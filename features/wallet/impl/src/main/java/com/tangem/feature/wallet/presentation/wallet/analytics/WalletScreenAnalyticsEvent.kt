@@ -53,10 +53,12 @@ sealed class WalletScreenAnalyticsEvent {
 
         class ScreenOpened(
             val theme: String,
+            val isImported: Boolean,
         ) : MainScreen(
             event = "Screen opened",
             params = mapOf(
                 "App Theme" to theme,
+                "Wallet Type" to if (isImported) "Seed Phrase" else "Seedless",
             ),
         )
 
