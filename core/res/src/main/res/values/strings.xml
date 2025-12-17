@@ -103,10 +103,10 @@
   <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
   <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
   <string name="app_settings_off_biometrics_alert_message">Disabling %1$s will require you to enter your passcode to unlock the app and to interact with your wallet.</string>
-  <string name="app_settings_off_require_access_code_alert_message">You’ll be asked for your wallet’s access code later so we can securely store it for future use</string>
-  <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
+  <string name="app_settings_off_require_access_code_alert_message">You\'ll be asked for your access code later for secure storage.</string>
+  <string name="app_settings_off_saved_access_code_alert_message">This will delete all saved wallet access codes. You\'ll need to enter the access code again to use the wallet.</string>
   <string name="app_settings_off_saved_wallet_alert_message">Removing the saved devices deletes all the saved wallets and their access codes from the app.</string>
-  <string name="app_settings_on_require_access_code_alert_message">This will delete all the saved wallet access codes. Any further interaction with the wallet will require submitting the access code.</string>
+  <string name="app_settings_on_require_access_code_alert_message">This will delete all saved wallet access codes. You’ll need to enter the access code again to use the wallet.</string>
   <string name="app_settings_require_access_code">Require Access Code</string>
   <string name="app_settings_require_access_code_footer">This option turns off biometrics for sensitive actions. You’ll need to enter your access code each time you sign a transaction.</string>
   <string name="app_settings_saved_access_codes">Save Access Code</string>
@@ -145,10 +145,10 @@
   <string name="balance_hidden_title">Balances are hidden</string>
   <string name="beta_mode_warning_message">According to the blockchain developers, Kaspa tokens are currently in beta. Stay tuned for updates!</string>
   <string name="beta_mode_warning_title">Beta Mode</string>
-  <string name="biometric_disabled_warning_description">Biometrics are turned off on your device, so you can’t use them to unlock your wallets. Enable biometrics in your device settings to use this method again.</string>
+  <string name="biometric_disabled_warning_description">Biometrics are turned off on your device, so you can\'t use them to unlock your wallets. Enable biometrics in your device settings to use this method again.</string>
   <string name="biometric_disabled_warning_title">Biometric authentication disabled</string>
   <string name="biometric_lockout_permanent_warning_description">Please scan the card or ring</string>
-  <string name="biometric_lockout_permanent_warning_description_2">You’ve reached the limit of biometric attempts. Please unlock your wallet with a device tap or enter your access code.</string>
+  <string name="biometric_lockout_permanent_warning_description_2">You\'ve reached the limit of biometric attempts. Please unlock your wallet with a card/ring or enter your access code.</string>
   <string name="biometric_lockout_permanent_warning_title">Biometric authentication locked</string>
   <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card or ring</string>
   <string name="biometric_lockout_warning_description_2">Biometric login is temporarily locked. Please try again in 30 seconds, or unlock your wallet with a device tap or access code.</string>
@@ -182,7 +182,7 @@
   <string name="card_reset_alert_finish_ok_button">Upgrade again</string>
   <string name="card_reset_alert_finish_title">Reset complete</string>
   <string name="card_reset_alert_incomplete_message">We recommend completing the reset process for all Tangem devices in this wallet.</string>
-  <string name="card_reset_alert_incomplete_title">You haven’t reset all your Tangem devices</string>
+  <string name="card_reset_alert_incomplete_title">Some Tangem devices still need to be reset.</string>
   <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards or rings in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
   <string name="card_settings_access_code_recovery_title">Access code recovery</string>
@@ -384,8 +384,9 @@
   <string name="common_transaction_status">Transaction status</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfer</string>
-  <string name="common_unable_to_load">Unable to load the data…</string>
+  <string name="common_unable_to_load">Unable to load data…</string>
   <string name="common_understand">I understand</string>
+  <string name="common_understand_continue">I understand, continue</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
@@ -575,7 +576,7 @@
   <string name="home_button_create_new_wallet">Create New Wallet</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
-  <string name="hot_access_code_set_biometric_ask">Do you want to allow “Tangem” to use biometric authentication? To confirm your identity and open the app</string>
+  <string name="hot_access_code_set_biometric_ask">Do you want to allow \"Tangem\" to use biometric authentication to confirm your identity and open the app?</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
   <string name="hot_crypto_token_network">On %s network</string>
   <string name="hw_access_code_create_alert_title">Are you sure you want to cancel access code setup?</string>
@@ -799,7 +800,7 @@
   <string name="markets_tooltip_title">Add tokens</string>
   <string name="markets_yield_supply_banner_description">Power up your assets while supplying them with instant access. %s</string>
   <string name="markets_yield_supply_banner_title">Activate Yield Mode</string>
-  <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s in order to create mobile wallet</string>
+  <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="news_all_news">All news</string>
   <plurals name="news_published_hours_ago">
@@ -1426,6 +1427,7 @@
   <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
   <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_other">Other</string>
+  <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>
@@ -1598,7 +1600,7 @@
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_push_notification_banner_subtitle">Enable push notifications to receive alerts when funds arrive in your wallet.</string>
   <string name="user_push_notification_banner_title">Don\'t Miss a Transaction</string>
-  <string name="user_wallet_list_add_button">Add new wallet</string>
+  <string name="user_wallet_list_add_button">Add Wallet</string>
   <string name="user_wallet_list_delete_hw_prompt">If you delete this wallet without a backup, you will permanently lose access to your funds.</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
@@ -1759,7 +1761,7 @@
   <string name="wallet_settings_change_access_code_title">Change access code</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">Push notifications may currently not work on Huawei devices. We\'re actively working on a solution and will release a fix in an upcoming update. Thank you for your understanding!</string>
-  <string name="wallet_settings_push_notifications_title">Transaction Notifications</string>
+  <string name="wallet_settings_push_notifications_title">Transaction notifications</string>
   <string name="wallet_settings_set_access_code_title">Set access code</string>
   <string name="wallet_settings_title">Wallet settings</string>
   <string name="wallet_title">Tangem</string>
@@ -1952,7 +1954,7 @@
   <string name="wc_warning_transaction">Suspicious transaction</string>
   <string name="welcome_create_wallet_already_have">Already have Tangem Wallet?</string>
   <string name="welcome_create_wallet_feature_assets">Thousands of assets</string>
-  <string name="welcome_create_wallet_feature_class">Best in class hardware wallet</string>
+  <string name="welcome_create_wallet_feature_class">Top-tier hardware wallet</string>
   <string name="welcome_create_wallet_feature_delivery">Fast delivery</string>
   <string name="welcome_create_wallet_feature_one_tap">Start in one tap</string>
   <string name="welcome_create_wallet_feature_seamless">Seamless and secure</string>
@@ -1961,7 +1963,7 @@
   <string name="welcome_create_wallet_mobile_description">Create or import a software wallet</string>
   <string name="welcome_create_wallet_mobile_description_full">Create or import a software wallet on your phone.</string>
   <string name="welcome_create_wallet_mobile_title">Start with Mobile Wallet</string>
-  <string name="welcome_create_wallet_other_method">Other method</string>
+  <string name="welcome_create_wallet_other_method">Other methods</string>
   <string name="welcome_create_wallet_use_hardware_description">Use a Tangem hardware wallet</string>
   <string name="welcome_create_wallet_use_hardware_title">Learn more &amp; buy</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
