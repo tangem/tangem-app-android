@@ -24,7 +24,8 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
         is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
         is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state, modifier)
         is TangemPayState.OnboardingBanner -> TangemPayOnboardingBanner(state, modifier)
-        TangemPayState.Loading -> TangemPayLoadingScreenBlock(modifier)
+        is TangemPayState.ExposedDevice -> TangemPayExposedDeviceState(modifier)
+        is TangemPayState.Loading -> TangemPayLoadingScreenBlock(modifier)
     }
 }
 
@@ -35,6 +36,8 @@ private fun TangemPayMainScreenBlockPreview() {
     TangemThemePreview {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
             TangemPayMainScreenBlock(state = TangemPayState.Loading, isBalanceHidden = false)
+
+            TangemPayMainScreenBlock(state = TangemPayState.ExposedDevice, isBalanceHidden = false)
 
             TangemPayMainScreenBlock(
                 Progress(
