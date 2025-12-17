@@ -24,6 +24,7 @@ internal sealed class MarketsListAnalyticsEvent(
                 SortByTypeUM.TopGainers -> "Gainers"
                 SortByTypeUM.TopLosers -> "Losers"
                 SortByTypeUM.Staking -> "Staking"
+                SortByTypeUM.YieldSupply -> "Yield Supply"
             },
             "Period" to when (interval) {
                 MarketsListUM.TrendInterval.H24 -> "24h"
@@ -32,12 +33,11 @@ internal sealed class MarketsListAnalyticsEvent(
             },
         ),
     )
+    class YieldModePromoShown : MarketsListAnalyticsEvent(event = "Notice - Yield Mode Promo")
 
-    class StakingPromoShown : MarketsListAnalyticsEvent(event = "Notice - Staking Promo")
+    class YieldModePromoClosed : MarketsListAnalyticsEvent(event = "Yield Mode Promo Closed")
 
-    class StakingPromoClosed : MarketsListAnalyticsEvent(event = "Staking Promo Closed")
-
-    class StakingMoreInfoClicked : MarketsListAnalyticsEvent(event = "Staking More Info")
+    class YieldModeMoreInfoClicked : MarketsListAnalyticsEvent(event = "Yield Mode More Info")
 
     data class TokenSearched(val tokenFound: Boolean) : MarketsListAnalyticsEvent(
         event = "Token Searched",
