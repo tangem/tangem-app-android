@@ -8,6 +8,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
+import com.tangem.features.markets.tokenlist.impl.model.MarketsNotificationUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.*
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import java.math.BigDecimal
 
 @Stable
 @Suppress("LongParameterList")
@@ -26,8 +26,6 @@ internal class MarketsListUMStateManager(
     private val visibleItemsChanged: (itemsKeys: List<CryptoCurrency.RawID>) -> Unit,
     private val onRetryButtonClicked: () -> Unit,
     private val onTokenClick: (MarketsListItemUM) -> Unit,
-    private val onStakingNotificationClick: () -> Unit,
-    private val onStakingNotificationCloseClick: () -> Unit,
     private val onShowTokensUnder100kClicked: () -> Unit,
 ) {
 
@@ -92,25 +90,25 @@ internal class MarketsListUMStateManager(
         isInErrorState: Boolean,
         isSearchNotFound: Boolean,
         uiItems: ImmutableList<MarketsListItemUM>,
-        stakingNotificationMaxApy: BigDecimal?,
+        marketsNotificationUM: MarketsNotificationUM?,
     ) {
-        state.update {
+        state.update { currentState ->
             when {
                 isInErrorState -> {
-                    it.copy(
+                    currentState.copy(
                         list = ListUM.LoadingError(onRetryClicked = onRetryButtonClicked),
                     )
                 }
                 isSearchNotFound -> {
-                    it.copy(list = ListUM.SearchNothingFound)
+                    currentState.copy(list = ListUM.SearchNothingFound)
                 }
                 uiItems.isEmpty() -> {
-                    it.copy(list = ListUM.Loading)
+                    currentState.copy(list = ListUM.Loading)
                 }
                 else -> {
-                    it.updateItems(
+                    currentState.updateItems(
                         newItems = uiItems,
-                        stakingNotificationMaxApy = stakingNotificationMaxApy,
+                        marketsNotificationUM = marketsNotificationUM,
                     )
                 }
             }
@@ -119,7 +117,7 @@ internal class MarketsListUMStateManager(
 
     private fun MarketsListUM.updateItems(
         newItems: ImmutableList<MarketsListItemUM>,
-        stakingNotificationMaxApy: BigDecimal?,
+        marketsNotificationUM: MarketsNotificationUM?,
     ): MarketsListUM {
         val currentState = this
 
@@ -131,7 +129,7 @@ internal class MarketsListUMStateManager(
                     .copy(
                         showUnder100kTokensNotificationWasHidden = currentState.showUnder100kButtonAlreadyPressed(),
                     ),
-                stakingNotificationMaxApy = stakingNotificationMaxApy,
+                marketsNotificationUM = marketsNotificationUM,
             )
         }
 
@@ -225,12 +223,7 @@ internal class MarketsListUMStateManager(
                 onOptionClicked = ::onBottomSheetOptionClicked,
             ),
         ),
-        stakingNotificationMaxApy = null,
-        onStakingNotificationClick = {
-            onStakingNotificationClick()
-            selectedSortByType = SortByTypeUM.Staking
-        },
-        onStakingNotificationCloseClick = onStakingNotificationCloseClick,
+        marketsNotificationUM = null,
     )
 
     private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
