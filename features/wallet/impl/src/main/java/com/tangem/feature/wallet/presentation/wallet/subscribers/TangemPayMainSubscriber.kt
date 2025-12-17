@@ -58,7 +58,10 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                                 transformer = TangemPayUnavailableStateTransformer(userWalletId),
                             )
                         }
-                        else -> {
+                        TangemPayCustomerInfoError.ExposedDeviceError -> {
+                            stateController.update(TangemPayExposedDeviceTransformer(userWalletId))
+                        }
+                        TangemPayCustomerInfoError.UnknownError -> {
                             // hide TangemPay block
                             Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
                             stateController.update(
