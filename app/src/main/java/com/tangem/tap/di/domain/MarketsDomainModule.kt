@@ -8,7 +8,6 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -129,13 +128,11 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStakingNotificationMaxApyUseCase(
-        settingsRepository: SettingsRepository,
+    fun provideShouldShowYieldModeMarketPromoUseCase(
         promoRepository: PromoRepository,
         marketsTokenRepository: MarketsTokenRepository,
-    ): GetStakingNotificationMaxApyUseCase {
-        return GetStakingNotificationMaxApyUseCase(
-            settingsRepository = settingsRepository,
+    ): ShouldShowYieldModeMarketPromoUseCase {
+        return ShouldShowYieldModeMarketPromoUseCase(
             promoRepository = promoRepository,
             marketsTokenRepository = marketsTokenRepository,
         )
