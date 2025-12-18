@@ -44,7 +44,7 @@ internal class DefaultP2PEthPoolRepository(
             Timber.e("Error fetching P2PEthPool vaults: $error")
             emptyList()
         }
-        p2pEthPoolVaultsStore.store(vaults)
+        p2pEthPoolVaultsStore.store(vaults.filter { !it.isPrivate }) // TODO eth isSmoothingPool?
     }
 
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
