@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.utils
 
 import com.tangem.core.ui.extensions.*
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.COSMOS_SCHEDULE
@@ -52,18 +53,18 @@ internal fun getRewardScheduleText(
     }
 }
 
-internal fun getRewardTypeShortText(rewardType: Yield.RewardType): TextReference {
+internal fun getRewardTypeShortText(rewardType: RewardType): TextReference {
     return when (rewardType) {
-        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_apr)
-        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_apy)
+        RewardType.APR -> TextReference.Res(R.string.staking_details_apr)
+        RewardType.APY -> TextReference.Res(R.string.staking_details_apy)
         else -> TextReference.EMPTY
     }
 }
 
-internal fun getRewardTypeLongText(rewardType: Yield.RewardType): TextReference {
+internal fun getRewardTypeLongText(rewardType: RewardType): TextReference {
     return when (rewardType) {
-        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
-        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
+        RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
+        RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
         else -> TextReference.EMPTY
     }
 }
