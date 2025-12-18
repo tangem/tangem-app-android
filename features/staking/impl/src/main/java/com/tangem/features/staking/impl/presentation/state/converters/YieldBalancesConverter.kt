@@ -11,7 +11,7 @@ import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
@@ -25,11 +25,11 @@ internal class YieldBalancesConverter(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Converter<Unit, InnerYieldBalanceState> {
 
     private val balanceItemConverter by lazy(LazyThreadSafetyMode.NONE) {
-        BalanceItemConverter(cryptoCurrencyStatus, appCurrencyProvider, yield)
+        BalanceItemConverter(cryptoCurrencyStatus, appCurrencyProvider, integration)
     }
 
     override fun convert(value: Unit): InnerYieldBalanceState {
