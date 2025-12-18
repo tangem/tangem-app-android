@@ -204,6 +204,17 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
+    data class NoticeHighFee(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
+        event = "Notice - High Network Fee",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
     enum class Action(val value: String) {
         Start("Start"),
         Approve("Approve"),
