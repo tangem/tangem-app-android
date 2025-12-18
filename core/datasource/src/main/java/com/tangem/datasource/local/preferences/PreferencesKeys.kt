@@ -27,6 +27,8 @@ object PreferencesKeys {
 
     val SAVE_USER_WALLETS_KEY by lazy { booleanPreferencesKey(name = "saveUserWallets") }
 
+    val ROOT_DETECTED_WARNING_SHOWN_KEY by lazy { booleanPreferencesKey(name = "rootDetectedWarningShown") }
+
     val SHOULD_SHOW_ASK_BIOMETRY_KEY by lazy { booleanPreferencesKey("saveUserWalletShown") }
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }

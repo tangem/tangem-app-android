@@ -193,4 +193,15 @@ internal class DefaultSettingsRepository(
             default = false,
         )
     }
+
+    override suspend fun isRootDetectedWarningShown(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.ROOT_DETECTED_WARNING_SHOWN_KEY,
+            default = false,
+        )
+    }
+
+    override suspend fun setRootDetectedWarningShown(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.ROOT_DETECTED_WARNING_SHOWN_KEY, value = value)
+    }
 }
