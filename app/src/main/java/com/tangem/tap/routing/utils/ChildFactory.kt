@@ -424,6 +424,7 @@ internal class ChildFactory @Inject constructor(
                         cardId = route.cardId,
                         isActiveBackupStatus = route.isActiveBackupStatus,
                         backupCardsCount = route.backupCardsCount,
+                        hasTangemPay = route.hasTangemPay,
                     ),
                     componentFactory = resetCardComponentFactory,
                 )
