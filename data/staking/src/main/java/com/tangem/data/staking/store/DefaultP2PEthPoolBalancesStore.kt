@@ -1,7 +1,7 @@
 package com.tangem.data.staking.store
 
 import androidx.datastore.core.DataStore
-import com.tangem.data.staking.converters.ethpool.P2PStakingBalanceConverter
+import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingBalanceConverter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
@@ -20,22 +20,22 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithP2PStakingBalances = Map<UserWalletId, Set<StakingBalance>>
-internal typealias WalletIdWithP2PResponses = Map<String, Set<P2PEthPoolAccountResponse>>
+internal typealias WalletIdWithP2PEthPoolResponses = Map<String, Set<P2PEthPoolAccountResponse>>
 
 /**
- * Default implementation of [P2PBalancesStore]
+ * Default implementation of [P2PEthPoolBalancesStore]
  *
- * Stores P2P ETH Pool staking balances.
+ * Stores P2PEthPool staking balances.
  *
  * @property runtimeStore runtime store
  * @property persistenceStore persistence store
  * @param dispatchers coroutine dispatchers
  */
-internal class DefaultP2PBalancesStore(
+internal class DefaultP2PEthPoolBalancesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithP2PStakingBalances>,
-    private val persistenceStore: DataStore<WalletIdWithP2PResponses>,
+    private val persistenceStore: DataStore<WalletIdWithP2PEthPoolResponses>,
     dispatchers: CoroutineDispatcherProvider,
-) : P2PBalancesStore {
+) : P2PEthPoolBalancesStore {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
@@ -47,7 +47,7 @@ internal class DefaultP2PBalancesStore(
                 value = cachedData.map { (stringWalletId, responses) ->
                     val key = UserWalletId(stringWalletId)
                     val value = responses.map { response ->
-                        P2PStakingBalanceConverter.convert(
+                        P2PEthPoolStakingBalanceConverter.convert(
                             response = response,
                             source = StatusSource.CACHE,
                         )
@@ -108,7 +108,7 @@ internal class DefaultP2PBalancesStore(
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>) {
         val newBalances = values.map { response ->
-            P2PStakingBalanceConverter.convert(
+            P2PEthPoolStakingBalanceConverter.convert(
                 response = response,
                 source = StatusSource.ACTUAL,
             )
@@ -152,7 +152,7 @@ internal class DefaultP2PBalancesStore(
             current.toMutableMap().apply {
                 this[userWalletId.stringValue] = this[userWalletId.stringValue].orEmpty()
                     .filterNot { response ->
-                        StakingIntegrationID.P2P.EthereumPooled.value in integrationIds
+                        StakingIntegrationID.P2PEthPool.value in integrationIds
                     }
                     .toSet()
             }
