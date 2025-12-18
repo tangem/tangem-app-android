@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -26,7 +27,7 @@ import java.math.RoundingMode
 internal class AmountRequirementStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxAmount: EnterAmountBoundary,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
     private val actionType: StakingActionCommonType,
 ) : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
@@ -96,11 +97,11 @@ internal class AmountRequirementStateTransformer(
 
         return when (actionType) {
             is StakingActionCommonType.Enter -> {
-                val enterRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
+                val enterRequirements = integration.enterArgs?.args?.get(Yield.Args.ArgType.AMOUNT)
                 enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
             }
             is StakingActionCommonType.Exit -> {
-                val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT)
+                val exitRequirements = integration.exitArgs?.args?.get(Yield.Args.ArgType.AMOUNT)
                 exitRequirements?.getError(amountDecimal, R.string.staking_unstake_amount_requirement_error)
             }
             else -> null
