@@ -9,7 +9,7 @@ import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
@@ -48,7 +48,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
     ) {
         val mainAccount = accountList.mainAccount
@@ -89,7 +89,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         appCurrency: AppCurrency,
         portfolioId: PortfolioId,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
         shouldShowMainPromo: Boolean,
     ) {
         val tokenList = maybeTokenList.getOrElse(
@@ -128,7 +128,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
         shouldShowMainPromo: Boolean,
     ) {
         stateController.update(

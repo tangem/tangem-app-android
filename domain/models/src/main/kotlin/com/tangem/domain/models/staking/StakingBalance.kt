@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 /**
- * Staking balance facade covering StakeKit and P2P balances
+ * Staking balance facade covering StakeKit and P2PEthPool balances
  */
 @Serializable
 sealed interface StakingBalance {
@@ -50,10 +50,10 @@ sealed interface StakingBalance {
         }
 
         @Serializable
-        data class P2P(
+        data class P2PEthPool(
             override val stakingId: StakingID,
             override val source: StatusSource,
-            val account: P2PStakingAccount,
+            val account: P2PEthPoolStakingAccount,
         ) : Data {
 
             override val totalStaked: BigDecimal
@@ -93,7 +93,7 @@ sealed interface StakingBalance {
     fun copySealed(source: StatusSource): StakingBalance {
         return when (this) {
             is Data.StakeKit -> copy(source = source)
-            is Data.P2P -> copy(source = source)
+            is Data.P2PEthPool -> copy(source = source)
             is Empty -> copy(source = source)
             is Error -> this
         }
