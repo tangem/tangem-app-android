@@ -37,17 +37,21 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     null -> TextReference.EMPTY
 }
 
-internal fun isSingleAction(networkId: String, activeStake: BalanceState): Boolean {
-    val isSingleAction = activeStake.pendingActions.size <= 1 // Either single or none pending actions
-    val isCompositePendingActions = isCompositePendingActions(networkId, activeStake.pendingActions)
-    val isRestake = activeStake.pendingActions.any { it.type.isRestake }
+internal fun isSingleAction(networkId: String, pendingActions: List<PendingAction>): Boolean {
+    val isSingleAction = pendingActions.size <= 1 // Either single or none pending actions
+    val isCompositePendingActions = isCompositePendingActions(networkId, pendingActions.toPersistentList())
+    val isRestake = pendingActions.any { it.type.isRestake }
 
     return isSingleAction && !isRestake || isCompositePendingActions
 }
 
-internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState): ImmutableList<PendingAction> {
+internal fun withStubUnstakeAction(
+    networkId: String,
+    pendingActions: List<PendingAction>,
+    activeStake: BalanceState,
+): ImmutableList<PendingAction> {
     return if (isStubUnstakeAction(networkId) && activeStake.type != BalanceType.REWARDS) {
-        activeStake.pendingActions.plus(
+        pendingActions.plus(
             PendingAction(
                 type = StakingActionType.UNSTAKE,
                 passthrough = "",
