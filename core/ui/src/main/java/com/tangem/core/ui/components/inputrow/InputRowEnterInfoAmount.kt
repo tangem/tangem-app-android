@@ -158,7 +158,7 @@ fun InputRowEnterInfoAmountV2(
                             .size(16.dp)
                             .clip(CircleShape)
                             .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TOOLTIP_ICON),
-                        text = description.resolveReference(),
+                        text = description,
                         content = { contentModifier ->
                             Icon(
                                 modifier = contentModifier.size(16.dp),

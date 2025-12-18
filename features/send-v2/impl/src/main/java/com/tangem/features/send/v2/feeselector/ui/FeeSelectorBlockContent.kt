@@ -29,6 +29,7 @@ import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.extensions.annotatedReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -122,7 +123,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
             }
         }
         TangemTooltip(
-            text = annotatedString,
+            text = annotatedReference(annotatedString),
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing6)
                 .size(TangemTheme.dimens.size16)
