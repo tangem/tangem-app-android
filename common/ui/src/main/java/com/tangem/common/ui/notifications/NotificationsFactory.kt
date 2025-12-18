@@ -108,6 +108,13 @@ object NotificationsFactory {
         }
     }
 
+    // Must be called last – shown only when no other notifications exist
+    fun MutableList<NotificationUM>.addHighFeeNotificationIfNoOther(shouldShowHighFeeNotification: Boolean) {
+        if (shouldShowHighFeeNotification && this.isEmpty()) {
+            add(NotificationUM.Info.YieldSupplyHighNetworkFee)
+        }
+    }
+
     fun MutableList<NotificationUM>.addReserveAmountErrorNotification(
         reserveAmount: BigDecimal?,
         sendingAmount: BigDecimal,
