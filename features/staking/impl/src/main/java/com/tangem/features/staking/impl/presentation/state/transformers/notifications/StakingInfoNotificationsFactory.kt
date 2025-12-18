@@ -9,7 +9,6 @@ import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.StakingIntegration
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -214,12 +213,12 @@ internal class StakingInfoNotificationsFactory(
         if (prevState.actionType !is StakingActionCommonType.Exit) return
 
         val maxAmount = prevState.balanceState?.cryptoAmount ?: return
-        val exitRequirements = integration.exitArgs?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
+        val exitRequirements = integration.exitArgs?.amountRequirement ?: return
 
         val amountLeft = maxAmount - actionAmount
         val isNotEnoughLeft = !amountLeft.isZero() && amountLeft < exitRequirements.minimum.orZero()
 
-        if (exitRequirements.required && isNotEnoughLeft) {
+        if (exitRequirements.isRequired && isNotEnoughLeft) {
             add(StakingNotification.Warning.LowStakedBalance)
         }
     }

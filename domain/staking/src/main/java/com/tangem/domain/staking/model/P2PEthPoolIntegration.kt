@@ -2,8 +2,11 @@ package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.common.RewardClaiming
+import com.tangem.domain.staking.model.common.RewardSchedule
+import com.tangem.domain.staking.model.common.StakingActionArgs
+import com.tangem.domain.staking.model.common.StakingAmountRequirement
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
-import com.tangem.domain.staking.model.stakekit.Yield
 import java.math.BigDecimal
 
 /**
@@ -39,9 +42,23 @@ class P2PEthPoolIntegration(
 
     override val exitMinimumAmount: BigDecimal? = null
 
-    override val enterArgs: Yield.Args.Enter? = null
+    override val enterArgs: StakingActionArgs = StakingActionArgs(
+        amountRequirement = StakingAmountRequirement(
+            isRequired = true,
+            minimum = DEFAULT_MINIMUM_STAKE,
+            maximum = null,
+        ),
+        isPartialAmountDisabled = false,
+    )
 
-    override val exitArgs: Yield.Args.Enter? = null
+    override val exitArgs: StakingActionArgs = StakingActionArgs(
+        amountRequirement = StakingAmountRequirement(
+            isRequired = true,
+            minimum = null,
+            maximum = null,
+        ),
+        isPartialAmountDisabled = false,
+    )
 
     // Metadata
 
@@ -49,9 +66,9 @@ class P2PEthPoolIntegration(
 
     override val cooldownPeriodDays: Int = DEFAULT_COOLDOWN_DAYS
 
-    override val rewardSchedule: Yield.Metadata.RewardSchedule = Yield.Metadata.RewardSchedule.DAY
+    override val rewardSchedule: RewardSchedule = RewardSchedule.DAY
 
-    override val rewardClaiming: Yield.Metadata.RewardClaiming = Yield.Metadata.RewardClaiming.AUTO
+    override val rewardClaiming: RewardClaiming = RewardClaiming.AUTO
 
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken = token
 

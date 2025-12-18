@@ -2,14 +2,15 @@ package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.YieldToken
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardClaiming
+import com.tangem.domain.staking.model.common.RewardSchedule
+import com.tangem.domain.staking.model.common.StakingActionArgs
 import java.math.BigDecimal
 
 /**
  * Strategy interface for staking integrations.
  * Abstracts over StakeKit and P2PEthPool staking providers.
  */
-// TODO p2p get rid of stakekit-specific models in StakingIntegration and implementors
 interface StakingIntegration {
 
     // Basic
@@ -36,9 +37,9 @@ interface StakingIntegration {
 
     val exitMinimumAmount: BigDecimal?
 
-    val enterArgs: Yield.Args.Enter?
+    val enterArgs: StakingActionArgs?
 
-    val exitArgs: Yield.Args.Enter?
+    val exitArgs: StakingActionArgs?
 
     // Metadata
 
@@ -46,9 +47,9 @@ interface StakingIntegration {
 
     val cooldownPeriodDays: Int?
 
-    val rewardSchedule: Yield.Metadata.RewardSchedule
+    val rewardSchedule: RewardSchedule
 
-    val rewardClaiming: Yield.Metadata.RewardClaiming
+    val rewardClaiming: RewardClaiming
 
     // Basic
 

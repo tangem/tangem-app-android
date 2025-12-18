@@ -136,8 +136,8 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
 
         val vaults = runSuspendCatching { p2pEthPoolVaultsStore.getSync() }.getOrNull().orEmpty()
         if (vaults.isEmpty()) {
-            Timber.w("No P2PEthPool vaults available for $userWalletId")
-            p2PEthPoolBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
+            Timber.w("No P2PEthPool vaults available for $userWalletId, storing empty balances")
+            p2PEthPoolBalancesStore.storeEmpty(userWalletId = userWalletId, stakingIds = stakingIds)
             return
         }
 

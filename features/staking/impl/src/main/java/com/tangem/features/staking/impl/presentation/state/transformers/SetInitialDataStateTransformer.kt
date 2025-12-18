@@ -19,10 +19,10 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardClaiming
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -293,9 +293,9 @@ internal class SetInitialDataStateTransformer(
         val EQUALITY_THRESHOLD = BigDecimal(1E-10)
 
         val rewardClaimingResources = mapOf(
-            Yield.Metadata.RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
-            Yield.Metadata.RewardClaiming.AUTO to R.string.staking_reward_claiming_auto,
-            Yield.Metadata.RewardSchedule.UNKNOWN to null,
+            RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
+            RewardClaiming.AUTO to R.string.staking_reward_claiming_auto,
+            RewardClaiming.UNKNOWN to null,
         )
     }
 }
