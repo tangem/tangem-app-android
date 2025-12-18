@@ -311,7 +311,7 @@ internal class ChildFactory @Inject constructor(
                     params = StakingComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
-                        yieldId = route.yieldId,
+                        integrationId = route.integrationId,
                     ),
                     componentFactory = stakingComponentFactory,
                 )
