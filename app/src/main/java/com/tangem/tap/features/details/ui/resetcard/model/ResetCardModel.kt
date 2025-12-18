@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
@@ -30,6 +31,9 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.wallet.R
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -82,33 +86,22 @@ internal class ResetCardModel @Inject constructor(
     // TODO: move logic to separate domain entity
     private var resetBackupCardCount = 0
 
+    private var warningsMap = emptyMap<ResetCardScreenState.WarningType, ResetCardScreenState.WarningUM>()
+
     val screenState: MutableStateFlow<ResetCardScreenState> = MutableStateFlow(
         value = getInitialState(),
     )
 
     private fun getInitialState(): ResetCardScreenState {
-        val shouldShowResetPasswordButton = shouldShowResetPasswordButton()
-        val warningsToShow = buildList {
-            add(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS)
-
-            if (shouldShowResetPasswordButton) {
-                add(ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE)
-            }
-        }
-
         return ResetCardScreenState(
             isResetButtonEnabled = false,
             descriptionText = getResetToFactoryDescription(
                 isActiveBackupStatus = isActiveBackupPrimaryCard,
                 typesResolver = currentCardTypesResolver,
             ),
-            warningsToShow = warningsToShow,
-            isResetPasswordButtonShown = shouldShowResetPasswordButton,
-            isAcceptCondition1Checked = false,
-            isAcceptCondition2Checked = false,
-            onAcceptCondition1ToggleClick = ::toggleFirstCondition,
-            onAcceptCondition2ToggleClick = ::toggleSecondCondition,
+            warningsToShow = buildInitialItems(),
             onResetButtonClick = { showDialog(ResetCardDialog.StartResetDialog) },
+            onToggleWarning = ::toggleCondition,
             dialog = null,
         )
     }
@@ -119,28 +112,46 @@ internal class ResetCardModel @Inject constructor(
         return isTangemWallet && isActiveBackupPrimaryCard
     }
 
-    private fun toggleFirstCondition(isAccepted: Boolean) {
-        screenState.update { prevState ->
-            val isResetButtonEnabled = if (prevState.isResetPasswordButtonShown) {
-                isAccepted && prevState.isAcceptCondition2Checked
-            } else {
-                isAccepted
-            }
+    private fun buildInitialItems(): ImmutableList<ResetCardScreenState.WarningUM> {
+        val shouldShowResetPasswordButton = shouldShowResetPasswordButton()
+        val shouldShowResetTangemPayButton = params.hasTangemPay
 
-            prevState.copy(
-                isAcceptCondition1Checked = isAccepted,
-                isResetButtonEnabled = isResetButtonEnabled,
-            )
+        val lostWalletUM = ResetCardScreenState.WarningUM(
+            isChecked = false,
+            type = ResetCardScreenState.WarningType.LOST_WALLET_ACCESS,
+            description = TextReference.Res(id = R.string.reset_card_to_factory_condition_1),
+        )
+        val lostPasswordUM = ResetCardScreenState.WarningUM(
+            isChecked = false,
+            type = ResetCardScreenState.WarningType.LOST_PASSWORD_RESTORE,
+            description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
+        )
+        val lostTangemPayUM = ResetCardScreenState.WarningUM(
+            isChecked = false,
+            type = ResetCardScreenState.WarningType.LOST_TANGEM_PAY,
+            description = TextReference.Res(R.string.reset_card_to_factory_condition_3),
+        )
+
+        warningsMap = buildMap {
+            put(ResetCardScreenState.WarningType.LOST_WALLET_ACCESS, lostWalletUM)
+            if (shouldShowResetPasswordButton) {
+                put(ResetCardScreenState.WarningType.LOST_PASSWORD_RESTORE, lostPasswordUM)
+            }
+            if (shouldShowResetTangemPayButton) {
+                put(ResetCardScreenState.WarningType.LOST_TANGEM_PAY, lostTangemPayUM)
+            }
         }
+        return warningsMap.values.toImmutableList()
     }
 
-    private fun toggleSecondCondition(isAccepted: Boolean) {
+    private fun toggleCondition(type: ResetCardScreenState.WarningType) {
         screenState.update { prevState ->
-            val isResetButtonEnabled = prevState.isAcceptCondition1Checked && isAccepted
-
+            warningsMap[type]?.let { current ->
+                warningsMap = warningsMap + (type to current.copy(isChecked = !current.isChecked))
+            }
             prevState.copy(
-                isAcceptCondition2Checked = isAccepted,
-                isResetButtonEnabled = isResetButtonEnabled,
+                warningsToShow = warningsMap.values.toImmutableList(),
+                isResetButtonEnabled = warningsMap.values.all { it.isChecked },
             )
         }
     }
