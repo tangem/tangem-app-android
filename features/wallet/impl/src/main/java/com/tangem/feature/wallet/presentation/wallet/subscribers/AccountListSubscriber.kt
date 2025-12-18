@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
@@ -50,7 +50,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
         return yieldSupplyApyFlowUseCase().distinctUntilChanged()
     }
 
-    private fun stakingApyFlow(): Flow<Map<String, List<Yield.Validator>>> {
+    private fun stakingApyFlow(): Flow<Map<String, List<StakingTarget>>> {
         return stakingApyFlowUseCase().distinctUntilChanged()
     }
 
