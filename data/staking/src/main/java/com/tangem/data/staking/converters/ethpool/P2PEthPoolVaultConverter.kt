@@ -5,7 +5,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.utils.converter.Converter
 
 /**
- * Converter from P2P Vault DTO to Domain model
+ * Converter from P2PEthPool Vault DTO to Domain model
  */
 internal object P2PEthPoolVaultConverter : Converter<P2PEthPoolVaultDTO, P2PEthPoolVault> {
 

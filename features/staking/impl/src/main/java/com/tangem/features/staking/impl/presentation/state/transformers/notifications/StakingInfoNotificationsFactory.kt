@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
@@ -26,7 +27,7 @@ import java.math.BigDecimal
 
 internal class StakingInfoNotificationsFactory(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
     private val isSubtractAvailable: Boolean,
 ) {
 
@@ -94,7 +95,7 @@ internal class StakingInfoNotificationsFactory(
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
             StakingActionType.UNLOCK_LOCKED -> {
-                val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+                val cooldownPeriodDays = integration.cooldownPeriodDays
                 if (cooldownPeriodDays != null) {
                     resourceReference(R.string.staking_unlocked_locked) to resourceReference(
                         R.string.staking_notification_unlock_text,
@@ -213,7 +214,7 @@ internal class StakingInfoNotificationsFactory(
         if (prevState.actionType !is StakingActionCommonType.Exit) return
 
         val maxAmount = prevState.balanceState?.cryptoAmount ?: return
-        val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
+        val exitRequirements = integration.exitArgs?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
 
         val amountLeft = maxAmount - actionAmount
         val isNotEnoughLeft = !amountLeft.isZero() && amountLeft < exitRequirements.minimum.orZero()
@@ -224,7 +225,7 @@ internal class StakingInfoNotificationsFactory(
     }
 
     private fun MutableList<NotificationUM>.addUnstakeInfoNotification() {
-        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+        val cooldownPeriodDays = integration.cooldownPeriodDays
 
         val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
         if (cooldownPeriodDays != null) {
@@ -248,18 +249,17 @@ internal class StakingInfoNotificationsFactory(
             val initialInfoState = prevState.initialInfoState as? StakingStates.InitialInfoState.Data
             val stakingBalances = (initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data)?.balances
 
-            val validatorAddress = prevState.balanceState?.validator?.address ?: return
+            val targetAddress = prevState.balanceState?.target?.address ?: return
 
-            val stakesCountWithCertainValidator = stakingBalances.orEmpty()
-                .filter {
-                    it.type == BalanceType.STAKED ||
-                        it.type == BalanceType.PREPARING ||
-                        it.type == BalanceType.UNSTAKED
+            val stakesCountWithCertainTarget = stakingBalances.orEmpty()
+                .count { state ->
+                    (state.type == BalanceType.STAKED ||
+                        state.type == BalanceType.PREPARING ||
+                        state.type == BalanceType.UNSTAKED) &&
+                        state.target?.address == targetAddress
                 }
-                .filter { it.validator?.address == validatorAddress }
-                .size
 
-            if (stakesCountWithCertainValidator > 1) {
+            if (stakesCountWithCertainTarget > 1) {
                 add(
                     StakingNotification.Info.Ordinary(
                         title = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_title),

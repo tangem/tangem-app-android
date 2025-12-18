@@ -45,11 +45,15 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.model.P2PEthPoolIntegration
+import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
+import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.utils.getValidatorsCount
@@ -134,6 +138,7 @@ internal class StakingModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getActionsUseCase: GetActionsUseCase,
     private val getYieldUseCase: GetYieldUseCase,
+    private val p2pEthPoolRepository: P2PEthPoolRepository,
     private val checkAccountInitializedUseCase: CheckAccountInitializedUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
@@ -164,9 +169,18 @@ internal class StakingModel @Inject constructor(
 
     private val cryptoCurrencyId: CryptoCurrency.ID = params.cryptoCurrency.id
     private val userWalletId: UserWalletId = params.userWalletId
-    private val yield: Yield = runBlocking {
-        getYieldUseCase(params.yieldId).getOrElse {
-            error("yield must be not null")
+    private val integration: StakingIntegration = runBlocking {
+        when (val integrationId = params.integrationId) {
+            is StakingIntegrationID.StakeKit -> {
+                val yield = getYieldUseCase(integrationId.value).getOrElse {
+                    error("yield must be not null")
+                }
+                StakeKitIntegration(integrationId, yield)
+            }
+            StakingIntegrationID.P2PEthPool -> {
+                val vaults = p2pEthPoolRepository.getVaults().getOrElse { emptyList() }
+                P2PEthPoolIntegration(integrationId, vaults)
+            }
         }
     }
 
@@ -194,7 +208,7 @@ internal class StakingModel @Inject constructor(
             return invalidatePendingTransactionsUseCase(
                 balanceItems = stakeKitBalance?.balance?.items.orEmpty(),
                 stakingActions = stakingActions,
-                token = yield.token,
+                token = integration.token,
             ).getOrElse { emptyList() }
         }
 
@@ -205,7 +219,7 @@ internal class StakingModel @Inject constructor(
         stakingBalanceUpdater.create(
             cryptoCurrencyStatus,
             userWallet,
-            yield,
+            integration,
         )
     }
 
@@ -213,7 +227,7 @@ internal class StakingModel @Inject constructor(
         stakingFeeTransactionLoader.create(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWallet = userWallet,
-            yield = yield,
+            integration = integration,
         )
     }
 
@@ -221,7 +235,7 @@ internal class StakingModel @Inject constructor(
         stakingTransactionLoader.create(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWallet = userWallet,
-            yield = yield,
+            integration = integration,
             isAmountSubtractAvailable = isAmountSubtractAvailable,
         )
     }
@@ -280,7 +294,7 @@ internal class StakingModel @Inject constructor(
             val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalance !is StakingBalance.Data.StakeKit
 
             when {
-                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && hasNoYieldBalanceData -> {
+                isInitialInfoStep && noBalanceState && integration.areAllTargetsFull && hasNoYieldBalanceData -> {
                     stakingEventFactory.createStakingValidatorsUnavailableAlert()
                     return@launch
                 }
@@ -293,12 +307,12 @@ internal class StakingModel @Inject constructor(
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                             stakingApproval = stakingApproval,
                             stakingAllowance = stakingAllowance,
-                            yieldArgs = yield.args,
+                            integration = integration,
                         ).let(::add)
-                        if (yield.args.enter.isPartialAmountDisabled) {
+                        if (integration.isPartialAmountDisabled) {
                             ValidatorSelectChangeTransformer(
-                                selectedValidator = yield.preferredValidators.firstOrNull(),
-                                yield = yield,
+                                selectedTarget = integration.preferredTargets.firstOrNull(),
+                                integration = integration,
                             ).let(::add)
                             SetAmountDataTransformer(
                                 clickIntents = this@StakingModel,
@@ -313,7 +327,7 @@ internal class StakingModel @Inject constructor(
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                                 minimumTransactionAmount = minimumTransactionAmount,
                                 actionType = uiState.value.actionType,
-                                yield = yield,
+                                integration = integration,
                             ).let(::add)
                         }
                     }
@@ -327,7 +341,7 @@ internal class StakingModel @Inject constructor(
     override fun getFee() {
         stateController.update(
             SetConfirmationStateLoadingTransformer(
-                yield = yield,
+                integration = integration,
                 appCurrency = appCurrency,
                 cryptoCurrency = cryptoCurrencyStatus.currency,
             ),
@@ -479,7 +493,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onAmountEnterClick() {
-        if (yield.preferredValidators.isEmpty()) {
+        if (integration.preferredTargets.isEmpty()) {
             stateController.updateEvent(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
@@ -487,8 +501,8 @@ internal class StakingModel @Inject constructor(
             if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
                     ValidatorSelectChangeTransformer(
-                        selectedValidator = null,
-                        yield = yield,
+                        selectedTarget = null,
+                        integration = integration,
                     ),
                 )
             }
@@ -502,7 +516,7 @@ internal class StakingModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 minimumTransactionAmount = minimumTransactionAmount,
                 value = value,
-                yield = yield,
+                integration = integration,
             ),
         )
     }
@@ -518,7 +532,7 @@ internal class StakingModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 minimumTransactionAmount = minimumTransactionAmount,
                 actionType = uiState.value.actionType,
-                yield = yield,
+                integration = integration,
             ),
         )
     }
@@ -539,16 +553,16 @@ internal class StakingModel @Inject constructor(
         stakingStateRouter.showValidators()
     }
 
-    override fun onValidatorSelect(validator: Yield.Validator) {
+    override fun onTargetSelect(target: StakingTarget) {
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ValidatorChosen(
-                validator = validator.name,
+                validator = target.name,
             ),
         )
         stateController.update(
             ValidatorSelectChangeTransformer(
-                selectedValidator = validator,
-                yield = yield,
+                selectedTarget = target,
+                integration = integration,
             ),
         )
     }
@@ -606,7 +620,7 @@ internal class StakingModel @Inject constructor(
                 balanceType = activeStake.type,
                 pendingActions = activeStake.pendingActions,
                 balanceState = activeStake,
-                validator = activeStake.validator,
+                target = activeStake.target,
                 amountValue = activeStake.cryptoValue,
             )
             onNextClick(activeStake)
@@ -619,7 +633,7 @@ internal class StakingModel @Inject constructor(
                             balanceType = activeStake.type,
                             pendingAction = action,
                             balanceState = activeStake,
-                            validator = activeStake.validator,
+                            target = activeStake.target,
                             amountValue = activeStake.cryptoValue,
                         )
                         stateController.update(DismissBottomSheetStateTransformer)
@@ -788,7 +802,7 @@ internal class StakingModel @Inject constructor(
                     isSubtractAvailable = isAmountSubtractAvailable,
                     feeError = feeError,
                     stakingError = stakingError,
-                    yield = yield,
+                    integration = integration,
                 ),
             )
         }
@@ -911,7 +925,7 @@ internal class StakingModel @Inject constructor(
             val validatorState = uiState.value.validatorState as? StakingStates.ValidatorState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
 
-            val validator = validatorState?.chosenValidator
+            val target = validatorState?.chosenTarget
             val feeAmount = feeState?.fee?.amount
             val amount = amountState?.amountTextField?.cryptoAmount
             saveBlockchainErrorUseCase(
@@ -919,7 +933,7 @@ internal class StakingModel @Inject constructor(
                     errorMessage = errorMessage,
                     blockchainId = network.rawId,
                     derivationPath = network.derivationPath.value,
-                    destinationAddress = validator?.address.orEmpty(),
+                    destinationAddress = target?.address.orEmpty(),
                     tokenSymbol = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.symbol,
                     amount = amount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
                     fee = feeAmount?.run { value?.toPlainString() + currencySymbol }.orEmpty(),
@@ -928,7 +942,7 @@ internal class StakingModel @Inject constructor(
 
             val email = FeedbackEmailType.StakingProblem(
                 walletMetaInfo = metaInfo,
-                validatorName = validator?.name,
+                validatorName = target?.name,
                 transactionTypes = transactionsInProgress.map { it.type.name },
                 unsignedTransactions = transactionsInProgress.map { it.unsignedTransaction },
             )
@@ -1229,7 +1243,7 @@ internal class StakingModel @Inject constructor(
         stateController.updateAll(
             SetInitialDataStateTransformer(
                 clickIntents = this@StakingModel,
-                yield = yield,
+                integration = integration,
                 isAnyTokenStaked = isAnyTokenStaked,
                 cryptoCurrencyStatus = status,
                 userWalletProvider = Provider { userWallet },
@@ -1248,7 +1262,7 @@ internal class StakingModel @Inject constructor(
         balanceState: BalanceState,
         pendingActions: ImmutableList<PendingAction> = persistentListOf(),
         pendingAction: PendingAction? = pendingActions.firstOrNull(),
-        validator: Yield.Validator?,
+        target: StakingTarget?,
         amountValue: String,
     ) {
         stateController.updateAll(
@@ -1261,11 +1275,11 @@ internal class StakingModel @Inject constructor(
                 pendingActions = pendingActions,
                 pendingAction = pendingAction,
                 stakingAllowance = stakingAllowance,
-                yieldArgs = yield.args,
+                integration = integration,
             ),
             ValidatorSelectChangeTransformer(
-                selectedValidator = validator,
-                yield = yield,
+                selectedTarget = target,
+                integration = integration,
             ),
             SetAmountDataTransformer(
                 clickIntents = this,
@@ -1280,7 +1294,7 @@ internal class StakingModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 value = amountValue,
                 minimumTransactionAmount = minimumTransactionAmount,
-                yield = yield,
+                integration = integration,
             ),
         )
     }

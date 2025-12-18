@@ -10,7 +10,7 @@ import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.staking.PendingAction
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
@@ -97,9 +97,9 @@ internal sealed class StakingStates {
             override val isPrimaryButtonEnabled: Boolean,
             override val isClickable: Boolean,
             val isVisibleOnConfirmation: Boolean,
-            val chosenValidator: Yield.Validator,
-            val activeValidator: Yield.Validator?,
-            val availableValidators: List<Yield.Validator>,
+            val chosenTarget: StakingTarget,
+            val activeTarget: StakingTarget?,
+            val availableTargets: List<StakingTarget>,
         ) : ValidatorState()
 
         data class Empty(

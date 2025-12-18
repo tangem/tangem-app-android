@@ -4,7 +4,7 @@ import arrow.core.toOption
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.data.staking.store.P2PBalancesStore
+import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -36,19 +36,19 @@ internal class DefaultMultiStakingBalanceFetcherTest {
     private val userWalletsStore: UserWalletsStore = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakingBalancesStore: StakingBalancesStore = mockk(relaxUnitFun = true)
-    private val p2pBalancesStore: P2PBalancesStore = mockk(relaxUnitFun = true)
+    private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore = mockk(relaxUnitFun = true)
     private val stakeKitApi: StakeKitApi = mockk()
-    private val p2pApi: P2PEthPoolApi = mockk()
-    private val p2pVaultsStore: P2PEthPoolVaultsStore = mockk()
+    private val p2pEthPoolApi: P2PEthPoolApi = mockk()
+    private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore = mockk()
 
     private val fetcher = DefaultMultiStakingBalanceFetcher(
         userWalletsStore = userWalletsStore,
         stakingYieldsStore = stakingYieldsStore,
         stakingBalancesStore = stakingBalancesStore,
-        p2pBalancesStore = p2pBalancesStore,
+        p2PEthPoolBalancesStore = p2PEthPoolBalancesStore,
         stakeKitApi = stakeKitApi,
-        p2pApi = p2pApi,
-        p2pVaultsStore = p2pVaultsStore,
+        p2pEthPoolApi = p2pEthPoolApi,
+        p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

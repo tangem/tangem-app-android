@@ -15,7 +15,7 @@ data class P2PEthPoolVaultsResponse(
 )
 
 /**
- * Network identifier in P2P API
+ * Network identifier in P2PEthPool API
  */
 @JsonClass(generateAdapter = false)
 enum class P2PEthPoolNetworkDTO {

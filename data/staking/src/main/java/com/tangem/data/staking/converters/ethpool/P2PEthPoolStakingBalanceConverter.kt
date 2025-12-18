@@ -9,16 +9,16 @@ import com.tangem.domain.models.staking.*
 import com.tangem.domain.staking.model.StakingIntegrationID
 import kotlinx.datetime.Instant
 
-/** Converts P2P ETH Pool API response to [StakingBalance.Data.P2P] */
-internal object P2PStakingBalanceConverter {
+/** Converts P2PEthPool API response to [StakingBalance.Data.P2PEthPool] */
+internal object P2PEthPoolStakingBalanceConverter {
 
-    fun convert(response: P2PEthPoolAccountResponse, source: StatusSource): StakingBalance.Data.P2P {
+    fun convert(response: P2PEthPoolAccountResponse, source: StatusSource): StakingBalance.Data.P2PEthPool {
         val stakingId = StakingID(
-            integrationId = StakingIntegrationID.P2P.EthereumPooled.value,
+            integrationId = StakingIntegrationID.P2PEthPool.value,
             address = response.delegatorAddress,
         )
 
-        val account = P2PStakingAccount(
+        val account = P2PEthPoolStakingAccount(
             delegatorAddress = response.delegatorAddress,
             vaultAddress = response.vaultAddress,
             stake = convertStake(response.stake),
@@ -27,29 +27,29 @@ internal object P2PStakingBalanceConverter {
             exitQueue = convertExitQueue(response.exitQueue),
         )
 
-        return StakingBalance.Data.P2P(
+        return StakingBalance.Data.P2PEthPool(
             stakingId = stakingId,
             source = source,
             account = account,
         )
     }
 
-    private fun convertStake(dto: P2PEthPoolStakeDTO): P2PStake {
-        return P2PStake(
+    private fun convertStake(dto: P2PEthPoolStakeDTO): P2PEthPoolStake {
+        return P2PEthPoolStake(
             assets = dto.assets,
             totalEarnedAssets = dto.totalEarnedAssets,
         )
     }
 
-    private fun convertExitQueue(dto: P2PEthPoolExitQueueDTO): P2PExitQueue {
-        return P2PExitQueue(
+    private fun convertExitQueue(dto: P2PEthPoolExitQueueDTO): P2PEthPoolExitQueue {
+        return P2PEthPoolExitQueue(
             total = dto.total.toBigDecimal(),
             requests = dto.requests.map(::convertExitRequest),
         )
     }
 
-    private fun convertExitRequest(dto: P2PEthPoolExitRequestDTO): P2PExitRequest {
-        return P2PExitRequest(
+    private fun convertExitRequest(dto: P2PEthPoolExitRequestDTO): P2PEthPoolExitRequest {
+        return P2PEthPoolExitRequest(
             ticket = dto.ticket,
             totalAssets = dto.totalAssets.toBigDecimal(),
             timestamp = Instant.fromEpochSeconds(dto.timestamp),

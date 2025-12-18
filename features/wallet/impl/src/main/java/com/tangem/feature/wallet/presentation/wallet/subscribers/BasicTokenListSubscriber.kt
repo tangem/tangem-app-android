@@ -11,7 +11,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -128,7 +128,7 @@ internal abstract class BasicTokenListSubscriber(
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, BigDecimal>,
-        stakingApyMap: Map<String, List<Yield.Validator>>,
+        stakingApyMap: Map<String, List<StakingTarget>>,
         shouldShowMainPromo: Boolean,
     ) {
         stateHolder.update(
@@ -156,7 +156,7 @@ internal abstract class BasicTokenListSubscriber(
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> = yieldSupplyApyFlowUseCase()
         .distinctUntilChanged()
 
-    private fun stakingApyFlow(): Flow<Map<String, List<Yield.Validator>>> = stakingApyFlowUseCase()
+    private fun stakingApyFlow(): Flow<Map<String, List<StakingTarget>>> = stakingApyFlowUseCase()
         .distinctUntilChanged()
 
     private fun yieldSupplyGetShouldShowMainPromoFlow(): Flow<Boolean> = yieldSupplyGetShouldShowMainPromoUseCase()

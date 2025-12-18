@@ -75,12 +75,12 @@ internal object StakingDataModule {
     @Provides
     @Singleton
     fun provideP2PEthPoolRepository(
-        p2pApi: P2PEthPoolApi,
+        p2pEthPoolApi: P2PEthPoolApi,
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         dispatchers: CoroutineDispatcherProvider,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
-            p2pApi = p2pApi,
+            p2pEthPoolApi = p2pEthPoolApi,
             p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             dispatchers = dispatchers,
         )
