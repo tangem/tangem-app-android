@@ -14,6 +14,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
@@ -38,7 +39,7 @@ internal fun WcAddressItem(address: String, modifier: Modifier = Modifier) {
         SpacerWMax()
         TangemTooltip(
             modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
-            text = address,
+            text = stringReference(address),
             enabled = isTooltipEnabled,
             content = { contentModifier ->
                 EllipsisText(
