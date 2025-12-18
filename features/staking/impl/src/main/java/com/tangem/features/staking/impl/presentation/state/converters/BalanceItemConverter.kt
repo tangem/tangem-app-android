@@ -12,7 +12,7 @@ import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.BalanceType.Companion.isClickable
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -29,24 +29,24 @@ import java.util.Calendar
 internal class BalanceItemConverter(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Converter<BalanceItem, BalanceState?> {
 
     override fun convert(value: BalanceItem): BalanceState? {
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
-        val validator = yield.validators.firstOrNull {
+        val target = integration.targets.firstOrNull {
             value.validatorAddress?.contains(it.address, ignoreCase = true) == true
         }
         val cryptoAmount = value.getBalanceValue()
         val fiatAmount = cryptoCurrencyStatus.value.fiatRate?.times(cryptoAmount)
 
-        val title = value.type.getTitle(validator?.name)
+        val title = value.type.getTitle(target?.name)
         return title?.let {
             BalanceState(
                 groupId = value.groupId,
-                validator = validator,
+                target = target,
                 title = title,
                 subtitle = getSubtitle(value),
                 type = value.type,
@@ -68,7 +68,7 @@ internal class BalanceItemConverter(
                 pendingActions = value.pendingActions.toPersistentList(),
                 isClickable = value.isClickable(),
                 isPending = value.isPending,
-                validatorAddress = value.validatorAddress,
+                targetAddress = value.validatorAddress,
             )
         }
     }
@@ -108,7 +108,7 @@ internal class BalanceItemConverter(
             resourceReference(R.string.staking_tap_to_unlock)
         }
         BalanceType.PREPARING -> {
-            val warmupPeriod = yield.metadata.warmupPeriod.days
+            val warmupPeriod = integration.warmupPeriodDays
             combinedReference(
                 resourceReference(R.string.staking_details_warmup_period),
                 stringReference(" "),
@@ -124,7 +124,7 @@ internal class BalanceItemConverter(
     }
 
     private fun getUnbondingDate(date: Instant?): TextReference? {
-        val unbondingPeriod = yield.metadata.cooldownPeriod?.days ?: return null
+        val unbondingPeriod = integration.cooldownPeriodDays ?: return null
         if (date == null) {
             return combinedReference(
                 resourceReference(R.string.staking_details_unbonding_period),
