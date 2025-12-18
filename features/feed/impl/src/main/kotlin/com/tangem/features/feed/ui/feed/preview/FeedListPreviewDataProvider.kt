@@ -11,7 +11,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 import kotlinx.collections.immutable.*
 
 @Suppress("MagicNumber")
