@@ -1,6 +1,9 @@
 package com.tangem.features.feed.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -12,6 +15,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.features.feed.components.FeedEntryChildFactory
 
 @Composable
@@ -20,8 +24,10 @@ internal fun EntryBottomSheetContent(
     onHeaderSizeChange: (Dp) -> Unit,
 ) {
     val density = LocalDensity.current
+    val background = LocalMainBottomSheetColor.current.value
 
     Scaffold(
+        containerColor = background,
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             AnimatedContent(
@@ -33,13 +39,15 @@ internal fun EntryBottomSheetContent(
                         }
                     }
                 },
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { currentState ->
                 currentState.Title()
             }
         },
         content = { contentPadding ->
             AnimatedContent(
-                stackState.active.instance,
+                targetState = stackState.active.instance,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { currentState ->
                 currentState.Content(modifier = Modifier.padding(contentPadding))
             }
