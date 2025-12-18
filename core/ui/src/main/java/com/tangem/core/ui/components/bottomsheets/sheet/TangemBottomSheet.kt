@@ -134,7 +134,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewBottomSheet(
         sheetState = SheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             initialValue = Expanded,
-            density = LocalDensity.current,
+            positionalThreshold = { 0f },
+            velocityThreshold = { 0f },
         ),
         onBack = null,
         containerColor = containerColor,
