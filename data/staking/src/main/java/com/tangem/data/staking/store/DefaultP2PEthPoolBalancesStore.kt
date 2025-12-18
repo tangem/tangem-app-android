@@ -90,6 +90,15 @@ internal class DefaultP2PEthPoolBalancesStore(
         }
     }
 
+    override suspend fun storeEmpty(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        updateInRuntime(
+            userWalletId = userWalletId,
+            stakingIds = stakingIds,
+            ifNotFound = ::createEmptyStakingBalance,
+            update = { it.copySealed(source = StatusSource.ACTUAL) },
+        )
+    }
+
     override suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
         updateInRuntime(
             userWalletId = userWalletId,
@@ -186,6 +195,9 @@ internal class DefaultP2PEthPoolBalancesStore(
             }
         }
     }
+
+    private fun createEmptyStakingBalance(id: StakingID): StakingBalance =
+        StakingBalance.Empty(stakingId = id, source = StatusSource.ACTUAL)
 
     private fun createErrorStakingBalance(id: StakingID): StakingBalance = StakingBalance.Error(stakingId = id)
 }
