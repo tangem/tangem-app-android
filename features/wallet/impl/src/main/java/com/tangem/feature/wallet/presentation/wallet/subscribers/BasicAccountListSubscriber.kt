@@ -8,8 +8,9 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
@@ -48,7 +49,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean = false,
     ) {
         val accountFlattenCurrencies = accountList.flattenCurrencies()
@@ -68,7 +69,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                     appCurrency = appCurrency,
                     portfolioId = PortfolioId(mainAccount.accountId),
                     yieldSupplyApyMap = yieldSupplyApyMap,
-                    stakingApyMap = stakingApyMap,
+                    stakingAvailabilityMap = stakingAvailabilityMap,
                     shouldShowMainPromo = shouldShowMainPromo,
                 )
             }
@@ -89,7 +90,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                         params = convertParams,
                         appCurrency = appCurrency,
                         yieldSupplyApyMap = yieldSupplyApyMap,
-                        stakingApyMap = stakingApyMap,
+                        stakingAvailabilityMap = stakingAvailabilityMap,
                         shouldShowMainPromo = shouldShowMainPromo,
                     )
                 }
@@ -102,7 +103,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         appCurrency: AppCurrency,
         portfolioId: PortfolioId,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean,
     ) {
         val tokenList = maybeTokenList.getOrElse(
@@ -132,7 +133,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
             params = TokenConverterParams.Wallet(portfolioId, tokenList),
             appCurrency = appCurrency,
             yieldSupplyApyMap = yieldSupplyApyMap,
-            stakingApyMap = stakingApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
             shouldShowMainPromo = shouldShowMainPromo,
         )
     }
@@ -141,7 +142,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-        stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean,
     ) {
         stateController.update(
@@ -151,7 +152,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 appCurrency = appCurrency,
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingApyMap = stakingApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
             ),
         )
