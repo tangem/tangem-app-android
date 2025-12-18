@@ -175,11 +175,6 @@ private fun TangemPayDetailsBalanceBlock(
             state = state,
             isBalanceHidden = isBalanceHidden,
         )
-        CryptoBalance(
-            modifier = Modifier.padding(start = 12.dp, top = 4.dp),
-            state = state,
-            isBalanceHidden = isBalanceHidden,
-        )
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
@@ -217,37 +212,6 @@ private fun FiatBalance(
             text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
-        )
-    }
-}
-
-@Suppress("UnusedPrivateMember")
-@Composable
-private fun CryptoBalance(
-    state: TangemPayDetailsBalanceBlockState,
-    isBalanceHidden: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    when (state) {
-        is TangemPayDetailsBalanceBlockState.Loading -> RectangleShimmer(
-            modifier = modifier.size(
-                width = TangemTheme.dimens.size70,
-                height = TangemTheme.dimens.size16,
-            ),
-        )
-        is TangemPayDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
-            text = state.cryptoBalance.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.caption2.applyBladeBrush(
-                isEnabled = state.isBalanceFlickering,
-                textColor = TangemTheme.colors.text.tertiary,
-            ),
-        )
-        is TangemPayDetailsBalanceBlockState.Error -> Text(
-            modifier = modifier,
-            text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
         )
     }
 }
@@ -345,7 +309,6 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                         onClick = {},
                     ),
                 ),
-                cryptoBalance = "1234.56 USDT",
                 fiatBalance = "$1234.56",
                 isBalanceFlickering = false,
             ),
