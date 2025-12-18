@@ -18,7 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -38,7 +38,7 @@ internal class TokenListStateConverter(
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
-    private val stakingApyMap: Map<String, List<Yield.Validator>>,
+    private val stakingApyMap: Map<String, List<StakingTarget>>,
     private val shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
