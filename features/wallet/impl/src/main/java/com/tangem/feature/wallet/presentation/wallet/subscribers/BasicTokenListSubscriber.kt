@@ -8,11 +8,12 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
@@ -41,7 +42,7 @@ internal abstract class BasicTokenListSubscriber(
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : WalletSubscriber() {
 
@@ -71,9 +72,8 @@ internal abstract class BasicTokenListSubscriber(
                 },
             flow2 = appCurrencyFlow(),
             flow3 = yieldSupplyApyFlow(),
-            flow4 = stakingApyFlow(),
-            flow5 = yieldSupplyGetShouldShowMainPromoFlow(),
-            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap, stakingApyMap, shouldShowMainPromo ->
+            flow4 = yieldSupplyGetShouldShowMainPromoFlow(),
+            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap, shouldShowMainPromo ->
                 val tokenList = maybeTokenList.getOrElse(
                     ifLoading = { maybeContent ->
                         val isRefreshing = stateHolder.getWalletState(userWallet.walletId)
@@ -101,7 +101,10 @@ internal abstract class BasicTokenListSubscriber(
                     params = TokenConverterParams.Wallet(PortfolioId(userWallet.walletId), tokenList),
                     appCurrency = appCurrency,
                     yieldSupplyApyMap = yieldSupplyApyMap,
-                    stakingApyMap = stakingApyMap,
+                    stakingAvailabilityMap = stakingAvailabilityListUseCase.invokeSync(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrencyList = tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
+                    ),
                     shouldShowMainPromo = shouldShowMainPromo,
                 )
 
@@ -128,7 +131,7 @@ internal abstract class BasicTokenListSubscriber(
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, BigDecimal>,
-        stakingApyMap: Map<String, List<Yield.Validator>>,
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
         shouldShowMainPromo: Boolean,
     ) {
         stateHolder.update(
@@ -138,7 +141,7 @@ internal abstract class BasicTokenListSubscriber(
                 appCurrency = appCurrency,
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingApyMap = stakingApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
             ),
         )
@@ -154,9 +157,6 @@ internal abstract class BasicTokenListSubscriber(
         .distinctUntilChanged()
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> = yieldSupplyApyFlowUseCase()
-        .distinctUntilChanged()
-
-    private fun stakingApyFlow(): Flow<Map<String, List<Yield.Validator>>> = stakingApyFlowUseCase()
         .distinctUntilChanged()
 
     private fun yieldSupplyGetShouldShowMainPromoFlow(): Flow<Boolean> = yieldSupplyGetShouldShowMainPromoUseCase()
