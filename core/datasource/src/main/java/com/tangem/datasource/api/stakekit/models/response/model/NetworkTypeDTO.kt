@@ -77,6 +77,9 @@ enum class NetworkTypeDTO {
     @Json(name = "canto")
     CANTO,
 
+    @Json(name = "cardano")
+    CARDANO,
+
     @Json(name = "chihuahua")
     CHIHUAHUA,
 
