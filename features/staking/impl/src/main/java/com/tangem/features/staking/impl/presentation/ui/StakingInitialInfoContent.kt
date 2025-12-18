@@ -46,7 +46,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -317,11 +317,11 @@ private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
 @Suppress("UnusedPrivateMember")
 @Composable
 private fun BalanceState.getAprTextColored() = combinedReference(
-    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    getRewardTypeShortText(target?.rewardInfo?.type ?: RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = validator?.rewardInfo?.rate?.orZero().format { percent() },
+            text = target?.rewardInfo?.rate?.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
@@ -329,8 +329,8 @@ private fun BalanceState.getAprTextColored() = combinedReference(
 
 @Composable
 private fun BalanceState.getAprTextNeutral() = combinedReference(
-    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
-    stringReference(" " + validator?.rewardInfo?.rate?.orZero().format { percent() }),
+    getRewardTypeShortText(target?.rewardInfo?.type ?: RewardType.UNKNOWN),
+    stringReference(" " + target?.rewardInfo?.rate?.orZero().format { percent() }),
 )
 
 @Composable
@@ -347,7 +347,7 @@ private fun BalanceState.getImage() = when (type) {
     BalanceType.UNSTAKED,
     BalanceType.LOCKED,
     -> null
-    else -> validator?.image
+    else -> target?.image
 }
 
 private val textGradientColors = listOf(
