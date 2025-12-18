@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.router
 
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -16,5 +17,5 @@ internal interface InnerTokenDetailsRouter {
 
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)
 
-    fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, yieldId: String)
+    fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, integrationId: StakingIntegrationID)
 }
