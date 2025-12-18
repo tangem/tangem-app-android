@@ -112,6 +112,7 @@ sealed class AppRoute(val path: String) : Route {
         val cardId: String,
         val isActiveBackupStatus: Boolean,
         val backupCardsCount: Int,
+        val hasTangemPay: Boolean,
     ) : AppRoute(
         path = "/reset_to_factory" +
             "/${userWalletId.stringValue}" +
