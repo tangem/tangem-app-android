@@ -139,13 +139,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         response: CustomerMeResponse.Result?,
     ): CustomerInfo {
         val card = response?.card
-        val balance = response?.balance
+        val fiatBalance = response?.balance?.fiat
         val paymentAccount = response?.paymentAccount
-        val cardInfo = if (paymentAccount != null && card != null && balance != null) {
+        val cardInfo = if (paymentAccount != null && card != null && fiatBalance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
-                balance = balance.fiat.availableBalance,
-                currencyCode = balance.fiat.currency,
+                balance = fiatBalance.availableBalance,
+                currencyCode = fiatBalance.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
                 depositAddress = response.depositAddress,
             )
