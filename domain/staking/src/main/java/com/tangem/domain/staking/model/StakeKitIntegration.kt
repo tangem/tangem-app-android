@@ -2,6 +2,10 @@ package com.tangem.domain.staking.model
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.common.RewardClaiming
+import com.tangem.domain.staking.model.common.RewardSchedule
+import com.tangem.domain.staking.model.common.StakingActionArgs
+import com.tangem.domain.staking.model.common.StakingAmountRequirement
 import com.tangem.domain.staking.model.stakekit.Yield
 import java.math.BigDecimal
 
@@ -39,9 +43,9 @@ class StakeKitIntegration(
         yield.args.exit?.args
             ?.get(Yield.Args.ArgType.AMOUNT)?.minimum
 
-    override val enterArgs: Yield.Args.Enter = yield.args.enter
+    override val enterArgs: StakingActionArgs = yield.args.enter.toStakingActionArgs()
 
-    override val exitArgs: Yield.Args.Enter? = yield.args.exit
+    override val exitArgs: StakingActionArgs? = yield.args.exit?.toStakingActionArgs()
 
     // Metadata
 
@@ -49,12 +53,47 @@ class StakeKitIntegration(
 
     override val cooldownPeriodDays: Int? = yield.metadata.cooldownPeriod?.days
 
-    override val rewardSchedule: Yield.Metadata.RewardSchedule = yield.metadata.rewardSchedule
+    override val rewardSchedule: RewardSchedule = yield.metadata.rewardSchedule.toRewardSchedule()
 
-    override val rewardClaiming: Yield.Metadata.RewardClaiming = yield.metadata.rewardClaiming
+    override val rewardClaiming: RewardClaiming = yield.metadata.rewardClaiming.toRewardClaiming()
 
     // Basic
 
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken =
         tokens.firstOrNull { rawCurrencyId?.value == it.coinGeckoId } ?: token
+
+    private fun Yield.Args.Enter.toStakingActionArgs(): StakingActionArgs {
+        val amountArg = args[Yield.Args.ArgType.AMOUNT]
+        return StakingActionArgs(
+            amountRequirement = amountArg?.let { arg ->
+                StakingAmountRequirement(
+                    isRequired = arg.required,
+                    minimum = arg.minimum,
+                    maximum = arg.maximum,
+                )
+            },
+            isPartialAmountDisabled = isPartialAmountDisabled,
+        )
+    }
+
+    private fun Yield.Metadata.RewardSchedule.toRewardSchedule(): RewardSchedule {
+        return when (this) {
+            Yield.Metadata.RewardSchedule.BLOCK -> RewardSchedule.BLOCK
+            Yield.Metadata.RewardSchedule.HOUR -> RewardSchedule.HOUR
+            Yield.Metadata.RewardSchedule.DAY -> RewardSchedule.DAY
+            Yield.Metadata.RewardSchedule.WEEK -> RewardSchedule.WEEK
+            Yield.Metadata.RewardSchedule.MONTH -> RewardSchedule.MONTH
+            Yield.Metadata.RewardSchedule.ERA -> RewardSchedule.ERA
+            Yield.Metadata.RewardSchedule.EPOCH -> RewardSchedule.EPOCH
+            Yield.Metadata.RewardSchedule.UNKNOWN -> RewardSchedule.UNKNOWN
+        }
+    }
+
+    private fun Yield.Metadata.RewardClaiming.toRewardClaiming(): RewardClaiming {
+        return when (this) {
+            Yield.Metadata.RewardClaiming.AUTO -> RewardClaiming.AUTO
+            Yield.Metadata.RewardClaiming.MANUAL -> RewardClaiming.MANUAL
+            Yield.Metadata.RewardClaiming.UNKNOWN -> RewardClaiming.UNKNOWN
+        }
+    }
 }

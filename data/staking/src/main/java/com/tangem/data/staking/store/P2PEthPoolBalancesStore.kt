@@ -23,6 +23,8 @@ interface P2PEthPoolBalancesStore {
 
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>)
 
+    suspend fun storeEmpty(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
+
     suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
     suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
