@@ -22,8 +22,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.isStakingSupported
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -44,7 +46,7 @@ import java.math.BigDecimal
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
     private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+    private val stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
     private val yieldSupplyPromoBannerKey: String? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
@@ -177,7 +179,7 @@ class TokenItemStateConverter(
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            stakingApyMap: Map<String, List<StakingTarget>>,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
@@ -217,7 +219,7 @@ class TokenItemStateConverter(
         private fun resolveEarnApy(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            stakingApyMap: Map<String, List<StakingTarget>>,
         ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
@@ -247,9 +249,9 @@ class TokenItemStateConverter(
                     stakingApyMap = stakingApyMap,
                 )
                 val rewardTypeRes = when (stakingInfo.rewardType) {
-                    Yield.RewardType.APR -> R.string.staking_apr_earn_badge
-                    Yield.RewardType.UNKNOWN,
-                    Yield.RewardType.APY,
+                    RewardType.APR -> R.string.staking_apr_earn_badge
+                    RewardType.UNKNOWN,
+                    RewardType.APY,
                     null,
                     -> R.string.yield_module_earn_badge
                 }
@@ -272,49 +274,35 @@ class TokenItemStateConverter(
 
         private fun findStakingRate(
             currencyStatus: CryptoCurrencyStatus,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            stakingApyMap: Map<String, List<StakingTarget>>,
         ): StakingLocalInfo {
             val stakingKey = currencyStatus.currency.stakingKey()
-            val validators = stakingApyMap[stakingKey]
+            val targets = stakingApyMap[stakingKey]
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
             val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
 
-            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (stakeKitBalance != null) {
+            val rewardInfo: RewardInfo? = if (stakeKitBalance != null) {
                 // StakeKit-specific: try to find rate from validator address
-                val validatorsByAddress = validators.associateBy { it.address }
+                val targetsByAddress = targets.associateBy { it.address }
                 stakeKitBalance.balance.items
                     .mapNotNull { it.validatorAddress }
-                    .firstNotNullOfOrNull { address ->
-                        val validator = validatorsByAddress[address]
-                        validator?.rewardInfo?.rate?.let { rate ->
-                            rate to validator.rewardInfo?.type
-                        }
-                    }
-                    ?: validators
-                        .filter { it.preferred }
-                        .mapNotNull { validator ->
-                            validator.rewardInfo?.rate?.let { rate -> rate to validator.rewardInfo?.type }
-                        }
-                        .maxByOrNull { it.first }
+                    .firstNotNullOfOrNull { address -> targetsByAddress[address]?.rewardInfo }
+                    ?: targets
+                        .filter { it.isPreferred }
+                        .mapNotNull { it.rewardInfo }
+                        .maxByOrNull { it.rate }
             } else {
-                // P2P or no balance: use preferred validators
-                // TODO p2p
-                validators
-                    .filter { it.preferred }
-                    .mapNotNull { validator ->
-                        validator.rewardInfo?.rate?.let { rate ->
-                            rate to validator.rewardInfo?.type
-                        }
-                    }
-                    .maxByOrNull { it.first }
+                targets
+                    .mapNotNull { it.rewardInfo }
+                    .maxByOrNull { it.rate }
             }
 
             return StakingLocalInfo(
-                rate = rateInfo?.first,
+                rate = rewardInfo?.rate,
                 isActive = stakingBalance != null,
-                rewardType = rateInfo?.second,
+                rewardType = rewardInfo?.type,
             )
         }
 
@@ -470,7 +458,7 @@ class TokenItemStateConverter(
     private data class StakingLocalInfo(
         val rate: BigDecimal?,
         val isActive: Boolean,
-        val rewardType: Yield.RewardType?,
+        val rewardType: RewardType?,
     )
 
     private data class EarnApyInfo(
