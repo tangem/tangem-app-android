@@ -94,7 +94,7 @@ fun InputRowEnter(
                             modifier = Modifier
                                 .size(16.dp)
                                 .clip(CircleShape),
-                            text = description.resolveReference(),
+                            text = description,
                             content = { contentModifier ->
                                 Icon(
                                     modifier = contentModifier.size(16.dp),
