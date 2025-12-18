@@ -4,7 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
@@ -35,7 +35,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) {
@@ -55,7 +55,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
-            stakingApyFlowUseCase = stakingApyFlowUseCase,
+            stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
             yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
         )
