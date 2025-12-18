@@ -5,8 +5,8 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.model.converter.MarketsTokenItemConverter
-import com.tangem.features.feed.ui.market.state.MarketsListUM
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.features.feed.ui.market.list.state.MarketsListUM
+import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
