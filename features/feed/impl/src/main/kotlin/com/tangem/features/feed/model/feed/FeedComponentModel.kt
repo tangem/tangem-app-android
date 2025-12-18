@@ -18,7 +18,7 @@ import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
+import kotlin.collections.all
 
 @Stable
 @ModelScoped
@@ -141,7 +142,9 @@ internal class FeedComponentModel @Inject constructor(
                 query = "",
                 onQueryChange = {},
                 isActive = false,
-                onActiveChange = { },
+                onActiveChange = {
+                    if (it) params.feedClickIntents.onMarketOpenClick(SortByTypeUM.Rating)
+                },
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
