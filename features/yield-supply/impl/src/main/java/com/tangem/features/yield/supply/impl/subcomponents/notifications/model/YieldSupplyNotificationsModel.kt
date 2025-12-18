@@ -5,6 +5,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addHighFeeNotificationIfNoOther
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -75,9 +76,9 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         onReload = params.callback::onFeeReload,
                     )
 
-                    if (data.shouldShowHighFeeNotification) {
-                        add(NotificationUM.Info.YieldSupplyHighNetworkFee)
-                    }
+                    addHighFeeNotificationIfNoOther(
+                        shouldShowHighFeeNotification = data.shouldShowHighFeeNotification,
+                    )
                 }
 
                 sendAnalytics(notifications, cryptoCurrencyStatus.currency)
