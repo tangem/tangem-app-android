@@ -80,14 +80,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                     }
                 }
 
-                if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
-                    analyticsEventHandler.send(
-                        YieldSupplyAnalytics.NoticeNotEnoughFee(
-                            token = cryptoCurrencyStatus.currency.symbol,
-                            blockchain = cryptoCurrencyStatus.currency.network.name,
-                        ),
-                    )
-                }
+                sendAnalytics(notifications, cryptoCurrencyStatus.currency)
 
                 uiState.update { notifications.toPersistentList() }
 
@@ -95,6 +88,26 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                 val hasError = notifications.any { it !is NotificationUM.Info.YieldSupplyHighNetworkFee }
                 yieldSupplyNotificationsUpdateListener.callbackHasError(hasError)
             }.launchIn(modelScope)
+    }
+
+    private fun sendAnalytics(notifications: List<NotificationUM>, currency: CryptoCurrency) {
+        if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
+            analyticsEventHandler.send(
+                YieldSupplyAnalytics.NoticeNotEnoughFee(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                ),
+            )
+        }
+
+        if (notifications.any { it is NotificationUM.Info.YieldSupplyHighNetworkFee }) {
+            analyticsEventHandler.send(
+                YieldSupplyAnalytics.NoticeHighFee(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                ),
+            )
+        }
     }
 
     private fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
