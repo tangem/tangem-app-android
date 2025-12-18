@@ -816,6 +816,7 @@
   </plurals>
   <string name="news_quick_recap">Quick recap</string>
   <string name="news_related_news">Related News</string>
+  <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Sources</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
@@ -1531,6 +1532,7 @@
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
+  <string name="tangempay_set_pin_code">Set \nPIN code</string>
   <string name="tangempay_sync_needed">Not synced</string>
   <string name="tangempay_sync_needed_restore_access">Restore access</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
