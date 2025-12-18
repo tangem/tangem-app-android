@@ -28,6 +28,7 @@ enum class NetworkType {
     BAND_PROTOCOL,
     BITSONG,
     CANTO,
+    CARDANO,
     CHIHUAHUA,
     COMDEX,
     COREUM,
