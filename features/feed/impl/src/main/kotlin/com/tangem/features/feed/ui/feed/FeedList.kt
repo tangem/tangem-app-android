@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleCard
 import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.common.ui.news.ShowMoreArticlesCard
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -41,9 +43,6 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -55,25 +54,20 @@ import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 
 @Composable
-internal fun FeedListHeader(searchBarUM: SearchBarUM, modifier: Modifier = Modifier) {
+internal fun FeedListHeader(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-    SearchBar(
+    FeedSearchBar(
+        feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
             .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp),
-        state = searchBarUM,
-        colors = TangemSearchBarDefaults.defaultTextFieldColors.copy(
-            focusedContainerColor = TangemTheme.colors.field.focused,
-            unfocusedContainerColor = TangemTheme.colors.field.focused,
-        ),
     )
 }
 
 @Composable
 internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-
     AnimatedContent(
         modifier = modifier,
         targetState = state.globalState,
@@ -100,6 +94,33 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun FeedSearchBar(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(36.dp))
+            .background(color = TangemTheme.colors.field.focused)
+            .clickable(onClick = feedListSearchBar.onBarClick)
+            .padding(14.dp),
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size20),
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_search_24),
+            tint = TangemTheme.colors.icon.informative,
+            contentDescription = null,
+        )
+
+        SpacerW(14.dp)
+
+        Text(
+            text = feedListSearchBar.placeholderText.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
 
@@ -308,7 +329,7 @@ private fun NewsContentBlock(
                                 append(stringResourceSafe(R.string.feed_tangem_ai))
                             }
                         },
-                        style = TangemTheme.typography.h3,
+                        style = TangemTheme.typography.subtitle1,
                     )
                 }
             },
@@ -345,8 +366,15 @@ private fun NewsContentBlock(
                     onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
                     modifier = Modifier
                         .height(164.dp)
-                        .widthIn(max = 216.dp),
+                        .width(216.dp),
                     colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+                )
+            }
+
+            item {
+                ShowMoreArticlesCard(
+                    modifier = Modifier.size(width = 216.dp, height = 164.dp),
+                    onClick = feedListCallbacks.onOpenAllNews,
                 )
             }
         }
