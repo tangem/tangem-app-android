@@ -348,8 +348,9 @@ internal class YieldSupplyModel @Inject constructor(
                     .getOrNull()
                 if (minAmount != null) {
                     val dustAmount = yieldSupplyGetDustMinAmountUseCase(
-                        minAmount = minAmount,
+                        minAmountTokenCurrency = minAmount,
                         appCurrency = appCurrency,
+                        tokenCryptoCurrencyStatus = cryptoCurrencyStatus,
                     )
                     cryptoCurrencyStatus.shouldShowNotSuppliedNotification(dustAmount)
                 } else {
