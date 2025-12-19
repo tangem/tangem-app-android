@@ -48,19 +48,20 @@ internal class OnrampOperationModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val rampStateManager: RampStateManager,
 ) : Model() {
-    private val params: Params = paramsContainer.require()
 
-    private val selectedUserWallet = getWalletsUseCase.invokeSync()
-        .first { it.walletId == params.userWalletId }
+    private val params: Params = paramsContainer.require()
 
     val state: StateFlow<OnrampOperationUM>
         field = MutableStateFlow(value = getInitialState())
 
+    private val selectedUserWallet = getWalletsUseCase.invokeSync()
+        .first { it.walletId == params.userWalletId }
+
     init {
         analyticsEventHandler.send(
             event = when (params) {
-                is Params.Buy -> MainScreenAnalyticsEvent.BuyScreenOpened
-                is Params.Sell -> MainScreenAnalyticsEvent.SellScreenOpened
+                is Params.Buy -> MainScreenAnalyticsEvent.BuyScreenOpened()
+                is Params.Sell -> MainScreenAnalyticsEvent.SellScreenOpened()
             },
         )
     }
