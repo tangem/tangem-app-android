@@ -2,10 +2,8 @@ package com.tangem.features.tangempay.model.transformers
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
-import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -13,7 +11,6 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
-import java.math.BigDecimal
 import java.util.Currency
 
 internal class DetailsBalanceTransformer(
@@ -37,7 +34,6 @@ internal class DetailsBalanceTransformer(
                     TangemPayDetailsBalanceBlockState.Content(
                         isBalanceFlickering = false,
                         fiatBalance = getFiatBalanceText(balance.value),
-                        cryptoBalance = getCryptoBalanceText(balance.value.cryptoBalance, cryptoCurrency),
                         actionButtons = prevState.balanceBlockState.actionButtons,
                     )
                 }
@@ -51,9 +47,5 @@ internal class DetailsBalanceTransformer(
         return balance.fiatBalance.format {
             fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
         }
-    }
-
-    private fun getCryptoBalanceText(cryptoBalance: BigDecimal, cryptoCurrency: CryptoCurrency): String {
-        return cryptoBalance.format { crypto(cryptoCurrency = cryptoCurrency) }
     }
 }
