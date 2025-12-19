@@ -78,7 +78,8 @@ internal class CreateHardwareWalletModel @Inject constructor(
     private fun onBuyTangemWalletClick() {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Upgrade).let { urlOpener.openUrl(it) }
         }
     }
 
