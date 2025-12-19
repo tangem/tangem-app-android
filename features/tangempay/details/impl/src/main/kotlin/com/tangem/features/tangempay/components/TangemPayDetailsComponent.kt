@@ -100,6 +100,14 @@ internal class TangemPayDetailsComponent(
                     listener = model,
                 ),
             )
+            is TangemPayDetailsNavigation.ViewPinCode -> TangemPayViewPinComponent(
+                appComponentContext = context,
+                params = TangemPayViewPinComponent.Params(
+                    walletId = navigation.userWalletId,
+                    cardId = navigation.cardId,
+                    listener = model,
+                ),
+            )
         }
     }
 }
