@@ -8,7 +8,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -32,7 +32,7 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    stakingApyFlowUseCase: StakingApyFlowUseCase,
+    stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
@@ -42,7 +42,7 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
     yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
-    stakingApyFlowUseCase = stakingApyFlowUseCase,
+    stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
     yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
 ) {
 
