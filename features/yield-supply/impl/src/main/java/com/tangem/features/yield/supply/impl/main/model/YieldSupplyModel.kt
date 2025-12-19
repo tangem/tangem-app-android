@@ -19,7 +19,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.hasNotSuppliedAmount
-import com.tangem.domain.models.currency.shouldShowNotSuppliedInfoIcon
+import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -351,7 +351,7 @@ internal class YieldSupplyModel @Inject constructor(
                         minAmount = minAmount,
                         appCurrency = appCurrency,
                     )
-                    cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustAmount)
+                    cryptoCurrencyStatus.shouldShowNotSuppliedNotification(dustAmount)
                 } else {
                     false
                 }
