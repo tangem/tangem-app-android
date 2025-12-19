@@ -89,7 +89,7 @@ class DefaultWalletAddressServiceRepository(
                     blockchain = blockchain,
                     derivationPath = network.derivationPath.value,
                 ) ?: return@withContext false
-                (walletManager as? NearWalletManager)?.validateAddress(address) ?: false
+                (walletManager as? NearWalletManager)?.validateAddress(address) == true
             } else {
                 blockchain.validateAddress(address)
             }

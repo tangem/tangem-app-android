@@ -157,14 +157,14 @@ internal class OnboardingEntryModel @Inject constructor(
         modelScope.launch {
             if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowAskBiometry()) {
                 doIfVisa {
-                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
+                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened())
                 }
                 stackNavigation.replaceAll(
                     OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
                 )
             } else {
                 doIfVisa {
-                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
                 }
                 stackNavigation.replaceAll(
                     OnboardingRoute.Done(
@@ -182,7 +182,7 @@ internal class OnboardingEntryModel @Inject constructor(
         override fun onAllowed() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
             doIfVisa {
-                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
             }
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
@@ -195,7 +195,7 @@ internal class OnboardingEntryModel @Inject constructor(
         override fun onDenied() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
             doIfVisa {
-                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened())
             }
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
