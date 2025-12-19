@@ -7,9 +7,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Store for P2P ETH Pool staking balances
+ * Store for P2PEthPool staking balances
  */
-interface P2PBalancesStore {
+interface P2PEthPoolBalancesStore {
 
     fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>>
 
@@ -22,6 +22,8 @@ interface P2PBalancesStore {
     suspend fun refresh(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>)
+
+    suspend fun storeEmpty(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
     suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
