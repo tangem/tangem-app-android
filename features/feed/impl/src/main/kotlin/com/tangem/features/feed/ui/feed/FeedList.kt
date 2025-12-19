@@ -52,7 +52,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 
 @Composable
 internal fun FeedListHeader(searchBarUM: SearchBarUM, modifier: Modifier = Modifier) {
@@ -269,6 +269,7 @@ private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendi
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun NewsContentBlock(
     feedListCallbacks: FeedListCallbacks,
@@ -315,21 +316,23 @@ private fun NewsContentBlock(
         )
         SpacerH(12.dp)
 
-        trendingArticle?.let { article ->
-            ArticleCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                articleConfigUM = article,
-                onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
-                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
-            )
-            SpacerH(12.dp)
+        if (trendingArticle != null) {
+            Column {
+                ArticleCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    articleConfigUM = trendingArticle,
+                    onArticleClick = { feedListCallbacks.onArticleClick(trendingArticle.id) },
+                    colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+                )
+                SpacerH(12.dp)
+            }
         }
 
         LazyRow(
             verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             state = rememberLazyListState(),
         ) {
@@ -347,6 +350,7 @@ private fun NewsContentBlock(
                 )
             }
         }
+        SpacerH(32.dp)
     }
 }
 
@@ -388,10 +392,16 @@ private fun Charts(
                     }
                 }
                 is MarketChartUM.LoadingError -> {
-                    UnableToLoadData(
-                        onRetryClick = marketChart.onRetryClicked,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 35.dp, horizontal = 10.dp),
+                    ) {
+                        UnableToLoadData(
+                            onRetryClick = marketChart.onRetryClicked,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
                 is MarketChartUM.Content -> {
                     marketChart.items.fastForEach { chart ->
@@ -468,10 +478,18 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
             onSeeAllClick = {},
         )
         SpacerH(12.dp)
-        UnableToLoadData(
-            onRetryClick = onRetryClick,
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        BlockCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+        ) {
+            UnableToLoadData(
+                onRetryClick = onRetryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 35.dp, horizontal = 10.dp),
+            )
+        }
     }
 }
 
@@ -481,7 +499,7 @@ private const val GRADIENT_END = 0.5f
 private val LinearGradientFirstPart = Color(0xFF635EEC)
 private val LinearGradientSecondPart = Color(0xFFE05AED)
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 1500)
 @Composable
 private fun FeedListPreview() {
     TangemThemePreview {
