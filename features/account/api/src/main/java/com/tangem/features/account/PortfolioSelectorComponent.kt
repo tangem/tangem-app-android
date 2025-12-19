@@ -57,6 +57,7 @@ interface PortfolioSelectorController {
      * combine and update with your Feature data and [PortfolioFetcher.data]
      */
     val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
+    suspend fun isAccountModeSync(): Boolean
 
     fun selectAccount(accountId: AccountId?)
     fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?>
