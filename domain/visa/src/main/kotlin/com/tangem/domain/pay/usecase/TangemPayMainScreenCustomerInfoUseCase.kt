@@ -73,7 +73,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
 
     private suspend fun showOnboardingBannerIfEligible(userWalletId: UserWalletId) {
         val isEligible = eligibilityManager
-            .getEligibleWallets(excludePaeraCustomers = false)
+            .getEligibleWallets(shouldExcludePaeraCustomers = false)
             .any { it.walletId == userWalletId }
         if (isEligible) {
             if (onboardingRepository.getHideMainOnboardingBanner(userWalletId)) {

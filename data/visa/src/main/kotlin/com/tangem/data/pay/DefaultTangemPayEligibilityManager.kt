@@ -39,9 +39,9 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         resetDataWhenWalletsUpdate()
     }
 
-    override suspend fun getEligibleWallets(excludePaeraCustomers: Boolean): List<UserWallet> {
+    override suspend fun getEligibleWallets(shouldExcludePaeraCustomers: Boolean): List<UserWallet> {
         return getUserWalletsData().mapNotNull {
-            if (!it.isPaeraCustomer || !excludePaeraCustomers) it.userWallet else null
+            if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet else null
         }
     }
 
