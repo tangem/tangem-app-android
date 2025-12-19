@@ -71,7 +71,7 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.Swap,
             is TransactionType.Transfer,
             is TransactionType.UnknownOperation,
-            TransactionType.YieldSupply.Send,
+            is TransactionType.YieldSupply.Send,
             TransactionType.YieldSupply.Topup,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
@@ -93,10 +93,12 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_enter)
             is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
             TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
-            TransactionType.YieldSupply.Send -> if (isOutgoing) {
-                resourceReference(R.string.common_transfer)
-            } else {
-                resourceReference(R.string.yield_module_transaction_withdraw)
+            is TransactionType.YieldSupply.Send -> {
+                if (type.isYieldSupplyWithdraw || isOutgoing) {
+                    resourceReference(R.string.yield_module_transaction_withdraw)
+                } else {
+                    resourceReference(R.string.common_transfer)
+                }
             }
             is TransactionType.YieldSupply.DeployContract -> resourceReference(
                 R.string
@@ -137,8 +139,8 @@ internal class TxHistoryItemStateConverter(
                             wrappedList(amount),
                         )
                     }
-                    TransactionType.YieldSupply.Send -> {
-                        if (isOutgoing) {
+                    is TransactionType.YieldSupply.Send -> {
+                        if (isOutgoing || !type.isYieldSupplyWithdraw) {
                             extractSubtitleByAddressType()
                         } else {
                             val amount =
