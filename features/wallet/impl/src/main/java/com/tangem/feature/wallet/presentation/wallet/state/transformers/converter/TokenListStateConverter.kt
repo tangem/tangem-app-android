@@ -14,11 +14,12 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -38,7 +39,7 @@ internal class TokenListStateConverter(
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
-    private val stakingApyMap: Map<String, List<Yield.Validator>>,
+    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     private val shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
@@ -72,7 +73,7 @@ internal class TokenListStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
         yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKeyConverter.convert(params),
-        stakingApyMap = stakingApyMap,
+        stakingApyMap = stakingAvailabilityMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, apySource, apy) },
