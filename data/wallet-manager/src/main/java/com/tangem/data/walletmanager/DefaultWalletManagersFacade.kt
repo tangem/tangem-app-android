@@ -85,7 +85,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val blockchain = network.toBlockchain()
         val derivationPath = network.derivationPath.value
 
-        return getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)
+        return getAndUpdateWalletManager(
+            userWallet = userWallet,
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+            extraTokens = extraTokens,
+        )
     }
 
     override suspend fun remove(userWalletId: UserWalletId, networks: Set<Network>) {
@@ -123,18 +128,18 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         if (tokenInfos.isEmpty()) return
 
         tokenInfos
-            .groupBy { it.network }
+            .groupBy(TokenInfo::network)
             .forEach { (network, tokenInfoList) ->
                 removeTokens(
                     userWalletId = userWalletId,
                     network = network,
-                    networkTokens = tokenInfoList.map {
+                    networkTokens = tokenInfoList.map { tokenInfo ->
                         Token(
-                            name = it.name,
-                            symbol = it.symbol,
-                            contractAddress = it.contractAddress,
-                            decimals = it.decimals,
-                            id = it.id,
+                            name = tokenInfo.name,
+                            symbol = tokenInfo.symbol,
+                            contractAddress = tokenInfo.contractAddress,
+                            decimals = tokenInfo.decimals,
+                            id = tokenInfo.id,
                         )
                     },
                 )
@@ -215,24 +220,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             "Unable to get a wallet manager for blockchain: ${currency.network}"
         }
 
-        return walletManager
-            .getTransactionHistoryState(
-                address = walletManager.wallet.address,
-                filterType = when (currency) {
-                    is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
-                    is CryptoCurrency.Token -> {
-                        val blockchainToken = Token(
-                            name = currency.name,
-                            symbol = currency.symbol,
-                            contractAddress = currency.contractAddress,
-                            decimals = currency.decimals,
-                            id = currency.id.rawCurrencyId?.value,
-                        )
-                        TransactionHistoryRequest.FilterType.Contract(blockchainToken)
-                    }
-                },
-            )
-            .let(txHistoryStateConverter::convert)
+        val transactionHistoryState = walletManager.getTransactionHistoryState(
+            address = walletManager.wallet.address,
+            filterType = when (currency) {
+                is CryptoCurrency.Coin -> TransactionHistoryRequest.FilterType.Coin
+                is CryptoCurrency.Token -> {
+                    val blockchainToken = Token(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                        contractAddress = currency.contractAddress,
+                        decimals = currency.decimals,
+                        id = currency.id.rawCurrencyId?.value,
+                    )
+                    TransactionHistoryRequest.FilterType.Contract(blockchainToken)
+                }
+            },
+        )
+
+        return txHistoryStateConverter.convert(transactionHistoryState)
     }
 
     override suspend fun getTxHistoryItems(
@@ -366,7 +371,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        getWmInitializationMutex(blockchain, derivationPath).withLock {
+        getWmInitializationMutex(userWalletId, blockchain, derivationPath).withLock {
             val userWallet = getUserWallet(userWalletId)
 
             var walletManager = walletManagersStore.getSyncOrNull(
@@ -738,15 +743,24 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
     }
 
-    private fun getWmInitializationMutex(blockchain: Blockchain, derivationPath: String?): Mutex {
-        val key = createMutexMapKey(blockchain, derivationPath)
+    private fun getWmInitializationMutex(
+        userWalletId: UserWalletId,
+        blockchain: Blockchain,
+        derivationPath: String?,
+    ): Mutex {
+        val key = createMutexMapKey(userWalletId, blockchain, derivationPath)
         return wmInitializationMutexes.computeIfAbsent(key) {
             Mutex()
         }
     }
 
-    private fun createMutexMapKey(blockchain: Blockchain, derivationPath: String?): String {
-        return blockchain.toNetworkId() + "|" + derivationPath
+    private fun createMutexMapKey(userWalletId: UserWalletId, blockchain: Blockchain, derivationPath: String?): String {
+        return listOf(
+            userWalletId.stringValue,
+            blockchain.toNetworkId(),
+            derivationPath,
+        )
+            .joinToString(separator = "|")
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
