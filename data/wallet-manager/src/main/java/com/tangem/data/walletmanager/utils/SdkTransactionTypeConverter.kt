@@ -1,5 +1,6 @@
 package com.tangem.data.walletmanager.utils
 
+import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem.TransactionType
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
@@ -11,17 +12,29 @@ import com.tangem.utils.converter.Converter
 
 internal class SdkTransactionTypeConverter(
     private val smartContractMethods: Map<String, SmartContractMethod>,
-) : Converter<Pair<TransactionType, TxInfo.DestinationType>, TxInfo.TransactionType> {
+    private val yieldSupplyAddresses: Set<String>,
+) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
 
-    override fun convert(value: Pair<TransactionType, TxInfo.DestinationType>): TxInfo.TransactionType {
-        val (type, destination) = value
+    override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
+        val (type, destination) = value.type to value.destinationType
+        val source = value.sourceType
 
         return when (type) {
             is TransactionType.ContractMethod -> {
-                getTransactionType(methodName = smartContractMethods[type.id]?.name, type.callData, destination)
+                getTransactionType(
+                    methodName = smartContractMethods[type.id]?.name,
+                    callData = type.callData,
+                    destination = destination,
+                    source = source,
+                )
             }
             is TransactionType.ContractMethodName -> {
-                getTransactionType(methodName = type.name, type.callData, destination)
+                getTransactionType(
+                    methodName = type.name,
+                    callData = type.callData,
+                    destination = destination,
+                    source = source,
+                )
             }
             is TransactionType.Transfer -> {
                 TxInfo.TransactionType.Transfer
@@ -48,7 +61,8 @@ internal class SdkTransactionTypeConverter(
     private fun getTransactionType(
         methodName: String?,
         callData: String?,
-        destination: TxInfo.DestinationType,
+        destination: TransactionHistoryItem.DestinationType,
+        source: TransactionHistoryItem.SourceType,
     ): TxInfo.TransactionType {
         return when (methodName) {
             "transfer" -> TxInfo.TransactionType.Transfer
@@ -70,7 +84,21 @@ internal class SdkTransactionTypeConverter(
             "withdrawRewardsPOL",
             -> TxInfo.TransactionType.Staking.ClaimRewards
             "redelegate" -> TxInfo.TransactionType.Staking.Restake
-            "yieldSend" -> TxInfo.TransactionType.YieldSupply.Send
+            "yieldSend" -> {
+                val sourceAddresses = when (source) {
+                    is TransactionHistoryItem.SourceType.Multiple -> source.addresses
+                    is TransactionHistoryItem.SourceType.Single -> listOf(source.address)
+                }.map {
+                    it.lowercase()
+                }.toSet()
+
+                val isYieldSupplyWithdraw =
+                    yieldSupplyAddresses.intersect(sourceAddresses).isNotEmpty()
+
+                TxInfo.TransactionType.YieldSupply.Send(
+                    isYieldSupplyWithdraw = isYieldSupplyWithdraw,
+                )
+            }
             "enterProtocolByOwner" -> callData?.let { data ->
                 TxInfo.TransactionType.YieldSupply.Enter(
                     EthereumYieldSupplyEnterCallData.decode(data)?.tokenContractAddress.orEmpty(),
@@ -82,7 +110,7 @@ internal class SdkTransactionTypeConverter(
                 )
             }
             "deployYieldModule" -> TxInfo.TransactionType.YieldSupply.DeployContract(
-                (destination as? TxInfo.DestinationType.Single)?.addressType?.address.orEmpty(),
+                (destination as? TransactionHistoryItem.DestinationType.Single)?.addressType?.address.orEmpty(),
             )
             "initYieldToken" -> callData?.let { data ->
                 TxInfo.TransactionType.YieldSupply.InitializeToken(
