@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>IgnoredReturnValue:FlowCachingSupplier.kt$FlowCachingSupplier$put(key = key, value = flow)</ID>
+    <ID>IgnoredReturnValue:FlowCachingSupplier.kt$FlowCachingSupplier$remove(key)</ID>
+    <ID>MultilineLambdaItParameter:FlowCachingSupplier.kt$FlowCachingSupplier${ it.toMutableMap().apply { put(key = key, value = flow) } }</ID>
+    <ID>MultilineLambdaItParameter:FlowCachingSupplier.kt$FlowCachingSupplier${ it.toMutableMap().apply { remove(key) } }</ID>
+    <ID>ObjectExtendsThrowable:DataError.kt$DataError.NetworkError$NoInternetConnection : NetworkError</ID>
+  </CurrentIssues>
+</SmellBaseline>
