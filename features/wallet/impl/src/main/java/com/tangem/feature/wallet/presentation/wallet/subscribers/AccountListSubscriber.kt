@@ -1,15 +1,15 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingTarget
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.utils.coroutines.combine7
+import com.tangem.utils.coroutines.combine6
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -31,27 +31,34 @@ internal class AccountListSubscriber @AssistedInject constructor(
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : BasicAccountListSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine7(
+    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine6(
         flow1 = getAccountStatusListFlow(),
         flow2 = getAppCurrencyFlow(),
         flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
         flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
         flow5 = yieldSupplyApyFlow(),
-        flow6 = stakingApyFlow(),
-        flow7 = yieldSupplyGetShouldShowMainPromoFlow(),
-        transform = ::updateState,
-    )
+        flow6 = yieldSupplyGetShouldShowMainPromoFlow(),
+    ) { accountList, appCurrency, expandedAccounts, isAccountMode, yieldSupplyApyMap, shouldShowMainPromo ->
+        updateState(
+            accountList = accountList,
+            appCurrency = appCurrency,
+            expandedAccounts = expandedAccounts,
+            isAccountMode = isAccountMode,
+            yieldSupplyApyMap = yieldSupplyApyMap,
+            stakingAvailabilityMap = stakingAvailabilityListUseCase.invokeSync(
+                userWalletId = userWallet.walletId,
+                cryptoCurrencyList = accountList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
+            ),
+            shouldShowMainPromo = shouldShowMainPromo,
+        )
+    }
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> {
         return yieldSupplyApyFlowUseCase().distinctUntilChanged()
-    }
-
-    private fun stakingApyFlow(): Flow<Map<String, List<StakingTarget>>> {
-        return stakingApyFlowUseCase().distinctUntilChanged()
     }
 
     private fun yieldSupplyGetShouldShowMainPromoFlow(): Flow<Boolean> {
