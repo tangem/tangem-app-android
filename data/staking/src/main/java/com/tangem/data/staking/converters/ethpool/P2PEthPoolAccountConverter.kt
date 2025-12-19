@@ -9,7 +9,7 @@ import com.tangem.utils.converter.Converter
 import org.joda.time.Instant
 
 /**
- * Converter from P2P Account Info Response to Domain model
+ * Converter from P2PEthPool Account Info Response to Domain model
  */
 internal object P2PEthPoolAccountConverter : Converter<P2PEthPoolAccountResponse, P2PEthPoolAccount> {
 
