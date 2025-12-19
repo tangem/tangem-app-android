@@ -26,11 +26,8 @@ import com.tangem.domain.notifications.ShouldShowNotificationUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.domain.swap.models.SwapCurrencies
-import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.*
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
-import com.tangem.domain.swap.models.SwapQuoteModel
-import com.tangem.domain.swap.models.getGroupWithDirection
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
 import com.tangem.domain.swap.usecase.SelectInitialPairUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -99,9 +96,9 @@ internal class SwapAmountModel @Inject constructor(
     private val params: SwapAmountComponentParams = paramsContainer.require()
     private val swapDirection = params.swapDirection
     private var appCurrency = AppCurrency.Default
-    private var userWallet = params.userWallet
+    private val userWallet = params.userWallet
 
-    private var primaryCryptoCurrency: CryptoCurrency = params.primaryCryptoCurrencyStatusFlow.value.currency
+    private val primaryCryptoCurrency: CryptoCurrency = params.primaryCryptoCurrencyStatusFlow.value.currency
 
     private var primaryMaximumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var primaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
@@ -111,7 +108,7 @@ internal class SwapAmountModel @Inject constructor(
     private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
 
-    private var showBestRateAnimation: Boolean = false
+    private var isShowBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
@@ -124,7 +121,7 @@ internal class SwapAmountModel @Inject constructor(
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             userCountry = getUserCountryUseCase.invokeSync().getOrNull()
                 ?: UserCountry.Other(Locale.getDefault().country)
-            showBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
+            isShowBestRateAnimation = swapBestRateAnimationStore.getSyncOrNull()
         }
         configAmountNavigation()
         subscribeOnCryptoCurrencyStatusFlow()
@@ -169,7 +166,7 @@ internal class SwapAmountModel @Inject constructor(
                 quoteUM = quoteUM,
                 secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                 secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
-                needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                isNeedApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
             ),
         )
     }
@@ -270,7 +267,7 @@ internal class SwapAmountModel @Inject constructor(
     override fun onSelectTokenClick() {
         val amountParams = params as? SwapAmountComponentParams.AmountParams ?: return
         modelScope.launch {
-            val showSendViaSwapNotification = shouldShowNotificationUseCase(
+            val isShowSendViaSwapNotification = shouldShowNotificationUseCase(
                 NotificationId.SendViaSwapTokenSelectorNotification.key,
             )
             val isEditMode = amountParams.currentRoute.firstOrNull()?.isEditMode == true
@@ -281,7 +278,7 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-                    shouldShowSendViaSwapNotification = showSendViaSwapNotification,
+                    shouldShowSendViaSwapNotification = isShowSendViaSwapNotification,
                     analyticsCategoryName = params.analyticsCategoryName,
                 ),
             )
@@ -306,7 +303,7 @@ internal class SwapAmountModel @Inject constructor(
 
     fun onFinishAnimation() {
         uiState.update {
-            (it as? SwapAmountUM.Content)?.copy(showBestRateAnimation = false) ?: it
+            (it as? SwapAmountUM.Content)?.copy(isShowBestRateAnimation = false) ?: it
         }
     }
 
@@ -367,7 +364,7 @@ internal class SwapAmountModel @Inject constructor(
                     swapDirection = swapDirection,
                     clickIntents = this,
                     isBalanceHidden = params.isBalanceHidingFlow.value,
-                    showBestRateAnimation = showBestRateAnimation,
+                    isShowBestRateAnimation = isShowBestRateAnimation,
                     isSingleWallet = isOnlyOneWallet,
                     isAccountsMode = params.isAccountModeFlow.value,
                     account = params.accountFlow.value,
@@ -418,7 +415,7 @@ internal class SwapAmountModel @Inject constructor(
                         swapDirection = swapDirection,
                         clickIntents = this,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
-                        showBestRateAnimation = showBestRateAnimation,
+                        isShowBestRateAnimation = isShowBestRateAnimation,
                         isSingleWallet = isOnlyOneWallet,
                         isAccountsMode = isAccountsMode,
                         account = account,
@@ -532,7 +529,7 @@ internal class SwapAmountModel @Inject constructor(
                         swapDirection = swapDirection,
                         clickIntents = this@SwapAmountModel,
                         isBalanceHidden = params.isBalanceHidingFlow.value,
-                        showBestRateAnimation = showBestRateAnimation,
+                        isShowBestRateAnimation = isShowBestRateAnimation,
                         isSingleWallet = isOnlyOneWallet,
                         isAccountsMode = params.isAccountModeFlow.value,
                         account = params.accountFlow.value,
@@ -540,6 +537,7 @@ internal class SwapAmountModel @Inject constructor(
                 )
                 startLoadingQuotesTask(isSilentReload = false)
             } else {
+                @Suppress("NullableToStringCall")
                 Timber.e(
                     """
                         Invalid cryptocurrencies status: 
@@ -596,50 +594,50 @@ internal class SwapAmountModel @Inject constructor(
         val isAmountScreen = params is SwapAmountComponentParams.AmountParams
         val isAmountError = fromAmount?.amountTextField?.isError == true || fromAmountValue.isNullOrZero()
         if (isAmountScreen && isAmountError) {
-            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer)
-            return
+            uiState.transformerUpdate(SwapQuoteEmptyStateTransformer); return
         }
 
         if (!isSilentReload) uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
 
         modelScope.launch {
-            val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available.filter {
-                it.currencyStatus.currency.id == toCryptoCurrency.id
-            }.flatMap {
-                it.providers
-            }.map { provider ->
-                async {
-                    getSwapQuoteUseCase(
-                        userWallet = userWallet,
-                        fromCryptoCurrency = fromCryptoCurrency,
-                        toCryptoCurrency = toCryptoCurrency,
-                        fromAmount = fromAmountValue,
-                        provider = provider,
-                    ).fold(
-                        ifLeft = { error ->
-                            SwapQuoteUM.Error(
-                                provider = provider,
-                                expressError = error,
-                            )
-                        },
-                        ifRight = { quote: SwapQuoteModel ->
-                            SwapQuoteUMConverter(
-                                primaryCurrency = fromCryptoCurrency,
-                                secondaryCurrency = toCryptoCurrency,
-                                swapDirection = swapDirection,
-                                allowanceContract = quote.allowanceContract,
-                                isApprovalNeeded = checkAllowance(state, quote),
-                                fromAmount = fromAmountValue,
-                            ).convert(
-                                SwapQuoteUMConverter.Data(
-                                    quote = quote,
+            val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available
+                .asSequence()
+                .filter { swapCurrencyStatus -> swapCurrencyStatus.currencyStatus.currency.id == toCryptoCurrency.id }
+                .flatMap(SwapCryptoCurrency::providers)
+                .toList()
+                .map { provider ->
+                    async {
+                        getSwapQuoteUseCase(
+                            userWallet = userWallet,
+                            fromCryptoCurrency = fromCryptoCurrency,
+                            toCryptoCurrency = toCryptoCurrency,
+                            fromAmount = fromAmountValue,
+                            provider = provider,
+                        ).fold(
+                            ifLeft = { error ->
+                                SwapQuoteUM.Error(
                                     provider = provider,
-                                ),
-                            )
-                        },
-                    )
-                }
-            }.awaitAll()
+                                    expressError = error,
+                                )
+                            },
+                            ifRight = { quote: SwapQuoteModel ->
+                                SwapQuoteUMConverter(
+                                    primaryCurrency = fromCryptoCurrency,
+                                    secondaryCurrency = toCryptoCurrency,
+                                    swapDirection = swapDirection,
+                                    allowanceContract = quote.allowanceContract,
+                                    isApprovalNeeded = checkAllowance(state, quote),
+                                    fromAmount = fromAmountValue,
+                                ).convert(
+                                    SwapQuoteUMConverter.Data(
+                                        quote = quote,
+                                        provider = provider,
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }.awaitAll()
 
             uiState.transformerUpdate(
                 SwapAmountSetQuotesTransformer(
@@ -647,7 +645,7 @@ internal class SwapAmountModel @Inject constructor(
                     secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
                     secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
                     isSilentReload = isSilentReload,
-                    needApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
+                    isNeedApplyFcaRestrictions = userCountry.needApplyFCARestrictions(),
                 ),
             )
             feeSelectorReloadTrigger.triggerUpdate()

@@ -1,11 +1,11 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
+import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -27,12 +27,12 @@ internal object NFTDomainModule {
     fun providesGetNFTCollectionsUseCase(
         currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        singleAccountListSupplier: SingleAccountListSupplier,
         accountsFeatureToggles: AccountsFeatureToggles,
     ): GetNFTCollectionsUseCase = GetNFTCollectionsUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        singleAccountListSupplier = singleAccountListSupplier,
         accountsFeatureToggles = accountsFeatureToggles,
     )
 
@@ -67,12 +67,12 @@ internal object NFTDomainModule {
     @Singleton
     fun providesGetNFTAvailableNetworksUseCase(
         nftRepository: NFTRepository,
-        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        singleAccountListSupplier: SingleAccountListSupplier,
         currenciesRepository: CurrenciesRepository,
     ): GetNFTNetworksUseCase = GetNFTNetworksUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
-        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        singleAccountListSupplier = singleAccountListSupplier,
     )
 
     @Provides
@@ -126,13 +126,13 @@ internal object NFTDomainModule {
     @Singleton
     fun provideDisableWalletNFTUseCase(
         walletsRepository: WalletsRepository,
-        nftRepository: NFTRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        nftCleaner: NFTCleaner,
     ): DisableWalletNFTUseCase {
         return DisableWalletNFTUseCase(
             walletsRepository = walletsRepository,
-            nftRepository = nftRepository,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            nftCleaner = nftCleaner,
         )
     }
 
@@ -145,13 +145,13 @@ internal object NFTDomainModule {
     @Provides
     @Singleton
     fun provideClearNFTCacheUseCase(
-        nftRepository: NFTRepository,
+        nftCleaner: NFTCleaner,
         currenciesRepository: CurrenciesRepository,
         accountsFeatureToggles: AccountsFeatureToggles,
         singleAccountListSupplier: SingleAccountListSupplier,
     ): ObserveAndClearNFTCacheIfNeedUseCase {
         return ObserveAndClearNFTCacheIfNeedUseCase(
-            nftRepository = nftRepository,
+            nftCleaner = nftCleaner,
             currenciesRepository = currenciesRepository,
             accountsFeatureToggles = accountsFeatureToggles,
             singleAccountListSupplier = singleAccountListSupplier,
