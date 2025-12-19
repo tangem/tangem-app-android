@@ -2017,7 +2017,7 @@
   <string name="yield_module_transaction_exit_subtitle">%1$s выведено из Aave</string>
   <string name="yield_module_transaction_initialize">Режим доходности инициализирован</string>
   <string name="yield_module_transaction_reactivate">Режим доходности реактивирован</string>
-  <string name="yield_module_transaction_topup">Перевод средств в Aave</string>
+  <string name="yield_module_transaction_topup">Перевод в Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s отправлено в Aave</string>
   <string name="yield_module_transaction_withdraw">Вывод из Aave</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>

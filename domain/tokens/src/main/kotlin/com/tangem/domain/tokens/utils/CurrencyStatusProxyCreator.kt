@@ -11,8 +11,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.getAddress
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
@@ -28,20 +28,20 @@ class CurrencyStatusProxyCreator {
         currency: CryptoCurrency,
         maybeQuoteStatus: Either<Error, QuoteStatus?>,
         maybeNetworkStatus: Either<Error, NetworkStatus?>,
-        maybeYieldBalance: Either<Error, YieldBalance>?,
+        maybeStakingBalance: Either<Error, StakingBalance>?,
     ): Either<Error, CryptoCurrencyStatus> = either {
         val networkStatus = maybeNetworkStatus.bind()
         val quote = recover(
             block = { maybeQuoteStatus.bind() },
             recover = { null },
         )
-        val yieldBalance = maybeYieldBalance?.getOrNull()
+        val stakingBalance = maybeStakingBalance?.getOrNull()
 
         createCurrencyStatus(
             currency = currency,
             quoteStatus = quote,
             networkStatus = networkStatus,
-            yieldBalance = yieldBalance,
+            stakingBalance = stakingBalance,
         )
     }
 
@@ -49,12 +49,12 @@ class CurrencyStatusProxyCreator {
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<Error, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<Error, Set<NetworkStatus>>,
-        maybeYieldBalances: Either<Error, List<YieldBalance>>,
+        maybeStakingBalances: Either<Error, List<StakingBalance>>,
     ): Either<Error, List<CryptoCurrencyStatus>> = either {
         val networksStatuses = maybeNetworkStatuses.bind().toNonEmptySetOrNull()
         val quoteStatuses: Set<QuoteStatus>? = maybeQuotes?.getOrNull()?.ifEmpty { null }
 
-        val yieldBalances = maybeYieldBalances.getOrNull()
+        val stakingBalances = maybeStakingBalances.getOrNull()
 
         currencies.map { currency ->
             val quote = quoteStatuses?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
@@ -63,11 +63,11 @@ class CurrencyStatusProxyCreator {
 
             val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
 
-            val yieldBalance = if (supportedIntegration != null && address != null) {
+            val stakingBalance = if (supportedIntegration != null && address != null) {
                 val stakingId = StakingID(integrationId = supportedIntegration, address = address)
 
-                yieldBalances?.firstOrNull { it.stakingId == stakingId }
-                    ?: YieldBalance.Error(stakingId = stakingId)
+                stakingBalances?.firstOrNull { it.stakingId == stakingId }
+                    ?: StakingBalance.Error(stakingId = stakingId)
             } else {
                 null
             }
@@ -76,7 +76,7 @@ class CurrencyStatusProxyCreator {
                 currency = currency,
                 quoteStatus = quote,
                 networkStatus = networkStatus,
-                yieldBalance = yieldBalance,
+                stakingBalance = stakingBalance,
             )
         }
     }
@@ -85,13 +85,13 @@ class CurrencyStatusProxyCreator {
         currency: CryptoCurrency,
         quoteStatus: QuoteStatus?,
         networkStatus: NetworkStatus?,
-        yieldBalance: YieldBalance?,
+        stakingBalance: StakingBalance?,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatusFactory.create(
             currency = currency,
             maybeNetworkStatus = networkStatus.toOption(),
             maybeQuoteStatus = quoteStatus.toOption(),
-            maybeYieldBalance = yieldBalance.toOption(),
+            maybeStakingBalance = stakingBalance.toOption(),
         )
     }
 }

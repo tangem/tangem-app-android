@@ -6,23 +6,24 @@ import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetStakingNotificationMaxApyUseCase
+import com.tangem.domain.markets.ShouldShowYieldModeMarketPromoUseCase
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.UserCountryError
-import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM.TrendInterval
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -31,7 +32,6 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.math.BigDecimal
 import javax.inject.Inject
 
 private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
@@ -45,7 +45,7 @@ internal class MarketsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    getStakingNotificationMaxApyUseCase: GetStakingNotificationMaxApyUseCase,
+    shouldShowYieldModeMarketPromoUseCase: ShouldShowYieldModeMarketPromoUseCase,
     private val promoRepository: PromoRepository,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -69,9 +69,7 @@ internal class MarketsListModel @Inject constructor(
         visibleItemsChanged = { visibleItemIds.value = it },
         onRetryButtonClicked = { activeListManager.reload() },
         onTokenClick = { onTokenUIClicked(it) },
-        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked) },
-        onStakingNotificationCloseClick = { onStakingNotificationCloseClick() },
-        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens) },
+        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
     )
 
     private val mainMarketsListManager = MarketsListBatchFlowManager(
@@ -112,53 +110,62 @@ internal class MarketsListModel @Inject constructor(
             marketsListUMStateManager.isInSearchStateFlow.flatMapLatest { isInSearchMode ->
                 if (isInSearchMode) {
                     combine(
-                        searchMarketsListManager.uiItems,
-                        searchMarketsListManager.isInInitialLoadingErrorState,
-                        searchMarketsListManager.isSearchNotFoundState,
-                        getStakingNotificationMaxApyUseCase(),
-                        getUserCountryUseCase.invoke(),
-                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, stakingMaxApy, userCountry ->
+                        flow = searchMarketsListManager.uiItems,
+                        flow2 = searchMarketsListManager.isInInitialLoadingErrorState,
+                        flow3 = searchMarketsListManager.isSearchNotFoundState,
+                        flow4 = shouldShowYieldModeMarketPromoUseCase(
+                            appCurrency = currentAppCurrency.value,
+                            interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
+                        ),
+                        flow5 = getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo, userCountry ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = isSearchNotFoundState,
-                            stakingNotificationMaxApy = stakingMaxApy,
+                            shouldShowYieldModePromo = isYieldModePromo,
                             userCountry = userCountry,
                         )
                     }
                 } else {
                     combine(
-                        mainMarketsListManager.uiItems,
-                        mainMarketsListManager.isInInitialLoadingErrorState,
-                        getStakingNotificationMaxApyUseCase(),
-                        getUserCountryUseCase.invoke(),
-                    ) { uiItems, isInInitialLoadingErrorState, stakingNotificationMaxApy, userCountry ->
+                        flow = mainMarketsListManager.uiItems,
+                        flow2 = mainMarketsListManager.isInInitialLoadingErrorState,
+                        flow3 = shouldShowYieldModeMarketPromoUseCase(
+                            appCurrency = currentAppCurrency.value,
+                            interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
+                        ),
+                        flow4 = getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo, userCountry ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = false,
-                            stakingNotificationMaxApy = stakingNotificationMaxApy,
+                            shouldShowYieldModePromo = shouldShowYieldModePromo,
                             userCountry = userCountry,
                         )
                     }
                 }
             }.collect { marketsItemsData ->
-                val stakingNotificationMaxApy = marketsItemsData.stakingNotificationMaxApy?.takeUnless {
-                    marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
-                }
-
-                if (marketsListUMStateManager.state.value.stakingNotificationMaxApy == null &&
-                    stakingNotificationMaxApy != null
-                ) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown)
+                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo
+                if (marketsListUMStateManager.state.value.marketsNotificationUM == null && shouldShowYieldModePromo) {
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoShown())
                 }
 
                 marketsListUMStateManager.onUiItemsChanged(
                     uiItems = marketsItemsData.items,
                     isInErrorState = marketsItemsData.isInErrorState,
                     isSearchNotFound = marketsItemsData.isSearchNotFound,
-                    stakingNotificationMaxApy = marketsItemsData.stakingNotificationMaxApy?.takeUnless {
-                        marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
+                    marketsNotificationUM = if (shouldShowYieldModePromo) {
+                        MarketsNotificationUM.YieldSupplyPromo(
+                            onClick = {
+                                analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModeMoreInfoClicked())
+                                marketsListUMStateManager.selectedSortByType = SortByTypeUM.YieldSupply
+                            },
+                            onCloseClick = { onYieldModeNotificationCloseClick() },
+                        )
+                    } else {
+                        null
                     },
                 )
             }
@@ -266,10 +273,18 @@ internal class MarketsListModel @Inject constructor(
         mainMarketsListManager.reload()
     }
 
+    fun TrendInterval.toBatchRequestInterval(): TokenMarketListConfig.Interval {
+        return when (this) {
+            TrendInterval.H24 -> TokenMarketListConfig.Interval.H24
+            TrendInterval.D7 -> TokenMarketListConfig.Interval.WEEK
+            TrendInterval.M1 -> TokenMarketListConfig.Interval.MONTH
+        }
+    }
+
     private fun initAnalytics() {
-        containerBottomSheetState.onEach {
-            if (it == BottomSheetState.EXPANDED) {
-                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
+        containerBottomSheetState.onEach { bottomSheetState ->
+            if (bottomSheetState == BottomSheetState.EXPANDED) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened())
             }
         }.launchIn(modelScope)
 
@@ -302,10 +317,10 @@ internal class MarketsListModel @Inject constructor(
         }.saveIn(updateQuotesJob)
     }
 
-    private fun onStakingNotificationCloseClick() {
-        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed)
+    private fun onYieldModeNotificationCloseClick() {
+        analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoClosed())
         modelScope.launch {
-            promoRepository.setMarketsStakingNotificationHideClicked()
+            promoRepository.setMarketsYieldSupplyNotificationHideClicked()
         }
     }
 
@@ -313,7 +328,7 @@ internal class MarketsListModel @Inject constructor(
         val items: ImmutableList<MarketsListItemUM>,
         val isInErrorState: Boolean,
         val isSearchNotFound: Boolean,
-        val stakingNotificationMaxApy: BigDecimal?,
+        val shouldShowYieldModePromo: Boolean,
         val userCountry: Either<UserCountryError, UserCountry>,
     )
 }
