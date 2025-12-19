@@ -40,7 +40,6 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
-import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -129,9 +128,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var cardRepository: CardRepository
-
-    @Inject
-    lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
     @Inject
     lateinit var backupServiceHolder: BackupServiceHolder
