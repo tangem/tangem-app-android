@@ -93,6 +93,7 @@ import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -601,10 +602,20 @@ internal class StakingModel @Inject constructor(
 
     override fun onActiveStake(activeStake: BalanceState) {
         val networkId = cryptoCurrencyStatus.currency.network.rawId
-        if (isSingleAction(networkId, activeStake)) {
+        val preferredValidators = yield.validators.filter { it.preferred }
+        val pendingActions = activeStake.pendingActions.mapNotNull { action ->
+            if (action.type in listOf(StakingActionType.RESTAKE, StakingActionType.STAKE) &&
+                preferredValidators.isSingleItem()
+            ) {
+                null
+            } else {
+                action
+            }
+        }.toImmutableList()
+        if (isSingleAction(networkId, pendingActions)) {
             prepareForConfirmation(
                 balanceType = activeStake.type,
-                pendingActions = activeStake.pendingActions,
+                pendingActions = pendingActions,
                 balanceState = activeStake,
                 validator = activeStake.validator,
                 amountValue = activeStake.cryptoValue,
@@ -613,7 +624,7 @@ internal class StakingModel @Inject constructor(
         } else {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
-                    pendingActions = withStubUnstakeAction(networkId, activeStake),
+                    pendingActions = withStubUnstakeAction(networkId, pendingActions, activeStake),
                     onActionSelect = { action ->
                         prepareForConfirmation(
                             balanceType = activeStake.type,
