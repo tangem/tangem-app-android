@@ -13,17 +13,18 @@ import kotlinx.collections.immutable.ImmutableList
 
 internal data class MarketsListUM(
     val list: ListUM,
-    val searchBar: SearchBarUM,
+    val marketsSearchBar: MarketsSearchBar,
     val selectedSortBy: SortByTypeUM,
     val sortByBottomSheet: TangemBottomSheetConfig,
     val selectedInterval: TrendInterval,
-    val shouldAlwaysShowSearchBar: Boolean,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
     val marketsNotificationUM: MarketsNotificationUM?,
+    val onSearchClicked: () -> Unit,
 ) {
     val isInSearchMode
-        get() = searchBar.isActive
+        get() = marketsSearchBar.searchBarUM.isActive &&
+            marketsSearchBar.searchBarUM.query.isNotEmpty()
 
     enum class TrendInterval(val text: TextReference) {
         H24(resourceReference(R.string.markets_selector_interval_24h_title)),
@@ -32,7 +33,12 @@ internal data class MarketsListUM(
     }
 }
 
-enum class SortByTypeUM(val text: TextReference) {
+internal data class MarketsSearchBar(
+    val searchBarUM: SearchBarUM,
+    val shouldAlwaysShowSearchBar: Boolean,
+)
+
+internal enum class SortByTypeUM(val text: TextReference) {
     Rating(resourceReference(R.string.markets_sort_by_rating_title)),
     Trending(resourceReference(R.string.markets_sort_by_trending_title)),
     ExperiencedBuyers(resourceReference(R.string.markets_sort_by_experienced_buyers_title)),
@@ -43,7 +49,7 @@ enum class SortByTypeUM(val text: TextReference) {
 }
 
 @Immutable
-sealed class ListUM {
+internal sealed class ListUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
