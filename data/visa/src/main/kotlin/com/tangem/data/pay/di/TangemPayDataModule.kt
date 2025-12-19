@@ -80,9 +80,8 @@ internal interface TangemPayDataModule {
             deviceSecurity: DeviceSecurityInfoProvider,
         ): TangemPayMainScreenCustomerInfoUseCase {
             return TangemPayMainScreenCustomerInfoUseCase(
-                repository = repository,
+                onboardingRepository = repository,
                 customerOrderRepository = customerOrderRepository,
-                tangemPayOnboardingRepository = tangemPayOnboardingRepository,
                 eligibilityManager = eligibilityManager,
                 deviceSecurity = deviceSecurity,
             )

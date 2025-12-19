@@ -2,6 +2,7 @@ package com.tangem.sdk.api
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
@@ -16,6 +17,7 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
@@ -159,8 +161,8 @@ interface TangemSdkManager {
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
-    suspend fun tangemPayProduceInitialCredentials(cardId: String): CompletionResult<TangemPayInitialCredentials>
+    suspend fun tangemPayProduceInitialCredentials(cardId: String): Either<Throwable, TangemPayInitialCredentials>
 
-    suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String>
+    suspend fun getWithdrawalSignature(cardId: String, hash: String): Either<Throwable, WithdrawalSignatureResult>
     // endregion
 }
