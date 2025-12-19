@@ -15,7 +15,7 @@ internal sealed class ConfirmUM {
     data class Content(
         override val isPrimaryButtonEnabled: Boolean = false,
         val isTransactionInProcess: Boolean,
-        val showTapHelp: Boolean,
+        val isShowTapHelp: Boolean,
         val sendingFooter: TextReference,
         val notifications: ImmutableList<NotificationUM>,
         val tosUM: TosUM?,
