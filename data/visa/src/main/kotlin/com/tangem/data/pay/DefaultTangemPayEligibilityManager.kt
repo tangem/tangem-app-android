@@ -9,26 +9,43 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 internal class DefaultTangemPayEligibilityManager @Inject constructor(
+    dispatchers: CoroutineDispatcherProvider,
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
-    private var cachedEligibleWallets: List<UserWallet>? = null
-    private var eligibleWalletsDeferred: Deferred<List<UserWallet>>? = null
+    private var cachedEligibleWallets: List<UserWalletData>? = null
+    private var eligibleWalletsDeferred: Deferred<List<UserWalletData>>? = null
     private val loadMutex = Mutex()
+    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
-    override suspend fun getEligibleWallets(): List<UserWallet> {
+    init {
+        resetDataWhenWalletsUpdate()
+    }
+
+    override suspend fun getEligibleWallets(excludePaeraCustomers: Boolean): List<UserWallet> {
+        return getUserWalletsData().mapNotNull {
+            if (!it.isPaeraCustomer || !excludePaeraCustomers) it.userWallet else null
+        }
+    }
+
+    private suspend fun getUserWalletsData(): List<UserWalletData> {
         cachedEligibleWallets?.let { return it }
 
         return loadMutex.withLock {
@@ -38,7 +55,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             coroutineScope {
                 val deferred = async {
                     getPossibleWalletsForTangemPay()
-                        .excludePaeraCustomers()
+                        .addPaeraCustomersData()
                         .also { cachedEligibleWallets = it }
                 }
                 eligibleWalletsDeferred = deferred
@@ -73,8 +90,8 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         is UserWallet.Hot -> true
     }
 
-    private suspend fun List<UserWallet>.excludePaeraCustomers(): List<UserWallet> {
-        if (isEmpty()) return this
+    private suspend fun List<UserWallet>.addPaeraCustomersData(): List<UserWalletData> {
+        if (isEmpty()) return emptyList()
 
         return coroutineScope {
             map { wallet ->
@@ -86,9 +103,30 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
                 }
             }
                 .awaitAll()
-                .mapNotNull { (wallet, isCustomer) ->
-                    wallet.takeUnless { isCustomer }
+                .map { (userWallet, isPaeraCustomer) ->
+                    UserWalletData(userWallet, isPaeraCustomer)
                 }
         }
     }
+
+    private fun resetDataWhenWalletsUpdate() {
+        coroutineScope.launch {
+            if (hotWalletFeatureToggles.isHotWalletEnabled) {
+                userWalletsListRepository.userWallets.collectLatest { reset() }
+            } else {
+                userWalletsListManager.userWallets.collectLatest { reset() }
+            }
+        }
+    }
+
+    private fun reset() {
+        cachedEligibleWallets = null
+        eligibleWalletsDeferred?.cancel()
+        eligibleWalletsDeferred = null
+    }
+
+    private data class UserWalletData(
+        val userWallet: UserWallet,
+        val isPaeraCustomer: Boolean,
+    )
 }

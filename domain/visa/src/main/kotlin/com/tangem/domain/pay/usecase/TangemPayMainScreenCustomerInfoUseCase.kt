@@ -47,7 +47,11 @@ class TangemPayMainScreenCustomerInfoUseCase(
             .fold(
                 ifLeft = { error ->
                     Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
-                    updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                    if (error is VisaApiError.NotPaeraCustomer) {
+                        showOnboardingBannerIfEligible(userWalletId)
+                    } else {
+                        updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                    }
                 },
                 ifRight = { hasTangemPay ->
                     Timber.tag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
@@ -62,19 +66,25 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         updateState(userWalletId, result)
                     } else {
                         // if there's no tangem pay, check eligibility and show onboarding banner
-                        val isEligible = eligibilityManager.getEligibleWallets().any { it.walletId == userWalletId }
-                        if (isEligible) {
-                            if (tangemPayOnboardingRepository.getHideMainOnboardingBanner(userWalletId)) {
-                                updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
-                            } else {
-                                updateState(userWalletId, MainCustomerInfoContentState.OnboardingBanner.right())
-                            }
-                        } else {
-                            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
-                        }
+                        showOnboardingBannerIfEligible(userWalletId)
                     }
                 },
             )
+    }
+
+    private suspend fun showOnboardingBannerIfEligible(userWalletId: UserWalletId) {
+        val isEligible = eligibilityManager
+            .getEligibleWallets(excludePaeraCustomers = false)
+            .any { it.walletId == userWalletId }
+        if (isEligible) {
+            if (tangemPayOnboardingRepository.getHideMainOnboardingBanner(userWalletId)) {
+                updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+            } else {
+                updateState(userWalletId, MainCustomerInfoContentState.OnboardingBanner.right())
+            }
+        } else {
+            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+        }
     }
 
     operator fun invoke(
