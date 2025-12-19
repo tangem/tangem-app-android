@@ -1083,6 +1083,7 @@
   <string name="reset_card_to_factory_button_title">Reset the card</string>
   <string name="reset_card_to_factory_condition_1">I understand that after performing this action, I will no longer have access to the current wallet</string>
   <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards of the current wallet</string>
+  <string name="reset_card_to_factory_condition_3">I understand that I will completely lose access to my Tangem Pay Card and all funds on it without the possibility of recovery</string>
   <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring. You will not be able to restore the current wallet or use the card or ring to recover the access code.</string>
   <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring and remove it from the app. You will not be able to restore the current wallet.</string>
   <string name="reset_cards_dialog_complete_description">All Tangem devices have been reset.</string>
@@ -1470,6 +1471,7 @@
   <string name="tangempay_card_details_open_wallet_step_5">All set! Your card is ready to use.</string>
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
+  <string name="tangempay_card_details_pin_code">PIN code</string>
   <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
@@ -1478,6 +1480,8 @@
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
+  <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
+  <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
   <string name="tangempay_card_details_withdraw">Withdraw</string>
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
