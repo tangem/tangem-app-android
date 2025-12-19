@@ -18,6 +18,7 @@ data class CardDetailsResponse(
         @Json(name = "card_number_end") val cardNumberEnd: String,
         @Json(name = "pan") val pan: Secret,
         @Json(name = "cvv") val cvv: Secret,
+        @Json(name = "pin") val pin: Secret?,
     )
 
     @JsonClass(generateAdapter = true)
