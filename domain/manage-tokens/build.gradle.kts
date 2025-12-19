@@ -24,6 +24,8 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
 
+    implementation(tangemDeps.blockchain)
+
     /* Core */
     api(projects.core.pagination)
     testImplementation(projects.core.pagination)

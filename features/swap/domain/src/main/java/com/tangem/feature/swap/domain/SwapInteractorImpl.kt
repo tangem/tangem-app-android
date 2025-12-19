@@ -45,6 +45,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -124,12 +125,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
-            .filter {
-                val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
-                    it.currency.getContractAddress() != currency.getContractAddress()
-                val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
-                val notCustomTokenFilter = !it.currency.isCustom
-                statusFilter && currencyFilter && notCustomTokenFilter
+            .filter { status ->
+                val isDifferentCurrency = status.currency.network.backendId != currency.network.backendId ||
+                    status.currency.getContractAddress() != currency.getContractAddress()
+                val hasValidStatus =
+                    status.value is CryptoCurrencyStatus.Loaded || status.value is CryptoCurrencyStatus.NoAccount
+                val isNotCustomToken = !status.currency.isCustom
+                hasValidStatus && isDifferentCurrency && isNotCustomToken
             }
 
         if (walletCurrencyStatusesExceptInitial.isEmpty()) {
@@ -171,15 +173,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         val walletAccountCurrencyStatusesExceptInitial = walletAccountCurrencyStatuses
             .mapNotNull { accountStatus ->
-                val filteredCurrencies = accountStatus.flattenCurrencies().filter {
-                    val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
-                        it.currency.getContractAddress() != currency.getContractAddress()
+                val filteredCurrencies = accountStatus.flattenCurrencies().filter { status ->
+                    val isDifferentCurrency = status.currency.network.backendId != currency.network.backendId ||
+                        status.currency.getContractAddress() != currency.getContractAddress()
 
-                    val statusFilter =
-                        it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
-                    val notCustomTokenFilter = !it.currency.isCustom
+                    val hasValidStatus =
+                        status.value is CryptoCurrencyStatus.Loaded || status.value is CryptoCurrencyStatus.NoAccount
+                    val isNotCustomToken = !status.currency.isCustom
 
-                    statusFilter && currencyFilter && notCustomTokenFilter
+                    hasValidStatus && isDifferentCurrency && isNotCustomToken
                 }
 
                 if (filteredCurrencies.isNotEmpty()) {
@@ -230,9 +232,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         tokenInfoForFilter: (SwapPairLeast) -> LeastTokenInfo,
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): CurrenciesGroup {
-        val filteredPairs = leastPairs.filter {
-            tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &&
-                tokenInfoForFilter(it).network == currency.network.backendId
+        val filteredPairs = leastPairs.filter { pair ->
+            tokenInfoForFilter(pair).contractAddress == currency.getContractAddress() &&
+                tokenInfoForFilter(pair).network == currency.network.backendId
         }
 
         val availableCryptoCurrencies = cryptoCurrenciesList.mapNotNull { cryptoCurrencyStatus ->
@@ -263,16 +265,16 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         tokenInfoForFilter: (SwapPairLeast) -> LeastTokenInfo,
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
     ): CurrenciesGroup {
-        val filteredPairs = leastPairs.filter {
-            tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &&
-                tokenInfoForFilter(it).network == currency.network.backendId
+        val filteredPairs = leastPairs.filter { pair ->
+            tokenInfoForFilter(pair).contractAddress == currency.getContractAddress() &&
+                tokenInfoForFilter(pair).network == currency.network.backendId
         }
 
-        val accountCurrencyList = cryptoCurrenciesList.mapNotNull { (account, currencyStatusList) ->
-            val account = account as? Account.CryptoPortfolio ?: return@mapNotNull null
+        val accountCurrencyList = cryptoCurrenciesList.mapNotNull { (accountEntry, currencyStatusList) ->
+            val cryptoPortfolio = accountEntry as? Account.CryptoPortfolio ?: return@mapNotNull null
 
             AccountSwapAvailability(
-                account = account,
+                account = cryptoPortfolio,
                 currencyList = currencyStatusList.map { currencyStatus ->
                     val providers = findProvidersForPair(
                         cryptoCurrencyStatuses = currencyStatus,
@@ -282,7 +284,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     val isUnavailable = providers.isNullOrEmpty()
                     AccountSwapCurrency(
                         isAvailable = !isUnavailable,
-                        account = account,
+                        account = cryptoPortfolio,
                         cryptoCurrencyStatus = currencyStatus,
                         providers = providers.orEmpty(),
                     )
@@ -306,13 +308,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val requirements = getAssetRequirementsUseCase.invoke(userWalletId, cryptoCurrencyStatuses.currency).getOrNull()
         val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
 
-        return swapPairsLeastList.firstNotNullOfOrNull {
-            val listTokenInfo = tokenInfoForAvailable(it)
+        return swapPairsLeastList.firstNotNullOfOrNull { pair ->
+            val listTokenInfo = tokenInfoForAvailable(pair)
             if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &&
                 cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &&
                 isAvailableForSwap
             ) {
-                it.providers
+                pair.providers
             } else {
                 null
             }
@@ -353,8 +355,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount = amount?.value,
             contractAddress = permissionOptions.forTokenContractAddress,
             spenderAddress = permissionOptions.spenderAddress,
-        ).getOrElse {
-            Timber.e(it, "Failed to create approveTransaction")
+        ).getOrElse { error ->
+            Timber.e(error, "Failed to create approveTransaction")
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -452,6 +454,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }.toMap()
     }
 
+    @Suppress("LongMethod")
     private suspend fun manageDex(
         networkId: String,
         fromToken: CryptoCurrencyStatus,
@@ -489,8 +492,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val fromTokenAddress = getTokenAddress(fromToken.currency)
         val isAllowedToSpend = maybeQuotes.fold(
             ifRight = { quotes ->
-                quotes.allowanceContract?.let {
-                    isAllowedToSpend(networkId, fromToken.currency, amount, it)
+                quotes.allowanceContract?.let { allowanceContract ->
+                    isAllowedToSpend(
+                        networkId = networkId,
+                        fromToken = fromToken.currency,
+                        amount = amount,
+                        spenderAddress = allowanceContract,
+                    )
                 } != false
             },
             ifLeft = { false },
@@ -628,7 +636,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             is TxFeeState.MultipleFeeState -> feeState.getFeeByType(selectedFee).feeValue
             is TxFeeState.SingleFeeState -> feeState.fee.feeValue
         }
-        val balanceAfterTransaction = getCoinBalanceAfterTransaction(fromTokenStatus, amount, includeFeeInAmount, fee)
+        val balanceAfterTransaction = getCoinBalanceAfterTransaction(
+            fromTokenStatus = fromTokenStatus,
+            amount = amount,
+            includeFeeInAmount = includeFeeInAmount,
+            fee = fee,
+        )
         val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
             includeFeeInAmount.amountSubtractFee
         } else {
@@ -868,8 +881,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(dataToSign, currencyToSendStatus.currency.network, txFee.fee.getGasLimit()),
-        ).getOrElse {
-            Timber.e(it, "Failed to create swap dex tx data")
+        ).getOrElse { error ->
+            Timber.e(error, "Failed to create swap dex tx data")
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -941,11 +954,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
         return result.fold(
             ifRight = { txHash ->
+                val networkAddress = currencyToSendStatus.value.networkAddress
+                val fromAddress = networkAddress?.defaultAddress?.value.orEmpty()
                 repository.exchangeSent(
                     userWallet = userWallet,
                     txId = swapData.transaction.txId,
                     fromNetwork = currencyToSendStatus.currency.network.backendId,
-                    fromAddress = currencyToSendStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
+                    fromAddress = fromAddress,
                     payInAddress = payInAddress,
                     txHash = txHash,
                     payInExtraId = swapData.transaction.txExtraId,
@@ -1003,12 +1018,16 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState {
+        val fromNetworkAddress = currencyToSend.value.networkAddress
+        val fromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
+        val toNetworkAddress = currencyToGet.value.networkAddress
+        val toAddress = toNetworkAddress?.defaultAddress?.value.orEmpty()
         val exchangeData = repository.getExchangeData(
             userWallet = userWallet,
             fromContractAddress = currencyToSend.currency.getContractAddress(),
             fromNetwork = currencyToSend.currency.network.backendId,
             toContractAddress = currencyToGet.currency.getContractAddress(),
-            fromAddress = currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            fromAddress = fromAddress,
             toNetwork = currencyToGet.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
@@ -1016,10 +1035,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             providerId = swapProvider.providerId,
             rateType = RateType.FLOAT,
             expressOperationType = expressOperationType,
-            toAddress = currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            toAddress = toAddress,
             refundAddress = currencyToSend.value.networkAddress?.defaultAddress?.value,
             refundExtraId = null, // currently always null,
-        ).getOrElse { return SwapTransactionState.Error.ExpressError(it) }
+        ).getOrElse { error -> return SwapTransactionState.Error.ExpressError(error) }
 
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
@@ -1066,8 +1085,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
             network = currencyToSend.currency.network,
-        ).getOrElse {
-            Timber.e(it, "Failed to create swap CEX tx data")
+        ).getOrElse { error ->
+            Timber.e(error, "Failed to create swap CEX tx data")
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -1082,14 +1101,16 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
 
         val derivationPath = currencyToSend.currency.network.derivationPath.value
+        val cexNetworkAddress = currencyToSend.value.networkAddress
+        val cexFromAddress = cexNetworkAddress?.defaultAddress?.value.orEmpty()
         return result.fold(
-            ifLeft = { SwapTransactionState.Error.TransactionError(it) },
+            ifLeft = { error -> SwapTransactionState.Error.TransactionError(error) },
             ifRight = { txHash ->
                 repository.exchangeSent(
                     userWallet = userWallet,
                     txId = exchangeDataCex.txId,
                     fromNetwork = currencyToSend.currency.network.backendId,
-                    fromAddress = currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty(),
+                    fromAddress = cexFromAddress,
                     payInAddress = getPayoutAddress(txData),
                     txHash = txHash,
                     payInExtraId = exchangeDataCex.txExtraId,
@@ -1185,8 +1206,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isReverseFromTo: Boolean,
     ): CryptoCurrencyStatus? {
         val group = state.getGroupWithReverse(isReverseFromTo)
-        return initialToCurrencyResolver.tryGetFromCache(userWallet, initialCryptoCurrency, state, isReverseFromTo)
-            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state, isReverseFromTo)
+        return initialToCurrencyResolver.tryGetFromCache(
+            userWallet = userWallet,
+            initialCryptoCurrency = initialCryptoCurrency,
+            state = state,
+            isReverseFromTo = isReverseFromTo,
+        )
+            ?: initialToCurrencyResolver.tryGetWithMaxAmount(state = state, isReverseFromTo = isReverseFromTo)
             ?: group.available.firstOrNull()?.currencyStatus
     }
 
@@ -1196,9 +1222,18 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isReverseFromTo: Boolean,
     ): AccountSwapCurrency? {
         val group = state.getGroupWithReverse(isReverseFromTo)
-        return initialToCurrencyResolver.tryGetFromCacheV2(userWallet, initialCryptoCurrency, state, isReverseFromTo)
-            ?: initialToCurrencyResolver.tryGetWithMaxAmountV2(state, isReverseFromTo)
-            ?: group.accountCurrencyList.firstNotNullOfOrNull { it.currencyList.firstOrNull { it.isAvailable } }
+        return initialToCurrencyResolver.tryGetFromCacheV2(
+            userWallet = userWallet,
+            initialCryptoCurrency = initialCryptoCurrency,
+            state = state,
+            isReverseFromTo = isReverseFromTo,
+        )
+            ?: initialToCurrencyResolver.tryGetWithMaxAmountV2(state = state, isReverseFromTo = isReverseFromTo)
+            ?: group.accountCurrencyList.firstNotNullOfOrNull { accountSwapAvailability ->
+                accountSwapAvailability.currencyList.firstOrNull { accountSwapCurrency ->
+                    accountSwapCurrency.isAvailable
+                }
+            }
     }
 
     override fun getNativeToken(networkId: String): CryptoCurrency {
@@ -1370,7 +1405,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                             swapAmount = amount,
                             quotesLoadedState = swapState,
                             isAllowedToSpend = isAllowedToSpend,
-                            spenderAddress = quoteModel.allowanceContract,
+                            spenderAddress = requireNotNull(quoteModel.allowanceContract) {
+                                "allowanceContract is required for DEX"
+                            },
                         )
                         if (state !is SwapState.QuotesLoadedState) return state
                         state.copy(
@@ -1551,19 +1588,23 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         selectedFee: FeeType,
         expressOperationType: ExpressOperationType,
     ): SwapState {
+        val fromNetworkAddress = fromToken.value.networkAddress
+        val dexFromAddress = fromNetworkAddress?.defaultAddress?.value.orEmpty()
+        val toNetworkAddress = toToken.value.networkAddress
+        val dexToAddress = toNetworkAddress?.defaultAddress?.value.orEmpty()
         return repository.getExchangeData(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
-            fromAddress = fromToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            fromAddress = dexFromAddress,
             toNetwork = toToken.currency.network.backendId,
             fromAmount = amount.toStringWithRightOffset(),
             fromDecimals = amount.decimals,
             toDecimals = toToken.currency.decimals,
             providerId = provider.providerId,
             rateType = RateType.FLOAT,
-            toAddress = toToken.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            toAddress = dexToAddress,
             refundAddress = fromToken.value.networkAddress?.defaultAddress?.value,
             expressOperationType = expressOperationType,
         ).fold(
@@ -1816,7 +1857,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromAccount: Account.CryptoPortfolio?,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
-        spenderAddress: String?,
+        spenderAddress: String,
         isAllowedToSpend: Boolean,
     ): SwapState {
         val fromToken = fromTokenStatus.currency
@@ -1840,7 +1881,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val derivationPath = fromToken.network.derivationPath.value
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
-            spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
+            spenderAddress = spenderAddress,
             amount = swapAmount.value.convertToSdkAmount(fromTokenStatus),
             blockchain = fromToken.network.toBlockchain(),
         )
@@ -2215,9 +2256,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
                     val token = tokens
                         .filterIsInstance<CryptoCurrency.Token>()
-                        .find {
-                            it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
-                                it.network.derivationPath == fromTokenStatus.currency.network.derivationPath
+                        .find { cryptoToken ->
+                            cryptoToken.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &&
+                                cryptoToken.network.derivationPath == fromTokenStatus.currency.network.derivationPath
                         }
 
                     SwapFeeState.NotEnough(
@@ -2271,18 +2312,18 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(): Set<QuoteStatus> {
-        return runCatching {
-            val cachedQuotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+        return runSuspendCatching {
+            val cachedQuotes = quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this@getQuotesOrEmpty)
 
-            val allQuotesFound = cachedQuotes?.all { it.value !is QuoteStatus.Empty } == true
+            val areAllQuotesFound = cachedQuotes?.all { quote -> quote.value !is QuoteStatus.Empty } == true
 
-            if (allQuotesFound) return@runCatching cachedQuotes
+            if (areAllQuotesFound) return@runSuspendCatching cachedQuotes.orEmpty()
 
             val currenciesIds = if (cachedQuotes.isNullOrEmpty()) {
-                this
+                this@getQuotesOrEmpty
             } else {
-                cachedQuotes.mapNotNullTo(hashSetOf()) {
-                    if (it.value is QuoteStatus.Empty) it.rawCurrencyId else null
+                cachedQuotes.mapNotNullTo(hashSetOf()) { quote ->
+                    if (quote.value is QuoteStatus.Empty) quote.rawCurrencyId else null
                 }
             }
 
@@ -2290,10 +2331,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 params = MultiQuoteStatusFetcher.Params(currenciesIds = currenciesIds, appCurrencyId = null),
             )
 
-            quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this)
+            quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this@getQuotesOrEmpty).orEmpty()
+        }.getOrElse { e ->
+            Timber.e(e, "Failed to get quotes: ${e.message.orEmpty()}")
+            emptySet()
         }
-            .getOrNull()
-            .orEmpty()
     }
 
     private fun isSolana(networkId: String): Boolean {
@@ -2305,7 +2347,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return try {
             SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
         } catch (e: Exception) {
-            Timber.e("Failed to format the hash: ${e.message}")
+            Timber.e("Failed to format the hash: ${e.message.orEmpty()}")
             hash
         }
     }

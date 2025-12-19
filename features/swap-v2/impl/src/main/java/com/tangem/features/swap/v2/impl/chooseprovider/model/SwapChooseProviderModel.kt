@@ -25,13 +25,13 @@ internal class SwapChooseProviderModel @Inject constructor(
 
     private val params: SwapChooseProviderComponent.Params = paramsContainer.require()
 
-    private val needApplyFCARestrictions = params.userCountry.needApplyFCARestrictions()
+    private val isNeedApplyFCARestrictions = params.userCountry.needApplyFCARestrictions()
 
     private val swapProviderListItemConverter by lazy(LazyThreadSafetyMode.NONE) {
         SwapProviderListItemConverter(
             cryptoCurrency = params.cryptoCurrency,
             selectedProvider = params.selectedProvider,
-            needApplyFCARestrictions = needApplyFCARestrictions,
+            isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
             needBestRateBadge = params.providers.filterIsInstance<SwapQuoteUM.Content>().isSingleItem().not(),
         )
     }
@@ -45,13 +45,13 @@ internal class SwapChooseProviderModel @Inject constructor(
     }
 
     private fun getInitialState(): SwapChooseProviderBottomSheetContent {
-        val filteredProviderList = params.providers.filter {
-            it is SwapQuoteUM.Content ||
-                it is SwapQuoteUM.Allowance ||
-                (it as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
+        val filteredProviderList = params.providers.filter { swapQuoteUM ->
+            swapQuoteUM is SwapQuoteUM.Content ||
+                swapQuoteUM is SwapQuoteUM.Allowance ||
+                (swapQuoteUM as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
         }
         return SwapChooseProviderBottomSheetContent(
-            isApplyFCARestrictions = needApplyFCARestrictions && params.selectedProvider.isRestrictedByFCA(),
+            isApplyFCARestrictions = isNeedApplyFCARestrictions && params.selectedProvider.isRestrictedByFCA(),
             providerList = swapProviderListItemConverter.convertList(filteredProviderList)
                 .filterNotNull()
                 .toPersistentList(),
