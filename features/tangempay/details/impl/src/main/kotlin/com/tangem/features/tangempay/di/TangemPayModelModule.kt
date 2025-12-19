@@ -9,6 +9,7 @@ import com.tangem.features.tangempay.model.TangemPayChangePinModel
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
+import com.tangem.features.tangempay.model.TangemPayViewPinModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -53,4 +54,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayAddFundsModel::class)
     fun bindTangemPayAddFundsModel(model: TangemPayAddFundsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayViewPinModel::class)
+    fun bindTangemPayViewPinModel(model: TangemPayViewPinModel): Model
 }
