@@ -9,7 +9,7 @@ internal sealed class MarketsListAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Markets", event = event, params = params) {
 
-    data object BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
+    class BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
 
     data class SortBy(
         val sortByTypeUM: SortByTypeUM,
@@ -24,6 +24,7 @@ internal sealed class MarketsListAnalyticsEvent(
                 SortByTypeUM.TopGainers -> "Gainers"
                 SortByTypeUM.TopLosers -> "Losers"
                 SortByTypeUM.Staking -> "Staking"
+                SortByTypeUM.YieldSupply -> "Yield Supply"
             },
             "Period" to when (interval) {
                 MarketsListUM.TrendInterval.H24 -> "24h"
@@ -32,12 +33,11 @@ internal sealed class MarketsListAnalyticsEvent(
             },
         ),
     )
+    class YieldModePromoShown : MarketsListAnalyticsEvent(event = "Notice - Yield Mode Promo")
 
-    data object StakingPromoShown : MarketsListAnalyticsEvent(event = "Notice - Staking Promo")
+    class YieldModePromoClosed : MarketsListAnalyticsEvent(event = "Yield Mode Promo Closed")
 
-    data object StakingPromoClosed : MarketsListAnalyticsEvent(event = "Staking Promo Closed")
-
-    data object StakingMoreInfoClicked : MarketsListAnalyticsEvent(event = "Staking More Info")
+    class YieldModeMoreInfoClicked : MarketsListAnalyticsEvent(event = "Yield Mode More Info")
 
     data class TokenSearched(val tokenFound: Boolean) : MarketsListAnalyticsEvent(
         event = "Token Searched",
@@ -46,5 +46,5 @@ internal sealed class MarketsListAnalyticsEvent(
         ),
     )
 
-    data object ShowTokens : MarketsListAnalyticsEvent(event = "Button - Show Tokens")
+    class ShowTokens : MarketsListAnalyticsEvent(event = "Button - Show Tokens")
 }
