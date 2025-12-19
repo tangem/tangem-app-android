@@ -13,6 +13,6 @@ sealed class SendEntryRoute : Route {
     data object SendWithSwap : SendEntryRoute()
     /** Route to choose token screen for send via swap */
     data class ChooseToken(
-        val showSendViaSwapNotification: Boolean,
+        val isShowSendViaSwapNotification: Boolean,
     ) : SendEntryRoute()
 }
