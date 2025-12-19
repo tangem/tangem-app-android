@@ -1,7 +1,12 @@
 package com.tangem.core.ui.utils
 
 import android.text.format.DateFormat
+import com.tangem.core.ui.utils.DateTimeFormatters.dateDDMMYYYY
+import com.tangem.core.ui.utils.DateTimeFormatters.dateMMMdd
+import com.tangem.core.ui.utils.DateTimeFormatters.dateTimeFormatter
+import com.tangem.core.ui.utils.DateTimeFormatters.dateYYYY
 import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormatterBuilder
@@ -81,10 +86,34 @@ object DateTimeFormatters {
     }
 
     /**
+     * Example: "June 31"
+     */
+    val dateDMMM: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("d MMMM")
+    }
+
+    /**
      * Example: "31.06.2020 12:00", "06/31/2020 12:00", "06/31/2020 12:00 PM"
      */
     val dateTimeFormatter: DateTimeFormatter by lazy {
         getBestFormatterBySkeleton("dd.MM.yyyy HH:mm")
+    }
+
+    /**
+     * Local full date formatter (e.g., "dd MMMM, HH:mm")
+     */
+    val localFullDate: DateTimeFormatter by lazy {
+        DateTimeFormatterBuilder()
+            .appendDayOfMonth(2)
+            .appendLiteral(' ')
+            .appendMonthOfYearText()
+            .appendLiteral(", ")
+            .appendHourOfDay(2)
+            .appendLiteral(':')
+            .appendMinuteOfHour(2)
+            .toFormatter()
+            .withLocale(Locale.getDefault())
+            .withZone(DateTimeZone.getDefault())
     }
 
     fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {
