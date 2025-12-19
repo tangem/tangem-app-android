@@ -845,7 +845,7 @@ internal class SwapModel @Inject constructor(
 
     private suspend fun processTangemPayWithdrawal(swapTransactionState: SwapTransactionState.TangemPayWithdrawalData) {
         tangemPayWithdrawUseCase(
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoAmount = swapTransactionState.cryptoAmount,
             cryptoCurrencyId = swapTransactionState.cryptoCurrencyId,
             receiverCexAddress = swapTransactionState.cexAddress,
