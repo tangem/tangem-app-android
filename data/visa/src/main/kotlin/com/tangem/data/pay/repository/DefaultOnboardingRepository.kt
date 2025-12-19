@@ -65,15 +65,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
         withContext(dispatcherProvider.io) {
-            val initialCredentials = authDataSource.produceInitialCredentials(cardId = getCardId(userWalletId))
+            val userWallet = getUserWallet(userWalletId)
+            val initialCredentials = authDataSource.produceInitialCredentials(userWallet)
                 .fold(
                     ifLeft = { error -> error("Can not produce initial data: ${error.message}") },
                     ifRight = { it },
                 )
             // should storeCheckCustomerWalletResult because we already know this
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId, true)
+            tangemPayStorage.storeCheckCustomerWalletResult(userWallet.walletId, true)
             tangemPayStorage.storeCustomerWalletAddress(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 customerWalletAddress = initialCredentials.customerWalletAddress,
             )
             tangemPayStorage.storeAuthTokens(
@@ -120,17 +121,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    private fun getCardId(userWalletId: UserWalletId): String {
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         val userWallet = if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
         } else {
             userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == userWalletId }
         } ?: error("no userWallet found")
-        return if (userWallet is UserWallet.Cold) {
-            userWallet.cardId
-        } else {
-            TODO("[REDACTED_JIRA]")
-        }
+        return userWallet
     }
 
     private suspend fun getCustomerInfo(
