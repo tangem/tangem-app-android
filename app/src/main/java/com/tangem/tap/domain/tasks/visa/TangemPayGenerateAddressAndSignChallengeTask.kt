@@ -11,7 +11,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
+import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.VisaDataToSignByCustomerWallet
@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
     private val dispatchersProvider: CoroutineDispatcherProvider,
-    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
+    private val tangemPayRemoteDataSource: TangemPayRemoteDataSource,
 ) : CardSessionRunnable<TangemPayInitialCredentials> {
 
     override fun run(session: CardSession, callback: CompletionCallback<TangemPayInitialCredentials>) {
@@ -52,7 +52,7 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
 
         val userWalletId = UserWalletIdBuilder.walletPublicKey(wallet.publicKey)
         val challenge = withContext(dispatchersProvider.io) {
-            visaAuthRemoteDataSource.getCustomerWalletAuthChallenge(
+            tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
                 customerWalletAddress = address,
                 customerWalletId = userWalletId.stringValue,
             )
@@ -71,7 +71,7 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         }
 
         val authTokens = withContext(dispatchersProvider.io) {
-            visaAuthRemoteDataSource.getTokenWithCustomerWallet(
+            tangemPayRemoteDataSource.getTokenWithCustomerWallet(
                 sessionId = challenge.session.sessionId,
                 signature = signedData.signature,
                 nonce = signedData.dataToSign.hashToSign,

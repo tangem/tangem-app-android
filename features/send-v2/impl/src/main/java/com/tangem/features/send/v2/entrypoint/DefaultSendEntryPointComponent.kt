@@ -106,6 +106,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
 
         Children(
             stack = childStackValue,
+            modifier = modifier,
             animation = stackAnimation { child ->
                 when (child.configuration) {
                     SendEntryRoute.Send,
@@ -115,7 +116,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
                 }
             },
         ) { child ->
-            child.instance.Content(modifier.fillMaxSize())
+            child.instance.Content(Modifier.fillMaxSize())
         }
     }
 
@@ -125,7 +126,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
     ): ComposableContentComponent = when (configuration) {
         is SendEntryRoute.ChooseToken -> getManagedTokensComponent(
             componentContext = factoryContext,
-            showSendViaSwapNotification = configuration.showSendViaSwapNotification,
+            showSendViaSwapNotification = configuration.isShowSendViaSwapNotification,
         )
         SendEntryRoute.Send -> sendComponent
         SendEntryRoute.SendWithSwap -> sendWithSwapComponent

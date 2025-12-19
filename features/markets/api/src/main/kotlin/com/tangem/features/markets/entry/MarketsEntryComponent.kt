@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 
 @Stable
 interface MarketsEntryComponent {

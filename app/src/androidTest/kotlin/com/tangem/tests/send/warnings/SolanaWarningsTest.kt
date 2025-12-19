@@ -22,7 +22,7 @@ class SolanaWarningsTest : BaseTestCase() {
     private val tokenName = "Solana"
     private val amountToLeaveLessThanRent = "0.0016941"
     private val amountToLeaveGreaterThanRent = "0.0000941"
-    private val amountToLeaveRentOnly = "0.00168934"
+    private val amountToLeaveRentOnly = "0.001689338"
     private val rentAmount = "SOL 0.00089088"
 
     private val invalidAmountTitle = getResourceString(R.string.send_notification_invalid_amount_title)

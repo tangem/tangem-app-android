@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.createhardwarewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,6 +44,7 @@ internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 24.dp,

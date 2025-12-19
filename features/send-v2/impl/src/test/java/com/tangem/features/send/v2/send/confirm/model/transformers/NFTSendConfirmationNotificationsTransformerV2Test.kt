@@ -167,7 +167,7 @@ class NFTSendConfirmationNotificationsTransformerV2Test {
             isPrimaryButtonEnabled = true,
             walletName = mockk(relaxed = true),
             isSending = false,
-            showTapHelp = false,
+            isShowTapHelp = false,
             sendingFooter = mockk(relaxed = true),
             notifications = persistentListOf(),
         )

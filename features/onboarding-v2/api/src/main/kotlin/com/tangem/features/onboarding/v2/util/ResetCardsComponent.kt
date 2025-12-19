@@ -8,8 +8,13 @@ interface ResetCardsComponent {
     fun startResetCardsFlow(createdUserWallet: UserWallet.Cold)
 
     data class Params(
+        val source: Source,
         val callbacks: ModelCallbacks,
-    )
+    ) {
+        enum class Source {
+            Upgrade, Onboarding,
+        }
+    }
 
     interface ModelCallbacks {
         fun onCancel()

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:NFTCollections.kt${ it.content is NFTCollections.Content.Error || it.content is NFTCollections.Content.Collections &amp;&amp; it.content.source == StatusSource.ONLY_CACHE }</ID>
+    <ID>MultilineLambdaItParameter:NFTCollections.kt${ val content = it.content content is NFTCollections.Content.Collections &amp;&amp; content.collections.isNullOrEmpty() }</ID>
+    <ID>MultilineLambdaItParameter:NFTCollections.kt${ val content = it.content content is NFTCollections.Content.Collections &amp;&amp; content.source != StatusSource.CACHE }</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,10 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.news.repository.NewsRepository
-import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
-import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
-import com.tangem.domain.news.usecase.ObserveNewsDetailsUseCase
-import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
+import com.tangem.domain.news.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,5 +34,11 @@ internal object NewsDomainModule {
     @Singleton
     fun provideGetNewsListBatchFlowUseCase(repository: NewsRepository): GetNewsListBatchFlowUseCase {
         return GetNewsListBatchFlowUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchTrendingNewsUseCase(repository: NewsRepository): FetchTrendingNewsUseCase {
+        return FetchTrendingNewsUseCase(repository)
     }
 }

@@ -27,7 +27,7 @@ internal class NFTSendAnalyticHelper @Inject constructor(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
-                nonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
+                isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
             ),
         )
         analyticsEventHandler.send(

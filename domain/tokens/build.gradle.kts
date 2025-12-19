@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.promo)
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Project - Api */
     implementation(projects.features.staking.api)
