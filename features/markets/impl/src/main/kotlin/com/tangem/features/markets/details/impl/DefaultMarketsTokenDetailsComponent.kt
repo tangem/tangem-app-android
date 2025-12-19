@@ -11,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -21,7 +22,6 @@ import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalytics
 import com.tangem.features.markets.details.impl.model.MarketsTokenDetailsModel
 import com.tangem.features.markets.details.impl.model.state.TokenNetworksState
 import com.tangem.features.markets.details.impl.ui.MarketsTokenDetailsContent
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
