@@ -60,14 +60,14 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
         }
 
-        override fun onMarketOpenClick(sortBy: SortByTypeUM) {
+        override fun onMarketOpenClick(sortBy: SortByTypeUM?) {
             innerRouter.push(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
                         onBackClicked = { onChildBack() },
                         onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
-                        preselectedSortType = sortBy,
-                        shouldAlwaysShowSearchBar = sortBy == SortByTypeUM.Rating,
+                        preselectedSortType = sortBy ?: SortByTypeUM.Rating,
+                        shouldAlwaysShowSearchBar = sortBy == null,
                     ),
                 ),
             )
