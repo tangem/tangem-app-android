@@ -78,11 +78,13 @@ internal object StakingDataModule {
         p2pEthPoolApi: P2PEthPoolApi,
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         dispatchers: CoroutineDispatcherProvider,
+        stakingFeatureToggles: StakingFeatureToggles,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pEthPoolApi = p2pEthPoolApi,
             p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             dispatchers = dispatchers,
+            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 

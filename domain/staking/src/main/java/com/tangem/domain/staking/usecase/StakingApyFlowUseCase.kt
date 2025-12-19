@@ -29,15 +29,22 @@ class StakingApyFlowUseCase(
             p2pEthPoolRepository.getVaultsFlow(),
         ) { yields, p2pVaults ->
             val stakeKitMap = yields.filterNot { yield ->
-                val isCardanoYield = yield.token.coinGeckoId == Blockchain.Cardano.toCoinId()
-                isCardanoYield && !stakingFeatureToggles.isCardanoStakingEnabled
+                val coinGeckoId = yield.token.coinGeckoId
+                val isCardanoYield = coinGeckoId == Blockchain.Cardano.toCoinId()
+                val isEthYield = coinGeckoId == Blockchain.Ethereum.toCoinId()
+
+                when {
+                    isCardanoYield && !stakingFeatureToggles.isCardanoStakingEnabled -> true
+                    isEthYield && !stakingFeatureToggles.isEthStakingEnabled -> true
+                    else -> false
+                }
             }.associate { yield ->
                 val key = "${yield.token.coinGeckoId}_${yield.token.symbol}"
                 val targets = yield.validators.map { it.toStakingTarget() }
                 key to targets
             }
 
-            val p2pMap = if (p2pVaults.isNotEmpty()) {
+            val p2pMap = if (p2pVaults.isNotEmpty() && stakingFeatureToggles.isEthStakingEnabled) {
                 val ethKey = "${Blockchain.Ethereum.toCoinId()}_${Blockchain.Ethereum.currency}"
                 val targets = p2pVaults.map { it.toStakingTarget() }
                 mapOf(ethKey to targets)
