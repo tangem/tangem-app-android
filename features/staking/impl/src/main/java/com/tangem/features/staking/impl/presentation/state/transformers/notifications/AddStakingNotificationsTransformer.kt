@@ -15,9 +15,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.StakingErrors
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -47,12 +47,12 @@ internal class AddStakingNotificationsTransformer(
     private val stakingError: StakingError?,
     private val currencyCheck: CryptoCurrencyCheck,
     private val isSubtractAvailable: Boolean,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Transformer<StakingUiState> {
 
     private val stakingInfoNotificationsFactory = StakingInfoNotificationsFactory(
         cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-        yield = yield,
+        integration = integration,
         isSubtractAvailable = isSubtractAvailable,
     )
 
@@ -77,7 +77,7 @@ internal class AddStakingNotificationsTransformer(
             isSubtractAvailable = isSubtractAvailable,
             reduceAmountBy = reduceAmountBy,
         )
-        val minimumRequirement = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum.orZero()
+        val minimumRequirement = integration.enterMinimumAmount.orZero()
         val sendingAmount = if (isEnterAction) {
             checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isSubtractAvailable,

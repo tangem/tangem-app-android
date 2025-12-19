@@ -24,7 +24,7 @@ internal class FeedEntryChildFactory @Inject constructor() {
 
         @Serializable
         @Immutable
-        data object TokenList : Child
+        data class TokenList(val params: DefaultMarketsTokenListComponent.Params) : Child
 
         @Serializable
         @Immutable
@@ -54,12 +54,7 @@ internal class FeedEntryChildFactory @Inject constructor() {
             is Child.TokenList -> {
                 DefaultMarketsTokenListComponent(
                     appComponentContext = appComponentContext,
-                    onTokenClick = { token, appCurrency ->
-                        feedEntryClickIntents.onMarketItemClick(
-                            token,
-                            appCurrency,
-                        )
-                    },
+                    params = child.params,
                 )
             }
             Child.NewsDetails -> {
