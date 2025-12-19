@@ -23,7 +23,7 @@ internal class DefaultFeedComponent(
     @Composable
     override fun Title() {
         val state by feedComponentModel.state.collectAsStateWithLifecycle()
-        FeedListHeader(state.searchBar)
+        FeedListHeader(state.feedListSearchBar)
     }
 
     @Composable
