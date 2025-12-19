@@ -1,6 +1,8 @@
 package com.tangem.core.ui.res
 
 import android.app.Activity
+import androidx.compose.foundation.ComposeFoundationFlags
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -27,6 +29,7 @@ import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.valentinilk.shimmer.Shimmer
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TangemTheme(
     activity: Activity,
@@ -36,6 +39,9 @@ fun TangemTheme(
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    // TODO Research and implement in redesign [REDACTED_TASK_KEY]
+    ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = false
+
     val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
     val windowSize = rememberWindowSize(activity = activity)
 

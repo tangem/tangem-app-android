@@ -311,7 +311,7 @@ internal class ChildFactory @Inject constructor(
                     params = StakingComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
-                        yieldId = route.yieldId,
+                        integrationId = route.integrationId,
                     ),
                     componentFactory = stakingComponentFactory,
                 )
@@ -424,6 +424,7 @@ internal class ChildFactory @Inject constructor(
                         cardId = route.cardId,
                         isActiveBackupStatus = route.isActiveBackupStatus,
                         backupCardsCount = route.backupCardsCount,
+                        hasTangemPay = route.hasTangemPay,
                     ),
                     componentFactory = resetCardComponentFactory,
                 )
