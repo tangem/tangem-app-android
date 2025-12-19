@@ -17,6 +17,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -31,6 +32,7 @@ internal class DefaultP2PEthPoolRepository(
     private val p2pEthPoolApi: P2PEthPoolApi,
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val stakingFeatureToggles: StakingFeatureToggles,
 ) : P2PEthPoolRepository {
 
     private val vaultConverter = P2PEthPoolVaultConverter
@@ -40,17 +42,21 @@ internal class DefaultP2PEthPoolRepository(
     private val errorConverter = P2PEthPoolErrorConverter
 
     override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
-        val vaults = getVaults(network).getOrElse { error ->
-            Timber.e("Error fetching P2PEthPool vaults: $error")
+        val vaults = if (stakingFeatureToggles.isEthStakingEnabled) {
+            getVaults(network).getOrElse { error ->
+                Timber.e("Error fetching P2PEthPool vaults: $error")
+                emptyList()
+            }
+        } else {
             emptyList()
         }
+
         p2pEthPoolVaultsStore.store(vaults.filter { !it.isPrivate }) // TODO eth isSmoothingPool?
     }
 
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
         withContext(dispatchers.io) {
-            val response = p2pEthPoolApi.getVaults(network.value)
-            when (response) {
+            when (val response = p2pEthPoolApi.getVaults(network.value)) {
                 is ApiResponse.Success -> {
                     val data = response.data
                     ensure(data.error == null) {
