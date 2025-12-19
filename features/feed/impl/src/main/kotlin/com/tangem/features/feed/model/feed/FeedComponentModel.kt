@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -31,7 +30,6 @@ import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
-import kotlin.collections.all
 
 @Stable
 @ModelScoped
@@ -65,13 +63,6 @@ internal class FeedComponentModel @Inject constructor(
 
     internal val state: StateFlow<FeedListUM>
         field = MutableStateFlow<FeedListUM>(initialState())
-
-    private val searchBarStateFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SearchBarStateFactory(
-            currentStateProvider = Provider { state.value },
-            onStateUpdate = { newState -> state.update { newState } },
-        )
-    }
 
     private val trendingNewsStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         TrendingNewsStateFactory(
@@ -137,14 +128,9 @@ internal class FeedComponentModel @Inject constructor(
     private fun initialState(): FeedListUM {
         return FeedListUM(
             currentDate = getCurrentDate(),
-            searchBar = SearchBarUM(
+            feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(R.string.markets_search_header_title),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = {
-                    if (it) params.feedClickIntents.onMarketOpenClick(SortByTypeUM.Rating)
-                },
+                onBarClick = { params.feedClickIntents.onMarketOpenClick(null) },
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
@@ -307,7 +293,6 @@ internal class FeedComponentModel @Inject constructor(
     private fun updateCallbacks() {
         state.update { feedListUM ->
             feedListUM.copy(
-                searchBar = state.value.searchBar.copy(onQueryChange = searchBarStateFactory::onSearchQueryChange),
                 feedListCallbacks = feedListUM.feedListCallbacks.copy(
                     onSortTypeClick = ::onSortTypeClick,
                     onMarketItemClick = { item ->
