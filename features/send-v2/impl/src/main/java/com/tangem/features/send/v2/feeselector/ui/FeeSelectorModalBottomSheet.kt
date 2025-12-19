@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -45,6 +46,7 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
@@ -200,7 +202,9 @@ private fun CustomFeeBlock(
 ) {
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier.padding(all = 12.dp),
+            modifier = Modifier
+                .padding(all = 12.dp)
+                .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_FEE_ITEM),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -208,7 +212,8 @@ private fun CustomFeeBlock(
                 modifier = Modifier
                     .size(36.dp)
                     .background(color = iconBackgroundColor, shape = CircleShape)
-                    .padding(6.dp),
+                    .padding(6.dp)
+                    .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_ICON),
                 painter = painterResource(R.drawable.ic_edit_v2_24),
                 tint = iconTint,
                 contentDescription = null,
@@ -217,6 +222,7 @@ private fun CustomFeeBlock(
                 text = stringResourceSafe(R.string.common_custom),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle2,
+                modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_TITLE),
             )
         }
         AnimatedVisibility(
@@ -289,7 +295,8 @@ private fun ExpandedCustomFeeItems(
                     .background(
                         color = TangemTheme.colors.background.primary,
                         shape = TangemTheme.shapes.roundedCornersXMedium,
-                    ),
+                    )
+                    .testTag(SendSelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_ITEM),
             )
         }
     }
@@ -309,7 +316,9 @@ private fun RegularFeeItemContent(
 ) {
     Column(modifier = modifier) {
         Row(
-            modifier = Modifier.padding(all = 12.dp),
+            modifier = Modifier
+                .padding(all = 12.dp)
+                .testTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_FEE_ITEM),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -317,7 +326,8 @@ private fun RegularFeeItemContent(
                 modifier = Modifier
                     .size(36.dp)
                     .background(color = iconBackgroundColor, shape = CircleShape)
-                    .padding(6.dp),
+                    .padding(6.dp)
+                    .testTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_ICON),
                 painter = painterResource(iconRes),
                 tint = iconTint,
                 contentDescription = null,
@@ -352,6 +362,7 @@ private fun FeeDescription(
             text = title.resolveReference(),
             color = TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.subtitle2,
+            modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE),
         )
         if (preDot != null) {
             FeeValueContent(preDot = preDot, postDot = postDot, ellipsizeOffset = ellipsizeOffset)
@@ -375,6 +386,7 @@ private fun FeeValueContent(preDot: TextReference, postDot: TextReference?, elli
             color = textColor,
             textAlign = TextAlign.End,
             ellipsis = ellipsis,
+            modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.TOKEN_AMOUNT),
         )
         if (postDot != null) {
             Text(
@@ -382,9 +394,16 @@ private fun FeeValueContent(preDot: TextReference, postDot: TextReference?, elli
                 style = textStyle,
                 color = textColor,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing4)
+                    .testTag(SendSelectNetworkFeeBottomSheetTestTags.DOT_SIGN),
             )
-            Text(text = postDot.resolveReference(), style = textStyle, color = textColor)
+            Text(
+                text = postDot.resolveReference(),
+                style = textStyle,
+                color = textColor,
+                modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.FIAT_AMOUNT),
+            )
         }
     }
 }
