@@ -31,11 +31,11 @@ internal class SwapDataConverter : Converter<ExchangeDataResponseWithTxDetails, 
         )
 
         return if (transactionDto.txType == TxType.SWAP) {
-            val otherNativeFeeWei = transactionDto.otherNativeFee?.let {
-                if (it == "0") {
+            val otherNativeFeeWei = transactionDto.otherNativeFee?.let { otherFee ->
+                if (otherFee == "0") {
                     BigDecimal.ZERO
                 } else {
-                    requireNotNull(it.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
+                    requireNotNull(otherFee.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
                 }
             }
             SwapDataTransactionModel.DEX(

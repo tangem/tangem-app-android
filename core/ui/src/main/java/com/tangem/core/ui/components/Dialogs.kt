@@ -308,13 +308,14 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DialogButtons(
     confirmButton: DialogButtonUM,
     dismissButton: DialogButtonUM?,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(
             space = TangemTheme.dimens.spacing4,
