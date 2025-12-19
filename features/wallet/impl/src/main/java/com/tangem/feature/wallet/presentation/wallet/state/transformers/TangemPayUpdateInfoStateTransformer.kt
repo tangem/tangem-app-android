@@ -66,6 +66,7 @@ internal class TangemPayUpdateInfoStateTransformer(
                 openDetails(
                     TangemPayDetailsConfig(
                         cardId = productInstance.cardId,
+                        isPinSet = cardInfo.isPinSet,
                         cardFrozenState = cardFrozenState,
                         customerWalletAddress = cardInfo.customerWalletAddress,
                         cardNumberEnd = cardInfo.lastFourDigits,
