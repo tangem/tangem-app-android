@@ -1,8 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -19,7 +20,7 @@ internal class SetTokenListTransformer(
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
     private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
+    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -64,7 +65,7 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingApyMap = stakingApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
             shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
     }
