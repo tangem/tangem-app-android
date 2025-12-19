@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.mode
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -161,7 +162,11 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                 openGeneratedSeedPhrase()
             },
             onLearnMoreClicked = {
-                urlOpener.openUrl(seedPhraseLearnMoreUrl())
+                modelScope.launch {
+                    urlOpener.openUrl(
+                        TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.SeedPhraseRiskySolution),
+                    )
+                }
             },
         )
     }
