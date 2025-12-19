@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply.usecase
 
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import java.math.BigDecimal
 
 /**
@@ -12,11 +13,15 @@ import java.math.BigDecimal
  */
 class YieldSupplyGetDustMinAmountUseCase {
 
-    operator fun invoke(minAmount: BigDecimal, appCurrency: AppCurrency): BigDecimal {
+    operator fun invoke(
+        minAmountTokenCurrency: BigDecimal,
+        appCurrency: AppCurrency,
+        tokenCryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): BigDecimal {
         return if (appCurrency.code in SUPPORTED_DUST_CURRENCIES) {
             DUST_MIN_AMOUNT
         } else {
-            minAmount.stripTrailingZeros()
+            minAmountTokenCurrency.multiply(tokenCryptoCurrencyStatus.value.fiatRate)
         }
     }
 
