@@ -45,17 +45,12 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.model.P2PEthPoolIntegration
-import com.tangem.domain.staking.model.StakeKitIntegration
-import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.StakingIntegration
-import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.staking.model.*
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
-import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
+import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
@@ -97,6 +92,7 @@ import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -178,6 +174,7 @@ internal class StakingModel @Inject constructor(
                 StakeKitIntegration(integrationId, yield)
             }
             StakingIntegrationID.P2PEthPool -> {
+                // TODO p2p avoid network call
                 val vaults = p2pEthPoolRepository.getVaults().getOrElse { emptyList() }
                 P2PEthPoolIntegration(integrationId, vaults)
             }
@@ -615,10 +612,23 @@ internal class StakingModel @Inject constructor(
 
     override fun onActiveStake(activeStake: BalanceState) {
         val networkId = cryptoCurrencyStatus.currency.network.rawId
-        if (isSingleAction(networkId, activeStake)) {
+        val preferredValidators = (integration as? StakeKitIntegration)?.targets
+            ?.filterIsInstance<StakingTarget.Validator>()
+            ?.filter { it.delegate.preferred }
+            .orEmpty()
+        val pendingActions = activeStake.pendingActions.mapNotNull { action ->
+            if (action.type in listOf(StakingActionType.RESTAKE, StakingActionType.STAKE) &&
+                preferredValidators.isSingleItem()
+            ) {
+                null
+            } else {
+                action
+            }
+        }.toImmutableList()
+        if (isSingleAction(networkId, pendingActions)) {
             prepareForConfirmation(
                 balanceType = activeStake.type,
-                pendingActions = activeStake.pendingActions,
+                pendingActions = pendingActions,
                 balanceState = activeStake,
                 target = activeStake.target,
                 amountValue = activeStake.cryptoValue,
@@ -627,7 +637,7 @@ internal class StakingModel @Inject constructor(
         } else {
             stateController.update(
                 ShowActionSelectorBottomSheetTransformer(
-                    pendingActions = withStubUnstakeAction(networkId, activeStake),
+                    pendingActions = withStubUnstakeAction(networkId, pendingActions, activeStake),
                     onActionSelect = { action ->
                         prepareForConfirmation(
                             balanceType = activeStake.type,
