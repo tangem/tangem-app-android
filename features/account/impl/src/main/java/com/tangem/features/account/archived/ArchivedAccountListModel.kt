@@ -13,7 +13,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
@@ -139,7 +138,19 @@ internal class ArchivedAccountListModel @Inject constructor(
 
         val featureError = AccountFeatureError.ArchivedAccountList.FailedToRecoverAccount(cause = error)
         logError(error = featureError)
-        messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
+        val messageText = resourceReference(
+            id = R.string.universal_error,
+            formatArgs = wrappedList(featureError.errorCode),
+        )
+        val message = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = messageText,
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_ok),
+                onClick = {},
+            ),
+        )
+        messageSender.send(message)
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
