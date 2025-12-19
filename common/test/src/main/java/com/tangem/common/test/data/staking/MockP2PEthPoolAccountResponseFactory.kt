@@ -8,7 +8,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import java.math.BigDecimal
 
 /**
- * Factory for creating mock P2P ETH Pool account responses for testing
+ * Factory for creating mock P2PEthPool account responses for testing
  */
 object MockP2PEthPoolAccountResponseFactory {
 
