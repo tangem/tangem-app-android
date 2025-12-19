@@ -28,6 +28,7 @@ internal class DefaultUpgradeWalletComponent @AssistedInject constructor(
     private val resetCardsComponent = resetCardsComponentFactory.create(
         context = child("ResetCardsComponent"),
         params = ResetCardsComponent.Params(
+            source = ResetCardsComponent.Params.Source.Upgrade,
             callbacks = model.resetCardsComponentCallbacks,
         ),
     )
