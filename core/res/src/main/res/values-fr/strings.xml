@@ -896,6 +896,8 @@
   <string name="reset_card_without_backup_to_factory_message">La réinitialisation aux paramètres d\'usine supprimera complètement le portefeuille de la carte sélectionnée et le supprimera de l\'application. Vous ne pourrez pas restaurer le portefeuille actuel.</string>
   <string name="ring_promo_text">Les propriétaires du Tangem Ring ont droit à 3 swap gratis sur Changelly jusqu\'au 15/11 !</string>
   <string name="ring_promo_title">Échangez avec 0 % de frais !</string>
+  <string name="root_detected_warning_description">Les appareils disposant d\'un accès root sont considérés comme moins sécurisés. Vos données peuvent être exposées à des risques supplémentaires.</string>
+  <string name="root_detected_warning_title">Accès root détecté</string>
   <string name="save_user_wallet_agreement_access_description">Connectez-vous à l\'application et vérifiez votre solde sans scanner la carte</string>
   <string name="save_user_wallet_agreement_access_title">Accéder à l\'application</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Autoriser l\'utilisation de la biométrie</string>
