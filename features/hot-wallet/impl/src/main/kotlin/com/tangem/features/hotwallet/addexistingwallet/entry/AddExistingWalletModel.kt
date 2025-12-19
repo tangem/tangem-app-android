@@ -27,6 +27,7 @@ import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -110,7 +111,7 @@ internal class AddExistingWalletModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
                         if (userWalletId != null) {
-                            modelScope.launch {
+                            modelScope.launch(NonCancellable) {
                                 setAccessCodeSkippedUseCase(userWalletId, true)
                             }
                         }

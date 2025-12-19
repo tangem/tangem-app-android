@@ -5,7 +5,7 @@ import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import kotlinx.serialization.Serializable
 
@@ -56,13 +56,10 @@ data class CryptoCurrencyStatus(
         /** The network address */
         val networkAddress: NetworkAddress? get() = null
 
-        /** Staking yield balance */
-        val yieldBalance: YieldBalance? get() = null
+        /** Staking balance */
+        val stakingBalance: StakingBalance? get() = null
 
-        /**
-         * !!! DO NOT CONFUSE with STAKING YIELD BALANCE
-         * Yield supply status
-         */
+        /** Yield supply status */
         val yieldSupplyStatus: YieldSupplyStatus? get() = null
 
         /** Sources */
@@ -73,11 +70,11 @@ data class CryptoCurrencyStatus(
     data class Sources(
         val networkSource: StatusSource = StatusSource.ACTUAL,
         val quoteSource: StatusSource = StatusSource.ACTUAL,
-        val yieldBalanceSource: StatusSource = StatusSource.ACTUAL,
+        val stakingBalanceSource: StatusSource = StatusSource.ACTUAL,
     ) {
 
         val total: StatusSource by lazy {
-            listOf(networkSource, quoteSource, yieldBalanceSource).getResultStatusSource()
+            listOf(networkSource, quoteSource, stakingBalanceSource).getResultStatusSource()
         }
     }
 
@@ -163,7 +160,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: SerializedBigDecimal,
         override val fiatRate: SerializedBigDecimal,
         override val priceChange: SerializedBigDecimal,
-        override val yieldBalance: YieldBalance?,
+        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
@@ -191,7 +188,7 @@ data class CryptoCurrencyStatus(
         override val fiatAmount: SerializedBigDecimal?,
         override val fiatRate: SerializedBigDecimal?,
         override val priceChange: SerializedBigDecimal?,
-        override val yieldBalance: YieldBalance?,
+        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
@@ -213,7 +210,7 @@ data class CryptoCurrencyStatus(
     @Serializable
     data class NoQuote(
         override val amount: SerializedBigDecimal,
-        override val yieldBalance: YieldBalance?,
+        override val stakingBalance: StakingBalance?,
         override val yieldSupplyStatus: YieldSupplyStatus?,
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxInfo>,
