@@ -91,9 +91,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun checkCustomerInfo(userWalletId: UserWalletId) {
         modelScope.launch {
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
-            repository.getCustomerInfo(
-                userWalletId = userWalletId,
-            )
+            repository.getCustomerInfo(userWalletId = userWalletId)
                 .onRight { customerInfo ->
                     uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     when {
@@ -166,21 +164,20 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 return@launch
             }
-            repository.getCustomerInfo(
-                userWalletId = userWalletId,
-            ).fold(
-                ifLeft = { error ->
-                    Timber.e("Error getCustomerInfo: ${error.errorCode}")
-                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                },
-                ifRight = { customerInfo ->
-                    if (customerInfo.isKycApproved) {
-                        back()
-                    } else {
-                        openKyc(userWalletId)
-                    }
-                },
-            )
+            repository.getCustomerInfo(userWalletId = userWalletId)
+                .fold(
+                    ifLeft = { error ->
+                        Timber.e("Error getCustomerInfo: ${error.errorCode}")
+                        uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
+                    },
+                    ifRight = { customerInfo ->
+                        if (customerInfo.isKycApproved) {
+                            back()
+                        } else {
+                            openKyc(userWalletId)
+                        }
+                    },
+                )
         }
     }
 

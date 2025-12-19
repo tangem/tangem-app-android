@@ -96,5 +96,6 @@ data class CustomerMeResponse(
         @Json(name = "card_type") val cardType: String,
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,
+        @Json(name = "is_pin_set") val isPinSet: Boolean?,
     )
 }
