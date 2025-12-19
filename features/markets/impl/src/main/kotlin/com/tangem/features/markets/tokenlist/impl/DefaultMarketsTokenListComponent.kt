@@ -16,12 +16,12 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.MarketsTokenDetails.AnalyticsParams
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.markets.toSerializableParam
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.markets.tokenlist.impl.model.MarketsListModel
 import com.tangem.features.markets.tokenlist.impl.ui.MarketsList
