@@ -37,44 +37,46 @@ fun DialogFullScreen(
             decorFitsSystemWindows = false,
         ),
         content = {
-            val activityWindow = getActivityWindow()
-            val dialogWindow = getDialogWindow()
-            val parentView = LocalView.current.parent as View
-            SideEffect {
-                if (activityWindow != null && dialogWindow != null) {
-                    val attributes = WindowManager.LayoutParams().apply {
-                        copyFrom(activityWindow.attributes)
-                        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                            softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-                        } else {
-                            flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                        }
-                        type = dialogWindow.attributes.type
-                    }
-
-                    dialogWindow.attributes = attributes
-                    parentView.layoutParams =
-                        FrameLayout.LayoutParams(
-                            activityWindow.decorView.width,
-                            activityWindow.decorView.height,
-                        )
-                }
-            }
-
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                val systemUiController = rememberSystemUiController(getActivityWindow())
-                val dialogSystemUiController = rememberSystemUiController(getDialogWindow())
-
+            ProvideSystemBarsIconsController {
+                val activityWindow = getActivityWindow()
+                val dialogWindow = getDialogWindow()
+                val parentView = LocalView.current.parent as View
                 SideEffect {
-                    systemUiController.setSystemBarsColor(color = Color.Transparent)
-                    dialogSystemUiController.setSystemBarsColor(color = Color.Transparent)
+                    if (activityWindow != null && dialogWindow != null) {
+                        val attributes = WindowManager.LayoutParams().apply {
+                            copyFrom(activityWindow.attributes)
+                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                            } else {
+                                flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                            }
+                            type = dialogWindow.attributes.type
+                        }
+
+                        dialogWindow.attributes = attributes
+                        parentView.layoutParams =
+                            FrameLayout.LayoutParams(
+                                activityWindow.decorView.width,
+                                activityWindow.decorView.height,
+                            )
+                    }
                 }
-            }
 
-            SystemBarsIconsDisposable(darkIcons = LocalIsInDarkTheme.current.not())
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                    val systemUiController = rememberSystemUiController(getActivityWindow())
+                    val dialogSystemUiController = rememberSystemUiController(getDialogWindow())
 
-            Surface(modifier = Modifier.fillMaxSize(), color = Color.Transparent) {
-                content()
+                    SideEffect {
+                        systemUiController.setSystemBarsColor(color = Color.Transparent)
+                        dialogSystemUiController.setSystemBarsColor(color = Color.Transparent)
+                    }
+                }
+
+                SystemBarsIconsDisposable(darkIcons = LocalIsInDarkTheme.current.not())
+
+                Surface(modifier = Modifier.fillMaxSize(), color = Color.Transparent) {
+                    content()
+                }
             }
         },
     )
