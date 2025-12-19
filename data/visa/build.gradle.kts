@@ -17,6 +17,7 @@ dependencies {
     /** Project - Data */
     implementation(projects.core.datasource)
     implementation(projects.core.error)
+    implementation(projects.core.error.ext)
     implementation(projects.core.security)
     implementation(projects.data.common)
 
@@ -60,6 +61,7 @@ dependencies {
     /** Libs - Tangem */
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
     implementation(projects.libs.tangemSdkApi)
 
     /** DI */
