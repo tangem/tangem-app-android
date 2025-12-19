@@ -43,6 +43,7 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
                 group = response.group,
                 sort = response.sort,
                 totalAccounts = accountDTOs.size,
+                totalArchivedAccounts = 0,
             ),
             accounts = accountDTOs.assignTokens(userWalletId = userWalletId, tokens = response.tokens),
             unassignedTokens = emptyList(),
