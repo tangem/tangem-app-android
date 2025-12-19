@@ -26,7 +26,11 @@ internal class DefaultMarketsTokenListComponent(
     @Composable
     override fun Title() {
         val state by model.state.collectAsStateWithLifecycle()
-        TopBarWithSearch(state.searchBar)
+        TopBarWithSearch(
+            onBackClick = params.onBackClicked,
+            onSearchClick = state.onSearchClicked,
+            marketsSearchBar = state.marketsSearchBar,
+        )
     }
 
     @Composable

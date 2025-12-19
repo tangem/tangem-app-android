@@ -29,6 +29,7 @@ internal class MarketsListUMStateManager(
     private val onRetryButtonClicked: () -> Unit,
     private val onTokenClick: (MarketsListItemUM) -> Unit,
     private val onShowTokensUnder100kClicked: () -> Unit,
+    private val onBackClick: () -> Unit,
 ) {
 
     val state = MutableStateFlow(state())
@@ -38,19 +39,17 @@ internal class MarketsListUMStateManager(
         set(value) = state.update { it.copy(sortByBottomSheet = it.sortByBottomSheet.copy(isShown = value)) }
 
     var searchQuery
-        get() = state.value.searchBar.query
+        get() = state.value.marketsSearchBar.searchBarUM.query
         private set(value) = state.update { marketsListUM ->
             marketsListUM.copy(
-                searchBar = marketsListUM.searchBar.copy(
-                    query = value,
-                    isActive = value.isNotEmpty(),
+                marketsSearchBar = marketsListUM.marketsSearchBar.copy(
+                    searchBarUM = marketsListUM.marketsSearchBar.searchBarUM.copy(query = value),
                 ),
             )
         }
 
-    var isInSearchState
-        get() = state.value.searchBar.isActive
-        private set(value) = state.update { it.copy(searchBar = it.searchBar.copy(isActive = value)) }
+    val isInSearchState
+        get() = state.value.marketsSearchBar.searchBarUM.isActive
 
     var selectedSortByType
         get() = state.value.selectedSortBy
@@ -91,7 +90,7 @@ internal class MarketsListUMStateManager(
         }
 
     val isInSearchStateFlow = state.map { it.isInSearchMode }.distinctUntilChanged()
-    val searchQueryFlow = state.map { it.searchBar.query }.distinctUntilChanged()
+    val searchQueryFlow = state.map { it.marketsSearchBar.searchBarUM.query }.distinctUntilChanged()
 
     fun onUiItemsChanged(
         isInErrorState: Boolean,
@@ -214,12 +213,20 @@ internal class MarketsListUMStateManager(
 
     private fun state(): MarketsListUM = MarketsListUM(
         list = ListUM.Loading,
-        searchBar = SearchBarUM(
-            placeholderText = resourceReference(R.string.markets_search_header_title),
-            query = "",
-            onQueryChange = { searchQuery = it },
-            isActive = false,
-            onActiveChange = { },
+        marketsSearchBar = MarketsSearchBar(
+            searchBarUM = SearchBarUM(
+                placeholderText = resourceReference(R.string.markets_search_header_title),
+                query = "",
+                onQueryChange = { searchQuery = it },
+                isActive = false,
+                onActiveChange = ::changeSearchBarIsActive,
+                onClearClick = {
+                    if (shouldAlwaysShowSearchBar()) {
+                        onBackClick()
+                    }
+                },
+            ),
+            shouldAlwaysShowSearchBar = shouldAlwaysShowSearchBar(),
         ),
         selectedSortBy = preselectedSortType(),
         selectedInterval = MarketsListUM.TrendInterval.H24,
@@ -234,7 +241,7 @@ internal class MarketsListUMStateManager(
             ),
         ),
         marketsNotificationUM = null,
-        shouldAlwaysShowSearchBar = shouldAlwaysShowSearchBar(),
+        onSearchClicked = { changeSearchBarIsActive(true) },
     )
 
     private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
@@ -261,6 +268,16 @@ internal class MarketsListUMStateManager(
                 } else {
                     marketsListUM.list
                 },
+            )
+        }
+    }
+
+    private fun changeSearchBarIsActive(isActive: Boolean) {
+        state.update { marketsListUM ->
+            marketsListUM.copy(
+                marketsSearchBar = marketsListUM.marketsSearchBar.copy(
+                    searchBarUM = marketsListUM.marketsSearchBar.searchBarUM.copy(isActive = isActive),
+                ),
             )
         }
     }

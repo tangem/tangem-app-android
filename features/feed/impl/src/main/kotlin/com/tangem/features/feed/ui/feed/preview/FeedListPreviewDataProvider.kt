@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui.feed.preview
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -22,12 +21,9 @@ internal object FeedListPreviewDataProvider {
         val marketItems = createSampleMarketItems()
         return FeedListUM(
             currentDate = "20 November",
-            searchBar = SearchBarUM(
+            feedListSearchBar = FeedListSearchBar(
                 placeholderText = TextReference.Str("Search tokens & news"),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = {},
+                onBarClick = {},
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
