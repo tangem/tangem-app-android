@@ -5,6 +5,7 @@ import com.tangem.plugin.configuration.utils.findPlugin
 import io.gitlab.arturbosch.detekt.CONFIGURATION_DETEKT
 import io.gitlab.arturbosch.detekt.CONFIGURATION_DETEKT_PLUGINS
 import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -28,6 +29,9 @@ private fun DetektExtension.configure(project: Project) {
             "plugins/detekt-rules/app-detekt-config.yml"
         )
     )
+
+    ignoredBuildTypes = listOf("release", "internal", "external", "mocked")
+    ignoredFlavors = listOf("huawei")
 }
 
 private fun Project.configureDetektPlugins() {
@@ -41,9 +45,14 @@ private fun Project.configureDetektPlugins() {
 }
 
 private fun Project.configureDetektTask() {
-    tasks.withType<Detekt> {
-        include("**/*.kt")
-        exclude("**/resources/**", "**/build/**")
+    tasks.withType<Detekt>().configureEach {
+        logger.lifecycle("[Detekt] Configuring task: $name in project: ${project.path}")
+
+        source = fileTree(projectDir) {
+            include("src/main/**/*.kt")
+            exclude("**/build/**")
+        }
+
         reports {
             sarif {
                 required.set(false)
@@ -53,6 +62,16 @@ private fun Project.configureDetektTask() {
             }
         }
 
+        jvmTarget = "17"
+    }
+
+    tasks.withType<DetektCreateBaselineTask>().configureEach {
+        logger.lifecycle("[Detekt Baseline] Configuring task: $name in project: ${project.path}")
+
+        source = fileTree(projectDir) {
+            include("src/main/**/*.kt")
+            exclude("**/build/**")
+        }
         jvmTarget = "17"
     }
 }
