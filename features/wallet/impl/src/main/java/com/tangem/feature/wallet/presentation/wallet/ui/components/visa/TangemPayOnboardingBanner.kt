@@ -4,21 +4,9 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -28,8 +16,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -57,28 +46,20 @@ internal fun TangemPayOnboardingBanner(state: TangemPayState.OnboardingBanner, m
             )
             .clickable(onClick = state.onClick),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        ConstraintLayout(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            Image(
-                painter = painterResource(R.drawable.img_tangem_pay_onboarding_banner),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .width(55.dp)
-                    .height(95.dp)
-                    .offset(y = 10.dp),
-            )
-
-            SpacerH4()
+            val (image, text, close) = createRefs()
 
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .constrainAs(text) {
+                        top.linkTo(parent.top)
+                        start.linkTo(image.end, margin = 12.dp)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    }
+                    .padding(top = 16.dp, end = 16.dp, bottom = 16.dp),
             ) {
                 Text(
                     text = stringResourceSafe(R.string.tangempay_onboarding_banner_title),
@@ -94,22 +75,32 @@ internal fun TangemPayOnboardingBanner(state: TangemPayState.OnboardingBanner, m
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
-            Box(
-                modifier = Modifier.fillMaxHeight(),
-                contentAlignment = Alignment.TopEnd,
-            ) {
-                Image(
-                    modifier = Modifier
-                        .clip(TangemTheme.shapes.roundedCornersXMedium)
-                        .clickable(onClick = state.closeOnClick)
-                        .padding(4.dp)
-                        .padding(top = 12.dp)
-                        .size(12.dp),
-                    painter = painterResource(id = R.drawable.ic_close_24),
-                    colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
-                    contentDescription = null,
-                )
-            }
+
+            Image(
+                painter = painterResource(R.drawable.img_tangem_pay_onboarding_banner),
+                contentDescription = null,
+                modifier = Modifier
+                    .constrainAs(image) {
+                        start.linkTo(parent.start)
+                        top.linkTo(text.top)
+                        bottom.linkTo(text.bottom)
+                        height = Dimension.fillToConstraints
+                    }
+                    .padding(top = 8.dp, start = 24.dp),
+            )
+
+            Image(
+                painter = painterResource(R.drawable.ic_close_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(16.dp)
+                    .clickable(onClick = state.closeOnClick)
+                    .constrainAs(close) {
+                        top.linkTo(parent.top, margin = 16.dp)
+                        end.linkTo(parent.end, margin = 16.dp)
+                    },
+                colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
+            )
         }
     }
 }

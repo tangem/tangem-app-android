@@ -248,7 +248,9 @@ internal class DetailsModel @Inject constructor(
     private fun addTangemPayItemIfEligible() {
         if (!tangemPayFeatureToggles.isTangemPayEnabled) return
         modelScope.launch {
-            val isEligible = tangemPayEligibilityManager.getEligibleWallets().isNotEmpty()
+            val isEligible = tangemPayEligibilityManager
+                .getEligibleWallets(shouldExcludePaeraCustomers = true)
+                .isNotEmpty()
             if (isEligible) {
                 items.update { itemsBuilder.addVisaItem(it) }
             }
