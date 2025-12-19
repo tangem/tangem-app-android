@@ -116,11 +116,11 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
         // if user came from deeplink or banner in settings and already is a paera customer -> exclude this wallet
-        val excludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings ||
+        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings ||
             params is TangemPayOnboardingComponent.Params.Deeplink
         modelScope.launch {
             val eligibleWalletsIds = eligibilityManager
-                .getEligibleWallets(excludePaeraCustomers = excludePaeraCustomers)
+                .getEligibleWallets(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
                 .map { it.walletId }
             if (eligibleWalletsIds.isEmpty()) {
                 back()
