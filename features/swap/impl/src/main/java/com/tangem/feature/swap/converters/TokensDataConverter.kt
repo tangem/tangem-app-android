@@ -58,7 +58,7 @@ internal class TokensDataConverter(
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
             isBalanceHidden = isBalanceHiddenProvider(),
-            afterSearch = group.isAfterSearch,
+            isAfterSearch = group.isAfterSearch,
         )
     }
 
@@ -71,7 +71,7 @@ internal class TokensDataConverter(
             id = cryptoCurrencyStatus.currency.id.value,
             name = cryptoCurrencyStatus.currency.name,
             symbol = cryptoCurrencyStatus.currency.symbol,
-            available = isAvailable,
+            isAvailable = isAvailable,
             tokenIcon = convertIcon(cryptoCurrencyStatus.currency, isAvailable),
             addedTokenBalanceData = TokenBalanceData(
                 amount = formatCryptoAmount(cryptoCurrencyStatus),

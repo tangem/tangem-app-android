@@ -31,22 +31,22 @@ sealed class PromoAnalyticsEvent(
         ),
     ) {
         sealed class BannerAction(val action: String) {
-            data object Clicked : BannerAction(action = "Clicked")
-            data object Closed : BannerAction(action = "Closed")
+            class Clicked : BannerAction(action = "Clicked")
+            class Closed : BannerAction(action = "Closed")
         }
     }
 
     // region visa waitlist promo
-    data object VisaWaitlistPromo : PromoAnalyticsEvent(event = "Visa Waitlist")
+    class VisaWaitlistPromo : PromoAnalyticsEvent(event = "Visa Waitlist")
 
-    data object VisaWaitlistPromoJoin : PromoAnalyticsEvent(
+    class VisaWaitlistPromoJoin : PromoAnalyticsEvent(
         event = "Button - Join Now",
         params = mapOf(
             "Program Name" to "Visa Waitlist",
         ),
     )
 
-    data object VisaWaitlistPromoDismiss : PromoAnalyticsEvent(
+    class VisaWaitlistPromoDismiss : PromoAnalyticsEvent(
         event = "Button - Close",
         params = mapOf(
             "Program Name" to "Visa Waitlist",

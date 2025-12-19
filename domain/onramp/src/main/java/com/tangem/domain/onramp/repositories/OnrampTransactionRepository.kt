@@ -24,4 +24,8 @@ interface OnrampTransactionRepository {
     )
 
     suspend fun removeTransaction(txId: String)
+
+    suspend fun storeHandledTransaction(txId: String)
+
+    suspend fun isHandledTransaction(txId: String): Boolean
 }

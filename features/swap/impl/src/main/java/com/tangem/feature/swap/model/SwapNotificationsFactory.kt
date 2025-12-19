@@ -125,9 +125,10 @@ internal class SwapNotificationsFactory(
         if (quoteModel.permissionState is PermissionDataState.PermissionLoading) {
             add(SwapNotificationUM.Error.ApprovalInProgressWarning)
         } else if (quoteModel.preparedSwapConfigState.hasOutgoingTransaction) {
+            val fromCurrency = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
             add(
                 SwapNotificationUM.Error.TransactionInProgressWarning(
-                    currencySymbol = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency.network.currencySymbol,
+                    currencySymbol = fromCurrency.network.currencySymbol,
                 ),
             )
         }
@@ -290,10 +291,10 @@ internal class SwapNotificationsFactory(
     ) {
         if (hideFee) return
         val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
-        val needShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
+        val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeEnoughState.feeCurrency != fromToken
-        if (needShowCoverWarning) {
+        if (shouldShowCoverWarning) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
                     fromToken = fromToken,

@@ -2,11 +2,11 @@ package com.tangem.domain.nft.repository
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface NFTRepository {
@@ -32,6 +32,4 @@ interface NFTRepository {
     suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
-
-    suspend fun clearCache(userWalletId: UserWalletId, networks: List<Network>)
 }

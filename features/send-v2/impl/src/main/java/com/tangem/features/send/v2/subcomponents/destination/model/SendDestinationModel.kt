@@ -85,7 +85,7 @@ internal class SendDestinationModel @Inject constructor(
 
     private val senderAddresses = MutableStateFlow<List<CryptoCurrencyAddress>>(emptyList())
 
-    private var validationJobHolder = JobHolder()
+    private val validationJobHolder = JobHolder()
 
     init {
         configDestinationNavigation()
@@ -234,11 +234,11 @@ internal class SendDestinationModel @Inject constructor(
                 .map { wallet ->
                     async {
                         val addresses = if (!wallet.isMultiCurrency) {
-                            getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
-                                if (it.network.rawId == cryptoCurrencyNetwork.rawId) {
+                            getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let { cryptoCurrency ->
+                                if (cryptoCurrency.network.rawId == cryptoCurrencyNetwork.rawId) {
                                     getNetworkAddressesUseCase.invokeSync(
                                         userWalletId = wallet.walletId,
-                                        networkRawId = it.network.id.rawId,
+                                        networkRawId = cryptoCurrency.network.id.rawId,
                                     )
                                 } else {
                                     null
@@ -323,12 +323,12 @@ internal class SendDestinationModel @Inject constructor(
                 network = cryptoCurrency.network,
             )
 
-            type?.let {
+            if (type != null) {
                 analyticsEventHandler.send(
                     SendDestinationAnalyticEvents.AddressEntered(
                         categoryName = analyticsCategoryName,
                         source = params.analyticsSendSource,
-                        method = it,
+                        method = type,
                         isValid = addressValidationResult.isRight(),
                     ),
                 )
@@ -339,12 +339,14 @@ internal class SendDestinationModel @Inject constructor(
                     memoValidationResult,
                 ),
             )
-            autoNextFromRecipient(type, addressValidationResult.isRight(), memoValidationResult.isRight())
+            if (type != null) {
+                autoNextFromRecipient(type, addressValidationResult.isRight(), memoValidationResult.isRight())
+            }
         }.saveIn(validationJobHolder)
     }
 
-    private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean, isValidMemo: Boolean) {
-        if (type?.isAutoNext == true && isValidAddress && isValidMemo) {
+    private fun autoNextFromRecipient(type: EnterAddressSource, isValidAddress: Boolean, isValidMemo: Boolean) {
+        if (type.isAutoNext && isValidAddress && isValidMemo) {
             saveResult()
             (params as? SendDestinationComponentParams.DestinationParams)?.callback?.onNextClick()
         }

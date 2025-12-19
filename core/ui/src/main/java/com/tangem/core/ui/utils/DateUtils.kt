@@ -38,3 +38,50 @@ fun Long.toTimeFormat(formatter: DateTimeFormatter = DateTimeFormatters.timeForm
 fun Long.formatAsDateTime(formatter: DateTimeFormatter): String {
     return DateTimeFormatters.formatDate(date = DateTime(this, DateTimeZone.getDefault()), formatter = formatter)
 }
+
+/**
+ * Parses an ISO 8601 date string and compares it to the current UTC time.
+ *
+
+ * @param now The current date to compare against.
+ * @return A [FormattedDate] subclass.
+ */
+@Suppress("MagicNumber")
+fun getFormattedDate(createdAt: String, now: DateTime): FormattedDate {
+    val pastDateUtc = try {
+        DateTime.parse(createdAt)
+    } catch (_: Exception) {
+        return FormattedDate.FullDate(createdAt)
+    }
+
+    val pastDateLocal = pastDateUtc.withZone(DateTimeZone.getDefault())
+    val isToday = pastDateLocal.isToday()
+
+    val diffInMillis = now.millis - pastDateUtc.millis
+    val diffInMinutes = diffInMillis / (1000 * 60)
+    val diffInHours = diffInMillis / (1000 * 60 * 60)
+
+    return when {
+        diffInMinutes < 1 -> FormattedDate.MinutesAgo(1)
+        diffInMinutes < 60 -> FormattedDate.MinutesAgo(diffInMinutes.toInt())
+        diffInHours < 12 && isToday -> FormattedDate.HoursAgo(diffInHours.toInt())
+        isToday -> {
+            val timeString = DateTimeFormatters.timeFormatter.print(pastDateLocal)
+            FormattedDate.Today(timeString)
+        }
+        else -> {
+            val dateString = DateTimeFormatters.localFullDate.print(pastDateLocal)
+            FormattedDate.FullDate(dateString)
+        }
+    }
+}
+
+/**
+ * Representing different formatted date representations.
+ */
+sealed class FormattedDate {
+    data class MinutesAgo(val minutes: Int) : FormattedDate()
+    data class HoursAgo(val hours: Int) : FormattedDate()
+    data class Today(val time: String) : FormattedDate()
+    data class FullDate(val date: String) : FormattedDate()
+}

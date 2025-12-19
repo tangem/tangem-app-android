@@ -4,12 +4,18 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 
 sealed class ReferralEvents(event: String) : AnalyticsEvent(REFERRAL_PROGRAM_CATEGORY, event) {
 
-    data object ReferralScreenOpened : ReferralEvents(event = "Referral Screen Opened")
-    data object ClickParticipate : ReferralEvents(event = "Button - Participate")
-    data object ClickCopy : ReferralEvents(event = "Button - Copy")
-    data object ClickShare : ReferralEvents(event = "Button - Share")
-    data object ClickTaC : ReferralEvents(event = "Link - TaC")
-    data object ParticipateSuccessful : ReferralEvents(event = "Participate Successful")
+    class ReferralScreenOpened : ReferralEvents(event = "Referral Screen Opened")
+    class ClickParticipate : ReferralEvents(event = "Button - Participate")
+    class ClickCopy : ReferralEvents(event = "Button - Copy")
+    class ClickShare : ReferralEvents(event = "Button - Share")
+    class ClickTaC : ReferralEvents(event = "Link - TaC")
+    class ParticipateSuccessful : ReferralEvents(event = "Participate Successful")
+}
+
+sealed class ReferralEventsAccounts(event: String) : AnalyticsEvent(REFERRAL_PROGRAM_ACCOUNT_CATEGORY, event) {
+
+    class ListChooseAccount : ReferralEventsAccounts(event = "List - choose account")
 }
 
 private const val REFERRAL_PROGRAM_CATEGORY = "Referral Program"
+private const val REFERRAL_PROGRAM_ACCOUNT_CATEGORY = "Referral program - Account"

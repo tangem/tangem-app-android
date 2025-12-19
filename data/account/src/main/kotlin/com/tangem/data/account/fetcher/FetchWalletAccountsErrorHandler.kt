@@ -2,7 +2,6 @@ package com.tangem.data.account.fetcher
 
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensResponseAccountIdEnricher
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -29,10 +28,10 @@ import javax.inject.Singleton
  * Handles errors that occur during the fetching of wallet accounts
  *
  * @property tangemTechApi                        API for network requests
+ * @property userWalletsStore                     provides access to user wallets storage
  * @property userTokensSaver                      saves user tokens to the storage
  * @property userTokensResponseStore              provides access to user token responses.
  * @property defaultWalletAccountsResponseFactory creates [GetWalletAccountsResponse] from [UserTokensResponse]
- * @property eTagsStore                           store for ETags to manage caching
  * @property dispatchers                          dispatchers
  *
  * @see DefaultWalletAccountsFetcher
@@ -47,7 +46,6 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
     private val userTokensSaver: UserTokensSaver,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
-    private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -66,7 +64,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         error: ApiResponseError,
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-        pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse?,
+        pushWalletAccounts: suspend (List<WalletAccountDTO>, String) -> GetWalletAccountsResponse?,
         storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
     ): FetchResult {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
@@ -87,9 +85,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
             val eTag = createWallet(userWalletId)
 
             if (eTag != null) {
-                eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
-
-                pushWalletAccounts(userWalletId, accountDTOs)
+                pushWalletAccounts(accountDTOs, eTag)
                 userTokensSaver.pushWithRetryer(userWalletId, userTokensResponse)
             }
         }

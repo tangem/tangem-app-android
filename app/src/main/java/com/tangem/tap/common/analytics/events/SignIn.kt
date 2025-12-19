@@ -10,8 +10,6 @@ sealed class SignIn(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Sign In", event, params) {
 
-    class ScreenOpened : SignIn(event = "Sign In Screen Opened")
-
     class ButtonBiometricSignIn : SignIn(event = "Button - Biometric Sign In")
     class ButtonCardSignIn : SignIn(event = "Button - Card Sign In")
 }

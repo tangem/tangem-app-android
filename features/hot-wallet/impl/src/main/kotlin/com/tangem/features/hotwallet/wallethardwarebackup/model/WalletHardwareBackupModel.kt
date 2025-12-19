@@ -4,6 +4,8 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -49,6 +51,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val messageSender: UiMessageSender,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -114,8 +117,14 @@ internal class WalletHardwareBackupModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened)
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
         showPurchaseBlockWithDelay()
+    }
+
+    override fun onDestroy() {
+        trackingContextProxy.removeContext()
+        super.onDestroy()
     }
 
     private fun showPurchaseBlockWithDelay() {
@@ -126,7 +135,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 
     private fun onCreateNewWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet())
         router.push(AppRoute.CreateHardwareWallet)
     }
 
@@ -134,7 +143,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
         val userWallet = getUserWalletUseCase.invoke(params.userWalletId)
             .getOrElse { error("Cannot find user wallet with id: ${params.userWalletId.stringValue}") }
         if (userWallet is UserWallet.Hot) {
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent)
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             if (!userWallet.backedUp) {
                 messageSender.send(makeBackupAtFirstAlertBS)
             } else {
@@ -160,6 +169,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 
     private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.HardwareWallet))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }

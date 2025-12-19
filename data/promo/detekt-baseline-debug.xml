@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>SuspendFunSwallowedCancellation:DefaultPromoRepository.kt$DefaultPromoRepository$runCatching</ID>
-    <ID>SuspendFunWithFlowReturnType:DefaultPromoRepository.kt$DefaultPromoRepository$suspend</ID>
-  </CurrentIssues>
-</SmellBaseline>

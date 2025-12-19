@@ -42,6 +42,7 @@ internal class MultiWalletCurrencyActionsConverter(
         }
     }
 
+    @Suppress("LongMethod")
     private fun mapTokenActionState(
         actionsState: TokenActionsState.ActionState,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -104,6 +105,11 @@ internal class MultiWalletCurrencyActionsConverter(
                 title = resourceReference(R.string.common_analytics)
                 icon = R.drawable.ic_analytics_24
                 action = { clickIntents.onAnalyticsClick(cryptoCurrencyStatus) }
+            }
+            is TokenActionsState.ActionState.YieldMode -> {
+                title = resourceReference(R.string.yield_module_start_earning)
+                icon = R.drawable.ic_analytics_up_mini_24
+                action = { /* no-op */ }
             }
         }
 

@@ -56,4 +56,8 @@ interface SettingsRepository {
     suspend fun setGooglePayAvailability(value: Boolean)
 
     suspend fun isGooglePayAvailability(): Boolean
+
+    suspend fun isRootDetectedWarningShown(): Boolean
+
+    suspend fun setRootDetectedWarningShown(value: Boolean)
 }
