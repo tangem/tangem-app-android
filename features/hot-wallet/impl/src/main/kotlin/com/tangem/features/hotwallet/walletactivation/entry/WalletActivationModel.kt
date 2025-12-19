@@ -18,8 +18,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
@@ -28,7 +28,6 @@ import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartCompone
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.walletactivation.entry.routing.WalletActivationRoute
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
@@ -44,7 +43,7 @@ internal class WalletActivationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val notificationsRepository: NotificationsRepository,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
@@ -118,8 +117,8 @@ internal class WalletActivationModel @Inject constructor(
 
     private fun navigateToPushNotificationsOrNext() {
         modelScope.launch {
-            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            if (shouldRequestPush) {
+            val shouldAskNotificationPermissions = notificationsRepository.shouldAskNotificationPermissionsViaBs()
+            if (shouldAskNotificationPermissions) {
                 stackNavigation.replaceAll(WalletActivationRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(WalletActivationRoute.SetupFinished)
