@@ -34,6 +34,7 @@ dependencies {
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
+    implementation(projects.common)
 
     /** Domain */
     implementation(projects.domain.models)
