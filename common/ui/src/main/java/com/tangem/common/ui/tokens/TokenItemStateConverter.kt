@@ -1,6 +1,5 @@
 package com.tangem.common.ui.tokens
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -22,8 +21,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.staking.model.StakingTarget
-import com.tangem.domain.staking.model.isStakingSupported
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
@@ -46,7 +45,7 @@ import java.math.BigDecimal
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
     private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
-    private val stakingApyMap: Map<String, List<StakingTarget>> = emptyMap(),
+    private val stakingApyMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val yieldSupplyPromoBannerKey: String? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
@@ -179,7 +178,7 @@ class TokenItemStateConverter(
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            stakingApyMap: Map<String, List<StakingTarget>>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
@@ -219,7 +218,7 @@ class TokenItemStateConverter(
         private fun resolveEarnApy(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            stakingApyMap: Map<String, List<StakingTarget>>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
         ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
@@ -274,35 +273,47 @@ class TokenItemStateConverter(
 
         private fun findStakingRate(
             currencyStatus: CryptoCurrencyStatus,
-            stakingApyMap: Map<String, List<StakingTarget>>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
         ): StakingLocalInfo {
-            val stakingKey = currencyStatus.currency.stakingKey()
-            val targets = stakingApyMap[stakingKey]
+            val stakingAvailability = stakingApyMap[currencyStatus.currency] as? StakingAvailability.Available
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
             val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
 
-            val rewardInfo: RewardInfo? = if (stakeKitBalance != null) {
-                // StakeKit-specific: try to find rate from validator address
-                val targetsByAddress = targets.associateBy { it.address }
-                stakeKitBalance.balance.items
-                    .mapNotNull { it.validatorAddress }
-                    .firstNotNullOfOrNull { address -> targetsByAddress[address]?.rewardInfo }
-                    ?: targets
-                        .filter { it.isPreferred }
-                        .mapNotNull { it.rewardInfo }
+            val rateInfo = when (val stakingOptions = stakingAvailability.option) {
+                is StakingOption.P2PEthPool -> {
+                    RewardInfo(
+                        rate = stakingOptions.apy,
+                        type = RewardType.APY,
+                    )
+                }
+                is StakingOption.StakeKit -> if (stakeKitBalance != null) {
+                    val validatorsByAddress = stakingOptions.yield.validators.associateBy { it.address }
+                    stakeKitBalance.balance.items
+                        .mapNotNull { it.validatorAddress }
+                        .firstNotNullOfOrNull { address ->
+                            validatorsByAddress[address]?.rewardInfo
+                        } ?: stakingOptions.yield.validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo
+                        }
                         .maxByOrNull { it.rate }
-            } else {
-                targets
-                    .mapNotNull { it.rewardInfo }
-                    .maxByOrNull { it.rate }
+                } else {
+                    stakingOptions.yield.validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo
+                        }
+                        .maxByOrNull { it.rate }
+                }
             }
 
             return StakingLocalInfo(
-                rate = rewardInfo?.rate,
-                isActive = stakingBalance != null,
-                rewardType = rewardInfo?.type,
+                rate = rateInfo?.rate,
+                isActive = stakeKitBalance != null, // todo add p2p check
+                rewardType = rateInfo?.type,
             )
         }
 
@@ -441,18 +452,6 @@ class TokenItemStateConverter(
         }
 
         fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
-
-        private fun CryptoCurrency.stakingKey(): String {
-            if (this is CryptoCurrency.Coin && !network.isStakingSupported) return ""
-
-            if (network.isStakingSupported && this !is CryptoCurrency.Coin) {
-                val isPolygonTokenOnEthereum = this is CryptoCurrency.Token &&
-                    this.network.id.rawId.value == Blockchain.Ethereum.id &&
-                    this.symbol == Blockchain.Polygon.currency
-                if (!isPolygonTokenOnEthereum) return ""
-            }
-            return "${id.rawCurrencyId}_$symbol"
-        }
     }
 
     private data class StakingLocalInfo(

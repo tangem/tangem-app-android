@@ -38,6 +38,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
+import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -64,6 +65,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
+    private val rootDetectedWarningComponentFactory: RootDetectedWarningComponent.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
@@ -83,6 +85,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val hotAccessCodeRequestComponent: HotAccessCodeRequestComponent by lazy {
         hotAccessCodeRequestComponentFactory
             .create(child("hotAccessCodeRequestComponent"), Unit)
+    }
+
+    private val rootDetectedWarningComponent: RootDetectedWarningComponent by lazy {
+        rootDetectedWarningComponentFactory
+            .create(child("rootDetectedWarningComponent"), Unit)
     }
 
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
@@ -134,6 +141,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private fun initializeInitialNavigation() {
         if (initialStack.isNullOrEmpty()) {
             componentScope.launch {
+                rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
                 val initialRoute = resolveInitialRoute()
                 router.replaceAll(initialRoute)
             }
@@ -177,6 +185,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
+            rootDetectedWarningContent = { rootDetectedWarningComponent.Content(it) },
         )
     }
 
