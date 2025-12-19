@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,9 +41,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
-import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -279,10 +278,13 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
     ) { balance ->
         when (state) {
             is WalletCardState.Content -> {
-                ResizableText(
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                Text(
                     text = balance,
-                    fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 16.sp,
+                        maxFontSize = TangemTheme.typography.h2.fontSize,
+                    ),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.h2
