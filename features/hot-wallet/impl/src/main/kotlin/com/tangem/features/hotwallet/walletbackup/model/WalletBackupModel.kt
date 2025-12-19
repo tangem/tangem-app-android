@@ -132,7 +132,8 @@ internal class WalletBackupModel @Inject constructor(
     private fun onBuyClick() {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Backup))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
     }
 
