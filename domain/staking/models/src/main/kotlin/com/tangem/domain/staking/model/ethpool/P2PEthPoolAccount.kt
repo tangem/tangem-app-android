@@ -4,7 +4,7 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import org.joda.time.Instant
 
 /**
- * P2P.org account staking information
+ * Account staking information
  * Contains detailed balance and exit queue information
  */
 data class P2PEthPoolAccount(
