@@ -149,7 +149,6 @@ internal class AccessCodeModel @Inject constructor(
                     onClick = {
                         uiState.update { currentState ->
                             currentState.copy(
-                                accessCode = "",
                                 onAccessCodeChange = ::onAccessCodeChange,
                                 requestFocus = triggeredEvent(Unit, ::consumeRequestFocusEvent),
                             )
