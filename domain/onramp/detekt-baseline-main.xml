@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxChainedCallsOnSameLine:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$offer.quote.paymentMethod.type.getProcessingSpeed().speed</ID>
+    <ID>MultilineLambdaItParameter:GetOnrampQuotesUseCase.kt$GetOnrampQuotesUseCase${ when (it) { is OnrampQuote.Data -&gt; it.toAmount.value is OnrampQuote.Error -&gt; null // negative difference to sort both when data and unavailable is present is OnrampQuote.AmountError -&gt; { when (val error = it.error) { is OnrampError.AmountError.TooSmallError -&gt; it.fromAmount.value - error.requiredAmount is OnrampError.AmountError.TooBigError -&gt; error.requiredAmount - it.fromAmount.value } } } }</ID>
+    <ID>NamedArguments:GetOnrampOffersUseCase.kt$GetOnrampOffersUseCase$determineAdvantages( recentOffer, bestRateOffer, fastestOffer, isSingleOffer, )</ID>
+    <ID>UnnecessaryLet:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent.Errors$let { put(PAYMENT_METHOD, paymentMethod) }</ID>
+    <ID>UnnecessaryLet:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent.Errors$let { put(PROVIDER, providerName) }</ID>
+    <ID>UseEmptyCounterpart:OnrampAnalyticsEvent.kt$OnrampAnalyticsEvent$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>
