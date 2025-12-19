@@ -30,7 +30,7 @@ class GetStakingEntryInfoUseCase(
                             symbol = symbol,
                         )
                     }
-                    is StakingOption.P2P -> {
+                    is StakingOption.P2PEthPool -> {
                         StakingEntryInfo(
                             tokenSymbol = "ETH",
                         )
