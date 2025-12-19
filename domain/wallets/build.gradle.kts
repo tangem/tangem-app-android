@@ -35,6 +35,8 @@ dependencies {
     implementation(projects.domain.hotWallet)
     // endregion
 
+    implementation(projects.common)
+
     // region Tangem libraries
     implementation(tangemDeps.blockchain) // android-library
     implementation(tangemDeps.card.core)
