@@ -121,6 +121,8 @@ internal class WalletModel @Inject constructor(
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
+        trackScreenOpened()
+
         updateMarketToggle()
         suggestToOpenMarkets()
 
@@ -139,9 +141,7 @@ internal class WalletModel @Inject constructor(
     }
 
     fun onResume() {
-        modelScope.launch(dispatchers.main) {
-            suggestToEnableBiometrics()
-        }
+        suggestToEnableBiometrics()
     }
 
     private fun updateMarketToggle() {
@@ -178,13 +178,15 @@ internal class WalletModel @Inject constructor(
         walletScreenContentLoader.cancelAll()
     }
 
-    private suspend fun suggestToEnableBiometrics() {
-        if (shouldShowAskBiometryBottomSheet()) {
-            delay(timeMillis = 1_800)
+    private fun suggestToEnableBiometrics() {
+        modelScope.launch(dispatchers.main) {
+            if (shouldShowAskBiometryBottomSheet()) {
+                delay(timeMillis = 1_800)
 
-            innerWalletRouter.dialogNavigation.activate(
-                configuration = WalletDialogConfig.AskForBiometry,
-            )
+                innerWalletRouter.dialogNavigation.activate(
+                    configuration = WalletDialogConfig.AskForBiometry,
+                )
+            }
         }
     }
 
@@ -199,6 +201,42 @@ internal class WalletModel @Inject constructor(
             }
 
             shouldShowMarketsTooltipUseCase(isShown = true)
+        }
+    }
+
+    private fun trackScreenOpened() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                userWalletsListRepository
+                    .selectedUserWalletSync()
+                    ?.let { selectedWallet ->
+                        val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                            .any { it is UserWallet.Hot }
+
+                        val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                            singleAccountListSupplier(selectedWallet.walletId)
+                                .first()
+                                .accounts
+                                .size
+                        } else {
+                            null
+                        }
+                        val result = getAppThemeModeUseCase().firstOrNull()
+                        val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+                        analyticsEventsHandler.send(
+                            WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                                hasMobileWallet = hasMobileWallet,
+                                accountsCount = accountsCount,
+                                theme = theme.value,
+                                isImported = selectedWallet.isImported(),
+                            ),
+                        )
+                    }
+            }
+        } else {
+            analyticsEventsHandler.send(
+                WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy(),
+            )
         }
     }
 
@@ -288,31 +326,6 @@ internal class WalletModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
-
-                    if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                        modelScope.launch {
-                            val hasMobileWallet = userWalletsListRepository.userWalletsSync()
-                                .any { it is UserWallet.Hot }
-                            val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                                singleAccountListSupplier(selectedWallet.walletId)
-                                    .first()
-                                    .accounts
-                                    .size
-                            } else {
-                                null
-                            }
-                            val result = getAppThemeModeUseCase().firstOrNull()
-                            val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
-                            analyticsEventsHandler.send(
-                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
-                                    hasMobileWallet = hasMobileWallet,
-                                    accountsCount = accountsCount,
-                                    theme = theme.value,
-                                    isImported = selectedWallet.isImported(),
-                                ),
-                            )
-                        }
-                    }
 
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
