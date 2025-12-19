@@ -4,10 +4,13 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.security.isSecurityExposed
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
@@ -21,6 +24,8 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
     private val tangemPayOnboardingRepository: OnboardingRepository,
+    private val eligibilityManager: TangemPayEligibilityManager,
+    private val deviceSecurity: DeviceSecurityInfoProvider,
 ) {
 
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
@@ -28,6 +33,16 @@ class TangemPayMainScreenCustomerInfoUseCase(
 
     suspend fun fetch(userWalletId: UserWalletId) {
         Timber.tag(TAG).i("fetch: $userWalletId")
+
+        if (deviceSecurity.isSecurityExposed()) {
+            Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+            Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+            Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+
+            updateState(userWalletId = userWalletId, either = TangemPayCustomerInfoError.ExposedDeviceError.left())
+            return // fast exit
+        }
+
         repository.checkCustomerWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
@@ -46,8 +61,17 @@ class TangemPayMainScreenCustomerInfoUseCase(
                             .map(MainCustomerInfoContentState::Content)
                         updateState(userWalletId, result)
                     } else {
-                        // ignore if there's no TangemPay
-                        updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                        // if there's no tangem pay, check eligibility and show onboarding banner
+                        val isEligible = eligibilityManager.getEligibleWallets().any { it.walletId == userWalletId }
+                        if (isEligible) {
+                            if (tangemPayOnboardingRepository.getHideMainOnboardingBanner(userWalletId)) {
+                                updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                            } else {
+                                updateState(userWalletId, MainCustomerInfoContentState.OnboardingBanner.right())
+                            }
+                        } else {
+                            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                        }
                     }
                 },
             )
