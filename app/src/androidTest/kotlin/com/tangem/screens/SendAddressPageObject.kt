@@ -95,10 +95,8 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
             hasAnyDescendant(withText(description, substring = true))
         }
         if (isMyWallet) {
-            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recipient_wallets_title)))
             hasAnyDescendant(withText(getResourceString(CoreUiR.string.manage_tokens_network_selector_wallet)))
         } else {
-            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recent_transactions)))
             hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON))
         }
     }
@@ -119,8 +117,7 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val destinationTagTextFieldHint: KNode = child {
-        hasParent(withTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD))
-        useUnmergedTree = true
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD)
     }
 
     val destinationTagBlockText: KNode = child {
