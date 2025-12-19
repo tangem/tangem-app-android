@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.state
+package com.tangem.features.feed.ui.market.list.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
@@ -10,7 +10,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.collections.immutable.ImmutableList
-import java.math.BigDecimal
 
 internal data class MarketsListUM(
     val list: ListUM,
@@ -18,11 +17,10 @@ internal data class MarketsListUM(
     val selectedSortBy: SortByTypeUM,
     val sortByBottomSheet: TangemBottomSheetConfig,
     val selectedInterval: TrendInterval,
+    val shouldAlwaysShowSearchBar: Boolean,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
-    val stakingNotificationMaxApy: BigDecimal?,
-    val onStakingNotificationClick: () -> Unit,
-    val onStakingNotificationCloseClick: () -> Unit,
+    val marketsNotificationUM: MarketsNotificationUM?,
 ) {
     val isInSearchMode
         get() = searchBar.isActive
