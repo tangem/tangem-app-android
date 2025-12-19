@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
@@ -27,7 +27,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    @Assisted private val yield: Yield,
+    @Assisted private val integration: StakingIntegration,
 ) {
     fun updateAfterTransaction() {
         coroutineScope.launch {
@@ -105,7 +105,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         fetchActionsUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,
-            networkType = yield.token.network,
+            networkType = integration.token.network,
             stakingActionStatus = StakingActionStatus.PROCESSING,
         )
     }
@@ -115,7 +115,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         fun create(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             userWallet: UserWallet,
-            yield: Yield,
+            integration: StakingIntegration,
         ): StakingBalanceUpdater
     }
 
