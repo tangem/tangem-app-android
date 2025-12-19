@@ -67,7 +67,7 @@ sealed class Settings(
             params = mapOf("State" to state.value),
         )
 
-        object ButtonEnableBiometricAuthentication : AppSettings(event = "Button - Enable Biometric Authentication")
+        class ButtonEnableBiometricAuthentication : AppSettings(event = "Button - Enable Biometric Authentication")
 
         class MainCurrencyChanged(currencyType: String) : AppSettings(
             event = "Main Currency Changed",
@@ -79,7 +79,7 @@ sealed class Settings(
             params = mapOf("State" to theme.value),
         )
 
-        object EnableBiometrics : AppSettings(event = "Notice - Enable Biometric")
+        class EnableBiometrics : AppSettings(event = "Notice - Enable Biometric")
 
         class HideBalanceChanged(state: AnalyticsParam.OnOffState) : AppSettings(
             event = "Hide Balance Changed",
