@@ -5,7 +5,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -45,7 +45,7 @@ internal class MultiWalletContentLoader(
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
@@ -64,7 +64,7 @@ internal class MultiWalletContentLoader(
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
-                stakingApyFlowUseCase = stakingApyFlowUseCase,
+                stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
                 yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
             ).let(::add)
 
