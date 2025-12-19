@@ -61,8 +61,9 @@ internal class DefaultStakingRepository(
             val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
 
             val availabilityFlow = when (stakingIntegration) {
-                is StakingIntegrationID.P2P -> p2pEthPoolRepository.getStakingAvailability()
+                StakingIntegrationID.P2PEthPool -> p2pEthPoolRepository.getStakingAvailability()
                 is StakingIntegrationID.StakeKit -> stakeKitRepository.getStakingAvailability(
+                    stakingIntegration,
                     rawCurrencyId,
                     cryptoCurrency.symbol,
                 )
@@ -94,8 +95,9 @@ internal class DefaultStakingRepository(
             ?: return StakingAvailability.Unavailable
 
         return when (stakingIntegration) {
-            is StakingIntegrationID.P2P -> p2pEthPoolRepository.getStakingAvailabilitySync()
+            StakingIntegrationID.P2PEthPool -> p2pEthPoolRepository.getStakingAvailabilitySync()
             is StakingIntegrationID.StakeKit -> stakeKitRepository.getStakingAvailabilitySync(
+                stakingIntegration,
                 rawCurrencyId,
                 cryptoCurrency.symbol,
             )
