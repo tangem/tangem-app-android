@@ -1,28 +1,19 @@
 package com.tangem.tap.domain.tasks.visa
 
-import arrow.core.getOrElse
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
-import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.extensions.toDecompressedPublicKey
-import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
-import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility.findKeyWithoutDerivation
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
-import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
 
@@ -46,11 +37,7 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
-        if (card.settings.isHDWalletAllowed) {
-            proceedApprove(card, session, callback)
-        } else {
-            proceedApproveWithLegacyCard(card, session, callback)
-        }
+        proceedApprove(card, session, callback)
     }
 
     private fun proceedApprove(
@@ -60,7 +47,7 @@ class VisaCustomerWalletApproveTask(
     ) {
         val derivationPath = VisaUtilities.customDerivationPath
 
-        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
+        val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.curve } ?: run {
             callback(CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError))
             return
         }
@@ -114,43 +101,15 @@ class VisaCustomerWalletApproveTask(
         )
     }
 
-    private fun proceedApproveWithLegacyCard(
-        card: Card,
-        session: CardSession,
-        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
-    ) {
-        val publicKey = findKeyWithoutDerivation(
-            targetAddress = visaDataForApprove.targetAddress,
-            card = CardDTO(card),
-        ).getOrElse { error ->
-            callback(CompletionResult.Failure(error.tangemError))
-            return
-        }
-
-        signApproveData(
-            targetWalletPublicKey = publicKey,
-            derivationPath = null,
-            extendedPublicKey = null,
-            session = session,
-            callback = callback,
-        )
-    }
-
-    // TODO: [REDACTED_TASK_KEY] - Get this public function from Blockchain SDK
-    private fun hashPersonalMessage(message: ByteArray): ByteArray {
-        val prefix = "\u0019Ethereum Signed Message:\n${message.size}".toByteArray()
-        return (prefix + message).toKeccak()
-    }
-
     private fun signApproveData(
         targetWalletPublicKey: ByteArray,
         derivationPath: DerivationPath?,
-        extendedPublicKey: ExtendedPublicKey?,
+        extendedPublicKey: ExtendedPublicKey,
         session: CardSession,
         callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
-        val content = "Tangem Pay wants to sign in with your account. Nonce: ${visaDataForApprove.hashToSign}"
-        val hash = hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
+        val content = VisaUtilities.signWithNonceMessage(visaDataForApprove.hashToSign)
+        val hash = VisaUtilities.hashPersonalMessage(content.toByteArray(Charsets.UTF_8))
 
         val signTask = SignHashCommand(
             hash = hash,
@@ -161,36 +120,13 @@ class VisaCustomerWalletApproveTask(
         signTask.run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
+                    val rsvSignature = VisaUtilities.unmarshallSignature(
                         signature = result.data.signature,
                         hash = hash,
-                        publicKey = extendedPublicKey?.publicKey?.toDecompressedPublicKey()
-                            ?: targetWalletPublicKey.toDecompressedPublicKey(),
-                    ).asRSVLegacyEVM().toHexString().lowercase()
-
-                    scanCard(
-                        session = session,
-                        callback = callback,
-                        signedData = visaDataForApprove.sign(rsvSignature, visaDataForApprove.targetAddress),
+                        extendedPublicKey = extendedPublicKey,
                     )
-                }
-                is CompletionResult.Failure -> {
-                    callback(CompletionResult.Failure(result.error))
-                }
-            }
-        }
-    }
 
-    private fun scanCard(
-        signedData: VisaSignedDataByCustomerWallet,
-        session: CardSession,
-        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
-    ) {
-        val scanTask = ScanTask()
-        scanTask.run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(signedData))
+                    visaDataForApprove.sign(rsvSignature, visaDataForApprove.targetAddress)
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
