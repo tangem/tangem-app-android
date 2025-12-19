@@ -297,6 +297,7 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pop()
     }
 
+    @Deprecated("Use TangemBlockUrlBuilder instead")
     private fun onApproveLearnMoreClick() {
         val code = SupportedLanguages.getCurrentSupportedLanguageCode()
             .takeIf { it == SupportedLanguages.RUSSIAN }
