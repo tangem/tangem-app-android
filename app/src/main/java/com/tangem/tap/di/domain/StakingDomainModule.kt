@@ -1,15 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.repositories.StakeKitActionRepository
-import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakeKitRepository
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
@@ -238,10 +232,7 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideStakingApyFlowUseCase(
-        stakeKitRepository: StakeKitRepository,
-        stakingFeatureToggles: StakingFeatureToggles,
-    ): StakingApyFlowUseCase {
-        return StakingApyFlowUseCase(stakeKitRepository, stakingFeatureToggles)
+    fun provideStakingApyFlowUseCase(stakingRepository: StakingRepository): StakingAvailabilityListUseCase {
+        return StakingAvailabilityListUseCase(stakingRepository)
     }
 }
