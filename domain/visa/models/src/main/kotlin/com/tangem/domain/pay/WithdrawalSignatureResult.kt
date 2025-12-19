@@ -1,4 +1,4 @@
-package com.tangem.domain.pay.model
+package com.tangem.domain.pay
 
 sealed class WithdrawalSignatureResult {
 

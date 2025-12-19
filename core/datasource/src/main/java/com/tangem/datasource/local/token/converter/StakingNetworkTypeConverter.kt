@@ -33,6 +33,7 @@ object StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType
             NetworkTypeDTO.BAND_PROTOCOL -> NetworkType.BAND_PROTOCOL
             NetworkTypeDTO.BITSONG -> NetworkType.BITSONG
             NetworkTypeDTO.CANTO -> NetworkType.CANTO
+            NetworkTypeDTO.CARDANO -> NetworkType.CARDANO
             NetworkTypeDTO.CHIHUAHUA -> NetworkType.CHIHUAHUA
             NetworkTypeDTO.COMDEX -> NetworkType.COMDEX
             NetworkTypeDTO.COREUM -> NetworkType.COREUM
@@ -106,6 +107,7 @@ object StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType
             NetworkType.BAND_PROTOCOL -> NetworkTypeDTO.BAND_PROTOCOL
             NetworkType.BITSONG -> NetworkTypeDTO.BITSONG
             NetworkType.CANTO -> NetworkTypeDTO.CANTO
+            NetworkType.CARDANO -> NetworkTypeDTO.CARDANO
             NetworkType.CHIHUAHUA -> NetworkTypeDTO.CHIHUAHUA
             NetworkType.COMDEX -> NetworkTypeDTO.COMDEX
             NetworkType.COREUM -> NetworkTypeDTO.COREUM
