@@ -394,6 +394,7 @@
   <string name="common_transfer">Перевод</string>
   <string name="common_unable_to_load">Невозможно загрузить данные…</string>
   <string name="common_understand">Я понял</string>
+  <string name="common_understand_continue">Я понимаю, продолжить</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
@@ -733,6 +734,7 @@
   <string name="markets_sort_by_top_gainers_title">Лидеры роста</string>
   <string name="markets_sort_by_top_losers_title">Лидеры падения</string>
   <string name="markets_sort_by_trending_title">В тренде</string>
+  <string name="markets_sort_by_yield_mode_title">Режим доходности</string>
   <string name="markets_staking_banner_description_placeholder">Стейкинг — простой способ получать доход с вашей криптовалюты. %s</string>
   <string name="markets_staking_banner_title">Получайте до %s APY</string>
   <string name="markets_token_added">Токен добавлен</string>
@@ -994,6 +996,7 @@
   <string name="onramp_currency_other">Другие валюты</string>
   <string name="onramp_currency_popular">Популярные фиаты</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_error_transaction_already_processed">Эта транзакция уже была обработана. Дополнительных действий не требуется.</string>
   <string name="onramp_fetching_best_rates">Получение лучших курсов...</string>
   <string name="onramp_instant_status">Моментально</string>
   <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
@@ -1104,6 +1107,8 @@
   <string name="reset_cards_dialog_next_device_description">Сбросьте следующее устройство для продолжения.</string>
   <string name="ring_promo_text">Владельцам колец — 3 обмена без комиссии на Changelly до 15.11!</string>
   <string name="ring_promo_title">Обмен с 0% комиссией!</string>
+  <string name="root_detected_warning_description">Устройства с root-доступом считаются менее безопасными. Ваши данные могут быть подвержены дополнительным рискам.</string>
+  <string name="root_detected_warning_title">Обнаружен root-доступ</string>
   <string name="save_user_wallet_agreement_access_description">Войдите в приложение и следите за своим балансом без сканирования карты или кольца</string>
   <string name="save_user_wallet_agreement_access_title">Доступ в приложение</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Использовать биометрию</string>
@@ -1493,6 +1498,7 @@
   <string name="tangempay_card_details_withdraw_in_progress_title">Вывод выполняется</string>
   <string name="tangempay_change_pin_code">Изменить PIN-код</string>
   <string name="tangempay_come_back_if_forget_pin">Можно посмотреть здесь, если забудете его.</string>
+  <string name="tangempay_factory_settings_warning_title">Я понимаю, что полностью потеряю доступ к своей карте Tangem Pay и ко всем средствам на ней без возможности восстановления.</string>
   <string name="tangempay_failed_to_issue_card">Не удалось выпустить карту</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Техническая ошибка, попробуйте ещё раз, нажав кнопку ниже</string>
   <string name="tangempay_failed_to_issue_card_support_description">Техническая ошибка, свяжитесь с поддержкой</string>
@@ -1964,6 +1970,7 @@
   <string name="yield_module_fee_policy_sheet_title">Политика комиссий за пополнение</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 15% от полученного дохода.</string>
   <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
+  <string name="yield_module_high_network_fees_notification_description">Комиссии сейчас выше обычного из-за высокой активности на рынке. Вы можете продолжить сейчас или вернуться позже, когда комиссии снизятся.</string>
   <string name="yield_module_high_network_fees_notification_title">Высокая сетевая комиссия</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
   <string name="yield_module_main_screen_promo_banner_message">Получай до %1$s APY на свой баланс</string>
@@ -2017,7 +2024,7 @@
   <string name="yield_module_transaction_exit_subtitle">%1$s выведено из Aave</string>
   <string name="yield_module_transaction_initialize">Режим доходности инициализирован</string>
   <string name="yield_module_transaction_reactivate">Режим доходности реактивирован</string>
-  <string name="yield_module_transaction_topup">Перевод средств в Aave</string>
+  <string name="yield_module_transaction_topup">Перевод в Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s отправлено в Aave</string>
   <string name="yield_module_transaction_withdraw">Вывод из Aave</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
