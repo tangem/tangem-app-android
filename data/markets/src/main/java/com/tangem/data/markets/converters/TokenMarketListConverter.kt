@@ -40,7 +40,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, To
                     monthChangePercent = token.priceChangePercentage?.day30?.movePointLeft(2),
                 ),
                 tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
-                stakingRate = stakingRate,
+                yieldRate = stakingRate ?: token.maxYieldApy?.movePointLeft(2),
                 updateTimestamp = value.timestamp,
             )
         }

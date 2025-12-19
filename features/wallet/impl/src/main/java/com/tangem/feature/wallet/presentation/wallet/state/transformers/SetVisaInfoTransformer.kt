@@ -137,7 +137,7 @@ internal class SetVisaInfoTransformer(
                 fiatAmount = visaCurrency.balances.available.multiply(visaCurrency.fiatRate),
                 fiatRate = visaCurrency.fiatRate,
                 priceChange = visaCurrency.priceChange,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -154,7 +154,7 @@ internal class SetVisaInfoTransformer(
                     clickIntents.onReceiveClick(
                         userWalletId = userWalletId,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        event = MainScreenAnalyticsEvent.ButtonReceive,
+                        event = MainScreenAnalyticsEvent.ButtonReceive(),
                     )
                 },
                 onLongClick = {

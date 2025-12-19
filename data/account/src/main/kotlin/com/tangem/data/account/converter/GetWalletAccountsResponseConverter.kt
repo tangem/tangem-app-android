@@ -27,6 +27,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
                 group = TokensGroupTypeConverter.convertBack(value.groupType),
                 sort = TokensSortTypeConverter.convertBack(value.sortType),
                 totalAccounts = value.totalAccounts,
+                totalArchivedAccounts = value.totalArchivedAccounts,
             ),
             accounts = value.accounts
                 .filterIsInstance<Account.CryptoPortfolio>()
