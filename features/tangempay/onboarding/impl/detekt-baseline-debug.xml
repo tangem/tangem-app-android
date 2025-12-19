@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MultilineLambdaItParameter:TangemPayOnboardingModel.kt$TangemPayOnboardingModel${ TangemPayOnboardingScreenState.Content( onBack = it.onBack, onTermsClick = ::onTermsClick, buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig( isLoading = false, onClick = ::onGetCardClick, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:TangemPayOnboardingModel.kt$TangemPayOnboardingModel${ Timber.e("Error getCustomerInfo: ${it.errorCode}") uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false)) }</ID>
-    <ID>NullableToStringCall:TangemPayOnboardingModel.kt$TangemPayOnboardingModel$${result.leftOrNull()?.message}</ID>
-  </CurrentIssues>
-</SmellBaseline>
