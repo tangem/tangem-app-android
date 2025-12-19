@@ -1,11 +1,11 @@
 package com.tangem.domain.staking.model.ethpool
 
 /**
- * Configuration for P2P Ethereum staking network.
+ * Configuration for P2PEthPool Ethereum staking network.
  *
  * Change [USE_TESTNET] to switch between testnet and mainnet.
  */
-object P2PStakingConfig {
+object P2PEthPoolStakingConfig {
 
     const val USE_TESTNET: Boolean = true
 

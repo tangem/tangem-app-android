@@ -21,10 +21,11 @@ import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
+import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.ui.EntryBottomSheetContent
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -60,7 +61,16 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onMarketOpenClick(sortBy: SortByTypeUM) {
-            innerRouter.push(FeedEntryChildFactory.Child.TokenList)
+            innerRouter.push(
+                route = FeedEntryChildFactory.Child.TokenList(
+                    params = DefaultMarketsTokenListComponent.Params(
+                        onBackClicked = { onChildBack() },
+                        onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
+                        preselectedSortType = sortBy,
+                        shouldAlwaysShowSearchBar = sortBy == SortByTypeUM.Rating,
+                    ),
+                ),
+            )
         }
 
         override fun onArticleClick(articleId: Int) {

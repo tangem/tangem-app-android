@@ -13,15 +13,14 @@ import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
 import com.tangem.domain.staking.GetStakingTransactionsUseCase
 import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
 import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionStatus
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionType
-import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -56,12 +55,12 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
-    @Assisted private val yield: Yield,
+    @Assisted private val integration: StakingIntegration,
     @Assisted private val isAmountSubtractAvailable: Boolean,
 ) {
 
     private val balanceUpdater: StakingBalanceUpdater
-        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, yield)
+        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, integration)
 
     suspend fun constructAndSendTransactions(
         onConstructSuccess: (List<StakingTransaction>) -> Unit,
@@ -193,7 +192,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val amountState = state.amountState as? AmountState.Data
             ?: error("No amount provided")
 
-        val validatorAddress = validatorState.chosenValidator.address
+        val validatorAddress = validatorState.chosenTarget.address
         val amount = getAmount(amountState, fee, confirmationState.reduceAmountBy)
 
         return getStakingTransactionsUseCase(
@@ -201,11 +200,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
             network = cryptoCurrencyStatus.currency.network,
             params = ActionParams(
                 actionCommonType = state.actionType,
-                integrationId = yield.id,
+                integrationId = integration.integrationId.value,
                 amount = amount,
                 address = defaultAddress,
                 validatorAddress = validatorAddress,
-                token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
+                token = integration.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
                 passthrough = action?.passthrough,
                 type = action?.type,
             ),
@@ -306,7 +305,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         fun create(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             userWallet: UserWallet,
-            yield: Yield,
+            integration: StakingIntegration,
             isAmountSubtractAvailable: Boolean,
         ): StakingTransactionSender
     }
