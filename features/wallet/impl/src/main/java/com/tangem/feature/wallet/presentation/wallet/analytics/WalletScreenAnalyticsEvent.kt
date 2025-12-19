@@ -51,6 +51,8 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
+        class ScreenOpenedLegacy : MainScreen(event = "Screen opened")
+
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
