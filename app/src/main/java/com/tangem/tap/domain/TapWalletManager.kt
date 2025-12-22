@@ -33,6 +33,9 @@ class TapWalletManager(
             .apply { join() }
     }
 
+    /**
+     * [REDACTED_TODO_COMMENT]
+     */
     private suspend fun loadUserWalletData(userWallet: UserWallet) {
         val trackingContextProxy = store.inject(DaggerGraphState::trackingContextProxy)
         trackingContextProxy.setContext(userWallet)
