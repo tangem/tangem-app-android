@@ -26,6 +26,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
@@ -315,13 +316,18 @@ internal class TokenDetailsStateFactory(
         return balanceSelectStateConverter.convert(buttonConfig)
     }
 
-    fun getStateWithUpdatedYieldSupplyDisplayBalance(displayBalance: String?): TokenDetailsState {
+    fun getStateWithUpdatedYieldSupplyDisplayBalance(
+        yieldSupplyRewardBalance: YieldSupplyRewardBalance,
+    ): TokenDetailsState {
         val state = currentStateProvider()
         val balanceState = state.tokenBalanceBlockState
         return state.copy(
             tokenBalanceBlockState = when (balanceState) {
                 is TokenDetailsBalanceBlockState.Content ->
-                    balanceState.copy(displayYeildSupplyCryptoBalance = displayBalance)
+                    balanceState.copy(
+                        displayYieldSupplyFiatBalance = yieldSupplyRewardBalance.fiatBalance,
+                        displayYieldSupplyCryptoBalance = yieldSupplyRewardBalance.cryptoBalance,
+                    )
                 is TokenDetailsBalanceBlockState.Error -> balanceState
                 is TokenDetailsBalanceBlockState.Loading -> balanceState
             },

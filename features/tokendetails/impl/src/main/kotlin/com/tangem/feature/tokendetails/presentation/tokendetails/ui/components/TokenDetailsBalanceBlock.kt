@@ -122,12 +122,12 @@ private fun FiatBalance(
                 height = TangemTheme.dimens.size32,
             ),
         )
-        is TokenDetailsBalanceBlockState.Content -> if (state.displayYeildSupplyCryptoBalance != null &&
+        is TokenDetailsBalanceBlockState.Content -> if (state.displayYieldSupplyFiatBalance != null &&
             !isBalanceHidden
         ) {
             TextAnimatedCounter(
                 modifier = modifier,
-                text = state.displayYeildSupplyCryptoBalance,
+                text = state.displayYieldSupplyFiatBalance,
                 style = TangemTheme.typography.h2.applyBladeBrush(
                     isEnabled = state.isBalanceFlickering,
                     textColor = TangemTheme.colors.text.primary1,
@@ -136,7 +136,7 @@ private fun FiatBalance(
         } else {
             Text(
                 modifier = modifier,
-                text = (state.displayYeildSupplyCryptoBalance ?: state.displayFiatBalance).orMaskWithStars(
+                text = (state.displayYieldSupplyFiatBalance ?: state.displayFiatBalance).orMaskWithStars(
                     isBalanceHidden,
                 ),
                 style = TangemTheme.typography.h2.applyBladeBrush(
@@ -184,8 +184,9 @@ private fun CryptoBalance(
                                 tint = TangemTheme.colors.icon.inactive,
                                 contentDescription = null,
                             )
-                            Text(
-                                text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
+                            TextAnimatedCounter(
+                                text = (state.displayYieldSupplyCryptoBalance ?: state.displayCryptoBalance)
+                                    .orMaskWithStars(isBalanceHidden),
                                 style = TangemTheme.typography.caption2.applyBladeBrush(
                                     isEnabled = state.isBalanceFlickering,
                                     textColor = TangemTheme.colors.text.tertiary,

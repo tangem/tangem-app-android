@@ -7,6 +7,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
@@ -24,6 +25,7 @@ class GetOnrampOffersUseCaseTest {
     private val errorResolver: OnrampErrorResolver = mockk(relaxUnitFun = true)
     private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
     private val cryptoCurrencyId: CryptoCurrency.ID = mockk(relaxUnitFun = true)
+    private val promoRepository: PromoRepository = mockk(relaxUnitFun = true)
 
     private lateinit var useCase: GetOnrampOffersUseCase
 
@@ -35,6 +37,7 @@ class GetOnrampOffersUseCaseTest {
             onrampTransactionRepository = onrampTransactionRepository,
             errorResolver = errorResolver,
             settingsRepository = settingsRepository,
+            promoRepository = promoRepository,
         )
     }
 
@@ -225,6 +228,7 @@ class GetOnrampOffersUseCaseTest {
 
         val transactions = emptyList<OnrampTransaction>()
 
+        coEvery { promoRepository.isMoonpayPromoActive() } returns false
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
         coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
@@ -240,6 +244,107 @@ class GetOnrampOffersUseCaseTest {
                 ifRight = { offers ->
                     Truth.assertThat(offers).isNotEmpty()
                     Truth.assertThat(offers).hasSize(1)
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `invoke should fallback to standard instant offers when promo is active but no Moonpay offers exist`() =
+        runTest {
+            val instantMethod = createMockPaymentMethod("gpay", "Google Pay", PaymentMethodType.GOOGLE_PAY)
+            val slowMethod = createMockPaymentMethod("bank", "Bank Transfer", PaymentMethodType.CARD)
+            val provider = createMockProvider("other", "Other Provider")
+
+            val quotes = listOf(
+                createMockQuote(instantMethod, provider, BigDecimal("95.0")),
+                createMockQuote(slowMethod, provider, BigDecimal("100.0")),
+            )
+
+            val transactions = emptyList<OnrampTransaction>()
+
+            coEvery { promoRepository.isMoonpayPromoActive() } returns true
+            coEvery { settingsRepository.isGooglePayAvailability() } returns true
+            coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+            coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(transactions)
+
+            val result = useCase()
+
+            result.collect { either ->
+                Truth.assertThat(either.isRight()).isTrue()
+                either.fold(
+                    ifLeft = { error -> Truth.assertThat(error).isNull() },
+                    ifRight = { offers ->
+                        Truth.assertThat(offers).hasSize(1)
+
+                        val recommendedBlock = offers.find { it.category == OnrampOfferCategory.Recommended }
+                        Truth.assertThat(recommendedBlock).isNotNull()
+                        Truth.assertThat(recommendedBlock?.offers).hasSize(2)
+
+                        val fastestOffer =
+                            recommendedBlock?.offers?.find { it.advantages == OnrampOfferAdvantages.Fastest }
+                        Truth.assertThat(fastestOffer).isNotNull()
+
+                        when (val quote = fastestOffer?.quote) {
+                            is OnrampQuote.Data -> {
+                                Truth.assertThat(quote.provider.id).isNotEqualTo("moonpay")
+                                Truth.assertThat(quote.paymentMethod.type).isEqualTo(PaymentMethodType.GOOGLE_PAY)
+                            }
+                            else -> Truth.assertThat(false).isTrue()
+                        }
+                    },
+                )
+            }
+        }
+
+    @Test
+    fun `invoke should show Moonpay fastest offer when promo is active`() = runTest {
+        val moonpayGooglePayMethod = createMockPaymentMethod("moonpay-gpay", "Google Pay", PaymentMethodType.GOOGLE_PAY)
+        val otherGooglePayMethod = createMockPaymentMethod(
+            "other-gpay",
+            "Other Google Pay",
+            PaymentMethodType.GOOGLE_PAY,
+        )
+        val slowMethod = createMockPaymentMethod("bank", "Bank Transfer", PaymentMethodType.CARD)
+        val moonpayProvider = createMockProvider("moonpay", "Moonpay")
+        val otherProvider = createMockProvider("other", "Other Provider")
+
+        val quotes = listOf(
+            createMockQuote(moonpayGooglePayMethod, moonpayProvider, BigDecimal("100.0")),
+            createMockQuote(otherGooglePayMethod, otherProvider, BigDecimal("95.0")),
+            createMockQuote(slowMethod, otherProvider, BigDecimal("105.0")),
+        )
+
+        val transactions = emptyList<OnrampTransaction>()
+
+        coEvery { promoRepository.isMoonpayPromoActive() } returns true
+        coEvery { settingsRepository.isGooglePayAvailability() } returns true
+        coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(transactions)
+
+        val result = useCase()
+
+        result.collect { either ->
+            Truth.assertThat(either.isRight()).isTrue()
+            either.fold(
+                ifLeft = { error -> Truth.assertThat(error).isNull() },
+                ifRight = { offers ->
+                    Truth.assertThat(offers).hasSize(1)
+
+                    val recommendedBlock = offers.find { it.category == OnrampOfferCategory.Recommended }
+                    Truth.assertThat(recommendedBlock).isNotNull()
+
+                    val fastestOffer = recommendedBlock?.offers?.find { it.advantages == OnrampOfferAdvantages.Fastest }
+                    Truth.assertThat(fastestOffer).isNotNull()
+
+                    when (val quote = fastestOffer?.quote) {
+                        is OnrampQuote.Data -> {
+                            Truth.assertThat(quote.provider.id).isEqualTo("moonpay")
+                            Truth.assertThat(quote.paymentMethod.type).isEqualTo(PaymentMethodType.GOOGLE_PAY)
+                            Truth.assertThat(quote.toAmount.value).isEqualTo(BigDecimal("100.0"))
+                        }
+                        else -> Truth.assertThat(false).isTrue()
+                    }
                 },
             )
         }

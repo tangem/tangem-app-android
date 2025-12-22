@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
@@ -31,12 +32,5 @@ internal class SelectedWalletAnalyticsSender @Inject constructor(
         userWallet.isLocked -> WalletScreenAnalyticsEvent.MainScreen.WalletUnlock
 
         else -> WalletScreenAnalyticsEvent.MainScreen.WalletSelected(userWallet.isImported())
-    }
-
-    private fun UserWallet.isImported(): Boolean {
-        return when (this) {
-            is UserWallet.Cold -> isImported
-            is UserWallet.Hot -> true
-        }
     }
 }

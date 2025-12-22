@@ -392,6 +392,7 @@
   <string name="common_week">Woche</string>
   <string name="common_with">mit</string>
   <string name="common_yes">Ja</string>
+  <string name="common_yield_mode">Ertragsmodus</string>
   <string name="contract_address_copied_message">Vertragsadresse kopiert!</string>
   <string name="currency_subtitle_expanded">Verfügbare Netzwerke</string>
   <string name="custom_token_another_account_dialog_description">Die Ableitung Deines Tokens entspricht der Ableitung von %1$s. Dein Token wird diesem Konto gutgeschrieben.</string>
@@ -849,6 +850,9 @@
   <string name="no_trustline_xlm_asset">Das Zielkonto verfügt nicht über eine Vertrauensstellung für das gesendete Asset.</string>
   <string name="notification_black_friday_text">Sicher Dir 10 $ in BTC mit jeder Wallet greif schnell zu!</string>
   <string name="notification_black_friday_title">Black Friday: bis zu 30% Nachlass</string>
+  <string name="notification_one_plus_one_button">Los geht\'s</string>
+  <string name="notification_one_plus_one_text">Nur für kurze Zeit!</string>
+  <string name="notification_one_plus_one_title">1+1: Beim Kauf einer Wallet erhältst Du 50% Rabatt</string>
   <string name="notification_referral_promo_button">Jetzt beitreten</string>
   <string name="notification_referral_promo_text">Teile Deinen Code – verdiene 5 USDT pro Verkauf. Deine Freunde erhalten 10 % Rabatt.</string>
   <string name="notification_referral_promo_title">Erhalte BELOHNUNGEN für jeden Freund!</string>
@@ -1480,11 +1484,11 @@
   <string name="tangempay_onboarding_security_description">Ein separates Zahlungskonto wird erstellt, ohne Ihre Adressen und Vermögenswerte offenzulegen</string>
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_title">Erhalten Sie Ihre kostenlose Tangem Pay Card in wenigen Minuten</string>
-  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account">Zahlungskonto</string>
   <string name="tangempay_payment_account_sync_needed">Synchronisierung des Zahlungskontos erforderlich</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
-  <string name="tangempay_service_unreachable_try_later">Der Dienst ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.</string>
+  <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_sync_needed">Synchronisation erforderlich</string>
   <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht verfügbar</string>
