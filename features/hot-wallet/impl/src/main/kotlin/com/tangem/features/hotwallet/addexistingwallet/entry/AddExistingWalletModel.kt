@@ -123,12 +123,16 @@ internal class AddExistingWalletModel @Inject constructor(
     }
 
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
+        var canSkip = true
+
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            showSkipAccessCodeWarningDialog()
+            if (canSkip) {
+                showSkipAccessCodeWarningDialog()
+            }
         }
     }
 
@@ -157,7 +161,12 @@ internal class AddExistingWalletModel @Inject constructor(
             stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(userWalletId, accessCode))
         }
 
+        override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = false
+        }
+
         override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = true
             navigateToPushNotificationsOrNext()
         }
     }
