@@ -38,10 +38,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.market.list.state.*
 import com.tangem.features.feed.ui.market.list.components.MarketsListLazyColumn
 import com.tangem.features.feed.ui.market.list.components.MarketsListSortByBottomSheet
 import com.tangem.features.feed.ui.market.list.components.YieldSupplyInMarketsPromoNotification
-import com.tangem.features.feed.ui.market.list.state.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -49,7 +49,12 @@ import kotlinx.coroutines.delay
 private const val SHOW_MORE_KEY = "privacyPolicy"
 
 @Composable
-internal fun TopBarWithSearch(onBackClick: () -> Unit, onSearchClick: () -> Unit, marketsSearchBar: MarketsSearchBar) {
+internal fun TopBarWithSearch(
+    buttonsEnabled: Boolean,
+    onBackClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    marketsSearchBar: MarketsSearchBar,
+) {
     val background = LocalMainBottomSheetColor.current.value
     val focusRequester: FocusRequester = remember { FocusRequester() }
 
@@ -59,6 +64,8 @@ internal fun TopBarWithSearch(onBackClick: () -> Unit, onSearchClick: () -> Unit
         if (showAppBarWithBackIcon) {
             AppBarWithBackButtonAndIcon(
                 onBackClick = onBackClick,
+                backButtonEnabled = buttonsEnabled,
+                endButtonEnabled = buttonsEnabled,
                 text = stringResourceSafe(R.string.markets_common_title),
                 iconRes = R.drawable.ic_search_24,
                 onIconClick = onSearchClick,
