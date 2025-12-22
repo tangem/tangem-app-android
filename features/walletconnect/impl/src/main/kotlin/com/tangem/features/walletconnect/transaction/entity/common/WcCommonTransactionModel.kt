@@ -20,4 +20,8 @@ internal interface WcCommonTransactionModel {
     fun showSuccessSignMessage(message: TextReference = resourceReference(R.string.wc_successfully_signed)) {
         messageSender.send(ToastMessage(message = message))
     }
+
+    fun showSuccessAddedMessage(message: TextReference = resourceReference(R.string.common_added)) {
+        messageSender.send(ToastMessage(message = message))
+    }
 }

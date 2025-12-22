@@ -1,8 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -11,14 +12,16 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.converte
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import timber.log.Timber
+import java.math.BigDecimal
 
 internal class SetTokenListTransformer(
     private val params: TokenConverterParams,
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
-    private val yieldSupplyApyMap: Map<String, String> = emptyMap(),
-    private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+    private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
+    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+    private val shouldShowMainPromo: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -62,7 +65,8 @@ internal class SetTokenListTransformer(
             appCurrency = appCurrency,
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
-            stakingApyMap = stakingApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
+            shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
     }
 }
