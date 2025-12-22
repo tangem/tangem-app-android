@@ -1444,6 +1444,7 @@
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_cancel_kyc">Cancel KYC</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
@@ -1505,6 +1506,7 @@
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
   <string name="tangempay_onboarding_banner_description">Use your crypto for real world spending. \nIt’s a payment card unlike any other.</string>
   <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
