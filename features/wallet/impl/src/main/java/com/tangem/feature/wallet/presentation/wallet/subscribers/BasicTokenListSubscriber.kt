@@ -8,13 +8,15 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
@@ -28,6 +30,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 
 @Deprecated("Use AccountListSubscriber instead")
 @Suppress("LongParameterList")
@@ -39,7 +42,8 @@ internal abstract class BasicTokenListSubscriber(
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
-    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
+    private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : WalletSubscriber() {
 
     private val sendAnalyticsJobHolder = JobHolder()
@@ -68,8 +72,8 @@ internal abstract class BasicTokenListSubscriber(
                 },
             flow2 = appCurrencyFlow(),
             flow3 = yieldSupplyApyFlow(),
-            flow4 = stakingApyFlow(),
-            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap, stakingApyMap ->
+            flow4 = yieldSupplyGetShouldShowMainPromoFlow(),
+            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap, shouldShowMainPromo ->
                 val tokenList = maybeTokenList.getOrElse(
                     ifLoading = { maybeContent ->
                         val isRefreshing = stateHolder.getWalletState(userWallet.walletId)
@@ -97,7 +101,11 @@ internal abstract class BasicTokenListSubscriber(
                     params = TokenConverterParams.Wallet(PortfolioId(userWallet.walletId), tokenList),
                     appCurrency = appCurrency,
                     yieldSupplyApyMap = yieldSupplyApyMap,
-                    stakingApyMap = stakingApyMap,
+                    stakingAvailabilityMap = stakingAvailabilityListUseCase.invokeSync(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrencyList = tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
+                    ),
+                    shouldShowMainPromo = shouldShowMainPromo,
                 )
 
                 walletWithFundsChecker.check(tokenList)
@@ -122,8 +130,9 @@ internal abstract class BasicTokenListSubscriber(
     private fun updateContent(
         params: TokenConverterParams,
         appCurrency: AppCurrency,
-        yieldSupplyApyMap: Map<String, String>,
-        stakingApyMap: Map<String, List<Yield.Validator>>,
+        yieldSupplyApyMap: Map<String, BigDecimal>,
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+        shouldShowMainPromo: Boolean,
     ) {
         stateHolder.update(
             SetTokenListTransformer(
@@ -132,7 +141,8 @@ internal abstract class BasicTokenListSubscriber(
                 appCurrency = appCurrency,
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
-                stakingApyMap = stakingApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
             ),
         )
     }
@@ -146,9 +156,9 @@ internal abstract class BasicTokenListSubscriber(
         }
         .distinctUntilChanged()
 
-    private fun yieldSupplyApyFlow(): Flow<Map<String, String>> = yieldSupplyApyFlowUseCase()
+    private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> = yieldSupplyApyFlowUseCase()
         .distinctUntilChanged()
 
-    private fun stakingApyFlow(): Flow<Map<String, List<Yield.Validator>>> = stakingApyFlowUseCase()
+    private fun yieldSupplyGetShouldShowMainPromoFlow(): Flow<Boolean> = yieldSupplyGetShouldShowMainPromoUseCase()
         .distinctUntilChanged()
 }
