@@ -147,7 +147,7 @@ internal class SendModel @Inject constructor(
     var appCurrency: AppCurrency = AppCurrency.Default
     var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
-    private var balanceHidingJobHolder = JobHolder()
+    private val balanceHidingJobHolder = JobHolder()
 
     init {
         subscribeOnBalanceHidden()
@@ -226,8 +226,8 @@ internal class SendModel @Inject constructor(
     }
 
     override fun resetSendNavigation() {
-        uiState.update {
-            it.copy(
+        uiState.update { state ->
+            state.copy(
                 destinationUM = SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
                 ).transform(DestinationUM.Empty()),
@@ -358,8 +358,8 @@ internal class SendModel @Inject constructor(
                         )
                     }
                 },
-                ifLeft = {
-                    Timber.w(it.toString())
+                ifLeft = { error ->
+                    Timber.w(error.toString())
                     showAlertError()
                     return@launch
                 },

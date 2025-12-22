@@ -47,7 +47,6 @@
     <ID>SuspendFunSwallowedCancellation:DefaultWcPairUseCase.kt$DefaultWcPairUseCase$runCatching</ID>
     <ID>UseAnyOrNoneInsteadOfFind:DefaultWcSessionsManager.kt$DefaultWcSessionsManager$find { it.sdkModel.topic == dto.topic }</ID>
     <ID>UseEmptyCounterpart:AssociateNetworksDelegate.kt$AssociateNetworksDelegate.Companion$listOf()</ID>
-    <ID>UseEmptyCounterpart:DefaultWcRequestService.kt$DefaultWcRequestService$setOf()</ID>
     <ID>UseEmptyCounterpart:WcAppMetaDataConverter.kt$WcAppMetaDataConverter$listOf()</ID>
     <ID>UseEmptyCounterpart:WcNetworksConverter.kt$WcNetworksConverter$listOf()</ID>
     <ID>UseEmptyCounterpart:WcSdkSessionConverter.kt$WcSdkSessionConverter$listOf()</ID>
