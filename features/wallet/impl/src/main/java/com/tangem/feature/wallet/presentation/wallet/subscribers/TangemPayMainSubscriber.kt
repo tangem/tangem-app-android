@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.MainCustomerInfoContentState
@@ -57,7 +58,10 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                                 transformer = TangemPayUnavailableStateTransformer(userWalletId),
                             )
                         }
-                        else -> {
+                        TangemPayCustomerInfoError.ExposedDeviceError -> {
+                            stateController.update(TangemPayExposedDeviceTransformer(userWalletId))
+                        }
+                        TangemPayCustomerInfoError.UnknownError -> {
                             // hide TangemPay block
                             Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
                             stateController.update(
@@ -79,6 +83,13 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                 updateTangemPay(data = state.info, userWalletId = userWalletId)
                 analytics.send(customerInfo = state.info)
             }
+            is MainCustomerInfoContentState.OnboardingBanner -> stateController.update(
+                transformer = TangemPayOnboardingBannerStateTransformer(
+                    userWalletId = userWalletId,
+                    onClick = clickIntents::onOnboardingBannerClick,
+                    closeOnClick = clickIntents::onOnboardingBannerCloseClick,
+                ),
+            )
         }
     }
 
@@ -91,7 +102,11 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                 userWalletId = userWalletId,
                 value = data,
                 cardFrozenState = cardFrozenState,
-                onClickKyc = { innerWalletRouter.openTangemPayOnboarding(userWalletId) },
+                onClickKyc = {
+                    innerWalletRouter.openTangemPayOnboarding(
+                        mode = AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(userWalletId),
+                    )
+                },
                 onIssuingCard = clickIntents::onIssuingCardClicked,
                 onIssuingFailed = clickIntents::onIssuingFailedClicked,
                 openDetails = { config ->
