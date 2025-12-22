@@ -78,6 +78,7 @@ internal class YieldSupplyModel @Inject constructor(
     var userWallet: UserWallet by Delegates.notNull()
 
     private val fetchCurrencyJobHolder = JobHolder()
+    private val loadStatusJobHolder = JobHolder()
 
     private var lastStatusCheckTimestamp = 0L
     private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
@@ -134,22 +135,20 @@ internal class YieldSupplyModel @Inject constructor(
         }
     }
 
-    private fun loadTokenStatus() {
+    private suspend fun loadTokenStatus() {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
-        modelScope.launch(dispatchers.default) {
-            yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
-                .onRight { tokenStatus ->
-                    uiState.update(
-                        YieldSupplyTokenStatusSuccessTransformer(
-                            tokenStatus = tokenStatus,
-                            onStartEarningClick = ::onStartEarningClick,
-                        ),
-                    )
-                }.onLeft {
-                    Timber.e(it)
-                    uiState.update { YieldSupplyUM.Initial }
-                }
-        }
+        yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
+            .onRight { tokenStatus ->
+                uiState.update(
+                    YieldSupplyTokenStatusSuccessTransformer(
+                        tokenStatus = tokenStatus,
+                        onStartEarningClick = ::onStartEarningClick,
+                    ),
+                )
+            }.onLeft {
+                Timber.e(it)
+                uiState.update { YieldSupplyUM.Initial }
+            }
     }
 
     override fun onStartEarningClick() {
@@ -183,7 +182,9 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     @Suppress("MaximumLineLength")
-    private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) = modelScope.launch {
+    private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) = modelScope.launch(
+        dispatchers.default,
+    ) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
         val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
             userWallet.walletId,
@@ -234,7 +235,7 @@ internal class YieldSupplyModel @Inject constructor(
                 lastStatusCheckTimestamp = 0L
             }
         }
-    }
+    }.saveIn(loadStatusJobHolder)
 
     private fun showProcessing(status: YieldSupplyEnterStatus) {
         uiState.update {
@@ -246,24 +247,21 @@ internal class YieldSupplyModel @Inject constructor(
         fetchCurrencyWithDelay()
     }
 
-    private fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    private suspend fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        modelScope
-            .launch {
-                yieldSupplyRepository.saveTokenProtocolStatus(
-                    userWalletId = userWallet.walletId,
-                    cryptoCurrency = cryptoCurrency,
-                    yieldSupplyEnterStatus = null,
-                )
-                if (yieldSupplyStatus?.isActive == true) {
-                    loadActiveState(
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        yieldSupplyStatus = yieldSupplyStatus,
-                    )
-                } else {
-                    loadTokenStatus()
-                }
-            }
+        yieldSupplyRepository.saveTokenProtocolStatus(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyEnterStatus = null,
+        )
+        if (yieldSupplyStatus?.isActive == true) {
+            loadActiveState(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                yieldSupplyStatus = yieldSupplyStatus,
+            )
+        } else {
+            loadTokenStatus()
+        }
     }
 
     private fun fetchCurrencyWithDelay() {
@@ -280,7 +278,10 @@ internal class YieldSupplyModel @Inject constructor(
         }.saveIn(fetchCurrencyJobHolder)
     }
 
-    private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
+    private suspend fun loadActiveState(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        yieldSupplyStatus: YieldSupplyStatus,
+    ) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
         val isShowInfoIconPrevState = when (val state = uiState.value) {
@@ -295,50 +296,48 @@ internal class YieldSupplyModel @Inject constructor(
                 ),
             )
         }
-        modelScope.launch(dispatchers.default) {
-            yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
-                .onRight { tokenStatus ->
-                    uiState.update {
-                        YieldSupplyUM.Content(
-                            title = resourceReference(
-                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+        yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
+            .onRight { tokenStatus ->
+                uiState.update {
+                    YieldSupplyUM.Content(
+                        title = resourceReference(
+                            R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+                        ),
+                        subtitle = resourceReference(
+                            R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
+                        ),
+                        rewardsApy = combinedReference(
+                            resourceReference(
+                                R.string.yield_module_token_details_earn_notification_apy,
                             ),
-                            subtitle = resourceReference(
-                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
-                            ),
-                            rewardsApy = combinedReference(
-                                resourceReference(
-                                    R.string.yield_module_token_details_earn_notification_apy,
-                                ),
-                                stringReference(" ${tokenStatus.apy}%"),
-                            ),
-                            onClick = ::onActiveClick,
-                            showWarningIcon = showWarningIcon,
-                            showInfoIcon = isShowInfoIconPrevState,
-                            apy = tokenStatus.apy.toString(),
-                        )
-                    }
-                    computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
-                }.onLeft { t ->
-                    Timber.e(t)
-                    uiState.update {
-                        YieldSupplyUM.Content(
-                            title = resourceReference(
-                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
-                            ),
-                            subtitle = resourceReference(
-                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
-                            ),
-                            rewardsApy = TextReference.EMPTY,
-                            onClick = ::onActiveClick,
-                            showWarningIcon = showWarningIcon,
-                            showInfoIcon = isShowInfoIconPrevState,
-                            apy = "",
-                        )
-                    }
-                    computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
+                            stringReference(" ${tokenStatus.apy}%"),
+                        ),
+                        onClick = ::onActiveClick,
+                        showWarningIcon = showWarningIcon,
+                        showInfoIcon = isShowInfoIconPrevState,
+                        apy = tokenStatus.apy.toString(),
+                    )
                 }
-        }
+                computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
+            }.onLeft { t ->
+                Timber.e(t)
+                uiState.update {
+                    YieldSupplyUM.Content(
+                        title = resourceReference(
+                            R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+                        ),
+                        subtitle = resourceReference(
+                            R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
+                        ),
+                        rewardsApy = TextReference.EMPTY,
+                        onClick = ::onActiveClick,
+                        showWarningIcon = showWarningIcon,
+                        showInfoIcon = isShowInfoIconPrevState,
+                        apy = "",
+                    )
+                }
+                computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
+            }
     }
 
     private fun computeAndApplyShowInfoIcon(cryptoCurrencyStatus: CryptoCurrencyStatus) {

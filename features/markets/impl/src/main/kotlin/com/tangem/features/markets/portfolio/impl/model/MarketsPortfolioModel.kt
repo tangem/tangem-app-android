@@ -193,7 +193,10 @@ internal class MarketsPortfolioModel @Inject constructor(
                         NewAddToPortfolioManager.State.NothingToAdd -> AddButtonState.Unavailable
                     }
                 },
-                onAddClick = { bottomSheetNavigation.activate(MarketsPortfolioRoute.AddToPortfolio) },
+                onAddClick = {
+                    analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioClicked())
+                    bottomSheetNavigation.activate(MarketsPortfolioRoute.AddToPortfolio)
+                },
             )
             newMarketsPortfolioDelegate.combineData()
                 .onEach { _state.value = it }

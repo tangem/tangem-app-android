@@ -17,6 +17,7 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -31,6 +32,7 @@ internal class DefaultP2PEthPoolRepository(
     private val p2pApi: P2PEthPoolApi,
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val stakingFeatureToggles: StakingFeatureToggles,
 ) : P2PEthPoolRepository {
 
     private val vaultConverter = P2PEthPoolVaultConverter
@@ -40,10 +42,15 @@ internal class DefaultP2PEthPoolRepository(
     private val errorConverter = P2PEthPoolErrorConverter
 
     override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
-        val vaults = getVaults(network).getOrElse { error ->
-            Timber.e("Error fetching P2P vaults: $error")
+        val vaults = if (stakingFeatureToggles.isEthStakingEnabled) {
+            getVaults(network).getOrElse { error ->
+                Timber.e("Error fetching P2P vaults: $error")
+                emptyList()
+            }
+        } else {
             emptyList()
         }
+
         p2pEthPoolVaultsStore.store(vaults)
     }
 
@@ -223,30 +230,18 @@ internal class DefaultP2PEthPoolRepository(
             .map { vaults ->
                 if (vaults.isEmpty()) {
                     return@map StakingAvailability.TemporaryUnavailable
-                }
-
-                val vault = findPublicVault(vaults = vaults)
-
-                if (vault != null) {
-                    StakingAvailability.Available(StakingOption.P2P(vault))
                 } else {
-                    StakingAvailability.TemporaryUnavailable
+                    StakingAvailability.Available(StakingOption.P2P(vaults))
                 }
             }
     }
 
     override suspend fun getStakingAvailabilitySync(): StakingAvailability {
         val vaults = getVaultsSync()
-        if (vaults.isEmpty()) {
-            return StakingAvailability.TemporaryUnavailable
-        }
-
-        val vault = findPublicVault(vaults = vaults)
-
-        return if (vault != null) {
-            StakingAvailability.Available(StakingOption.P2P(vault))
-        } else {
+        return if (vaults.isEmpty()) {
             StakingAvailability.TemporaryUnavailable
+        } else {
+            StakingAvailability.Available(StakingOption.P2P(vaults))
         }
     }
 
@@ -256,9 +251,5 @@ internal class DefaultP2PEthPoolRepository(
 
     private fun getVaultsFlow(): Flow<List<P2PEthPoolVault>> {
         return p2pEthPoolVaultsStore.get()
-    }
-
-    private fun findPublicVault(vaults: List<P2PEthPoolVault>): P2PEthPoolVault? {
-        return vaults.firstOrNull { vault -> !vault.isPrivate }
     }
 }
