@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,6 +29,7 @@ import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -37,20 +37,17 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.keyboardAsState
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.impl.R
+import com.tangem.features.markets.tokenlist.impl.model.MarketsNotificationUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListSortByBottomSheet
-import com.tangem.features.markets.tokenlist.impl.ui.components.StakingInMarketsPromoNotification
+import com.tangem.features.markets.tokenlist.impl.ui.components.YieldSupplyInMarketsPromoNotification
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
@@ -58,7 +55,6 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetCont
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import java.math.BigDecimal
 
 private const val SHOW_MORE_KEY = "privacyPolicy"
 
@@ -180,38 +176,38 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                 )
             }
 
+            val marketsNotification = state.marketsNotificationUM
             AnimatedVisibility(
                 state.isInSearchMode.not() &&
-                    state.stakingNotificationMaxApy != null &&
-                    state.selectedSortBy != SortByTypeUM.Staking,
+                    state.selectedSortBy != SortByTypeUM.YieldSupply,
             ) {
                 val showMore = stringResourceSafe(R.string.common_show_more)
-                val description = stringResourceSafe(
-                    R.string.markets_staking_banner_description_placeholder,
-                    showMore,
-                )
 
-                val clickableDescription = buildAnnotatedString {
-                    append(description.substringBefore(showMore))
+                when (marketsNotification) {
+                    is MarketsNotificationUM.YieldSupplyPromo -> {
+                        val description = stringResourceSafe(
+                            R.string.markets_yield_supply_banner_description,
+                            showMore,
+                        )
 
-                    pushStringAnnotation(SHOW_MORE_KEY, "")
-                    appendColored(showMore, TangemTheme.colors.text.accent)
-                    pop()
+                        val clickableDescription = annotatedReference {
+                            append(description.substringBefore(showMore))
+
+                            pushStringAnnotation(SHOW_MORE_KEY, "")
+                            appendColored(showMore, TangemTheme.colors.text.accent)
+                            pop()
+                        }
+
+                        YieldSupplyInMarketsPromoNotification(
+                            config = marketsNotification.config.copy(
+                                subtitle = clickableDescription,
+                            ),
+                            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
+                        )
+                    }
+                    else -> { /* no-op */
+                    }
                 }
-
-                StakingInMarketsPromoNotification(
-                    config = NotificationConfig(
-                        iconResId = R.drawable.img_staking_in_market_notification,
-                        title = resourceReference(
-                            R.string.markets_staking_banner_title,
-                            wrappedList(state.stakingNotificationMaxApy.format { percent() }),
-                        ),
-                        subtitle = annotatedReference(clickableDescription),
-                        onClick = state.onStakingNotificationClick,
-                        onCloseClick = state.onStakingNotificationCloseClick,
-                    ),
-                    modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                )
             }
         }
     }
@@ -420,9 +416,10 @@ private fun Preview() {
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
                     ),
-                    stakingNotificationMaxApy = BigDecimal(0.12345),
-                    onStakingNotificationClick = {},
-                    onStakingNotificationCloseClick = {},
+                    marketsNotificationUM = MarketsNotificationUM.YieldSupplyPromo(
+                        onClick = {},
+                        onCloseClick = {},
+                    ),
                 ),
                 onHeaderSizeChange = {},
                 bottomSheetState = BottomSheetState.EXPANDED,

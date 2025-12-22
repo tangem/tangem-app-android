@@ -103,7 +103,7 @@ internal class OnboardingTwinModel @Inject constructor(
     init {
         when (_uiState.value) {
             is OnboardingTwinUM.Welcome -> {
-                analyticsEventHandler.send(OnboardingEvent.Twins.ScreenOpened)
+                analyticsEventHandler.send(OnboardingEvent.Twins.ScreenOpened())
                 modelScope.launch {
                     saveTwinsOnboardingShownUseCase()
                 }
@@ -171,7 +171,11 @@ internal class OnboardingTwinModel @Inject constructor(
                         }
                     }
 
-                    analyticsEventHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+                    analyticsEventHandler.send(
+                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                        ),
+                    )
 
                     update<OnboardingTwinUM.ScanCard> {
                         it.copy(
@@ -272,7 +276,7 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private fun scanComplete(scanResponse: ScanResponse) {
-        analyticsEventHandler.send(OnboardingEvent.Twins.SetupFinished)
+        analyticsEventHandler.send(OnboardingEvent.Twins.SetupFinished())
 
         when (params.mode) {
             Mode.WelcomeOnly -> saveWalletAndDone()
