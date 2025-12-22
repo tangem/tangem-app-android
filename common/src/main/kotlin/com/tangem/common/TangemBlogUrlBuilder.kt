@@ -1,20 +1,15 @@
 package com.tangem.common
 
-import com.tangem.utils.SupportedLanguages
-
 /**
 [REDACTED_AUTHOR]
  */
 object TangemBlogUrlBuilder {
 
-    fun build(post: Post): String {
-        val code = SupportedLanguages.getCurrentSupportedLanguageCode()
-            .takeIf { code ->
-                code == SupportedLanguages.RUSSIAN || code == SupportedLanguages.ENGLISH
-            }
-            ?: SupportedLanguages.ENGLISH
-
-        return "https://tangem.com/$code/blog/post/${post.path}/"
+    suspend fun build(post: Post): String {
+        return TangemSiteUrlBuilder.url(
+            path = "/blog/post/${post.path}/",
+            campaign = "articles",
+        )
     }
 
     sealed interface Post {
@@ -27,6 +22,14 @@ object TangemBlogUrlBuilder {
 
         data object SeedNotifySecond : Post {
             override val path: String = "tangem-resolves-log-issue"
+        }
+
+        data object SeedPhraseRiskySolution : Post {
+            override val path: String = "seed-phrase-a-risky-solution"
+        }
+
+        data object WhatWalletToChoose : Post {
+            override val path: String = "mobile-wallet"
         }
     }
 }
