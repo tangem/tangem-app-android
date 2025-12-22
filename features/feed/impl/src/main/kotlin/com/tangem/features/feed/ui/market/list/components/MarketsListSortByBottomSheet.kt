@@ -18,8 +18,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.market.list.state.SortByBottomSheetContentUM
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.SortByBottomSheetContentUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 
 @Composable
 fun MarketsListSortByBottomSheet(config: TangemBottomSheetConfig) {
