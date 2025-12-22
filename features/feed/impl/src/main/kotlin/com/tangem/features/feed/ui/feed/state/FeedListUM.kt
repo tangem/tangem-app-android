@@ -4,7 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toPersistentList
