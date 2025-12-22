@@ -10,10 +10,13 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
@@ -96,6 +99,7 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -106,15 +110,13 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private var needToRefreshWallet = false
     private val clearNFTCacheJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
+    private var needToRefreshWallet = false
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
-
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
                 if (isBackground.not()) {
@@ -271,8 +273,8 @@ internal class WalletModel @Inject constructor(
     // It's okay here because we need to be able to observe the selected wallet changes
     @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
-        getSelectedWalletUseCase().onRight {
-            it
+        getSelectedWalletUseCase().onRight { walletFlow ->
+            walletFlow
                 .conflate()
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
@@ -282,6 +284,8 @@ internal class WalletModel @Inject constructor(
 
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
+
+                    sendMainScreenOpenedAnalytics(selectedWallet.isImported())
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -689,6 +693,17 @@ internal class WalletModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun sendMainScreenOpenedAnalytics(isImported: Boolean) {
+        val result = getAppThemeModeUseCase().firstOrNull()
+        val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+        analyticsEventsHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                theme = theme.value,
+                isImported = isImported,
+            ),
+        )
     }
 
     inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {

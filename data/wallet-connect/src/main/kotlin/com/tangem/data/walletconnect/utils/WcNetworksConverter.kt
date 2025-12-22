@@ -1,6 +1,9 @@
 package com.tangem.data.walletconnect.utils
 
 import com.reown.walletkit.client.Wallet
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.model.CAIP10
 import com.tangem.domain.account.producer.SingleAccountProducer
@@ -44,7 +47,7 @@ internal class WcNetworksConverter @Inject constructor(
         val allCoinNetwork = filterWalletNetworkForRequest(request.chainId.orEmpty(), session.wallet)
 
         val requestNetwork = allCoinNetwork.find { network ->
-            val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
+            val address = getAddressForWC(wallet.walletId, network)
             requestAddress.lowercase() == address?.lowercase()
         }
         return requestNetwork
@@ -60,7 +63,18 @@ internal class WcNetworksConverter @Inject constructor(
 
     suspend fun allAddressForChain(rawChainId: String, wallet: UserWallet): List<String> {
         return filterWalletNetworkForRequest(rawChainId, wallet)
-            .mapNotNull { walletManagersFacade.getDefaultAddress(wallet.walletId, it)?.lowercase() }
+            .mapNotNull { getAddressForWC(wallet.walletId, it)?.lowercase() }
+    }
+
+    suspend fun getAddressForWC(userWalletId: UserWalletId, network: Network): String? {
+        return when (network.toBlockchain()) {
+            Blockchain.XDC,
+            Blockchain.XDCTestnet,
+            -> walletManagersFacade.getAddresses(userWalletId, network)
+                .find { address -> address.type == AddressType.Legacy }
+                ?.value
+            else -> walletManagersFacade.getDefaultAddress(userWalletId, network)
+        }
     }
 
     /**
@@ -94,8 +108,8 @@ internal class WcNetworksConverter @Inject constructor(
                     // find all derivation
                     .filter { it.rawId == blockchain.id }
                     // find equal address
-                    .firstOrNull {
-                        val walletAddress = walletManagersFacade.getDefaultAddress(wallet.walletId, it)
+                    .firstOrNull { network ->
+                        val walletAddress = getAddressForWC(wallet.walletId, network)
                         walletAddress?.lowercase() == caip10.accountAddress.lowercase()
                     }
             }
