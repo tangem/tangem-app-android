@@ -66,6 +66,10 @@ internal class TangemCardTypesResolver(
     override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {
+        if (card.cardId.equals("AB02000000002045", true)
+            || card.cardId.equals("AB02000000047966", true)) {
+            return true
+        }
         return !isTangemTwins() &&
             !card.isStart2Coin &&
             !isTangemNote() &&
