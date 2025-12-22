@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.builder
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.MobileWallet
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
@@ -22,9 +23,12 @@ class HotUserWalletBuilder @AssistedInject constructor(
     private val hotSdk: TangemHotSdk,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val dispatcherProvider: CoroutineDispatcherProvider,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
 ) {
 
     suspend fun build(): UserWallet.Hot = withContext(dispatcherProvider.default) {
+        checkHotWalletCreationSupported()
+
         val allNetworks = Blockchain.entries.filter { it.isTestnet().not() }
         val curves = allNetworks.map { it.getSupportedCurves() }.flatten().toSet()
         val requests = curves.sortedBy { it.ordinal }.map { curve ->
@@ -71,6 +75,12 @@ class HotUserWalletBuilder @AssistedInject constructor(
             wallets = wallets,
             backedUp = false,
         )
+    }
+
+    fun checkHotWalletCreationSupported() {
+        require(isHotWalletCreationSupported()) {
+            "Hot wallet creation is supported only from ${isHotWalletCreationSupported.getLeastVersionName()}"
+        }
     }
 
     @AssistedFactory
