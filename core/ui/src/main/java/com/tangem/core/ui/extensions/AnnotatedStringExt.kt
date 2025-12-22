@@ -56,9 +56,28 @@ fun AnnotatedString.Builder.appendMarkdown(markdownText: String, node: ASTNode):
     return this
 }
 
+/**
+ * Appends a single space character to the [AnnotatedString.Builder].
+ */
 fun AnnotatedString.Builder.appendSpace() = append(" ")
 
+/**
+ * Appends text with the specified [Color] to the [AnnotatedString.Builder].
+ *
+ * @param text The text to append.
+ * @param color The [Color] to apply to the appended text.
+ */
 fun AnnotatedString.Builder.appendColored(text: String, color: Color) = withStyle(SpanStyle(color = color)) {
+    append(text)
+}
+
+/**
+ * Appends text with the specified [SpanStyle] to the [AnnotatedString.Builder].
+ *
+ * @param text The text to append.
+ * @param spanStyle The [SpanStyle] to apply to the appended text.
+ */
+fun AnnotatedString.Builder.appendStyled(text: String, spanStyle: SpanStyle) = withStyle(spanStyle) {
     append(text)
 }
 
