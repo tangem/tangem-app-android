@@ -1,16 +1,22 @@
 package com.tangem.features.createwalletselection
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.Shop
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
 import com.tangem.features.createwalletselection.impl.R
@@ -28,9 +34,12 @@ import javax.inject.Inject
 internal class CreateWalletSelectionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateWalletSelectionUM>
@@ -76,6 +85,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                 ),
                 onBuyClick = ::onBuyClick,
                 shouldShowAlreadyHaveWallet = true,
+                onWhatToChooseClick = ::onWhatToChooseClick,
             ),
         )
 
@@ -93,7 +103,20 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onMobileWalletClick() {
-        router.push(AppRoute.CreateMobileWallet)
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
+                source = AnalyticsParam.ScreensSources.AddNewWallet.value,
+            ),
+        )
+        if (!isHotWalletCreationSupported()) {
+            uiMessageSender.send(
+                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
+            )
+            return
+        }
+
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.AddNewWallet.value))
     }
 
     private fun onHardwareWalletClick() {
@@ -101,10 +124,16 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onBuyClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
-        analyticsEventHandler.send(Shop.ScreenOpened)
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.AddNewWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Creation).let { urlOpener.openUrl(it) }
+        }
+    }
+
+    private fun onWhatToChooseClick() {
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatWalletToChoose))
         }
     }
 
