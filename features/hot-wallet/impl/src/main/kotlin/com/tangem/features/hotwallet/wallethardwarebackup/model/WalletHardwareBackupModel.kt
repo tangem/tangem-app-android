@@ -171,7 +171,8 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private fun onBuyClick() {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.HardwareWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
     }
 
