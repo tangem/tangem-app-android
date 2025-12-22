@@ -51,7 +51,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 
 @Composable
 internal fun FeedListHeader(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -85,6 +86,7 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
             style = TangemTheme.typography.h3,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
 
         SpacerH(8.dp)

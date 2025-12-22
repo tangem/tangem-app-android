@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.list.state
+package com.tangem.features.feed.model.market.list.state
 
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference

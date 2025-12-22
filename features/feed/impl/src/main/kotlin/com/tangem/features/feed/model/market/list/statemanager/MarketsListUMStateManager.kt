@@ -9,7 +9,12 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.market.list.state.*
+import com.tangem.features.feed.model.market.list.state.ListUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.MarketsNotificationUM
+import com.tangem.features.feed.model.market.list.state.MarketsSearchBar
+import com.tangem.features.feed.model.market.list.state.SortByBottomSheetContentUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

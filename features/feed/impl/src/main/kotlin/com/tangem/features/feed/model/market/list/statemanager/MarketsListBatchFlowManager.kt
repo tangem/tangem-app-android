@@ -8,8 +8,8 @@ import com.tangem.features.feed.model.converter.MarketsTokenItemConverter
 import com.tangem.features.feed.model.market.list.utils.logAction
 import com.tangem.features.feed.model.market.list.utils.logStatus
 import com.tangem.features.feed.model.market.list.utils.logUpdateResults
-import com.tangem.features.feed.ui.market.list.state.MarketsListUM
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult

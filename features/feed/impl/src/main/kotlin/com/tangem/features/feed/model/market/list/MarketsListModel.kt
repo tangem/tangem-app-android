@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
@@ -19,10 +20,10 @@ import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListCo
 import com.tangem.features.feed.model.market.list.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListUMStateManager
-import com.tangem.features.feed.ui.market.list.state.ListUM
-import com.tangem.features.feed.ui.market.list.state.MarketsListUM
-import com.tangem.features.feed.ui.market.list.state.MarketsNotificationUM
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.ListUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.MarketsNotificationUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -105,6 +106,7 @@ internal class MarketsListModel @Inject constructor(
 
     private var activeListManager: MarketsListBatchFlowManager = mainMarketsListManager
 
+    val containerBottomSheetState = MutableStateFlow(BottomSheetState.COLLAPSED)
     val isVisibleOnScreen = MutableStateFlow(false)
 
     val state = marketsListUMStateManager.state.asStateFlow()
@@ -289,6 +291,12 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun initAnalytics() {
+        containerBottomSheetState.onEach { bottomSheetState ->
+            if (bottomSheetState == BottomSheetState.EXPANDED) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened())
+            }
+        }.launchIn(modelScope)
+
         state.filter { it.isInSearchMode.not() }
             .map { MarketsListAnalyticsEvent.SortBy(it.selectedSortBy, it.selectedInterval) }.distinctUntilChanged()
             .onEach {
@@ -308,6 +316,9 @@ internal class MarketsListModel @Inject constructor(
         launch {
             while (true) {
                 delay(timeMillis)
+                // Update quotes only when the container bottom sheet is in the expanded state
+                containerBottomSheetState.first { it == BottomSheetState.EXPANDED }
+                // and is visible on the screen
                 isVisibleOnScreen.first { it }
                 activeListManager.updateQuotes()
             }
