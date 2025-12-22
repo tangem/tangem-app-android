@@ -6,7 +6,6 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.keyboard.KeyboardValidator
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
-import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -81,7 +80,6 @@ internal class MainViewModel @Inject constructor(
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
-    private val trackingContextProxy: TrackingContextProxy,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -143,7 +141,7 @@ internal class MainViewModel @Inject constructor(
                 }
             }
 
-            prepareSelectedWalletFeedback()
+            subscribeToSelectedWallet()
 
             // await while initial route stack is initialized
             appRouterConfig.initializedState.first { it }
@@ -172,12 +170,15 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    private fun prepareSelectedWalletFeedback() {
+    private fun subscribeToSelectedWallet() {
         getSelectedWalletUseCase.invoke()
             .mapLeft { emptyFlow<UserWallet>() }
             .onRight { wallet ->
                 wallet.distinctUntilChanged()
-                    .onEach { trackingContextProxy.setContext(it) }
+                    .onEach {
+                        // FIXME Do not remove this call without checking implications !!!
+                        appStateHolder.onUserWalletSelected(it)
+                    }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }

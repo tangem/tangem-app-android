@@ -20,7 +20,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
     @Test
     fun `GIVEN promo disabled WHEN convert THEN return null`() {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xABCDEF")
-        val status = createStatus(token = token, amount = BigDecimal.ONE, isYieldActive = false)
+        val status = createLoadedStatus(token = token, amount = BigDecimal.ONE, isYieldActive = false)
         val tokenList = ungroupedTokenList(status)
         val params = TokenConverterParams.Wallet(
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
@@ -39,7 +39,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
     @Test
     fun `GIVEN empty apy map WHEN convert THEN return null`() {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xA1")
-        val status = createStatus(token = token, amount = BigDecimal("2.0"), isYieldActive = false)
+        val status = createLoadedStatus(token = token, amount = BigDecimal("2.0"), isYieldActive = false)
         val params = TokenConverterParams.Wallet(
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(status),
@@ -57,7 +57,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
     @Test
     fun `GIVEN active yield token present WHEN convert THEN return null`() {
         val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xAA")
-        val statusActive = createStatus(token = token, amount = BigDecimal("5"), isYieldActive = true)
+        val statusActive = createLoadedStatus(token = token, amount = BigDecimal("5"), isYieldActive = true)
         val params = TokenConverterParams.Wallet(
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(statusActive),
@@ -78,8 +78,8 @@ class YieldSupplyPromoBannerKeyConverterTest {
         val tokenSmall = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xAbCd")
         val tokenBig = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xBEEF")
 
-        val statusSmall = createStatus(token = tokenSmall, amount = BigDecimal("1.00"), isYieldActive = false)
-        val statusBig = createStatus(token = tokenBig, amount = BigDecimal("10.00"), isYieldActive = false)
+        val statusSmall = createLoadedStatus(token = tokenSmall, amount = BigDecimal("1.00"), isYieldActive = false)
+        val statusBig = createLoadedStatus(token = tokenBig, amount = BigDecimal("10.00"), isYieldActive = false)
 
         val apyMap = mapOf(
             "${tokenSmall.network.backendId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
@@ -105,7 +105,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
     fun `GIVEN non evm case sensitive mismatch WHEN convert THEN return null`() {
         val nonEvmId = "xrp"
         val token = createToken(networkId = nonEvmId, backendId = nonEvmId, contract = "rAbC123")
-        val status = createStatus(token = token, amount = BigDecimal("3"), isYieldActive = false)
+        val status = createLoadedStatus(token = token, amount = BigDecimal("3"), isYieldActive = false)
 
         val mismatchedKey = "${token.network.backendId}_${token.contractAddress.lowercase()}"
         val apyMap = mapOf(mismatchedKey to BigDecimal("0.07"))
@@ -116,6 +116,24 @@ class YieldSupplyPromoBannerKeyConverterTest {
         )
         val converter = YieldSupplyPromoBannerKeyConverter(
             yieldModuleApyMap = apyMap,
+            shouldShowMainPromo = true,
+        )
+
+        val result = converter.convert(params)
+
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `GIVEN custom status WHEN convert THEN return null`() {
+        val token = createToken(networkId = "ethereum", backendId = "ethereum", contract = "0xCUSTOM")
+        val status = createCustomStatus(token = token, amount = BigDecimal("5.0"), isYieldActive = false)
+        val params = TokenConverterParams.Wallet(
+            portfolioId = PortfolioId.Wallet(UserWalletId("00")),
+            tokenList = ungroupedTokenList(status),
+        )
+        val converter = YieldSupplyPromoBannerKeyConverter(
+            yieldModuleApyMap = mapOf(token.yieldSupplyKey() to BigDecimal("0.10")),
             shouldShowMainPromo = true,
         )
 
@@ -135,7 +153,45 @@ class YieldSupplyPromoBannerKeyConverterTest {
         )
     }
 
-    private fun createStatus(
+    private fun createLoadedStatus(
+        token: CryptoCurrency.Token,
+        amount: BigDecimal,
+        isYieldActive: Boolean,
+    ): CryptoCurrencyStatus {
+        val networkAddress = NetworkAddress.Single(
+            defaultAddress = NetworkAddress.Address(
+                value = "addr",
+                type = NetworkAddress.Address.Type.Primary,
+            ),
+        )
+        val value = CryptoCurrencyStatus.Loaded(
+            amount = amount,
+            fiatAmount = BigDecimal.ZERO,
+            fiatRate = BigDecimal.ONE,
+            priceChange = BigDecimal.ZERO,
+            stakingBalance = null,
+            yieldSupplyStatus = if (isYieldActive) {
+                YieldSupplyStatus(
+                    isActive = true,
+                    isInitialized = true,
+                    isAllowedToSpend = true,
+                    effectiveProtocolBalance = null,
+                )
+            } else {
+                null
+            },
+            hasCurrentNetworkTransactions = false,
+            pendingTransactions = emptySet(),
+            networkAddress = networkAddress,
+            sources = CryptoCurrencyStatus.Sources(),
+        )
+        return CryptoCurrencyStatus(
+            currency = token,
+            value = value,
+        )
+    }
+
+    private fun createCustomStatus(
         token: CryptoCurrency.Token,
         amount: BigDecimal,
         isYieldActive: Boolean,

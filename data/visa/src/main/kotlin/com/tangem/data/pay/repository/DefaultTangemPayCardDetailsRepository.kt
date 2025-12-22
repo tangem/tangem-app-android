@@ -82,12 +82,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             block = {
                 val publicKeyBase64 = getPublicKeyBase64()
                 val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
-                val result = requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
-                    tangemPayApi.revealCardDetails(
-                        authHeader = authHeader,
-                        body = CardDetailsRequest(sessionId = sessionId),
-                    )
-                }.getOrNull()?.result ?: error("Cannot reveal card details")
+                val result = requireNotNull(
+                    requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                        tangemPayApi.revealCardDetails(
+                            authHeader = authHeader,
+                            body = CardDetailsRequest(sessionId = sessionId),
+                        )
+                    }.getOrNull()?.result,
+                )
 
                 val pan = rainCryptoUtil.decryptSecret(
                     base64Secret = result.pan.secret,
@@ -113,6 +115,38 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         )
     }
 
+    override suspend fun getPin(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?> {
+        return catch(
+            block = {
+                val publicKeyBase64 = getPublicKeyBase64()
+                val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+                val result = requireNotNull(
+                    requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                        tangemPayApi.revealCardDetails(
+                            authHeader = authHeader,
+                            body = CardDetailsRequest(sessionId = sessionId),
+                        )
+                    }.getOrNull()?.result,
+                )
+
+                val encryptedPin = result.pin
+                val pin = if (encryptedPin != null) {
+                    rainCryptoUtil.decryptPin(
+                        base64Secret = encryptedPin.secret,
+                        base64Iv = encryptedPin.iv,
+                        secretKeyBytes = secretKeyBytes,
+                    ).takeIf { !it.isNullOrEmpty() }
+                } else {
+                    null
+                }
+                secretKeyBytes.fill(0)
+
+                pin.right()
+            },
+            catch = ::catchException,
+        )
+    }
+
     override suspend fun setPin(userWalletId: UserWalletId, pin: String): Either<UniversalError, SetPinResult> {
         return requestHelper.runWithErrorLogs(TAG) {
             val publicKeyBase64 = getPublicKeyBase64()
@@ -120,16 +154,18 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
             secretKeyBytes.fill(0)
 
-            val status = requestHelper.request(userWalletId) { authHeader ->
-                tangemPayApi.setPin(
-                    authHeader = authHeader,
-                    body = SetPinRequest(
-                        sessionId = sessionId,
-                        pin = encryptedData.encryptedBase64,
-                        iv = encryptedData.ivBase64,
-                    ),
-                )
-            }.result?.result ?: error("Cannot set pin code")
+            val status = requireNotNull(
+                requestHelper.request(userWalletId) { authHeader ->
+                    tangemPayApi.setPin(
+                        authHeader = authHeader,
+                        body = SetPinRequest(
+                            sessionId = sessionId,
+                            pin = encryptedData.encryptedBase64,
+                            iv = encryptedData.ivBase64,
+                        ),
+                    )
+                }.result?.result,
+            )
             when (status) {
                 SetPinResult.SUCCESS.name -> SetPinResult.SUCCESS
                 SetPinResult.PIN_TOO_WEAK.name -> SetPinResult.PIN_TOO_WEAK

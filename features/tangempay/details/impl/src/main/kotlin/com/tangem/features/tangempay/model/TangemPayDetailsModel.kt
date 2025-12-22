@@ -33,6 +33,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.components.ViewPinListener
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -77,7 +78,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val orderRepository: CustomerOrderRepository,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
+) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener, ViewPinListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
@@ -124,8 +125,17 @@ internal class TangemPayDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    override fun onClickChangePin() {
-        router.push(TangemPayDetailsInnerRoute.ChangePIN)
+    override fun onClickPinCode() {
+        if (!params.config.isPinSet) {
+            router.push(TangemPayDetailsInnerRoute.ChangePIN)
+        } else {
+            bottomSheetNavigation.activate(
+                TangemPayDetailsNavigation.ViewPinCode(
+                    userWalletId = params.userWalletId,
+                    cardId = params.config.cardId,
+                ),
+            )
+        }
     }
 
     override fun onClickFreezeCard() {
@@ -386,6 +396,15 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
+    }
+
+    override fun onClickChangePin() {
+        bottomSheetNavigation.dismiss()
+        router.push(TangemPayDetailsInnerRoute.ChangePIN)
+    }
+
+    override fun onDismissViewPin() {
         bottomSheetNavigation.dismiss()
     }
 

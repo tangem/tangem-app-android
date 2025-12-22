@@ -6,7 +6,6 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class CustomerMeResponse(
     @Json(name = "result") val result: Result?,
-    @Json(name = "error") val error: String?,
 ) {
     @JsonClass(generateAdapter = true)
     data class Result(
@@ -97,5 +96,6 @@ data class CustomerMeResponse(
         @Json(name = "card_type") val cardType: String,
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,
+        @Json(name = "is_pin_set") val isPinSet: Boolean?,
     )
 }
