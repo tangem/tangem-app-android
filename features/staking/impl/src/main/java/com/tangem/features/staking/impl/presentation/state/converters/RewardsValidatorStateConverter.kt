@@ -10,7 +10,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
@@ -21,7 +22,7 @@ import java.math.BigDecimal
 internal class RewardsValidatorStateConverter(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Converter<Unit, StakingStates.RewardsValidatorsState> {
     override fun convert(value: Unit): StakingStates.RewardsValidatorsState {
         val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
@@ -42,13 +43,13 @@ internal class RewardsValidatorStateConverter(
 
     private fun List<BalanceItem>.mapRewardBalances(cryptoCurrencyStatus: CryptoCurrencyStatus) =
         this.mapNotNull { balance ->
-            val validator = yield.validators.firstOrNull {
+            val target = integration.targets.firstOrNull {
                 it.address.contains(balance.validatorAddress.orEmpty(), ignoreCase = true)
             }
             val cryptoValue = balance.amount
             val fiatValue = cryptoCurrencyStatus.value.fiatRate?.times(cryptoValue)
 
-            validator?.toBalanceState(
+            target?.toBalanceState(
                 balance = balance,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 cryptoValue = cryptoValue,
@@ -56,7 +57,7 @@ internal class RewardsValidatorStateConverter(
             )
         }
 
-    private fun Yield.Validator.toBalanceState(
+    private fun StakingTarget.toBalanceState(
         balance: BalanceItem,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         cryptoValue: BigDecimal,
@@ -80,7 +81,7 @@ internal class RewardsValidatorStateConverter(
 
         return BalanceState(
             groupId = balance.groupId,
-            validator = this,
+            target = this,
             title = stringReference(this.name),
             subtitle = null,
             cryptoValue = cryptoValue.parseBigDecimal(cryptoCurrency.decimals),
@@ -93,7 +94,7 @@ internal class RewardsValidatorStateConverter(
             isClickable = true,
             type = balance.type,
             isPending = balance.isPending,
-            validatorAddress = balance.validatorAddress,
+            targetAddress = balance.validatorAddress,
         )
     }
 }

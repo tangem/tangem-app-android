@@ -139,10 +139,10 @@ abstract class BaseTestCase : TestCase(
         return ApplicationInjectionExecutionRule(
             toggleStates = mapOf(
                 "NEW_TOKEN_RECEIVE_ENABLED" to true,
-                "WALLET_BALANCE_FETCHER_ENABLED" to true,
-                "SWAP_REDESIGN_ENABLED" to true,
+                "SWAP_REDESIGN_ENABLED" to false,
                 "NEW_ONRAMP_MAIN_ENABLED" to true,
-                "HOT_WALLET_ENABLED" to true
+                "HOT_WALLET_ENABLED" to true,
+                "YIELD_SUPPLY_FEATURE_ENABLED" to true
             )
         )
     }

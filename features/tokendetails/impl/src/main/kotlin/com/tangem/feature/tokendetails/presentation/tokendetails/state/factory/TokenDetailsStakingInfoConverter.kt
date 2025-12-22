@@ -62,12 +62,12 @@ internal class TokenDetailsStakingInfoConverter(
 
         val hasPendingBalances = when (stakingBalance) {
             is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.isNotEmpty()
-            is StakingBalance.Data.P2P -> !stakingBalance.unstakingAmount.isNullOrZero()
+            is StakingBalance.Data.P2PEthPool -> !stakingBalance.unstakingAmount.isNullOrZero()
             null -> false
         }
         val pendingAmount = when (stakingBalance) {
             is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.sumOf { it.amount }
-            is StakingBalance.Data.P2P -> stakingBalance.unstakingAmount
+            is StakingBalance.Data.P2PEthPool -> stakingBalance.unstakingAmount
             null -> BigDecimal.ZERO
         }
 
@@ -98,7 +98,7 @@ internal class TokenDetailsStakingInfoConverter(
                 stakingAmount = stakingCryptoAmount,
                 rewardAmount = when (stakingBalance) {
                     is StakingBalance.Data.StakeKit -> stakingBalance.getRewardStakingBalance()
-                    is StakingBalance.Data.P2P -> stakingBalance.totalRewards
+                    is StakingBalance.Data.P2PEthPool -> stakingBalance.totalRewards
                     else -> BigDecimal.ZERO
                 },
             )

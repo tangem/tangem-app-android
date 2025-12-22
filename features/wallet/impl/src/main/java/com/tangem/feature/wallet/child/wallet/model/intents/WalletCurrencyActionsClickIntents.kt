@@ -505,6 +505,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     ) {
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
 
+        val integrationId = option?.integrationId ?: return
+
         modelScope.launch {
             val cryptoCurrency = cryptoCurrencyStatus.currency
 
@@ -512,7 +514,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.Staking(
                     userWalletId = userWalletId,
                     cryptoCurrency = cryptoCurrency,
-                    yieldId = option?.integrationId ?: return@launch,
+                    integrationId = integrationId,
                 ),
             )
         }

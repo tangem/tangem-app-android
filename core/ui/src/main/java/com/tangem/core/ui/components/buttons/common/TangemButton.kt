@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -23,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.utils.MultipleClickPreventer
@@ -75,7 +75,7 @@ fun TangemButton(
                 )
             },
             text = {
-                ResizableText(
+                Text(
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .heightIn(MinButtonContentSize, maxContentSize)
@@ -86,7 +86,10 @@ fun TangemButton(
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    minFontSize = 12.sp,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 12.sp,
+                        maxFontSize = textStyle.fontSize,
+                    ),
                 )
             },
             icon = { iconResId ->

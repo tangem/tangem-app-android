@@ -52,7 +52,7 @@ internal fun WcPortfolioItem(portfolioName: AccountTitleUM, modifier: Modifier =
             )
             is AccountTitleUM.Text -> TangemTooltip(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
-                text = portfolioName.title.resolveReference(),
+                text = portfolioName.title,
                 enabled = isTooltipEnabled,
                 content = { contentModifier ->
                     Text(
