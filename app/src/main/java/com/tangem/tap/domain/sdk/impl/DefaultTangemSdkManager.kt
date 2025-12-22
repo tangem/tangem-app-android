@@ -3,6 +3,9 @@ package com.tangem.tap.domain.sdk.impl
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.tangem.Log
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -24,6 +27,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
@@ -516,23 +520,44 @@ internal class DefaultTangemSdkManager(
 
     override suspend fun tangemPayProduceInitialCredentials(
         cardId: String,
-    ): CompletionResult<TangemPayInitialCredentials> {
+    ): Either<Throwable, TangemPayInitialCredentials> {
         return coroutineScope {
-            runTaskAsyncReturnOnMain(
+            val result = runTaskAsyncReturnOnMain(
                 runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
                 cardId = cardId,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
             )
+
+            return@coroutineScope when (result) {
+                is CompletionResult.Failure<*> -> result.error.left()
+                is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
+            }
         }
     }
 
-    override suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String> {
+    override suspend fun getWithdrawalSignature(
+        cardId: String,
+        hash: String,
+    ): Either<Throwable, WithdrawalSignatureResult> {
         return coroutineScope {
-            runTaskAsyncReturnOnMain(
+            val result = runTaskAsyncReturnOnMain(
                 runnable = TangemPaySignWithdrawalHashTask(cardId = cardId, hash = hash.hexToBytes()),
                 cardId = cardId,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
             )
+
+            return@coroutineScope when (result) {
+                is CompletionResult.Failure<*> -> {
+                    if (result.error is TangemSdkError.UserCancelled) {
+                        WithdrawalSignatureResult.Cancelled.right()
+                    } else {
+                        result.error.left()
+                    }
+                }
+                is CompletionResult.Success<String> -> {
+                    WithdrawalSignatureResult.Success(result.data).right()
+                }
+            }
         }
     }
     // endregion
