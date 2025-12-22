@@ -115,6 +115,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
             appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
             appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
             appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
+            appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), false)
         }
 
     override suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String) {
@@ -141,6 +142,20 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 key = PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
                 value = orders,
             )
+        }
+    }
+
+    override suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), hide)
+        }
+    }
+
+    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
+        return withContext(dispatcherProvider.io) {
+            appPreferencesStore.getSyncOrNull(
+                key = PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId),
+            ) == true
         }
     }
 
