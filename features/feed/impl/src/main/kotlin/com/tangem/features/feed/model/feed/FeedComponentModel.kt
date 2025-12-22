@@ -17,7 +17,7 @@ import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
