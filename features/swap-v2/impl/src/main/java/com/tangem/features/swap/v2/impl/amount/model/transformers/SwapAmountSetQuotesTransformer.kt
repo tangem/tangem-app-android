@@ -22,14 +22,14 @@ internal class SwapAmountSetQuotesTransformer(
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
     private val isSilentReload: Boolean,
-    private val needApplyFcaRestrictions: Boolean,
+    private val isNeedApplyFcaRestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
-        val isSingleProvider = quotes.filter {
-            it is SwapQuoteUM.Content || it is SwapQuoteUM.Allowance ||
-                (it as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
+        val isSingleProvider = quotes.filter { swapQuoteUM ->
+            swapQuoteUM is SwapQuoteUM.Content || swapQuoteUM is SwapQuoteUM.Allowance ||
+                (swapQuoteUM as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
         }.isSingleItem()
 
         val sortedQuotes = quotes.sortedWith(SwapQuotesComparator)
@@ -49,7 +49,7 @@ internal class SwapAmountSetQuotesTransformer(
             quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
-            needApplyFCARestrictions = needApplyFcaRestrictions &&
+            isNeedApplyFCARestrictions = isNeedApplyFcaRestrictions &&
                 selectedQuote.provider?.isRestrictedByFCA() == true,
         )
 
