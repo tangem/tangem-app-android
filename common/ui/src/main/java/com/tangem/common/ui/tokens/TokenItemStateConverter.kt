@@ -401,6 +401,9 @@ class TokenItemStateConverter(
             onYieldPromoCloseClick: (() -> Unit)?,
         ): TokenItemState.PromoBannerState {
             val token = status.currency as? CryptoCurrency.Token ?: return TokenItemState.PromoBannerState.Empty
+            if (status.value !is CryptoCurrencyStatus.Loaded) {
+                return TokenItemState.PromoBannerState.Empty
+            }
             if (yieldSupplyPromoBannerKey == null || yieldSupplyPromoBannerKey != token.yieldSupplyKey() ||
                 yieldModuleApyMap[token.yieldSupplyKey()] == null
             ) {
