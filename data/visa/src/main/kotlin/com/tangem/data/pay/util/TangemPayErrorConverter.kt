@@ -18,6 +18,7 @@ internal class TangemPayErrorConverter @Inject constructor(
 
     override fun convert(value: Throwable): VisaApiError {
         return if (value is ApiResponseError.HttpException) {
+            if (value.isServerError()) return VisaApiError.ServerUnavailable
             if (value.code == ApiResponseError.HttpException.Code.NOT_FOUND) return VisaApiError.NotPaeraCustomer
             if (value.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) return VisaApiError.RefreshTokenExpired
 

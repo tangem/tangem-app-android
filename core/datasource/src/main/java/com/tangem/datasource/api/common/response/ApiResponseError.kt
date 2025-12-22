@@ -18,6 +18,54 @@ sealed class ApiResponseError : Exception() {
         val errorBody: String?,
     ) : ApiResponseError() {
 
+        fun isServerError(): Boolean = when (code) {
+            Code.OK,
+            Code.CREATED,
+            Code.ACCEPTED,
+            Code.NOT_MODIFIED,
+            Code.BAD_REQUEST,
+            Code.UNAUTHORIZED,
+            Code.PAYMENT_REQUIRED,
+            Code.FORBIDDEN,
+            Code.NOT_FOUND,
+            Code.METHOD_NOT_ALLOWED,
+            Code.NOT_ACCEPTABLE,
+            Code.PROXY_AUTHENTICATION_REQUIRED,
+            Code.REQUEST_TIMEOUT,
+            Code.CONFLICT,
+            Code.GONE,
+            Code.LENGTH_REQUIRED,
+            Code.PRECONDITION_FAILED,
+            Code.PAYLOAD_TOO_LARGE,
+            Code.URI_TOO_LONG,
+            Code.UNSUPPORTED_MEDIA_TYPE,
+            Code.RANGE_NOT_SATISFIABLE,
+            Code.EXPECTATION_FAILED,
+            Code.IM_A_TEAPOT,
+            Code.UNPROCESSABLE_ENTITY,
+            Code.LOCKED,
+            Code.FAILED_DEPENDENCY,
+            Code.TOO_EARLY,
+            Code.UPGRADE_REQUIRED,
+            Code.PRECONDITION_REQUIRED,
+            Code.TOO_MANY_REQUESTS,
+            Code.REQUEST_HEADER_FIELDS_TOO_LARGE,
+            Code.UNAVAILABLE_FOR_LEGAL_REASONS,
+            -> false
+            Code.INTERNAL_SERVER_ERROR,
+            Code.NOT_IMPLEMENTED,
+            Code.BAD_GATEWAY,
+            Code.SERVICE_UNAVAILABLE,
+            Code.GATEWAY_TIMEOUT,
+            Code.HTTP_VERSION_NOT_SUPPORTED,
+            Code.VARIANT_ALSO_NEGOTIATES,
+            Code.INSUFFICIENT_STORAGE,
+            Code.LOOP_DETECTED,
+            Code.NOT_EXTENDED,
+            Code.NETWORK_AUTHENTICATION_REQUIRED,
+            -> true
+        }
+
         // TODO: extract Code from HttpException
         // region Error Codes
         enum class Code(val numericCode: Int) {
