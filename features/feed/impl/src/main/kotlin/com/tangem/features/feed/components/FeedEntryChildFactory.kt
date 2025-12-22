@@ -1,9 +1,11 @@
 package com.tangem.features.feed.components
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.core.ui.decompose.ComposableModularContentComponent
+import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
@@ -43,12 +45,16 @@ internal class FeedEntryChildFactory @Inject constructor() {
         child: Child,
         appComponentContext: AppComponentContext,
         feedEntryClickIntents: FeedEntryClickIntents,
-    ): ComposableModularContentComponent {
+        analyticsEventHandler: AnalyticsEventHandler,
+        accountsFeatureToggles: AccountsFeatureToggles,
+    ): ComposableModularBottomSheetContentComponent {
         return when (child) {
             is Child.TokenDetails -> {
                 DefaultMarketsTokenDetailsComponent(
                     appComponentContext = appComponentContext,
                     params = child.params,
+                    analyticsEventHandler = analyticsEventHandler,
+                    accountsFeatureToggles = accountsFeatureToggles,
                 )
             }
             is Child.TokenList -> {
