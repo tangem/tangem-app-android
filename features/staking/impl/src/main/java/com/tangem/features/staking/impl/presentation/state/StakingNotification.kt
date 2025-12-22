@@ -89,9 +89,20 @@ internal object StakingNotification {
             subtitle = subtitleText,
         )
 
-        data object StakeEntireBalance : Info(
+        data class StakeEntireBalance(
+            private val reduceAmountValue: TextReference?,
+            private val onReduceClick: () -> Unit,
+        ) : Info(
             title = resourceReference(R.string.common_network_fee_title),
             subtitle = resourceReference(R.string.staking_notification_stake_entire_balance_text),
+            buttonsState = if (reduceAmountValue != null) {
+                NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                    text = reduceAmountValue,
+                    onClick = onReduceClick,
+                )
+            } else {
+                null
+            },
         )
 
         data class Unstake(

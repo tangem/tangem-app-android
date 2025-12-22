@@ -76,4 +76,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onActivateTonAccountNotificationShow()
 
     fun onActivateTonAccountClick()
+
+    fun onAmountReduceByFeeClick(reduceAmount: BigDecimal, notification: Class<out NotificationUM>)
 }

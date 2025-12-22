@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
+import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
@@ -1079,6 +1080,17 @@ internal class StakingModel @Inject constructor(
                 )
             }
         }
+    }
+
+    override fun onAmountReduceByFeeClick(reduceAmount: BigDecimal, notification: Class<out NotificationUM>) {
+        stateController.update(
+            AmountReduceByStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                value = ReduceByData(reduceAmount, reduceAmount),
+                minimumTransactionAmount = null,
+            ),
+        )
+        onNotificationCancel(notification)
     }
 
     private suspend fun setupApprovalNeeded() {
