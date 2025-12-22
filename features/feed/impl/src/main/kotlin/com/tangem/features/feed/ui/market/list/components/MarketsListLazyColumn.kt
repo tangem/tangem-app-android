@@ -25,7 +25,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.market.list.state.ListUM
+import com.tangem.features.feed.model.market.list.state.ListUM
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
