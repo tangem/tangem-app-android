@@ -19,7 +19,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.TextButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
@@ -61,14 +63,14 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
             },
             title = { },
             actions = {
-                Text(
-                    modifier = Modifier
-                        .padding(16.dp),
+                TextButton(
+                    modifier = Modifier.clip(TangemTheme.shapes.roundedCornersLarge),
                     text = stringResourceSafe(R.string.wallet_add_support_title),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    textStyle = TangemTheme.typography.body1,
+                    colors = TangemButtonsDefaults.defaultTextButtonColors.copy(
+                        contentColor = TangemTheme.colors.text.primary1,
+                    ),
+                    onClick = state.onWhatToChooseClick,
                 )
             },
         )
@@ -288,6 +290,7 @@ private fun PreviewCreateWalletContent() {
                 ),
                 shouldShowAlreadyHaveWallet = true,
                 onBuyClick = { },
+                onWhatToChooseClick = { },
             ),
         )
     }
