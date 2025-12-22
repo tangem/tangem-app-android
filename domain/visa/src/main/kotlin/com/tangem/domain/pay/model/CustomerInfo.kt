@@ -32,5 +32,6 @@ data class CustomerInfo(
         val currencyCode: String,
         val customerWalletAddress: String,
         val depositAddress: String?,
+        val isPinSet: Boolean,
     )
 }
