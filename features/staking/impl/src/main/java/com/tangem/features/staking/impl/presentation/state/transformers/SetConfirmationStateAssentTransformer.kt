@@ -35,7 +35,7 @@ internal class SetConfirmationStateAssentTransformer(
                     isFeeApproximate = isFeeApproximate,
                 ),
                 isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
-                    sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+                    sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
                 },
             )
         } else {
