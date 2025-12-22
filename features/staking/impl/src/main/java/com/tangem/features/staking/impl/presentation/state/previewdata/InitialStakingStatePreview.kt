@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.toStakingTarget
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -81,7 +82,7 @@ internal object InitialStakingStatePreview {
                     fiatAmount = null,
                     formattedFiatAmount = stringReference("100 $"),
                     rawCurrencyId = null,
-                    validator = Yield.Validator(
+                    target = Yield.Validator(
                         address = "address",
                         status = Yield.Validator.ValidatorStatus.ACTIVE,
                         name = "Binance",
@@ -92,13 +93,13 @@ internal object InitialStakingStatePreview {
                         votingPower = null,
                         preferred = false,
                         isStrategicPartner = false,
-                    ),
+                    ).toStakingTarget(),
                     pendingActions = persistentListOf(),
                     isClickable = true,
                     type = BalanceType.STAKED,
                     subtitle = null,
                     isPending = false,
-                    validatorAddress = "",
+                    targetAddress = "",
                 ),
             ),
         ),
