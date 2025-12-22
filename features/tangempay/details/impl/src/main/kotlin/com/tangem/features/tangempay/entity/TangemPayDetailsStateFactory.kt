@@ -51,9 +51,9 @@ internal class TangemPayDetailsStateFactory(
                     TangemPayDetailsTopBarMenuItem(
                         type = TangemPayDetailsTopBarMenuItemType.ChangePin,
                         dropdownItem = TangemDropdownMenuItem(
-                            title = resourceReference(R.string.tangempay_card_details_change_pin),
+                            title = resourceReference(R.string.tangempay_card_details_pin_code),
                             textColor = themedColor { TangemTheme.colors.text.primary1 },
-                            onClick = intents::onClickChangePin,
+                            onClick = intents::onClickPinCode,
                         ),
                     ),
                     TangemPayDetailsTopBarMenuItem(

@@ -1,45 +1,23 @@
 package com.tangem.data.nft.di
 
-import android.content.Context
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.nft.DefaultNFTRepository
-import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
-import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.nft.repository.NFTRepository
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.domain.nft.utils.NFTCleaner
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object NFTDataModule {
+internal interface NFTDataModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideNFTRepository(
-        @ApplicationContext context: Context,
-        nftPersistenceStoreFactory: NFTPersistenceStoreFactory,
-        nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
-        walletManagersFacade: WalletManagersFacade,
-        dispatchers: CoroutineDispatcherProvider,
-        excludedBlockchains: ExcludedBlockchains,
-        userWalletsStore: UserWalletsStore,
-        networkFactory: NetworkFactory,
-    ): NFTRepository = DefaultNFTRepository(
-        nftPersistenceStoreFactory = nftPersistenceStoreFactory,
-        nftRuntimeStoreFactory = nftRuntimeStoreFactory,
-        walletManagersFacade = walletManagersFacade,
-        dispatchers = dispatchers,
-        excludedBlockchains = excludedBlockchains,
-        userWalletsStore = userWalletsStore,
-        networkFactory = networkFactory,
-        resources = context.resources,
-    )
+    fun bindNFTRepository(defaultNFTRepository: DefaultNFTRepository): NFTRepository
+
+    @Binds
+    @Singleton
+    fun bindNFTCleaner(defaultNFTRepository: DefaultNFTRepository): NFTCleaner
 }

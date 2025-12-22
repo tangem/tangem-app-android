@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ObjectExtendsThrowable:RemoveCurrencyError.kt$RemoveCurrencyError$HasLinkedTokens : RemoveCurrencyError</ID>
+    <ID>UseEmptyCounterpart:PromoAnalyticsEvent.kt$PromoAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenExchangeAnalyticsEvent.kt$TokenExchangeAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenOnrampAnalyticsEvent.kt$TokenOnrampAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenReceiveAnalyticsEvent.kt$TokenReceiveAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenReceiveNewAnalyticsEvent.kt$TokenReceiveNewAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenScreenAnalyticsEvent.kt$TokenScreenAnalyticsEvent$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -11,8 +11,11 @@ import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -26,6 +29,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
@@ -34,6 +38,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
+import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -60,9 +65,13 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val tangemHotSDKProxy: TangemHotSDKProxy,
     private val hotAccessCodeRequestComponentFactory: HotAccessCodeRequestComponent.Factory,
     private val hotAccessCodeRequesterProxy: HotWalletPasswordRequesterProxy,
+    private val rootDetectedWarningComponentFactory: RootDetectedWarningComponent.Factory,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : RoutingComponent,
     AppComponentContext by context,
@@ -76,6 +85,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val hotAccessCodeRequestComponent: HotAccessCodeRequestComponent by lazy {
         hotAccessCodeRequestComponentFactory
             .create(child("hotAccessCodeRequestComponent"), Unit)
+    }
+
+    private val rootDetectedWarningComponent: RootDetectedWarningComponent by lazy {
+        rootDetectedWarningComponentFactory
+            .create(child("rootDetectedWarningComponent"), Unit)
     }
 
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
@@ -127,6 +141,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private fun initializeInitialNavigation() {
         if (initialStack.isNullOrEmpty()) {
             componentScope.launch {
+                rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
                 val initialRoute = resolveInitialRoute()
                 router.replaceAll(initialRoute)
             }
@@ -151,6 +166,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 )
             }
             else -> {
+                trackSignInEvent()
                 AppRoute.Wallet
             }
         }.also {
@@ -169,6 +185,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
+            rootDetectedWarningContent = { rootDetectedWarningComponent.Content(it) },
         )
     }
 
@@ -233,6 +250,20 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         componentScope.launch(dispatchers.main) {
             val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+        }
+    }
+
+    private suspend fun trackSignInEvent() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            val userWallets = userWalletsListRepository.userWalletsSync()
+            val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
+            trackingContextProxy.addContext(selectedWallet)
+            analyticsEventHandler.send(
+                event = Basic.SignedIn(
+                    signInType = Basic.SignedIn.SignInType.NoSecurity,
+                    walletsCount = userWallets.size,
+                ),
+            )
         }
     }
 }

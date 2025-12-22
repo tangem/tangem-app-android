@@ -29,6 +29,8 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
 
     override val isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean> = MutableStateFlow { _, _ -> true }
 
+    override suspend fun isAccountModeSync(): Boolean = isAccountsModeEnabledUseCase.invokeSync()
+
     override fun selectAccount(accountId: AccountId?) {
         _selectedAccount.tryEmit(accountId)
     }

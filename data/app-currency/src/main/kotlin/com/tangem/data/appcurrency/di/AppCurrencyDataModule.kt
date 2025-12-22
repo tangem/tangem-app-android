@@ -3,8 +3,8 @@ package com.tangem.data.appcurrency.di
 import com.tangem.data.appcurrency.DefaultAppCurrencyRepository
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -21,17 +21,17 @@ internal object AppCurrencyDataModule {
     @Singleton
     fun provideAppCurrencyRepository(
         tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
+        appCurrencyResponseStore: AppCurrencyResponseStore,
         availableAppCurrenciesStore: AvailableAppCurrenciesStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
     ): AppCurrencyRepository {
         return DefaultAppCurrencyRepository(
             tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
             availableAppCurrenciesStore = availableAppCurrenciesStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
+            appCurrencyResponseStore = appCurrencyResponseStore,
         )
     }
 }

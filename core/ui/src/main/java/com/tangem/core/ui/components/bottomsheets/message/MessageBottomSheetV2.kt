@@ -2,17 +2,13 @@ package com.tangem.core.ui.components.bottomsheets.message
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +21,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.icons.HighlightedIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -144,20 +141,11 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUMV2.Icon, modifier: Modifie
         MessageBottomSheetUMV2.Icon.BackgroundType.Warning -> TangemTheme.colors.icon.warning
     }
 
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size56)
-            .clip(CircleShape)
-            .background(backgroundColor.copy(alpha = 0.1F)),
-        contentAlignment = Alignment.Center,
-        content = {
-            Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                painter = painterResource(icon.res),
-                contentDescription = null,
-                tint = tint,
-            )
-        },
+    HighlightedIcon(
+        modifier = modifier,
+        icon = icon.res,
+        iconTint = tint,
+        backgroundColor = backgroundColor,
     )
 }
 

@@ -1,6 +1,6 @@
 package com.tangem.data.staking.utils
 
-import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -16,9 +16,9 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultStakingCleanerTest {
 
-    private val yieldsBalancesStore = mockk<YieldsBalancesStore>(relaxed = true)
+    private val stakingBalancesStore = mockk<StakingBalancesStore>(relaxed = true)
     private val cleaner = DefaultStakingCleaner(
-        yieldsBalancesStore = yieldsBalancesStore,
+        stakingBalancesStore = stakingBalancesStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
     private val userWalletId = UserWalletId("011")
@@ -28,7 +28,7 @@ class DefaultStakingCleanerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(yieldsBalancesStore)
+        clearMocks(stakingBalancesStore)
     }
 
     @Test
@@ -38,7 +38,7 @@ class DefaultStakingCleanerTest {
 
         // Assert
         coVerifyOrder {
-            yieldsBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+            stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
         }
     }
 
@@ -49,7 +49,7 @@ class DefaultStakingCleanerTest {
 
         // Assert
         coVerifyOrder(inverse = true) {
-            yieldsBalancesStore.clear(userWalletId = any(), stakingIds = any())
+            stakingBalancesStore.clear(userWalletId = any(), stakingIds = any())
         }
     }
 }

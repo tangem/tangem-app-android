@@ -1,41 +1,48 @@
 package com.tangem.common.ui.news
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
-import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-fun ArticleCard(articleConfigUM: ArticleConfigUM, onArticleClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ArticleCard(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: CardColors = TangemBlockCardColors,
+) {
     BlockCard(
         modifier = modifier,
         onClick = onArticleClick,
+        colors = colors,
     ) {
         if (articleConfigUM.isTrending) {
             TrendingArticle(articleConfigUM = articleConfigUM)
@@ -81,7 +88,7 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
 
         ArticleInfo(
             score = articleConfigUM.score,
-            createdAt = articleConfigUM.createdAt,
+            createdAt = articleConfigUM.createdAt.resolveReference(),
         )
 
         SpacerH(32.dp)
@@ -98,7 +105,7 @@ private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
     Column(modifier = Modifier.padding(12.dp)) {
         ArticleInfo(
             score = articleConfigUM.score,
-            createdAt = articleConfigUM.createdAt,
+            createdAt = articleConfigUM.createdAt.resolveReference(),
         )
 
         SpacerH(8.dp)
@@ -121,54 +128,13 @@ private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
     }
 }
 
-@Composable
-private fun ArticleInfo(score: Float, createdAt: String, modifier: Modifier = Modifier) {
-    val dotColor = TangemTheme.colors.text.secondary
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_start_circle_12),
-            contentDescription = null,
-        )
-
-        Text(
-            text = score.toString(),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.secondary,
-        )
-
-        Spacer(
-            modifier = Modifier
-                .size(4.dp)
-                .drawWithCache {
-                    val radius = size.minDimension / 2f
-                    onDrawBehind {
-                        drawCircle(
-                            color = dotColor,
-                            radius = radius,
-                        )
-                    }
-                },
-        )
-
-        Text(
-            text = createdAt,
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.secondary,
-        )
-    }
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Tags(tags: ImmutableList<ArticleTagUM>, modifier: Modifier = Modifier) {
+private fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
     val expandIndicator = remember {
         ContextualFlowRowOverflow.expandIndicator {
             val remainingItems = tags.size - shownItemCount
-            ArticleBadge(articleTagUM = ArticleTagUM.Category(TextReference.Str("${StringsSigns.PLUS}$remainingItems")))
+            Label(state = LabelUM(TextReference.Str("${StringsSigns.PLUS}$remainingItems")))
         }
     }
     ContextualFlowRow(
@@ -179,7 +145,7 @@ private fun Tags(tags: ImmutableList<ArticleTagUM>, modifier: Modifier = Modifie
         maxLines = 1,
         overflow = expandIndicator,
     ) { index ->
-        ArticleBadge(articleTagUM = tags[index])
+        Label(state = tags[index])
     }
 }
 
@@ -189,14 +155,14 @@ private fun Tags(tags: ImmutableList<ArticleTagUM>, modifier: Modifier = Modifie
 private fun TagsPreview() {
     TangemThemePreview {
         Tags(
-            tags = listOf(
-                ArticleTagUM.Category(TextReference.Str("Hype")),
-                ArticleTagUM.Category(TextReference.Str("BTC")),
-                ArticleTagUM.Category(TextReference.Str("Supply")),
-                ArticleTagUM.Category(TextReference.Str("Demand")),
-                ArticleTagUM.Category(TextReference.Str("Best rate")),
-                ArticleTagUM.Category(TextReference.Str("Breaking news")),
-            ).toPersistentList(),
+            tags = persistentListOf(
+                LabelUM(TextReference.Str("Hype")),
+                LabelUM(TextReference.Str("BTC")),
+                LabelUM(TextReference.Str("Supply")),
+                LabelUM(TextReference.Str("Demand")),
+                LabelUM(TextReference.Str("Best rate")),
+                LabelUM(TextReference.Str("Breaking news")),
+            ),
         )
     }
 }
@@ -206,19 +172,18 @@ private fun TagsPreview() {
 @Composable
 private fun ArticleCardsPreview() {
     val tags = listOf(
-        ArticleTagUM.Category(TextReference.Str("Hype")),
-        ArticleTagUM.Category(TextReference.Str("BTC")),
-        ArticleTagUM.Category(TextReference.Str("Supply")),
-        ArticleTagUM.Category(TextReference.Str("Demand")),
-        ArticleTagUM.Category(TextReference.Str("Best rate")),
-        ArticleTagUM.Category(TextReference.Str("Breaking news")),
+        LabelUM(TextReference.Str("Hype")),
+        LabelUM(TextReference.Str("BTC")),
+        LabelUM(TextReference.Str("Supply")),
+        LabelUM(TextReference.Str("Demand")),
+        LabelUM(TextReference.Str("Breaking news")),
     ).toImmutableSet()
 
     val config = ArticleConfigUM(
         id = 1,
         title = "Bitcoin ETFs log 4th straight day of inflows (+\$550M)",
         score = 9.5f,
-        createdAt = "1h ago",
+        createdAt = TextReference.Str("1h ago"),
         isTrending = true,
         tags = tags,
         isViewed = false,

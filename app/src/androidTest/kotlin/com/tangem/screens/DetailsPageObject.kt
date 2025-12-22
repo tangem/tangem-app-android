@@ -42,6 +42,7 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasText(getResourceString(R.string.app_settings_title))
     }
+
     val contactSupportButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasText(getResourceString(R.string.common_contact_support))
@@ -49,6 +50,11 @@ class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val toSButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
         hasText(getResourceString(R.string.disclaimer_title))
+    }
+
+    val versionName: KNode = child {
+        hasTestTag(DetailsScreenTestTags.VERSION_NAME)
+        useUnmergedTree = true
     }
 }
 

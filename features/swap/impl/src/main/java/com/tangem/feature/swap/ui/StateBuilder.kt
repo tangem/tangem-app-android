@@ -109,7 +109,7 @@ internal class StateBuilder(
                 type = TransactionCardType.ReadOnly(),
                 amountEquivalent = null,
                 tokenIconUrl = initialCurrencyTo?.iconUrl,
-                tokenCurrency = initialCurrencyTo?.symbol ?: "",
+                tokenCurrency = initialCurrencyTo?.symbol.orEmpty(),
                 token = null,
                 amountTextFieldValue = null,
                 canSelectAnotherToken = false,
@@ -122,7 +122,7 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = false,
+                isEnabled = false,
                 onClick = {},
             ),
             onRefresh = {},
@@ -181,7 +181,7 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = false,
+                isEnabled = false,
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
@@ -246,7 +246,7 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = false,
+                isEnabled = false,
                 onClick = {},
             ),
             providerState = ProviderState.Loading(),
@@ -335,7 +335,7 @@ internal class StateBuilder(
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(
-                    showWarning = true,
+                    shouldShowWarning = true,
                     onWarningClick = actions.onReceiveCardWarningClick,
                     accountTitleUM = getToCardAccountTitle(toAccount),
                 ),
@@ -368,7 +368,7 @@ internal class StateBuilder(
             fee = feeState,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = getSwapButtonEnabled(notifications),
+                isEnabled = getSwapButtonEnabled(notifications),
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -397,17 +397,17 @@ internal class StateBuilder(
 
     private fun createTosState(swapProvider: SwapProvider): TosState {
         return TosState(
-            tosLink = swapProvider.termsOfUse?.let {
+            tosLink = swapProvider.termsOfUse?.let { termsUrl ->
                 LegalState(
                     title = resourceReference(R.string.common_terms_of_use),
-                    link = it,
+                    link = termsUrl,
                     onClick = actions.onLinkClick,
                 )
             },
-            policyLink = swapProvider.privacyPolicy?.let {
+            policyLink = swapProvider.privacyPolicy?.let { policyUrl ->
                 LegalState(
                     title = resourceReference(R.string.common_privacy_policy),
-                    link = it,
+                    link = policyUrl,
                     onClick = actions.onLinkClick,
                 )
             },
@@ -420,12 +420,13 @@ internal class StateBuilder(
     }
 
     private fun getSwapButtonEnabled(notifications: ImmutableList<NotificationUM>): Boolean {
-        return notifications.none {
-            it is SwapNotificationUM.Error || it is NotificationUM.Error ||
-                it is SwapNotificationUM.Warning.ExpressError || it is SwapNotificationUM.Warning.ExpressGeneralError ||
-                it is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
-                it is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
-                it is SwapNotificationUM.Info.PermissionNeeded
+        return notifications.none { notification ->
+            notification is SwapNotificationUM.Error || notification is NotificationUM.Error ||
+                notification is SwapNotificationUM.Warning.ExpressError ||
+                notification is SwapNotificationUM.Warning.ExpressGeneralError ||
+                notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
+                notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                notification is SwapNotificationUM.Info.PermissionNeeded
         }
     }
 
@@ -495,7 +496,7 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = false,
+                isEnabled = false,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -592,7 +593,7 @@ internal class StateBuilder(
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
-                enabled = false,
+                isEnabled = false,
                 onClick = { },
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -604,7 +605,7 @@ internal class StateBuilder(
     fun createSwapInProgressState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
-                enabled = false,
+                isEnabled = false,
             ),
         )
     }
@@ -722,15 +723,17 @@ internal class StateBuilder(
         )
         val selectTokenState = uiState.selectTokenState?.copy(
             isBalanceHidden = isBalanceHidden,
-            availableTokens = uiState.selectTokenState.availableTokens.map {
-                when (it) {
+            availableTokens = uiState.selectTokenState.availableTokens.map { tokenState ->
+                when (tokenState) {
                     is TokenToSelectState.TokenToSelect -> {
-                        it.copy(
-                            addedTokenBalanceData = it.addedTokenBalanceData?.copy(isBalanceHidden = isBalanceHidden),
+                        tokenState.copy(
+                            addedTokenBalanceData = tokenState.addedTokenBalanceData?.copy(
+                                isBalanceHidden = isBalanceHidden,
+                            ),
                         )
                     }
                     is TokenToSelectState.Title -> {
-                        it
+                        tokenState
                     }
                 }
             }.toImmutableList(),
@@ -804,7 +807,7 @@ internal class StateBuilder(
     fun loadingPermissionState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
-                enabled = false,
+                isEnabled = false,
             ),
             permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
@@ -837,7 +840,7 @@ internal class StateBuilder(
                 txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
-                showStatusButton = shouldShowStatus,
+                shouldShowStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})"),
@@ -877,7 +880,7 @@ internal class StateBuilder(
                 txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
-                showStatusButton = false,
+                shouldShowStatusButton = false,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = TextReference.EMPTY,
@@ -1101,8 +1104,8 @@ internal class StateBuilder(
         onDismiss: () -> Unit,
     ): SwapStateHolder {
         val availableProvidersStates = providersStates.entries
-            .mapNotNull {
-                it.convertToProviderBottomSheetState(
+            .mapNotNull { entry ->
+                entry.convertToProviderBottomSheetState(
                     pricesLowerBest = pricesLowerBest,
                     onProviderSelect = actions.onProviderSelect,
                     needApplyFCARestrictions = needApplyFCARestrictions,
@@ -1139,19 +1142,19 @@ internal class StateBuilder(
             uiState.copy(
                 bottomSheetConfig = uiState.bottomSheetConfig.copy(
                     content = config.copy(
-                        providers = providers.map {
-                            val tokenInfo = tokenSwapInfoForProviders[it.id]
-                            if (it is ProviderState.Content && tokenInfo != null) {
+                        providers = providers.map { providerState ->
+                            val tokenInfo = tokenSwapInfoForProviders[providerState.id]
+                            if (providerState is ProviderState.Content && tokenInfo != null) {
                                 val rateString = tokenInfo.tokenAmount
                                     .getFormattedCryptoAmount(tokenInfo.cryptoCurrencyStatus.currency)
-                                it.copy(
+                                providerState.copy(
                                     subtitle = stringReference(rateString),
-                                    percentLowerThenBest = pricesLowerBest[it.id]?.let { percent ->
+                                    percentLowerThenBest = pricesLowerBest[providerState.id]?.let { percent ->
                                         PercentDifference.Value(percent)
                                     } ?: PercentDifference.Value(0f),
                                 )
                             } else {
-                                it
+                                providerState
                             }
                         }.toImmutableList(),
                     ),
@@ -1170,8 +1173,8 @@ internal class StateBuilder(
     ): SwapStateHolder {
         val config = ChooseFeeBottomSheetConfig(
             selectedFee = selectedFee,
-            onSelectFeeType = {
-                val selectedItem = when (it) {
+            onSelectFeeType = { feeType ->
+                val selectedItem = when (feeType) {
                     FeeType.NORMAL -> txFeeState.normalFee
                     FeeType.PRIORITY -> txFeeState.priorityFee
                 }
@@ -1191,6 +1194,7 @@ internal class StateBuilder(
         )
     }
 
+    @Deprecated("Use TangemBlockUrlBuilder instead")
     private fun buildReadMoreUrl(): String {
         return buildString {
             append(FEE_READ_MORE_URL_FIRST_PART)

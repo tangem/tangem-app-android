@@ -1,16 +1,19 @@
 package com.tangem.data.pay.di
 
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
+import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.security.DeviceSecurityInfoProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -62,6 +65,10 @@ internal interface TangemPayDataModule {
     @Singleton
     fun bindTangemPayWithdrawUseCase(impl: DefaultTangemPayWithdrawUseCase): TangemPayWithdrawUseCase
 
+    @Binds
+    @Singleton
+    fun bindTangemPayEligibilityManager(impl: DefaultTangemPayEligibilityManager): TangemPayEligibilityManager
+
     companion object {
         @Provides
         @Singleton
@@ -69,11 +76,14 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
             customerOrderRepository: CustomerOrderRepository,
             tangemPayOnboardingRepository: OnboardingRepository,
+            eligibilityManager: TangemPayEligibilityManager,
+            deviceSecurity: DeviceSecurityInfoProvider,
         ): TangemPayMainScreenCustomerInfoUseCase {
             return TangemPayMainScreenCustomerInfoUseCase(
-                repository = repository,
+                onboardingRepository = repository,
                 customerOrderRepository = customerOrderRepository,
-                tangemPayOnboardingRepository = tangemPayOnboardingRepository,
+                eligibilityManager = eligibilityManager,
+                deviceSecurity = deviceSecurity,
             )
         }
 

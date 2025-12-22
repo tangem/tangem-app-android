@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:WalletMetaInfo.kt$WalletMetaInfo$val hotWalletIsBackedUp: Boolean? = null</ID>
+  </CurrentIssues>
+</SmellBaseline>

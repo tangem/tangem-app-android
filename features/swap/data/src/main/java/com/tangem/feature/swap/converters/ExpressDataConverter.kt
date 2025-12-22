@@ -25,11 +25,11 @@ internal class ExpressDataConverter : Converter<ExchangeDataResponseWithTxDetail
         dataResponse: ExchangeDataResponse,
     ): ExpressTransactionModel {
         return if (transactionDto.txType == TxType.SWAP) {
-            val otherNativeFeeWei = transactionDto.otherNativeFee?.let {
-                if (it == "0") {
+            val otherNativeFeeWei = transactionDto.otherNativeFee?.let { feeValue ->
+                if (feeValue == "0") {
                     BigDecimal.ZERO
                 } else {
-                    requireNotNull(it.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
+                    requireNotNull(feeValue.toBigDecimalOrNull()) { "wrong amount format, use only digits" }
                 }
             }
             ExpressTransactionModel.DEX(

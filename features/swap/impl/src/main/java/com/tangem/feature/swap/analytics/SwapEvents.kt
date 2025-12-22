@@ -15,7 +15,7 @@ private const val PROMO_CATEGORY = "Promo"
 
 sealed class SwapEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(SWAP_CATEGORY, event, params) {
 
     data class SwapScreenOpened(val token: String) : SwapEvents(
@@ -23,17 +23,17 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    data object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
+    class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
-    data class ChooseTokenScreenOpened(val availableTokens: Boolean) : SwapEvents(
+    data class ChooseTokenScreenOpened(val hasAvailableTokens: Boolean) : SwapEvents(
         event = "Choose Token Screen Opened",
-        params = mapOf("Available tokens" to if (availableTokens) "Yes" else "No"),
+        params = mapOf("Available tokens" to if (hasAvailableTokens) "Yes" else "No"),
     )
 
-    data class ChooseTokenScreenResult(val tokenChosen: Boolean, val token: String? = null) : SwapEvents(
+    data class ChooseTokenScreenResult(val isTokenChosen: Boolean, val token: String? = null) : SwapEvents(
         event = "Choose Token Screen Result",
         params = buildMap {
-            put("Token Chosen", if (tokenChosen) "Yes" else "No")
+            put("Token Chosen", if (isTokenChosen) "Yes" else "No")
             token?.let { put("Token", it) }
         },
     )
@@ -71,10 +71,11 @@ sealed class SwapEvents(
         ),
     )
 
-    data object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
+    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
 
-    data object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
+    class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
+    @Suppress("NullableToStringCall")
     data class SwapInProgressScreen(
         val provider: SwapProvider,
         val commission: FeeType, // Market / Fast
@@ -82,6 +83,8 @@ sealed class SwapEvents(
         val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
+        val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = mapOf(
@@ -91,10 +94,11 @@ sealed class SwapEvents(
             "Receive Token" to receiveToken,
             "Send Blockchain" to sendBlockchain,
             "Receive Blockchain" to receiveBlockchain,
+            "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
         ),
     )
 
-    data object ProviderClicked : SwapEvents("Provider Clicked")
+    class ProviderClicked : SwapEvents("Provider Clicked")
 
     data class ProviderChosen(val provider: SwapProvider) : SwapEvents(
         event = "Provider Chosen",
@@ -111,7 +115,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    data object NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
+    class NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
 
     data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
         event = "Notice - Not Enough Fee",
