@@ -48,11 +48,11 @@ internal sealed class SwapAmountUM {
         val swapCurrencies: SwapCurrencies,
         val swapQuotes: ImmutableList<SwapQuoteUM>,
         val selectedQuote: SwapQuoteUM,
-        val showFCAWarning: Boolean,
+        val isShowFCAWarning: Boolean,
 
         // extra data
         val appCurrency: AppCurrency?,
-        val showBestRateAnimation: Boolean,
+        val isShowBestRateAnimation: Boolean,
     ) : SwapAmountUM()
 }
 
