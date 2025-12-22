@@ -18,8 +18,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
@@ -28,11 +28,11 @@ import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartCompone
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.walletactivation.entry.routing.WalletActivationRoute
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,7 +43,7 @@ internal class WalletActivationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val notificationsRepository: NotificationsRepository,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
@@ -61,7 +61,7 @@ internal class WalletActivationModel @Inject constructor(
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
-    val isStartingWithAccessCode = params.isBackupExists
+    private val isStartingWithAccessCode = params.isBackupExists
     val stackNavigation = StackNavigation<WalletActivationRoute>()
     val startRoute = if (isStartingWithAccessCode) {
         WalletActivationRoute.SetAccessCode
@@ -70,18 +70,28 @@ internal class WalletActivationModel @Inject constructor(
     }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
-    private val source = AnalyticsParam.ScreensSources.Main
-    private val action = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup
+    private val analyticsSource = AnalyticsParam.ScreensSources.Main
+    private val analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup
 
     init {
         trackingContextProxy.addHotWalletContext()
-        if (startRoute is WalletActivationRoute.ManualBackupStart) {
-            analyticsEventHandler.send(
-                event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
-                    source = source.value,
-                    action = action.value,
-                ),
-            )
+        when (startRoute) {
+            is WalletActivationRoute.ManualBackupStart -> {
+                analyticsEventHandler.send(
+                    event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
+                        source = analyticsSource.value,
+                        action = analyticsAction.value,
+                    ),
+                )
+            }
+            is WalletActivationRoute.SetAccessCode -> {
+                analyticsEventHandler.send(
+                    event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(
+                        source = analyticsSource.value,
+                    ),
+                )
+            }
+            else -> Unit
         }
     }
 
@@ -107,8 +117,8 @@ internal class WalletActivationModel @Inject constructor(
 
     private fun navigateToPushNotificationsOrNext() {
         modelScope.launch {
-            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            if (shouldRequestPush) {
+            val shouldAskNotificationPermissions = notificationsRepository.shouldAskNotificationPermissionsViaBs()
+            if (shouldAskNotificationPermissions) {
                 stackNavigation.replaceAll(WalletActivationRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(WalletActivationRoute.SetupFinished)
@@ -134,7 +144,7 @@ internal class WalletActivationModel @Inject constructor(
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
-                        modelScope.launch {
+                        modelScope.launch(NonCancellable) {
                             setAccessCodeSkippedUseCase(userWalletId, true)
                         }
                         navigateToPushNotificationsOrNext()
@@ -146,12 +156,16 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
+        var canSkip = true
+
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            showSkipAccessCodeWarningDialog()
+            if (canSkip) {
+                showSkipAccessCodeWarningDialog()
+            }
         }
     }
 
@@ -160,8 +174,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupPhrase)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -172,8 +186,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupCheck)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.RecoveryPhraseCheck(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -184,8 +198,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupCompleted)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -193,6 +207,9 @@ internal class WalletActivationModel @Inject constructor(
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = analyticsSource.value),
+            )
             stackNavigation.push(WalletActivationRoute.SetAccessCode)
         }
 
@@ -201,11 +218,19 @@ internal class WalletActivationModel @Inject constructor(
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
         override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = analyticsSource.value),
+            )
             stackNavigation.push(WalletActivationRoute.ConfirmAccessCode(accessCode))
+        }
+
+        override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = false
         }
 
         override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
+            hotWalletStepperComponentModelCallback.canSkip = true
         }
     }
 

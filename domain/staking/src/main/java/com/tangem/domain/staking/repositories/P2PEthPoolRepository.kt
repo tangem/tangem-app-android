@@ -2,7 +2,13 @@ package com.tangem.domain.staking.repositories
 
 import arrow.core.Either
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.ethpool.*
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolAccount
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolReward
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
 import com.tangem.domain.staking.model.stakekit.StakingError
 import kotlinx.coroutines.flow.Flow
 
@@ -13,7 +19,7 @@ interface P2PEthPoolRepository {
      *
      * @param network P2P network (MAINNET or TESTNET)
      */
-    suspend fun fetchVaults(network: P2PEthPoolNetwork = P2PEthPoolNetwork.MAINNET)
+    suspend fun fetchVaults(network: P2PEthPoolNetwork = P2PStakingConfig.activeNetwork)
 
     /**
      * Get list of available staking vaults
@@ -22,7 +28,7 @@ interface P2PEthPoolRepository {
      * @return Either error or list of vaults with APY, capacity, fees
      */
     suspend fun getVaults(
-        network: P2PEthPoolNetwork = P2PEthPoolNetwork.MAINNET,
+        network: P2PEthPoolNetwork = P2PStakingConfig.activeNetwork,
     ): Either<StakingError, List<P2PEthPoolVault>>
 
     /**

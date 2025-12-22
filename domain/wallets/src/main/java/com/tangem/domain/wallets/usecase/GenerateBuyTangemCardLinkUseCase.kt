@@ -1,23 +1,24 @@
 package com.tangem.domain.wallets.usecase
 
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import com.tangem.common.TangemSiteUrlBuilder
+import java.util.Locale
 
 class GenerateBuyTangemCardLinkUseCase {
 
-    suspend operator fun invoke(): String = suspendCoroutine { cont ->
-        Firebase.analytics.appInstanceId
-            .addOnSuccessListener { id ->
-                cont.resume("$NEW_BUY_WALLET_URL&app_instance_id=$id")
-            }
-            .addOnFailureListener {
-                cont.resume(NEW_BUY_WALLET_URL)
-            }
+    suspend operator fun invoke(source: Source): String {
+        return invoke(source.utmCampaign)
     }
 
-    companion object {
-        private const val NEW_BUY_WALLET_URL = "https://buy.tangem.com/?utm_source=tangem-app&utm_medium=app"
+    suspend operator fun invoke(utmCampaign: String?): String {
+        val langCode = Locale.getDefault().language
+        val utmTags = TangemSiteUrlBuilder.getUtmTags(utmCampaign)
+        return "https://buy.tangem.com/$langCode?$utmTags"
+    }
+
+    enum class Source(val utmCampaign: String) {
+        Creation("prospect"),
+        Settings("users"),
+        Backup("backup"),
+        Upgrade("upgrade"),
     }
 }

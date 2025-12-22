@@ -88,7 +88,7 @@ internal fun SwapAmountBlockContent(
         SwapChooseProviderContent(
             isBestRate = isBestRate,
             isSingleProvider = quoteContent?.isSingleProvider == true,
-            showBestRateAnimation = amountUM.showBestRateAnimation,
+            showBestRateAnimation = amountUM.isShowBestRateAnimation,
             expressProvider = amountUM.selectedQuote.provider,
             onClick = onProviderSelectClick,
             onFinishAnimation = onFinishAnimation,
@@ -98,7 +98,7 @@ internal fun SwapAmountBlockContent(
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
             },
-            showFCAWarning = amountUM.showFCAWarning,
+            showFCAWarning = amountUM.isShowFCAWarning,
         )
     }
 }

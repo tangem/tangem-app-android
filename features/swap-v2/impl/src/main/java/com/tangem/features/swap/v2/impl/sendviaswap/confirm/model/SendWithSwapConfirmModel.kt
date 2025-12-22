@@ -94,11 +94,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         field = MutableStateFlow(params.sendWithSwapUM)
 
     val primaryCurrencyStatus: CryptoCurrencyStatus = params.primaryCryptoCurrencyStatusFlow.value
-    val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
     val primaryFeePaidCurrencyStatus: CryptoCurrencyStatus = params.primaryFeePaidCurrencyStatusFlow.value
-    val secondaryCurrency: CryptoCurrency = requireNotNull(amountUM?.secondaryCryptoCurrencyStatus?.currency) {
-        "Crypto currency must not be null"
-    }
 
     private val swapTransactionSender = swapTransactionSenderFactory.create(params.userWallet)
 
@@ -110,6 +106,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         get() = uiState.value.destinationUM as? DestinationUM.Content
     private val feeSelectorUM
         get() = uiState.value.feeSelectorUM as? FeeSelectorUM.Content
+
+    val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
+    val secondaryCurrency: CryptoCurrency = requireNotNull(amountUM?.secondaryCryptoCurrencyStatus?.currency) {
+        "Crypto currency must not be null"
+    }
 
     val confirmData: ConfirmData
         get() {
@@ -270,13 +271,13 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
                     swapAlertFactory.getSendTransactionErrorState(
                         error = error,
-                        onFailedTxEmailClick = {
+                        onFailedTxEmailClick = { _ ->
                             modelScope.launch {
                                 swapAlertFactory.onFailedTxEmailClick(
                                     userWallet = params.userWallet,
                                     cryptoCurrency = confirmData.fromCryptoCurrencyStatus?.currency,
                                     confirmData = confirmData,
-                                    errorMessage = error.toString(),
+                                    errorMessage = error?.toString().orEmpty(),
                                 )
                             }
                         },
@@ -320,8 +321,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
-                uiState.update {
-                    it.copy(
+                uiState.update { state ->
+                    state.copy(
                         confirmUM = SendWithSwapConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
                         ).transform(uiState.value.confirmUM),
@@ -335,9 +336,9 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private fun subscribeOnTapHelpUpdates() {
         isSendTapHelpEnabledUseCase().getOrNull()
             ?.onEach { showTapHelp ->
-                uiState.update {
-                    val confirmUM = it.confirmUM as? ConfirmUM.Content
-                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                uiState.update { state ->
+                    val confirmUM = state.confirmUM as? ConfirmUM.Content
+                    state.copy(confirmUM = confirmUM?.copy(isShowTapHelp = showTapHelp) ?: state.confirmUM)
                 }
             }?.launchIn(modelScope)
     }
@@ -376,12 +377,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             flow2 = swapNotificationsUpdateListener.hasErrorFlow,
         ) { hasSendError, hasSwapError ->
             val hasError = hasSendError || hasSwapError
-            uiState.update {
-                val feeUM = it.feeSelectorUM as? FeeSelectorUM.Content
-                it.copy(
-                    confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
+            uiState.update { state ->
+                val feeUM = state.feeSelectorUM as? FeeSelectorUM.Content
+                state.copy(
+                    confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
                         isPrimaryButtonEnabled = !hasError && feeUM != null,
-                    ) ?: it.confirmUM,
+                    ) ?: state.confirmUM,
                 )
             }
         }.launchIn(modelScope)
