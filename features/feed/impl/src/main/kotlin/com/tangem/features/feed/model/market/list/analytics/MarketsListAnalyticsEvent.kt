@@ -1,13 +1,15 @@
 package com.tangem.features.feed.model.market.list.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.features.feed.ui.market.list.state.MarketsListUM
-import com.tangem.features.feed.ui.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 
 internal sealed class MarketsListAnalyticsEvent(
     event: String,
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Markets", event = event, params = params) {
+
+    class BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
 
     data class SortBy(
         val sortByTypeUM: SortByTypeUM,
