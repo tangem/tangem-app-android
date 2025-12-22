@@ -135,7 +135,7 @@ internal class HomeModel @Inject constructor(
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards())
         analyticsEventHandler.send(Shop.ScreenOpened())
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase.invoke(null).let { urlOpener.openUrl(it) }
         }
     }
 
