@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:GetArchivedAccountsUseCase.kt$GetArchivedAccountsUseCase${ send(it.lceError()) return }</ID>
+    <ID>MultilineLambdaItParameter:GetArchivedAccountsUseCase.kt$GetArchivedAccountsUseCase${ send(it.lceError()) return@channelFlow }</ID>
+    <ID>NamedArguments:AddCryptoPortfolioUseCase.kt$AddCryptoPortfolioUseCase$createAccount(userWalletId, accountName, icon, derivationIndex)</ID>
+    <ID>UnnecessaryAbstractClass:MultiAccountListSupplier.kt$MultiAccountListSupplier$MultiAccountListSupplier</ID>
+    <ID>UnnecessaryAbstractClass:SingleAccountListSupplier.kt$SingleAccountListSupplier$SingleAccountListSupplier</ID>
+    <ID>UnnecessaryAbstractClass:SingleAccountSupplier.kt$SingleAccountSupplier$SingleAccountSupplier</ID>
+  </CurrentIssues>
+</SmellBaseline>

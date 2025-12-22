@@ -137,7 +137,7 @@ class PriceChangeCalculatorTest {
             fiatAmount = amount,
             fiatRate = BigDecimal.ONE,
             priceChange = priceChange,
-            yieldBalance = null,
+            stakingBalance = null,
             yieldSupplyStatus = null,
             hasCurrentNetworkTransactions = false,
             pendingTransactions = emptySet(),

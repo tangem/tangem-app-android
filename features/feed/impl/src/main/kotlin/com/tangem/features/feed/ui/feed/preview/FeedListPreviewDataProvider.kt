@@ -1,17 +1,16 @@
 package com.tangem.features.feed.ui.feed.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.common.ui.news.ArticleTagUM
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
+import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import kotlinx.collections.immutable.*
 
@@ -38,7 +37,7 @@ internal object FeedListPreviewDataProvider {
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = articles.filter { it.isTrending.not() }.toImmutableList(),
+            news = NewsUM.Content(articles.filter { it.isTrending.not() }.toImmutableList()),
             trendingArticle = articles.first { it.isTrending },
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),
@@ -94,7 +93,6 @@ internal object FeedListPreviewDataProvider {
     ): MarketChartUM.Content {
         return MarketChartUM.Content(
             items = items,
-            triggerScrollReset = consumedEvent(),
             sortChartConfig = SortChartConfigUM(
                 sortByType = sortByType,
                 isSelected = isSelected,
@@ -107,7 +105,7 @@ internal object FeedListPreviewDataProvider {
             id = 1,
             title = "Bitcoin ETF reaches new highs, institutions pile in",
             score = 0.82f,
-            createdAt = "2h ago",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = true,
             tags = createArticleTags(),
             isViewed = false,
@@ -116,7 +114,7 @@ internal object FeedListPreviewDataProvider {
             id = 2,
             title = "Layer 2 networks battle for dominance amid fee wars",
             score = 0.71f,
-            createdAt = "4h ago",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = true,
@@ -125,7 +123,7 @@ internal object FeedListPreviewDataProvider {
             id = 3,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -134,7 +132,7 @@ internal object FeedListPreviewDataProvider {
             id = 4,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -143,7 +141,7 @@ internal object FeedListPreviewDataProvider {
             id = 5,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -152,28 +150,25 @@ internal object FeedListPreviewDataProvider {
             id = 6,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
         ),
     )
 
-    private fun createArticleTags(): ImmutableSet<ArticleTagUM> {
+    private fun createArticleTags(): ImmutableSet<LabelUM> {
         return persistentSetOf(
-            ArticleTagUM.Token(
-                title = TextReference.Str("BTC"),
-                iconState = CurrencyIconState.CoinIcon(
-                    url = "",
-                    fallbackResId = 0,
-                    isGrayscale = false,
-                    shouldShowCustomBadge = false,
+            LabelUM(
+                text = TextReference.Str("BTC"),
+                leadingContent = LabelLeadingContentUM.Token(
+                    iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/euro-coin.png",
                 ),
             ),
-            ArticleTagUM.Category(TextReference.Str("Regulation")),
-            ArticleTagUM.Category(TextReference.Str("BTC")),
-            ArticleTagUM.Category(TextReference.Str("Supply")),
-            ArticleTagUM.Category(TextReference.Str("Demand")),
+            LabelUM(TextReference.Str("Regulation")),
+            LabelUM(TextReference.Str("BTC")),
+            LabelUM(TextReference.Str("Supply")),
+            LabelUM(TextReference.Str("Demand")),
         )
     }
 
