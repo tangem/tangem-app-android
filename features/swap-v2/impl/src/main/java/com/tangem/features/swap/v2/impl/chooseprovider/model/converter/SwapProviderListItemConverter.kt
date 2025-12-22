@@ -21,14 +21,14 @@ import com.tangem.utils.converter.Converter
 internal class SwapProviderListItemConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val selectedProvider: ExpressProvider,
-    private val needApplyFCARestrictions: Boolean,
+    private val isNeedApplyFCARestrictions: Boolean,
     needBestRateBadge: Boolean,
 ) : Converter<SwapQuoteUM, SwapProviderListItem?> {
 
     private val providerStateConverter = SwapProviderStateConverter(
         cryptoCurrency = cryptoCurrency,
         selectedProvider = selectedProvider,
-        needApplyFCARestrictions = needApplyFCARestrictions,
+        isNeedApplyFCARestrictions = isNeedApplyFCARestrictions,
         isNeedBestRateBadge = needBestRateBadge,
     )
 
@@ -78,7 +78,7 @@ internal class SwapProviderListItemConverter(
                 },
             )
         }
-        is SwapQuoteUM.Content -> if (needApplyFCARestrictions && value.provider.isRestrictedByFCA()) {
+        is SwapQuoteUM.Content -> if (isNeedApplyFCARestrictions && value.provider.isRestrictedByFCA()) {
             ProviderChooseUM.ExtraUM.Action(
                 text = resourceReference(R.string.express_provider_fca_warning_list),
             )
