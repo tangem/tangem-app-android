@@ -6,17 +6,16 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class CustomerMeResponse(
     @Json(name = "result") val result: Result?,
-    @Json(name = "error") val error: String?,
 ) {
     @JsonClass(generateAdapter = true)
     data class Result(
         @Json(name = "id") val id: String,
         @Json(name = "state") val state: String,
-        @Json(name = "createdAt") val createdAt: String,
+        @Json(name = "created_at") val createdAt: String,
         @Json(name = "product_instance") val productInstance: ProductInstance?,
         @Json(name = "payment_account") val paymentAccount: PaymentAccount?,
         @Json(name = "kyc") val kyc: Kyc?,
-        @Json(name = "depositAddress") val depositAddress: String?,
+        @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "card") val card: Card?,
         @Json(name = "balance") val balance: BalanceResponse?,
     )
@@ -24,49 +23,49 @@ data class CustomerMeResponse(
     @JsonClass(generateAdapter = true)
     data class ProductInstance(
         @Json(name = "id") val id: String,
-        @Json(name = "cid") val cid: String,
+        @Json(name = "cid") val cid: String?,
         @Json(name = "card_id") val cardId: String,
-        @Json(name = "card_wallet_address") val cardWalletAddress: String,
+        @Json(name = "card_wallet_address") val cardWalletAddress: String?,
         @Json(name = "status") val status: Status,
         @Json(name = "updated_at") val updatedAt: String,
         @Json(name = "payment_account_id") val paymentAccountId: String,
     ) {
         @JsonClass(generateAdapter = false)
         enum class Status {
-            @Json(name = "new")
+            @Json(name = "NEW")
             NEW,
 
-            @Json(name = "ready_for_manufacturing")
+            @Json(name = "READY_FOR_MANUFACTURING")
             READY_FOR_MANUFACTURING,
 
-            @Json(name = "manufacturing")
+            @Json(name = "MANUFACTURING")
             MANUFACTURING,
 
-            @Json(name = "sent_to_delivery")
+            @Json(name = "SENT_TO_DELIVERY")
             SENT_TO_DELIVERY,
 
-            @Json(name = "delivered")
+            @Json(name = "DELIVERED")
             DELIVERED,
 
-            @Json(name = "activating")
+            @Json(name = "ACTIVATING")
             ACTIVATING,
 
-            @Json(name = "active")
+            @Json(name = "ACTIVE")
             ACTIVE,
 
-            @Json(name = "blocked")
+            @Json(name = "BLOCKED")
             BLOCKED,
 
-            @Json(name = "deactivating")
+            @Json(name = "DEACTIVATING")
             DEACTIVATING,
 
-            @Json(name = "deactivated")
+            @Json(name = "DEACTIVATED")
             DEACTIVATED,
 
-            @Json(name = "canceled")
+            @Json(name = "CANCELED")
             CANCELED,
 
-            @Json(name = "unknown")
+            @Json(name = "UNKNOWN")
             UNKNOWN,
         }
     }
@@ -91,11 +90,12 @@ data class CustomerMeResponse(
     @JsonClass(generateAdapter = true)
     data class Card(
         @Json(name = "token") val token: String,
-        @Json(name = "expiration_month") val expirationMonth: Int,
-        @Json(name = "expiration_year") val expirationYear: Int,
+        @Json(name = "expiration_month") val expirationMonth: String,
+        @Json(name = "expiration_year") val expirationYear: String,
         @Json(name = "emboss_name") val embossName: String,
         @Json(name = "card_type") val cardType: String,
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,
+        @Json(name = "is_pin_set") val isPinSet: Boolean?,
     )
 }

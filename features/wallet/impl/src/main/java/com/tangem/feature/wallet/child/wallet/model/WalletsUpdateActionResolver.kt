@@ -64,14 +64,17 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         selectedWallet: UserWallet,
     ): Action {
         return when {
-            isHotWalletUpgraded(state, wallets) -> {
-                getHotWalletsUpgradedAction(state, wallets)
+            isAnyHotWalletUpgraded(state, wallets) -> {
+                getHotWalletsUpgradedAction(state, wallets, selectedWallet)
+            }
+            isAnyHotWalletBackedUpChange(state, wallets) -> {
+                getHotWalletsBackedUpAction(state, wallets)
             }
             isWalletsCountChanged(state, wallets) -> {
                 getChangeWalletsListAction(state, wallets, selectedWallet)
             }
             isAnotherWalletSelected(state, selectedWallet) -> {
-                Action.ReinitializeWallet(
+                Action.ReinitializeNewWallet(
                     prevWalletId = state.getPrevSelectedWallet().id,
                     selectedWallet = selectedWallet,
                 )
@@ -79,31 +82,35 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             isAnyWalletNameChanged(state, wallets) -> {
                 getRenameWalletsAction(state, wallets)
             }
-            isAnyHotWalletBackedUpChange(state, wallets) -> {
-                getHotWalletsBackedUpAction(state, wallets)
+            isAnyWalletUnlocked(state, wallets) -> {
+                Action.UnlockWallet(
+                    selectedWallet = selectedWallet,
+                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
+                )
             }
-            else -> getUpdateSelectedWalletAction(state, wallets, selectedWallet)
+            isSelectedWalletCardsCountChanged(state, selectedWallet) -> {
+                Action.UpdateWalletCardCount(selectedWallet)
+            }
+            else -> Action.Unknown
         }
     }
 
     private fun isAnyHotWalletBackedUpChange(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
         val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
-        val walletsToUpdate = wallets.filter {
-            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
+        return wallets.any {
+            it is UserWallet.Hot && it.backedUp && incompleteActivationWalletIds.contains(it.walletId)
         }
-        return walletsToUpdate.isNotEmpty()
     }
 
-    private fun isHotWalletUpgraded(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
-        val previousWallet = state
-            .wallets
-            .getOrNull(state.selectedWalletIndex)
-        return when (previousWallet) {
-            is WalletState.MultiCurrency -> {
-                val wallet = wallets.firstOrNull { it.walletId == previousWallet.walletCardState.id }
-                previousWallet.type == WalletState.MultiCurrency.WalletType.Hot && wallet is UserWallet.Cold
+    private fun isAnyHotWalletUpgraded(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        return state.wallets.any { walletState ->
+            when (walletState) {
+                is WalletState.MultiCurrency -> {
+                    val wallet = wallets.firstOrNull { it.walletId == walletState.walletCardState.id }
+                    walletState.type == WalletState.MultiCurrency.WalletType.Hot && wallet is UserWallet.Cold
+                }
+                else -> false
             }
-            else -> false
         }
     }
 
@@ -189,9 +196,15 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     private fun getHotWalletsUpgradedAction(
         state: WalletScreenState,
         wallets: List<UserWallet>,
-    ): Action.ReloadWallets {
-        val walletsToUpdate = wallets.filter { it.walletId == state.getPrevSelectedWallet().id }
-        return Action.ReloadWallets(walletsToUpdate)
+        selectedWallet: UserWallet,
+    ): Action.ReinitializeWallets {
+        val walletsToUpdate = wallets.filter { wallet ->
+            val previousState = state.wallets.firstOrNull { it.walletCardState.id == wallet.walletId }
+                ?: return@filter false
+            wallet is UserWallet.Cold && previousState is WalletState.MultiCurrency &&
+                previousState.type == WalletState.MultiCurrency.WalletType.Hot
+        }
+        return Action.ReinitializeWallets(selectedWallet, walletsToUpdate)
     }
 
     private fun getRenameWalletsAction(state: WalletScreenState, wallets: List<UserWallet>): Action.RenameWallets {
@@ -205,27 +218,12 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         )
     }
 
-    private fun getUpdateSelectedWalletAction(
-        state: WalletScreenState,
-        wallets: List<UserWallet>,
-        selectedWallet: UserWallet,
-    ): Action {
-        return when {
-            isSelectedWalletUnlocked(state, selectedWallet) -> {
-                Action.UnlockWallet(
-                    selectedWallet = selectedWallet,
-                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
-                )
-            }
-            isSelectedWalletCardsCountChanged(state, selectedWallet) -> {
-                Action.UpdateWalletCardCount(selectedWallet)
-            }
-            else -> Action.Unknown
+    private fun isAnyWalletUnlocked(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        return state.wallets.any { walletState ->
+            val wallet = wallets.firstOrNull { it.walletId == walletState.walletCardState.id } ?: return@any false
+            !wallet.isLocked &&
+                (walletState is WalletState.MultiCurrency.Locked || walletState is WalletState.SingleCurrency.Locked)
         }
-    }
-
-    private fun isSelectedWalletUnlocked(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
-        return state.isSelectedWalletLocked() && !selectedWallet.isLocked
     }
 
     private fun isSelectedWalletCardsCountChanged(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
@@ -233,12 +231,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         val prevSelectedWallet = state.getPrevSelectedWallet()
         return prevSelectedWallet is WalletCardState.Content &&
             prevSelectedWallet.cardCount != selectedWallet.getCardsCount()
-    }
-
-    private fun WalletScreenState.isSelectedWalletLocked(): Boolean {
-        val selectedWalletState = wallets.getOrNull(selectedWalletIndex) ?: error("Selected wallet is not found")
-        return selectedWalletState is WalletState.MultiCurrency.Locked ||
-            selectedWalletState is WalletState.SingleCurrency.Locked
     }
 
     private fun WalletScreenState.getPrevSelectedWallet(): WalletCardState {
@@ -249,9 +241,12 @@ internal class WalletsUpdateActionResolver @Inject constructor(
     }
 
     private fun WalletScreenState.incompleteActivationWalletIds(): List<UserWalletId> {
-        return wallets.mapNotNull {
-            if (it.warnings.any { it is WalletNotification.FinishWalletActivation }) {
-                it.walletCardState.id
+        return wallets.mapNotNull { wallet ->
+            if (wallet.warnings.any { it is WalletNotification.FinishWalletActivation } ||
+                wallet.walletCardState is WalletState.MultiCurrency &&
+                wallet.walletCardState.additionalInfo?.isHotBackedUp == false
+            ) {
+                wallet.walletCardState.id
             } else {
                 null
             }
@@ -296,13 +291,26 @@ internal class WalletsUpdateActionResolver @Inject constructor(
          * @property prevWalletId   previous selected wallet id
          * @property selectedWallet selected wallet
          */
-        data class ReinitializeWallet(
+        data class ReinitializeNewWallet(
             val prevWalletId: UserWalletId,
             val selectedWallet: UserWallet,
         ) : Action() {
 
             override fun toString(): String {
                 return "ReinitializeWallet(prevWalletId = $prevWalletId, selectedWallet = ${selectedWallet.walletId})"
+            }
+        }
+
+        /**
+         * Reinitialize wallets
+         */
+        data class ReinitializeWallets(
+            val selectedWallet: UserWallet,
+            val wallets: List<UserWallet>,
+        ) : Action() {
+
+            override fun toString(): String {
+                return "ReinitializeWallets(wallets = ${wallets.joinToString { it.walletId.toString() }}"
             }
         }
 
