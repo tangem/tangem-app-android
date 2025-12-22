@@ -12,12 +12,11 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.EstimateGasUseCase
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
-import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -45,7 +44,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
-    @Assisted private val yield: Yield,
+    @Assisted private val integration: StakingIntegration,
 ) {
 
     suspend fun getFee(
@@ -58,9 +57,9 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
             ?: error("Illegal state")
 
-        val validatorAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenValidator?.address
-            ?: state.balanceState?.validatorAddress
-            ?: error("No validator address provided")
+        val validatorAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenTarget?.address
+            ?: state.balanceState?.targetAddress
+            ?: error("No target address provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
@@ -170,11 +169,11 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         network = cryptoCurrencyStatus.currency.network,
         params = ActionParams(
             actionCommonType = stateController.value.actionType,
-            integrationId = yield.id,
+            integrationId = integration.integrationId.value,
             amount = amount,
             address = sourceAddress,
             validatorAddress = validatorAddress,
-            token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
+            token = integration.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId),
             passthrough = action?.passthrough,
             type = action?.type,
         ),
@@ -234,7 +233,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         fun create(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             userWallet: UserWallet,
-            yield: Yield,
+            integration: StakingIntegration,
         ): StakingFeeTransactionLoader
     }
 }

@@ -25,7 +25,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
+import com.tangem.core.ui.test.SwapSelectNetworkFeeBottomSheetTestTags
 import com.tangem.utils.StringsSigns
 
 @Composable
@@ -70,7 +70,7 @@ fun SelectorRowItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(paddingValues)
-                .testTag(SelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM),
+                .testTag(SwapSelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(

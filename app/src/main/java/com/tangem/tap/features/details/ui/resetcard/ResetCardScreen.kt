@@ -22,6 +22,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog as ResetCardDialog
 
 @Composable
@@ -114,22 +115,11 @@ private fun Description(text: TextReference) {
 @Composable
 private fun Conditions(state: ResetCardScreenState) {
     state.warningsToShow.forEach { warning ->
-        when (warning) {
-            ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
-                ConditionCheckBox(
-                    checkedState = state.isAcceptCondition1Checked,
-                    onCheckedChange = state.onAcceptCondition1ToggleClick,
-                    description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
-                )
-            }
-            ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
-                ConditionCheckBox(
-                    checkedState = state.isAcceptCondition2Checked,
-                    onCheckedChange = state.onAcceptCondition2ToggleClick,
-                    description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
-                )
-            }
-        }
+        ConditionCheckBox(
+            checkedState = warning.isChecked,
+            onCheckedChange = { state.onToggleWarning(warning.type) },
+            description = warning.description,
+        )
     }
 }
 
@@ -239,14 +229,16 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
         ResetCardScreen(
             state = ResetCardScreenState(
                 isResetButtonEnabled = true,
-                isResetPasswordButtonShown = false,
-                warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
+                warningsToShow = persistentListOf(
+                    ResetCardScreenState.WarningUM(
+                        isChecked = false,
+                        type = ResetCardScreenState.WarningType.LOST_WALLET_ACCESS,
+                        description = TextReference.Res(id = R.string.reset_card_to_factory_condition_1),
+                    ),
+                ),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                isAcceptCondition1Checked = false,
-                isAcceptCondition2Checked = false,
-                onAcceptCondition1ToggleClick = {},
-                onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
+                onToggleWarning = {},
                 dialog = null,
             ),
             onBackClick = {},

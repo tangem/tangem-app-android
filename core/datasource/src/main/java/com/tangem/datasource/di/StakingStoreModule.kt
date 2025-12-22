@@ -80,7 +80,7 @@ internal object StakingStoreModule {
 
     @Provides
     @Singleton
-    fun provideP2PBalancesPersistenceStore(
+    fun provideP2PEthPoolBalancesPersistenceStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
@@ -91,7 +91,7 @@ internal object StakingStoreModule {
                 types = mapWithStringKeyTypes(valueTypes = setTypes<P2PEthPoolAccountResponse>()),
                 defaultValue = emptyMap(),
             ),
-            produceFile = { context.dataStoreFile(fileName = "p2p_balances") },
+            produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_balances") },
             scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
         )
     }
