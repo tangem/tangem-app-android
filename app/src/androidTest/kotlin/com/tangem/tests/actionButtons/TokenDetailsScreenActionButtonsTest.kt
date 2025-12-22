@@ -84,8 +84,8 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Assert 'Buy' button is not dimmed") {
                 onTokenDetailsScreen { buyButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
             }
-            step("Assert 'Send' button is dimmed") {
-                onTokenDetailsScreen { sendButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+            step("Assert 'Send' button is not dimmed") {
+                onTokenDetailsScreen { sendButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
