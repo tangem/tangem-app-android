@@ -84,4 +84,6 @@ internal object StakingClickIntentsStub : StakingClickIntents {
     override fun onActivateTonAccountNotificationShow() {}
 
     override fun onActivateTonAccountClick() {}
+
+    override fun onAmountReduceByFeeClick(reduceAmount: BigDecimal, notification: Class<out NotificationUM>) {}
 }
