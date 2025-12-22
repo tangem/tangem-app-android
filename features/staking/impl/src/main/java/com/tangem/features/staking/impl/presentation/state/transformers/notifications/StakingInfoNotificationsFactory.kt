@@ -1,9 +1,13 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.notifications
 
+import com.tangem.blockchain.common.Amount
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fee
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
@@ -35,7 +39,10 @@ internal class StakingInfoNotificationsFactory(
      * @param prevState     current screen state to update
      * @param sendingAmount amount being transferred from user account
      * @param actionAmount  any amount being transferred or used action
-     * @param feeValue      fee amount payed from user account
+     * @param feeAmount     fee amount payed from user account
+     * @param tonBalanceExtraFeeThreshold threshold for TON extra fee notification
+     * @param isFeeApproximate whether fee is approximate
+     * @param onAmountReduceByFeeClick callback to reduce amount by fee
      */
     @Suppress("LongParameterList")
     fun addInfoNotifications(
@@ -43,17 +50,24 @@ internal class StakingInfoNotificationsFactory(
         prevState: StakingUiState,
         sendingAmount: BigDecimal,
         actionAmount: BigDecimal,
-        feeValue: BigDecimal,
+        feeAmount: Amount?,
         tonBalanceExtraFeeThreshold: BigDecimal,
+        isFeeApproximate: Boolean,
+        onAmountReduceByFeeClick: (BigDecimal, notification: Class<out NotificationUM>) -> Unit,
     ) = with(notifications) {
         addStakingLowBalanceNotification(prevState, actionAmount)
         addTonExtraFeeInfoNotification(tonBalanceExtraFeeThreshold)
 
         when (prevState.actionType) {
-            is StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
+            is StakingActionCommonType.Enter -> addEnterInfoNotifications(
+                sendingAmount = sendingAmount,
+                feeAmount = feeAmount,
+                isFeeApproximate = isFeeApproximate,
+                onAmountReduceByFeeClick = onAmountReduceByFeeClick,
+            )
             is StakingActionCommonType.Exit -> addExitInfoNotifications(prevState)
             is StakingActionCommonType.Pending -> {
-                addCardanoRestakeMinimumAmountNotification(feeValue)
+                addCardanoRestakeMinimumAmountNotification(feeAmount?.value.orZero())
                 addPendingInfoNotifications(prevState)
                 addTonHaveToUnstakeAllNotification(prevState)
             }
@@ -67,12 +81,19 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addEnterInfoNotifications(
         sendingAmount: BigDecimal,
-        feeValue: BigDecimal,
+        feeAmount: Amount?,
+        isFeeApproximate: Boolean,
+        onAmountReduceByFeeClick: (BigDecimal, notification: Class<out NotificationUM>) -> Unit,
     ) {
-        addCardanoStakeMinimumAmountNotification(feeValue)
+        addCardanoStakeMinimumAmountNotification(feeAmount?.value.orZero())
         addTronRevoteNotification()
         addCardanoStakeNotification()
-        addStakingEntireBalanceNotification(sendingAmount, feeValue)
+        addStakingEntireBalanceNotification(
+            sendingAmount = sendingAmount,
+            feeAmount = feeAmount,
+            isFeeApproximate = isFeeApproximate,
+            onAmountReduceByFeeClick = onAmountReduceByFeeClick,
+        )
     }
 
     private fun MutableList<NotificationUM>.addPendingInfoNotifications(prevState: StakingUiState) {
@@ -194,15 +215,46 @@ internal class StakingInfoNotificationsFactory(
 
     private fun MutableList<NotificationUM>.addStakingEntireBalanceNotification(
         sendingAmount: BigDecimal,
-        feeValue: BigDecimal,
+        feeAmount: Amount?,
+        isFeeApproximate: Boolean,
+        onAmountReduceByFeeClick: (BigDecimal, notification: Class<out NotificationUM>) -> Unit,
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount.orZero()
+        val feeValue = feeAmount?.value.orZero()
 
         val isEntireBalance = sendingAmount.plus(feeValue) == balance
 
         if (isEntireBalance && isSubtractAvailable && !isCardano(cryptoCurrencyStatus.currency.network.rawId)) {
-            add(StakingNotification.Info.StakeEntireBalance)
+            val value = feeValue.multiply(FEE_DECIMALS_MULTIPLIER)
+
+            val reduceAmountValue = feeAmount
+                ?.takeIf { feeValue != BigDecimal.ZERO }
+                ?.let { amount ->
+                    resourceReference(
+                        R.string.send_notification_reduce_by,
+                        wrappedList(
+                            value.format {
+                                crypto(
+                                    symbol = amount.currencySymbol,
+                                    decimals = amount.decimals,
+                                ).fee(canBeLower = isFeeApproximate)
+                            },
+                        ),
+                    )
+                }
+
+            add(
+                StakingNotification.Info.StakeEntireBalance(
+                    reduceAmountValue,
+                    {
+                        onAmountReduceByFeeClick.invoke(
+                            value,
+                            StakingNotification.Info.StakeEntireBalance::class.java,
+                        )
+                    },
+                ),
+            )
         }
     }
 
@@ -286,5 +338,6 @@ internal class StakingInfoNotificationsFactory(
     private companion object {
         val MINIMUM_STAKE_BALANCE = "5".toBigDecimal()
         val MINIMUM_RESTAKE_BALANCE = "3".toBigDecimal()
+        val FEE_DECIMALS_MULTIPLIER = "3".toBigDecimal()
     }
 }
