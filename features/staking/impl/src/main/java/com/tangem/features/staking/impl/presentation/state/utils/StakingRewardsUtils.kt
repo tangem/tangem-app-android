@@ -47,7 +47,7 @@ internal fun getRewardScheduleText(
         -> getCustomRewardSchedule(
             networkId = networkId,
             decapitalize = decapitalize,
-        )
+        ) ?: stringReference(rewardSchedule.name.lowercase().capitalize())
         else -> null
     }
 }
