@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
@@ -14,6 +15,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,6 +31,10 @@ internal interface TangemPayIntents {
     fun onIssuingFailedClicked()
 
     fun onPaySupportClick()
+
+    fun onOnboardingBannerClick(userWalletId: UserWalletId)
+
+    fun onOnboardingBannerCloseClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LongParameterList")
@@ -113,6 +119,17 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                     walletMetaInfo = cardInfo,
                 ),
             )
+        }
+    }
+
+    override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
+        router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
+    }
+
+    override fun onOnboardingBannerCloseClick(userWalletId: UserWalletId) {
+        modelScope.launch {
+            stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
+            onboardingRepository.setHideMainOnboardingBanner(userWalletId)
         }
     }
 }
