@@ -39,6 +39,7 @@ dependencies {
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
+    implementation(projects.common)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
