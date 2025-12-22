@@ -25,6 +25,8 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.PortfolioId
@@ -88,6 +90,8 @@ internal class WalletSettingsModel @Inject constructor(
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
 ) : Model() {
 
@@ -115,7 +119,18 @@ internal class WalletSettingsModel @Inject constructor(
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight { wallet ->
             trackingContextProxy.addContext(wallet)
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletSettingsScreenOpened)
+            modelScope.launch {
+                val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                    singleAccountListSupplier(wallet.walletId)
+                        .first()
+                        .accounts
+                        .size
+                } else {
+                    null
+                }
+                val event = WalletSettingsAnalyticEvents.WalletSettingsScreenOpened(accountsCount)
+                analyticsEventHandler.send(event)
+            }
         }
 
         fun combineUI(wallet: UserWallet) = combine(
@@ -220,7 +235,7 @@ internal class WalletSettingsModel @Inject constructor(
             },
             onReferralClick = { onReferralClick(userWallet) },
             onManageTokensClick = {
-                analyticsEventHandler.send(Settings.ButtonManageTokens)
+                analyticsEventHandler.send(Settings.ButtonManageTokens())
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
@@ -384,7 +399,6 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
         if (!state.value.isWalletBackedUp) {
             showMakeBackupAtFirstAlertBS(
                 isUpgradeFlow = true,
@@ -404,7 +418,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onBackupClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup())
         router.push(AppRoute.WalletBackup(params.userWalletId))
     }
 
@@ -438,10 +452,10 @@ internal class WalletSettingsModel @Inject constructor(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
                             isUpgradeFlow = isUpgradeFlow,
-                            setAccessCode = true,
+                            shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
                             analyticsAction = if (isUpgradeFlow) {
-                                RecoveryPhraseScreenAction.Backup.value
+                                RecoveryPhraseScreenAction.Upgrade.value
                             } else {
                                 RecoveryPhraseScreenAction.AccessCode.value
                             },

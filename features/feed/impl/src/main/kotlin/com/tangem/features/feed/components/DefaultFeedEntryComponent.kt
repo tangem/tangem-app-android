@@ -1,10 +1,13 @@
 package com.tangem.features.feed.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -13,11 +16,15 @@ import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
-import com.tangem.features.feed.entry.BottomSheetState
 import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.feed.model.feed.FeedModelClickIntents
+import com.tangem.features.feed.ui.EntryBottomSheetContent
+import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,7 +42,37 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val stack: Value<ChildStack<FeedEntryChildFactory.Child, Any>> = childStack(
+    private val clickIntents = object : FeedEntryClickIntents {
+        override fun onMarketItemClick(token: TokenMarketParams, appCurrency: AppCurrency) {
+            innerRouter.push(
+                route = FeedEntryChildFactory.Child.TokenDetails(
+                    params = DefaultMarketsTokenDetailsComponent.Params(
+                        token = token,
+                        appCurrency = appCurrency,
+                        shouldShowPortfolio = true,
+                        analyticsParams = DefaultMarketsTokenDetailsComponent.AnalyticsParams(
+                            blockchain = null,
+                            source = "Market",
+                        ),
+                    ),
+                ),
+            )
+        }
+
+        override fun onMarketOpenClick(sortBy: SortByTypeUM) {
+            innerRouter.push(FeedEntryChildFactory.Child.TokenList)
+        }
+
+        override fun onArticleClick(articleId: Int) {
+            innerRouter.push(FeedEntryChildFactory.Child.NewsDetails)
+        }
+
+        override fun onOpenAllNews() {
+            innerRouter.push(FeedEntryChildFactory.Child.NewsList)
+        }
+    }
+
+    private val stack: Value<ChildStack<FeedEntryChildFactory.Child, ComposableModularContentComponent>> = childStack(
         key = "main",
         source = stackNavigation,
         serializer = FeedEntryChildFactory.Child.serializer(),
@@ -48,7 +85,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     componentContext = factoryContext,
                     router = innerRouter,
                 ),
-                onTokenClick = ::marketsListTokenSelected,
+                feedEntryClickIntents = clickIntents,
             )
         },
     )
@@ -59,22 +96,15 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier,
     ) {
-        bottomSheetState // TODO will be continued in next tasks.
-    }
+        val stackState by stack.subscribeAsState()
 
-    private fun marketsListTokenSelected(token: TokenMarketParams, appCurrency: AppCurrency) {
-        innerRouter.push(
-            route = FeedEntryChildFactory.Child.TokenDetails(
-                params = DefaultMarketsTokenDetailsComponent.Params(
-                    token = token,
-                    appCurrency = appCurrency,
-                    shouldShowPortfolio = true,
-                    analyticsParams = DefaultMarketsTokenDetailsComponent.AnalyticsParams(
-                        blockchain = null,
-                        source = "Market",
-                    ),
-                ),
-            ),
+        BackHandler(enabled = bottomSheetState.value == BottomSheetState.EXPANDED) {
+            onChildBack()
+        }
+
+        EntryBottomSheetContent(
+            stackState = stackState,
+            onHeaderSizeChange = onHeaderSizeChange,
         )
     }
 
@@ -89,3 +119,5 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         override fun create(context: AppComponentContext): DefaultFeedEntryComponent
     }
 }
+
+internal interface FeedEntryClickIntents : FeedModelClickIntents
