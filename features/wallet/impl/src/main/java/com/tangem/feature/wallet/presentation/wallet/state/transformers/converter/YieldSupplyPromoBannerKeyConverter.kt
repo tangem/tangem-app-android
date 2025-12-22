@@ -20,16 +20,15 @@ internal class YieldSupplyPromoBannerKeyConverter(
             is TokenConverterParams.Wallet -> value.tokenList.flattenCurrencies()
             is TokenConverterParams.Account -> value.accountList.flattenCurrencies()
         }.filter { status ->
-            status.value is CryptoCurrencyStatus.Loaded ||
-                status.value is CryptoCurrencyStatus.Custom
+            status.value is CryptoCurrencyStatus.Loaded
         }
 
-        val tokens = currencies.filter { it.currency is CryptoCurrency.Token }
+        val cryptoCurrencyStatuses = currencies.filter { it.currency is CryptoCurrency.Token }
 
-        if (tokens.any { it.value.yieldSupplyStatus?.isActive == true }) return null
+        if (cryptoCurrencyStatuses.any { it.value.yieldSupplyStatus?.isActive == true }) return null
         if (yieldModuleApyMap.isEmpty()) return null
 
-        val max = tokens.asSequence()
+        val max = cryptoCurrencyStatuses.asSequence()
             .mapNotNull { status ->
                 val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
                 val tokenKey = token.yieldSupplyKey()
