@@ -60,7 +60,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
     }
 
     override fun onApyInfoClick() {
-        analytics.send(YieldSupplyAnalytics.ApyChartViewed)
+        analytics.send(YieldSupplyAnalytics.ApyChartViewed())
         bottomSheetNavigation.activate(YieldSupplyPromoConfig.Apy)
     }
 

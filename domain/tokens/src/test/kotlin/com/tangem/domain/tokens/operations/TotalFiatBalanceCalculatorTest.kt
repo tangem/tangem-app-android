@@ -11,7 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.YieldBalanceItem
 import io.mockk.every
 import io.mockk.mockk
@@ -192,7 +192,7 @@ class TotalFiatBalanceCalculatorTest {
                 createCustom(
                     currency = cryptoCurrencyFactory.cardano,
                     fiatAmount = BigDecimal.ZERO,
-                    yieldBalance = createYieldBalance(
+                    stakingBalance = createStakeKitBalance(
                         amount = BigDecimal(20),
                         // It is important to use `BalanceType.REWARDS` because Cardano should not include the full
                         // staking balance. See `getTotalWithRewardsStakingBalance`.
@@ -207,7 +207,7 @@ class TotalFiatBalanceCalculatorTest {
                 createCustom(
                     currency = cryptoCurrencyFactory.stellar,
                     fiatAmount = BigDecimal.ONE,
-                    yieldBalance = createYieldBalance(
+                    stakingBalance = createStakeKitBalance(
                         amount = BigDecimal(9),
                         balanceType = BalanceType.STAKED,
                     ),
@@ -246,7 +246,7 @@ class TotalFiatBalanceCalculatorTest {
                 createLoaded(
                     currency = cryptoCurrencyFactory.cardano,
                     fiatAmount = BigDecimal.ZERO,
-                    yieldBalance = createYieldBalance(
+                    stakingBalance = createStakeKitBalance(
                         amount = BigDecimal(20),
                         // It is important to use `BalanceType.REWARDS` because Cardano should not include the full
                         // staking balance. See `getTotalWithRewardsStakingBalance`.
@@ -261,7 +261,7 @@ class TotalFiatBalanceCalculatorTest {
                 createLoaded(
                     currency = cryptoCurrencyFactory.stellar,
                     fiatAmount = BigDecimal.ONE,
-                    yieldBalance = createYieldBalance(
+                    stakingBalance = createStakeKitBalance(
                         amount = BigDecimal(9),
                         balanceType = BalanceType.STAKED,
                     ),
@@ -497,7 +497,7 @@ class TotalFiatBalanceCalculatorTest {
             currency = currency,
             value = CryptoCurrencyStatus.NoQuote(
                 amount = BigDecimal.ONE,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -545,7 +545,7 @@ class TotalFiatBalanceCalculatorTest {
     private fun createCustom(
         currency: CryptoCurrency,
         fiatAmount: BigDecimal?,
-        yieldBalance: YieldBalance? = null,
+        stakingBalance: StakingBalance.Data.StakeKit? = null,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = currency,
@@ -554,7 +554,7 @@ class TotalFiatBalanceCalculatorTest {
                 fiatAmount = fiatAmount,
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
-                yieldBalance = yieldBalance,
+                stakingBalance = stakingBalance,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -567,7 +567,7 @@ class TotalFiatBalanceCalculatorTest {
     private fun createLoaded(
         currency: CryptoCurrency,
         fiatAmount: BigDecimal,
-        yieldBalance: YieldBalance? = null,
+        stakingBalance: StakingBalance.Data.StakeKit? = null,
         source: StatusSource = StatusSource.ACTUAL,
     ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
@@ -577,7 +577,7 @@ class TotalFiatBalanceCalculatorTest {
                 fiatAmount = fiatAmount,
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
-                yieldBalance = yieldBalance,
+                stakingBalance = stakingBalance,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -587,8 +587,8 @@ class TotalFiatBalanceCalculatorTest {
         )
     }
 
-    private fun createYieldBalance(amount: BigDecimal, balanceType: BalanceType): YieldBalance.Data {
-        return YieldBalance.Data(
+    private fun createStakeKitBalance(amount: BigDecimal, balanceType: BalanceType): StakingBalance.Data.StakeKit {
+        return StakingBalance.Data.StakeKit(
             stakingId = mockk(),
             source = StatusSource.ACTUAL,
             balance = YieldBalanceItem(

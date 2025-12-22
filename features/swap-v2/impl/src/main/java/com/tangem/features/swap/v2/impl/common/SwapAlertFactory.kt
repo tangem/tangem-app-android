@@ -91,7 +91,8 @@ internal class SwapAlertFactory @Inject constructor(
                 destinationAddress = confirmData?.enteredDestination.orEmpty(),
                 tokenSymbol = confirmData?.toCryptoCurrencyStatus?.currency?.symbol.orEmpty(),
                 amount = confirmData?.enteredAmount?.toString().orEmpty(),
-                fee = confirmData?.fee?.amount?.value?.toString().orEmpty(),
+                fee = confirmData?.fee?.amount?.value?.toString()
+                    .orEmpty(),
             ),
         )
 
