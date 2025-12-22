@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:WcAppMetaData.kt$WcAppMetaData$val linkMode: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:WcSession.kt$WcSession$val showWalletInfo: Boolean</ID>
+    <ID>ObjectExtendsThrowable:WcPairError.kt$WcPairError$InvalidConnectionRequest : WcPairError</ID>
+    <ID>ObjectExtendsThrowable:WcPairError.kt$WcPairError$InvalidDomainURL : WcPairError</ID>
+    <ID>ObjectExtendsThrowable:WcPairError.kt$WcPairError$ProposalExpired : WcPairError</ID>
+    <ID>ObjectExtendsThrowable:WcPairError.kt$WcPairError$RejectionFailed : WcPairError</ID>
+  </CurrentIssues>
+</SmellBaseline>
