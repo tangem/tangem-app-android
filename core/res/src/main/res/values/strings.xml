@@ -1444,6 +1444,7 @@
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
+  <string name="tangempay_cancel_kyc">Cancel KYC</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
@@ -1471,6 +1472,7 @@
   <string name="tangempay_card_details_open_wallet_step_5">All set! Your card is ready to use.</string>
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
+  <string name="tangempay_card_details_pin_code">PIN code</string>
   <string name="tangempay_card_details_receive_description">Share your address or show QR-code</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
@@ -1479,6 +1481,8 @@
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
+  <string name="tangempay_card_details_view_pin_code_description">Come back to the app if you forget it.</string>
+  <string name="tangempay_card_details_view_pin_code_title">Your PIN code</string>
   <string name="tangempay_card_details_withdraw">Withdraw</string>
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
@@ -1502,6 +1506,7 @@
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
   <string name="tangempay_onboarding_banner_description">Use your crypto for real world spending. \nIt’s a payment card unlike any other.</string>
   <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>

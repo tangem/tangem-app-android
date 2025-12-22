@@ -144,6 +144,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 currencyCode = fiatBalance.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
                 depositAddress = response.depositAddress,
+                isPinSet = response.card?.isPinSet == true,
             )
         } else {
             null
