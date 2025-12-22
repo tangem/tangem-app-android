@@ -65,6 +65,7 @@ sealed class VisaApiError(
     data object WithdrawalDataError : VisaApiError(104004003)
     data object SignWithdrawError : VisaApiError(104004004)
     data object WithdrawError : VisaApiError(104004005)
+    data object ServerUnavailable : VisaApiError(104004006)
 
     companion object {
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
