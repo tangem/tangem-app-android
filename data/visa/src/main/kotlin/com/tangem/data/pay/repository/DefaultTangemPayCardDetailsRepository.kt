@@ -52,20 +52,29 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val storePollingMutex = Mutex()
 
     override suspend fun getCardBalance(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardBalance> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            val result = requestHelper.request(userWalletId) { authHeader ->
-                tangemPayApi.getCardBalance(authHeader)
-            }.result ?: error("Cannot get card balance")
-            TangemPayCardBalance(
-                fiatBalance = result.fiat.availableBalance,
-                currencyCode = result.fiat.currency,
-                cryptoBalance = result.crypto.balance,
-                availableForWithdrawal = result.availableForWithdrawal.amount,
-                chainId = result.crypto.chainId,
-                depositAddress = result.crypto.depositAddress,
-                contractAddress = result.crypto.tokenContractAddress,
-            )
-        }
+        return catch(
+            block = {
+                val response = requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.getCardBalance(authHeader)
+                }.getOrNull()
+
+                val fiatBalance = requireNotNull(response?.result?.fiat) { "Cannot get card balance fiat" }
+                val cryptoBalance = requireNotNull(response.result?.crypto) { "Cannot get card balance crypto" }
+                val withdrawalAmount = requireNotNull(response.result?.availableForWithdrawal) {
+                    "Cannot get card balance availableForWithdrawal"
+                }
+                TangemPayCardBalance(
+                    fiatBalance = fiatBalance.availableBalance,
+                    currencyCode = fiatBalance.currency,
+                    cryptoBalance = cryptoBalance.balance,
+                    availableForWithdrawal = withdrawalAmount.amount,
+                    chainId = cryptoBalance.chainId,
+                    depositAddress = cryptoBalance.depositAddress,
+                    contractAddress = cryptoBalance.tokenContractAddress,
+                ).right()
+            },
+            catch = ::catchException,
+        )
     }
 
     override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
@@ -100,7 +109,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                     expirationMonth = result.expirationMonth,
                 ).right()
             },
-            catch = { errorConverter.convert(it).left() },
+            catch = ::catchException,
         )
     }
 
@@ -283,6 +292,11 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
         }
+    }
+
+    private fun <T> catchException(throwable: Throwable): Either<UniversalError, T> {
+        Timber.tag(TAG).e(throwable)
+        return errorConverter.convert(throwable).left()
     }
 
     private companion object {
