@@ -172,10 +172,11 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 refreshToken = response.refreshToken,
                 refreshExpiresAt = response.refreshExpiresAt,
             )
+        }.mapLeft { error ->
+            Timber.tag(TAG).e("Can not refresh auth tokens: $error")
+            if (error is VisaApiError.ServerUnavailable) error else VisaApiError.RefreshTokenExpired
         }.onRight { tokens ->
             tangemPayStorage.storeAuthTokens(customerWalletAddress = customerWalletAddress, tokens = tokens)
-        }.onLeft {
-            Timber.tag(TAG).e("Can not refresh auth tokens: $it")
         }
     }
 }
