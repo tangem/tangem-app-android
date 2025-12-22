@@ -1,5 +1,6 @@
 package com.tangem.features.createwalletselection
 
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -84,6 +85,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                 ),
                 onBuyClick = ::onBuyClick,
                 shouldShowAlreadyHaveWallet = true,
+                onWhatToChooseClick = ::onWhatToChooseClick,
             ),
         )
 
@@ -124,7 +126,14 @@ internal class CreateWalletSelectionModel @Inject constructor(
     private fun onBuyClick() {
         analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.AddNewWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Creation).let { urlOpener.openUrl(it) }
+        }
+    }
+
+    private fun onWhatToChooseClick() {
+        modelScope.launch {
+            urlOpener.openUrl(TangemBlogUrlBuilder.build(TangemBlogUrlBuilder.Post.WhatWalletToChoose))
         }
     }
 
