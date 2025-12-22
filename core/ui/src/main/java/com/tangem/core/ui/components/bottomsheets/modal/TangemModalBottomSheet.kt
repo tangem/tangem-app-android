@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -146,7 +145,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheet(
         sheetState = SheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             initialValue = Expanded,
-            density = LocalDensity.current,
+            positionalThreshold = { 0f },
+            velocityThreshold = { 0f },
         ),
         onBack = null,
         bsContent = {
