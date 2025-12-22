@@ -12,6 +12,10 @@ import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -35,6 +39,7 @@ internal class DefaultYieldSupplyRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : YieldSupplyRepository {
 
     private val statusMap: MutableMap<String, YieldSupplyEnterStatus> = ConcurrentHashMap()
@@ -172,6 +177,14 @@ internal class DefaultYieldSupplyRepository(
     } catch (e: Exception) {
         Timber.e(e, "Failed to get pending yield supply status")
         null
+    }
+
+    override fun getShouldShowYieldPromoBanner(): Flow<Boolean> {
+        return appPreferencesStore.get(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, true)
+    }
+
+    override suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean) {
+        appPreferencesStore.store(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, shouldShow)
     }
 
     private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any {

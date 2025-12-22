@@ -345,6 +345,7 @@
   <string name="common_week">semana</string>
   <string name="common_with">con</string>
   <string name="common_yes">Sí</string>
+  <string name="common_yield_mode">Modo de rendimiento</string>
   <string name="contract_address_copied_message">Dirección de contrato copiada</string>
   <string name="currency_subtitle_expanded">Redes disponibles</string>
   <string name="custom_token_contract_address_input_title">Dirección de contrato</string>
@@ -1319,11 +1320,11 @@
   <string name="tangempay_onboarding_security_description">Se creará una cuenta de pago separada sin divulgar tus direcciones y activos</string>
   <string name="tangempay_onboarding_security_title">Privacidad inigualable</string>
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
-  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">Sincronización de cuenta de pago necesaria</string>
   <string name="tangempay_service_unavailable_description">Estamos solucionando un problema técnico. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="tangempay_service_unavailable_title">Servicio temporalmente no disponible</string>
-  <string name="tangempay_service_unreachable_try_later">El servicio no está disponible actualmente. Inténtalo de nuevo más tarde.</string>
+  <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
   <string name="tangempay_sync_needed">Sincronización necesaria</string>
   <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay temporalmente no disponible</string>
@@ -1417,6 +1418,10 @@
   <string name="user_wallet_list_rename_popup_title">Renombrar la billetera</string>
   <string name="user_wallet_list_unlock_all">Desbloquear todo</string>
   <string name="user_wallet_list_unlock_all_with">Desbloquear todo con %s</string>
+  <string name="visa_onboarding_pin_code_description">Configure un código de 4 dígitos.\nSe utilizará para los pagos.</string>
+  <string name="visa_onboarding_pin_code_title">Crear código PIN</string>
+  <string name="visa_onboarding_pin_not_accepted">No se aceptó el PIN. Inténtalo de nuevo o usa un código diferente.</string>
+  <string name="visa_onboarding_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
   <string name="wallet_add_common_title">Elija cómo agregar su billetera</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">La blockchain está Inaccesible. Inténtelo más tarde</string>
   <string name="wallet_balance_missing_derivation">Escanee la tarjeta o el anillo</string>
