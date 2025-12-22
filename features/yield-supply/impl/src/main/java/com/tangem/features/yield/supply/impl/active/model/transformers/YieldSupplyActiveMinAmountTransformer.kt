@@ -11,8 +11,8 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.notSuppliedAmountOrNull
-import com.tangem.domain.models.currency.shouldShowNotSuppliedInfoIcon
+import com.tangem.domain.models.currency.notSuppliedCryptoAmountOrNull
+import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
@@ -91,11 +91,11 @@ internal class YieldSupplyActiveMinAmountTransformer(
     }
 
     private fun getNotSuppliedNotification(cryptoCurrencyStatus: CryptoCurrencyStatus): NotificationUM? {
-        return if (cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustMinAmount)) {
+        return if (cryptoCurrencyStatus.shouldShowNotSuppliedNotification(dustMinAmount)) {
             val cryptoCurrency = cryptoCurrencyStatus.currency
-            val notDepositedAmount = cryptoCurrencyStatus.notSuppliedAmountOrNull()
+            val notSuppliedAmount = cryptoCurrencyStatus.notSuppliedCryptoAmountOrNull()
             val formattedAmount =
-                notDepositedAmount.format { crypto(symbol = "", decimals = cryptoCurrencyStatus.currency.decimals) }
+                notSuppliedAmount.format { crypto(symbol = "", decimals = cryptoCurrencyStatus.currency.decimals) }
             analyticsHandler.send(
                 YieldSupplyAnalytics.NoticeAmountNotDeposited(
                     token = cryptoCurrency.symbol,

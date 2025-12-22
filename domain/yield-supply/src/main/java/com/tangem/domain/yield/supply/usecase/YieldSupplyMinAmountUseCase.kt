@@ -13,6 +13,14 @@ import com.tangem.domain.yield.supply.fixFee
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+/**
+ * Use case that calculates the minimum amount required for yield supply operations.
+ *
+ * The calculation is based on the estimated transaction fee converted to the token currency,
+ * with a buffer multiplier applied to account for fee fluctuations.
+ *
+ * @return [BigDecimal] minimum amount in token currency (not native/network currency)
+ */
 class YieldSupplyMinAmountUseCase(
     private val feeRepository: FeeRepository,
     private val quotesRepository: QuotesRepository,
