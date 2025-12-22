@@ -124,9 +124,10 @@ data class TxInfo(
             }
 
             @Serializable
-            data object Send : YieldSupply {
-                override val address: String? = null
-            }
+            data class Send(
+                override val address: String? = null,
+                val isYieldSupplyWithdraw: Boolean,
+            ) : YieldSupply
 
             @Serializable
             data class DeployContract(override val address: String) : YieldSupply
