@@ -32,7 +32,10 @@ class GetSwapSupportedPairsUseCase(
             swapTxType = swapTxType,
         )
 
-        val filteredOutInitial = cryptoCurrencyList.filterNot { it.id.rawNetworkId == initialCurrency.id.rawNetworkId }
+        val filteredOutInitial = cryptoCurrencyList.filterNot { currency ->
+            currency.id.rawNetworkId == initialCurrency.id.rawNetworkId &&
+                currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
+        }
 
         val fromGroup = pairs.groupPairs(
             initialCurrency = initialCurrency,
