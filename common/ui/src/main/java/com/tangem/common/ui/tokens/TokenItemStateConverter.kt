@@ -1,6 +1,5 @@
 package com.tangem.common.ui.tokens
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -22,7 +21,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.YieldBalance
-import com.tangem.domain.staking.model.isStakingSupported
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
@@ -43,12 +43,14 @@ import java.math.BigDecimal
  */
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
-    private val yieldModuleApyMap: Map<String, String> = emptyMap(),
-    private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+    private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
+    private val stakingApyMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+    private val yieldSupplyPromoBannerKey: String? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
     private val onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)? = null,
+    private val onYieldPromoCloseClick: (() -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
         createTitleState(
             currencyStatus = currencyStatus,
@@ -65,6 +67,15 @@ class TokenItemStateConverter(
     },
     private val fiatAmountStateProvider: (CryptoCurrencyStatus) -> TokenItemState.FiatAmountState? = {
         createFiatAmountState(status = it, appCurrency = appCurrency)
+    },
+    private val promoBannerProvider: (CryptoCurrencyStatus) -> TokenItemState.PromoBannerState = { status ->
+        createPromoBannerState(
+            status = status,
+            yieldModuleApyMap = yieldModuleApyMap,
+            yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKey,
+            onApyLabelClick = onApyLabelClick,
+            onYieldPromoCloseClick = onYieldPromoCloseClick,
+        )
     },
     private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
     private val onItemLongClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
@@ -102,6 +113,7 @@ class TokenItemStateConverter(
             subtitleState = requireNotNull(subtitleStateProvider(this)),
             fiatAmountState = requireNotNull(fiatAmountStateProvider(this)),
             subtitle2State = requireNotNull(subtitle2StateProvider(this)),
+            promoBannerState = promoBannerProvider(this),
             onItemClick = onItemClick?.let { onItemClick ->
                 { onItemClick(it, this) }
             },
@@ -164,8 +176,8 @@ class TokenItemStateConverter(
 
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
-            yieldModuleApyMap: Map<String, String>,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            yieldModuleApyMap: Map<String, BigDecimal>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
@@ -204,8 +216,8 @@ class TokenItemStateConverter(
         // polygon-pos_0xc2132d05d31c914a87c6611c10748aeb04b58e8f
         private fun resolveEarnApy(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
-            yieldModuleApyMap: Map<String, String>,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            yieldModuleApyMap: Map<String, BigDecimal>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
         ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
@@ -223,7 +235,7 @@ class TokenItemStateConverter(
                             wrappedList(yieldSupplyApy),
                         ),
                         isActive = isActive,
-                        apy = yieldSupplyApy,
+                        apy = yieldSupplyApy.toString(),
                         source = ApySource.YIELD_SUPPLY,
                     )
                 }
@@ -260,46 +272,42 @@ class TokenItemStateConverter(
 
         private fun findStakingRate(
             currencyStatus: CryptoCurrencyStatus,
-            stakingApyMap: Map<String, List<Yield.Validator>>,
+            stakingApyMap: Map<CryptoCurrency, StakingAvailability>,
         ): StakingLocalInfo {
-            val stakingKey = currencyStatus.currency.stakingKey()
-            val validators = stakingApyMap[stakingKey]
+            val stakingAvailability = stakingApyMap[currencyStatus.currency] as? StakingAvailability.Available
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
             val yieldBalance = currencyStatus.value.yieldBalance
             val hasStakedBalance = yieldBalance is YieldBalance.Data
 
-            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (hasStakedBalance) {
-                val validatorsByAddress = validators.associateBy { it.address }
-                yieldBalance.balance.items
-                    .mapNotNull { it.validatorAddress }
-                    .firstNotNullOfOrNull { address ->
-                        val validator = validatorsByAddress[address]
-                        validator?.rewardInfo?.rate?.let { rate ->
-                            rate to validator.rewardInfo?.type
-                        }
-                    }
-                    ?: validators
+            val rateInfo = when (val stakingOptions = stakingAvailability.option) {
+                is StakingOption.P2P -> null // todo p2p
+                is StakingOption.StakeKit -> if (hasStakedBalance) {
+                    val validatorsByAddress = stakingOptions.yield.validators.associateBy { it.address }
+                    yieldBalance.balance.items
+                        .mapNotNull { it.validatorAddress }
+                        .firstNotNullOfOrNull { address ->
+                            validatorsByAddress[address]?.rewardInfo
+                        } ?: stakingOptions.yield.validators
                         .filter { it.preferred }
                         .mapNotNull { validator ->
-                            validator.rewardInfo?.rate?.let { rate -> rate to validator.rewardInfo?.type }
+                            validator.rewardInfo
                         }
-                        .maxByOrNull { it.first }
-            } else {
-                validators
-                    .filter { it.preferred }
-                    .mapNotNull { validator ->
-                        validator.rewardInfo?.rate?.let { rate ->
-                            rate to validator.rewardInfo?.type
+                        .maxByOrNull { it.rate }
+                } else {
+                    stakingOptions.yield.validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo
                         }
-                    }
-                    .maxByOrNull { it.first }
+                        .maxByOrNull { it.rate }
+                }
             }
 
             return StakingLocalInfo(
-                rate = rateInfo?.first,
+                rate = rateInfo?.rate,
                 isActive = hasStakedBalance,
-                rewardType = rateInfo?.second,
+                rewardType = rateInfo?.type,
             )
         }
 
@@ -381,6 +389,39 @@ class TokenItemStateConverter(
             }
         }
 
+        private fun createPromoBannerState(
+            status: CryptoCurrencyStatus,
+            yieldModuleApyMap: Map<String, BigDecimal>,
+            yieldSupplyPromoBannerKey: String?,
+            onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
+            onYieldPromoCloseClick: (() -> Unit)?,
+        ): TokenItemState.PromoBannerState {
+            val token = status.currency as? CryptoCurrency.Token ?: return TokenItemState.PromoBannerState.Empty
+            if (status.value !is CryptoCurrencyStatus.Loaded) {
+                return TokenItemState.PromoBannerState.Empty
+            }
+            if (yieldSupplyPromoBannerKey == null || yieldSupplyPromoBannerKey != token.yieldSupplyKey() ||
+                yieldModuleApyMap[token.yieldSupplyKey()] == null
+            ) {
+                return TokenItemState.PromoBannerState.Empty
+            }
+            val yieldSupplyApy =
+                yieldModuleApyMap[token.yieldSupplyKey()] ?: return TokenItemState.PromoBannerState.Empty
+
+            return TokenItemState.PromoBannerState.Content(
+                title = resourceReference(
+                    R.string.yield_module_main_screen_promo_banner_message,
+                    wrappedList(yieldSupplyApy),
+                ),
+                onPromoBannerClick = {
+                    onApyLabelClick?.invoke(status, ApySource.YIELD_SUPPLY, yieldSupplyApy.toString())
+                },
+                onCloseClick = {
+                    onYieldPromoCloseClick?.invoke()
+                },
+            )
+        }
+
         private fun CryptoCurrencyStatus.getCryptoPriceState(appCurrency: AppCurrency): TokenItemState.SubtitleState {
             val fiatRate = value.fiatRate
             val priceChange = value.priceChange
@@ -408,18 +449,6 @@ class TokenItemStateConverter(
         }
 
         fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
-
-        private fun CryptoCurrency.stakingKey(): String {
-            if (this is CryptoCurrency.Coin && !network.isStakingSupported) return ""
-
-            if (network.isStakingSupported && this !is CryptoCurrency.Coin) {
-                val isPolygonTokenOnEthereum = this is CryptoCurrency.Token &&
-                    this.network.id.rawId.value == Blockchain.Ethereum.id &&
-                    this.symbol == Blockchain.Polygon.currency
-                if (!isPolygonTokenOnEthereum) return ""
-            }
-            return "${id.rawCurrencyId}_$symbol"
-        }
     }
 
     private data class StakingLocalInfo(
