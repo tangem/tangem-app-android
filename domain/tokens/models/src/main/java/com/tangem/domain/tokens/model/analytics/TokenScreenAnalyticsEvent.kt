@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BALANCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
@@ -58,12 +59,14 @@ sealed class TokenScreenAnalyticsEvent(
         token: String,
         blockchain: String,
         status: String?,
+        derivationIndex: Int? = null,
     ) : TokenScreenAnalyticsEvent(
         event = event,
         params = buildMap {
             put(TOKEN_PARAM, token)
             put(BLOCKCHAIN, blockchain)
             status?.let { put(STATUS, it) }
+            derivationIndex?.let { put(ACCOUNT_DERIVATION_FROM, it.toString()) }
         },
     ) {
 
@@ -71,11 +74,13 @@ sealed class TokenScreenAnalyticsEvent(
             token: String,
             blockchain: String,
             status: String?,
+            derivationIndex: Int? = null,
         ) : ButtonWithParams(
             event = "Button - Buy",
             token = token,
             status = status,
             blockchain = blockchain,
+            derivationIndex = derivationIndex,
         )
 
         class ButtonSell(
@@ -93,22 +98,26 @@ sealed class TokenScreenAnalyticsEvent(
             token: String,
             status: String,
             blockchain: String,
+            derivationIndex: Int? = null,
         ) : ButtonWithParams(
             event = "Button - Exchange",
             token = token,
             status = status,
             blockchain = blockchain,
+            derivationIndex = derivationIndex,
         )
 
         class ButtonSend(
             token: String,
             status: String,
             blockchain: String,
+            derivationIndex: Int? = null,
         ) : ButtonWithParams(
             event = "Button - Send",
             token = token,
             status = status,
             blockchain = blockchain,
+            derivationIndex = derivationIndex,
         )
 
         class ButtonReceive(

@@ -66,7 +66,7 @@ internal class SelectProviderModel @Inject constructor(
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)
 
-        analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened())
         getPaymentMethods()
         getProviders(params.selectedPaymentMethod)
     }
@@ -140,7 +140,7 @@ internal class SelectProviderModel @Inject constructor(
     }
 
     private fun openPaymentMethods() {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened())
         bottomSheetNavigation.activate(
             ProviderListBottomSheetConfig.PaymentMethods(
                 selectedMethodId = state.value.selectedPaymentMethod.paymentMethod.id,

@@ -46,7 +46,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
@@ -217,9 +216,9 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         }
         SpacerW16()
         if (balance.isNotBlank()) {
-            AnimatedContent(targetState = balance, label = "") {
+            AnimatedContent(targetState = balance, label = "") { balanceText ->
                 Text(
-                    text = it,
+                    text = balanceText,
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier
@@ -318,15 +317,15 @@ private fun Content(
                                 style = TangemTheme.typography.body2,
                             )
                         } else {
-                            AnimatedContent(targetState = amountEquivalent, label = "") {
+                            AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
                                 Text(
-                                    text = it,
+                                    text = amount,
                                     color = TangemTheme.colors.text.tertiary,
                                     style = TangemTheme.typography.body2,
                                 )
                             }
                         }
-                        if (type.showWarning) {
+                        if (type.shouldShowWarning) {
                             SpacerW4()
                             IconButton(
                                 onClick = {
@@ -348,9 +347,9 @@ private fun Content(
                         }
                     }
                 } else {
-                    AnimatedContent(targetState = amountEquivalent, label = "") {
+                    AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
                         Text(
-                            text = it,
+                            text = amount,
                             color = TangemTheme.colors.text.tertiary,
                             style = TangemTheme.typography.body2,
                             modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
@@ -409,6 +408,7 @@ fun Token(
     }
 }
 
+@Suppress("NullableToStringCall")
 @Composable
 private fun TokenIcon(
     tokenIconUrl: String,
@@ -595,7 +595,7 @@ private fun TransactionCardPreview() {
 private fun TransactionCardPreviewWithPriceImpact() {
     TransactionCard(
         type = TransactionCardType.ReadOnly(
-            showWarning = true,
+            shouldShowWarning = true,
             accountTitleUM = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = AccountNameUM.DefaultMain.value,
