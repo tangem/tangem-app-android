@@ -44,8 +44,8 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
         Row(
             modifier = Modifier
                 .background(color = bgColor, shape = TangemTheme.shapes.roundedCornersXMedium)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clickable(onClick = state.onPromoBannerClick)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
