@@ -51,7 +51,7 @@ internal class DefaultP2PEthPoolRepository(
             emptyList()
         }
 
-        p2pEthPoolVaultsStore.store(vaults.filter { !it.isPrivate }) // TODO eth isSmoothingPool?
+        p2pEthPoolVaultsStore.store(vaults)
     }
 
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
