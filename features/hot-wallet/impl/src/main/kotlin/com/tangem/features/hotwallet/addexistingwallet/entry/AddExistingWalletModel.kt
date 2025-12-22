@@ -15,8 +15,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
@@ -25,8 +25,8 @@ import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,7 +36,7 @@ import javax.inject.Inject
 internal class AddExistingWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val notificationsRepository: NotificationsRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
@@ -78,8 +78,8 @@ internal class AddExistingWalletModel @Inject constructor(
 
     private fun navigateToPushNotificationsOrNext() {
         modelScope.launch {
-            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            if (shouldRequestPush) {
+            val shouldAskNotificationPermissions = notificationsRepository.shouldAskNotificationPermissionsViaBs()
+            if (shouldAskNotificationPermissions) {
                 stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
@@ -110,7 +110,7 @@ internal class AddExistingWalletModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
                         if (userWalletId != null) {
-                            modelScope.launch {
+                            modelScope.launch(NonCancellable) {
                                 setAccessCodeSkippedUseCase(userWalletId, true)
                             }
                         }
@@ -123,12 +123,16 @@ internal class AddExistingWalletModel @Inject constructor(
     }
 
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
+        var canSkip = true
+
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            showSkipAccessCodeWarningDialog()
+            if (canSkip) {
+                showSkipAccessCodeWarningDialog()
+            }
         }
     }
 
@@ -157,7 +161,12 @@ internal class AddExistingWalletModel @Inject constructor(
             stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(userWalletId, accessCode))
         }
 
+        override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = false
+        }
+
         override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = true
             navigateToPushNotificationsOrNext()
         }
     }
