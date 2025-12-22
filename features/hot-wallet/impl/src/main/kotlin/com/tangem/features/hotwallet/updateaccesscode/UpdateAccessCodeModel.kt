@@ -50,6 +50,10 @@ internal class UpdateAccessCodeModel @Inject constructor(
         stackNavigation.push(UpdateAccessCodeRoute.ConfirmAccessCode(userWalletId, accessCode))
     }
 
+    override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
+        // No-op
+    }
+
     override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
         stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
     }
