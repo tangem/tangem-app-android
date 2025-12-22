@@ -6,13 +6,10 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.networkIconResId
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.domain.models.ReceiveAddressModel
-import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.TokenReceiveNotification
+import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.ens.EnsAddress
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
@@ -111,7 +108,10 @@ internal class TokenReceiveStateFactory(
                 }
                 ReceiveAddressModel.NameService.Ens -> Ens
                 ReceiveAddressModel.NameService.Legacy -> Primary.Legacy(
-                    displayName = TextReference.Res(R.string.domain_receive_assets_legacy_address),
+                    displayName = resourceReference(
+                        R.string.domain_receive_assets_legacy_address,
+                        WrappedList(listOf(cryptoCurrency.name)),
+                    ),
                 )
             }
             ReceiveAddress(
