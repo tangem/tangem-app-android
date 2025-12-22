@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.list.state
+package com.tangem.features.feed.model.market.list.state
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 
