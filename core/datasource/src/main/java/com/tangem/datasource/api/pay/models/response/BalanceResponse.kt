@@ -6,9 +6,9 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class BalanceResponse(
-    @Json(name = "fiat") val fiat: FiatBalance,
-    @Json(name = "crypto") val crypto: CryptoBalance,
-    @Json(name = "available_for_withdrawal") val availableForWithdrawal: AvailableForWithdrawal,
+    @Json(name = "fiat") val fiat: FiatBalance?,
+    @Json(name = "crypto") val crypto: CryptoBalance?,
+    @Json(name = "available_for_withdrawal") val availableForWithdrawal: AvailableForWithdrawal?,
 )
 
 @JsonClass(generateAdapter = true)
