@@ -4,6 +4,9 @@ import android.content.res.Resources
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.AppInstanceIdProvider
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -13,13 +16,15 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.component.DetailsComponent
@@ -29,6 +34,8 @@ import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -46,7 +53,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
-    itemsBuilder: ItemsBuilder,
+    private val itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
@@ -60,6 +67,11 @@ internal class DetailsModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     private val feedbackFeatureToggles: FeedbackFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val tangemPayEligibilityManager: TangemPayEligibilityManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -91,6 +103,8 @@ internal class DetailsModel @Inject constructor(
                 onBuyClick = ::onBuyClick,
             ),
         )
+
+        addTangemPayItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -216,13 +230,32 @@ internal class DetailsModel @Inject constructor(
 
     private fun onBuyClick() {
         modelScope.launch {
-            urlOpener.openUrl(buildBuyLink())
+            if (hotWalletFeatureToggles.isHotWalletEnabled) {
+                analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Settings))
+                generateBuyTangemCardLinkUseCase
+                    .invoke(GenerateBuyTangemCardLinkUseCase.Source.Settings).let { urlOpener.openUrl(it) }
+            } else {
+                // This is incorrect implementation of buy link generation, but it is left here
+                urlOpener.openUrl(buildBuyLink())
+            }
         }
     }
 
     private fun updateState(items: ImmutableList<DetailsItemUM>) {
         state.update { prevState ->
             prevState.copy(items = items)
+        }
+    }
+
+    private fun addTangemPayItemIfEligible() {
+        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
+        modelScope.launch {
+            val isEligible = tangemPayEligibilityManager
+                .getEligibleWallets(shouldExcludePaeraCustomers = true)
+                .isNotEmpty()
+            if (isEligible) {
+                items.update { itemsBuilder.addVisaItem(it) }
+            }
         }
     }
 

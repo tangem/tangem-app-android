@@ -52,7 +52,7 @@ internal fun SendConfirmContent(
                 feeSelectorBlockComponent = feeSelectorBlockComponent,
             )
             if (confirmUM != null) {
-                tapHelp(isDisplay = confirmUM.showTapHelp)
+                tapHelp(isDisplay = confirmUM.isShowTapHelp)
                 with(notificationsComponent) {
                     content(
                         state = notificationsUM,

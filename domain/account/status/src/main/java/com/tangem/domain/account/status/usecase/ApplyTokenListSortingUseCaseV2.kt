@@ -106,6 +106,7 @@ class ApplyTokenListSortingUseCaseV2(
             userWalletId = accountList.userWalletId,
             accounts = accountList.accounts.sortTokens(sortedTokensIdsByAccount, errors),
             totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
             sortType = if (isSortedByBalance) TokensSortType.BALANCE else TokensSortType.NONE,
             groupType = if (isGroupedByNetwork) TokensGroupType.NETWORK else TokensGroupType.NONE,
         ).getOrElse {

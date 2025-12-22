@@ -29,7 +29,7 @@ internal class SelectedWalletAnalyticsSender @Inject constructor(
      * that cannot be processed in [WalletWarningsAnalyticsSender].
      * */
     private fun getEvent(userWallet: UserWallet): AnalyticsEvent? = when {
-        userWallet.isLocked -> WalletScreenAnalyticsEvent.MainScreen.WalletUnlock
+        userWallet.isLocked -> WalletScreenAnalyticsEvent.MainScreen.WalletUnlock()
 
         else -> WalletScreenAnalyticsEvent.MainScreen.WalletSelected(userWallet.isImported())
     }

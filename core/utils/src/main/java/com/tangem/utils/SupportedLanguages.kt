@@ -10,7 +10,7 @@ object SupportedLanguages {
     const val ITALIAN = "it"
     const val JAPANESE = "ja"
     const val UKRAINIAN = "uk"
-    const val CHINESE = "uk"
+    const val CHINESE = "zh"
     const val SPANISH = "es"
 
     val supportedLangugeCodes = listOf(

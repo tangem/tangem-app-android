@@ -62,10 +62,7 @@ internal class TokenActionsModel @Inject constructor(
         )
 
     private fun handledQuickAction(handledAction: HandledQuickAction) {
-        val event = analyticsEventBuilder.quickActionClick(
-            actionUM = handledAction.action,
-            blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
-        )
+        val event = analyticsEventBuilder.getTokenActionClick(actionUM = handledAction.action)
         analyticsEventHandler.send(event)
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return

@@ -118,7 +118,7 @@ internal class DefaultSwapRepository(
                 )
             } catch (exception: Exception) {
                 if (exception is ApiResponseError.HttpException) {
-                    throw ExpressException(errorsDataConverter.convert(exception.errorBody ?: ""))
+                    throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
                 } else {
                     throw exception
                 }
@@ -138,12 +138,12 @@ internal class DefaultSwapRepository(
                     network = initialCurrency.network,
                 )
                 val currenciesList = currencyList
-                    .filter {
-                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, it)
+                    .filter { currency ->
+                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
                         val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
                         isAvailableForSwap
                     }
-                    .map { leastTokenInfoConverter.convert(it) }
+                    .map { currency -> leastTokenInfoConverter.convert(currency) }
 
                 val pairsDeferred = async {
                     getPairsInternal(
@@ -174,7 +174,7 @@ internal class DefaultSwapRepository(
                 )
             } catch (exception: Exception) {
                 if (exception is ApiResponseError.HttpException) {
-                    throw ExpressException(errorsDataConverter.convert(exception.errorBody ?: ""))
+                    throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
                 } else {
                     throw exception
                 }
@@ -221,9 +221,9 @@ internal class DefaultSwapRepository(
                                 .getOrThrow(),
                         )
                     },
-                    catch = {
-                        Timber.e("getExchangeStatus error: $it")
-                        raise(UnknownError(it.message))
+                    catch = { exception ->
+                        Timber.e("getExchangeStatus error: $exception")
+                        raise(UnknownError(exception.message))
                     },
                 )
             }
@@ -420,7 +420,7 @@ internal class DefaultSwapRepository(
 
     private fun getDataError(ex: Exception): ExpressDataError {
         return if (ex is ApiResponseError.HttpException) {
-            errorsDataConverter.convert(ex.errorBody ?: "")
+            errorsDataConverter.convert(ex.errorBody.orEmpty())
         } else {
             ExpressDataError.UnknownError
         }

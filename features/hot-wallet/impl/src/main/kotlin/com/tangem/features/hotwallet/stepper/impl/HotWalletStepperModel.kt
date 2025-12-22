@@ -31,12 +31,6 @@ internal class HotWalletStepperModel @Inject constructor(
     }
 
     fun onSkipClick() {
-        // TODO send analytics
         params.callback.onSkipClick()
-    }
-
-    fun onFeedbackClick() {
-        // TODO send analytics
-        // openFeedback()
     }
 }

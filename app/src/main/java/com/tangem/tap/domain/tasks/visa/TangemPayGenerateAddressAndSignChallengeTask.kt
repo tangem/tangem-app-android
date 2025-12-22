@@ -3,7 +3,6 @@ package com.tangem.tap.domain.tasks.visa
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.CardWallet
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
@@ -11,7 +10,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
+import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.VisaDataToSignByCustomerWallet
@@ -31,7 +30,7 @@ import kotlinx.coroutines.withContext
 class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
     @Assisted private val coroutineScope: CoroutineScope,
     private val dispatchersProvider: CoroutineDispatcherProvider,
-    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
+    private val tangemPayRemoteDataSource: TangemPayRemoteDataSource,
 ) : CardSessionRunnable<TangemPayInitialCredentials> {
 
     override fun run(session: CardSession, callback: CompletionCallback<TangemPayInitialCredentials>) {
@@ -42,17 +41,19 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
 
     private suspend fun runSuspend(session: CardSession): CompletionResult<TangemPayInitialCredentials> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+        val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.curve }
             ?: return CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError)
 
         val address = when (val derivationResult = runDerivationTask(session, wallet)) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(derivationResult.error)
-            is CompletionResult.Success<ExtendedPublicKey> -> generateAddressFromExtendedKey(derivationResult.data)
+            is CompletionResult.Success<ExtendedPublicKey> -> VisaUtilities.generateAddressFromExtendedKey(
+                extendedPublicKey = derivationResult.data,
+            )
         }
 
         val userWalletId = UserWalletIdBuilder.walletPublicKey(wallet.publicKey)
         val challenge = withContext(dispatchersProvider.io) {
-            visaAuthRemoteDataSource.getCustomerWalletAuthChallenge(
+            tangemPayRemoteDataSource.getCustomerWalletAuthChallenge(
                 customerWalletAddress = address,
                 customerWalletId = userWalletId.stringValue,
             )
@@ -71,7 +72,7 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         }
 
         val authTokens = withContext(dispatchersProvider.io) {
-            visaAuthRemoteDataSource.getTokenWithCustomerWallet(
+            tangemPayRemoteDataSource.getTokenWithCustomerWallet(
                 sessionId = challenge.session.sessionId,
                 signature = signedData.signature,
                 nonce = signedData.dataToSign.hashToSign,
@@ -117,14 +118,6 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         )
         task.run(session = session, callback = deferred::complete)
         return deferred.await()
-    }
-
-    private fun generateAddressFromExtendedKey(extendedPublicKey: ExtendedPublicKey): String {
-        val derivationData = VisaUtilities.visaBlockchain.makeAddressesFromExtendedPublicKey(
-            extendedPublicKey = extendedPublicKey,
-            cachedIndex = null,
-        )
-        return derivationData.address
     }
 
     @AssistedFactory

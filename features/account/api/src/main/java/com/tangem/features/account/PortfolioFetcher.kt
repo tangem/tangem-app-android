@@ -26,7 +26,7 @@ interface PortfolioFetcher {
 
         val isSingleChoice: Boolean = balances.values
             .map { it.accountsBalance.accountStatuses }
-            .flatten().size == 1
+            .sumOf { it.size } == 1
 
         fun isSingleChoice(walletId: UserWalletId): Boolean = balances[walletId]
             ?.accountsBalance
@@ -43,7 +43,7 @@ interface PortfolioFetcher {
     }
 
     sealed interface Mode {
-        data class All(val onlyMultiCurrency: Boolean) : Mode
+        data class All(val isOnlyMultiCurrency: Boolean) : Mode
         data class Wallet(val walletId: UserWalletId) : Mode
     }
 

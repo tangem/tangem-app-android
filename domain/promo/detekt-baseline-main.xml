@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NullableBooleanCheck:GetStoryContentUseCase.kt$GetStoryContentUseCase$isFCAAllowed(id).firstOrNull() ?: false</ID>
+  </CurrentIssues>
+</SmellBaseline>

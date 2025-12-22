@@ -27,7 +27,12 @@ internal class FeeSelectorCustomValueChangedTransformer(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             normalFee = state.selectedFeeItem.fee,
         )
-        val updatedCustomValues = customFeeConverter.onValueChange(state, customFee.customValues, index, value)
+        val updatedCustomValues = customFeeConverter.onValueChange(
+            feeSelectorState = state,
+            customValues = customFee.customValues,
+            index = index,
+            value = value,
+        )
         val newCustomFee = customFee.copy(
             fee = customFeeConverter.convertBack(updatedCustomValues),
             customValues = updatedCustomValues,

@@ -61,7 +61,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     val onDone = MutableSharedFlow<Params.DoneEvent>()
 
     init {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ActivationInProgressScreen)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ActivationInProgressScreen())
         runShortPolling()
     }
 

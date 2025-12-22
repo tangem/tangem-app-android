@@ -2,6 +2,7 @@ package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.AccountPortfolioItemUMConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -24,6 +25,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.extension.isAccountsSupported
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
@@ -46,6 +48,7 @@ internal class AccountItemsDelegate @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
@@ -72,7 +75,10 @@ internal class AccountItemsDelegate @Inject constructor(
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
-                onClick = { openAccountDetails(this.account) },
+                onClick = {
+                    analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
+                    openAccountDetails(this.account)
+                },
                 appCurrency = appCurrency,
                 accountBalance = this.tokenList.totalFiatBalance,
                 isBalanceHidden = isBalanceHidden,
@@ -107,14 +113,22 @@ internal class AccountItemsDelegate @Inject constructor(
                 title = resourceReference(R.string.account_form_title_create),
                 isAddAccountEnabled = isAddAccountEnabled,
                 onAddAccountClick = {
-                    if (isAddAccountEnabled) openAddAccount(userWalletId) else canNotAddAccountDialog()
+                    if (isAddAccountEnabled) {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAddAccount())
+                        openAddAccount(userWalletId)
+                    } else {
+                        canNotAddAccountDialog()
+                    }
                 },
             ),
             archivedAccounts = if (isArchivedAccountsEnabled) {
                 BlockUM(
                     text = resourceReference(R.string.account_archived_accounts),
                     iconRes = R.drawable.ic_archive_24,
-                    onClick = { openArchivedAccounts(userWalletId) },
+                    onClick = {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonArchivedAccounts())
+                        openArchivedAccounts(userWalletId)
+                    },
                 )
             } else {
                 null

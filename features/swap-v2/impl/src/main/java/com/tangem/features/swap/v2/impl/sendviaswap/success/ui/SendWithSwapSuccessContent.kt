@@ -344,7 +344,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     txUrl = "https://tangem.com",
                     provider = ExpressProvider(
                         providerId = "changelly",
-                        rateTypes = listOf(),
+                        rateTypes = emptyList(),
                         name = "Changelly",
                         type = ExpressProviderType.CEX,
                         imageLarge = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/changelly-1024.png",
