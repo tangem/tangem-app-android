@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.network.TxInfo.TransactionStatus
 import com.tangem.domain.models.network.TxInfo.TransactionType
@@ -20,6 +21,7 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
 
 internal class TxHistoryItemStateConverter(
+    private val currency: CryptoCurrency,
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: WalletClickIntents,
@@ -49,7 +51,9 @@ internal class TxHistoryItemStateConverter(
         R.drawable.ic_close_24
     } else {
         when (type) {
-            is TransactionType.Approve -> R.drawable.ic_doc_24
+            is TransactionType.YieldSupply.DeployContract,
+            is TransactionType.Approve,
+            -> R.drawable.ic_doc_24
             is TransactionType.Staking.Stake,
             is TransactionType.Staking.Vote,
             is TransactionType.Staking.Restake,
@@ -59,11 +63,16 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.Staking.Unstake,
             is TransactionType.Staking.Withdraw,
             -> R.drawable.ic_transaction_history_unstaking_24
+            is TransactionType.YieldSupply.Enter -> R.drawable.ic_connect_24
+            is TransactionType.YieldSupply.InitializeToken -> R.drawable.ic_gear_24
+            is TransactionType.YieldSupply.ReactivateToken -> R.drawable.ic_refresh_24
+            is TransactionType.YieldSupply.Exit -> R.drawable.ic_disconnect_24
             is TransactionType.Operation,
             is TransactionType.Swap,
             is TransactionType.Transfer,
-            is TransactionType.YieldSupply,
             is TransactionType.UnknownOperation,
+            is TransactionType.YieldSupply.Send,
+            TransactionType.YieldSupply.Topup,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
     }
@@ -74,32 +83,83 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_enter)
-        is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
-        is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
         is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
         is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
         is TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
         is TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
         is TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
+        is TransactionType.YieldSupply -> when (type) {
+            is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_enter)
+            is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
+            TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
+            is TransactionType.YieldSupply.Send -> {
+                if (type.isYieldSupplyWithdraw || isOutgoing) {
+                    resourceReference(R.string.yield_module_transaction_withdraw)
+                } else {
+                    resourceReference(R.string.common_transfer)
+                }
+            }
+            is TransactionType.YieldSupply.DeployContract -> resourceReference(
+                R.string
+                    .yield_module_transaction_deploy_contract,
+            )
+            is TransactionType.YieldSupply.InitializeToken -> resourceReference(
+                R.string
+                    .yield_module_transaction_initialize,
+            )
+            is TransactionType.YieldSupply.ReactivateToken -> resourceReference(
+                R.string
+                    .yield_module_transaction_reactivate,
+            )
+        }
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
     private fun TxInfo.extractSubtitle(): TextReference {
-        return when (this.type) {
-            is TransactionType.YieldSupply.Enter -> {
-                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
-                resourceReference(R.string.yield_module_transaction_enter_subtitle, wrappedList(amount))
-            }
-            is TransactionType.YieldSupply.Topup,
-            -> {
-                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
-                resourceReference(R.string.yield_module_transaction_topup_subtitle, wrappedList(amount))
-            }
-            is TransactionType.YieldSupply.Exit -> {
-                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
-                resourceReference(R.string.yield_module_transaction_exit_subtitle, wrappedList(amount))
+        return when (val type = this.type) {
+            is TransactionType.YieldSupply -> if (currency is CryptoCurrency.Coin) {
+                resourceReference(
+                    R.string.transaction_history_transaction_for_address,
+                    wrappedList(type.address?.toBriefAddressFormat().orEmpty()),
+                )
+            } else {
+                when (type) {
+                    is TransactionType.YieldSupply.Enter -> {
+                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        resourceReference(
+                            R.string.yield_module_transaction_enter_subtitle,
+                            wrappedList(amount),
+                        )
+                    }
+                    TransactionType.YieldSupply.Topup -> {
+                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        resourceReference(
+                            R.string.yield_module_transaction_topup_subtitle,
+                            wrappedList(amount),
+                        )
+                    }
+                    is TransactionType.YieldSupply.Send -> {
+                        if (isOutgoing || !type.isYieldSupplyWithdraw) {
+                            extractSubtitleByAddressType()
+                        } else {
+                            val amount =
+                                amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                            resourceReference(
+                                R.string.yield_module_transaction_exit_subtitle,
+                                wrappedList(amount),
+                            )
+                        }
+                    }
+                    is TransactionType.YieldSupply.Exit -> {
+                        val amount = amount.format { crypto(symbol = currency.symbol, decimals = currency.decimals) }
+                        resourceReference(
+                            R.string.yield_module_transaction_exit_subtitle,
+                            wrappedList(amount),
+                        )
+                    }
+                    else -> extractSubtitleByAddressType()
+                }
             }
             else -> extractSubtitleByAddressType()
         }
@@ -147,14 +207,18 @@ internal class TxHistoryItemStateConverter(
 
     @Suppress("ComplexCondition")
     private fun TxInfo.getAmount(): String {
-        if (type is TransactionType.Staking.Vote ||
-            type == TransactionType.Staking.ClaimRewards ||
-            type == TransactionType.Staking.Withdraw ||
-            type == TransactionType.YieldSupply.Enter ||
-            type == TransactionType.YieldSupply.Exit ||
-            type == TransactionType.YieldSupply.Topup
-        ) {
-            return ""
+        when (type) {
+            is TransactionType.Staking.Vote,
+            TransactionType.Staking.ClaimRewards,
+            TransactionType.Staking.Withdraw,
+            -> return ""
+
+            is TransactionType.YieldSupply -> {
+                if (currency is CryptoCurrency.Token && type == TransactionType.YieldSupply.Send && !isOutgoing) {
+                    return ""
+                }
+            }
+            else -> Unit
         }
         val prefix = when {
             status == TransactionStatus.Failed -> ""
