@@ -7,16 +7,16 @@ fun CryptoCurrency.Token.yieldSupplyKey(): String {
 }
 
 fun CryptoCurrencyStatus.hasNotSuppliedAmount(): Boolean {
-    val notSupplied = notSuppliedAmountOrNull() ?: return false
+    val notSupplied = notSuppliedCryptoAmountOrNull() ?: return false
     return notSupplied > BigDecimal.ZERO
 }
 
-fun CryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustAmount: BigDecimal): Boolean {
-    val notSupplied = notSuppliedAmountOrNull() ?: return false
+fun CryptoCurrencyStatus.shouldShowNotSuppliedNotification(dustAmount: BigDecimal): Boolean {
+    val notSupplied = notSuppliedCryptoAmountOrNull()?.multiply(this.value.fiatRate) ?: return false
     return notSupplied >= dustAmount
 }
 
-fun CryptoCurrencyStatus.notSuppliedAmountOrNull(): BigDecimal? {
+fun CryptoCurrencyStatus.notSuppliedCryptoAmountOrNull(): BigDecimal? {
     if (this.currency !is CryptoCurrency.Token) return null
 
     val supplyStatus = this.value.yieldSupplyStatus
