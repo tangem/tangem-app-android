@@ -103,10 +103,10 @@
   <string name="app_settings_enable_biometrics_description">設定に移動して、Tangemアプリで生体認証を有効にします。</string>
   <string name="app_settings_enable_biometrics_title">生体認証を有効にする</string>
   <string name="app_settings_off_biometrics_alert_message">%1$sが無効になると、アプリのロックを解除してウォレットを操作するために、パスコードを入力する必要があります。</string>
-  <string name="app_settings_off_require_access_code_alert_message">後でウォレットのアクセスコードを入力してもらいます。それを安全に保存し、今後の利用に備えるためです。</string>
-  <string name="app_settings_off_saved_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。ウォレットでの今後の操作には、アクセスコードの送信が必要になります。</string>
+  <string name="app_settings_off_require_access_code_alert_message">安全に保管するため、後ほどアクセスコードの入力を求められます。</string>
+  <string name="app_settings_off_saved_access_code_alert_message">保存されているすべてのウォレットのアクセスコードが削除されます。ウォレットを使用するには、再度アクセスコードを入力する必要があります。</string>
   <string name="app_settings_off_saved_wallet_alert_message">保存したデバイスを削除すると、保存されているすべてのウォレットとそのアクセスコードがアプリから削除されます。</string>
-  <string name="app_settings_on_require_access_code_alert_message">これにより、保存されているウォレットアクセスコードがすべて削除されます。今後ウォレットを操作するには、アクセスコードの送信が必要になります。</string>
+  <string name="app_settings_on_require_access_code_alert_message">保存されているすべてのウォレットのアクセスコードが削除されます。ウォレットを使用するには、再度アクセスコードを入力する必要があります。</string>
   <string name="app_settings_require_access_code">アクセスコードを要求する</string>
   <string name="app_settings_require_access_code_footer">このオプションを選択すると、機密性の高い操作における生体認証が無効になります。取引に署名するたびにアクセスコードを入力する必要があります。</string>
   <string name="app_settings_saved_access_codes">アクセスコードを保存</string>
@@ -144,10 +144,10 @@
   <string name="balance_hidden_title">残高は非表示</string>
   <string name="beta_mode_warning_message">ブロックチェーン開発者によると、Kaspaトークンは現在ベータ版です。アップデートをお楽しみに！</string>
   <string name="beta_mode_warning_title">ベータモード</string>
-  <string name="biometric_disabled_warning_description">デバイスで生体認証がオフになっているため、ウォレットのロック解除に使用できません。生体認証を再度利用するには、デバイスの設定で有効にしてください。</string>
+  <string name="biometric_disabled_warning_description">この端末では生体認証がオフになっているため、ウォレットの解除に使用できません。再度この方法を使用するには、端末の設定で生体認証を有効にしてください。</string>
   <string name="biometric_disabled_warning_title">生体認証が無効になっています</string>
   <string name="biometric_lockout_permanent_warning_description">カードまたはリングをスキャンしてください</string>
-  <string name="biometric_lockout_permanent_warning_description_2">生体認証の試行回数が上限に達しました。端末タップまたはアクセスコードでウォレットを解除してください。</string>
+  <string name="biometric_lockout_permanent_warning_description_2">生体認証の試行回数の上限に達しました。カード／リングでウォレットを解除するか、アクセスコードを入力してください。</string>
   <string name="biometric_lockout_permanent_warning_title">生体認証がロックされています</string>
   <string name="biometric_lockout_warning_description">30秒後に再試行するか、カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_description_2">生体認証ログインは一時的にロックされています。30秒後にもう一度お試しいただくか、端末タップまたはアクセスコードでウォレットを解除してください。</string>
@@ -179,7 +179,7 @@
   <string name="card_reset_alert_finish_ok_button">もう一度アップグレードしてください</string>
   <string name="card_reset_alert_finish_title">リセット完了</string>
   <string name="card_reset_alert_incomplete_message">このウォレット内のすべてのTangemデバイスで、リセット処理を完了することを推奨します。</string>
-  <string name="card_reset_alert_incomplete_title">すべてのTangemデバイスをリセットしていません</string>
+  <string name="card_reset_alert_incomplete_title">リセットが必要なTangemデバイスがあります。</string>
   <string name="card_settings_access_code_recovery_disabled_description">このカードを使用して、このウォレット内の他のカードまたはリングのアクセスコードをリセットしたくない場合は、このオプションを無効にしてください。これにより、このカードのアクセスコードもリセットできなくなりますのでご注意ください。</string>
   <string name="card_settings_access_code_recovery_enabled_description">このカードを使用して、このウォレット内の他のカードのアクセスコードをリセットできます。</string>
   <string name="card_settings_access_code_recovery_title">アクセスコードの復元</string>
@@ -378,6 +378,7 @@
   <string name="common_transfer">送金</string>
   <string name="common_unable_to_load">データを読み込めません…</string>
   <string name="common_understand">わかりました</string>
+  <string name="common_understand_continue">理解して続行</string>
   <string name="common_unknown_error">エラーが発生しました。もう一度お試しください。</string>
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
@@ -567,7 +568,7 @@
   <string name="home_button_create_new_wallet">新しいウォレットを作成する</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
-  <string name="hot_access_code_set_biometric_ask">「Tangem」に生体認証の使用を許可しますか？\n本人確認とアプリの起動のために使用されます。</string>
+  <string name="hot_access_code_set_biometric_ask">「Tangem」が生体認証を使用して本人確認を行い、アプリを開くことを許可しますか？</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
   <string name="hot_crypto_token_network">%sネットワーク</string>
   <string name="hw_access_code_create_alert_title">アクセスコードの設定をキャンセルしてもよろしいですか？</string>
@@ -1059,6 +1060,7 @@
   <string name="reset_card_to_factory_button_title">カードをリセットする</string>
   <string name="reset_card_to_factory_condition_1">この操作を実行すると、現在のウォレットにアクセスできなくなることを理解しています。</string>
   <string name="reset_card_to_factory_condition_2">このカードを使用して、現在のウォレットの他のカードのアクセスコードを回復させられないことを認識しています。</string>
+  <string name="reset_card_to_factory_condition_3">復元は不可能であり、Tangem Payカードおよびカード上のすべての資金へのアクセスを完全に失うことを理解しました</string>
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="reset_cards_dialog_complete_description">すべてのTangemデバイスがリセットされました。</string>
@@ -1067,6 +1069,8 @@
   <string name="reset_cards_dialog_next_device_description">続行するには次のデバイスをリセットしてください</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
   <string name="ring_promo_title">今すぐ手数料0% でスワップしましょう！</string>
+  <string name="root_detected_warning_description">Rootアクセスが有効な端末は、セキュリティが低いと判断されます。データが追加のリスクにさらされる可能性があります。</string>
+  <string name="root_detected_warning_title">Rootアクセスが検出されました</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
   <string name="save_user_wallet_agreement_access_title">アプリにアクセスする</string>
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
@@ -1402,6 +1406,7 @@
   <string name="tangem_pay_freeze_card_success">カードが凍結されています</string>
   <string name="tangem_pay_get_help">サポートを受ける</string>
   <string name="tangem_pay_other">その他</string>
+  <string name="tangem_pay_rooted_device_subtitle">Root化された端末では使用できません</string>
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
   <string name="tangem_pay_status_pending">保留中</string>
@@ -1414,6 +1419,8 @@
   <string name="tangem_pay_unfreeze_card_failed">カードの凍結解除に失敗しました。しばらくしてからもう一度お試しください。</string>
   <string name="tangem_pay_unfreeze_card_success">カードの凍結が解除されました</string>
   <string name="tangem_pay_withdrawal">出金</string>
+  <string name="tangempay_account_unable_to_use_rooted">Root化された端末では使用できません</string>
+  <string name="tangempay_cancel_kyc">KYCをキャンセル</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
   <string name="tangempay_card_details_card_number">カード番号</string>
@@ -1441,6 +1448,7 @@
   <string name="tangempay_card_details_open_wallet_step_5">準備完了！カードはすぐに使用できます。</string>
   <string name="tangempay_card_details_open_wallet_title">Google Payにカードを追加する</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Apple Payにカードを追加する</string>
+  <string name="tangempay_card_details_pin_code">PINコード</string>
   <string name="tangempay_card_details_receive_description">アドレスを共有するか、QRコードを表示してください。</string>
   <string name="tangempay_card_details_receive_error_description">技術的な問題が検出されました。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。</string>
   <string name="tangempay_card_details_receive_error_title">現在、受け取りは利用できません</string>
@@ -1449,12 +1457,15 @@
   <string name="tangempay_card_details_swap_description">ポートフォリオ内のあらゆる資産をカードと交換</string>
   <string name="tangempay_card_details_title">カードの詳細</string>
   <string name="tangempay_card_details_unfreeze_card">カードの一時停止を解除</string>
+  <string name="tangempay_card_details_view_pin_code_description">忘れた場合は、アプリに戻ってください。</string>
+  <string name="tangempay_card_details_view_pin_code_title">PINコード</string>
   <string name="tangempay_card_details_withdraw">出金</string>
   <string name="tangempay_card_details_withdraw_error_title">現在、出金ができません</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">現在の処理が完了するまでは、スワップや新しい出金を開始することはできません。</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">出金処理中です</string>
   <string name="tangempay_change_pin_code">PINコードを変更</string>
   <string name="tangempay_come_back_if_forget_pin">忘れた場合はアプリに戻って確認できます。</string>
+  <string name="tangempay_factory_settings_warning_title">復元は不可能であり、Tangem Payカードおよびカード上のすべての資金へのアクセスを完全に失うことを理解しました</string>
   <string name="tangempay_failed_to_issue_card">カードの発行に失敗しました</string>
   <string name="tangempay_failed_to_issue_card_retry_description">技術的なエラーが発生しました。下のボタンをクリックして、もう一度お試しください。</string>
   <string name="tangempay_failed_to_issue_card_support_description">技術的なエラーが発生しました。サポートへお問い合わせください。</string>
@@ -1471,6 +1482,7 @@
   <string name="tangempay_kyc_in_progress">KYC進行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
+  <string name="tangempay_kyc_in_progress_popup_description">以下のボタンから、現在のKYCステータスを確認するか、KYCをキャンセルできます。</string>
   <string name="tangempay_onboarding_banner_description">暗号資産を、リアルな支払いに。\n他とはまったく違う、新しいタイプの決済カード。</string>
   <string name="tangempay_onboarding_banner_title">Tangem Visaカード</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
@@ -1488,7 +1500,7 @@
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_sync_needed">同期が必要です</string>
   <string name="tangempay_tangem_visa_card">Tangem Visaカード</string>
-  <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
+  <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">カードまたはリングを使用して、支払いアカウントへのアクセスを復元してください。</string>
   <string name="tangempay_your_pin_code">PINコード</string>
@@ -1572,7 +1584,7 @@
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
-  <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
+  <string name="user_wallet_list_add_button">ウォレットを追加</string>
   <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
   <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
   <string name="user_wallet_list_error_unable_to_unlock">エラーが発生しました。カードまたはリングをスキャンしてログインしてください。</string>
@@ -1879,7 +1891,7 @@
   <string name="wc_warning_transaction">不審な取引</string>
   <string name="welcome_create_wallet_already_have">すでにTangemウォレットをお持ちですか？</string>
   <string name="welcome_create_wallet_feature_assets">数千種類の資産</string>
-  <string name="welcome_create_wallet_feature_class">業界最高水準のハードウェアウォレット</string>
+  <string name="welcome_create_wallet_feature_class">最高水準のハードウェアウォレット</string>
   <string name="welcome_create_wallet_feature_delivery">迅速な配送</string>
   <string name="welcome_create_wallet_feature_one_tap">ワンタップで開始</string>
   <string name="welcome_create_wallet_feature_seamless">シームレスで安全</string>
