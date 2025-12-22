@@ -328,6 +328,7 @@
   <string name="common_week">semaine</string>
   <string name="common_with">avec</string>
   <string name="common_yes">Oui</string>
+  <string name="common_yield_mode">Mode Rendement</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
   <string name="custom_token_contract_address_input_title">Adresse du contrat</string>
@@ -895,6 +896,8 @@
   <string name="reset_card_without_backup_to_factory_message">La réinitialisation aux paramètres d\'usine supprimera complètement le portefeuille de la carte sélectionnée et le supprimera de l\'application. Vous ne pourrez pas restaurer le portefeuille actuel.</string>
   <string name="ring_promo_text">Les propriétaires du Tangem Ring ont droit à 3 swap gratis sur Changelly jusqu\'au 15/11 !</string>
   <string name="ring_promo_title">Échangez avec 0 % de frais !</string>
+  <string name="root_detected_warning_description">Les appareils disposant d\'un accès root sont considérés comme moins sécurisés. Vos données peuvent être exposées à des risques supplémentaires.</string>
+  <string name="root_detected_warning_title">Accès root détecté</string>
   <string name="save_user_wallet_agreement_access_description">Connectez-vous à l\'application et vérifiez votre solde sans scanner la carte</string>
   <string name="save_user_wallet_agreement_access_title">Accéder à l\'application</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Autoriser l\'utilisation de la biométrie</string>
@@ -1300,11 +1303,11 @@
   <string name="tangempay_onboarding_security_description">Un compte de paiement séparé sera créé sans divulguer vos adresses et actifs</string>
   <string name="tangempay_onboarding_security_title">Confidentialité inégalée</string>
   <string name="tangempay_onboarding_title">Obtenez votre carte Tangem Pay gratuite en quelques minutes</string>
-  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account">Compte de paiement</string>
   <string name="tangempay_payment_account_sync_needed">Synchronisation du compte de paiement nécessaire</string>
   <string name="tangempay_service_unavailable_description">Nous réparons un problème technique. Veuillez réessayer plus tard.</string>
   <string name="tangempay_service_unavailable_title">Service temporairement indisponible</string>
-  <string name="tangempay_service_unreachable_try_later">Le service est actuellement indisponible. Veuillez réessayer plus tard.</string>
+  <string name="tangempay_service_unreachable_try_later">Les données ne peuvent pas être affichées pour le moment, mais les paiements par carte fonctionnent toujours.</string>
   <string name="tangempay_sync_needed">Synchronisation requise</string>
   <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
@@ -1408,6 +1411,9 @@
   <string name="visa_onboarding_in_progress_description">Cela ne prendra pas longtemps. Nous configurons votre compte.</string>
   <string name="visa_onboarding_in_progress_issuer_description">Cela ne prendra pas longtemps. Nous terminons l\'activation.</string>
   <string name="visa_onboarding_in_progress_title">Tout est en cours de préparation !</string>
+  <string name="visa_onboarding_pin_code_description">Créez un code à 4 chiffres. Il servira pour les paiements.</string>
+  <string name="visa_onboarding_pin_code_title">Créer un code PIN</string>
+  <string name="visa_onboarding_pin_not_accepted">Le code PIN n\'a pas été accepté. Veuillez réessayer ou utiliser un autre code.</string>
   <string name="visa_onboarding_pin_validation_error_message">Code PIN invalide : évitez les séquences ou les répétitions</string>
   <string name="visa_onboarding_wallet_connect_title">Accéder le site Web</string>
   <string name="visa_onboarding_welcome_back_description">Continuons la configuration de votre compte.</string>
