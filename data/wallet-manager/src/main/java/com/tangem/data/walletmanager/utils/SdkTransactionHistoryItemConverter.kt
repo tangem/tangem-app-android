@@ -8,9 +8,13 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem as
 
 internal class SdkTransactionHistoryItemConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
+    yieldSupplyAddresses: Set<String>,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
-    private val typeConverter by lazy { SdkTransactionTypeConverter(smartContractMethods) }
+    private val typeConverter by lazy { SdkTransactionTypeConverter(
+        smartContractMethods = smartContractMethods,
+        yieldSupplyAddresses = yieldSupplyAddresses,
+    ) }
 
     override fun convert(value: SdkTransactionHistoryItem): TxInfo = TxInfo(
         txHash = value.txHash,
@@ -24,7 +28,7 @@ internal class SdkTransactionHistoryItemConverter(
             SdkTransactionHistoryItem.TransactionStatus.Failed -> TxInfo.TransactionStatus.Failed
             SdkTransactionHistoryItem.TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
         },
-        type = typeConverter.convert(value.type to value.destinationType.toDomain()),
+        type = typeConverter.convert(value),
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
     )
 
