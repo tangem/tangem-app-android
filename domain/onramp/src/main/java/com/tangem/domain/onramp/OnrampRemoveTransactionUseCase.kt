@@ -11,10 +11,13 @@ class OnrampRemoveTransactionUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(txId: String?): Either<OnrampError, Unit> {
+    suspend operator fun invoke(txId: String?, forceRemove: Boolean = false): Either<OnrampError, Unit> {
         if (txId == null) return OnrampError.DomainError("Transaction id not provided").left()
 
         return Either.catch {
+            if (!forceRemove) {
+                onrampTransactionRepository.storeHandledTransaction(txId)
+            }
             onrampTransactionRepository.removeTransaction(txId)
         }.mapLeft(errorResolver::resolve)
     }
