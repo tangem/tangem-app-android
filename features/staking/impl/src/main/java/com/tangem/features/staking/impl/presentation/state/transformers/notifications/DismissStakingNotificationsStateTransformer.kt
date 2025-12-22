@@ -13,7 +13,7 @@ internal class DismissStakingNotificationsStateTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val updatedNotifications = confirmationState?.notifications
-            ?.filterNot { it::class == notification }?.toPersistentList()
+            ?.filterNot { it::class.java == notification }?.toPersistentList()
             ?: persistentListOf()
 
         return prevState.copy(
