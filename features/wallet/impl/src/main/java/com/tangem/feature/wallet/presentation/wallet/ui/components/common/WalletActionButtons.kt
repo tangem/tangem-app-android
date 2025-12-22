@@ -2,12 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.runtime.*
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
@@ -66,16 +64,10 @@ internal fun LazyListScope.actions(
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val fontSizeRange = FontSizeRange(min = 10.sp, max = 14.sp)
-            var fontSizeValue by remember { mutableFloatStateOf(fontSizeRange.max.value) }
-
             actions.fastForEach { action ->
                 key(action::class.java) {
                     MultiCurrencyAction(
                         config = action.config,
-                        fontSizeValue = fontSizeValue.sp,
-                        fontSizeRange = fontSizeRange,
-                        onFontSizeChange = { fontSizeValue = it },
                         modifier = Modifier.weight(1f),
                     )
                 }
