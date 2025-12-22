@@ -16,6 +16,9 @@ import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.feed.entry.components.FeedEntryRoute
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
@@ -38,10 +41,7 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerOnMain
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerInSettings
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -121,6 +121,8 @@ internal class ChildFactory @Inject constructor(
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
     private val yieldSupplyActiveComponentFactory: YieldSupplyActiveComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val feedFeatureToggle: FeedFeatureToggle,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -204,21 +206,39 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
-                createComponentChild(
-                    context = context,
-                    params = MarketsTokenDetailsComponent.Params(
-                        token = route.token,
-                        appCurrency = route.appCurrency,
-                        shouldShowPortfolio = route.shouldShowPortfolio,
-                        analyticsParams = route.analyticsParams?.let { params ->
-                            MarketsTokenDetailsComponent.AnalyticsParams(
-                                blockchain = params.blockchain,
-                                source = params.source,
-                            )
-                        },
-                    ),
-                    componentFactory = marketsTokenDetailsComponentFactory,
-                )
+                if (feedFeatureToggle.isFeedEnabled) {
+                    createComponentChild(
+                        context = context,
+                        params = FeedEntryRoute.MarketTokenDetails(
+                            token = route.token,
+                            appCurrency = route.appCurrency,
+                            shouldShowPortfolio = route.shouldShowPortfolio,
+                            analyticsParams = route.analyticsParams?.let { params ->
+                                FeedEntryRoute.MarketTokenDetails.AnalyticsParams(
+                                    blockchain = params.blockchain,
+                                    source = params.source,
+                                )
+                            },
+                        ),
+                        componentFactory = feedEntryComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = MarketsTokenDetailsComponent.Params(
+                            token = route.token,
+                            appCurrency = route.appCurrency,
+                            shouldShowPortfolio = route.shouldShowPortfolio,
+                            analyticsParams = route.analyticsParams?.let { params ->
+                                MarketsTokenDetailsComponent.AnalyticsParams(
+                                    blockchain = params.blockchain,
+                                    source = params.source,
+                                )
+                            },
+                        ),
+                        componentFactory = marketsTokenDetailsComponentFactory,
+                    )
+                }
             }
             is AppRoute.Onramp -> {
                 createComponentChild(
