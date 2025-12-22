@@ -3,8 +3,10 @@ package com.tangem.features.hotwallet.accesscode.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,9 +18,14 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.haptic.TangemHapticEffect
+import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "LongMethod")
 @Composable
@@ -27,6 +34,24 @@ internal fun AccessCode(
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
+    if (state.isLoading) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors.background.primary)
+                .navigationBarsPadding(),
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(20.dp),
+                color = TangemTheme.colors.icon.secondary,
+                strokeWidth = 2.dp,
+            )
+        }
+        return
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -88,6 +113,20 @@ internal fun AccessCode(
             }
         }
     }
+
+    val hapticManager = LocalHapticManager.current
+
+    LaunchedEffect(state.accessCodeColor) {
+        when (state.accessCodeColor) {
+            PinTextColor.WrongCode -> {
+                launch(NonCancellable) {
+                    delay(timeMillis = 500)
+                    hapticManager.perform(TangemHapticEffect.View.Reject)
+                }
+            }
+            else -> Unit
+        }
+    }
 }
 
 @Preview(showBackground = true, widthDp = 360)
@@ -101,6 +140,7 @@ private fun PreviewSet() {
                 accessCodeColor = PinTextColor.Primary,
                 onAccessCodeChange = {},
                 isConfirmMode = false,
+                isLoading = false,
             ),
         )
     }
@@ -117,6 +157,23 @@ private fun PreviewConfirm() {
                 accessCodeColor = PinTextColor.Success,
                 onAccessCodeChange = {},
                 isConfirmMode = true,
+                isLoading = false,
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun PreviewConfirmLoading() {
+    TangemThemePreview {
+        AccessCode(
+            state = AccessCodeUM(
+                accessCode = "123456",
+                accessCodeColor = PinTextColor.Success,
+                onAccessCodeChange = {},
+                isConfirmMode = true,
+                isLoading = true,
             ),
         )
     }

@@ -53,6 +53,7 @@ internal class AccessCodeComponent @AssistedInject constructor(
 
     interface ModelCallbacks {
         fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String)
+        fun onAccessCodeUpdateStarted(userWalletId: UserWalletId)
         fun onAccessCodeUpdated(userWalletId: UserWalletId)
     }
 
