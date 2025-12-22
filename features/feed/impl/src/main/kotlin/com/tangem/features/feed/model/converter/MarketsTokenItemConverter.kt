@@ -12,7 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
