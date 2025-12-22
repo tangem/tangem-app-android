@@ -38,7 +38,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "NullableToStringCall")
 internal class DefaultTransactionRepository(
     private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
@@ -64,12 +64,12 @@ internal class DefaultTransactionRepository(
 
         val extras = txExtras ?: getMemoExtras(networkId = network.rawId, memo)
 
-        val destination = if (amount.type is AmountType.TokenYieldSupply) {
+        val patchedDestination = if (amount.type is AmountType.TokenYieldSupply) {
             walletManager.getYieldModuleAddress()
         } else {
             destination
         }
-        val amount = if (amount.type is AmountType.TokenYieldSupply) {
+        val patchedAmount = if (amount.type is AmountType.TokenYieldSupply) {
             amount.copy(value = BigDecimal.ZERO)
         } else {
             amount
@@ -77,17 +77,17 @@ internal class DefaultTransactionRepository(
 
         return@withContext if (fee != null) {
             walletManager.createTransaction(
-                amount = amount,
+                amount = patchedAmount,
                 fee = fee,
-                destination = destination,
+                destination = patchedDestination,
             ).copy(
                 extras = extras,
             )
         } else {
             TransactionData.Uncompiled(
-                amount = amount,
+                amount = patchedAmount,
                 sourceAddress = walletManager.wallet.address,
-                destinationAddress = destination,
+                destinationAddress = patchedDestination,
                 extras = extras,
                 fee = null,
             )
@@ -288,7 +288,7 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (walletManager as TransactionSender).send(txData, signer)
+        (requireNotNull(walletManager) as TransactionSender).send(txData, signer)
     }
 
     override suspend fun sendMultipleTransactions(
@@ -304,7 +304,7 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (walletManager as TransactionSender).sendMultiple(txsData, signer, sendMode)
+        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode)
     }
 
     override fun createTransactionDataExtras(

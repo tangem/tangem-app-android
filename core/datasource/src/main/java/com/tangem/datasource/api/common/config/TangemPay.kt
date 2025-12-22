@@ -31,7 +31,7 @@ internal class TangemPay(
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
-        baseUrl = "https://api.dev.us.paera.com/bff/",
+        baseUrl = "https://api.dev.us.paera.com/bff-v2/",
         headers = createHeaders(),
     )
 
@@ -43,7 +43,7 @@ internal class TangemPay(
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
-        baseUrl = "https://api.us.paera.com/bff/",
+        baseUrl = "https://api.us.paera.com/bff-v2/",
         headers = createHeaders(),
     )
 
