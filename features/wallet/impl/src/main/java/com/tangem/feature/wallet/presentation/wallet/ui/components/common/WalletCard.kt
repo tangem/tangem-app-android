@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,9 +40,8 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
 import androidx.constraintlayout.compose.Dimension
-import com.tangem.core.ui.components.FontSizeRange
+import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
@@ -69,89 +69,6 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
 @Suppress("LongMethod")
 @Composable
 internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    @Suppress("DestructuringDeclarationWithTooManyEntries")
-    CardContainer(
-        dropDownItems = state.dropDownItems,
-        isLockedState = state is WalletCardState.LockedContent,
-        modifier = modifier,
-    ) { itemSize ->
-        val (titleRef, balanceRef, additionalTextRef, imageRef) = createRefs()
-
-        val contentVerticalMargin = TangemTheme.dimens.spacing12
-        TitleText(
-            text = state.title,
-            modifier = Modifier.constrainAs(titleRef) {
-                start.linkTo(parent.start)
-                top.linkTo(anchor = parent.top, margin = contentVerticalMargin)
-                end.linkTo(imageRef.start)
-                width = Dimension.fillToConstraints
-            },
-        )
-
-        var balanceWidth by remember { mutableIntStateOf(value = Int.MIN_VALUE) }
-        Balance(
-            state = state,
-            isBalanceHidden = isBalanceHidden,
-            modifier = Modifier
-                .onSizeChanged { balanceWidth = it.width }
-                .padding(vertical = TangemTheme.dimens.spacing8)
-                .constrainAs(balanceRef) {
-                    start.linkTo(parent.start)
-                    top.linkTo(anchor = titleRef.bottom)
-                    bottom.linkTo(anchor = additionalTextRef.top)
-                },
-        )
-
-        val additionalText by remember(state.additionalInfo, isBalanceHidden) {
-            mutableStateOf(
-                state.additionalInfo?.content?.orMaskWithStars(
-                    maskWithStars = state.additionalInfo?.hideable == true && isBalanceHidden,
-                ),
-            )
-        }
-        AdditionalInfo(
-            text = additionalText,
-            modifier = Modifier.constrainAs(additionalTextRef) {
-                start.linkTo(parent.start)
-                top.linkTo(balanceRef.bottom)
-                bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
-
-                if (additionalText != null) {
-                    width = if (state.imageResId != null) {
-                        end.linkTo(imageRef.start)
-                        Dimension.fillToConstraints
-                    } else {
-                        Dimension.wrapContent
-                    }
-                }
-            },
-        )
-
-        // If balance has a large width then image must be hidden
-        val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
-            mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
-        }
-
-        if (hasSpaceForImage) {
-            Image(
-                id = state.imageResId,
-                modifier = Modifier.constrainAs(imageRef) {
-                    end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
-                    height = Dimension.fillToConstraints
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun CardContainer(
-    dropDownItems: ImmutableList<WalletDropDownItems>,
-    isLockedState: Boolean,
-    modifier: Modifier = Modifier,
-    content: @Composable (ConstraintLayoutScope.(IntSize) -> Unit),
-) {
     var isMenuVisible by rememberSaveable { mutableStateOf(value = false) }
     var pressOffset by remember { mutableStateOf(value = DpOffset.Zero) }
     var itemSize by remember { mutableStateOf(value = IntSize.Zero) }
@@ -166,7 +83,7 @@ private fun CardContainer(
             .onSizeChanged { itemSize = it }
             .testTag(MainScreenTestTags.TOTAL_BALANCE_CONTAINER)
             .then(
-                if (isLockedState || dropDownItems.isEmpty()) {
+                if (state is WalletCardState.LockedContent || state.dropDownItems.isEmpty()) {
                     Modifier
                 } else {
                     Modifier
@@ -189,15 +106,19 @@ private fun CardContainer(
                         }
                 },
             ),
-        shape = TangemTheme.shapes.roundedCornersXMedium,
-        color = TangemTheme.colors.background.primary,
     ) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(TangemTheme.shapes.roundedCornersXMedium)
+                .background(TangemTheme.colors.background.primary)
                 .padding(horizontal = TangemTheme.dimens.spacing12),
         ) {
-            content(itemSize)
+            CardContainer(
+                state = state,
+                isBalanceHidden = isBalanceHidden,
+                itemSize = itemSize,
+            )
         }
     }
 
@@ -209,7 +130,82 @@ private fun CardContainer(
         pressOffset = pressOffset,
         itemHeight = itemHeight,
         onDismissRequest = { isMenuVisible = false },
-        dropDownItems = dropDownItems,
+        dropDownItems = state.dropDownItems,
+    )
+}
+
+@Suppress("DestructuringDeclarationWithTooManyEntries")
+@Composable
+private fun ConstraintLayoutScope.CardContainer(state: WalletCardState, isBalanceHidden: Boolean, itemSize: IntSize) {
+    val (titleRef, balanceRef, additionalTextRef, imageRef) = createRefs()
+
+    val contentVerticalMargin = TangemTheme.dimens.spacing12
+    TitleText(
+        text = state.title,
+        modifier = Modifier.constrainAs(titleRef) {
+            start.linkTo(anchor = parent.start)
+            top.linkTo(anchor = parent.top, margin = contentVerticalMargin)
+            end.linkTo(anchor = imageRef.start)
+            width = Dimension.fillToConstraints
+        },
+    )
+
+    var balanceWidth by remember { mutableIntStateOf(value = Int.MIN_VALUE) }
+    Balance(
+        state = state,
+        isBalanceHidden = isBalanceHidden,
+        modifier = Modifier
+            .onSizeChanged { balanceWidth = it.width }
+            .padding(vertical = TangemTheme.dimens.spacing8)
+            .constrainAs(balanceRef) {
+                start.linkTo(anchor = parent.start)
+                top.linkTo(anchor = titleRef.bottom)
+                bottom.linkTo(anchor = additionalTextRef.top)
+            },
+    )
+
+    val additionalText by remember(state.additionalInfo, isBalanceHidden) {
+        mutableStateOf(
+            state.additionalInfo?.content?.orMaskWithStars(
+                maskWithStars = state.additionalInfo?.hideable == true && isBalanceHidden,
+            ),
+        )
+    }
+    AdditionalInfo(
+        text = additionalText,
+        modifier = Modifier.constrainAs(additionalTextRef) {
+            start.linkTo(parent.start)
+            top.linkTo(balanceRef.bottom)
+            bottom.linkTo(anchor = parent.bottom, margin = contentVerticalMargin)
+
+            if (additionalText != null) {
+                width = if (state.imageResId != null) {
+                    end.linkTo(imageRef.start)
+                    Dimension.fillToConstraints
+                } else {
+                    Dimension.wrapContent
+                }
+            }
+        },
+    )
+
+    // If balance has a large width then image must be hidden
+    val hasSpaceForImage by remember(key1 = balanceWidth, key2 = itemSize.width) {
+        mutableStateOf(value = balanceWidth < itemSize.width * HALF_OF_ITEM_WIDTH)
+    }
+
+    Image(
+        id = state.imageResId,
+        modifier = Modifier.constrainAs(imageRef) {
+            end.linkTo(parent.end)
+            bottom.linkTo(parent.bottom)
+            height = Dimension.fillToConstraints
+            visibility = if (hasSpaceForImage) {
+                Visibility.Visible
+            } else {
+                Visibility.Gone
+            }
+        },
     )
 }
 
@@ -282,10 +278,13 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
     ) { balance ->
         when (state) {
             is WalletCardState.Content -> {
-                ResizableText(
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                Text(
                     text = balance,
-                    fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 16.sp,
+                        maxFontSize = TangemTheme.typography.h2.fontSize,
+                    ),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = TangemTheme.typography.h2
