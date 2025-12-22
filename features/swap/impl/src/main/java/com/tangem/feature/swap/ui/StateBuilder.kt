@@ -1194,6 +1194,7 @@ internal class StateBuilder(
         )
     }
 
+    @Deprecated("Use TangemBlockUrlBuilder instead")
     private fun buildReadMoreUrl(): String {
         return buildString {
             append(FEE_READ_MORE_URL_FIRST_PART)
