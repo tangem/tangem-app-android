@@ -1,7 +1,9 @@
 package com.tangem.feature.walletsettings.utils
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.usecase.ApplyAccountListSortingUseCase
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -24,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 @OptIn(FlowPreview::class)
 internal class AccountListSortingSaver @Inject constructor(
     private val applyAccountListSortingUseCase: ApplyAccountListSortingUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -41,6 +44,9 @@ internal class AccountListSortingSaver @Inject constructor(
                 applyAccountListSortingUseCase.invoke(accountIds).onLeft {
                     Timber.e("Error while saving account list sorting: $it")
                 }
+                    .onRight {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.LongtapAccountsOrder())
+                    }
             }
             .launchIn(coroutineScope)
     }
