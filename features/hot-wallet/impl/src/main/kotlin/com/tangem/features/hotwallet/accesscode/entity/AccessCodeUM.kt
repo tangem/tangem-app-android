@@ -8,6 +8,7 @@ import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 internal data class AccessCodeUM(
     val accessCode: String,
     val accessCodeColor: PinTextColor,
+    val isLoading: Boolean,
     val onAccessCodeChange: (String) -> Unit,
     val isConfirmMode: Boolean,
     val requestFocus: StateEvent<Unit> = consumedEvent(),
