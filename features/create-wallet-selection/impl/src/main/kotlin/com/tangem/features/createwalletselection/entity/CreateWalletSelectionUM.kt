@@ -10,6 +10,7 @@ internal data class CreateWalletSelectionUM(
     val blocks: ImmutableList<Block>,
     val onBackClick: () -> Unit,
     val onBuyClick: () -> Unit,
+    val onWhatToChooseClick: () -> Unit,
 ) {
     data class Block(
         val title: TextReference,

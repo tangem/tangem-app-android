@@ -156,12 +156,16 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
+        var canSkip = true
+
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            showSkipAccessCodeWarningDialog()
+            if (canSkip) {
+                showSkipAccessCodeWarningDialog()
+            }
         }
     }
 
@@ -220,8 +224,13 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ConfirmAccessCode(accessCode))
         }
 
+        override fun onAccessCodeUpdateStarted(userWalletId: UserWalletId) {
+            hotWalletStepperComponentModelCallback.canSkip = false
+        }
+
         override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
+            hotWalletStepperComponentModelCallback.canSkip = true
         }
     }
 
