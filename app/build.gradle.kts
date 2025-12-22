@@ -179,6 +179,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.error.ext)
+    implementation(projects.core.security)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
@@ -215,6 +216,7 @@ dependencies {
     implementation(projects.data.walletManager)
     implementation(projects.data.yieldSupply)
     implementation(projects.data.hotWallet)
+    implementation(projects.data.news)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -352,7 +354,6 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-
     kapt(deps.hilt.kapt)
     kapt(deps.hilt.compilerx)
 
@@ -384,10 +385,10 @@ dependencies {
     implementation(deps.prettyLogger)
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
-
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+    implementation(files("libs/dexprotector-annotations.jar"))
 
     /** Testing libraries */
     testImplementation(projects.common.test)
@@ -417,7 +418,6 @@ dependencies {
     implementation(deps.camera.camera2)
     implementation(deps.camera.lifecycle)
     implementation(deps.camera.view)
-
     implementation(deps.listenableFuture)
     implementation(deps.mlKit.barcodeScanning)
 

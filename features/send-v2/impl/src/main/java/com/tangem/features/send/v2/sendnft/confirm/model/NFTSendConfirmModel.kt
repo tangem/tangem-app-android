@@ -195,7 +195,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 derivationPath = cryptoCurrency.network.derivationPath.value,
                 destinationAddress = confirmData.enteredDestination.orEmpty(),
                 tokenSymbol = null,
-                amount = params.nftAsset.amount.toString(),
+                amount = params.nftAsset.amount?.toString().orEmpty(),
                 fee = confirmData.fee?.amount?.value?.stripZeroPlainString(),
             ),
         )
@@ -213,8 +213,8 @@ internal class NFTSendConfirmModel @Inject constructor(
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty || isEmptyFee) {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         confirmUM = NFTSendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
                             walletName = stringReference(userWallet.name),
@@ -229,9 +229,9 @@ internal class NFTSendConfirmModel @Inject constructor(
     private fun subscribeOnTapHelpUpdates() {
         isSendTapHelpEnabledUseCase().getOrNull()
             ?.onEach { showTapHelp ->
-                _uiState.update {
-                    val confirmUM = it.confirmUM as? ConfirmUM.Content
-                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                _uiState.update { state ->
+                    val confirmUM = state.confirmUM as? ConfirmUM.Content
+                    state.copy(confirmUM = confirmUM?.copy(isShowTapHelp = showTapHelp) ?: state.confirmUM)
                 }
             }?.launchIn(modelScope)
     }
@@ -239,13 +239,13 @@ internal class NFTSendConfirmModel @Inject constructor(
     private fun subscribeOnNotificationsUpdateTrigger() {
         notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
-                _uiState.update {
-                    val isFeeNotNull = it.feeSelectorUM is FeeSelectorUMRedesigned.Content
+                _uiState.update { state ->
+                    val isFeeNotNull = state.feeSelectorUM is FeeSelectorUMRedesigned.Content
 
-                    it.copy(
-                        confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
+                    state.copy(
+                        confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
                             isPrimaryButtonEnabled = !hasError && isFeeNotNull,
-                        ) ?: it.confirmUM,
+                        ) ?: state.confirmUM,
                     )
                 }
             }
@@ -353,8 +353,8 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ),
             )
         }
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 confirmUM = NFTSendConfirmationNotificationsTransformerV2(
                     feeSelectorUM = uiState.value.feeSelectorUM,
                     analyticsEventHandler = analyticsEventHandler,
