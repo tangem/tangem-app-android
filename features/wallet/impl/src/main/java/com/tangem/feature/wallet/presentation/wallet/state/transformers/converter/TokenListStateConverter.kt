@@ -14,11 +14,12 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -28,16 +29,24 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
 
+@Suppress("LongParameterList")
 internal class TokenListStateConverter(
     private val appCurrency: AppCurrency,
     private val params: TokenConverterParams,
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
-    private val yieldModuleApyMap: Map<String, String>,
-    private val stakingApyMap: Map<String, List<Yield.Validator>>,
+    private val yieldModuleApyMap: Map<String, BigDecimal>,
+    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
+
+    private val yieldSupplyPromoBannerKeyConverter = YieldSupplyPromoBannerKeyConverter(
+        yieldModuleApyMap,
+        shouldShowMainPromo,
+    )
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
@@ -63,10 +72,12 @@ internal class TokenListStateConverter(
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
-        stakingApyMap = stakingApyMap,
+        yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKeyConverter.convert(params),
+        stakingApyMap = stakingAvailabilityMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, apySource, apy) },
+        onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
