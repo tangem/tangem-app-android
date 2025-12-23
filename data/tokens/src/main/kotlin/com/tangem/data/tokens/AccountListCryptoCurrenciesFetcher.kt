@@ -3,11 +3,8 @@ package com.tangem.data.tokens
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
-import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
@@ -19,7 +16,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
  *
  * @property userWalletsStore      [UserWallet]'s store
  * @property walletAccountsFetcher instance of [WalletAccountsFetcher] to fetch accounts for a multi wallet
- * @property expressServiceFetcher fetcher of express service
  * @property dispatchers           dispatchers
  *
 [REDACTED_AUTHOR]
@@ -27,7 +23,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 internal class AccountListCryptoCurrenciesFetcher(
     private val userWalletsStore: UserWalletsStore,
     private val walletAccountsFetcher: WalletAccountsFetcher,
-    private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesFetcher {
 
@@ -37,14 +32,7 @@ internal class AccountListCryptoCurrenciesFetcher(
 
             if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
 
-            val response = walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
-
-            expressServiceFetcher.fetch(
-                userWallet = userWallet,
-                assetIds = response.flattenTokens().mapTo(hashSetOf()) {
-                    ExpressAsset.ID(networkId = it.networkId, contractAddress = it.contractAddress)
-                },
-            )
+            walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
 
             Unit.right()
         }

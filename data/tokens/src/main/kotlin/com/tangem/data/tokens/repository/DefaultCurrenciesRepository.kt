@@ -19,8 +19,6 @@ import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -44,7 +42,6 @@ internal class DefaultCurrenciesRepository(
     private val userWalletsStore: UserWalletsStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val cacheRegistry: CacheRegistry,
-    private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val userTokensSaver: UserTokensSaver,
@@ -101,11 +98,6 @@ internal class DefaultCurrenciesRepository(
         userTokensSaver.store(
             userWalletId = userWalletId,
             response = updatedResponse,
-        )
-
-        fetchExpressAssetsByNetworkIds(
-            userWallet = userWalletsStore.getSyncStrict(key = userWalletId),
-            userTokens = updatedResponse,
         )
 
         currenciesToAdd
@@ -219,12 +211,6 @@ internal class DefaultCurrenciesRepository(
                 userWallet = userWallet,
             )
 
-            fetchExpressAssetsByNetworkIds(
-                userWallet = userWallet,
-                cryptoCurrencies = listOf(currency),
-                refresh = refresh,
-            )
-
             currency
         }
     }
@@ -246,12 +232,6 @@ internal class DefaultCurrenciesRepository(
                     }
             }
 
-            fetchExpressAssetsByNetworkIds(
-                userWallet = userWallet,
-                cryptoCurrencies = currencies,
-                refresh = refresh,
-            )
-
             currencies
         }
     }
@@ -270,7 +250,6 @@ internal class DefaultCurrenciesRepository(
             )
                 .find { it.id == id }
             requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
-            fetchExpressAssetsByNetworkIds(userWallet, listOf(currency))
             currency
         }
     }
@@ -633,8 +612,6 @@ internal class DefaultCurrenciesRepository(
             .let { customTokensMerger.mergeIfPresented(userWalletId, it) }
 
         userTokensSaver.store(userWalletId, compatibleUserTokensResponse)
-
-        fetchExpressAssetsByNetworkIds(userWallet, compatibleUserTokensResponse)
     }
 
     private suspend fun checkIsEmptyDemoWallet(userWallet: UserWallet.Cold): Boolean {
@@ -642,44 +619,6 @@ internal class DefaultCurrenciesRepository(
 
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
     }
-
-    private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
-        val tokens = userTokens.tokens.mapTo(hashSetOf()) { token ->
-            ExpressAsset.ID(
-                networkId = token.networkId,
-                contractAddress = token.contractAddress,
-            )
-        }
-
-        coroutineScope {
-            launch { expressServiceFetcher.fetch(userWallet, tokens) }
-        }
-    }
-
-    private suspend fun fetchExpressAssetsByNetworkIds(
-        userWallet: UserWallet,
-        cryptoCurrencies: List<CryptoCurrency>,
-        refresh: Boolean = false,
-    ) {
-        val tokens = cryptoCurrencies.mapTo(hashSetOf()) { currency ->
-            val tokenCurrency = currency as? CryptoCurrency.Token
-            ExpressAsset.ID(
-                networkId = currency.network.backendId,
-                contractAddress = tokenCurrency?.contractAddress,
-            )
-        }
-        cacheRegistry.invokeOnExpire(
-            key = getAssetsCacheKey(userWallet.walletId),
-            skipCache = refresh,
-            block = {
-                coroutineScope {
-                    launch { expressServiceFetcher.fetch(userWallet, tokens) }
-                }
-            },
-        )
-    }
-
-    private fun getAssetsCacheKey(userWalletId: UserWalletId): String = "assets_cache_key_${userWalletId.stringValue}"
 
     private suspend fun handleFetchTokensError(userWallet: UserWallet, e: ApiResponseError): UserTokensResponse {
         val userWalletId = userWallet.walletId

@@ -1,7 +1,6 @@
 package com.tangem.datasource.api.express
 
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.*
@@ -12,13 +11,6 @@ import retrofit2.http.*
  */
 @Suppress("LongParameterList")
 interface TangemExpressApi {
-
-    @POST("assets")
-    suspend fun getAssets(
-        @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String?,
-        @Body body: AssetsRequestBody,
-    ): ApiResponse<List<Asset>>
 
     @POST("pairs")
     suspend fun getPairs(

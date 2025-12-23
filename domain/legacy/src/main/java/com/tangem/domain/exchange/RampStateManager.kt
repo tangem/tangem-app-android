@@ -40,8 +40,6 @@ interface RampStateManager {
 
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
 
-    fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>>
-
     /**
      * Returns the reason why sending is unavailable for the given user wallet and cryptocurrency status
      *

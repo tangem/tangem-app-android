@@ -5,7 +5,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
@@ -47,13 +46,11 @@ internal object ActivityModule {
     @Singleton
     fun provideDefaultRampManager(
         appStateHolder: AppStateHolder,
-        expressServiceFetcher: ExpressServiceFetcher,
         currenciesRepository: CurrenciesRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
         return DefaultRampManager(
             sellService = Provider { requireNotNull(appStateHolder.sellService) },
-            expressServiceFetcher = expressServiceFetcher,
             currenciesRepository = currenciesRepository,
             dispatchers = dispatchers,
         )
