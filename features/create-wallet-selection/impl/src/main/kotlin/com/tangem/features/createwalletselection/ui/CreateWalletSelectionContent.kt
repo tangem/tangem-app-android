@@ -33,7 +33,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
 import com.tangem.features.createwalletselection.impl.R
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
@@ -103,7 +102,6 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                         .padding(top = 8.dp),
                     title = block.title.resolveReference(),
                     description = block.description.resolveReference(),
-                    features = block.features,
                     badge = block.titleLabel?.let {
                         { Label(it) }
                     },
@@ -126,7 +124,6 @@ private fun WalletBlock(
     title: String,
     description: String,
     onClick: () -> Unit,
-    features: ImmutableList<CreateWalletSelectionUM.Feature>,
     modifier: Modifier = Modifier,
     badge: @Composable (() -> Unit)? = null,
 ) {
@@ -162,43 +159,6 @@ private fun WalletBlock(
             text = description,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
-        )
-        if (features.isNotEmpty()) {
-            HorizontalDivider(
-                modifier = Modifier.padding(top = 12.dp),
-                thickness = 0.5.dp,
-                color = TangemTheme.colors.stroke.primary,
-            )
-            features.forEach { feature ->
-                Feature(
-                    feature = feature,
-                    modifier = Modifier
-                        .padding(top = 12.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Feature(feature: CreateWalletSelectionUM.Feature, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size16),
-            painter = painterResource(id = feature.iconResId),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
-        )
-        Text(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(start = 6.dp),
-            text = feature.title.resolveReference(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
         )
     }
 }
@@ -259,32 +219,12 @@ private fun PreviewCreateWalletContent() {
                             style = LabelStyle.ACCENT,
                         ),
                         description = resourceReference(R.string.wallet_add_hardware_description),
-                        features = persistentListOf(
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_add_wallet_16,
-                                title = resourceReference(R.string.wallet_add_hardware_info_create),
-                            ),
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_import_seed_16,
-                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
-                            ),
-                        ),
                         onClick = { },
                     ),
                     CreateWalletSelectionUM.Block(
                         title = resourceReference(R.string.wallet_create_mobile_title),
                         titleLabel = null,
                         description = resourceReference(R.string.wallet_add_mobile_description),
-                        features = persistentListOf(
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_mobile_wallet_16,
-                                title = resourceReference(R.string.hw_create_title),
-                            ),
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_import_seed_16,
-                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
-                            ),
-                        ),
                         onClick = { },
                     ),
                 ),
