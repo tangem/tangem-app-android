@@ -1,16 +1,33 @@
 package com.tangem.core.ui.extensions
 
+import android.content.res.Configuration
 import android.content.res.Resources
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Builder
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.res.getPluralStringSafe
 import com.tangem.core.res.getStringSafe
+import com.tangem.core.ui.R
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.THREE_STARS
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
@@ -68,6 +85,35 @@ sealed interface TextReference {
      * @see [TextReference.plus] method
      */
     data class Combined(val refs: WrappedList<TextReference>) : TextReference
+
+    /**
+     * Styled string value
+     *
+     * @property value                string value
+     * @property spanStyleReference   text style reference
+     * @property onClick              optional click action
+     */
+    data class StyledStr(
+        val value: String,
+        val spanStyleReference: SpanStyleReference,
+        val onClick: (() -> Unit)? = null,
+    ) : TextReference
+
+    /**
+     * Styled string resource
+     *
+     * @property id                  resource id
+     * @property formatArgs          arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because
+     *                               [Any] is unstable.
+     * @property spanStyleReference  text style reference
+     * @property onClick             optional click action
+     */
+    data class StyledRes(
+        @StringRes val id: Int,
+        val formatArgs: WrappedList<Any> = WrappedList(emptyList()),
+        val spanStyleReference: SpanStyleReference,
+        val onClick: (() -> Unit)? = null,
+    ) : TextReference
 
     companion object {
 
@@ -140,6 +186,42 @@ fun pluralReference(
 }
 
 /**
+ * Creates a [TextReference] using a plain string value with optional span style and click action.
+ *
+ * @param value The plain string value.
+ * @param spanStyleReference A [SpanStyleReference] representing the text style to be applied.
+ * @param onClick An optional lambda function to be invoked when the text is clicked.
+ * @return A [TextReference] representing the styled string with click action.
+ */
+fun styledStringReference(value: String, spanStyleReference: SpanStyleReference, onClick: (() -> Unit)? = null) =
+    TextReference.StyledStr(
+        value = value,
+        onClick = onClick,
+        spanStyleReference = spanStyleReference,
+    )
+
+/**
+ * Creates a [TextReference] using a string resource ID with optional format arguments, span style, and click action.
+ *
+ * @param id The resource ID of the string.
+ * @param formatArgs A list of format arguments to be applied to the string resource.
+ * @param spanStyleReference A [SpanStyleReference] representing the text style to be applied.
+ * @param onClick An optional lambda function to be invoked when the text is clicked.
+ * @return A [TextReference] representing the styled string with click action.
+ */
+fun styledResourceReference(
+    @StringRes id: Int,
+    formatArgs: WrappedList<Any> = WrappedList(emptyList()),
+    spanStyleReference: SpanStyleReference,
+    onClick: (() -> Unit)? = null,
+) = TextReference.StyledRes(
+    id = id,
+    formatArgs = formatArgs,
+    spanStyleReference = spanStyleReference,
+    onClick = onClick,
+)
+
+/**
  * Combines multiple [TextReference] instances into a single [TextReference].
  *
  * @param refs A list of [TextReference] instances to be combined.
@@ -165,9 +247,7 @@ fun combinedReference(vararg refs: TextReference): TextReference {
 fun TextReference.resolveReference(): String {
     return when (this) {
         is TextReference.Res -> {
-            val args = formatArgs
-                .map { if (it is TextReference) it.resolveReference() else it }
-                .toTypedArray()
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference() else it }.toTypedArray()
 
             val resolvedReference = stringResourceSafe(id = id, *args)
 
@@ -187,6 +267,12 @@ fun TextReference.resolveReference(): String {
                 }
             }
         }
+        is TextReference.StyledRes -> {
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference() else it }.toTypedArray()
+
+            stringResourceSafe(id = id, *args)
+        }
+        is TextReference.StyledStr -> value
     }
 }
 
@@ -194,9 +280,7 @@ fun TextReference.resolveReference(): String {
 fun TextReference.resolveReference(resources: Resources): String {
     return when (this) {
         is TextReference.Res -> {
-            val args = formatArgs
-                .map { if (it is TextReference) it.resolveReference(resources) else it }
-                .toTypedArray()
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference(resources) else it }.toTypedArray()
 
             resources.getStringSafe(id, *args)
         }
@@ -210,6 +294,12 @@ fun TextReference.resolveReference(resources: Resources): String {
                 }
             }
         }
+        is TextReference.StyledRes -> {
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference(resources) else it }.toTypedArray()
+
+            resources.getStringSafe(id, *args)
+        }
+        is TextReference.StyledStr -> value
     }
 }
 
@@ -218,9 +308,7 @@ fun TextReference.resolveReference(resources: Resources): String {
 fun TextReference.resolveAnnotatedReference(): AnnotatedString {
     return when (this) {
         is TextReference.Res -> {
-            val args = formatArgs
-                .map { if (it is TextReference) it.resolveReference() else it }
-                .toTypedArray()
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference() else it }.toTypedArray()
 
             formatAnnotated(stringResourceSafe(id = id, *args))
         }
@@ -234,6 +322,21 @@ fun TextReference.resolveAnnotatedReference(): AnnotatedString {
                 append(it.resolveAnnotatedReference())
             }
         }
+        is TextReference.StyledRes -> {
+            val args = formatArgs.map { if (it is TextReference) it.resolveReference() else it }.toTypedArray()
+            val text = stringResourceSafe(id = id, *args)
+
+            createStyledText(
+                text = text,
+                spanStyleReference = spanStyleReference,
+                onClick = onClick,
+            )
+        }
+        is TextReference.StyledStr -> createStyledText(
+            text = value,
+            spanStyleReference = spanStyleReference,
+            onClick = onClick,
+        )
     }
 }
 
@@ -245,6 +348,8 @@ operator fun TextReference.plus(ref: TextReference): TextReference {
         is TextReference.Res,
         is TextReference.Str,
         is TextReference.Annotated,
+        is TextReference.StyledRes,
+        is TextReference.StyledStr,
         -> TextReference.Combined(refs = wrappedList(this, ref))
     }
 }
@@ -281,3 +386,119 @@ private fun formatAnnotated(rawString: String): AnnotatedString {
 fun TextReference.orMaskWithStars(maskWithStars: Boolean): TextReference {
     return if (maskWithStars) stringReference(THREE_STARS) else this
 }
+
+@ReadOnlyComposable
+@Composable
+private fun createStyledText(
+    text: String,
+    spanStyleReference: SpanStyleReference,
+    onClick: (() -> Unit)?,
+): AnnotatedString = buildAnnotatedString {
+    if (onClick != null) {
+        withLink(
+            link = LinkAnnotation.Clickable(
+                tag = text,
+                linkInteractionListener = { onClick() },
+            ),
+            block = {
+                appendStyled(
+                    text = text,
+                    spanStyle = spanStyleReference(),
+                )
+            },
+        )
+    } else {
+        appendStyled(
+            text = text,
+            spanStyle = spanStyleReference(),
+        )
+    }
+}
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun TextReference_Preview(@PreviewParameter(TextReferencePreviewProvider::class) params: TextReference) {
+    TangemThemePreview {
+        val uriHandler = LocalUriHandler.current
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(TangemTheme.colors.background.primary)
+                .padding(4.dp),
+        ) {
+            Text(
+                text = params.resolveAnnotatedReference(),
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            Text(
+                text = styledResourceReference(
+                    id = R.string.common_read_more,
+                    spanStyleReference = {
+                        TangemTheme.typography.body1.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                    },
+                    onClick = {
+                        uriHandler.openUri("https://tangem.com")
+                    },
+                ).resolveAnnotatedReference(),
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            Text(
+                text = stringReference("To be masked").orMaskWithStars(true).resolveAnnotatedReference(),
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
+    }
+}
+
+private class TextReferencePreviewProvider : PreviewParameterProvider<TextReference> {
+    override val values: Sequence<TextReference>
+        get() = sequenceOf(
+            stringReference("Simple string"),
+            resourceReference(R.string.common_tangem),
+            pluralReference(
+                id = R.plurals.common_days,
+                count = 5,
+                formatArgs = wrappedList(5),
+            ),
+            styledStringReference(
+                value = "Styled string",
+                spanStyleReference = {
+                    TangemTheme.typography.subtitle2.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                },
+            ),
+            styledResourceReference(
+                id = R.string.common_tangem,
+                spanStyleReference = {
+                    TangemTheme.typography.caption1.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                },
+            ),
+            combinedReference(
+                stringReference("Simple string"),
+                resourceReference(R.string.common_tangem),
+                pluralReference(
+                    id = R.plurals.common_days,
+                    count = 5,
+                    formatArgs = wrappedList(5),
+                ),
+                styledStringReference(
+                    value = "Styled string",
+                    spanStyleReference = {
+                        TangemTheme.typography.subtitle2.copy(TangemTheme.colors.text.accent).toSpanStyle()
+                    },
+                ),
+                styledResourceReference(
+                    id = R.string.common_tangem,
+                    spanStyleReference = {
+                        TangemTheme.typography.caption1.copy(TangemTheme.colors.text.warning).toSpanStyle()
+                    },
+                ),
+            ),
+        )
+}
+// endregion
