@@ -6,11 +6,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -25,6 +28,10 @@ internal interface TangemPayIntents {
     suspend fun onPullToRefresh()
 
     fun onRefreshPayToken(userWalletId: UserWalletId)
+
+    fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
+
+    fun onKycProgressClicked(userWalletId: UserWalletId)
 
     fun onIssuingCardClicked()
 
@@ -47,6 +54,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val tangemPayOnboardingRepository: OnboardingRepository,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
@@ -65,6 +73,51 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             produceInitialDataTangemPay.invoke(userWalletId)
             tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
         }
+    }
+
+    override fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig) {
+        router.openTangemPayDetails(
+            userWalletId = userWalletId,
+            config = config,
+        )
+    }
+
+    override fun onKycProgressClicked(userWalletId: UserWalletId) {
+        val cancelKycConfirmDialogMessage = DialogMessage(
+            title = resourceReference(R.string.tangempay_kyc_confirm_cancellation_alert_title),
+            message = resourceReference(R.string.tangempay_kyc_confirm_cancellation_description),
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_not_now),
+                onClick = { },
+            ),
+            secondAction = EventMessageAction(
+                title = resourceReference(R.string.common_confirm),
+                onClick = { disableTangemPay(userWalletId) },
+            ),
+        )
+        val kycInfoBottomSheet = bottomSheetMessage {
+            infoBlock {
+                iconImage(res = com.tangem.core.ui.R.drawable.img_visa_notification)
+                title = resourceReference(R.string.tangempay_kyc_in_progress)
+                body = resourceReference(R.string.tangempay_kyc_in_progress_popup_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.tangempay_kyc_in_progress_notification_button)
+                onClick = {
+                    router.openTangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(userWalletId))
+                    closeBs()
+                }
+            }
+            secondaryButton {
+                text = resourceReference(R.string.tangempay_cancel_kyc)
+                onClick = {
+                    uiMessageSender.send(cancelKycConfirmDialogMessage)
+                    closeBs()
+                }
+            }
+        }
+
+        uiMessageSender.send(kycInfoBottomSheet)
     }
 
     override fun onIssuingCardClicked() {
@@ -130,6 +183,13 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
             onboardingRepository.setHideMainOnboardingBanner(userWalletId)
+        }
+    }
+
+    private fun disableTangemPay(userWalletId: UserWalletId) {
+        modelScope.launch {
+            tangemPayOnboardingRepository.disableTangemPay(userWalletId)
+                .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId) }
         }
     }
 }
