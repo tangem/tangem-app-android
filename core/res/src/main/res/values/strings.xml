@@ -1501,6 +1501,8 @@
   <string name="tangempay_issuing_your_card">Issuing your card</string>
   <string name="tangempay_issuing_your_card_description">We’re getting your card ready. This may take a little time.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirm Cancellation</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
   <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
@@ -1686,7 +1688,7 @@
   <string name="visa_unlock_notification_button">Unlock</string>
   <string name="visa_unlock_notification_subtitle">Scan your card to unlock access</string>
   <string name="visa_unlock_notification_title">Needed unlock</string>
-  <string name="wallet_add_common_title">Choose how to add your wallet</string>
+  <string name="wallet_add_common_title">Choose your wallet type</string>
   <string name="wallet_add_hardware_description">Scan your Tangem card or ring to restore it or import from another wallet.</string>
   <string name="wallet_add_hardware_info_create">Create Hardware Wallet</string>
   <string name="wallet_add_hardware_purchase">Want to purchase a Tangem Wallet?</string>
