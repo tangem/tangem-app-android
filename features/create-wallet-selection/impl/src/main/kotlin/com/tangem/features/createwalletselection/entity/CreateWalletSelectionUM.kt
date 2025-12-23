@@ -16,12 +16,6 @@ internal data class CreateWalletSelectionUM(
         val title: TextReference,
         val titleLabel: LabelUM?,
         val description: TextReference,
-        val features: ImmutableList<Feature>,
         val onClick: () -> Unit,
-    )
-
-    data class Feature(
-        val iconResId: Int,
-        val title: TextReference,
     )
 }
