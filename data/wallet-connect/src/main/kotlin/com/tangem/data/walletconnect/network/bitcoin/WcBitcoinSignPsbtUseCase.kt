@@ -1,10 +1,10 @@
 package com.tangem.data.walletconnect.network.bitcoin
 
 import arrow.core.left
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignInput
-import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtResponse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -34,6 +34,12 @@ import kotlinx.coroutines.flow.map
  *
  * Signs a Partially Signed Bitcoin Transaction (BIP-174 PSBT) with optional broadcast.
  */
+@JsonClass(generateAdapter = true)
+internal data class SignPsbtResponse(
+    @Json(name = "psbt") val psbt: String,
+    @Json(name = "txid") val txid: String? = null,
+)
+
 @Suppress("LongParameterList")
 internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
@@ -46,6 +52,8 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     @SdkMoshi private val moshi: Moshi,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
     WcTransactionUseCase {
+
+    override val wallet get() = context.session.wallet
 
     override val securityStatus: LceFlow<Throwable, BlockAidTransactionCheck.Result> =
         blockAidDelegate.getSecurityStatus(
@@ -67,73 +75,49 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
         )
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
-        if (walletManager !is BitcoinWalletManager) {
-            emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))
-            return
-        }
+            ?: run {
+                emit(state.toResult(HandleMethodError.UnknownError("Failed to create wallet manager").left()))
+                return
+            }
 
         val signer = signerProvider.createSigner(wallet)
-        val signInputs = convertSignInputs()
-
-        val signedPsbt = signPsbt(walletManager, signInputs, signer, state) ?: return
-        val txid = broadcastIfNeeded(walletManager, signedPsbt, state) ?: return
-
-        respondWithSignedPsbt(signedPsbt, txid, state)
-    }
-
-    private fun convertSignInputs(): List<SignInput> {
-        return method.signInputs.map { input ->
+        val signInputs = method.signInputs.map { input ->
             SignInput(
                 address = input.address,
                 index = input.index,
                 sighashTypes = input.sighashTypes,
             )
         }
-    }
-
-    private suspend fun SignCollector<TransactionData>.signPsbt(
-        walletManager: BitcoinWalletManager,
-        signInputs: List<SignInput>,
-        signer: com.tangem.blockchain.common.TransactionSigner,
-        state: WcSignState<TransactionData>,
-    ): String? {
-        return when (val signResult = walletManager.signPsbt(method.psbt, signInputs, signer)) {
-            is SdkResult.Success -> signResult.data
-            is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(signResult.error.customMessage).left()))
-                null
-            }
-        }
-    }
-
-    private suspend fun SignCollector<TransactionData>.broadcastIfNeeded(
-        walletManager: BitcoinWalletManager,
-        signedPsbt: String,
-        state: WcSignState<TransactionData>,
-    ): String? {
-        if (!method.broadcast) return ""
-
-        return when (val broadcastResult = walletManager.broadcastPsbt(signedPsbt)) {
-            is SdkResult.Success -> broadcastResult.data
-            is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(broadcastResult.error.customMessage).left()))
-                null
-            }
-        }
-    }
-
-    private suspend fun SignCollector<TransactionData>.respondWithSignedPsbt(
-        signedPsbt: String,
-        txid: String,
-        state: WcSignState<TransactionData>,
-    ) {
-        val signPsbtResponse = SignPsbtResponse(
-            psbt = signedPsbt,
-            txid = txid.takeIf { it.isNotEmpty() },
+        val signedPsbtResult = walletManager.signPsbt(
+            psbtBase64 = method.psbt,
+            signInputs = signInputs,
+            signer = signer,
         )
-        val response = buildJsonResponse(signPsbtResponse)
-        val wcRespondResult = respondService.respond(rawSdkRequest, response)
-        emit(state.toResult(wcRespondResult))
+
+        when (signedPsbtResult) {
+            is SdkResult.Success -> {
+                val signedPsbt = signedPsbtResult.data
+                val txid = if (method.broadcast == true) {
+                    when (val broadcastResult = walletManager.broadcastPsbt(signedPsbt)) {
+                        is SdkResult.Success -> broadcastResult.data
+                        is SdkResult.Failure -> {
+                            val error = HandleMethodError.UnknownError(broadcastResult.error.customMessage).left()
+                            emit(state.toResult(error))
+                            return
+                        }
+                    }
+                } else {
+                    null
+                }
+
+                val response = buildJsonResponse(signedPsbt, txid)
+                val wcRespondResult = respondService.respond(rawSdkRequest, response)
+                emit(state.toResult(wcRespondResult))
+            }
+            is SdkResult.Failure -> {
+                emit(state.toResult(HandleMethodError.UnknownError(signedPsbtResult.error.customMessage).left()))
+            }
+        }
     }
 
     override fun invoke(): Flow<WcSignState<TransactionData>> {
@@ -143,10 +127,12 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
         return delegate.invoke(transactionData)
     }
 
-    private fun buildJsonResponse(data: SignPsbtResponse): String {
-        return moshi.adapter(
-            SignPsbtResponse::class.java,
-        ).toJson(data)
+    private fun buildJsonResponse(signedPsbt: String, txid: String?): String {
+        val response = SignPsbtResponse(
+            psbt = signedPsbt,
+            txid = txid,
+        )
+        return moshi.adapter(SignPsbtResponse::class.java).toJson(response)
     }
 
     @AssistedFactory
