@@ -1617,7 +1617,7 @@
   <string name="visa_unlock_notification_button">ロック解除</string>
   <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
   <string name="visa_unlock_notification_title">ロック解除が必要</string>
-  <string name="wallet_add_common_title">ウォレットの追加方法を選択してください</string>
+  <string name="wallet_add_common_title">ウォレットの種類を選択します</string>
   <string name="wallet_add_hardware_description">Tangemカードまたはリングをスキャンして復元するか、別のウォレットからインポートしてください。</string>
   <string name="wallet_add_hardware_info_create">ハードウェアウォレットを作成</string>
   <string name="wallet_add_hardware_purchase">Tangemウォレットを購入しますか？</string>

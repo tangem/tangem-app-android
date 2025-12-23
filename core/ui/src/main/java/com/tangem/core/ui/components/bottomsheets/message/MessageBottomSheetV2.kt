@@ -1,14 +1,18 @@
 package com.tangem.core.ui.components.bottomsheets.message
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -88,9 +92,7 @@ fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifie
 @Composable
 private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: Modifier = Modifier) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        state.icon?.let {
-            BottomSheetIcon(it)
-        }
+        BottomSheetIconContainer(state.icon, state.iconImage)
         state.title?.let { title ->
             Text(
                 modifier = Modifier
@@ -119,6 +121,26 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
                 chip = chip,
             )
         }
+    }
+}
+
+@Suppress("CanBeNonNullable")
+@Composable
+private fun BottomSheetIconContainer(
+    icon: MessageBottomSheetUMV2.Icon?,
+    iconImage: MessageBottomSheetUMV2.IconImage?,
+    modifier: Modifier = Modifier,
+) {
+    if (icon != null) {
+        BottomSheetIcon(icon, modifier)
+    } else if (iconImage != null) {
+        Image(
+            modifier = modifier
+                .size(TangemTheme.dimens.size56)
+                .clip(CircleShape),
+            painter = painterResource(id = iconImage.res),
+            contentDescription = null,
+        )
     }
 }
 
@@ -217,6 +239,35 @@ private fun Preview() {
                         type = MessageBottomSheetUMV2.Icon.Type.Attention
                         backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                     }
+                    title = TextReference.Str("Title Title Title")
+                    body = TextReference.Str("Body")
+                    chip(text = TextReference.Str("Some chip information"))
+                }
+                primaryButton {
+                    text = TextReference.Str("Test")
+                    icon = R.drawable.ic_tangem_24
+                }
+                secondaryButton {
+                    icon = R.drawable.ic_tangem_24
+                    text = TextReference.Str("asdasd")
+                    onClick {
+                        closeBs()
+                    }
+                }
+            },
+            onDismissRequest = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview2() {
+    TangemThemePreview {
+        MessageBottomSheetV2(
+            messageBottomSheetUM {
+                infoBlock {
+                    iconImage = MessageBottomSheetUMV2.IconImage(R.drawable.img_visa_notification)
                     title = TextReference.Str("Title Title Title")
                     body = TextReference.Str("Body")
                     chip(text = TextReference.Str("Some chip information"))
