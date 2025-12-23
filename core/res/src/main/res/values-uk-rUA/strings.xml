@@ -1141,9 +1141,12 @@
   <string name="tangempay_card_details_show_details">Показати деталі</string>
   <string name="tangempay_card_details_swap_description">Обміняйте будь-який актив у вашому портфелі на картку</string>
   <string name="tangempay_card_details_unfreeze_card">Розморозити картку</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_get_banner_description">Отримайте безкоштовну віртуальну картку Tangem Visa</string>
+  <string name="tangempay_onboarding_banner_description">Отримайте безкоштовну віртуальну картку Tangem Visa</string>
+  <string name="tangempay_onboarding_banner_title">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_service_unavailable_description">Ми усуваємо технічну проблему. Будь ласка, спробуйте пізніше.</string>
   <string name="tangempay_service_unavailable_title">Сервіс тимчасово недоступний</string>
+  <string name="tangempay_tangem_visa_card">Використовуйте USDC для щоденних платежів</string>
   <string name="this_is_my_wallet_title">Це мій гаманець</string>
   <string name="toast_balances_hidden">Баланси приховано</string>
   <string name="toast_balances_shown">Баланси показано</string>
