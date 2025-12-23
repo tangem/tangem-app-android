@@ -139,7 +139,7 @@
   <string name="tangempay_failed_to_issue_card">Impossibile emettere la carta</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Si è verificato un errore tecnico, riprova cliccando il pulsante qui sotto</string>
   <string name="tangempay_failed_to_issue_card_support_description">Si è verificato un errore tecnico, contatta il supporto</string>
-  <string name="tangempay_get_banner_description">Utilizza le tue attività per fare acquisti nel mondo reale. \nÈ una carta di pagamento diversa da qualsiasi altra.</string>
+  <string name="tangempay_get_banner_description">Ottieni la tua carta virtuale Tangem Visa gratuita</string>
   <string name="tangempay_get_tangem_pay">Ottieni Tangem Pay</string>
   <string name="tangempay_go_to_support">Vai al supporto</string>
   <string name="tangempay_issue_card_notification_description">Di solito richiede fino a 15 minuti</string>
@@ -152,8 +152,8 @@
   <string name="tangempay_kyc_in_progress">KYC in corso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Visualizza stato</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in corso per Tangem Pay</string>
-  <string name="tangempay_onboarding_banner_description">Utilizza le tue attività per fare acquisti nel mondo reale. \nÈ una carta di pagamento diversa da qualsiasi altra.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_onboarding_banner_description">Ottieni la tua carta virtuale Tangem Visa gratuita</string>
+  <string name="tangempay_onboarding_banner_title">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_onboarding_get_card_button_text">Ottieni carta</string>
   <string name="tangempay_onboarding_pay_description">Con carta digitale che funziona con Apple Pay e Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Spendi i tuoi asset ovunque</string>
@@ -168,7 +168,7 @@
   <string name="tangempay_service_unavailable_title">Servizio temporaneamente non disponibile</string>
   <string name="tangempay_service_unreachable_try_later">Al momento non è possibile visualizzare i dati, ma i pagamenti con carta continuano a funzionare.</string>
   <string name="tangempay_sync_needed">Sincronizzazione necessaria</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Usa la tua carta o il tuo anello per ripristinare l\'accesso al tuo conto di pagamento</string>
