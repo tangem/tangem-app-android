@@ -12,4 +12,12 @@ internal class AppsFlyerLogClient(
     override fun logEvent(event: String, params: Map<String, String>) {
         logger.logEvent(event, params)
     }
+
+    override fun setUserId(userId: String) {
+        // No-op
+    }
+
+    override fun clearUserId() {
+        // No-op
+    }
 }
