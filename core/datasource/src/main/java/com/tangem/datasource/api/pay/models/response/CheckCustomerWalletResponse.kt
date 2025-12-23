@@ -9,5 +9,6 @@ data class CheckCustomerWalletResponse(
 ) {
     data class Result(
         @Json(name = "id") val id: String?,
+        @Json(name = "is_tangem_pay_enabled") val isTangemPayEnabled: Boolean?,
     )
 }
