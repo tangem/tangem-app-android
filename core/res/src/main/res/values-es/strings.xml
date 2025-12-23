@@ -916,6 +916,8 @@
   <string name="reset_card_without_backup_to_factory_message">El reseteo a valores de fábrica eliminará completamente la billetera de la tarjeta/anillo seleccionado y lo eliminará de la app. No podrá restaurar la billetera actual.</string>
   <string name="ring_promo_text">Si tiene un Anillo Tangem, ¡3 swaps sin comisión en Changelly hasta el 15/11!</string>
   <string name="ring_promo_title">¡Intercambia con 0% de comisión!</string>
+  <string name="root_detected_warning_description">Los dispositivos con jailbreak se consideran menos seguros. Sus datos podrían estar expuestos a riesgos adicionales.</string>
+  <string name="root_detected_warning_title">Acceso root detectado</string>
   <string name="save_user_wallet_agreement_access_description">Inicie sesión en la app y comprueba su saldo sin escanear la tarjeta o el anillo</string>
   <string name="save_user_wallet_agreement_access_title">Acceder a la app</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Permitir el uso de biometría</string>
