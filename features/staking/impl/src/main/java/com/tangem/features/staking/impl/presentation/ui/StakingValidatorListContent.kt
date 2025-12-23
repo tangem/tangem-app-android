@@ -27,7 +27,8 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -54,24 +55,24 @@ internal fun StakingValidatorListContent(
             .padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         if (state is StakingStates.ValidatorState.Data) {
-            val validators = state.availableValidators
+            val targets = state.availableTargets
             items(
-                count = validators.size,
-                key = { validators[it].address },
-                contentType = { validators[it]::class.java },
+                count = targets.size,
+                key = { targets[it].address },
+                contentType = { targets[it]::class.java },
             ) { index ->
-                val item = validators[index]
+                val item = targets[index]
 
                 InputRowImageSelector(
                     subtitle = stringReference(item.name),
                     caption = item.getAprTextNeutral(),
                     imageUrl = item.image.orEmpty(),
-                    isSelected = item == state.chosenValidator,
-                    onSelect = { clickIntents.onValidatorSelect(item) },
+                    isSelected = item == state.chosenTarget,
+                    onSelect = { clickIntents.onTargetSelect(item) },
                     modifier = Modifier
                         .roundedShapeItemDecoration(
                             currentIndex = index,
-                            lastIndex = validators.lastIndex,
+                            lastIndex = targets.lastIndex,
                             radius = TangemTheme.dimens.radius12,
                             addDefaultPadding =
                             false,
@@ -106,21 +107,21 @@ internal fun StakingValidatorListContent(
  */
 @Suppress("UnusedPrivateMember")
 @Composable
-private fun Yield.Validator.getAprTextColored() = combinedReference(
-    getRewardTypeLongText(rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+private fun StakingTarget.getAprTextColored() = combinedReference(
+    getRewardTypeLongText(rewardInfo?.type ?: RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = rewardInfo?.rate?.orZero().format { percent() },
+            text = rewardInfo?.rate.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
 )
 
 @Composable
-private fun Yield.Validator.getAprTextNeutral() = combinedReference(
-    getRewardTypeLongText(rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
-    stringReference(" " + rewardInfo?.rate?.orZero().format { percent() }),
+private fun StakingTarget.getAprTextNeutral() = combinedReference(
+    getRewardTypeLongText(rewardInfo?.type ?: RewardType.UNKNOWN),
+    stringReference(" " + rewardInfo?.rate.orZero().format { percent() }),
 )
 
 @Composable

@@ -27,6 +27,8 @@ object PreferencesKeys {
 
     val SAVE_USER_WALLETS_KEY by lazy { booleanPreferencesKey(name = "saveUserWallets") }
 
+    val ROOT_DETECTED_WARNING_SHOWN_KEY by lazy { booleanPreferencesKey(name = "rootDetectedWarningShown") }
+
     val SHOULD_SHOW_ASK_BIOMETRY_KEY by lazy { booleanPreferencesKey("saveUserWalletShown") }
 
     val APP_LAUNCH_COUNT_KEY by lazy { intPreferencesKey(name = "launchCount") }
@@ -77,8 +79,8 @@ object PreferencesKeys {
 
     val SHOULD_SHOW_MARKETS_TOOLTIP_KEY by lazy { booleanPreferencesKey(name = "shouldShowMarketsTooltip") }
 
-    val MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY by lazy {
-        booleanPreferencesKey(name = "marketsStakingNotificationHideClicked")
+    val MARKETS_YIELD_SUPPLY_NOTIFICATION_HIDE_CLICKED_KEY by lazy {
+        booleanPreferencesKey(name = "marketsYieldSupplyNotificationHideClicked")
     }
 
     val WALLET_FIRST_USAGE_DATE_KEY by lazy { longPreferencesKey(name = "walletFirstUsageDate") }

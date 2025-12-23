@@ -13,6 +13,7 @@ import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.security.DeviceSecurityInfoProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -76,12 +77,13 @@ internal interface TangemPayDataModule {
             customerOrderRepository: CustomerOrderRepository,
             tangemPayOnboardingRepository: OnboardingRepository,
             eligibilityManager: TangemPayEligibilityManager,
+            deviceSecurity: DeviceSecurityInfoProvider,
         ): TangemPayMainScreenCustomerInfoUseCase {
             return TangemPayMainScreenCustomerInfoUseCase(
-                repository = repository,
+                onboardingRepository = repository,
                 customerOrderRepository = customerOrderRepository,
-                tangemPayOnboardingRepository = tangemPayOnboardingRepository,
                 eligibilityManager = eligibilityManager,
+                deviceSecurity = deviceSecurity,
             )
         }
 

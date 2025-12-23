@@ -232,8 +232,10 @@ internal class DetailsModel @Inject constructor(
         modelScope.launch {
             if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Settings))
-                generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+                generateBuyTangemCardLinkUseCase
+                    .invoke(GenerateBuyTangemCardLinkUseCase.Source.Settings).let { urlOpener.openUrl(it) }
             } else {
+                // This is incorrect implementation of buy link generation, but it is left here
                 urlOpener.openUrl(buildBuyLink())
             }
         }
@@ -248,7 +250,9 @@ internal class DetailsModel @Inject constructor(
     private fun addTangemPayItemIfEligible() {
         if (!tangemPayFeatureToggles.isTangemPayEnabled) return
         modelScope.launch {
-            val isEligible = tangemPayEligibilityManager.getEligibleWallets().isNotEmpty()
+            val isEligible = tangemPayEligibilityManager
+                .getEligibleWallets(shouldExcludePaeraCustomers = true)
+                .isNotEmpty()
             if (isEligible) {
                 items.update { itemsBuilder.addVisaItem(it) }
             }

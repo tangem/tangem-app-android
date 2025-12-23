@@ -9,6 +9,7 @@ import com.tangem.datasource.api.pay.models.request.GenerateNonceByCustomerWalle
 import com.tangem.datasource.api.pay.models.request.GetTokenByCustomerWalletRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayAuthTokens
@@ -56,7 +57,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
                     authType = "customer_wallet",
                     sessionId = sessionId,
                     signature = signature,
-                    messageFormat = "Tangem Pay wants to sign in with your account. Nonce: $nonce",
+                    messageFormat = VisaUtilities.signWithNonceMessage(nonce),
                 ),
             ).getOrThrow()
         }.map { response ->

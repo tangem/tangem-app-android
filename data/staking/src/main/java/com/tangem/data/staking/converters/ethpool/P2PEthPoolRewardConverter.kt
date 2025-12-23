@@ -5,7 +5,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolReward
 import com.tangem.utils.converter.Converter
 
 /**
- * Converter from P2P Reward Entry DTO to Domain model
+ * Converter from P2PEthPool Reward Entry DTO to Domain model
  */
 internal object P2PEthPoolRewardConverter : Converter<P2PEthPoolRewardDTO, P2PEthPoolReward> {
 

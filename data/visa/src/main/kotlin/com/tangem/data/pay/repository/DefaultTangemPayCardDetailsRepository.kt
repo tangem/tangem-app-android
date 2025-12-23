@@ -52,20 +52,29 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val storePollingMutex = Mutex()
 
     override suspend fun getCardBalance(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardBalance> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            val result = requestHelper.request(userWalletId) { authHeader ->
-                tangemPayApi.getCardBalance(authHeader)
-            }.result ?: error("Cannot get card balance")
-            TangemPayCardBalance(
-                fiatBalance = result.fiat.availableBalance,
-                currencyCode = result.fiat.currency,
-                cryptoBalance = result.crypto.balance,
-                availableForWithdrawal = result.availableForWithdrawal.amount,
-                chainId = result.crypto.chainId,
-                depositAddress = result.crypto.depositAddress,
-                contractAddress = result.crypto.tokenContractAddress,
-            )
-        }
+        return catch(
+            block = {
+                val response = requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.getCardBalance(authHeader)
+                }.getOrNull()
+
+                val fiatBalance = requireNotNull(response?.result?.fiat) { "Cannot get card balance fiat" }
+                val cryptoBalance = requireNotNull(response.result?.crypto) { "Cannot get card balance crypto" }
+                val withdrawalAmount = requireNotNull(response.result?.availableForWithdrawal) {
+                    "Cannot get card balance availableForWithdrawal"
+                }
+                TangemPayCardBalance(
+                    fiatBalance = fiatBalance.availableBalance,
+                    currencyCode = fiatBalance.currency,
+                    cryptoBalance = cryptoBalance.balance,
+                    availableForWithdrawal = withdrawalAmount.amount,
+                    chainId = cryptoBalance.chainId,
+                    depositAddress = cryptoBalance.depositAddress,
+                    contractAddress = cryptoBalance.tokenContractAddress,
+                ).right()
+            },
+            catch = ::catchException,
+        )
     }
 
     override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
@@ -73,12 +82,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             block = {
                 val publicKeyBase64 = getPublicKeyBase64()
                 val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
-                val result = requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
-                    tangemPayApi.revealCardDetails(
-                        authHeader = authHeader,
-                        body = CardDetailsRequest(sessionId = sessionId),
-                    )
-                }.getOrNull()?.result ?: error("Cannot reveal card details")
+                val result = requireNotNull(
+                    requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                        tangemPayApi.revealCardDetails(
+                            authHeader = authHeader,
+                            body = CardDetailsRequest(sessionId = sessionId),
+                        )
+                    }.getOrNull()?.result,
+                )
 
                 val pan = rainCryptoUtil.decryptSecret(
                     base64Secret = result.pan.secret,
@@ -100,7 +111,39 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                     expirationMonth = result.expirationMonth,
                 ).right()
             },
-            catch = { errorConverter.convert(it).left() },
+            catch = ::catchException,
+        )
+    }
+
+    override suspend fun getPin(userWalletId: UserWalletId, cardId: String): Either<UniversalError, String?> {
+        return catch(
+            block = {
+                val publicKeyBase64 = getPublicKeyBase64()
+                val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+                val result = requireNotNull(
+                    requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                        tangemPayApi.revealCardDetails(
+                            authHeader = authHeader,
+                            body = CardDetailsRequest(sessionId = sessionId),
+                        )
+                    }.getOrNull()?.result,
+                )
+
+                val encryptedPin = result.pin
+                val pin = if (encryptedPin != null) {
+                    rainCryptoUtil.decryptPin(
+                        base64Secret = encryptedPin.secret,
+                        base64Iv = encryptedPin.iv,
+                        secretKeyBytes = secretKeyBytes,
+                    ).takeIf { !it.isNullOrEmpty() }
+                } else {
+                    null
+                }
+                secretKeyBytes.fill(0)
+
+                pin.right()
+            },
+            catch = ::catchException,
         )
     }
 
@@ -111,16 +154,18 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
             secretKeyBytes.fill(0)
 
-            val status = requestHelper.request(userWalletId) { authHeader ->
-                tangemPayApi.setPin(
-                    authHeader = authHeader,
-                    body = SetPinRequest(
-                        sessionId = sessionId,
-                        pin = encryptedData.encryptedBase64,
-                        iv = encryptedData.ivBase64,
-                    ),
-                )
-            }.result?.result ?: error("Cannot set pin code")
+            val status = requireNotNull(
+                requestHelper.request(userWalletId) { authHeader ->
+                    tangemPayApi.setPin(
+                        authHeader = authHeader,
+                        body = SetPinRequest(
+                            sessionId = sessionId,
+                            pin = encryptedData.encryptedBase64,
+                            iv = encryptedData.ivBase64,
+                        ),
+                    )
+                }.result?.result,
+            )
             when (status) {
                 SetPinResult.SUCCESS.name -> SetPinResult.SUCCESS
                 SetPinResult.PIN_TOO_WEAK.name -> SetPinResult.PIN_TOO_WEAK
@@ -284,6 +329,11 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
         }
+    }
+
+    private fun <T> catchException(throwable: Throwable): Either<UniversalError, T> {
+        Timber.tag(TAG).e(throwable)
+        return errorConverter.convert(throwable).left()
     }
 
     private companion object {

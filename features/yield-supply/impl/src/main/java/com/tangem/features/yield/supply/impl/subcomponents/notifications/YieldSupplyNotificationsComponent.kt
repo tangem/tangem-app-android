@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.notifications
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,6 +36,7 @@ internal class YieldSupplyNotificationsComponent(
             modifier = modifier
                 .fillMaxWidth()
                 .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             state.forEachIndexed { index, item ->
                 Notification(
@@ -43,7 +45,6 @@ internal class YieldSupplyNotificationsComponent(
                         Modifier.padding(top = 16.dp)
                     },
                     containerColor = TangemTheme.colors.background.action,
-                    iconTint = null,
                 )
             }
         }

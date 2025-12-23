@@ -86,6 +86,13 @@ fun UserWallet.requireHotWallet(): UserWallet.Hot {
         ?: error("This user wallet is not a hot wallet")
 }
 
+fun UserWallet.isImported(): Boolean {
+    return when (this) {
+        is UserWallet.Cold -> isImported
+        is UserWallet.Hot -> true
+    }
+}
+
 fun UserWallet.copy(name: String = this.name, walletId: UserWalletId = this.walletId): UserWallet = when (this) {
     is UserWallet.Cold -> this.copy(name = name, walletId = walletId)
     is UserWallet.Hot -> this.copy(name = name, walletId = walletId)

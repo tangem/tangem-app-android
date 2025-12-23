@@ -65,7 +65,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         .onRight { isValid -> if (isValid) showOnboarding() else back() }
                         .onLeft { back() }
                 }
-                is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
+                    openKyc(userWalletId = params.userWalletId)
+                }
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 is TangemPayOnboardingComponent.Params.FromBannerOnMain,
                 -> showOnboarding()
@@ -89,9 +91,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun checkCustomerInfo(userWalletId: UserWalletId) {
         modelScope.launch {
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
-            repository.getCustomerInfo(
-                userWalletId = userWalletId,
-            )
+            repository.getCustomerInfo(userWalletId = userWalletId)
                 .onRight { customerInfo ->
                     uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     when {
@@ -104,7 +104,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         else -> back()
                     }
                 }
-                .onLeft { back() }
+                .onLeft { startOnboarding(userWalletId) }
         }
     }
 
@@ -115,8 +115,13 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        // if user came from deeplink or banner in settings and already is a paera customer -> exclude this wallet
+        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings ||
+            params is TangemPayOnboardingComponent.Params.Deeplink
         modelScope.launch {
-            val eligibleWalletsIds = eligibilityManager.getEligibleWallets().map { it.walletId }
+            val eligibleWalletsIds = eligibilityManager
+                .getEligibleWallets(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
+                .map { it.walletId }
             if (eligibleWalletsIds.isEmpty()) {
                 back()
                 return@launch
@@ -159,21 +164,20 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 return@launch
             }
-            repository.getCustomerInfo(
-                userWalletId = userWalletId,
-            ).fold(
-                ifLeft = { error ->
-                    Timber.e("Error getCustomerInfo: ${error.errorCode}")
-                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                },
-                ifRight = { customerInfo ->
-                    if (customerInfo.isKycApproved) {
-                        back()
-                    } else {
-                        openKyc(userWalletId)
-                    }
-                },
-            )
+            repository.getCustomerInfo(userWalletId = userWalletId)
+                .fold(
+                    ifLeft = { error ->
+                        Timber.e("Error getCustomerInfo: ${error.errorCode}")
+                        uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
+                    },
+                    ifRight = { customerInfo ->
+                        if (customerInfo.isKycApproved) {
+                            back()
+                        } else {
+                            openKyc(userWalletId)
+                        }
+                    },
+                )
         }
     }
 

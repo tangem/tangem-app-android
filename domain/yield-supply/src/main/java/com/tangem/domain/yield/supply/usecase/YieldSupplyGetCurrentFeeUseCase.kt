@@ -2,6 +2,8 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -10,6 +12,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.yield.supply.YieldSupplyConst.YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT
 import com.tangem.domain.yield.supply.fixFee
+import com.tangem.domain.yield.supply.models.YieldSupplyFee
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -25,7 +28,7 @@ class YieldSupplyGetCurrentFeeUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Either<Throwable, BigDecimal> = catch {
+    ): Either<Throwable, YieldSupplyFee> = catch {
         val feeWithoutGas = feeRepository.getEthereumFeeWithoutGas(userWalletId, cryptoCurrencyStatus.currency)
 
         val fiatRate = cryptoCurrencyStatus.value.fiatRate ?: error("Fiat rate is missing")
@@ -60,6 +63,23 @@ class YieldSupplyGetCurrentFeeUseCase(
 
         val tokenValue = rateRatio.multiply(nativeGas.amount.value)
 
-        tokenValue.stripTrailingZeros()
+        val isEthereum = cryptoCurrencyStatus.currency
+            .network.id.rawId.value == Blockchain.Ethereum.id
+
+        val isHighFee = if (isEthereum) {
+            val maxFeePerGas = (feeWithoutGas as? Fee.Ethereum.EIP1559)?.maxFeePerGas ?: 0.toBigInteger()
+            maxFeePerGas >= HIGH_ETHEREUM_FEE
+        } else {
+            false
+        }
+
+        YieldSupplyFee(
+            value = tokenValue.stripTrailingZeros(),
+            isHighFee = isHighFee,
+        )
+    }
+
+    companion object {
+        private val HIGH_ETHEREUM_FEE = 400_000_000.toBigInteger()
     }
 }

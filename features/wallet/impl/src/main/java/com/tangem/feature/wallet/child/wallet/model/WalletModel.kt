@@ -13,12 +13,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.models.wallet.*
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
@@ -100,6 +99,7 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -114,16 +114,14 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private var needToRefreshWallet = false
     private val clearNFTCacheJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
+    private var needToRefreshWallet = false
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
-        if (!hotWalletFeatureToggles.isHotWalletEnabled) {
-            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy())
-        }
+        trackScreenOpened()
 
         updateMarketToggle()
         suggestToOpenMarkets()
@@ -143,9 +141,7 @@ internal class WalletModel @Inject constructor(
     }
 
     fun onResume() {
-        modelScope.launch(dispatchers.main) {
-            suggestToEnableBiometrics()
-        }
+        suggestToEnableBiometrics()
     }
 
     private fun updateMarketToggle() {
@@ -182,13 +178,15 @@ internal class WalletModel @Inject constructor(
         walletScreenContentLoader.cancelAll()
     }
 
-    private suspend fun suggestToEnableBiometrics() {
-        if (shouldShowAskBiometryBottomSheet()) {
-            delay(timeMillis = 1_800)
+    private fun suggestToEnableBiometrics() {
+        modelScope.launch(dispatchers.main) {
+            if (shouldShowAskBiometryBottomSheet()) {
+                delay(timeMillis = 1_800)
 
-            innerWalletRouter.dialogNavigation.activate(
-                configuration = WalletDialogConfig.AskForBiometry,
-            )
+                innerWalletRouter.dialogNavigation.activate(
+                    configuration = WalletDialogConfig.AskForBiometry,
+                )
+            }
         }
     }
 
@@ -203,6 +201,42 @@ internal class WalletModel @Inject constructor(
             }
 
             shouldShowMarketsTooltipUseCase(isShown = true)
+        }
+    }
+
+    private fun trackScreenOpened() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                userWalletsListRepository
+                    .selectedUserWalletSync()
+                    ?.let { selectedWallet ->
+                        val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                            .any { it is UserWallet.Hot }
+
+                        val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                            singleAccountListSupplier(selectedWallet.walletId)
+                                .first()
+                                .accounts
+                                .size
+                        } else {
+                            null
+                        }
+                        val result = getAppThemeModeUseCase().firstOrNull()
+                        val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+                        analyticsEventsHandler.send(
+                            WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                                hasMobileWallet = hasMobileWallet,
+                                accountsCount = accountsCount,
+                                theme = theme.value,
+                                isImported = selectedWallet.isImported(),
+                            ),
+                        )
+                    }
+            }
+        } else {
+            analyticsEventsHandler.send(
+                WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy(),
+            )
         }
     }
 
@@ -292,27 +326,6 @@ internal class WalletModel @Inject constructor(
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
-
-                    if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                        modelScope.launch {
-                            val hasMobileWallet = userWalletsListRepository.userWalletsSync()
-                                .any { it is UserWallet.Hot }
-                            val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                                singleAccountListSupplier(selectedWallet.walletId)
-                                    .first()
-                                    .accounts
-                                    .size
-                            } else {
-                                null
-                            }
-                            analyticsEventsHandler.send(
-                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
-                                    hasMobileWallet = hasMobileWallet,
-                                    accountsCount = accountsCount,
-                                ),
-                            )
-                        }
-                    }
 
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
@@ -453,7 +466,7 @@ internal class WalletModel @Inject constructor(
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
-            is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeNewWallet -> reinitializeNewWallet(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallets -> reinitializeWallets(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
@@ -537,7 +550,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private fun reinitializeNewWallet(action: WalletsUpdateActionResolver.Action.ReinitializeNewWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -550,7 +563,7 @@ internal class WalletModel @Inject constructor(
         fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
-            ReinitializeWalletTransformer(
+            ReinitializeNewWalletTransformer(
                 prevWalletId = action.prevWalletId,
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
@@ -570,14 +583,11 @@ internal class WalletModel @Inject constructor(
                 coroutineScope = modelScope,
             )
 
-            modelScope.launch(dispatchers.main) {
-                fetchWalletContent(userWallet = userWallet)
-            }
+            fetchWalletContent(userWallet = userWallet)
 
             stateHolder.update(
                 ReinitializeWalletTransformer(
-                    prevWalletId = userWallet.walletId,
-                    newUserWallet = userWallet,
+                    userWallet = userWallet,
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                 ),

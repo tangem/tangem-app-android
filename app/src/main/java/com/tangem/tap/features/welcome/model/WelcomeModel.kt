@@ -2,7 +2,7 @@ package com.tangem.tap.features.welcome.model
 
 import com.tangem.common.core.TangemError
 import com.tangem.common.routing.entity.InitScreenLaunchMode
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -28,6 +28,7 @@ import javax.inject.Inject
 internal class WelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appFinisher: AppFinisher,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model(), StoreSubscriber<WelcomeState> {
 
@@ -54,12 +55,12 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private fun unlockWallets() {
-        Analytics.send(SignIn.ButtonBiometricSignIn())
+        analyticsEventsHandler.send(SignIn.ButtonBiometricSignIn())
         store.dispatch(WelcomeAction.ProceedWithBiometrics)
     }
 
     private fun scanCard() {
-        Analytics.send(SignIn.ButtonCardSignIn())
+        analyticsEventsHandler.send(SignIn.ButtonCardSignIn())
         store.dispatch(WelcomeAction.ProceedWithCard)
     }
 

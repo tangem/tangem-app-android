@@ -12,7 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.market.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -38,7 +38,7 @@ internal class MarketsTokenItemConverter(
             trendType = value.getTrendType(),
             chartData = value.getChartData(),
             isUnder100kMarketCap = value.isUnderMarketCapLimit,
-            stakingRate = value.stakingRate?.format { percent() }?.let {
+            stakingRate = value.yieldRate?.format { percent() }?.let {
                 resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
             },
             updateTimestamp = value.updateTimestamp,

@@ -7,7 +7,6 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class TangemPayTxHistoryResponse(
-    @Json(name = "error") val error: String?,
     @Json(name = "result") val result: Result,
 ) {
     @JsonClass(generateAdapter = true)

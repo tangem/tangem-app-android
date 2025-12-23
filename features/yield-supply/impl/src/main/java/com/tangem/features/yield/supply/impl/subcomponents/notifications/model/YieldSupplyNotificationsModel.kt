@@ -5,6 +5,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addHighFeeNotificationIfNoOther
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -74,21 +75,40 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         dustValue = null,
                         onReload = params.callback::onFeeReload,
                     )
-                }
 
-                if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
-                    analyticsEventHandler.send(
-                        YieldSupplyAnalytics.NoticeNotEnoughFee(
-                            token = cryptoCurrencyStatus.currency.symbol,
-                            blockchain = cryptoCurrencyStatus.currency.network.name,
-                        ),
+                    addHighFeeNotificationIfNoOther(
+                        shouldShowHighFeeNotification = data.shouldShowHighFeeNotification,
                     )
                 }
 
+                sendAnalytics(notifications, cryptoCurrencyStatus.currency)
+
                 uiState.update { notifications.toPersistentList() }
 
-                yieldSupplyNotificationsUpdateListener.callbackHasError(notifications.any())
+                // Business requirement that YieldSupplyHighNetworkFee is not an error and doesn't block the button
+                val hasError = notifications.any { it !is NotificationUM.Info.YieldSupplyHighNetworkFee }
+                yieldSupplyNotificationsUpdateListener.callbackHasError(hasError)
             }.launchIn(modelScope)
+    }
+
+    private fun sendAnalytics(notifications: List<NotificationUM>, currency: CryptoCurrency) {
+        if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
+            analyticsEventHandler.send(
+                YieldSupplyAnalytics.NoticeNotEnoughFee(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                ),
+            )
+        }
+
+        if (notifications.any { it is NotificationUM.Info.YieldSupplyHighNetworkFee }) {
+            analyticsEventHandler.send(
+                YieldSupplyAnalytics.NoticeHighFee(
+                    token = currency.symbol,
+                    blockchain = currency.network.name,
+                ),
+            )
+        }
     }
 
     private fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
