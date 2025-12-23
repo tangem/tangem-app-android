@@ -154,10 +154,20 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemTypography.current
 
+    val typography2: TangemTypography2
+        @Composable
+        @ReadOnlyComposable
+        get() = TangemTypography2(InterFamily)
+
     val dimens: TangemDimens
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens.current
+
+    val dimens2: TangemDimens2
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemDimens2.current
 
     val shapes: TangemShapes
         @Composable
@@ -343,8 +353,16 @@ internal val LocalTangemTypography = staticCompositionLocalOf {
     TangemTypography(RobotoFamily)
 }
 
+internal val LocalTangemTypography2 = staticCompositionLocalOf {
+    TangemTypography2(InterFamily)
+}
+
 private val LocalTangemDimens = staticCompositionLocalOf {
     TangemDimens()
+}
+
+private val LocalTangemDimens2 = staticCompositionLocalOf {
+    TangemDimens2()
 }
 
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
