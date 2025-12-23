@@ -8,9 +8,12 @@ interface TangemPayStorage {
     suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String)
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String?
 
+    suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId)
+
     suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens)
 
     suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens?
+    suspend fun clearAuthTokens(customerWalletAddress: String)
 
     suspend fun storeOrderId(customerWalletAddress: String, orderId: String)
 
