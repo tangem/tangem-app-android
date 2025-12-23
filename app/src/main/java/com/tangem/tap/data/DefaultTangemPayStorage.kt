@@ -53,6 +53,12 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
+    override suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
+        }
+    }
+
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) =
         withContext(dispatcherProvider.io) {
             val json = tokensAdapter.toJson(tokens)
@@ -69,6 +75,10 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 ?.decodeToString(throwOnInvalidSequence = true)
                 ?.let(tokensAdapter::fromJson)
         }
+
+    override suspend fun clearAuthTokens(customerWalletAddress: String) {
+        secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+    }
 
     override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) {
         withContext(dispatcherProvider.io) {
@@ -112,6 +122,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
     override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
         withContext(dispatcherProvider.io) {
             secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+            appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), false)
             appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
             appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
             appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
