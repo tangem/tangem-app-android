@@ -12,7 +12,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.EstimateGasUseCase
-import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.StakeKitIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
@@ -36,7 +36,7 @@ import kotlinx.coroutines.delay
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
-internal class StakingFeeTransactionLoader @AssistedInject constructor(
+internal class StakeKitFeeLoader @AssistedInject constructor(
     private val stateController: StakingStateController,
     private val getFeeUseCase: GetFeeUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
@@ -44,10 +44,10 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
-    @Assisted private val integration: StakingIntegration,
-) {
+    @Assisted private val integration: StakeKitIntegration,
+) : StakingFeeLoader {
 
-    suspend fun getFee(
+    override suspend fun getFee(
         onStakingFee: (Fee, Boolean) -> Unit,
         onStakingFeeError: (StakingError) -> Unit,
         onApprovalFee: (TransactionFee) -> Unit,
@@ -57,21 +57,41 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
             ?: error("Illegal state")
 
-        val validatorAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenTarget?.address
+        val targetAddress = (state.validatorState as? StakingStates.ValidatorState.Data)?.chosenTarget?.address
             ?: state.balanceState?.targetAddress
             ?: error("No target address provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
 
-        val pendingAction = confirmationState.pendingAction
-        val pendingActions = confirmationState.pendingActions
+        getStakeKitFee(
+            confirmationState = confirmationState,
+            actionType = state.actionType,
+            amount = amount,
+            validatorAddress = targetAddress,
+            onStakingFee = onStakingFee,
+            onStakingFeeError = onStakingFeeError,
+            onApprovalFee = onApprovalFee,
+            onFeeError = onFeeError,
+        )
+    }
 
-        val isEnter = state.actionType is StakingActionCommonType.Enter
+    private suspend fun getStakeKitFee(
+        confirmationState: StakingStates.ConfirmationState.Data,
+        actionType: StakingActionCommonType,
+        amount: BigDecimal,
+        validatorAddress: String,
+        onStakingFee: (Fee, Boolean) -> Unit,
+        onStakingFeeError: (StakingError) -> Unit,
+        onApprovalFee: (TransactionFee) -> Unit,
+        onFeeError: (GetFeeError) -> Unit,
+    ) {
+        val isEnter = actionType is StakingActionCommonType.Enter
         val isApprovalNeeded = confirmationState.isApprovalNeeded
         val isAllowanceNotEnough = confirmationState.allowance < amount
+
         if (isEnter && isApprovalNeeded && isAllowanceNotEnough) {
-            getApproveFee(
+            getApprovalFee(
                 amount = amount,
                 validatorAddress = validatorAddress,
                 onApprovalFee = onApprovalFee,
@@ -79,8 +99,8 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             )
         } else {
             estimateGas(
-                pendingAction = pendingAction,
-                pendingActions = pendingActions,
+                pendingAction = confirmationState.pendingAction,
+                pendingActions = confirmationState.pendingActions,
                 amount = amount,
                 validatorAddress = validatorAddress,
                 onStakingFeeError = onStakingFeeError,
@@ -105,61 +125,80 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
                 pendingActions = pendingActions,
             )
         ) {
-            val result = coroutineScope {
-                pendingActions?.map { action ->
-                    async {
-                        // Simultaneous or quick api calls can sometimes return ZERO fee
-                        estimateFeeRetry {
-                            estimateFee(
-                                amount = amount,
-                                sourceAddress = sourceAddress,
-                                validatorAddress = validatorAddress,
-                                action = action,
-                            )
-                        }.getOrElse {
-                            onStakingFeeError(it)
-                            null
-                        }
-                    }
-                }?.awaitAll()?.filterNotNull()
-            }
-
-            if (result.isNullOrEmpty()) {
-                onStakingFeeError(StakingError.DomainError("Error estimating fee"))
-                return
-            }
-
-            val totalAmount = result.sumOf { it.amount }
-            val totalGasLimit = result.sumOf { it.gasLimit?.toBigDecimalOrNull().orZero() }
-            StakingGasEstimate(
-                amount = totalAmount,
-                token = result.first().token,
-                gasLimit = totalGasLimit.toPlainString().orEmpty(),
-            )
+            estimateCompositeGas(
+                pendingActions = pendingActions,
+                amount = amount,
+                sourceAddress = sourceAddress,
+                validatorAddress = validatorAddress,
+                onStakingFeeError = onStakingFeeError,
+            ) ?: return
         } else {
-            estimateFee(
+            estimateSingleGas(
                 amount = amount,
                 sourceAddress = sourceAddress,
                 validatorAddress = validatorAddress,
                 action = pendingAction,
-            ).getOrElse {
-                onStakingFeeError(it)
+            ).getOrElse { error ->
+                onStakingFeeError(error)
                 return
             }
         }
 
-        val amount = Amount(
+        val feeAmount = Amount(
             currencySymbol = gasEstimate.token.symbol,
             value = gasEstimate.amount,
             decimals = gasEstimate.token.decimals,
         )
         onStakingFee(
-            Fee.Common(amount),
-            isFeeApproximateUseCase(networkId = cryptoCurrencyStatus.currency.network.id, amountType = amount.type),
+            Fee.Common(feeAmount),
+            isFeeApproximateUseCase(networkId = cryptoCurrencyStatus.currency.network.id, amountType = feeAmount.type),
         )
     }
 
-    private suspend fun estimateFee(
+    /**
+     * Estimates gas for several staking transactions.
+     */
+    private suspend fun estimateCompositeGas(
+        pendingActions: ImmutableList<PendingAction>?,
+        amount: BigDecimal,
+        sourceAddress: String,
+        validatorAddress: String,
+        onStakingFeeError: (StakingError) -> Unit,
+    ): StakingGasEstimate? {
+        val result = coroutineScope {
+            pendingActions?.map { action ->
+                async {
+                    // Simultaneous or quick API calls can sometimes return ZERO fee
+                    estimateGasRetry {
+                        estimateSingleGas(
+                            amount = amount,
+                            sourceAddress = sourceAddress,
+                            validatorAddress = validatorAddress,
+                            action = action,
+                        )
+                    }.getOrElse { gasError ->
+                        onStakingFeeError(gasError)
+                        null
+                    }
+                }
+            }?.awaitAll()?.filterNotNull()
+        }
+
+        if (result.isNullOrEmpty()) {
+            onStakingFeeError(StakingError.DomainError("Error estimating fee"))
+            return null
+        }
+
+        val totalAmount = result.sumOf { it.amount }
+        val totalGasLimit = result.sumOf { it.gasLimit?.toBigDecimalOrNull().orZero() }
+        return StakingGasEstimate(
+            amount = totalAmount,
+            token = result.first().token,
+            gasLimit = totalGasLimit.toPlainString().orEmpty(),
+        )
+    }
+
+    private suspend fun estimateSingleGas(
         amount: BigDecimal,
         sourceAddress: String,
         validatorAddress: String,
@@ -179,7 +218,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         ),
     )
 
-    private suspend fun getApproveFee(
+    private suspend fun getApprovalFee(
         amount: BigDecimal,
         validatorAddress: String,
         onApprovalFee: (TransactionFee) -> Unit,
@@ -187,6 +226,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     ) {
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: return onApprovalFeeError(GetFeeError.UnknownError)
+
         val approvalTransactionData = createApprovalTransactionUseCase(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWalletId = userWallet.walletId,
@@ -196,34 +236,29 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         ).getOrElse {
             return onApprovalFeeError(GetFeeError.DataError(it))
         }
+
         getFeeUseCase(
             userWallet = userWallet,
             network = tokenCurrency.network,
             transactionData = approvalTransactionData,
         ).fold(
-            ifRight = { fee ->
-                onApprovalFee(fee)
-            },
-            ifLeft = { error ->
-                onApprovalFeeError(error)
-            },
+            ifRight = onApprovalFee,
+            ifLeft = onApprovalFeeError,
         )
     }
 
-    private suspend fun estimateFeeRetry(
-        times: Int = 3,
-        delay: Long = 1000,
+    private suspend fun estimateGasRetry(
+        times: Int = RETRY_COUNT,
+        delayMs: Long = RETRY_DELAY_MS,
         block: suspend () -> Either<StakingError, StakingGasEstimate>,
     ): Either<StakingError, StakingGasEstimate> {
         repeat(times - 1) {
             val feeResult = block()
             feeResult.fold(
                 ifLeft = { return feeResult },
-                ifRight = {
-                    if (!it.amount.isZero()) return feeResult
-                },
+                ifRight = { estimate -> if (!estimate.amount.isZero()) return feeResult },
             )
-            delay(delay)
+            delay(delayMs)
         }
         return block()
     }
@@ -233,7 +268,12 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         fun create(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             userWallet: UserWallet,
-            integration: StakingIntegration,
-        ): StakingFeeTransactionLoader
+            integration: StakeKitIntegration,
+        ): StakeKitFeeLoader
+    }
+
+    private companion object {
+        const val RETRY_COUNT = 3
+        const val RETRY_DELAY_MS = 1000L
     }
 }
