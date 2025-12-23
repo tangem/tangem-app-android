@@ -36,20 +36,16 @@ internal class DefaultWcRequestService(
                 sessionRequest = sessionRequest,
             ),
         )
+        Timber.tag(WC_TAG).i("handle request $sr")
         val name = requestConverters.firstNotNullOfOrNull { it.toWcMethodName(sr) }
             ?: WcMethodName.Unsupported(sr.request.method)
-
+        Timber.tag(WC_TAG).i("handle request name $name")
         if (name is WcMethodName.Unsupported) {
             respondService.rejectRequestNonBlock(sr)
             if (name.raw.startsWith("wallet_")) return
         }
 
-        val sendResult = _wcRequest.trySend(name to sr)
-        if (sendResult.isFailure) {
-            Timber.tag(WC_TAG).e(
-                "Failed to send request to channel: ${sr.request.id} (${sr.request.method})",
-            )
-        }
+        _wcRequest.trySend(name to sr)
     }
 
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
@@ -60,7 +56,11 @@ internal class DefaultWcRequestService(
             it.filterTo(mutableSetOf()) { (millis, _) -> millis > expiredMillis }
         }
 
-        return cachedRequest.none { (_, hashParams) -> hash == hashParams }
+        val noHaveCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
+        if (!noHaveCached) {
+            Timber.tag(WC_TAG).i("filter request $request")
+        }
+        return noHaveCached
     }
 
     private fun saveRequest(request: WcSdkSessionRequest) {
