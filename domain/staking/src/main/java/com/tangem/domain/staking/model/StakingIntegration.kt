@@ -11,7 +11,7 @@ import java.math.BigDecimal
  * Strategy interface for staking integrations.
  * Abstracts over StakeKit and P2PEthPool staking providers.
  */
-interface StakingIntegration {
+sealed interface StakingIntegration {
 
     // Basic
 
