@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -180,9 +181,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
             )
         }.map { response ->
             val id = response.result?.id
-            val isPaeraCustomer = !id.isNullOrEmpty()
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer)
-            isPaeraCustomer
+            val isTangemPayEnabled = response.result?.isTangemPayEnabled == true
+            val shouldShowTangemPayBlock = !id.isNullOrEmpty() && isTangemPayEnabled
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, shouldShowTangemPayBlock)
+            shouldShowTangemPayBlock
         }.mapLeft { error ->
             if (error is VisaApiError.NotPaeraCustomer) {
                 tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
@@ -204,5 +206,18 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
+    }
+
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Any> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.setTangemPayEnabledStatus(
+                authHeader = authHeader,
+                body = SetTangemPayEnabledRequest(isTangemPayEnabled = false),
+            )
+        }.onRight {
+            val address = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
+            setHideMainOnboardingBanner(userWalletId)
+        }
     }
 }
