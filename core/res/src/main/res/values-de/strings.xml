@@ -1072,6 +1072,8 @@
   <string name="reset_cards_dialog_next_device_description">Bitte setze das nächste Gerät zurück, um fortzufahren.</string>
   <string name="ring_promo_text">Ringbesitzer erhalten bis zum 15.11. 3 provisionsfreie Swaps auf Changelly!</string>
   <string name="ring_promo_title">Jetzt mit 0 % Gebühren tauschen!</string>
+  <string name="root_detected_warning_description">Geräte mit Root-Zugriff gelten als weniger sicher. Deine Daten können zusätzlichen Risiken ausgesetzt sein.</string>
+  <string name="root_detected_warning_title">Root-Zugriff erkannt</string>
   <string name="save_user_wallet_agreement_access_description">Melde dich bei der App an und überprüfe dein Guthaben, ohne die Karte oder Ring zu scannen</string>
   <string name="save_user_wallet_agreement_access_title">Zugriff auf die App</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Nutzung biometrischer Daten zulassen</string>
@@ -1461,7 +1463,7 @@
   <string name="tangempay_failed_to_issue_card">Kartenausstellung fehlgeschlagen</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Ein technischer Fehler ist aufgetreten, bitte versuchen Sie es erneut, indem Sie auf die Schaltfläche unten klicken</string>
   <string name="tangempay_failed_to_issue_card_support_description">Ein technischer Fehler ist aufgetreten, bitte kontaktieren Sie den Support</string>
-  <string name="tangempay_get_banner_description">Nutzen Sie Ihre Kryptowährungen für Einkäufe im Alltag. \nEine Zahlungskarte, die ihresgleichen sucht.</string>
+  <string name="tangempay_get_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_get_tangem_pay">Tangem Pay erhalten</string>
   <string name="tangempay_go_to_support">Zum Support</string>
   <string name="tangempay_issue_card_notification_description">Es dauert in der Regel bis zu 15 Minuten.</string>
@@ -1474,8 +1476,8 @@
   <string name="tangempay_kyc_in_progress">KYC in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
-  <string name="tangempay_onboarding_banner_description">Nutzen Sie Ihre Kryptowährungen für Einkäufe im echten Leben. \nEs ist eine Zahlungskarte, die ihresgleichen sucht.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
+  <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
   <string name="tangempay_onboarding_pay_description">Mit digitaler Karte, die mit Apple Pay und Google Pay funktioniert</string>
   <string name="tangempay_onboarding_pay_title">Geben Sie Ihre Vermögenswerte überall aus</string>
@@ -1490,7 +1492,7 @@
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
   <string name="tangempay_sync_needed">Synchronisation erforderlich</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht verfügbar</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Verwenden Sie Ihre Karte oder Ihren Ring, um den Zugriff auf Ihr Zahlungskonto wiederherzustellen</string>
@@ -1990,6 +1992,7 @@
   <string name="yield_module_fee_policy_sheet_title">Gebührenpolitik</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem erhebt außerdem eine Servicegebühr von 15% auf den erzielten Ertrag.</string>
   <string name="yield_module_high_fee_error">Deine Gelder werden automatisch an Aave überwiesen, sobald die Netzwerkgebühren niedriger sind oder Dein Guthaben den erforderlichen Mindestbetrag erreicht.</string>
+  <string name="yield_module_high_network_fees_notification_description">Die Gebühren sind aufgrund der hohen Marktaktivität derzeit höher als üblich. Du kannst jetzt fortfahren oder später noch einmal vorbeischauen, wenn die Gebühren niedriger sind.</string>
   <string name="yield_module_high_network_fees_notification_title">Hohe Netzwerkgebühren</string>
   <string name="yield_module_historical_returns">Historische Renditen</string>
   <string name="yield_module_main_screen_promo_banner_message">Aktiviere %1$s%% Jahreszins auf Dein Guthaben</string>
