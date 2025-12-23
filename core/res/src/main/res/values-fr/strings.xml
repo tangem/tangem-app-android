@@ -1280,7 +1280,7 @@
   <string name="tangempay_failed_to_issue_card">Échec de l\'émission de la carte</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Une erreur technique s\'est produite, veuillez réessayer en cliquant sur le bouton ci-dessous</string>
   <string name="tangempay_failed_to_issue_card_support_description">Une erreur technique s\'est produite, veuillez contacter le support</string>
-  <string name="tangempay_get_banner_description">Utilisez vos cryptomonnaies pour vos dépenses quotidiennes. \nC\'est une carte de paiement unique en son genre.</string>
+  <string name="tangempay_get_banner_description">Obtenez votre carte virtuelle Tangem Visa gratuite</string>
   <string name="tangempay_get_tangem_pay">Obtenir Tangem Pay</string>
   <string name="tangempay_go_to_support">Contacter le support</string>
   <string name="tangempay_issue_card_notification_description">Cela prend généralement jusqu\'à 15 minutes</string>
@@ -1293,8 +1293,8 @@
   <string name="tangempay_kyc_in_progress">KYC en cours</string>
   <string name="tangempay_kyc_in_progress_notification_button">Voir le statut</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en cours pour Tangem Pay</string>
-  <string name="tangempay_onboarding_banner_description">Utilisez vos cryptomonnaies pour vos dépenses du quotidien. \nC\'est une carte de paiement unique en son genre.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_onboarding_banner_description">Obtenez votre carte virtuelle Tangem Visa gratuite</string>
+  <string name="tangempay_onboarding_banner_title">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtenir la carte</string>
   <string name="tangempay_onboarding_pay_description">Avec carte numérique compatible Apple Pay et Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Dépensez vos actifs partout</string>
@@ -1309,7 +1309,7 @@
   <string name="tangempay_service_unavailable_title">Service temporairement indisponible</string>
   <string name="tangempay_service_unreachable_try_later">Les données ne peuvent pas être affichées pour le moment, mais les paiements par carte fonctionnent toujours.</string>
   <string name="tangempay_sync_needed">Synchronisation requise</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_tangem_visa_card">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Utilisez votre carte ou votre bague pour restaurer l\'accès à votre compte de paiement</string>
