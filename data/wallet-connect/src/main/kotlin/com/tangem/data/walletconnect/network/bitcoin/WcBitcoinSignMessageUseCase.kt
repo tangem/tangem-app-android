@@ -4,8 +4,6 @@ import arrow.core.left
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignMessageRequest
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
@@ -55,6 +53,8 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
 ) : BaseWcSignUseCase<Nothing, WcMessageSignUseCase.SignModel>(),
     WcMessageSignUseCase {
 
+    override val wallet get() = context.session.wallet
+
     // BlockAid doesn't support Bitcoin message signing
     override val securityStatus: LceFlow<Throwable, CheckTransactionResult> = flowOf(
         Lce.Content(
@@ -69,20 +69,23 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
         state: WcSignState<WcMessageSignUseCase.SignModel>,
     ) {
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
-        if (walletManager !is BitcoinWalletManager) {
-            emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))
-            return
-        }
+            ?: run {
+                emit(state.toResult(HandleMethodError.UnknownError("Failed to create wallet manager").left()))
+                return
+            }
 
         val signer = signerProvider.createSigner(wallet)
-        val request = SignMessageRequest(
-            account = method.account,
-            message = method.message,
-            address = method.address,
-            protocol = method.protocol,
-        )
 
-        when (val result = walletManager.walletConnectHandler.signMessage(request, signer)) {
+        // Use the address from method, or fallback to account if not specified
+        val addressToSign = method.address ?: method.account
+
+        // Use MessageSigner to sign the message
+        when (val result = walletManager.signMessage(
+            message = method.message,
+            address = addressToSign,
+            protocol = method.protocol ?: "ecdsa",
+            signer = signer,
+        )) {
             is SdkResult.Success -> {
                 val response = buildJsonResponse(result.data)
                 val wcRespondResult = respondService.respond(rawSdkRequest, response)
@@ -98,9 +101,7 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
         return delegate.invoke(initModel = WcMessageSignUseCase.SignModel(method.message))
     }
 
-    private fun buildJsonResponse(
-        data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignMessageResponse,
-    ): String {
+    private fun buildJsonResponse(data: com.tangem.blockchain.common.messagesigning.MessageSignatureResult): String {
         val response = SignMessageResponse(
             address = data.address,
             signature = data.signature,
