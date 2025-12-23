@@ -55,6 +55,21 @@ fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier):
 fun Modifier.conditionalCompose(
     condition: Boolean,
     modifier: @Composable Modifier.() -> Modifier = { Modifier },
+): Modifier {
+    return if (condition) {
+        then(modifier(Modifier))
+    } else {
+        this
+    }
+}
+
+/**
+ * Conditionally applies a modifier based on a boolean condition.
+ */
+@Composable
+fun Modifier.conditionalCompose(
+    condition: Boolean,
+    modifier: @Composable Modifier.() -> Modifier = { Modifier },
     otherModifier: @Composable Modifier.() -> Modifier = { this },
 ): Modifier {
     return if (condition) {
