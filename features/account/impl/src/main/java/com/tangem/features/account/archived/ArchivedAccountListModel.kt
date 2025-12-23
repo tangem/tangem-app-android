@@ -124,11 +124,8 @@ internal class ArchivedAccountListModel @Inject constructor(
 
             messageSender.send(
                 DialogMessage(
-                    title = resourceReference(R.string.common_something_went_wrong),
-                    message = resourceReference(
-                        id = R.string.account_recover_limit_dialog_description,
-                        formatArgs = wrappedList(AccountList.MAX_ACCOUNTS_COUNT.toString()),
-                    ),
+                    title = resourceReference(R.string.account_recover_limit_dialog_title),
+                    message = resourceReference(R.string.account_archived_recover_error_message),
                     firstActionBuilder = { firstAction },
                 ),
             )
