@@ -54,32 +54,12 @@ internal class CreateWalletSelectionModel @Inject constructor(
                             style = LabelStyle.ACCENT,
                         ),
                         description = resourceReference(R.string.wallet_add_hardware_description),
-                        features = persistentListOf(
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_add_wallet_16,
-                                title = resourceReference(R.string.wallet_add_hardware_info_create),
-                            ),
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_import_seed_16,
-                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
-                            ),
-                        ),
                         onClick = ::onHardwareWalletClick,
                     ),
                     CreateWalletSelectionUM.Block(
                         title = resourceReference(R.string.wallet_create_mobile_title),
                         titleLabel = null,
                         description = resourceReference(R.string.wallet_add_mobile_description),
-                        features = persistentListOf(
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_mobile_wallet_16,
-                                title = resourceReference(R.string.hw_create_title),
-                            ),
-                            CreateWalletSelectionUM.Feature(
-                                iconResId = R.drawable.ic_import_seed_16,
-                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
-                            ),
-                        ),
                         onClick = ::onMobileWalletClick,
                     ),
                 ),
