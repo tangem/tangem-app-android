@@ -248,7 +248,7 @@ internal class DefaultP2PEthPoolRepository(
         }
     }
 
-    private suspend fun getVaultsSync(): List<P2PEthPoolVault> {
+    override suspend fun getVaultsSync(): List<P2PEthPoolVault> {
         return p2pEthPoolVaultsStore.getSync()
     }
 }
