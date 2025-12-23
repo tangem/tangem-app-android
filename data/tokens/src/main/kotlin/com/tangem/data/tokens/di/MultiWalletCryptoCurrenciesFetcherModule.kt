@@ -11,7 +11,6 @@ import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -33,7 +32,6 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
         userTokensResponseStore: UserTokensResponseStore,
         userTokensSaver: UserTokensSaver,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-        expressServiceFetcher: ExpressServiceFetcher,
         walletAccountsFetcher: WalletAccountsFetcher,
         dispatchers: CoroutineDispatcherProvider,
     ): MultiWalletCryptoCurrenciesFetcher {
@@ -41,7 +39,6 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
             AccountListCryptoCurrenciesFetcher(
                 userWalletsStore = userWalletsStore,
                 walletAccountsFetcher = walletAccountsFetcher,
-                expressServiceFetcher = expressServiceFetcher,
                 dispatchers = dispatchers,
             )
         } else {
@@ -57,7 +54,6 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
                 userTokensResponseStore = userTokensResponseStore,
                 userTokensSaver = userTokensSaver,
                 cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-                expressServiceFetcher = expressServiceFetcher,
                 dispatchers = dispatchers,
             )
         }

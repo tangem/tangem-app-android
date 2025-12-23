@@ -8,8 +8,6 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.core.utils.eitherOn
-import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -39,7 +37,6 @@ import timber.log.Timber
  * @property stakingIdFactory Factory for creating staking IDs.
  * @property networksCleaner Cleaner for removing obsolete network data.
  * @property stakingCleaner Cleaner for removing obsolete staking data.
- * @property expressServiceFetcher Fetcher for updating express service data.
  * @property parallelUpdatingScope Coroutine scope for parallel updates.
  * @property dispatchers Coroutine dispatchers for managing threading.
  *
@@ -56,7 +53,6 @@ class ManageCryptoCurrenciesUseCase(
     private val stakingIdFactory: StakingIdFactory,
     private val networksCleaner: NetworksCleaner,
     private val stakingCleaner: StakingCleaner,
-    private val expressServiceFetcher: ExpressServiceFetcher,
     private val parallelUpdatingScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
@@ -101,7 +97,6 @@ class ManageCryptoCurrenciesUseCase(
                 syncTokens(userWalletId, modifiedCurrencyList)
 
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
-                refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
             }
         }
@@ -138,7 +133,6 @@ class ManageCryptoCurrenciesUseCase(
                 syncTokens(userWalletId, modifiedCurrencyList)
 
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
-                refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
             }
 
             tokenToAdd
@@ -282,23 +276,6 @@ class ManageCryptoCurrenciesUseCase(
                 walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
             }
                 .onFailure { Timber.e(it, "Failed to create wallet manager for network ${network.id}") }
-        }
-    }
-
-    private suspend fun refreshExpress(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        if (currencies.isEmpty()) return
-
-        coroutineScope {
-            launch {
-                val assetIds = currencies.mapTo(hashSetOf()) { currency ->
-                    ExpressAsset.ID(
-                        networkId = currency.network.backendId,
-                        contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
-                    )
-                }
-
-                expressServiceFetcher.fetch(userWalletId = userWalletId, assetIds = assetIds)
-            }
         }
     }
 

@@ -16,13 +16,11 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.OnrampOperationComponent.Params
@@ -46,7 +44,6 @@ internal class OnrampOperationModel @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val rampStateManager: RampStateManager,
 ) : Model() {
 
     private val params: Params = paramsContainer.require()
@@ -80,18 +77,11 @@ internal class OnrampOperationModel @Inject constructor(
 
     fun onHotTokenClick(status: CryptoCurrencyStatus) {
         modelScope.launch {
-            val unavailabilityReason = rampStateManager.availableForBuy(
-                userWallet = selectedUserWallet,
-                cryptoCurrency = status.currency,
+            analyticsEventHandler.send(
+                event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
             )
 
-            if (unavailabilityReason == ScenarioUnavailabilityReason.None) {
-                analyticsEventHandler.send(
-                    event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
-                )
-
-                selectTokenIfDemoModeOff(status)
-            }
+            selectTokenIfDemoModeOff(status)
         }
     }
 

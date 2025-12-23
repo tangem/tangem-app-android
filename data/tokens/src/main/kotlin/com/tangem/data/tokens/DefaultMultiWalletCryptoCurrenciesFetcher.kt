@@ -13,8 +13,6 @@ import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
@@ -31,7 +29,6 @@ import timber.log.Timber
  * @property userTokensResponseStore   store of [UserTokensResponse]
  * @property userTokensSaver           user tokens saver
  * @property cardCryptoCurrencyFactory factory for creating crypto currencies for specified card
- * @property expressServiceFetcher     express service loader
  * @property dispatchers               dispatchers
  *
 [REDACTED_AUTHOR]
@@ -45,7 +42,6 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
     private val userTokensResponseStore: UserTokensResponseStore,
     private val userTokensSaver: UserTokensSaver,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesFetcher {
 
@@ -76,8 +72,6 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
             .let { customTokensMerger.mergeIfPresented(userWalletId = userWallet.walletId, response = it) }
 
         userTokensSaver.store(userWalletId = userWallet.walletId, response = compatibleUserTokensResponse)
-
-        fetchExpressAssetsByNetworkIds(userWallet = userWallet, userTokens = compatibleUserTokensResponse)
     }
 
     private suspend fun UserWallet.Cold.isDemoWalletWithoutSavedTokens(): Boolean {
@@ -105,17 +99,6 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
         }
 
         return response
-    }
-
-    private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
-        val tokens = userTokens.tokens.mapTo(hashSetOf()) { token ->
-            ExpressAsset.ID(
-                networkId = token.networkId,
-                contractAddress = token.contractAddress,
-            )
-        }
-
-        expressServiceFetcher.fetch(userWallet = userWallet, assetIds = tokens)
     }
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet): UserTokensResponse {

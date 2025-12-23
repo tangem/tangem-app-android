@@ -549,19 +549,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             val swapRoute = getSwapRoute(
                 AppRoute.SwapCrypto(userWalletId = userWalletId),
             )
-            onMultiWalletActionClick(
-                statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
-                route = swapRoute,
-                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
-            )
+
+            handleContent(swapRoute, MainScreenAnalyticsEvent::ButtonSwap)
         }
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId, screenType: String) {
-        onMultiWalletActionClick(
-            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
-            route = AppRoute.BuyCrypto(userWalletId = userWalletId),
-            eventCreator = { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
+        handleContent(
+            AppRoute.BuyCrypto(userWalletId = userWalletId),
+            { MainScreenAnalyticsEvent.ButtonBuy(status = it, screenType = screenType) },
         )
     }
 

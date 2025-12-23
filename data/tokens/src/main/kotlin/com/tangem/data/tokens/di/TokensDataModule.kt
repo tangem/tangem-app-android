@@ -15,7 +15,6 @@ import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -42,7 +41,6 @@ internal object TokensDataModule {
         walletManagersFacade: WalletManagersFacade,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
-        expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         tokensSaver: UserTokensSaver,
@@ -56,7 +54,6 @@ internal object TokensDataModule {
             walletManagersFacade = walletManagersFacade,
             cacheRegistry = cacheRegistry,
             userTokensResponseStore = userTokensResponseStore,
-            expressServiceFetcher = expressServiceFetcher,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,

@@ -6,7 +6,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
@@ -101,7 +100,6 @@ internal object AccountStatusUseCaseModule {
         stakingIdFactory: StakingIdFactory,
         networksCleaner: NetworksCleaner,
         stakingCleaner: StakingCleaner,
-        expressServiceFetcher: ExpressServiceFetcher,
         dispatchers: CoroutineDispatcherProvider,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
@@ -114,7 +112,6 @@ internal object AccountStatusUseCaseModule {
             stakingIdFactory = stakingIdFactory,
             networksCleaner = networksCleaner,
             stakingCleaner = stakingCleaner,
-            expressServiceFetcher = expressServiceFetcher,
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             dispatchers = dispatchers,
         )
