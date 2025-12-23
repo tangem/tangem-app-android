@@ -69,7 +69,8 @@ import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
-import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeTransactionLoader
+import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
+import com.tangem.features.staking.impl.presentation.state.helpers.StakingOperationsFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingTransactionSender
 import com.tangem.features.staking.impl.presentation.state.transformers.*
 import com.tangem.features.staking.impl.presentation.state.transformers.amount.*
@@ -128,8 +129,7 @@ internal class StakingModel @Inject constructor(
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
     private val invalidatePendingTransactionsUseCase: InvalidatePendingTransactionsUseCase,
-    private val stakingTransactionLoader: StakingTransactionSender.Factory,
-    private val stakingFeeTransactionLoader: StakingFeeTransactionLoader.Factory,
+    private val stakingOperationsFactory: StakingOperationsFactory,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
@@ -175,8 +175,7 @@ internal class StakingModel @Inject constructor(
                 StakeKitIntegration(integrationId, yield)
             }
             StakingIntegrationID.P2PEthPool -> {
-                // TODO p2p avoid network call
-                val vaults = p2pEthPoolRepository.getVaults().getOrElse { emptyList() }
+                val vaults = p2pEthPoolRepository.getVaultsSync()
                 P2PEthPoolIntegration(integrationId, vaults)
             }
         }
@@ -221,16 +220,16 @@ internal class StakingModel @Inject constructor(
         )
     }
 
-    private val feeLoader by lazy(LazyThreadSafetyMode.NONE) {
-        stakingFeeTransactionLoader.create(
+    private val feeLoader: StakingFeeLoader by lazy(LazyThreadSafetyMode.NONE) {
+        stakingOperationsFactory.createFeeLoader(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWallet = userWallet,
             integration = integration,
         )
     }
 
-    private val transactionSender by lazy(LazyThreadSafetyMode.NONE) {
-        stakingTransactionLoader.create(
+    private val transactionSender: StakingTransactionSender by lazy(LazyThreadSafetyMode.NONE) {
+        stakingOperationsFactory.createTransactionSender(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWallet = userWallet,
             integration = integration,
@@ -391,49 +390,57 @@ internal class StakingModel @Inject constructor(
             modelScope.launch {
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
                 stateController.update(SetConfirmationStateInProgressTransformer())
-                transactionSender.constructAndSendTransactions(
-                    onConstructSuccess = { constructedTransactions ->
-                        transactionsInProgress.addAll(constructedTransactions)
-                    },
-                    onConstructError = { error ->
-                        stakingEventFactory.createStakingErrorAlert(error)
-                        stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
-                    },
-                    onSendSuccess = { txUrl ->
-                        stakingAnalyticSender.sendTransactionStakingAnalytics(
-                            stateController.value,
-                            cryptoCurrencyStatus,
-                        )
-                        transactionsInProgress.clear()
-                        stateController.update(SetConfirmationStateCompletedTransformer(txUrl, cryptoCurrencyStatus))
-                    },
-                    onSendError = { error ->
-                        analyticsEventHandler.send(
-                            StakingAnalyticsEvent.TransactionError(
-                                errorCode = error.getAnalyticsDescription(),
-                            ),
-                        )
-                        stakingEventFactory.createSendTransactionErrorAlert(error)
-                        stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
-                    },
-                    onFeeIncreased = { increasedFee, isFeeApproximate ->
-                        stateController.updateAll(
-                            SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
-                            SetConfirmationStateAssentTransformer(
-                                appCurrencyProvider = Provider { appCurrency },
-                                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                                fee = increasedFee,
-                                isFeeApproximate = isFeeApproximate,
-                                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            ),
-                        )
-                        stateController.updateEvent(
-                            StakingEvent.ShowAlert(
-                                StakingAlertUM.FeeIncreased(stateController::dismissAlert),
-                            ),
-                        )
-                        updateNotifications()
-                    },
+                transactionSender.send(
+                    StakingTransactionSender.Callbacks(
+                        onConstructSuccess = { constructedTransactions ->
+                            transactionsInProgress.addAll(constructedTransactions)
+                        },
+                        onConstructError = { error ->
+                            stakingEventFactory.createStakingErrorAlert(error)
+                            stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
+                        },
+                        onSendSuccess = { txUrl ->
+                            stakingAnalyticSender.sendTransactionStakingAnalytics(
+                                stateController.value,
+                                cryptoCurrencyStatus,
+                            )
+                            transactionsInProgress.clear()
+                            stateController.update(
+                                SetConfirmationStateCompletedTransformer(txUrl, cryptoCurrencyStatus),
+                            )
+                        },
+                        onSendError = { error ->
+                            analyticsEventHandler.send(
+                                StakingAnalyticsEvent.TransactionError(
+                                    errorCode = error.getAnalyticsDescription(),
+                                ),
+                            )
+                            stakingEventFactory.createSendTransactionErrorAlert(error)
+                            stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
+                        },
+                        onFeeIncreased = { increasedFee, isFeeApproximate ->
+                            stateController.updateAll(
+                                SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
+                                SetConfirmationStateAssentTransformer(
+                                    appCurrencyProvider = Provider { appCurrency },
+                                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                                    fee = increasedFee,
+                                    isFeeApproximate = isFeeApproximate,
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                ),
+                            )
+                            stateController.updateEvent(
+                                StakingEvent.ShowAlert(
+                                    StakingAlertUM.FeeIncreased(stateController::dismissAlert),
+                                ),
+                            )
+                            updateNotifications()
+                        },
+                        onTransactionExpired = {
+                            stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
+                            getFee()
+                        },
+                    ),
                 )
             }.saveIn(sendTransactionJobHolder)
         }
