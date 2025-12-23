@@ -133,6 +133,16 @@ interface P2PEthPoolRepository {
     fun getVaultsFlow(): Flow<List<P2PEthPoolVault>>
 
     /**
+     * Get cached vaults synchronously from local store.
+     *
+     * This returns vaults from the local cache/store without network call.
+     * Call [fetchVaults] first to populate the cache from the network.
+     *
+     * @return List of cached vaults (empty if cache is not populated)
+     */
+    suspend fun getVaultsSync(): List<P2PEthPoolVault>
+
+    /**
      * Check P2PEthPool staking availability by finding public vault
      *
      * @return Flow of StakingAvailability - Available with StakingOption.P2PEthPool if public vault found,
