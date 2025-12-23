@@ -48,7 +48,7 @@ internal data class TokenActionsBSContentUM(
             iconRes = R.drawable.ic_staking_24,
         ),
         YieldMode(
-            text = resourceReference(R.string.yield_module_start_earning),
+            text = resourceReference(R.string.common_yield_mode),
             iconRes = R.drawable.ic_analytics_up_mini_24,
         ),
         ;
