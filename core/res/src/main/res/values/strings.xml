@@ -23,12 +23,12 @@
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
-  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover.</string>
+  <string name="account_archived_recover_error_message">You’ve reached the limit of 20 active accounts. Archive one account to recover this one.</string>
   <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
   <string name="account_could_not_archive">We couldn’t archive account. Please try again later.</string>
-  <string name="account_could_not_archive_referral_program_message">This account participates in the referral program.</string>
-  <string name="account_could_not_archive_referral_program_title">This account cannot be archived.</string>
+  <string name="account_could_not_archive_referral_program_message">This account is participating in the referral program.</string>
+  <string name="account_could_not_archive_referral_program_title">This account can’t be archived</string>
   <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
   <string name="account_create_success_message">Account created</string>
   <string name="account_details_archive">Archive account</string>
@@ -43,12 +43,13 @@
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
-  <string name="account_form_name_already_exist_error_description">Account name already exists</string>
+  <string name="account_form_name_already_exist_error_description">An account with this name already exists. Please choose a different name.</string>
+  <string name="account_form_name_already_exist_error_title">Account name already in use</string>
   <string name="account_form_placeholder_edit_account">Account</string>
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
   <string name="account_form_title_edit">Edit account</string>
-  <string name="account_generic_error_dialog_message">Please try again later. If it keeps happening, get in touch with support and we’ll help you resolve it.</string>
+  <string name="account_generic_error_dialog_message">Please try again later. If the problem persists, contact support and we’ll help you resolve it.</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
   <string name="account_main_account_title">Main account</string>
   <string name="account_recover_limit_dialog_description">You have already exceeded the limit of %1$s active accounts. Archive one to recover</string>
@@ -628,6 +629,7 @@
   <string name="hw_remove_wallet_notification_title">Are you sure you want to forget this wallet?</string>
   <string name="hw_remove_wallet_warning_access">I understand that if I haven\'t backed up my wallet before removing it, I will lose access to it.</string>
   <string name="hw_remove_wallet_warning_device">I understand that removing my wallet does not delete it, only removes it from my device.</string>
+  <string name="hw_upgrade">Upgrade</string>
   <string name="hw_upgrade_backup_description">Seed phrase not required. Your Tangem card or ring becomes your secure backup.</string>
   <string name="hw_upgrade_backup_title">Backup with Tangem</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can\'t upgrade. A wallet already exists on this device.</string>
@@ -803,6 +805,7 @@
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="news_all_news">All news</string>
+  <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
     <item quantity="one">%dh ago</item>
     <item quantity="other">%dh ago</item>
@@ -811,6 +814,9 @@
     <item quantity="one">%d minute ago</item>
     <item quantity="other">%d minutes ago</item>
   </plurals>
+  <string name="news_quick_recap">Quick recap</string>
+  <string name="news_related_news">Related News</string>
+  <string name="news_sources">Sources</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
@@ -1493,7 +1499,7 @@
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
-  <string name="tangempay_get_banner_description">Use your crypto for real world spending. \nIt\'s a payment card unlike any other.</string>
+  <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
@@ -1501,14 +1507,16 @@
   <string name="tangempay_issuing_your_card">Issuing your card</string>
   <string name="tangempay_issuing_your_card_description">We’re getting your card ready. This may take a little time.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirm Cancellation</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
   <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
-  <string name="tangempay_onboarding_banner_description">Use your crypto for real world spending. \nIt’s a payment card unlike any other.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
+  <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
   <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
@@ -1523,7 +1531,7 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_sync_needed">Sync needed</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
@@ -1686,7 +1694,7 @@
   <string name="visa_unlock_notification_button">Unlock</string>
   <string name="visa_unlock_notification_subtitle">Scan your card to unlock access</string>
   <string name="visa_unlock_notification_title">Needed unlock</string>
-  <string name="wallet_add_common_title">Choose how to add your wallet</string>
+  <string name="wallet_add_common_title">Choose your wallet type</string>
   <string name="wallet_add_hardware_description">Scan your Tangem card or ring to restore it or import from another wallet.</string>
   <string name="wallet_add_hardware_info_create">Create Hardware Wallet</string>
   <string name="wallet_add_hardware_purchase">Want to purchase a Tangem Wallet?</string>
