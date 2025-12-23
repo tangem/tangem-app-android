@@ -1,21 +1,38 @@
 package com.tangem.tap.common.analytics.handlers.appsflyer
 
 import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AppsFlyerAnalyticsHandler(
     private val client: AppsFlyerAnalyticsClient,
-) : AnalyticsHandler {
+) : AnalyticsHandler, AnalyticsUserIdHandler {
 
     override fun id(): String = ID
 
-    override fun send(eventId: String, params: Map<String, String>) {
-        client.logEvent(eventId, params)
+    override fun send(event: AnalyticsEvent) {
+        when (event) {
+            is AppsFlyerOnlyEvent -> {
+                client.logEvent(event.id, event.params)
+            }
+            is AppsFlyerIncludedEvent -> {
+                client.logEvent(
+                    event = AnalyticsEvent(category = event.category, event = event.appsFlyerReplacedEvent).id,
+                    params = event.params,
+                )
+            }
+        }
     }
 
-    override fun send(event: AnalyticsEvent) {
-        super.send(event)
+    override fun setUserId(userId: String) {
+        client.setUserId(userId)
+    }
+
+    override fun clearUserId() {
+        client.clearUserId()
     }
 
     companion object {
@@ -23,12 +40,10 @@ class AppsFlyerAnalyticsHandler(
     }
 
     class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = null
-        // disabled for now until analytics strategy is defined
-        // when {
-        // !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerApiKey, data.config.appsAppId)
-        // data.isDebug && data.logConfig.appsflyer -> AppsFlyerLogClient(data.jsonConverter)
-        // else -> null
-        // }?.let { AppsFlyerAnalyticsHandler(it) }
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
+            !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerApiKey, data.config.appsAppId)
+            data.isDebug && data.logConfig.isAppsflyerLogEnabled -> AppsFlyerLogClient(data.jsonConverter)
+            else -> null
+        }?.let { AppsFlyerAnalyticsHandler(it) }
     }
 }
