@@ -1072,6 +1072,8 @@
   <string name="reset_cards_dialog_next_device_description">Bitte setze das nächste Gerät zurück, um fortzufahren.</string>
   <string name="ring_promo_text">Ringbesitzer erhalten bis zum 15.11. 3 provisionsfreie Swaps auf Changelly!</string>
   <string name="ring_promo_title">Jetzt mit 0 % Gebühren tauschen!</string>
+  <string name="root_detected_warning_description">Geräte mit Root-Zugriff gelten als weniger sicher. Deine Daten können zusätzlichen Risiken ausgesetzt sein.</string>
+  <string name="root_detected_warning_title">Root-Zugriff erkannt</string>
   <string name="save_user_wallet_agreement_access_description">Melde dich bei der App an und überprüfe dein Guthaben, ohne die Karte oder Ring zu scannen</string>
   <string name="save_user_wallet_agreement_access_title">Zugriff auf die App</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Nutzung biometrischer Daten zulassen</string>
@@ -1990,6 +1992,7 @@
   <string name="yield_module_fee_policy_sheet_title">Gebührenpolitik</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem erhebt außerdem eine Servicegebühr von 15% auf den erzielten Ertrag.</string>
   <string name="yield_module_high_fee_error">Deine Gelder werden automatisch an Aave überwiesen, sobald die Netzwerkgebühren niedriger sind oder Dein Guthaben den erforderlichen Mindestbetrag erreicht.</string>
+  <string name="yield_module_high_network_fees_notification_description">Die Gebühren sind aufgrund der hohen Marktaktivität derzeit höher als üblich. Du kannst jetzt fortfahren oder später noch einmal vorbeischauen, wenn die Gebühren niedriger sind.</string>
   <string name="yield_module_high_network_fees_notification_title">Hohe Netzwerkgebühren</string>
   <string name="yield_module_historical_returns">Historische Renditen</string>
   <string name="yield_module_main_screen_promo_banner_message">Aktiviere %1$s%% Jahreszins auf Dein Guthaben</string>
