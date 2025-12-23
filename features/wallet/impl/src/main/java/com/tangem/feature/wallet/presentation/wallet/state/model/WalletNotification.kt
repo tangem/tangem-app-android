@@ -411,4 +411,22 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconSize = 54.dp,
         ),
     )
+
+    data class UpgradeHotWalletPromo(
+        val onLaterClick: () -> Unit,
+        val onUpgradeClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.hw_upgrade_to_cold_banner_title),
+            subtitle = resourceReference(R.string.hw_upgrade_to_cold_banner_description),
+            iconResId = R.drawable.img_tangem_wallet_72,
+            buttonsState = ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(R.string.hw_upgrade),
+                onPrimaryClick = onUpgradeClick,
+                secondaryText = resourceReference(R.string.common_later),
+                onSecondaryClick = onLaterClick,
+            ),
+            iconSize = 72.dp,
+        ),
+    )
 }

@@ -6,8 +6,9 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.*
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.PushBannerPromo.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
@@ -40,16 +41,16 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
     @Suppress("CyclomaticComplexMethod")
     private fun getEvent(warning: WalletNotification): AnalyticsEvent? {
         return when (warning) {
-            is WalletNotification.Critical.DevCard -> MainScreen.DevelopmentCard()
-            is WalletNotification.Critical.FailedCardValidation -> MainScreen.ProductSampleCard()
-            is WalletNotification.Warning.MissingBackup -> MainScreen.BackupYourWallet()
-            is WalletNotification.Warning.NumberOfSignedHashesIncorrect -> MainScreen.CardSignedTransactions()
-            is WalletNotification.Warning.TestNetCard -> MainScreen.TestnetCard()
-            is WalletNotification.Informational.DemoCard -> MainScreen.DemoCard()
-            is WalletNotification.Informational.MissingAddresses -> MainScreen.MissingAddresses()
-            is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem()
-            is WalletNotification.Critical.BackupError -> MainScreen.BackupError()
-            is WalletNotification.NoteMigration -> MainScreen.NotePromo()
+            is WalletNotification.Critical.DevCard -> DevelopmentCard()
+            is WalletNotification.Critical.FailedCardValidation -> ProductSampleCard()
+            is WalletNotification.Warning.MissingBackup -> BackupYourWallet()
+            is WalletNotification.Warning.NumberOfSignedHashesIncorrect -> CardSignedTransactions()
+            is WalletNotification.Warning.TestNetCard -> TestnetCard()
+            is WalletNotification.Informational.DemoCard -> DemoCard()
+            is WalletNotification.Informational.MissingAddresses -> MissingAddresses()
+            is WalletNotification.RateApp -> HowDoYouLikeTangem()
+            is WalletNotification.Critical.BackupError -> BackupError()
+            is WalletNotification.NoteMigration -> NotePromo()
             is WalletNotification.SwapPromo -> NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.Empty, // Use it on new promo action
@@ -66,7 +67,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.OnePlusOne,
             )
-            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
+            is WalletNotification.ReferralPromo -> ReferralPromo()
             is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
@@ -87,16 +88,17 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                     WalletActivationBannerType.Attention -> AnalyticsParam.EmptyFull.Empty
                     WalletActivationBannerType.Warning -> AnalyticsParam.EmptyFull.Full
                 }
-                MainScreen.NoticeFinishActivation(
+                NoticeFinishActivation(
                     activationState = activationState,
                     balanceState = balanceState,
                 )
             }
-            is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport()
-            is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond()
-            is WalletNotification.PushNotifications -> WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner()
+            is WalletNotification.Critical.SeedPhraseNotification -> NoticeSeedPhraseSupport()
+            is WalletNotification.Critical.SeedPhraseSecondNotification -> NoticeSeedPhraseSupportSecond()
+            is WalletNotification.PushNotifications -> PushBanner()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
-            WalletNotification.Warning.TangemPayUnreachable -> null
+            is WalletNotification.Warning.TangemPayUnreachable -> null
+            is WalletNotification.UpgradeHotWalletPromo -> null
         }
     }
 }

@@ -628,6 +628,7 @@
   <string name="hw_remove_wallet_notification_title">Are you sure you want to forget this wallet?</string>
   <string name="hw_remove_wallet_warning_access">I understand that if I haven\'t backed up my wallet before removing it, I will lose access to it.</string>
   <string name="hw_remove_wallet_warning_device">I understand that removing my wallet does not delete it, only removes it from my device.</string>
+  <string name="hw_upgrade">Upgrade</string>
   <string name="hw_upgrade_backup_description">Seed phrase not required. Your Tangem card or ring becomes your secure backup.</string>
   <string name="hw_upgrade_backup_title">Backup with Tangem</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can\'t upgrade. A wallet already exists on this device.</string>
