@@ -1634,7 +1634,7 @@
   <string name="visa_onboarding_pin_not_accepted">ПИН не принят. Попробуйте ещё раз или введите другой код.</string>
   <string name="visa_onboarding_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
   <string name="visa_unlock_notification_button">Разблокировать</string>
-  <string name="wallet_add_common_title">Выберите способ добавления кошелька</string>
+  <string name="wallet_add_common_title">Выберите тип кошелька</string>
   <string name="wallet_add_hardware_description">Отсканируйте вашу карту или кольцо Tangem, чтобы восстановить её или импортировать из другого кошелька.</string>
   <string name="wallet_add_hardware_info_create">Создать аппаратный кошелёк</string>
   <string name="wallet_add_hardware_purchase">Хотите приобрести кошелек Tangem?</string>

@@ -29,6 +29,12 @@ interface TangemPayApi {
         @Path("customer_wallet_id") customerWalletId: String,
     ): ApiResponse<CheckCustomerWalletResponse>
 
+    @PATCH("v1/customer/pay-enabled")
+    suspend fun setTangemPayEnabledStatus(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetTangemPayEnabledRequest,
+    ): ApiResponse<Any>
+
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 
