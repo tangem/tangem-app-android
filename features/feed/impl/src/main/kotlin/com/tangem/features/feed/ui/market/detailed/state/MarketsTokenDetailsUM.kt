@@ -2,11 +2,13 @@ package com.tangem.features.feed.ui.market.detailed.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
+import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
+import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
 internal data class MarketsTokenDetailsUM(
@@ -25,6 +27,7 @@ internal data class MarketsTokenDetailsUM(
     val body: Body,
     val shouldShowPriceSubtitle: Boolean,
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
+    val relatedNews: RelatedNews,
 ) {
 
     data class ChartState(
@@ -68,5 +71,10 @@ internal data class MarketsTokenDetailsUM(
         val shortDescription: TextReference,
         val fullDescription: TextReference?,
         val onReadMoreClick: () -> Unit,
+    )
+
+    data class RelatedNews(
+        val articles: ImmutableList<ArticleConfigUM>,
+        val onArticledClicked: (id: Int) -> Unit,
     )
 }
