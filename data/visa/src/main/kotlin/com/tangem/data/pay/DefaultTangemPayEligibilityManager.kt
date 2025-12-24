@@ -45,6 +45,10 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
+    override suspend fun getTangemPayAvailability(): Boolean {
+        return onboardingRepository.checkCustomerEligibility()
+    }
+
     private suspend fun getUserWalletsData(): List<UserWalletData> {
         cachedEligibleWallets?.let { return it }
 
@@ -69,7 +73,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private suspend fun getPossibleWalletsForTangemPay(): List<UserWallet> {
-        if (!onboardingRepository.checkCustomerEligibility()) {
+        if (!checkTangemPayEligibility()) {
             return emptyList()
         }
 
@@ -123,6 +127,10 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         cachedEligibleWallets = null
         eligibleWalletsDeferred?.cancel()
         eligibleWalletsDeferred = null
+    }
+
+    private suspend fun checkTangemPayEligibility(): Boolean {
+        return onboardingRepository.getCustomerEligibility() || onboardingRepository.checkCustomerEligibility()
     }
 
     private data class UserWalletData(

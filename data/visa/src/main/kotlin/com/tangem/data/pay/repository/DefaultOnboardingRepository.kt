@@ -197,7 +197,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val response = requestHelper.performWithoutToken {
             tangemPayApi.checkCustomerEligibility()
         }.getOrNull()
-        return response?.result?.isTangemPayAvailable == true
+
+        val isAvailable = response?.result?.isTangemPayAvailable == true
+        tangemPayStorage.storeTangemPayEligibility(eligibility = isAvailable)
+
+        return isAvailable
+    }
+
+    override suspend fun getCustomerEligibility(): Boolean {
+        return tangemPayStorage.getTangemPayEligibility()
     }
 
     override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
