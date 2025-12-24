@@ -334,14 +334,14 @@ internal class SendModel @Inject constructor(
                             userWalletId = params.userWalletId,
                             currency = cryptoCurrency,
                         ).onEach { (account, cryptoCurrencyStatus) ->
+                            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
+                            accountFlow.value = account
+
                             cryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
                             feeCryptoCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
                                 userWalletId = params.userWalletId,
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                             ).getOrNull() ?: cryptoCurrencyStatus
-
-                            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
-                            accountFlow.value = account
 
                             if (params.amount != null) {
                                 router.replaceAll(Confirm)
