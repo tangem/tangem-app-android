@@ -422,7 +422,6 @@
   <string name="custom_token_validation_error_not_found_title">トークンは誰でも作成できることに注意してください。</string>
   <string name="details_buy_wallet">Tangemウォレットを購入</string>
   <string name="details_chat">チャット</string>
-  <string name="details_get_visa">Tangem Visaを入手</string>
   <string name="details_manage_security_access_code">アクセスコード</string>
   <string name="details_manage_security_access_code_description">カードをスキャンする前に、正しいアクセスコードを送信する必要があります。</string>
   <string name="details_manage_security_long_tap">長くタップ</string>
