@@ -135,6 +135,7 @@ private fun Content(
                 state = state.body,
                 isAccountEnabled = isAccountEnabled,
                 portfolioBlock = portfolioBlock,
+                relatedNews = state.relatedNews,
             )
         }
     }

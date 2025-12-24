@@ -9,8 +9,8 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.feed.state.*
 import kotlinx.collections.immutable.*
 
 @Suppress("MagicNumber")
@@ -33,7 +33,11 @@ internal object FeedListPreviewDataProvider {
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = NewsUM.Content(articles.filter { it.isTrending.not() }.toImmutableList()),
+            news = NewsUM(
+                content = articles.filter { it.isTrending.not() }.toImmutableList(),
+                onRetryClicked = {},
+                newsUMState = NewsUMState.CONTENT,
+            ),
             trendingArticle = articles.first { it.isTrending },
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),
