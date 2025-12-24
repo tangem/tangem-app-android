@@ -238,7 +238,7 @@ internal class MarketsListModel @Inject constructor(
 
         modelScope.launch {
             marketsListUMStateManager.isInSearchStateFlow.collectLatest { isInSearchMode ->
-                activeListManager = if (isInSearchMode) {
+                activeListManager = if (isInSearchMode || marketsListUMStateManager.searchQuery.isNotEmpty()) {
                     searchMarketsListManager
                 } else {
                     searchMarketsListManager.clearStateAndStopAllActions()

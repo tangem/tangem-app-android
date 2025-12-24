@@ -49,9 +49,9 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 
 @Composable
 internal fun FeedListHeader(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
@@ -269,34 +269,26 @@ private fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallb
 @Suppress("CanBeNonNullable")
 @Composable
 private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
-    AnimatedContent(news) { newsUM ->
-        when (newsUM) {
-            is NewsUM.Content -> {
-                if (newsUM.content.isNotEmpty()) {
+    AnimatedContent(news.newsUMState) { newsUMState ->
+        when (newsUMState) {
+            NewsUMState.LOADING -> NewsLoadingBlock()
+            NewsUMState.CONTENT -> {
+                if (news.content.isNotEmpty()) {
                     NewsContentBlock(
                         feedListCallbacks = feedListCallbacks,
-                        news = newsUM,
+                        news = news,
                         trendingArticle = trendingArticle,
                     )
                 }
             }
-            NewsUM.Loading -> {
-                NewsLoadingBlock()
-            }
-            is NewsUM.Error -> {
-                NewsErrorBlock(onRetryClick = newsUM.onRetryClicked)
-            }
+            NewsUMState.ERROR -> NewsErrorBlock(onRetryClick = news.onRetryClicked)
         }
     }
 }
 
 @Suppress("LongMethod")
 @Composable
-private fun NewsContentBlock(
-    feedListCallbacks: FeedListCallbacks,
-    news: NewsUM.Content,
-    trendingArticle: ArticleConfigUM?,
-) {
+private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
     Column {
         Header(
             title = {

@@ -15,6 +15,8 @@ import com.tangem.domain.models.news.TrendingNews
 import com.tangem.features.feed.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import org.joda.time.DateTime
@@ -22,34 +24,48 @@ import org.joda.time.DateTime
 internal class TrendingNewsStateFactory(
     private val currentStateProvider: Provider<FeedListUM>,
     private val onStateUpdate: (FeedListUM) -> Unit,
+    private val onRetryClicked: () -> Unit,
 ) {
 
-    fun updateTrendingNewsState(result: TrendingNews, onRetryClicked: () -> Unit) {
+    fun updateTrendingNewsState(result: TrendingNews) {
         val currentState = currentStateProvider()
         when (result) {
             is TrendingNews.Data -> handleDataState(currentState, result.articles)
-            is TrendingNews.Error -> handleErrorState(currentState, onRetryClicked)
+            is TrendingNews.Error -> handleErrorState(currentState)
         }
     }
 
     private fun handleDataState(currentState: FeedListUM, articles: List<ShortArticle>) {
         val (trendingArticle, commonArticles) = separateTrendingAndCommonArticles(articles)
+        val commonArticlesUM = commonArticles.map { mapToArticleConfigUM(it, isTrending = false) }.toPersistentList()
+        val updatedNews = when (currentState.news.newsUMState) {
+            NewsUMState.CONTENT -> currentState.news.copy(content = commonArticlesUM)
+            NewsUMState.LOADING,
+            NewsUMState.ERROR,
+            -> NewsUM(
+                content = commonArticlesUM,
+                onRetryClicked = onRetryClicked,
+                newsUMState = NewsUMState.CONTENT,
+            )
+        }
 
         onStateUpdate(
             currentState.copy(
                 trendingArticle = trendingArticle?.let { mapToArticleConfigUM(it, isTrending = true) },
-                news = NewsUM.Content(
-                    commonArticles.map { mapToArticleConfigUM(it, isTrending = false) }.toPersistentList(),
-                ),
+                news = updatedNews,
             ),
         )
     }
 
-    private fun handleErrorState(currentState: FeedListUM, onRetryClicked: () -> Unit) {
+    private fun handleErrorState(currentState: FeedListUM) {
         onStateUpdate(
             currentState.copy(
                 trendingArticle = null,
-                news = NewsUM.Error(onRetryClicked = onRetryClicked),
+                news = NewsUM(
+                    content = persistentListOf(),
+                    onRetryClicked = onRetryClicked,
+                    newsUMState = NewsUMState.ERROR,
+                ),
             ),
         )
     }
@@ -79,7 +95,7 @@ internal class TrendingNewsStateFactory(
         )
     }
 
-    private fun buildArticleTags(article: ShortArticle): kotlinx.collections.immutable.ImmutableSet<LabelUM> {
+    private fun buildArticleTags(article: ShortArticle): ImmutableSet<LabelUM> {
         val categoryLabels = article.categories.map { category ->
             LabelUM(text = TextReference.Str(category.name))
         }

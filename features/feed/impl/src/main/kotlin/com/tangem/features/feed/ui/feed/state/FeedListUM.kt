@@ -33,11 +33,16 @@ internal data class FeedListSearchBar(
     val placeholderText: TextReference,
 )
 
-@Immutable
-internal sealed interface NewsUM {
-    data object Loading : NewsUM
-    data class Content(val content: ImmutableList<ArticleConfigUM>) : NewsUM
-    data class Error(val onRetryClicked: () -> Unit) : NewsUM
+internal data class NewsUM(
+    val content: ImmutableList<ArticleConfigUM>,
+    val onRetryClicked: () -> Unit,
+    val newsUMState: NewsUMState,
+)
+
+internal enum class NewsUMState {
+    LOADING,
+    CONTENT,
+    ERROR,
 }
 
 internal data class MarketChartConfig(

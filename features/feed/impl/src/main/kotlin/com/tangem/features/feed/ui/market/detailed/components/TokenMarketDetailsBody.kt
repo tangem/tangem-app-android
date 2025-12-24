@@ -1,26 +1,33 @@
 package com.tangem.features.feed.ui.market.detailed.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.news.ArticleCard
+import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.items.DescriptionPlaceholder
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
+import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM.RelatedNews
 
 @Suppress("CanBeNonNullable") // TODO will be removed after [REDACTED_JIRA]
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
     isAccountEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
+    relatedNews: RelatedNews,
 ) {
     when (state) {
         MarketsTokenDetailsUM.Body.Loading -> {
@@ -49,6 +56,10 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 item(key = "portfolio") {
                     portfolioBlock(Modifier.blockPaddings())
                 }
+            }
+
+            if (relatedNews.articles.isNotEmpty()) {
+                relatedNews(relatedNews)
             }
 
             if (isAccountEnabled) {
@@ -187,6 +198,45 @@ private fun LazyListScope.loadingInfoBlocks() {
 
     item("links-loading") {
         LinksBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+}
+
+private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
+    item("related-news") {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp, top = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                modifier = Modifier.padding(start = 16.dp),
+                text = "Related news",
+                style = TangemTheme.typography.h3,
+                color = TangemTheme.colors.text.primary1,
+            )
+
+            LazyRow(
+                verticalAlignment = Alignment.CenterVertically,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                state = rememberLazyListState(),
+            ) {
+                items(
+                    items = relatedNews.articles,
+                    key = ArticleConfigUM::id,
+                ) { article ->
+                    ArticleCard(
+                        articleConfigUM = article,
+                        onArticleClick = { relatedNews.onArticledClicked(article.id) },
+                        modifier = Modifier
+                            .height(164.dp)
+                            .width(216.dp),
+                        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+                    )
+                }
+            }
+        }
     }
 }
 
