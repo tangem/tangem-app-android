@@ -8,13 +8,18 @@ import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
+import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import kotlinx.serialization.Serializable
 import javax.inject.Inject
 
-internal class FeedEntryChildFactory @Inject constructor() {
+internal class FeedEntryChildFactory @Inject constructor(
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
+) {
 
     @Serializable
     @Immutable
@@ -45,8 +50,6 @@ internal class FeedEntryChildFactory @Inject constructor() {
         child: Child,
         appComponentContext: AppComponentContext,
         feedEntryClickIntents: FeedEntryClickIntents,
-        analyticsEventHandler: AnalyticsEventHandler,
-        accountsFeatureToggles: AccountsFeatureToggles,
     ): ComposableModularBottomSheetContentComponent {
         return when (child) {
             is Child.TokenDetails -> {
@@ -55,6 +58,7 @@ internal class FeedEntryChildFactory @Inject constructor() {
                     params = child.params,
                     analyticsEventHandler = analyticsEventHandler,
                     accountsFeatureToggles = accountsFeatureToggles,
+                    portfolioComponentFactory = portfolioComponentFactory,
                 )
             }
             is Child.TokenList -> {
