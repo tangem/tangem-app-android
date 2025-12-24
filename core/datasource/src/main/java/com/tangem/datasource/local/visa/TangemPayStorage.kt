@@ -3,6 +3,7 @@ package com.tangem.datasource.local.visa
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 
+@Suppress("TooManyFunctions")
 interface TangemPayStorage {
 
     suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String)
@@ -36,6 +37,8 @@ interface TangemPayStorage {
     suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
 
     suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
+    suspend fun storeTangemPayEligibility(eligibility: Boolean)
+    suspend fun getTangemPayEligibility(): Boolean
 
     suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
 }
