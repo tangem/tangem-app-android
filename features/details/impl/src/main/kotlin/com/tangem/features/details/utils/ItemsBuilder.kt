@@ -129,7 +129,7 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
     private fun getVisaItem(): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
         id = "get_tangem_visa",
         block = BlockUM(
-            text = resourceReference(R.string.details_get_visa),
+            text = resourceReference(R.string.tangempay_get_tangem_pay),
             iconRes = R.drawable.ic_tangem_pay_24,
             onClick = {
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
