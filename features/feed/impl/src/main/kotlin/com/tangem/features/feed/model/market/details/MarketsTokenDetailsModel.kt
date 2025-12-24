@@ -29,6 +29,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.news.model.NewsListConfig
+import com.tangem.domain.news.usecase.GetNewsUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
@@ -38,6 +40,7 @@ import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.converter.DescriptionConverter
 import com.tangem.features.feed.model.market.details.converter.ExchangeItemStateConverter
+import com.tangem.features.feed.model.market.details.converter.RelatedNewsConverter
 import com.tangem.features.feed.model.market.details.converter.TokenMarketInfoConverter
 import com.tangem.features.feed.model.market.details.formatter.*
 import com.tangem.features.feed.model.market.details.state.QuotesStateUpdater
@@ -49,6 +52,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -76,6 +80,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val excludedBlockchains: ExcludedBlockchains,
     private val urlOpener: UrlOpener,
+    private val getNewsUseCase: GetNewsUseCase,
 ) : Model() {
 
     private val quotesJob = JobHolder()
@@ -137,6 +142,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         },
         // ==================
     )
+
+    private val relatedNewsConverter by lazy {
+        RelatedNewsConverter()
+    }
 
     private val descriptionConverter = DescriptionConverter(
         onReadModeClicked = { content ->
@@ -230,6 +239,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             ),
             shouldShowPriceSubtitle = false,
             onShouldShowPriceSubtitleChange = ::onShouldShowPriceSubtitleChange,
+            relatedNews = MarketsTokenDetailsUM.RelatedNews(
+                articles = persistentListOf(),
+                onArticledClicked = {
+                    // TODO in [REDACTED_JIRA]
+                },
+            ),
         ),
     )
 
@@ -264,6 +279,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         initialLoad()
+        loadRelatedNews()
     }
 
     private fun initialLoad() {
@@ -282,6 +298,27 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             result.onRight { res ->
                 updateQuotes(res)
+            }
+        }
+    }
+
+    private fun loadRelatedNews() {
+        modelScope.launch(dispatchers.default) {
+            getNewsUseCase.getNews(
+                limit = RELATED_NEWS_LIMIT,
+                newsListConfig = NewsListConfig(
+                    language = Locale.getDefault().language,
+                    snapshot = null,
+                    tokenIds = listOf(params.token.id.value),
+                ),
+            ).onRight { articles ->
+                state.update { marketsTokenDetailsUM ->
+                    marketsTokenDetailsUM.copy(
+                        relatedNews = marketsTokenDetailsUM.relatedNews.copy(
+                            articles = relatedNewsConverter.convert(articles),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -649,5 +686,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private companion object {
         const val QUOTES_UPDATE_INTERVAL_MILLIS = 60000L
+        const val RELATED_NEWS_LIMIT = 10
     }
 }
