@@ -16,8 +16,8 @@ import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
+import kotlin.collections.all
 
 @Stable
 @ModelScoped
@@ -68,6 +69,11 @@ internal class FeedComponentModel @Inject constructor(
         TrendingNewsStateFactory(
             currentStateProvider = Provider { state.value },
             onStateUpdate = { newState -> state.update { newState } },
+            onRetryClicked = {
+                modelScope.launch(dispatchers.default) {
+                    fetchTrendingNewsUseCase.invoke()
+                }
+            },
         )
     }
 
@@ -88,14 +94,7 @@ internal class FeedComponentModel @Inject constructor(
                 flow4 = manageTrendingNewsUseCase.observeTrendingNews(),
             ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult ->
                 updateMarketCharts(itemsByOrder, loadingStatesByOrder, errorStatesByOrder)
-                trendingNewsStateFactory.updateTrendingNewsState(
-                    result = trendingNewsResult,
-                    onRetryClicked = {
-                        modelScope.launch(dispatchers.default) {
-                            fetchTrendingNewsUseCase.invoke()
-                        }
-                    },
-                )
+                trendingNewsStateFactory.updateTrendingNewsState(result = trendingNewsResult)
                 updateGlobalState()
                 val currentSortType = state.value.marketChartConfig.currentSortByType
                 val items = itemsByOrder[currentSortType]
@@ -140,7 +139,11 @@ internal class FeedComponentModel @Inject constructor(
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = NewsUM.Loading,
+            news = NewsUM(
+                content = persistentListOf(),
+                onRetryClicked = {},
+                newsUMState = NewsUMState.LOADING,
+            ),
             trendingArticle = null,
             marketChartConfig = MarketChartConfig(
                 marketCharts = buildMap {
@@ -224,10 +227,10 @@ internal class FeedComponentModel @Inject constructor(
             val newsState = currentState.news
             val marketCharts = currentState.marketChartConfig.marketCharts
 
-            val isNewsLoading = newsState is NewsUM.Loading
+            val isNewsLoading = newsState.newsUMState == NewsUMState.LOADING
             val areAllChartsLoading = marketCharts.values.all { it is MarketChartUM.Loading }
 
-            val isNewsError = newsState is NewsUM.Error
+            val isNewsError = newsState.newsUMState == NewsUMState.ERROR
             val areAllChartsError = marketCharts.values.all { it is MarketChartUM.LoadingError }
 
             val newGlobalState = when {
