@@ -304,7 +304,9 @@ internal class WalletModel @Inject constructor(
                 notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
                 return@launch
             }
-            if (!isBiometricsEnabled) return@launch
+            if (!hotWalletFeatureToggles.isHotWalletEnabled && !isBiometricsEnabled) {
+                return@launch
+            }
             if (!shouldShow) {
                 return@launch
             }
