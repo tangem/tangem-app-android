@@ -53,6 +53,7 @@ internal class DefaultWalletsRepository(
     private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
         MutableStateFlow(mutableSetOf())
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
     }
