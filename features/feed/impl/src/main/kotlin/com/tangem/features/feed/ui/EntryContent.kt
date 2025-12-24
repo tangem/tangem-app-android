@@ -1,9 +1,5 @@
 package com.tangem.features.feed.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
@@ -39,8 +35,7 @@ internal fun EntryContent(
             containerColor = background,
             contentWindowInsets = WindowInsetsZero,
             topBar = {
-                AnimatedContent(
-                    targetState = stackState.value.active.instance,
+                Children(
                     modifier = Modifier
                         .then(
                             if (!isOpenedInBottomSheet) {
@@ -56,8 +51,11 @@ internal fun EntryContent(
                                 }
                             }
                         },
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                ) { currentState -> currentState.Title(bottomSheetState) }
+                    stack = stackState.value,
+                    animation = stackAnimation(fade()),
+                ) { child ->
+                    child.instance.Title(bottomSheetState)
+                }
             },
             content = { contentPadding ->
                 Children(
