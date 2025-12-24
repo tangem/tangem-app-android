@@ -7,13 +7,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.feed.ui.market.detailed.state.InfoPointUM
-import com.tangem.features.feed.ui.market.detailed.state.InsightsUM
-import com.tangem.features.feed.ui.market.detailed.state.ListedOnUM
-import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
-import com.tangem.features.feed.ui.market.detailed.state.MetricsUM
-import com.tangem.features.feed.ui.market.detailed.state.PricePerformanceUM
-import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreUM
+import com.tangem.features.feed.ui.market.detailed.state.*
 import kotlinx.collections.immutable.persistentListOf
 
 internal object MarketsTokenDetailsPreview {
@@ -49,6 +43,10 @@ internal object MarketsTokenDetailsPreview {
         triggerPriceChange = consumedEvent(),
         onShouldShowPriceSubtitleChange = {},
         shouldShowPriceSubtitle = false,
+        relatedNews = MarketsTokenDetailsUM.RelatedNews(
+            articles = persistentListOf(),
+            onArticledClicked = {},
+        ),
     )
 
     val contentState = MarketsTokenDetailsUM(
@@ -135,5 +133,9 @@ internal object MarketsTokenDetailsPreview {
         triggerPriceChange = consumedEvent(),
         onShouldShowPriceSubtitleChange = {},
         shouldShowPriceSubtitle = false,
+        relatedNews = MarketsTokenDetailsUM.RelatedNews(
+            articles = persistentListOf(),
+            onArticledClicked = {},
+        ),
     )
 }
