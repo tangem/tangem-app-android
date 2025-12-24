@@ -53,19 +53,19 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
+    paramsContainer: ParamsContainer,
+    feedbackFeatureToggles: FeedbackFeatureToggles,
     private val itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val appInstanceIdProvider: AppInstanceIdProvider,
-    paramsContainer: ParamsContainer,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appStateHolder: ReduxStateHolder,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val feedbackFeatureToggles: FeedbackFeatureToggles,
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -254,7 +254,18 @@ internal class DetailsModel @Inject constructor(
                 .getEligibleWallets(shouldExcludePaeraCustomers = true)
                 .isNotEmpty()
             if (isEligible) {
-                items.update { itemsBuilder.addVisaItem(it) }
+                items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
+            }
+        }
+    }
+
+    private fun onTangemPayItemClicked() {
+        modelScope.launch {
+            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
+            if (isEligible) {
+                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
+            } else {
+                items.update { itemsBuilder.removeTangemPayItem(it) }
             }
         }
     }
