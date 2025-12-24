@@ -430,7 +430,6 @@
   <string name="custom_token_validation_error_not_found_title">Note that tokens can be created by anyone</string>
   <string name="details_buy_wallet">Buy Tangem Wallet</string>
   <string name="details_chat">Chat</string>
-  <string name="details_get_visa">Get Tangem Visa</string>
   <string name="details_manage_security_access_code">Access code</string>
   <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card</string>
   <string name="details_manage_security_long_tap">Long Tap</string>
