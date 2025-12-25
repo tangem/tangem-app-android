@@ -22,6 +22,7 @@ import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
@@ -143,13 +144,13 @@ internal class StakingBalanceEntryConverter(
     }
 
     private fun getUnbondingDate(date: Instant?): TextReference? {
-        val unbondingPeriod = integration.cooldownPeriodDays ?: return null
+        val cooldownPeriod = integration.cooldownPeriod ?: return null
         if (date == null) {
             return TextReference.Combined(
                 wrappedList(
                     resourceReference(R.string.staking_details_unbonding_period),
                     stringReference(" "),
-                    pluralReference(R.plurals.common_days, unbondingPeriod, wrappedList(unbondingPeriod)),
+                    cooldownPeriod.toTextReference(),
                 ),
             )
         }
