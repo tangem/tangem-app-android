@@ -54,10 +54,13 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
     }
 
     fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
-        val tangemPayItem = items.find { it.id == TANGEM_PAY_ITEM_ID } ?: return items
-        return items.toMutableList()
-            .also { list -> list.remove(tangemPayItem) }
-            .toImmutableList()
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != TANGEM_PAY_ITEM_ID }.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
     }
 
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
