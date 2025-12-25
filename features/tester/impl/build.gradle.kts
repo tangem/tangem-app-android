@@ -61,6 +61,8 @@ dependencies {
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.news.newsDetails.api)
     implementation(projects.features.news.newsDetails.impl)
+    implementation(projects.features.news.newsList.api)
+    implementation(projects.features.news.newsList.impl)
 
     /* SDK */
     implementation(tangemDeps.blockchain)
