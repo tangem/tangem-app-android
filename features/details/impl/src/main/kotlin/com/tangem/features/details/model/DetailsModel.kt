@@ -248,7 +248,7 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun addTangemPayItemIfEligible() {
-        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
+        if (!tangemPayFeatureToggles.isEntryPointsEnabled) return
         modelScope.launch {
             val isEligible = tangemPayEligibilityManager
                 .getEligibleWallets(shouldExcludePaeraCustomers = true)
