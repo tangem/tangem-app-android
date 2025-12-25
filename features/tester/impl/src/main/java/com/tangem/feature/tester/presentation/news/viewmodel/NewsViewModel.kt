@@ -27,6 +27,7 @@ internal class NewsViewModel @Inject constructor() : ViewModel() {
             onBackClick = ::onBackClick,
             buttons = persistentSetOf(
                 NewsUM.ButtonUM.NEWS_DETAILS,
+                NewsUM.ButtonUM.NEWS_DETAILS_BOTTOM_SHEET,
             ),
             onButtonClick = ::onButtonClick,
         )
@@ -39,6 +40,7 @@ internal class NewsViewModel @Inject constructor() : ViewModel() {
     private fun onButtonClick(button: NewsUM.ButtonUM) {
         when (button) {
             NewsUM.ButtonUM.NEWS_DETAILS -> router?.open(TesterScreen.NEWS_DETAILS)
+            NewsUM.ButtonUM.NEWS_DETAILS_BOTTOM_SHEET -> router?.open(TesterScreen.NEWS_DETAILS_BOTTOM_SHEET)
         }
     }
 }

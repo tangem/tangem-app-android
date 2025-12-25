@@ -305,6 +305,9 @@ include(":features:feed:impl")
 
 include(":features:news:news-details:api")
 include(":features:news:news-details:impl")
+
+include(":features:news:news-list:api")
+include(":features:news:news-list:impl")
 // endregion Feature modules
 
 // region Domain modules

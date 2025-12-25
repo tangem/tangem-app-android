@@ -1,4 +1,4 @@
-package com.tangem.features.news.details.api
+package com.tangem.features.news.list.api
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -8,9 +8,9 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
-interface NewsDetailsComponent : ComposableContentComponent {
+interface NewsListComponent : ComposableContentComponent {
 
-    data class Params(val selectedArticleId: Int = 0)
+    data class Params(val selectedFilter: String? = null)
 
     @Composable
     fun BottomSheetContent(
@@ -19,5 +19,5 @@ interface NewsDetailsComponent : ComposableContentComponent {
         modifier: Modifier,
     )
 
-    interface Factory : ComponentFactory<Params, NewsDetailsComponent>
+    interface Factory : ComponentFactory<Params, NewsListComponent>
 }
