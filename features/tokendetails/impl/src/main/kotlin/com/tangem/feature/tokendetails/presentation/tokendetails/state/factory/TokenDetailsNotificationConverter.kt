@@ -155,6 +155,7 @@ internal class TokenDetailsNotificationConverter(
                 },
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
+            is CryptoCurrencyWarning.MigrationClore -> MigrationClore
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
         }
     }
