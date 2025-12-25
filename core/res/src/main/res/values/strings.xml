@@ -1787,6 +1787,8 @@
   <string name="warning_button_ok">Ok, Got it!</string>
   <string name="warning_button_really_cool">Really cool!</string>
   <string name="warning_button_refresh">Refresh</string>
+  <string name="warning_clore_migration_message">According to Clore’s official documentation, all tokens received before December 21 will be migrated to Clore (ERC20); tokens received after will not. Transfer solution coming — stay tuned.</string>
+  <string name="warning_clore_migration_title">Clore Network Migration</string>
   <string name="warning_demo_mode_message">You are currently in the Demo mode</string>
   <string name="warning_demo_mode_title">Demo mode active</string>
   <string name="warning_developer_card_message">The card you scanned is a developer card. Do not use it to create your wallet.</string>
