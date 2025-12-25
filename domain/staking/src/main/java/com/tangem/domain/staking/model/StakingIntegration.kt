@@ -45,7 +45,7 @@ sealed interface StakingIntegration {
 
     val warmupPeriodDays: Int
 
-    val cooldownPeriodDays: Int?
+    val cooldownPeriod: CooldownPeriod?
 
     val rewardSchedule: RewardSchedule
 
