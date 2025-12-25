@@ -17,7 +17,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.StakingTarget
@@ -49,7 +49,7 @@ internal class SetInitialDataStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val balancesToShowProvider: Provider<List<BalanceItem>>,
+    private val balancesToShowProvider: Provider<List<StakingBalanceEntry>>,
     private val isAccountsModeEnabled: Boolean,
     private val account: Account.CryptoPortfolio?,
     private val isBalanceHidden: Boolean,

@@ -1,6 +1,7 @@
 package com.tangem.domain.models.staking
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
@@ -21,6 +22,9 @@ sealed interface StakingBalance {
     @Serializable
     sealed interface Data : StakingBalance {
 
+        /** Provider-agnostic list of balance entries for UI display */
+        val entries: List<StakingBalanceEntry>
+
         @Serializable
         data class StakeKit(
             override val stakingId: StakingID,
@@ -28,25 +32,23 @@ sealed interface StakingBalance {
             val balance: YieldBalanceItem,
         ) : Data {
 
-            override val totalStaked: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.STAKED }
-                    .sumOf { it.amount }
+            override val totalStaked: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.STAKED }
+                .sumOf { it.amount }
 
-            override val totalRewards: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.REWARDS }
-                    .sumOf { it.amount }
+            override val totalRewards: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.REWARDS }
+                .sumOf { it.amount }
 
-            override val unstakingAmount: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.UNSTAKING || it.type == BalanceType.UNLOCKING }
-                    .sumOf { it.amount }
+            override val unstakingAmount: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.UNSTAKING || it.type == BalanceType.UNLOCKING }
+                .sumOf { it.amount }
 
-            override val withdrawableAmount: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.UNSTAKED }
-                    .sumOf { it.amount }
+            override val withdrawableAmount: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.UNSTAKED }
+                .sumOf { it.amount }
+
+            override val entries: List<StakingBalanceEntry> = balance.items.toStakingBalanceEntries()
         }
 
         @Serializable
@@ -56,17 +58,15 @@ sealed interface StakingBalance {
             val account: P2PEthPoolStakingAccount,
         ) : Data {
 
-            override val totalStaked: BigDecimal
-                get() = account.stake.assets
+            override val totalStaked: SerializedBigDecimal = account.stake.assets
 
-            override val totalRewards: BigDecimal
-                get() = account.stake.totalEarnedAssets
+            override val totalRewards: SerializedBigDecimal = account.stake.totalEarnedAssets
 
-            override val unstakingAmount: BigDecimal
-                get() = account.exitQueue.total
+            override val unstakingAmount: SerializedBigDecimal = account.exitQueue.total
 
-            override val withdrawableAmount: BigDecimal
-                get() = account.availableToWithdraw
+            override val withdrawableAmount: SerializedBigDecimal = account.availableToWithdraw
+
+            override val entries: List<StakingBalanceEntry> = account.toStakingBalanceEntries()
         }
     }
 

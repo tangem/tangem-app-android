@@ -199,14 +199,21 @@ internal class StakingModel @Inject constructor(
     }
     private var appCurrency: AppCurrency by Delegates.notNull()
 
-    private val balancesToShow: List<BalanceItem>
+    private val balancesToShow: List<StakingBalanceEntry>
         get() {
-            val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
-            return invalidatePendingTransactionsUseCase(
-                balanceItems = stakeKitBalance?.balance?.items.orEmpty(),
-                stakingActions = stakingActions,
-                token = integration.token,
-            ).getOrElse { emptyList() }
+            val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
+            return when (stakingBalance) {
+                is StakingBalance.Data.StakeKit -> {
+                    val invalidatedItems = invalidatePendingTransactionsUseCase(
+                        balanceItems = stakingBalance.balance.items,
+                        stakingActions = stakingActions,
+                        token = integration.token,
+                    ).getOrElse { emptyList() }
+                    invalidatedItems.toStakingBalanceEntries()
+                }
+                is StakingBalance.Data.P2PEthPool -> stakingBalance.entries
+                else -> emptyList()
+            }
         }
 
     private var isInitialInfoAnalyticSent: Boolean = false
