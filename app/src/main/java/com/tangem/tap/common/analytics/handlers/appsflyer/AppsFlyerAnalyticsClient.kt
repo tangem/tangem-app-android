@@ -8,20 +8,10 @@ import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEven
 
 interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
-internal class AppsFlyerClient(
-    private val context: Context,
-    key: String,
-    appId: String,
-) : AppsFlyerAnalyticsClient {
+internal class AppsFlyerClient(private val context: Context) : AppsFlyerAnalyticsClient {
 
     private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
     private val eventConverter = UnderscoreAnalyticsEventConverter()
-
-    init {
-        appsFlyerLib.init(key, null, context)
-        appsFlyerLib.setAppId(appId)
-        appsFlyerLib.start(context)
-    }
 
     override fun setUserId(userId: String) {
         appsFlyerLib.setCustomerUserId(userId)
