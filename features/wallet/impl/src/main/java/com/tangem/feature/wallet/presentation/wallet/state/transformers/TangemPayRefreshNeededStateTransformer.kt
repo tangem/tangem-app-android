@@ -23,6 +23,7 @@ internal class TangemPayRefreshNeededStateTransformer(
                     is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
                 },
                 onRefreshClick = onRefreshClick,
+                shouldShowProgress = false,
             ),
         )
         return if (prevState is WalletState.MultiCurrency.Content) {
