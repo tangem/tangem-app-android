@@ -33,6 +33,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
+import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
@@ -156,15 +157,11 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createUnbondingPeriodItem(): RoundedListWithDividersItemData? {
-        val cooldownPeriodDays = integration.cooldownPeriodDays ?: return null
+        val cooldownPeriod = integration.cooldownPeriod ?: return null
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_unbonding_period,
             startText = TextReference.Res(R.string.staking_details_unbonding_period),
-            endText = pluralReference(
-                id = R.plurals.common_days,
-                count = cooldownPeriodDays,
-                formatArgs = wrappedList(cooldownPeriodDays),
-            ),
+            endText = cooldownPeriod.toTextReference(),
             iconClick = { clickIntents.onInfoClick(InfoType.UNBONDING_PERIOD) },
         )
     }
