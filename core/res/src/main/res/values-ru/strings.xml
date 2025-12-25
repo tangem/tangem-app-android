@@ -54,7 +54,7 @@
   <string name="account_reorder_description">Нажмите и удерживайте аккаунт, чтобы изменить порядок аккаунтов.</string>
   <string name="account_unsaved_dialog_action_first">Продолжить</string>
   <string name="account_unsaved_dialog_action_second">Отменить</string>
-  <string name="account_unsaved_dialog_message_create">Вы уверены, что хотите создание нового аккаунта?</string>
+  <string name="account_unsaved_dialog_message_create">Вы уверены, что хотите отменить создание нового аккаунта?</string>
   <string name="account_unsaved_dialog_message_edit">Вы уверены, что хотите отменить изменения?</string>
   <string name="account_unsaved_dialog_title">Несохраненные изменения</string>
   <string name="accounts_migration_alert_message">Некоторые пользовательские токены были перемещены из «%1$s» в «%2$s», поскольку их путь деривации относится к этой учётной записи.</string>
@@ -1457,6 +1457,7 @@
   <string name="tangem_pay_unfreeze_card_failed">Не удалось разморозить карту, попробуйте еще раз</string>
   <string name="tangem_pay_unfreeze_card_success">Карта разморожена</string>
   <string name="tangem_pay_withdrawal">Вывести</string>
+  <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
   <string name="tangempay_card_details_card_number">Номер</string>
@@ -1484,6 +1485,7 @@
   <string name="tangempay_card_details_open_wallet_step_5">Всё готово! Можно пользоваться картой</string>
   <string name="tangempay_card_details_open_wallet_title">Добавьте карту в Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Добавить карту в Apple Pay</string>
+  <string name="tangempay_card_details_pin_code">ПИН-код</string>
   <string name="tangempay_card_details_receive_description">Скопируйте свой адрес или покажите QR</string>
   <string name="tangempay_card_details_receive_error_description">Техническая ошибка. Попробуйте позже или обратитесь в поддержку.</string>
   <string name="tangempay_card_details_receive_error_title">Пополнение недоступно</string>
@@ -1492,6 +1494,7 @@
   <string name="tangempay_card_details_swap_description">Пополните карту любым активом через обмен </string>
   <string name="tangempay_card_details_title">Реквизиты</string>
   <string name="tangempay_card_details_unfreeze_card">Разморозить карту</string>
+  <string name="tangempay_card_details_view_pin_code_title">Ваш ПИН</string>
   <string name="tangempay_card_details_withdraw">Вывести</string>
   <string name="tangempay_card_details_withdraw_error_title">Вывод сейчас недоступен</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Вы не можете начать обмен или новый вывод, пока не завершится текущий.</string>
@@ -1502,7 +1505,7 @@
   <string name="tangempay_failed_to_issue_card">Не удалось выпустить карту</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Техническая ошибка, попробуйте ещё раз, нажав кнопку ниже</string>
   <string name="tangempay_failed_to_issue_card_support_description">Техническая ошибка, свяжитесь с поддержкой</string>
-  <string name="tangempay_get_banner_description">Используйте криптовалюту в реальной жизни. \nКарта, не похожая ни на одну другую.</string>
+  <string name="tangempay_get_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_get_tangem_pay">Получить Tangem Pay</string>
   <string name="tangempay_go_to_support">Написать в поддержку</string>
   <string name="tangempay_issue_card_notification_description">Обычно это занимает до 15 минут</string>
@@ -1515,8 +1518,9 @@
   <string name="tangempay_kyc_in_progress">KYC в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
-  <string name="tangempay_onboarding_banner_description">Используйте криптовалюту в реальной жизни. \nКарта, не похожая ни на одну другую.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Вы можете посмотреть текущий статус KYC или отменить его</string>
+  <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
+  <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
   <string name="tangempay_onboarding_pay_description">Виртуальную карту можно добавить в Apple Pay и Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Покупайте где угодно</string>
@@ -1526,15 +1530,15 @@
   <string name="tangempay_onboarding_security_title">Абсолютная приватность</string>
   <string name="tangempay_onboarding_title">Откройте виртуальную \nTangem Pay Card</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
-  <string name="tangempay_payment_account_sync_needed">Требуется синхронизация платежного аккаунта</string>
+  <string name="tangempay_payment_account_sync_needed">Платежный аккаунт не синхронизирован</string>
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
-  <string name="tangempay_sync_needed">Требуется синхронизация</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_sync_needed">Не синхронизирован</string>
+  <string name="tangempay_tangem_visa_card">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay временно недоступен</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Используйте вашу карту или кольцо для восстановления доступа к платежному аккаунту</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">Нажмите на кнопку ниже, чтобы восстановить доступ</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Это мой кошелек</string>
   <string name="toast_balances_hidden">Балансы скрыты</string>
