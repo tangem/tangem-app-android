@@ -12,6 +12,7 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -20,6 +21,8 @@ import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,7 +31,7 @@ internal interface TangemPayIntents {
 
     suspend fun onPullToRefresh()
 
-    fun onRefreshPayToken(userWalletId: UserWalletId)
+    fun onRefreshPayToken(userWallet: UserWallet)
 
     fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
 
@@ -70,10 +73,21 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
     }
 
-    override fun onRefreshPayToken(userWalletId: UserWalletId) {
+    override fun onRefreshPayToken(userWallet: UserWallet) {
+        stateHolder.update(TangemPayRefreshShowProgressTransformer(userWallet.walletId))
+
         modelScope.launch {
-            produceInitialDataTangemPay.invoke(userWalletId)
-            tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+            produceInitialDataTangemPay.invoke(userWallet.walletId)
+                .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWallet.walletId) }
+                .onLeft {
+                    stateHolder.update(
+                        transformer = TangemPayRefreshNeededStateTransformer(
+                            userWallet = userWallet,
+                            userWalletId = userWallet.walletId,
+                            onRefreshClick = { onRefreshPayToken(userWallet) },
+                        )
+                    )
+                }
         }
     }
 

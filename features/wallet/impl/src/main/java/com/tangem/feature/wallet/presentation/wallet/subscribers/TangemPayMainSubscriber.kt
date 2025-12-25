@@ -47,7 +47,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                                 transformer = TangemPayRefreshNeededStateTransformer(
                                     userWalletId = userWalletId,
                                     userWallet = userWallet,
-                                    onRefreshClick = { clickIntents.onRefreshPayToken(userWalletId) },
+                                    onRefreshClick = { clickIntents.onRefreshPayToken(userWallet) },
                                 ),
                             )
                         }
