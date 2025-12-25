@@ -9,15 +9,10 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -27,6 +22,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
@@ -130,6 +126,8 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private suspend fun checkTangemPayEligibility(): Boolean {
+        if (!tangemPayFeatureToggles.isEntryPointsEnabled) return true
+
         return onboardingRepository.getCustomerEligibility() || onboardingRepository.checkCustomerEligibility()
     }
 
