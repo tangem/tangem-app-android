@@ -548,6 +548,7 @@
   <string name="feedback_preface_scan_failed">Please tell us what card or ring do you have</string>
   <string name="feedback_preface_support">Hi support team,</string>
   <string name="feedback_preface_tx_failed">Please tell us more about your issue. Every small detail can help.</string>
+  <string name="feedback_subject_backup_problem">Backup issue</string>
   <string name="feedback_subject_pre_activated_wallet">Previously activated wallet</string>
   <string name="feedback_subject_rate_negative">My suggestions</string>
   <string name="feedback_subject_scan_failed">Can\'t scan a card/ring</string>
