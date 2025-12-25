@@ -2,7 +2,6 @@ package com.tangem.features.staking.impl.presentation.state.transformers.notific
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -19,6 +18,7 @@ import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceStat
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isTon
@@ -115,17 +115,11 @@ internal class StakingInfoNotificationsFactory(
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
             StakingActionType.UNLOCK_LOCKED -> {
-                val cooldownPeriodDays = integration.cooldownPeriodDays
-                if (cooldownPeriodDays != null) {
+                val cooldownPeriod = integration.cooldownPeriod
+                if (cooldownPeriod != null) {
                     resourceReference(R.string.staking_unlocked_locked) to resourceReference(
                         R.string.staking_notification_unlock_text,
-                        wrappedList(
-                            pluralReference(
-                                id = R.plurals.common_days,
-                                count = cooldownPeriodDays,
-                                formatArgs = wrappedList(cooldownPeriodDays),
-                            ),
-                        ),
+                        wrappedList(cooldownPeriod.toTextReference()),
                     )
                 } else {
                     null to null
@@ -276,13 +270,13 @@ internal class StakingInfoNotificationsFactory(
     }
 
     private fun MutableList<NotificationUM>.addUnstakeInfoNotification() {
-        val cooldownPeriodDays = integration.cooldownPeriodDays
+        val cooldownPeriod = integration.cooldownPeriod
 
         val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
-        if (cooldownPeriodDays != null) {
+        if (cooldownPeriod != null) {
             add(
                 StakingNotification.Info.Unstake(
-                    cooldownPeriodDays = cooldownPeriodDays,
+                    cooldownPeriod = cooldownPeriod,
                     subtitleRes = if (isCosmos(cryptoCurrencyNetworkIdValue)) {
                         R.string.staking_notification_unstake_cosmos_text
                     } else {
