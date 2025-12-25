@@ -16,4 +16,5 @@ internal enum class TesterScreen {
     ACCOUNTS,
     NEWS,
     NEWS_DETAILS,
+    NEWS_DETAILS_BOTTOM_SHEET,
 }
