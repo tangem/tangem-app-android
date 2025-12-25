@@ -694,6 +694,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         userWalletId: UserWalletId,
     ): Throwable? {
         val currency = fromToken.currency
+        val blockchain = currency.network.toBlockchain()
+        // Stellar validation removed because swap uses destination = "0" and throws an error
+        if (blockchain == Blockchain.Stellar) {
+            return null
+        }
         val fee = Fee.Common(
             amount = Amount(
                 value = when (feeState) {
@@ -701,7 +706,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     is TxFeeState.MultipleFeeState -> feeState.normalFee.feeValue
                     is TxFeeState.SingleFeeState -> feeState.fee.feeValue
                 },
-                blockchain = currency.network.toBlockchain(),
+                blockchain = blockchain,
             ),
         )
 
