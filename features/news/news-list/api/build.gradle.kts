@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.features.news.details.api"
+    namespace = "com.tangem.features.news.list.api"
 }
 
 dependencies {
