@@ -24,20 +24,22 @@ internal class RewardsValidatorStateConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val integration: StakingIntegration,
 ) : Converter<Unit, StakingStates.RewardsValidatorsState> {
+
     override fun convert(value: Unit): StakingStates.RewardsValidatorsState {
         val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
-        return if (stakingBalance is StakingBalance.Data.StakeKit) {
-            val balances = stakingBalance.balance.items
-            StakingStates.RewardsValidatorsState.Data(
-                isPrimaryButtonEnabled = true,
-                rewards = balances
-                    .filter { it.type == BalanceType.REWARDS }
-                    .mapRewardBalances(cryptoCurrencyStatus)
-                    .toPersistentList(),
-            )
-        } else {
-            // TODO p2p
-            StakingStates.RewardsValidatorsState.Empty()
+        return when (stakingBalance) {
+            is StakingBalance.Data.StakeKit -> {
+                val balances = stakingBalance.balance.items
+                StakingStates.RewardsValidatorsState.Data(
+                    isPrimaryButtonEnabled = true,
+                    rewards = balances
+                        .filter { it.type == BalanceType.REWARDS }
+                        .mapRewardBalances(cryptoCurrencyStatus)
+                        .toPersistentList(),
+                )
+            }
+            is StakingBalance.Data.P2PEthPool -> StakingStates.RewardsValidatorsState.Empty()
+            else -> StakingStates.RewardsValidatorsState.Empty()
         }
     }
 
