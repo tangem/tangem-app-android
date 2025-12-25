@@ -14,6 +14,9 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
@@ -38,9 +41,11 @@ import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewMod
 import com.tangem.feature.tester.presentation.news.ui.NewsScreen
 import com.tangem.feature.tester.presentation.news.viewmodel.NewsViewModel
 import com.tangem.features.news.details.impl.MockArticlesFactory
+import com.tangem.features.news.details.impl.ui.ArticleUM
 import com.tangem.features.news.details.impl.ui.NewsDetailsContent
 import com.tangem.features.news.details.impl.ui.NewsDetailsUM
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
 
@@ -190,6 +195,43 @@ internal class TesterActivity : ComposeActivity() {
                     onBackClick = { innerTesterRouter.back() },
                 )
             }
+
+            composable(route = TesterScreen.NEWS_DETAILS_BOTTOM_SHEET.name) {
+                NewsDetailsBottomSheetTest(
+                    onDismiss = { innerTesterRouter.back() },
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun NewsDetailsBottomSheetTest(onDismiss: () -> Unit) {
+        data class NewsDetailsBottomSheetContent(
+            val articles: ImmutableList<ArticleUM>,
+        ) : TangemBottomSheetConfigContent
+
+        val content = NewsDetailsBottomSheetContent(
+            articles = MockArticlesFactory.createMockArticles(),
+        )
+
+        TangemBottomSheet<NewsDetailsBottomSheetContent>(
+            config = TangemBottomSheetConfig(
+                isShown = true,
+                onDismissRequest = onDismiss,
+                content = content,
+            ),
+            containerColor = TangemTheme.colors.background.tertiary,
+        ) { sheetContent ->
+            NewsDetailsContent(
+                state = NewsDetailsUM(
+                    articles = sheetContent.articles,
+                    selectedArticleIndex = 0,
+                    onLikeClick = { },
+                    onShareClick = { },
+                ),
+                onBackClick = onDismiss,
+                isBottomSheetMode = true,
+            )
         }
     }
 }
