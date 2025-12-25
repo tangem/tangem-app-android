@@ -14,6 +14,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -55,6 +56,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
+    private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
@@ -176,7 +178,14 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
-        router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
+        modelScope.launch {
+            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
+            if (isEligible) {
+                router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
+            } else {
+                tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+            }
+        }
     }
 
     override fun onOnboardingBannerCloseClick(userWalletId: UserWalletId) {
