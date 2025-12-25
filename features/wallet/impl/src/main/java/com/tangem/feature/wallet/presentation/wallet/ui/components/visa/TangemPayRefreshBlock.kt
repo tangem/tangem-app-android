@@ -70,6 +70,7 @@ private fun TangemPayRefreshBlockPreview() {
                         tangemIcon = R.drawable.ic_tangem_24,
                         buttonText = resourceReference(id = R.string.tangempay_sync_needed_restore_access),
                         onRefreshClick = {},
+                        shouldShowProgress = true,
                     ),
                 ),
                 modifier = Modifier,
