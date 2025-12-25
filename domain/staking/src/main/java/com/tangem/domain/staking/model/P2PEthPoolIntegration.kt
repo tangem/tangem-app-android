@@ -64,7 +64,10 @@ class P2PEthPoolIntegration(
 
     override val warmupPeriodDays: Int = 0
 
-    override val cooldownPeriodDays: Int = DEFAULT_COOLDOWN_DAYS
+    override val cooldownPeriod: CooldownPeriod = CooldownPeriod.Range(
+        minDays = MIN_COOLDOWN_DAYS,
+        maxDays = MAX_COOLDOWN_DAYS,
+    )
 
     override val rewardSchedule: RewardSchedule = RewardSchedule.DAY
 
@@ -73,7 +76,8 @@ class P2PEthPoolIntegration(
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken = token
 
     companion object {
-        private const val DEFAULT_COOLDOWN_DAYS = 7
+        private const val MIN_COOLDOWN_DAYS = 1
+        private const val MAX_COOLDOWN_DAYS = 4
         private val DEFAULT_MINIMUM_STAKE = BigDecimal("0.01")
     }
 }
