@@ -24,13 +24,19 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.pager.PagerIndicator
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.news.details.impl.MockArticlesFactory
 
 // TODO [REDACTED_TASK_KEY] make internal
 @Composable
-fun NewsDetailsContent(state: NewsDetailsUM, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+fun NewsDetailsContent(
+    state: NewsDetailsUM,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isBottomSheetMode: Boolean = false,
+) {
     val pagerState = rememberPagerState(
         initialPage = state.selectedArticleIndex,
         pageCount = { state.articles.size },
@@ -39,49 +45,47 @@ fun NewsDetailsContent(state: NewsDetailsUM, onBackClick: () -> Unit, modifier: 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary)
-            .systemBarsPadding(),
+            .background(TangemTheme.colors.background.tertiary)
+            .conditionalCompose(isBottomSheetMode) { systemBarsPadding() },
     ) {
-        Column {
-            TangemTopAppBar(
-                title = null,
-                startButton = TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_back_24,
-                    onClicked = onBackClick,
-                ),
-                endButton = TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_share_24,
-                    onClicked = state.onShareClick,
-                ),
-            )
-            Box(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                if (state.articles.isNotEmpty()) {
-                    HorizontalPager(
-                        state = pagerState,
+        TangemTopAppBar(
+            title = null,
+            startButton = TopAppBarButtonUM.Icon(
+                iconRes = R.drawable.ic_back_24,
+                onClicked = onBackClick,
+            ),
+            endButton = TopAppBarButtonUM.Icon(
+                iconRes = R.drawable.ic_share_24,
+                onClicked = state.onShareClick,
+            ),
+        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            if (state.articles.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    ArticleDetail(
+                        article = state.articles[page],
                         modifier = Modifier.fillMaxSize(),
-                    ) { page ->
-                        ArticleDetail(
-                            article = state.articles[page],
-                            modifier = Modifier.fillMaxSize(),
-                            onLikeClick = state.onLikeClick,
-                        )
-                    }
+                        onLikeClick = state.onLikeClick,
+                    )
+                }
 
-                    if (state.articles.size > 1) {
-                        Column(
+                if (state.articles.size > 1) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth(),
+                    ) {
+                        PagerIndicator(
+                            pagerState = pagerState,
                             modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth(),
-                        ) {
-                            PagerIndicator(
-                                pagerState = pagerState,
-                                modifier = Modifier
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(bottom = 16.dp),
-                            )
-                        }
+                                .align(Alignment.CenterHorizontally)
+                                .padding(bottom = 16.dp),
+                        )
                     }
                 }
             }
