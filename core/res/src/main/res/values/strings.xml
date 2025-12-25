@@ -23,12 +23,12 @@
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
-  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover.</string>
+  <string name="account_archived_recover_error_message">You’ve reached the limit of 20 active accounts. Archive one account to recover this one.</string>
   <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
   <string name="account_could_not_archive">We couldn’t archive account. Please try again later.</string>
-  <string name="account_could_not_archive_referral_program_message">This account participates in the referral program.</string>
-  <string name="account_could_not_archive_referral_program_title">This account cannot be archived.</string>
+  <string name="account_could_not_archive_referral_program_message">This account is participating in the referral program.</string>
+  <string name="account_could_not_archive_referral_program_title">This account can’t be archived</string>
   <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
   <string name="account_create_success_message">Account created</string>
   <string name="account_details_archive">Archive account</string>
@@ -43,12 +43,13 @@
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
-  <string name="account_form_name_already_exist_error_description">Account name already exists</string>
+  <string name="account_form_name_already_exist_error_description">An account with this name already exists. Please choose a different name.</string>
+  <string name="account_form_name_already_exist_error_title">Account name already in use</string>
   <string name="account_form_placeholder_edit_account">Account</string>
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
   <string name="account_form_title_edit">Edit account</string>
-  <string name="account_generic_error_dialog_message">Please try again later. If it keeps happening, get in touch with support and we’ll help you resolve it.</string>
+  <string name="account_generic_error_dialog_message">Please try again later. If the problem persists, contact support and we’ll help you resolve it.</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
   <string name="account_main_account_title">Main account</string>
   <string name="account_recover_limit_dialog_description">You have already exceeded the limit of %1$s active accounts. Archive one to recover</string>
@@ -127,15 +128,15 @@
   </plurals>
   <string name="auth_wallet_mobile_description">Mobile Wallet</string>
   <string name="backup_complete_description">You successfully backed up your wallet.</string>
-  <string name="backup_complete_seed_description">These words are unrecoverable if lost. Keep them somewhere safe.</string>
+  <string name="backup_complete_seed_description">These words cannot be recovered if lost. Store them securely.</string>
   <string name="backup_complete_title">Backup completed</string>
-  <string name="backup_info_description">Your secret recovery phrase is a fixed set of %s random words for accessing and recovering your wallet.</string>
+  <string name="backup_info_description">Your secret recovery phrase is a set of %s random words for accessing and recovering your wallet.</string>
   <string name="backup_info_keep_description">These words cannot be recovered if lost. Keep them safe.</string>
   <string name="backup_info_keep_title">Keep it safe</string>
   <string name="backup_info_save_description">Save these %s words in a secure location and never share them with anyone.</string>
   <string name="backup_info_save_title">No recovery possible</string>
   <string name="backup_info_title">Recovery phrase</string>
-  <string name="backup_seed_caution">Never share these words with anyone. Tangem will never ask you for them. The %s words below are your wallet\'s recovery phrase. Use them to restore your wallet if you lose your device.</string>
+  <string name="backup_seed_caution">The %s words below are your wallet\'s recovery phrase. Never share these words with anyone. Tangem will never ask you for them. Use them to restore your wallet if you lose your device.</string>
   <string name="backup_seed_description">Write down these %s words in numerical order and keep them safe and private</string>
   <string name="backup_seed_responsibility">You are fully responsible for securing your wallet and safely backing up your recovery phrase.</string>
   <string name="backup_seed_title">Recovery phrase</string>
@@ -546,6 +547,7 @@
   <string name="feedback_preface_scan_failed">Please tell us what card or ring do you have</string>
   <string name="feedback_preface_support">Hi support team,</string>
   <string name="feedback_preface_tx_failed">Please tell us more about your issue. Every small detail can help.</string>
+  <string name="feedback_subject_backup_problem">Backup issue</string>
   <string name="feedback_subject_pre_activated_wallet">Previously activated wallet</string>
   <string name="feedback_subject_rate_negative">My suggestions</string>
   <string name="feedback_subject_scan_failed">Can\'t scan a card/ring</string>
@@ -564,8 +566,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
-  <string name="hardware_wallet_backup_feature_description">Your backup is created using 2 or 3 Tangem cards. Keep them in separate safe places to protect against loss or damage — no seed phrase needed.</string>
-  <string name="hardware_wallet_backup_feature_title">Backup with Multiple Cards</string>
+  <string name="hardware_wallet_backup_feature_description">A backup is created using 2–3 Tangem cards. Store them separately in secure locations to protect against loss or damage. No seed phrase needed.</string>
+  <string name="hardware_wallet_backup_feature_title">Backup With Multiple Cards</string>
   <string name="hardware_wallet_create_title">Add Tangem Wallet</string>
   <string name="hardware_wallet_key_feature_description">Your private key is generated directly inside the Tangem card and never leaves it.</string>
   <string name="hardware_wallet_key_feature_title">Key Generation</string>
@@ -585,7 +587,7 @@
   <string name="hw_activation_need_title">Finalize wallet setup</string>
   <string name="hw_activation_need_warning_description">Complete setup by securing the app with an access code.</string>
   <string name="hw_backup_alert_description">If you exit, you\'ll need to start over.</string>
-  <string name="hw_backup_alert_title">Are you sure you want to quit the setup process?</string>
+  <string name="hw_backup_alert_title">Are you sure you want to quit activation?</string>
   <string name="hw_backup_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
@@ -598,7 +600,7 @@
   <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
-  <string name="hw_backup_need_finish_first">Finish backup first</string>
+  <string name="hw_backup_need_finish_first">Complete the backup first</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
@@ -627,14 +629,15 @@
   <string name="hw_remove_wallet_notification_title">Are you sure you want to forget this wallet?</string>
   <string name="hw_remove_wallet_warning_access">I understand that if I haven\'t backed up my wallet before removing it, I will lose access to it.</string>
   <string name="hw_remove_wallet_warning_device">I understand that removing my wallet does not delete it, only removes it from my device.</string>
+  <string name="hw_upgrade">Upgrade</string>
   <string name="hw_upgrade_backup_description">Seed phrase not required. Your Tangem card or ring becomes your secure backup.</string>
-  <string name="hw_upgrade_backup_title">Backup with Tangem</string>
+  <string name="hw_upgrade_backup_title">Backup With Tangem</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can\'t upgrade. A wallet already exists on this device.</string>
-  <string name="hw_upgrade_error_card_key_import">Pick another device. This one can’t be used for the upgrade.</string>
+  <string name="hw_upgrade_error_card_key_import">Pick another device. This one can\'t be used for the upgrade.</string>
   <string name="hw_upgrade_error_wallet2_card_required">An error occurred during the operation.</string>
   <string name="hw_upgrade_funds_access_description">Your funds remain safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Access to funds</string>
-  <string name="hw_upgrade_general_security_description">Your wallet data will be erased from the app and stored on your hardware wallet</string>
+  <string name="hw_upgrade_general_security_description">Your wallet information will be erased from the app and stored on your hardware wallet</string>
   <string name="hw_upgrade_general_security_title">General security</string>
   <string name="hw_upgrade_key_migration_description">Private keys will be moved from the app to your Tangem hardware wallet</string>
   <string name="hw_upgrade_key_migration_title">Key migration</string>
@@ -802,6 +805,7 @@
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="news_all_news">All news</string>
+  <string name="news_like">Like</string>
   <plurals name="news_published_hours_ago">
     <item quantity="one">%dh ago</item>
     <item quantity="other">%dh ago</item>
@@ -810,6 +814,9 @@
     <item quantity="one">%d minute ago</item>
     <item quantity="other">%d minutes ago</item>
   </plurals>
+  <string name="news_quick_recap">Quick recap</string>
+  <string name="news_related_news">Related News</string>
+  <string name="news_sources">Sources</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
@@ -893,8 +900,8 @@
   <string name="onboarding_activation_error_message">Please repeat the operation. The card will be reset to factory settings.</string>
   <string name="onboarding_activation_error_title">Activation error</string>
   <string name="onboarding_add_tokens">Add tokens</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. When backup process is finished you can\'t add more backup devices. If you have one more card or ring, add it to the backup. Would you like to continue the backup process?</string>
-  <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. Once backup is finalized, you can\'t add more devices. If you have one more card or ring, add it now. Do you want to continue?</string>
+  <string name="onboarding_backup_exit_warning">The backup is partially complete and can\'t be quit now.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">A passphrase is an optional security feature that adds a word or phrase to your recovery phrase, creating a new set of wallet addresses for extra protection.</string>
   <string name="onboarding_button_add_backup_card">Add a card or ring</string>
   <string name="onboarding_button_backup_card">Scan card</string>
@@ -944,7 +951,7 @@
   <string name="onboarding_seed_phrase_intro_legacy">Legacy</string>
   <string name="onboarding_seed_user_validation_message">To check whether you’ve written down your seed phrase correctly, please enter the 2nd, 7th and 11th words</string>
   <string name="onboarding_seed_user_validation_title">So, let’s check</string>
-  <string name="onboarding_subtitle_no_backup_cards">To start the backup process add up to two backup cards or rings.</string>
+  <string name="onboarding_subtitle_no_backup_cards">To start the backup process, add up to two backup cards or rings.</string>
   <string name="onboarding_subtitle_one_backup_card">You can add one more card or ring or finalize the backup process</string>
   <string name="onboarding_subtitle_scan_backup_card_format">Prepare the backup card with number %s</string>
   <string name="onboarding_subtitle_scan_primary">Scan the primary card or ring to start the backup process.</string>
@@ -1083,8 +1090,8 @@
   <string name="reset_card_to_factory_condition_1">I understand that after performing this action, I will no longer have access to the current wallet</string>
   <string name="reset_card_to_factory_condition_2">I realize that I can\'t use this card to recover my access code on the other cards of the current wallet</string>
   <string name="reset_card_to_factory_condition_3">I understand that I will completely lose access to my Tangem Pay Card and all funds on it without the possibility of recovery</string>
-  <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring. You will not be able to restore the current wallet or use the card or ring to recover the access code.</string>
-  <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring and remove it from the app. You will not be able to restore the current wallet.</string>
+  <string name="reset_card_with_backup_to_factory_message">A factory reset completely erases the wallet from the selected card or ring. You will not be able to restore the current wallet or use this card or ring to recover the access code.</string>
+  <string name="reset_card_without_backup_to_factory_message">A factory reset completely erases the wallet from the selected card or ring and removes it from the app. You will not be able to restore the current wallet.</string>
   <string name="reset_cards_dialog_complete_description">All Tangem devices have been reset.</string>
   <string name="reset_cards_dialog_first_description">Something went wrong with the activation process. Please reset the cards one by one.</string>
   <string name="reset_cards_dialog_first_title">Card verification failed</string>
@@ -1369,7 +1376,7 @@
   <string name="staking_your_stakes">Your stakes</string>
   <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card or ring</string>
   <string name="story_awe_title">Revolutionary Hardware Wallet</string>
-  <string name="story_backup_description">Up to 3 physical cards or rings to one wallet</string>
+  <string name="story_backup_description">Add up to 3 cards or rings to one wallet</string>
   <string name="story_backup_title">Ultra Secure Backup</string>
   <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously — all in one card or ring</string>
   <string name="story_currencies_title">Thousands of Currencies</string>
@@ -1492,7 +1499,7 @@
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
-  <string name="tangempay_get_banner_description">Use your crypto for real world spending. \nIt\'s a payment card unlike any other.</string>
+  <string name="tangempay_get_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_go_to_support">Go to Support</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
@@ -1508,8 +1515,8 @@
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
-  <string name="tangempay_onboarding_banner_description">Use your crypto for real world spending. \nIt’s a payment card unlike any other.</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
+  <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
+  <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
   <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
@@ -1519,15 +1526,16 @@
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_payment_account">Payment account</string>
-  <string name="tangempay_payment_account_sync_needed">Payment account sync needed</string>
+  <string name="tangempay_payment_account_sync_needed">Payment account is not synced</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
-  <string name="tangempay_sync_needed">Sync needed</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
+  <string name="tangempay_sync_needed">Not synced</string>
+  <string name="tangempay_sync_needed_restore_access">Restore access</string>
+  <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
@@ -1777,7 +1785,7 @@
   <string name="warning_access_denied_message">Use %s or scan a card/ring to unlock access to your wallet</string>
   <string name="warning_approval_in_progress_message">The permission-granting process is currently underway and will be completed shortly</string>
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
-  <string name="warning_backup_errors_message">It seems that the card or ring activation was not completed correctly. This could be due to an issue with your device\'s NFC module or incorrect tapping of the card or ring to your device. Please contact our Support team for assistance.</string>
+  <string name="warning_backup_errors_message">Activation was not completed successfully. This may be due to an NFC issue or incorrect tapping. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
   <string name="warning_beacon_chain_retirement_content">On December 3, 2024, the BEP-2 network was disabled by decision of the network developers and is no longer supported</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain shut down</string>
@@ -1788,6 +1796,8 @@
   <string name="warning_button_ok">Ok, Got it!</string>
   <string name="warning_button_really_cool">Really cool!</string>
   <string name="warning_button_refresh">Refresh</string>
+  <string name="warning_clore_migration_message">According to Clore’s official documentation, all tokens received before December 21 will be migrated to Clore (ERC20); tokens received after will not. Transfer solution coming — stay tuned.</string>
+  <string name="warning_clore_migration_title">Clore Network Migration</string>
   <string name="warning_demo_mode_message">You are currently in the Demo mode</string>
   <string name="warning_demo_mode_title">Demo mode active</string>
   <string name="warning_developer_card_message">The card you scanned is a developer card. Do not use it to create your wallet.</string>
@@ -1836,7 +1846,7 @@
   <string name="warning_network_unreachable_message">The network is currently unreachable. Please try again later.</string>
   <string name="warning_network_unreachable_title">Network is unreachable</string>
   <string name="warning_no_account_title">Top up your wallet</string>
-  <string name="warning_no_backup_message">Your wallet hasn\'t been backed up. Carry out this procedure to protect your assets now.</string>
+  <string name="warning_no_backup_message">Your wallet isn\'t backed up yet. Back it up now to protect your assets.</string>
   <string name="warning_no_backup_title">Missing backup</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">This card has been previously used for transactions. If received from an untrusted source, consider withdrawing all funds. If it\'s your card, no action is required.</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">Card has already signed transactions</string>
@@ -1976,10 +1986,10 @@
   <string name="welcome_create_wallet_use_hardware_description">Use a Tangem hardware wallet</string>
   <string name="welcome_create_wallet_use_hardware_title">Learn more &amp; buy</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
-  <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
+  <string name="welcome_interrupted_backup_alert_message">Your backup was interrupted. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
   <string name="welcome_interrupted_backup_discard_discard">Discard</string>
-  <string name="welcome_interrupted_backup_discard_message">If you discard the backup now, then you will have to reset the devices to factory settings to start over again</string>
+  <string name="welcome_interrupted_backup_discard_message">If you discard the backup now, you will have to reset the devices to factory settings to start over again</string>
   <string name="welcome_interrupted_backup_discard_resume">Resume backup</string>
   <string name="welcome_interrupted_backup_discard_title">This is an irreversible action</string>
   <string name="welcome_unlock">Log in with %s</string>
