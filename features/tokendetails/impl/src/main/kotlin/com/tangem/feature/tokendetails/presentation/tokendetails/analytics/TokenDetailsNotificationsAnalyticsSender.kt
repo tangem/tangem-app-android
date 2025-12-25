@@ -59,6 +59,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.RequiredTrustlineWarning,
             is TokenDetailsNotification.KoinosMana,
             is TokenDetailsNotification.MigrationMaticToPol,
+            is TokenDetailsNotification.MigrationClore,
             is TokenDetailsNotification.UsedOutdatedData,
             -> null
         }
