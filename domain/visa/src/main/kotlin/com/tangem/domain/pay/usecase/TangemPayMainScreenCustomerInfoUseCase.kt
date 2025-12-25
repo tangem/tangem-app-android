@@ -9,6 +9,7 @@ import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import kotlinx.coroutines.flow.*
@@ -24,6 +25,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val deviceSecurity: DeviceSecurityInfoProvider,
 ) {
 
@@ -46,7 +48,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             .fold(
                 ifLeft = { error ->
                     Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
-                    if (error is VisaApiError.NotPaeraCustomer) {
+                    if (error is VisaApiError.NotPaeraCustomer && tangemPayFeatureToggles.isEntryPointsEnabled) {
                         showOnboardingBannerIfEligible(userWalletId)
                     } else {
                         updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
@@ -64,8 +66,13 @@ class TangemPayMainScreenCustomerInfoUseCase(
                             .map(MainCustomerInfoContentState::Content)
                         updateState(userWalletId, result)
                     } else {
-                        // if there's no tangem pay, check eligibility and show onboarding banner
-                        showOnboardingBannerIfEligible(userWalletId)
+                        if (tangemPayFeatureToggles.isEntryPointsEnabled) {
+                            // if there's no tangem pay, check eligibility and show onboarding banner
+                            showOnboardingBannerIfEligible(userWalletId)
+                        } else {
+                            // ignore if there's no TangemPay
+                            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                        }
                     }
                 },
             )
