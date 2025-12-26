@@ -1527,6 +1527,7 @@
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_payment_account">Payment account</string>
   <string name="tangempay_payment_account_sync_needed">Payment account is not synced</string>
+  <string name="tangempay_pin_validation_error_message">Invalid PIN: avoid sequences or repeats</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
@@ -1796,7 +1797,7 @@
   <string name="warning_button_ok">Ok, Got it!</string>
   <string name="warning_button_really_cool">Really cool!</string>
   <string name="warning_button_refresh">Refresh</string>
-  <string name="warning_clore_migration_message">According to Clore’s official documentation, all tokens received before December 21 will be migrated to Clore (ERC20); tokens received after will not. Transfer solution coming — stay tuned.</string>
+  <string name="warning_clore_migration_message">According to Clore’s official documentation, all coins received before December 21 will be migrated to Clore (ERC-20 token); coins received after that date will not. A transfer solution is coming — stay tuned.</string>
   <string name="warning_clore_migration_title">Clore Network Migration</string>
   <string name="warning_demo_mode_message">You are currently in the Demo mode</string>
   <string name="warning_demo_mode_title">Demo mode active</string>
