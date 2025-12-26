@@ -17,10 +17,6 @@ import timber.log.Timber
 
 private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
 
-/**
- * Returns tangem pay customer info for the main screen banner
- * Works only if the user already authorised at least once (won't emit anything otherwise)
- */
 class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
