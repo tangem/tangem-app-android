@@ -1,21 +1,22 @@
-package com.tangem.features.news.details.impl.ui
+package com.tangem.features.feed.ui.news.details.state
 
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
-// TODO [REDACTED_TASK_KEY] make internal
-data class NewsDetailsUM(
+internal data class NewsDetailsUM(
     val articles: ImmutableList<ArticleUM>,
     val selectedArticleIndex: Int,
     val onShareClick: () -> Unit,
     val onLikeClick: () -> Unit,
+    val onBackClick: () -> Unit,
+    val onArticleIndexChanged: (Int) -> Unit = {},
 )
 
-// TODO [REDACTED_TASK_KEY] make internal
-data class ArticleUM(
+internal data class ArticleUM(
     val id: Int,
     val title: String,
-    val createdAt: String,
+    val createdAt: TextReference,
     val score: Float,
     val tags: ImmutableList<LabelUM>,
     val shortContent: String,
@@ -23,11 +24,16 @@ data class ArticleUM(
     val sources: ImmutableList<SourceUM>,
 )
 
-// TODO [REDACTED_TASK_KEY] make internal
-data class SourceUM(
+internal data class SourceUM(
     val id: Int,
     val title: String,
-    val sourceName: String,
-    val publishedAt: String,
+    val source: Source,
+    val publishedAt: TextReference,
     val url: String,
+    val onClick: () -> Unit,
+)
+
+internal data class Source(
+    val id: Int,
+    val name: String,
 )

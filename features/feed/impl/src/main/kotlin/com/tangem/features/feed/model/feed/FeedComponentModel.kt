@@ -31,6 +31,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
 import kotlin.collections.all
+import kotlin.collections.map
 
 @Stable
 @ModelScoped
@@ -311,7 +312,17 @@ internal class FeedComponentModel @Inject constructor(
                         params.feedClickIntents.onMarketOpenClick(sortBy)
                     },
                     onArticleClick = { articleId ->
-                        params.feedClickIntents.onArticleClick(articleId)
+                        val trendingArticleId = state.value.trendingArticle?.id
+                        params.feedClickIntents.onArticleClick(
+                            articleId = articleId,
+                            preselectedArticlesId = listOfNotNull(trendingArticleId) +
+                                when (state.value.news.newsUMState) {
+                                    NewsUMState.CONTENT -> state.value.news.content.map { it.id }
+                                    NewsUMState.LOADING,
+                                    NewsUMState.ERROR,
+                                    -> emptyList()
+                                },
+                        )
                     },
                     onOpenAllNews = {
                         params.feedClickIntents.onOpenAllNews()

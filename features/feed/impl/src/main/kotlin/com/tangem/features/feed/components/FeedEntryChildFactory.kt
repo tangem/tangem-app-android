@@ -43,7 +43,7 @@ internal class FeedEntryChildFactory @Inject constructor(
 
         @Serializable
         @Immutable
-        data object NewsDetails : Child
+        data class NewsDetails(val params: DefaultNewsDetailsComponent.Params) : Child
     }
 
     fun createChild(
@@ -67,9 +67,10 @@ internal class FeedEntryChildFactory @Inject constructor(
                     params = child.params,
                 )
             }
-            Child.NewsDetails -> {
+            is Child.NewsDetails -> {
                 DefaultNewsDetailsComponent(
                     appComponentContext = appComponentContext,
+                    params = child.params,
                 )
             }
             Child.NewsList -> {

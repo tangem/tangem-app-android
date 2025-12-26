@@ -15,7 +15,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
@@ -87,13 +86,14 @@ internal class DefaultMarketsTokenDetailsComponent(
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
+        val background = LocalMainBottomSheetColor.current.value
         MarketsTokenDetailsTopBar(
             onBackClick = { params.onBackClicked() },
             isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
             shouldShowPriceSubtitle = state.shouldShowPriceSubtitle,
             tokenName = state.tokenName,
             tokenPrice = state.priceText,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = background,
         )
     }
 
@@ -131,6 +131,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         val shouldShowPortfolio: Boolean,
         val analyticsParams: AnalyticsParams?,
         val onBackClicked: () -> Unit,
+        val onArticleClick: (articleId: Int, preselectedArticlesId: List<Int>) -> Unit,
     )
 
     @Serializable
