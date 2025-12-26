@@ -224,13 +224,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
     }
 
-    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Any> {
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
         return requestHelper.performRequest(userWalletId) { authHeader ->
             tangemPayApi.setTangemPayEnabledStatus(
                 authHeader = authHeader,
                 body = SetTangemPayEnabledRequest(isTangemPayEnabled = false),
             )
-        }.onRight {
+        }.map {
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             setHideMainOnboardingBanner(userWalletId)

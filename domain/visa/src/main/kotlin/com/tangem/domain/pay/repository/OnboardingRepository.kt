@@ -34,5 +34,5 @@ interface OnboardingRepository {
 
     suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId)
 
-    suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Any>
+    suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 }
