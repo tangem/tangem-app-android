@@ -241,9 +241,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             onShouldShowPriceSubtitleChange = ::onShouldShowPriceSubtitleChange,
             relatedNews = MarketsTokenDetailsUM.RelatedNews(
                 articles = persistentListOf(),
-                onArticledClicked = {
-                    // TODO in [REDACTED_JIRA]
-                },
+                onArticledClicked = {},
             ),
         ),
     )
@@ -313,9 +311,16 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 ),
             ).onRight { articles ->
                 state.update { marketsTokenDetailsUM ->
+                    val relatedNews = relatedNewsConverter.convert(articles)
                     marketsTokenDetailsUM.copy(
                         relatedNews = marketsTokenDetailsUM.relatedNews.copy(
-                            articles = relatedNewsConverter.convert(articles),
+                            articles = relatedNews,
+                            onArticledClicked = { articledId ->
+                                params.onArticleClick(
+                                    /* articledId */ articledId,
+                                    /* preselectedIds */ relatedNews.map { it.id },
+                                )
+                            },
                         ),
                     )
                 }
