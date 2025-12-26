@@ -50,6 +50,7 @@ internal class FeedEntryChildFactory @Inject constructor(
         child: Child,
         appComponentContext: AppComponentContext,
         feedEntryClickIntents: FeedEntryClickIntents,
+        onBackClicked: () -> Unit,
     ): ComposableModularBottomSheetContentComponent {
         return when (child) {
             is Child.TokenDetails -> {
@@ -76,6 +77,10 @@ internal class FeedEntryChildFactory @Inject constructor(
             Child.NewsList -> {
                 DefaultNewsListComponent(
                     appComponentContext = appComponentContext,
+                    params = DefaultNewsListComponent.Params(
+                        onArticleClicked = { feedEntryClickIntents.onArticleClick(articleId = it) },
+                        onBackClick = onBackClicked,
+                    ),
                 )
             }
             Child.Feed -> {
