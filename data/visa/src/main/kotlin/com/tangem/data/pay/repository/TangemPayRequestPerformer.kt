@@ -18,7 +18,6 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -40,38 +39,6 @@ internal class TangemPayRequestPerformer @Inject constructor(
 
     private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
     private val tokensMutex = Mutex()
-
-    @Deprecated("Do not use this method")
-    suspend fun <T : Any> runWithErrorLogs(tag: String, requestBlock: suspend () -> T): Either<VisaApiError, T> {
-        return try {
-            val result = requestBlock()
-            Either.Right(result)
-        } catch (exception: Exception) {
-            when (exception) {
-                is CancellationException -> {
-                    throw exception
-                }
-                else -> {
-                    Timber.tag(tag).e(exception)
-                    Either.Left(errorConverter.convert(exception))
-                }
-            }
-        }
-    }
-
-    @Deprecated("Use perform request instead", replaceWith = ReplaceWith("performRequest"))
-    suspend fun <T : Any> request(
-        userWalletId: UserWalletId,
-        requestBlock: suspend (header: String) ->
-        ApiResponse<T>,
-    ): T = withContext(dispatchers.io) {
-        performRequest(userWalletId, requestBlock = requestBlock)
-            // to keep behaviour as previous
-            .fold(
-                ifRight = { it },
-                ifLeft = { error -> error("Cannot perform request: $error") },
-            )
-    }
 
     suspend fun <T : Any> performWithStaticToken(
         requestBlock: suspend (header: String) -> ApiResponse<T>,

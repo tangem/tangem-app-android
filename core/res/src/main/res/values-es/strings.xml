@@ -401,7 +401,7 @@
   <string name="disclaimer_error_loading">Compruebe su conexión a internet o cambia a una red diferente</string>
   <string name="disclaimer_title">Condiciones de uso</string>
   <string name="domain_receive_assets_default_address">Dirección por defecto</string>
-  <string name="domain_receive_assets_legacy_address">Dirección Legacy</string>
+  <string name="domain_receive_assets_legacy_address">Dirección %s Legacy</string>
   <string name="domain_receive_assets_navigation_title">Recibir activos</string>
   <string name="domain_receive_assets_network_name_address">%s dirección</string>
   <string name="domain_receive_assets_onboarding_description">Enviar activos a otras redes resultará en una pérdida permanente.</string>
@@ -491,6 +491,7 @@
   <string name="feedback_preface_scan_failed">Por favor, díganos qué tarjeta o anillo tiene</string>
   <string name="feedback_preface_support">Hola equipo de soporte,</string>
   <string name="feedback_preface_tx_failed">Por favor, cuéntenos más sobre tu problema. Cada pequeño detalle puede ayudar.</string>
+  <string name="feedback_subject_backup_problem">Problema con la copia de seguridad</string>
   <string name="feedback_subject_pre_activated_wallet">Billetera previamente activada</string>
   <string name="feedback_subject_rate_negative">Mis recomendaciones</string>
   <string name="feedback_subject_scan_failed">No se puede escanear una tarjeta/anillo</string>
@@ -1399,6 +1400,7 @@
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">La cuenta de pago no está sincronizada</string>
+  <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
   <string name="tangempay_service_unavailable_description">Estamos solucionando un problema técnico. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="tangempay_service_unavailable_title">Servicio temporalmente no disponible</string>
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>
@@ -1582,6 +1584,8 @@
   <string name="warning_button_ok">Entendido</string>
   <string name="warning_button_really_cool">¡Realmente genial!</string>
   <string name="warning_button_refresh">Actualizar</string>
+  <string name="warning_clore_migration_message">Según la documentación oficial de Clore, todas las monedas recibidas antes del 21 de diciembre serán migradas a Clore (token ERC-20); las monedas recibidas después de esa fecha no lo serán. Se está desarrollando una solución de transferencia — mantente atento.</string>
+  <string name="warning_clore_migration_title">Migración de la red Clore</string>
   <string name="warning_demo_mode_message">Actualmente estás en el modo Demo</string>
   <string name="warning_demo_mode_title">Modo demo activo</string>
   <string name="warning_developer_card_message">La tarjeta que ha escaneado es una tarjeta de desarrollador. No la use para crear su billetera.</string>
