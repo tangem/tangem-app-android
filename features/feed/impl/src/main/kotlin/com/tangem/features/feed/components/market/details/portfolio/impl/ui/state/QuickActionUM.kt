@@ -44,7 +44,7 @@ internal sealed class QuickActionUM(
     data class YieldMode(
         private val apy: String,
     ) : QuickActionUM(
-        title = resourceReference(R.string.yield_module_start_earning),
+        title = resourceReference(R.string.common_yield_mode),
         description = resourceReference(R.string.yield_module_main_screen_promo_banner_message, wrappedList(apy)),
         icon = R.drawable.ic_analytics_up_mini_24,
     )
