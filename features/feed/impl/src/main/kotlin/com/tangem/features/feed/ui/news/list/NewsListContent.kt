@@ -1,4 +1,4 @@
-package com.tangem.features.news.list.impl.ui
+package com.tangem.features.feed.ui.news.list
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,32 +11,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.news.ArticleCard
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.ui.news.list.state.NewsListUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
-internal fun NewsListContent(state: NewsListUM, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun NewsListContent(state: NewsListUM, modifier: Modifier = Modifier) {
+    val background = LocalMainBottomSheetColor.current.value
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(color = TangemTheme.colors.background.tertiary),
+            .background(background),
     ) {
-        AppBarWithBackButton(
-            text = stringResourceSafe(R.string.common_news),
-            onBackClick = onBackClick,
-        )
-
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -48,9 +43,8 @@ internal fun NewsListContent(state: NewsListUM, onBackClick: () -> Unit, modifie
                 Chip(state = filter)
             }
         }
-
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(16.dp),
         ) {
             items(
@@ -145,8 +139,8 @@ private fun NewsListContentPreview() {
                 filters = filters,
                 articles = articles,
                 onArticleClick = {},
+                onBackClick = {},
             ),
-            onBackClick = {},
         )
     }
 }
