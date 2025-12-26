@@ -15,10 +15,13 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
+import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
@@ -55,6 +58,9 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             source = "Market",
                         ),
                         onBackClicked = { onChildBack() },
+                        onArticleClick = { articleId, preselectedArticlesId ->
+                            onArticleClick(articleId, preselectedArticlesId)
+                        },
                     ),
                 ),
             )
@@ -73,8 +79,16 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
         }
 
-        override fun onArticleClick(articleId: Int) {
-            innerRouter.push(FeedEntryChildFactory.Child.NewsDetails)
+        override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
+            innerRouter.push(
+                FeedEntryChildFactory.Child.NewsDetails(
+                    params = DefaultNewsDetailsComponent.Params(
+                        articleId = articleId,
+                        onBackClicked = { onChildBack() },
+                        preselectedArticlesId = preselectedArticlesId,
+                    ),
+                ),
+            )
         }
 
         override fun onOpenAllNews() {
@@ -121,20 +135,25 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val bottomSheetState = remember {
-            derivedStateOf { BottomSheetState.EXPANDED }
-        }
+        val background = TangemTheme.colors.background.tertiary
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            val bottomSheetState = remember {
+                derivedStateOf { BottomSheetState.EXPANDED }
+            }
 
-        BackHandler {
-            router.pop()
-        }
+            BackHandler {
+                router.pop()
+            }
 
-        EntryContent(
-            bottomSheetState = bottomSheetState,
-            stackState = stack.subscribeAsState(),
-            onHeaderSizeChange = {},
-            isOpenedInBottomSheet = false,
-        )
+            EntryContent(
+                bottomSheetState = bottomSheetState,
+                stackState = stack.subscribeAsState(),
+                onHeaderSizeChange = {},
+                isOpenedInBottomSheet = false,
+            )
+        }
     }
 
     private fun onChildBack() {
@@ -157,6 +176,9 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         )
                     },
                     onBackClicked = { router.pop() },
+                    onArticleClick = { articleId, preselectedArticlesId ->
+                        clickIntents.onArticleClick(articleId, preselectedArticlesId)
+                    },
                 ),
             )
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
@@ -165,6 +187,13 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     onTokenClick = { token, currency -> clickIntents.onMarketItemClick(token, currency) },
                     preselectedSortType = SortByTypeUM.Rating,
                     shouldAlwaysShowSearchBar = false,
+                ),
+            )
+            is FeedEntryRoute.NewsDetail -> FeedEntryChildFactory.Child.NewsDetails(
+                DefaultNewsDetailsComponent.Params(
+                    articleId = entryRoute.articleId,
+                    onBackClicked = { router.pop() },
+                    preselectedArticlesId = entryRoute.preselectedArticlesId,
                 ),
             )
             null -> FeedEntryChildFactory.Child.Feed
