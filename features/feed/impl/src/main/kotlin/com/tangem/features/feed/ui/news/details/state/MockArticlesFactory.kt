@@ -1,22 +1,19 @@
-package com.tangem.features.news.details.impl
+package com.tangem.features.feed.ui.news.details.state
 
 import com.tangem.core.ui.components.label.entity.LabelSize
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.news.details.impl.ui.ArticleUM
-import com.tangem.features.news.details.impl.ui.SourceUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
-// TODO [REDACTED_TASK_KEY] remove mock data
 @Suppress("MaximumLineLength", "LongMethod")
-object MockArticlesFactory {
+internal object MockArticlesFactory {
     fun createMockArticles(): ImmutableList<ArticleUM> = listOf(
         ArticleUM(
             id = 1,
             title = "SEC delays decisions on ETH-staking ETFs and spot XRP/SOL funds",
-            createdAt = "20 Jun, 21:45",
+            createdAt = TextReference.Str("20 Jun, 21:45"),
             score = 6.5f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("Regulation"), size = LabelSize.BIG),
@@ -27,23 +24,31 @@ object MockArticlesFactory {
                 SourceUM(
                     id = 1,
                     title = "Deeper liquidity could drive crypto market beyond \$6T",
-                    sourceName = "cointelegraph",
-                    publishedAt = "1h ago",
+                    source = Source(
+                        id = 11,
+                        name = "Coin-telegraph",
+                    ),
+                    publishedAt = TextReference.Str("1h ago"),
                     url = "https://cointelegraph.com",
+                    onClick = {},
                 ),
                 SourceUM(
                     id = 2,
                     title = "Top gainers and losers in crypto this week",
-                    sourceName = "Investing",
-                    publishedAt = "2h ago",
+                    source = Source(
+                        id = 10,
+                        name = "Investing",
+                    ),
+                    publishedAt = TextReference.Str("2h ago"),
                     url = "https://investing.com",
+                    onClick = {},
                 ),
             ).toPersistentList(),
         ),
         ArticleUM(
             id = 2,
             title = "Bitcoin ETFs log 4th straight day of inflows (+\$550M)",
-            createdAt = "20 Jun, 20:15",
+            createdAt = TextReference.Str("20 Jun, 20:15"),
             score = 8.2f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("BTC"), size = LabelSize.BIG),
@@ -55,16 +60,20 @@ object MockArticlesFactory {
                 SourceUM(
                     id = 3,
                     title = "Bitcoin ETFs see massive inflows",
-                    sourceName = "Bloomberg",
-                    publishedAt = "3h ago",
+                    source = Source(
+                        id = 12,
+                        name = "Bloomberg",
+                    ),
+                    publishedAt = TextReference.Str("3h ago"),
                     url = "https://bloomberg.com",
+                    onClick = {},
                 ),
             ).toPersistentList(),
         ),
         ArticleUM(
             id = 3,
             title = "Ethereum network upgrade scheduled for Q2 2025",
-            createdAt = "20 Jun, 18:30",
+            createdAt = TextReference.Str("20 Jun, 18:30"),
             score = 7.8f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("ETH"), size = LabelSize.BIG),
@@ -76,16 +85,20 @@ object MockArticlesFactory {
                 SourceUM(
                     id = 4,
                     title = "Ethereum core devs announce upgrade",
-                    sourceName = "CoinDesk",
-                    publishedAt = "5h ago",
+                    source = Source(
+                        id = 15,
+                        name = "CoinDesk",
+                    ),
+                    publishedAt = TextReference.Str("5h ago"),
                     url = "https://coindesk.com",
+                    onClick = {},
                 ),
             ).toPersistentList(),
         ),
         ArticleUM(
             id = 4,
             title = "Solana surpasses Ethereum in daily transaction volume",
-            createdAt = "20 Jun, 16:00",
+            createdAt = TextReference.Str("20 Jun, 16:00"),
             score = 9.1f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("SOL"), size = LabelSize.BIG),
@@ -97,16 +110,20 @@ object MockArticlesFactory {
                 SourceUM(
                     id = 5,
                     title = "Solana transactions hit record",
-                    sourceName = "The Block",
-                    publishedAt = "7h ago",
+                    source = Source(
+                        id = 18,
+                        name = "Times",
+                    ),
+                    publishedAt = TextReference.Str("7h ago"),
                     url = "https://theblock.co",
+                    onClick = {},
                 ),
             ).toPersistentList(),
         ),
         ArticleUM(
             id = 5,
             title = "DeFi protocol launches innovative yield farming strategy",
-            createdAt = "20 Jun, 14:20",
+            createdAt = TextReference.Str("20 Jun, 14:20"),
             score = 6.9f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("DeFi"), size = LabelSize.BIG),
@@ -118,7 +135,7 @@ object MockArticlesFactory {
         ArticleUM(
             id = 6,
             title = "Crypto regulation bill advances in US Senate",
-            createdAt = "20 Jun, 12:45",
+            createdAt = TextReference.Str("20 Jun, 12:45"),
             score = 8.7f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("Regulation"), size = LabelSize.BIG),
@@ -131,7 +148,7 @@ object MockArticlesFactory {
         ArticleUM(
             id = 7,
             title = "Major bank announces crypto custody services",
-            createdAt = "20 Jun, 10:30",
+            createdAt = TextReference.Str("20 Jun, 10:30"),
             score = 7.3f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("Adoption"), size = LabelSize.BIG),
@@ -143,7 +160,7 @@ object MockArticlesFactory {
         ArticleUM(
             id = 8,
             title = "NFT marketplace reports 300% increase in trading volume",
-            createdAt = "20 Jun, 08:15",
+            createdAt = TextReference.Str("20 Jun, 08:15"),
             score = 5.8f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("NFT"), size = LabelSize.BIG),
@@ -155,7 +172,7 @@ object MockArticlesFactory {
         ArticleUM(
             id = 9,
             title = "Layer 2 solution achieves 100,000 TPS milestone",
-            createdAt = "19 Jun, 22:00",
+            createdAt = TextReference.Str("19 Jun, 22:00"),
             score = 8.5f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("Technology"), size = LabelSize.BIG),
@@ -168,7 +185,7 @@ object MockArticlesFactory {
         ArticleUM(
             id = 10,
             title = "Stablecoin market cap reaches new all-time high",
-            createdAt = "19 Jun, 19:30",
+            createdAt = TextReference.Str("19 Jun, 19:30"),
             score = 7.6f,
             tags = listOf(
                 LabelUM(text = TextReference.Str("Stablecoins"), size = LabelSize.BIG),
