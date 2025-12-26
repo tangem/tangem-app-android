@@ -36,6 +36,7 @@ internal class NewsDetailsConverter(
             shortContent = value.shortContent,
             content = value.content,
             sources = buildSources(value),
+            newsUrl = value.newsUrl,
         )
     }
 
