@@ -85,7 +85,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                             userWallet = userWallet,
                             userWalletId = userWallet.walletId,
                             onRefreshClick = { onRefreshPayToken(userWallet) },
-                        )
+                        ),
                     )
                 }
         }

@@ -323,7 +323,7 @@
   <string name="disclaimer_error_loading">Перевірте підключення до інтернету або змініть мережу</string>
   <string name="disclaimer_title">Умови використання</string>
   <string name="domain_receive_assets_default_address">Основна адреса</string>
-  <string name="domain_receive_assets_legacy_address">Legacy адреса</string>
+  <string name="domain_receive_assets_legacy_address">Legacy %s адреса</string>
   <string name="domain_receive_assets_navigation_title">Отримати активи</string>
   <string name="domain_receive_assets_network_name_address">%s адреса</string>
   <string name="domain_receive_assets_onboarding_description">Надсилання активів в інші мережі призведе до безповоротної втрати.</string>
@@ -408,6 +408,7 @@
   <string name="feedback_preface_scan_failed">Розкажіть, будь ласка, яку картку або кільце ви маєте?</string>
   <string name="feedback_preface_support">Привіт, команда підтримки,</string>
   <string name="feedback_preface_tx_failed">Будь ласка, розкажіть нам більше про вашу проблему. Кожна дрібниця може допомогти.</string>
+  <string name="feedback_subject_backup_problem">Проблема з резервним копіюванням</string>
   <string name="feedback_subject_pre_activated_wallet">Раніше активований гаманець</string>
   <string name="feedback_subject_rate_negative">Мої пропозиції</string>
   <string name="feedback_subject_scan_failed">Не вдається відсканувати картку/кільце</string>
@@ -1383,6 +1384,8 @@
   <string name="warning_button_ok">Зрозуміло!</string>
   <string name="warning_button_really_cool">Дуже круто!</string>
   <string name="warning_button_refresh">Оновити</string>
+  <string name="warning_clore_migration_message">Згідно з офіційною документацією Clore, усі монети, отримані до 21 грудня, будуть мігровані в токен Clore (ERC-20); монети, отримані після цієї дати, — ні. Рішення для переказу перебуває в розробці — стежте за оновленнями.</string>
+  <string name="warning_clore_migration_title">Міграція мережі Clore</string>
   <string name="warning_demo_mode_message">Ви перебуваєте в демонстраційному режимі</string>
   <string name="warning_demo_mode_title">Демонстраційний режим активовано</string>
   <string name="warning_developer_card_message">Відсканована вами картка є карткою розробника. Не використовуйте її для створення гаманця.</string>
