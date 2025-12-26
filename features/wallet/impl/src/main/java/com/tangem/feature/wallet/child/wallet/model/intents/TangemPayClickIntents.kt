@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -213,6 +214,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             tangemPayOnboardingRepository.disableTangemPay(userWalletId)
                 .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId) }
+                .onLeft { uiMessageSender.send(ToastMessage(resourceReference(R.string.common_something_went_wrong))) }
         }
     }
 }
