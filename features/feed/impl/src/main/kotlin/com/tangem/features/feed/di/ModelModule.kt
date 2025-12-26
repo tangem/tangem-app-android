@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
+import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,4 +30,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(MarketsTokenDetailsModel::class)
     fun provideMarketsTokenDetailsModel(model: MarketsTokenDetailsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NewsDetailsModel::class)
+    fun provideNewsDetailsModel(model: NewsDetailsModel): Model
 }
