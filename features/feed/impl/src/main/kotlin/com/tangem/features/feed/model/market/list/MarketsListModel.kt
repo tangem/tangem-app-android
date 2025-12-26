@@ -122,7 +122,7 @@ internal class MarketsListModel @Inject constructor(
                         flow4 = shouldShowYieldModeMarketPromoUseCase(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ),
+                        ).conflate(),
                     ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo ->
                         MarketsItemsData(
                             items = uiItems,
@@ -138,7 +138,7 @@ internal class MarketsListModel @Inject constructor(
                         flow3 = shouldShowYieldModeMarketPromoUseCase(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ),
+                        ).conflate(),
                     ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo ->
                         MarketsItemsData(
                             items = uiItems,
