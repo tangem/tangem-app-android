@@ -357,7 +357,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                     articleConfigUM = article,
                     onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
                     modifier = Modifier
-                        .height(164.dp)
+                        .heightIn(min = 164.dp)
                         .width(216.dp),
                     colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 )
@@ -365,7 +365,9 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
 
             item {
                 ShowMoreArticlesCard(
-                    modifier = Modifier.size(width = 216.dp, height = 164.dp),
+                    modifier = Modifier
+                        .width(216.dp)
+                        .heightIn(min = 164.dp),
                     onClick = feedListCallbacks.onOpenAllNews,
                 )
             }
