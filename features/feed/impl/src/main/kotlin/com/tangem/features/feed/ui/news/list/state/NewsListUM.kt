@@ -1,4 +1,4 @@
-package com.tangem.features.news.list.impl.ui
+package com.tangem.features.feed.ui.news.list.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.news.ArticleConfigUM
@@ -11,4 +11,5 @@ data class NewsListUM(
     val filters: ImmutableList<ChipUM>,
     val articles: ImmutableList<ArticleConfigUM>,
     val onArticleClick: (Int) -> Unit,
+    val onBackClick: () -> Unit,
 )

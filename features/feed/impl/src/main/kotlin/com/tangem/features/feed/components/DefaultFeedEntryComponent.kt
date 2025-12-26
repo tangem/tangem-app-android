@@ -111,6 +111,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         router = innerRouter,
                     ),
                     feedEntryClickIntents = clickIntents,
+                    onBackClicked = { onChildBack() },
                 )
             },
         )
