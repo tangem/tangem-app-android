@@ -62,6 +62,12 @@ interface TangemPayApi {
         @Body body: CardDetailsRequest,
     ): ApiResponse<CardDetailsResponse>
 
+    @GET("v1/customer/card/pin")
+    suspend fun getPin(
+        @Header("Authorization") authHeader: String,
+        @Header("X-Session-Id") sessionId: String,
+    ): ApiResponse<GetPinResponse>
+
     @PUT("v1/customer/card/pin")
     suspend fun setPin(
         @Header("Authorization") authHeader: String,
