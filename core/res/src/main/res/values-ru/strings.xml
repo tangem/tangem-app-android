@@ -460,7 +460,7 @@
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
   <string name="domain_receive_assets_default_address">Основной адрес</string>
-  <string name="domain_receive_assets_legacy_address">Legacy адрес</string>
+  <string name="domain_receive_assets_legacy_address">Legacy %s адрес</string>
   <string name="domain_receive_assets_navigation_title">Получить активы</string>
   <string name="domain_receive_assets_network_name_address">%s адрес</string>
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
@@ -551,6 +551,7 @@
   <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта или кольцо?</string>
   <string name="feedback_preface_support">Привет, команда поддержки,</string>
   <string name="feedback_preface_tx_failed">Пожалуйста, расскажите нам больше о вашей проблеме. Каждая маленькая деталь может помочь.</string>
+  <string name="feedback_subject_backup_problem">Проблема резервного копирования</string>
   <string name="feedback_subject_pre_activated_wallet">Ранее активированный кошелек</string>
   <string name="feedback_subject_rate_negative">Мои предложения</string>
   <string name="feedback_subject_scan_failed">Не могу отсканировать карту/кольцо</string>
@@ -1531,6 +1532,7 @@
   <string name="tangempay_onboarding_title">Откройте виртуальную \nTangem Pay Card</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Платежный аккаунт не синхронизирован</string>
+  <string name="tangempay_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
@@ -1739,6 +1741,8 @@
   <string name="warning_button_ok">Понятно!</string>
   <string name="warning_button_really_cool">Очень круто!</string>
   <string name="warning_button_refresh">Обновить</string>
+  <string name="warning_clore_migration_message">Согласно официальной документации Clore, все монеты, полученные до 21 декабря, будут мигрированы в токен Clore (ERC-20); монеты, полученные после этой даты, — нет. Решение для перевода находится в разработке — следите за обновлениями.</string>
+  <string name="warning_clore_migration_title">Миграция сети Clore</string>
   <string name="warning_demo_mode_message">Вы находитесь в режиме демо</string>
   <string name="warning_demo_mode_title">Демо режим включен</string>
   <string name="warning_developer_card_message">Отсканированная вами карта является картой разработчика. Не используйте ее для создания своего кошелька.</string>
