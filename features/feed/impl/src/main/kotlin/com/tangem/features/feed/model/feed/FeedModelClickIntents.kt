@@ -10,6 +10,6 @@ import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 internal interface FeedModelClickIntents {
     fun onMarketItemClick(token: TokenMarketParams, appCurrency: AppCurrency)
     fun onMarketOpenClick(sortBy: SortByTypeUM?)
-    fun onArticleClick(articleId: Int)
+    fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int> = emptyList())
     fun onOpenAllNews()
 }
