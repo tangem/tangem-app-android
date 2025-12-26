@@ -22,6 +22,7 @@ internal data class ArticleUM(
     val shortContent: String,
     val content: String,
     val sources: ImmutableList<SourceUM>,
+    val newsUrl: String,
 )
 
 internal data class SourceUM(

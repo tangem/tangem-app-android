@@ -44,6 +44,7 @@ internal object MockArticlesFactory {
                     onClick = {},
                 ),
             ).toPersistentList(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 2,
@@ -69,6 +70,7 @@ internal object MockArticlesFactory {
                     onClick = {},
                 ),
             ).toPersistentList(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 3,
@@ -94,6 +96,7 @@ internal object MockArticlesFactory {
                     onClick = {},
                 ),
             ).toPersistentList(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 4,
@@ -119,6 +122,7 @@ internal object MockArticlesFactory {
                     onClick = {},
                 ),
             ).toPersistentList(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 5,
@@ -131,6 +135,7 @@ internal object MockArticlesFactory {
             shortContent = "New DeFi protocol introduced innovative yield farming approach.",
             content = "A newly launched protocol unveiled innovative yield farming mechanism.\n\nAPY rates range from 15% to 30%.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 6,
@@ -144,6 +149,7 @@ internal object MockArticlesFactory {
             shortContent = "Comprehensive cryptocurrency regulation bill passed Senate Banking Committee.",
             content = "The US Senate Banking Committee advanced landmark crypto regulation bill.\n\nKey provisions include asset definitions.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 7,
@@ -156,6 +162,7 @@ internal object MockArticlesFactory {
             shortContent = "World's largest bank announced cryptocurrency custody services.",
             content = "Major financial institution announced comprehensive crypto custody services.\n\nSupporting Bitcoin and Ethereum initially.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 8,
@@ -168,6 +175,7 @@ internal object MockArticlesFactory {
             shortContent = "Leading NFT marketplace experienced dramatic surge in trading activity.",
             content = "Prominent NFT marketplace reported 300% increase in trading volume.\n\nNew features include lower fees.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 9,
@@ -181,6 +189,7 @@ internal object MockArticlesFactory {
             shortContent = "New Layer 2 scaling solution achieved 100,000 TPS in testing.",
             content = "Layer 2 solution processed 100,000 transactions per second.\n\nUsing zero-knowledge proof technology.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
         ArticleUM(
             id = 10,
@@ -194,6 +203,7 @@ internal object MockArticlesFactory {
             shortContent = "Total stablecoin market capitalization surpassed \$180 billion.",
             content = "Stablecoin market cap reached \$180 billion all-time high.\n\nDriven by DeFi activity and institutional adoption.",
             sources = persistentListOf(),
+            newsUrl = "",
         ),
     ).toPersistentList()
 }
