@@ -21,6 +21,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -133,19 +134,16 @@ internal class CreateHardwareWalletModel @Inject constructor(
         }
 
         saveWalletUseCase(userWallet = userWallet).fold(
-            ifLeft = {
+            ifLeft = { saveWalletError ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> {
-                        userWalletsListRepository.unlock(
-                            userWalletId = userWallet.walletId,
-                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
-                        ).onRight {
-                            router.replaceAll(AppRoute.Wallet)
-                        }
-                    }
+                when (saveWalletError) {
+                    is SaveWalletError.DataError -> Timber.e(saveWalletError.toString(), "Unable to save user wallet")
+                    is SaveWalletError.WalletAlreadySaved -> handleAlreadySavedCard(
+                        saveWalletError.messageId,
+                        walletId = userWallet.walletId,
+                        scanResponse = scanResponse,
+                    )
                 }
             },
             ifRight = {
@@ -174,5 +172,19 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    private suspend fun handleAlreadySavedCard(messageId: Int, walletId: UserWalletId, scanResponse: ScanResponse) {
+        uiMessageSender.send(
+            message = DialogMessage(
+                message = resourceReference(messageId),
+            ),
+        )
+        userWalletsListRepository.unlock(
+            userWalletId = walletId,
+            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+        ).onRight {
+            router.replaceAll(AppRoute.Wallet)
+        }
     }
 }
