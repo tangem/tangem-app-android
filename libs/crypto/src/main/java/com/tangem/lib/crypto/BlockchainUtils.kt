@@ -115,6 +115,10 @@ object BlockchainUtils {
         return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
+    fun isClore(blockchainId: String): Boolean {
+        return Blockchain.fromId(blockchainId) == Blockchain.Clore
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
