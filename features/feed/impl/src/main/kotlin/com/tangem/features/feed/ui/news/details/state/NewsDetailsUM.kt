@@ -1,7 +1,10 @@
 package com.tangem.features.feed.ui.news.details.state
 
+import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.news.RelatedToken
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class NewsDetailsUM(
@@ -10,7 +13,8 @@ internal data class NewsDetailsUM(
     val onShareClick: () -> Unit,
     val onLikeClick: () -> Unit,
     val onBackClick: () -> Unit,
-    val onArticleIndexChanged: (Int) -> Unit = {},
+    val onArticleIndexChanged: (Int) -> Unit,
+    val relatedTokensUM: RelatedTokensUM = RelatedTokensUM.Loading,
 )
 
 internal data class ArticleUM(
@@ -23,6 +27,7 @@ internal data class ArticleUM(
     val content: String,
     val sources: ImmutableList<SourceUM>,
     val newsUrl: String,
+    val relatedTokens: ImmutableList<RelatedToken>,
 )
 
 internal data class SourceUM(
@@ -32,7 +37,21 @@ internal data class SourceUM(
     val publishedAt: TextReference,
     val url: String,
     val onClick: () -> Unit,
+    val imageUrl: String?,
 )
+
+@Immutable
+internal sealed interface RelatedTokensUM {
+
+    data class Content(
+        val items: ImmutableList<MarketsListItemUM>,
+        val onTokenClick: (MarketsListItemUM) -> Unit,
+    ) : RelatedTokensUM
+
+    data object Loading : RelatedTokensUM
+
+    data object LoadingError : RelatedTokensUM
+}
 
 internal data class Source(
     val id: Int,

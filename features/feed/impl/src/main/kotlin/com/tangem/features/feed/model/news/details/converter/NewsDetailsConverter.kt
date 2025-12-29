@@ -37,6 +37,7 @@ internal class NewsDetailsConverter(
             content = value.content,
             sources = buildSources(value),
             newsUrl = value.newsUrl,
+            relatedTokens = value.relatedTokens.toImmutableList(),
         )
     }
 
@@ -66,6 +67,7 @@ internal class NewsDetailsConverter(
                 publishedAt = mapFormattedDate(originalArticle.publishedAt),
                 url = originalArticle.url,
                 onClick = { onSourceClick(originalArticle.url) },
+                imageUrl = originalArticle.imageUrl,
             )
         }.toImmutableList()
     }

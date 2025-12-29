@@ -13,6 +13,8 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
 import kotlinx.serialization.Serializable
@@ -57,8 +59,7 @@ internal class DefaultNewsDetailsComponent(
     data class Params(
         val articleId: Int,
         val onBackClicked: () -> Unit,
+        val onTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
         val preselectedArticlesId: List<Int> = emptyList(),
-        val tokenIds: List<String> = emptyList(),
-        val categoryIds: List<Int> = emptyList(),
     )
 }
