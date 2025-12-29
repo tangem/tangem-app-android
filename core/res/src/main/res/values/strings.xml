@@ -817,6 +817,7 @@
   </plurals>
   <string name="news_quick_recap">Quick recap</string>
   <string name="news_related_news">Related News</string>
+  <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Sources</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
