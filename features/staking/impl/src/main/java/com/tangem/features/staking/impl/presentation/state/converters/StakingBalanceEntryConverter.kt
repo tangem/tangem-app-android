@@ -27,7 +27,6 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.datetime.Instant
 import java.math.BigDecimal
@@ -197,7 +196,11 @@ internal class StakingBalanceEntryConverter(
     private fun StakingBalanceEntry.getPendingActions(): List<PendingAction> {
         return when (val actions = this.actions) {
             is StakingEntryActions.StakeKit -> actions.pendingActions
-            is StakingEntryActions.P2PEthPool -> persistentListOf()
+            is StakingEntryActions.P2PEthPool -> if (type == StakingEntryType.WITHDRAWABLE) {
+                listOf(STUB_WITHDRAW_ACTION)
+            } else {
+                emptyList()
+            }
         }
     }
 
@@ -223,6 +226,11 @@ internal class StakingBalanceEntryConverter(
     }
 
     private companion object {
+        val STUB_WITHDRAW_ACTION = PendingAction(
+            StakingActionType.WITHDRAW,
+            passthrough = "",
+            args = null,
+        )
         const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000
     }
 }

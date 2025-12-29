@@ -75,13 +75,20 @@ internal class P2PEthPoolTransactionCreator @Inject constructor(
                 )
             }
             is StakingActionCommonType.Exit -> {
-                p2pEthPoolRepository.createWithdrawTransaction(
+                p2pEthPoolRepository.createUnstakeTransaction(
                     network = network,
-                    stakerAddress = sourceAddress,
+                    delegatorAddress = sourceAddress,
+                    vaultAddress = vaultAddress,
+                    amount = amount.toPlainString(),
                 )
             }
             is StakingActionCommonType.Pending -> {
-                Either.Left(StakingError.DomainError("Pending actions not supported for P2PEthPool"))
+                p2pEthPoolRepository.createWithdrawTransaction(
+                    network = network,
+                    delegatorAddress = sourceAddress,
+                    vaultAddress = vaultAddress,
+                    amount = amount.toPlainString(),
+                )
             }
         }
     }

@@ -3,14 +3,20 @@ package com.tangem.datasource.api.ethpool.models.response
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import org.joda.time.DateTime
+import java.math.BigDecimal
 
 /**
- * Response for POST /api/v1/staking/pool/{network}/staking/withdraw
+ * Unified response for staking transactions (deposit, unstake, withdraw)
+ *
+ * Response for:
+ * - POST /api/v1/staking/pool/{network}/staking/deposit
+ * - POST /api/v1/staking/pool/{network}/staking/unstake
+ * - POST /api/v1/staking/pool/{network}/staking/withdraw
  */
 @JsonClass(generateAdapter = true)
-data class P2PEthPoolWithdrawResponse(
+data class P2PEthPoolTransactionResponse(
     @Json(name = "amount")
-    val amount: Double,
+    val amount: BigDecimal,
     @Json(name = "vaultAddress")
     val vaultAddress: String,
     @Json(name = "delegatorAddress")
@@ -20,5 +26,5 @@ data class P2PEthPoolWithdrawResponse(
     @Json(name = "createdAt")
     val createdAt: DateTime,
     @Json(name = "tickets")
-    val tickets: List<String>,
+    val tickets: List<String>? = null,
 )

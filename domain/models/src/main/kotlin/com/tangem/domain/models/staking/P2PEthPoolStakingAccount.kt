@@ -32,6 +32,6 @@ data class P2PEthPoolExitRequest(
     val ticket: String,
     val totalAssets: SerializedBigDecimal,
     val timestamp: Instant,
-    val withdrawalTimestamp: Instant,
+    val withdrawalTimestamp: Instant?,
     val isClaimable: Boolean,
 )

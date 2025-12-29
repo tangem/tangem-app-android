@@ -115,6 +115,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
+    fun isEthereum(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
@@ -155,8 +160,10 @@ object BlockchainUtils {
         return blockchain != Blockchain.Cardano
     }
 
-    fun isStakingRewardUnavailable(blockchainId: String): Boolean {
-        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId)
+    fun isStakingRewardUnavailable(blockchainId: String, isCoin: Boolean): Boolean {
+        val isP2PEthPool = isEthereum(blockchainId) && isCoin
+
+        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId) || isP2PEthPool
     }
 
     /** Checks if the blockchain uses case-insensitive contract addresses */

@@ -15,7 +15,7 @@ import java.math.BigDecimal
  */
 class P2PEthPoolIntegration(
     override val integrationId: StakingIntegrationID,
-    vaults: List<P2PEthPoolVault>,
+    private val vaults: List<P2PEthPoolVault>,
 ) : StakingIntegration {
 
     // Basic
@@ -46,7 +46,7 @@ class P2PEthPoolIntegration(
         amountRequirement = StakingAmountRequirement(
             isRequired = true,
             minimum = DEFAULT_MINIMUM_STAKE,
-            maximum = null,
+            maximum = calculateMaximumStakeAmount(),
         ),
         isPartialAmountDisabled = false,
     )
@@ -74,6 +74,15 @@ class P2PEthPoolIntegration(
     override val rewardClaiming: RewardClaiming = RewardClaiming.AUTO
 
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken = token
+
+    private fun calculateMaximumStakeAmount(): BigDecimal? {
+        return vaults
+            .mapNotNull { vault ->
+                val availableCapacity = vault.capacity - vault.totalAssets
+                if (availableCapacity > BigDecimal.ZERO) availableCapacity else null
+            }
+            .maxOrNull()
+    }
 
     companion object {
         private const val MIN_COOLDOWN_DAYS = 1
