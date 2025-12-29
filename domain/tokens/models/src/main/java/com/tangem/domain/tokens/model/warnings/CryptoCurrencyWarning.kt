@@ -57,6 +57,8 @@ sealed class CryptoCurrencyWarning {
 
     data object MigrationMaticToPol : CryptoCurrencyWarning()
 
+    data object MigrationClore : CryptoCurrencyWarning()
+
     /**
      * Shows a warning about an available fee resource for a transaction in several blockchains (ex. Koinos)
      */
