@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -24,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.tokenlist.PortfolioListItem
 import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
 import com.tangem.core.ui.components.tokenlist.TokenListItem
@@ -38,12 +40,15 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
-import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.TokenToSelectState
+import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.ui.market.swapMarketsListItems
+import com.tangem.feature.swap.ui.preview.SwapSelectTokenPreviewProvider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+
+private const val LOAD_MORE_BUFFER = 25
 
 @Composable
 internal fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
@@ -135,12 +140,15 @@ private fun TokensNotFound(modifier: Modifier = Modifier) {
 @Composable
 private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier = Modifier) {
     val screenBackgroundColor = TangemTheme.colors.background.secondary
+    val lazyListState = rememberLazyListState()
+
     LazyColumn(
         modifier = modifier
             .background(color = screenBackgroundColor)
             .fillMaxSize()
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
+        state = lazyListState,
     ) {
         when (val list = state.tokensListData) {
             is TokenListUMData.AccountList -> list.tokensList.forEach { item ->
@@ -164,7 +172,21 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
 
         tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
 
-        item { SpacerH12() }
+        state.marketsState?.let(::swapMarketsListItems)
+    }
+
+    (state.marketsState as? SwapMarketState.Content)?.let { marketState ->
+        InfiniteListHandler(
+            listState = lazyListState,
+            buffer = LOAD_MORE_BUFFER,
+            triggerLoadMoreCheckOnItemsCountChange = true,
+            onLoadMore = remember(state) {
+                {
+                    state.marketsState.loadMore()
+                    true
+                }
+            },
+        )
     }
 }
 
@@ -387,41 +409,12 @@ private fun TokenItem(
     }
 }
 
-private val token = TokenToSelectState.TokenToSelect(
-    tokenIcon = CurrencyIconState.CoinIcon(
-        url = "",
-        fallbackResId = 0,
-        isGrayscale = false,
-        shouldShowCustomBadge = false,
-    ),
-    id = "",
-    name = "Optimistic Ethereum (ETH)",
-    symbol = "USDC",
-    addedTokenBalanceData = TokenBalanceData(
-        amount = "15 000 $",
-        amountEquivalent = "15 000 USDT",
-        isBalanceHidden = false,
-    ),
-)
-
-private val title = TokenToSelectState.Title(
-    title = stringReference("MY TOKENS"),
-)
-
 @Preview
 @Composable
 private fun TokenScreenPreview() {
     TangemThemePreview {
         SwapSelectTokenScreen(
-            state = SwapSelectTokenStateHolder(
-                availableTokens = listOf(title, token, token, token).toImmutableList(),
-                unavailableTokens = listOf(title, token, token, token).toImmutableList(),
-                tokensListData = TokenListUMData.EmptyList,
-                isAfterSearch = false,
-                isBalanceHidden = false,
-                onSearchEntered = {},
-                onTokenSelected = {},
-            ),
+            state = SwapSelectTokenPreviewProvider().provideSwapSelectTokenState(),
             onBack = {},
         )
     }

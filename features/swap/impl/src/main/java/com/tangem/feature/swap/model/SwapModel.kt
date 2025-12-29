@@ -1019,6 +1019,9 @@ internal class SwapModel @Inject constructor(
                 )
             }
 
+            if (swapRouter.currentScreen == SwapNavScreen.SelectToken) {
+            }
+
             val filteredTokenDataState = if (isOrderReversed) {
                 tokenDataState.copy(
                     fromGroup = tokenDataState.fromGroup.copy(
