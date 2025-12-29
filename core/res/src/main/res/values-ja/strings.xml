@@ -23,7 +23,7 @@
   <string name="account_archived_recover">回復する</string>
   <string name="account_archived_recover_dialog_description">「 %1$s 」を回復しようとしています。</string>
   <string name="account_archived_recover_dialog_title">アカウントを回復する</string>
-  <string name="account_archived_recover_error_message">すでにアクティブアカウントの上限（20件）に達しています。復元するには、1つをアーカイブしてください。</string>
+  <string name="account_archived_recover_error_message">有効なアカウントは最大20件までです。1つのアカウントをアーカイブすると、このアカウントを復元できます。</string>
   <string name="account_archived_recover_error_title">アカウントを復元できません</string>
   <string name="account_archived_title">アーカイブ済み</string>
   <string name="account_could_not_archive">アカウントをアーカイブできませんでした。しばらくしてからもう一度お試しください。</string>
@@ -43,12 +43,13 @@
   <string name="account_form_create_button">アカウントを追加</string>
   <string name="account_form_edit_button">保存</string>
   <string name="account_form_name">アカウント名</string>
-  <string name="account_form_name_already_exist_error_description">アカウント名はすでに存在しています</string>
+  <string name="account_form_name_already_exist_error_description">この名前のアカウントはすでに存在します。別の名前を選択してください。</string>
+  <string name="account_form_name_already_exist_error_title">このアカウント名はすでに使用されています</string>
   <string name="account_form_placeholder_edit_account">アカウント</string>
   <string name="account_form_placeholder_new_account">新しいアカウント</string>
   <string name="account_form_title_create">アカウントを追加</string>
   <string name="account_form_title_edit">アカウントを編集</string>
-  <string name="account_generic_error_dialog_message">少し時間をおいて再度お試しください。問題が続く場合はサポートへご連絡ください。こちらで解決をお手伝いします。</string>
+  <string name="account_generic_error_dialog_message">しばらく時間をおいてから、もう一度お試しください。問題が解決しない場合は、サポートにお問い合わせください。こちらで解決をお手伝いします。</string>
   <string name="account_label_tokens_info">%1$s ( %2$s内)</string>
   <string name="account_main_account_title">メインアカウント</string>
   <string name="account_recover_limit_dialog_description">すでにアクティブアカウントの上限%1$s件を超えています。復元するには、1つをアーカイブしてください。</string>
@@ -422,7 +423,6 @@
   <string name="custom_token_validation_error_not_found_title">トークンは誰でも作成できることに注意してください。</string>
   <string name="details_buy_wallet">Tangemウォレットを購入</string>
   <string name="details_chat">チャット</string>
-  <string name="details_get_visa">Tangem Visaを入手</string>
   <string name="details_manage_security_access_code">アクセスコード</string>
   <string name="details_manage_security_access_code_description">カードをスキャンする前に、正しいアクセスコードを送信する必要があります。</string>
   <string name="details_manage_security_long_tap">長くタップ</string>
@@ -593,11 +593,13 @@
   <string name="hw_backup_need_description">アクセスコードを作成する前にウォレットをバックアップしてください。</string>
   <string name="hw_backup_need_finish_first">先にバックアップを完了してください</string>
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
+  <string name="hw_backup_no_backup">未完了</string>
   <string name="hw_backup_section_other_title">その他の方法</string>
   <string name="hw_backup_seed_description">資金を保護するため、リカバリーフレーズは安全な場所に保管し、他人に知られないようにしてください。</string>
   <string name="hw_backup_seed_title">リカバリーフレーズ</string>
   <string name="hw_backup_to_secure_description">アクセスコードでウォレットを保護するには、バックアップの手続きを完了してください。</string>
   <string name="hw_backup_to_upgrade_description">ハードウェアウォレットにアップグレードするには、バックアップの手続きを完了してください。</string>
+  <string name="hw_create_keys_description">秘密鍵は安全に暗号化され、スマートフォン上に保存されています</string>
   <string name="hw_create_keys_title">秘密鍵はデバイス上に保持されます</string>
   <string name="hw_create_seed_description">リカバリーフレーズを使ってウォレットを作成または復元してください。</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
@@ -618,6 +620,7 @@
   <string name="hw_remove_wallet_notification_title">このウォレットを削除してもよろしいですか？</string>
   <string name="hw_remove_wallet_warning_access">ウォレットを削除する前にバックアップを行っていない場合、ウォレットへのアクセスを失うことを理解しています。</string>
   <string name="hw_remove_wallet_warning_device">ウォレットを削除しても中身自体が消えるわけではなく、このデバイスから表示が消えるだけであることを理解しています。</string>
+  <string name="hw_upgrade">アップグレード</string>
   <string name="hw_upgrade_backup_description">シードフレーズは不要です。Tangemカードまたはリングが安全なバックアップとなります。</string>
   <string name="hw_upgrade_backup_title">Tangemでバックアップ</string>
   <string name="hw_upgrade_error_card_already_has_wallet">アップグレードできません。このデバイスにはすでにウォレットが存在します。</string>
@@ -790,12 +793,16 @@
   <string name="mobile_wallet_requires_min_os_warning_body">モバイルウォレットを作成するには、%1$sにアップデートする必要があります</string>
   <string name="mobile_wallet_requires_min_os_warning_title">モバイルウォレットを使用するには、%1$s以降が必要です</string>
   <string name="news_all_news">すべてのニュース</string>
+  <string name="news_like">いいね</string>
   <plurals name="news_published_hours_ago">
     <item quantity="other">%d時間前</item>
   </plurals>
   <plurals name="news_published_minutes_ago">
     <item quantity="other">%d分前</item>
   </plurals>
+  <string name="news_quick_recap">クイックまとめ</string>
+  <string name="news_related_news">関連ニュース</string>
+  <string name="news_sources">情報源</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="nft_about_title">NFTについて</string>
@@ -942,7 +949,7 @@
   <string name="onboarding_title_notifications">通知</string>
   <string name="onboarding_title_one_backup_card">バックアップデバイスが1つ追加されました</string>
   <string name="onboarding_title_scan_origin_card">カードまたはリングを用意してください</string>
-  <string name="onboarding_title_two_backup_cards">バックアップデバイス2つが追加されました</string>
+  <string name="onboarding_title_two_backup_cards">バックアップデバイスが2つ追加されました</string>
   <string name="onboarding_top_up_body">始めるには、ウォレットに任意の金額を入金するだけです</string>
   <string name="onboarding_top_up_body_no_account_error">始めるには、ウォレットに%1$s %2$s以上入金するだけです</string>
   <string name="onboarding_top_up_button_but_crypto">暗号資産を購入する</string>
@@ -1469,7 +1476,7 @@
   <string name="tangempay_failed_to_issue_card">カードの発行に失敗しました</string>
   <string name="tangempay_failed_to_issue_card_retry_description">技術的なエラーが発生しました。下のボタンをクリックして、もう一度お試しください。</string>
   <string name="tangempay_failed_to_issue_card_support_description">技術的なエラーが発生しました。サポートへお問い合わせください。</string>
-  <string name="tangempay_get_banner_description">暗号資産を日常の支払いに使おう。\n\nこれまでにないタイプの決済カード。</string>
+  <string name="tangempay_get_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_get_tangem_pay">Tangem Payを入手</string>
   <string name="tangempay_go_to_support">サポートへ移動</string>
   <string name="tangempay_issue_card_notification_description">通常は最大で15分ほどかかります</string>
@@ -1477,14 +1484,16 @@
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
   <string name="tangempay_issuing_your_card_description">カードを準備しています。少し時間がかかる場合があります。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">中止を確定する</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">KYC手続きを中止しますか？いつでも再開できます。</string>
   <string name="tangempay_kyc_failed_description">プロフィールを確認できませんでした。ご不明な点があればサポートまでお問い合わせください。</string>
   <string name="tangempay_kyc_failed_title">申し訳ございませんが、本人確認を行うことができませんでした</string>
   <string name="tangempay_kyc_in_progress">KYC進行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">以下のボタンから、現在のKYCステータスを確認するか、KYCをキャンセルできます。</string>
-  <string name="tangempay_onboarding_banner_description">暗号資産を、リアルな支払いに。\n他とはまったく違う、新しいタイプの決済カード。</string>
-  <string name="tangempay_onboarding_banner_title">Tangem Visaカード</string>
+  <string name="tangempay_onboarding_banner_description">無料のTangem Visaバーチャルカードを入手</string>
+  <string name="tangempay_onboarding_banner_title">日常の支払いにUSDCを利用</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
   <string name="tangempay_onboarding_pay_description">Apple PayとGoogle Payに対応したデジタルカード付き</string>
   <string name="tangempay_onboarding_pay_title">どこでも暗号資産を使える</string>
@@ -1494,15 +1503,15 @@
   <string name="tangempay_onboarding_security_title">他に類を見ないプライバシー</string>
   <string name="tangempay_onboarding_title">無料のTangem Payカードを数分でゲットしましょう</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
-  <string name="tangempay_payment_account_sync_needed">支払いアカウントの同期が必要です</string>
+  <string name="tangempay_payment_account_sync_needed">支払アカウントが同期されていません</string>
   <string name="tangempay_service_unavailable_description">技術的な問題を修正しています。後でもう一度お試しください。</string>
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_sync_needed">同期が必要です</string>
-  <string name="tangempay_tangem_visa_card">Tangem Visaカード</string>
+  <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">カードまたはリングを使用して、支払いアカウントへのアクセスを復元してください。</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
@@ -1617,7 +1626,7 @@
   <string name="visa_unlock_notification_button">ロック解除</string>
   <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
   <string name="visa_unlock_notification_title">ロック解除が必要</string>
-  <string name="wallet_add_common_title">ウォレットの追加方法を選択してください</string>
+  <string name="wallet_add_common_title">ウォレットの種類を選択します</string>
   <string name="wallet_add_hardware_description">Tangemカードまたはリングをスキャンして復元するか、別のウォレットからインポートしてください。</string>
   <string name="wallet_add_hardware_info_create">ハードウェアウォレットを作成</string>
   <string name="wallet_add_hardware_purchase">Tangemウォレットを購入しますか？</string>
