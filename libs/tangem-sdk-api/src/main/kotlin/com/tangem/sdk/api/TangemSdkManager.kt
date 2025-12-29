@@ -161,8 +161,13 @@ interface TangemSdkManager {
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
-    suspend fun tangemPayProduceInitialCredentials(cardId: String): Either<Throwable, TangemPayInitialCredentials>
+    suspend fun tangemPayProduceInitialCredentials(
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, TangemPayInitialCredentials>
 
-    suspend fun getWithdrawalSignature(cardId: String, hash: String): Either<Throwable, WithdrawalSignatureResult>
+    suspend fun getWithdrawalSignature(
+        hash: String,
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, WithdrawalSignatureResult>
     // endregion
 }
