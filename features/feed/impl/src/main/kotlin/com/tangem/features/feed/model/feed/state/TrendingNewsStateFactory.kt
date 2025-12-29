@@ -1,19 +1,14 @@
-package com.tangem.features.feed.ui.feed.state
+package com.tangem.features.feed.model.feed.state
 
-import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
-import com.tangem.core.ui.components.label.entity.LabelUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.models.news.TrendingNews
-import com.tangem.features.feed.ui.utils.mapFormattedDate
+import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMConverter
+import com.tangem.features.feed.ui.feed.state.FeedListUM
+import com.tangem.features.feed.ui.feed.state.NewsUM
+import com.tangem.features.feed.ui.feed.state.NewsUMState
 import com.tangem.utils.Provider
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.collections.immutable.toPersistentSet
 
 internal class TrendingNewsStateFactory(
     private val currentStateProvider: Provider<FeedListUM>,
@@ -31,7 +26,9 @@ internal class TrendingNewsStateFactory(
 
     private fun handleDataState(currentState: FeedListUM, articles: List<ShortArticle>) {
         val (trendingArticle, commonArticles) = separateTrendingAndCommonArticles(articles)
-        val commonArticlesUM = commonArticles.map { mapToArticleConfigUM(it, isTrending = false) }.toPersistentList()
+        val commonArticlesUM = getShortArticleConfigConverter(isTrending = false)
+            .convert(commonArticles)
+            .toPersistentList()
         val updatedNews = when (currentState.news.newsUMState) {
             NewsUMState.CONTENT -> currentState.news.copy(content = commonArticlesUM)
             NewsUMState.LOADING,
@@ -45,7 +42,10 @@ internal class TrendingNewsStateFactory(
 
         onStateUpdate(
             currentState.copy(
-                trendingArticle = trendingArticle?.let { mapToArticleConfigUM(it, isTrending = true) },
+                trendingArticle = trendingArticle?.let { article ->
+                    getShortArticleConfigConverter(isTrending = true)
+                        .convert(listOf(article))
+                }?.firstOrNull(),
                 news = updatedNews,
             ),
         )
@@ -77,32 +77,7 @@ internal class TrendingNewsStateFactory(
         }
     }
 
-    private fun mapToArticleConfigUM(article: ShortArticle, isTrending: Boolean): ArticleConfigUM {
-        return ArticleConfigUM(
-            id = article.id,
-            title = article.title,
-            score = article.score,
-            isTrending = isTrending,
-            tags = buildArticleTags(article),
-            createdAt = mapFormattedDate(article.createdAt),
-            isViewed = article.viewed,
-        )
-    }
-
-    private fun buildArticleTags(article: ShortArticle): ImmutableSet<LabelUM> {
-        val categoryLabels = article.categories.map { category ->
-            LabelUM(text = TextReference.Str(category.name))
-        }
-        val tokenLabels = article.relatedTokens.map { token ->
-            LabelUM(
-                text = TextReference.Str(token.symbol),
-                leadingContent = LabelLeadingContentUM.Token(
-                    iconUrl = getTokenIconUrlFromDefaultHost(
-                        tokenId = CryptoCurrency.RawID(token.id),
-                    ),
-                ),
-            )
-        }
-        return (categoryLabels + tokenLabels).toPersistentSet()
+    private fun getShortArticleConfigConverter(isTrending: Boolean): ShortArticleToArticleConfigUMConverter {
+        return ShortArticleToArticleConfigUMConverter(isTrending = Provider { isTrending })
     }
 }

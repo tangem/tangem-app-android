@@ -4,12 +4,15 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.model.converter.BatchItemConverter
+import com.tangem.features.feed.model.converter.BatchListStateManager
 import com.tangem.features.feed.model.converter.MarketsTokenItemConverter
+import com.tangem.features.feed.model.converter.distinctBatchesContent
+import com.tangem.features.feed.model.market.list.state.MarketsListUM
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.utils.logAction
 import com.tangem.features.feed.model.market.list.utils.logStatus
 import com.tangem.features.feed.model.market.list.utils.logUpdateResults
-import com.tangem.features.feed.model.market.list.state.MarketsListUM
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
@@ -48,8 +51,27 @@ internal class MarketsListBatchFlowManager(
         batchFlowType = batchFlowType,
     )
 
+    private val batchConverter = object : BatchItemConverter<TokenMarket, MarketsListItemUM> {
+
+        private val internalConverter: MarketsTokenItemConverter
+            get() = MarketsTokenItemConverter(
+                currentTrendInterval = currentTrendInterval(), // Теперь тут всегда актуальное значение
+                appCurrency = currentAppCurrency(),
+            )
+
+        override fun convert(item: TokenMarket) = internalConverter.convert(item)
+
+        override fun update(prevDomain: TokenMarket, currentUI: MarketsListItemUM, newDomain: TokenMarket) =
+            internalConverter.update(prevDomain, currentUI, newDomain)
+    }
+
+    private val stateManager = BatchListStateManager<Int, TokenMarket, MarketsListItemUM>(
+        converter = batchConverter,
+        dispatchers = dispatchers,
+    )
+
     private val resultBatches = MutableStateFlow(ResultBatches())
-    private val uiBatches = resultBatches.map { it.uiBatches }
+    private val uiBatches = stateManager.state.map { it.uiBatches }
 
     val uiItems: StateFlow<ImmutableList<MarketsListItemUM>>
         get() = uiBatches
@@ -128,15 +150,11 @@ internal class MarketsListBatchFlowManager(
     init {
         batchFlow.state
             .map { it.data }
-            .distinctUntilChanged { a, b ->
-                a.size == b.size &&
-                    a.map { it.key } == b.map { it.key } &&
-                    a.map { it.data }.flatten() == b.map { it.data }.flatten()
-            }
-            .onEach {
+            .distinctBatchesContent()
+            .onEach { newList ->
                 coroutineScope {
                     launch {
-                        updateState(it)
+                        stateManager.update(newList = newList, forceUpdate = false)
                     }.saveIn(updateStateJob)
                 }
             }
@@ -159,70 +177,12 @@ internal class MarketsListBatchFlowManager(
         }
     }
 
-    private suspend fun updateState(newList: List<Batch<Int, List<TokenMarket>>>, forceUpdate: Boolean = false) =
-        withContext(dispatchers.default) {
-            resultBatches.update { resultBatches ->
-                val items = resultBatches.uiBatches
-                val previousList = resultBatches.processedItems
-
-                val converter = MarketsTokenItemConverter(currentTrendInterval(), appCurrency = currentAppCurrency())
-
-                if (newList.isEmpty()) {
-                    return@update ResultBatches(processedItems = emptyList())
-                }
-
-                val isInitialLoading =
-                    forceUpdate || previousList.isNullOrEmpty() || newList.first().key != previousList.first().key
-
-                val outItems = if (isInitialLoading) {
-                    newList.map { batch ->
-                        Batch(
-                            key = batch.key,
-                            data = converter.convertList(batch.data),
-                        )
-                    }
-                } else {
-                    if (previousList.size != newList.size) {
-                        val keysToAdd = newList.map { it.key }.subtract(previousList.map { it.key }.toSet())
-                        val newBatches = newList.filter { keysToAdd.contains(it.key) }
-
-                        items + newBatches.map { batch ->
-                            Batch(
-                                key = batch.key,
-                                data = converter.convertList(batch.data),
-                            )
-                        }
-                    } else {
-                        items.mapIndexed { batchIndex, batch ->
-                            val prevBatch = previousList[batchIndex]
-                            val newBatch = newList[batchIndex]
-                            if (previousList == newBatch) return@mapIndexed batch
-
-                            Batch(
-                                key = batch.key,
-                                data = batch.data.mapIndexed { index, marketsListItemUM ->
-                                    val prevItem = prevBatch.data[index]
-                                    val newItem = newBatch.data[index]
-
-                                    converter.update(
-                                        prevItem,
-                                        marketsListItemUM,
-                                        newItem,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                currentCoroutineContext().ensureActive()
-
-                ResultBatches(
-                    uiBatches = outItems,
-                    processedItems = newList,
-                )
-            }
-        }
+    fun updateUIWithSameState() {
+        modelScope.launch(dispatchers.default) {
+            val current = batchFlow.state.value.data
+            stateManager.update(current, forceUpdate = true)
+        }.saveIn(updateStateJob)
+    }
 
     fun reload(searchText: String? = null) {
         modelScope.launch {
@@ -248,13 +208,6 @@ internal class MarketsListBatchFlowManager(
         modelScope.launch {
             actionsFlow.emit(BatchAction.LoadMore())
         }
-    }
-
-    fun updateUIWithSameState() {
-        modelScope.launch(dispatchers.default) {
-            val current = batchFlow.state.value.data
-            updateState(current, forceUpdate = true)
-        }.saveIn(updateStateJob)
     }
 
     fun loadCharts(batchKeys: Set<Int>, interval: MarketsListUM.TrendInterval) {

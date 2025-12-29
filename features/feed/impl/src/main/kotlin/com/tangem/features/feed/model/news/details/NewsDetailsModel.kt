@@ -2,6 +2,7 @@ package com.tangem.features.feed.model.news.details
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,16 +13,16 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
 import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.news.RelatedToken
+import com.tangem.domain.news.usecase.MarkArticleAsViewedUseCase
 import com.tangem.domain.news.usecase.ObserveNewsDetailsUseCase
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.model.news.details.converter.NewsDetailsConverter
 import com.tangem.features.feed.model.news.details.converter.RelatedTokenConverter
 import com.tangem.features.feed.model.news.details.converter.TokenMarketInfoToParamsConverter
 import com.tangem.features.feed.model.news.details.factory.NewsDetailsStateFactory
-import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.news.RelatedToken
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
 import com.tangem.features.feed.ui.news.details.state.RelatedTokensUM
@@ -49,6 +50,7 @@ internal class NewsDetailsModel @Inject constructor(
     private val shareManager: ShareManager,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
+    private val markArticleAsViewedUseCase: MarkArticleAsViewedUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -101,7 +103,10 @@ internal class NewsDetailsModel @Inject constructor(
     private fun onArticleIndexChanged(newIndex: Int) {
         stateFactory.updateSelectedArticleIndex(newIndex)
         val currentArticle = state.value.articles.getOrNull(newIndex)
-        currentArticle?.let(::loadRelatedTokens)
+        currentArticle?.let { article ->
+            markArticleAsViewed(article.id)
+            loadRelatedTokens(article)
+        }
     }
 
     private fun handlePreselectedArticles() {
@@ -126,8 +131,6 @@ internal class NewsDetailsModel @Inject constructor(
                 .onEach { articles ->
                     val selectedIndex = articles.indexOfFirstOrNull { it.id == params.articleId } ?: 0
                     stateFactory.updateArticles(articles, selectedIndex)
-                    val currentArticle = articles.getOrNull(selectedIndex)
-                    currentArticle?.let(::loadRelatedTokens)
                 }
                 .launchIn(modelScope)
         }
@@ -252,6 +255,12 @@ internal class NewsDetailsModel @Inject constructor(
             tokenData?.second?.let { tokenParams ->
                 params.onTokenClick(tokenParams, appCurrency)
             }
+        }
+    }
+
+    private fun markArticleAsViewed(articleId: Int) {
+        modelScope.launch(dispatchers.default) {
+            markArticleAsViewedUseCase.markAsViewed(articleId)
         }
     }
 

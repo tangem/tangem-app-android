@@ -13,20 +13,13 @@ import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.repository.NewsRepository
-import com.tangem.pagination.BatchFetchResult
-import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.*
 import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
-import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 /**
@@ -42,12 +35,14 @@ internal class DefaultNewsRepository(
 ) : NewsRepository {
 
     override fun getNewsListBatchFlow(context: NewsListBatchingContext, batchSize: Int): NewsListBatchFlow {
-        return BatchListSource(
+        val newsBatchFlow = BatchListSource(
             fetchDispatcher = dispatchers.io,
             context = context,
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: INITIAL_BATCH_KEY },
             batchFetcher = createBatchFetcher(batchSize),
         ).toBatchFlow()
+
+        return updateViewedStatusForNewsBatch(newsBatchFlow, context.coroutineScope)
     }
 
     override suspend fun getNews(config: NewsListConfig, limit: Int): List<ShortArticle> {
@@ -115,16 +110,50 @@ internal class DefaultNewsRepository(
     }
 
     override suspend fun getCategories(): List<ArticleCategory> {
-        return newsApi.getCategories().getOrThrow().items.map { dto ->
-            ArticleCategory(
-                id = dto.id,
-                name = dto.name,
-            )
+        return withContext(dispatchers.io) {
+            newsApi.getCategories().getOrThrow().items.map { dto ->
+                ArticleCategory(
+                    id = dto.id,
+                    name = dto.name,
+                )
+            }
         }
     }
 
     override suspend fun updateNewsViewed(articleIds: Collection<Int>, viewed: Boolean) {
         newsViewedStore.updateViewed(articleIds, viewed)
+    }
+
+    private fun updateViewedStatusForNewsBatch(
+        newsBatchFlow: NewsListBatchFlow,
+        scope: CoroutineScope,
+    ): NewsListBatchFlow {
+        return object : NewsListBatchFlow {
+            override val state: StateFlow<BatchListState<Int, List<ShortArticle>>> =
+                combine(
+                    newsBatchFlow.state,
+                    newsViewedStore.getAll(),
+                ) { batchListState, viewedFlags ->
+                    val updatedBatches = batchListState.data.map { batch ->
+                        val updatedArticles = batch.data.map { article ->
+                            val isViewed = viewedFlags[article.id] == true
+                            article.copy(viewed = isViewed)
+                        }
+                        Batch(key = batch.key, data = updatedArticles)
+                    }
+                    BatchListState(
+                        data = updatedBatches,
+                        status = batchListState.status,
+                    )
+                }.stateIn(
+                    scope = scope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = BatchListState(emptyList(), newsBatchFlow.state.value.status),
+                )
+
+            override val updateResults: SharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<ShortArticle>>>> =
+                newsBatchFlow.updateResults
+        }
     }
 
     private suspend fun fetchDetailedArticlesInternal(newsIds: Collection<Int>, language: String?) =
@@ -141,7 +170,7 @@ internal class DefaultNewsRepository(
 
             if (idsToFetch.isEmpty()) return@withContext
 
-            val fetchedArticles = coroutineScope {
+            val fetchedArticles = supervisorScope {
                 idsToFetch.map { newsId ->
                     async {
                         newsApi.getNewsDetails(newsId = newsId, language = language)
@@ -160,13 +189,12 @@ internal class DefaultNewsRepository(
 
     private suspend fun fetchAndStoreTrendingNews(limit: Int, language: String?) {
         return withContext(dispatchers.io) {
-            val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)
-            when (val result = apiResponse) {
+            when (val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)) {
                 is ApiResponse.Error -> {
                     Timber.e(
-                        result.cause.cause,
+                        apiResponse.cause.cause,
                         "Trending news fetch failed cause: ${
-                            when (val error = result.cause) {
+                            when (val error = apiResponse.cause) {
                                 is ApiResponseError.HttpException -> error.code
                                 is ApiResponseError.NetworkException -> "NetworkException"
                                 is ApiResponseError.TimeoutException -> "TimeoutException"
@@ -179,14 +207,14 @@ internal class DefaultNewsRepository(
                         key = TRENDING_NEWS_KEY,
                         value = TrendingNews.Error(
                             NewsError.Unknown(
-                                message = result.cause.message,
+                                message = apiResponse.cause.message,
                                 code = null,
                             ),
                         ),
                     )
                 }
                 is ApiResponse.Success<NewsTrendingResponse> -> {
-                    val freshArticles = result.data.items.map { it.toDomainShortArticle() }
+                    val freshArticles = apiResponse.data.items.map { it.toDomainShortArticle() }
                     val articles = freshArticles.take(limit)
                     trendingNewsStore.store(TRENDING_NEWS_KEY, TrendingNews.Data(articles))
                     TrendingNews.Data(articles)
@@ -271,7 +299,7 @@ internal class DefaultNewsRepository(
                 page = page,
                 limit = limit,
                 language = params.language,
-                snapshot = snapshotOverride,
+                snapshot = snapshotOverride?.takeIf { it.isNotEmpty() },
                 tokenIds = params.tokenIds.takeIf { it.isNotEmpty() },
                 categoryIds = params.categoryIds.takeIf { it.isNotEmpty() },
             ).getOrThrow()

@@ -7,9 +7,17 @@ import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 data class NewsListUM(
-    val selectedCategoryId: Int?,
+    val selectedCategoryId: Int,
     val filters: ImmutableList<ChipUM>,
-    val articles: ImmutableList<ArticleConfigUM>,
+    val listOfArticles: ImmutableList<ArticleConfigUM>,
+    val newsListState: NewsListState,
     val onArticleClick: (Int) -> Unit,
     val onBackClick: () -> Unit,
 )
+
+@Immutable
+sealed class NewsListState {
+    data class Content(val loadMore: () -> Unit) : NewsListState()
+    data object Loading : NewsListState()
+    data class LoadingError(val onRetryClicked: () -> Unit) : NewsListState()
+}
