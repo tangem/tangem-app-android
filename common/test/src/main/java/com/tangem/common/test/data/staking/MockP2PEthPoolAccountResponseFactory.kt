@@ -35,7 +35,7 @@ object MockP2PEthPoolAccountResponseFactory {
             availableToUnstake = stakedAmount,
             availableToWithdraw = BigDecimal.ZERO,
             exitQueue = P2PEthPoolExitQueueDTO(
-                total = 0.0,
+                total = BigDecimal.ZERO,
                 requests = emptyList(),
             ),
         )
@@ -55,7 +55,7 @@ object MockP2PEthPoolAccountResponseFactory {
             availableToUnstake = BigDecimal.ZERO,
             availableToWithdraw = BigDecimal.ZERO,
             exitQueue = P2PEthPoolExitQueueDTO(
-                total = 0.0,
+                total = BigDecimal.ZERO,
                 requests = emptyList(),
             ),
         )
