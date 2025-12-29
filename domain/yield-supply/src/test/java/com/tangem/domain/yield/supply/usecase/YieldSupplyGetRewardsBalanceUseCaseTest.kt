@@ -459,4 +459,72 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
             YieldSupplyGetRewardsBalanceUseCase.FIAT_MAX_DECIMALS,
         )
     }
+
+    @Test
+    fun `GIVEN token with decimals less than MIN_DECIMALS WHEN invoke THEN does not crash`() = runTest {
+        val network = createNetwork()
+        val tokenId = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(network.rawId),
+            suffix = CryptoCurrency.ID.Suffix.RawID("low-decimals-token", "0xLowDecimals"),
+        )
+        val tokenWithLowDecimals = CryptoCurrency.Token(
+            id = tokenId,
+            network = network,
+            name = "Low Decimals Token",
+            symbol = "LDT",
+            decimals = 0,
+            iconUrl = null,
+            isCustom = false,
+            contractAddress = "0xLowDecimals",
+        )
+
+        val amount = BigDecimal("100.00")
+        val apy = BigDecimal("10.0")
+
+        val status = CryptoCurrencyStatus(
+            currency = tokenWithLowDecimals,
+            value = CryptoCurrencyStatus.Custom(
+                amount = amount,
+                fiatAmount = null,
+                fiatRate = BigDecimal.ONE,
+                priceChange = null,
+                yieldBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = NetworkAddress.Single(
+                    NetworkAddress.Address(value = "0xabc", type = NetworkAddress.Address.Type.Primary),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+            ),
+        )
+
+        coEvery { repository.getCachedMarkets() } returns listOf(
+            YieldMarketToken(
+                tokenAddress = tokenWithLowDecimals.contractAddress,
+                chainId = 1,
+                apy = apy,
+                isActive = true,
+                maxFeeNative = BigDecimal.ZERO,
+                maxFeeUSD = BigDecimal.ZERO,
+                backendId = "id",
+            ),
+        )
+
+        val dispatcherProvider = testDispatcherProvider(this)
+        val useCase = YieldSupplyGetRewardsBalanceUseCase(repository, dispatcherProvider)
+        val appCurrency = AppCurrency.Default
+
+        val deferred = async { useCase(status, appCurrency).take(2).toList() }
+
+        testScheduler.advanceUntilIdle()
+        advanceTimeBy(TICK_MILLIS)
+        testScheduler.advanceUntilIdle()
+
+        val emissions = deferred.await()
+        assertThat(emissions).hasSize(2)
+        assertThat(emissions[0].cryptoBalance).isNotNull()
+        assertThat(emissions[1].cryptoBalance).isNotNull()
+    }
 }

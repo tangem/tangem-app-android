@@ -102,14 +102,16 @@ class YieldSupplyGetRewardsBalanceUseCase(
     }.flowOn(dispatcherProvider.default)
 
     private fun calculateMinVisibleDecimals(perTickDeltaAbs: BigDecimal, maxDecimals: Int): Int {
-        if (perTickDeltaAbs <= BigDecimal.ZERO) return MIN_DECIMALS
+        val effectiveMin = MIN_DECIMALS.coerceAtMost(maxDecimals)
+
+        if (perTickDeltaAbs <= BigDecimal.ZERO) return effectiveMin
 
         val perTickAsDouble = perTickDeltaAbs.toDouble()
-        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return MIN_DECIMALS
+        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return effectiveMin
 
         val safe = if (perTickAsDouble <= 0.0) EPSILON else perTickAsDouble
         val raw = ceil(-ln(safe) / LN_10)
-        return raw.toInt().coerceIn(MIN_DECIMALS, maxDecimals)
+        return raw.toInt().coerceIn(effectiveMin, maxDecimals)
     }
 
     private fun perTickDelta(amount: BigDecimal, apyFraction: BigDecimal): BigDecimal {
