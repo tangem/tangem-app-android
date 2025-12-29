@@ -1,31 +1,19 @@
 package com.tangem.data.staking.store
 
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.flow.Flow
 
 /**
- * Store for P2PEthPool staking balances
+ * Store for P2PEthPool staking balances.
+ *
+ * Extends [BaseStakingBalancesStore] with P2PEthPool-specific storage operations.
  */
-interface P2PEthPoolBalancesStore {
+interface P2PEthPoolBalancesStore : BaseStakingBalancesStore {
 
-    fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>>
-
-    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): StakingBalance?
-
-    suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<StakingBalance>?
-
-    suspend fun refresh(userWalletId: UserWalletId, stakingId: StakingID)
-
-    suspend fun refresh(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
-
+    /** Store actual P2PEthPool account balances */
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>)
 
+    /** Store empty state for accounts with no active positions */
     suspend fun storeEmpty(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
-
-    suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
-
-    suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 }
