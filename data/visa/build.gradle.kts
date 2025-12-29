@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
     implementation(projects.data.common)
+    implementation(projects.data.wallets)
 
     /** Project - Domain */
     implementation(projects.domain.visa)
