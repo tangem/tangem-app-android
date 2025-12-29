@@ -269,6 +269,7 @@ sealed class TokenItemState {
             val title: TextReference,
             val onPromoBannerClick: () -> Unit,
             val onCloseClick: () -> Unit,
+            val onPromoShown: () -> Unit = {},
         ) : PromoBannerState()
 
         data object Empty : PromoBannerState()
