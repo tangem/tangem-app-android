@@ -27,6 +27,7 @@ import com.tangem.common.ui.news.ArticleHeader
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.components.pager.PagerIndicator
@@ -171,7 +172,10 @@ private fun ArticleDetail(article: ArticleUM, modifier: Modifier = Modifier, onL
                         items = article.sources,
                         key = SourceUM::id,
                     ) { source ->
-                        SourceItem(source = source)
+                        SourceItem(
+                            source = source,
+                            modifier = Modifier.fillParentMaxHeight(),
+                        )
                     }
                 }
             }
@@ -259,9 +263,11 @@ private fun SourceItem(source: SourceUM, modifier: Modifier = Modifier) {
                 color = TangemTheme.colors.text.primary1,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 12.dp),
             )
         }
+
+        SpacerHMax()
+
         Text(
             text = source.publishedAt.resolveReference(),
             style = TangemTheme.typography.caption2,
