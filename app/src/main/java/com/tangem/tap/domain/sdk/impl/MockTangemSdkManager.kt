@@ -219,14 +219,14 @@ class MockTangemSdkManager(
     }
 
     override suspend fun tangemPayProduceInitialCredentials(
-        cardId: String,
+        preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials> {
         error("Not implemented")
     }
 
     override suspend fun getWithdrawalSignature(
-        cardId: String,
         hash: String,
+        preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, WithdrawalSignatureResult> {
         error("Not implemented")
     }
