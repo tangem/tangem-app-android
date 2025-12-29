@@ -1,8 +1,8 @@
 package com.tangem.domain.staking.repositories
 
 import arrow.core.Either
+import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolAccount
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolReward
@@ -54,14 +54,16 @@ interface P2PEthPoolRepository {
      * to withdraw the funds.
      *
      * @param network P2PEthPool network (MAINNET or TESTNET)
-     * @param stakerPublicKey Staker's public key (note: API doc may have Bitcoin terminology)
-     * @param stakeTransactionHash Original stake transaction hash
+     * @param delegatorAddress User's wallet address
+     * @param vaultAddress Vault contract address
+     * @param amount Amount of ETH to unstake
      * @return Either error or unsigned transaction
      */
     suspend fun createUnstakeTransaction(
         network: P2PEthPoolNetwork,
-        stakerPublicKey: String,
-        stakeTransactionHash: String,
+        delegatorAddress: String,
+        vaultAddress: String,
+        amount: String,
     ): Either<StakingError, P2PEthPoolUnsignedTx>
 
     /**
@@ -70,12 +72,16 @@ interface P2PEthPoolRepository {
      * Only works when funds are available (after exit queue wait period).
      *
      * @param network P2PEthPool network (MAINNET or TESTNET)
-     * @param stakerAddress User's wallet address
+     * @param delegatorAddress User's wallet address
+     * @param vaultAddress Vault contract address
+     * @param amount Amount of ETH to withdraw
      * @return Either error or unsigned transaction with withdrawal tickets
      */
     suspend fun createWithdrawTransaction(
         network: P2PEthPoolNetwork,
-        stakerAddress: String,
+        delegatorAddress: String,
+        vaultAddress: String,
+        amount: String,
     ): Either<StakingError, P2PEthPoolUnsignedTx>
 
     /**
@@ -104,7 +110,7 @@ interface P2PEthPoolRepository {
         network: P2PEthPoolNetwork,
         delegatorAddress: String,
         vaultAddress: String,
-    ): Either<StakingError, P2PEthPoolAccount>
+    ): Either<StakingError, P2PEthPoolStakingAccount>
 
     /**
      * Get rewards history for account and vault
