@@ -86,6 +86,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         articleId = articleId,
                         onBackClicked = { onChildBack() },
                         preselectedArticlesId = preselectedArticlesId,
+                        onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
                     ),
                 ),
             )
@@ -195,6 +196,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     articleId = entryRoute.articleId,
                     onBackClicked = { router.pop() },
                     preselectedArticlesId = entryRoute.preselectedArticlesId,
+                    onTokenClick = { token, currency -> clickIntents.onMarketItemClick(token, currency) },
                 ),
             )
             null -> FeedEntryChildFactory.Child.Feed
