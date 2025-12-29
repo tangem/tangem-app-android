@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -19,6 +20,11 @@ sealed class WalletScreenAnalyticsEvent {
             ),
             OneTimeAnalyticsEvent {
 
+            override val oneTimeEventId: String = id + userWalletId.stringValue
+        }
+
+        class AppsFlyerWalletFunded(userWalletId: UserWalletId) : Basic(event = "wallet_funded"),
+            AppsFlyerOnlyEvent, OneTimeAnalyticsEvent {
             override val oneTimeEventId: String = id + userWalletId.stringValue
         }
 
