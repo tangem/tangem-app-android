@@ -81,14 +81,7 @@ internal class YieldBalancesConverter(
 
     private fun getRewardBlockType(stakingBalance: StakingBalance?): RewardBlockType {
         val blockchainId = cryptoCurrencyStatus.currency.network.rawId
-
-        if (stakingBalance is StakingBalance.Data.P2PEthPool) {
-            return if (isStakingRewardUnavailable(blockchainId)) {
-                RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
-            } else {
-                RewardBlockType.NoRewards
-            }
-        }
+        val isCoin = cryptoCurrencyStatus.currency.id.isCoin
 
         val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
         val rewards = stakeKitBalance?.balance?.items
@@ -98,7 +91,7 @@ internal class YieldBalancesConverter(
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         return when {
-            isStakingRewardUnavailable(blockchainId) -> {
+            isStakingRewardUnavailable(blockchainId, isCoin) -> {
                 if (BlockchainUtils.isSolana(blockchainId)) {
                     RewardBlockType.RewardUnavailable.SolanaRewardUnavailable
                 } else {
