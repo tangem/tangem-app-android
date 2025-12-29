@@ -679,7 +679,7 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun unlockWallet(action: WalletsUpdateActionResolver.Action.UnlockWallet) {
-        withContext(dispatchers.io) { delay(timeMillis = 700) }
+        delay(timeMillis = 700)
 
         stateHolder.update(
             transformer = UnlockWalletTransformer(
@@ -696,7 +696,7 @@ internal class WalletModel @Inject constructor(
         )
 
         action.unlockedWallets.onEach { userWallet ->
-            modelScope.launch { fetchWalletContent(userWallet = userWallet) }
+            fetchWalletContent(userWallet = userWallet)
         }
     }
 
