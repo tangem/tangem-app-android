@@ -38,6 +38,8 @@ internal object NetworkModule {
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
     private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
 
+    private const val P2P_ETH_POOL_API_TIMEOUT_SECONDS = 60L
+
     @Provides
     @Singleton
     fun provideApiConfigManager(
@@ -82,6 +84,12 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.P2PEthPool,
             applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                readTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+            ),
         )
     }
 
