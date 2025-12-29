@@ -468,4 +468,7 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_active/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")
 }
