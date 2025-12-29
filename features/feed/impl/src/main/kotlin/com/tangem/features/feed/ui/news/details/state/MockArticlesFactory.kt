@@ -31,6 +31,7 @@ internal object MockArticlesFactory {
                     publishedAt = TextReference.Str("1h ago"),
                     url = "https://cointelegraph.com",
                     onClick = {},
+                    imageUrl = null,
                 ),
                 SourceUM(
                     id = 2,
@@ -42,9 +43,11 @@ internal object MockArticlesFactory {
                     publishedAt = TextReference.Str("2h ago"),
                     url = "https://investing.com",
                     onClick = {},
+                    imageUrl = null,
                 ),
             ).toPersistentList(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 2,
@@ -68,9 +71,11 @@ internal object MockArticlesFactory {
                     publishedAt = TextReference.Str("3h ago"),
                     url = "https://bloomberg.com",
                     onClick = {},
+                    imageUrl = null,
                 ),
             ).toPersistentList(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 3,
@@ -94,9 +99,11 @@ internal object MockArticlesFactory {
                     publishedAt = TextReference.Str("5h ago"),
                     url = "https://coindesk.com",
                     onClick = {},
+                    imageUrl = null,
                 ),
             ).toPersistentList(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 4,
@@ -120,9 +127,11 @@ internal object MockArticlesFactory {
                     publishedAt = TextReference.Str("7h ago"),
                     url = "https://theblock.co",
                     onClick = {},
+                    imageUrl = null,
                 ),
             ).toPersistentList(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 5,
@@ -136,6 +145,7 @@ internal object MockArticlesFactory {
             content = "A newly launched protocol unveiled innovative yield farming mechanism.\n\nAPY rates range from 15% to 30%.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 6,
@@ -150,6 +160,7 @@ internal object MockArticlesFactory {
             content = "The US Senate Banking Committee advanced landmark crypto regulation bill.\n\nKey provisions include asset definitions.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 7,
@@ -163,6 +174,7 @@ internal object MockArticlesFactory {
             content = "Major financial institution announced comprehensive crypto custody services.\n\nSupporting Bitcoin and Ethereum initially.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 8,
@@ -176,6 +188,7 @@ internal object MockArticlesFactory {
             content = "Prominent NFT marketplace reported 300% increase in trading volume.\n\nNew features include lower fees.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 9,
@@ -190,6 +203,7 @@ internal object MockArticlesFactory {
             content = "Layer 2 solution processed 100,000 transactions per second.\n\nUsing zero-knowledge proof technology.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
         ArticleUM(
             id = 10,
@@ -204,6 +218,7 @@ internal object MockArticlesFactory {
             content = "Stablecoin market cap reached \$180 billion all-time high.\n\nDriven by DeFi activity and institutional adoption.",
             sources = persistentListOf(),
             newsUrl = "",
+            relatedTokens = persistentListOf(),
         ),
     ).toPersistentList()
 }
