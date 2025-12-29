@@ -126,6 +126,28 @@ sealed class MainScreenAnalyticsEvent(
             STATE to state,
         ),
     )
+
+    data class YieldPromo(
+        val token: String,
+        val blockchain: String,
+    ) : MainScreenAnalyticsEvent(
+        event = "Yield Promo",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
+    data class YieldPromoClicked(
+        val token: String,
+        val blockchain: String,
+    ) : MainScreenAnalyticsEvent(
+        event = "Yield Promo Clicked",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
     // endregion
 
     companion object {
