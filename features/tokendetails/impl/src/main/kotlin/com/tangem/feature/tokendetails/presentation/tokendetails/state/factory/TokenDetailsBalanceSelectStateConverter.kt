@@ -5,7 +5,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
@@ -29,8 +29,8 @@ internal class TokenDetailsBalanceSelectStateConverter(
                 return this
             }
 
-            val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
-            val stakingCryptoAmount = yieldBalance?.getTotalWithRewardsStakingBalance(
+            val stakingBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data
+            val stakingCryptoAmount = stakingBalance?.getTotalWithRewardsStakingBalance(
                 cryptoCurrencyStatus.currency.network.rawId,
             )
             val stakingFiatAmount = stakingCryptoAmount?.let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }
