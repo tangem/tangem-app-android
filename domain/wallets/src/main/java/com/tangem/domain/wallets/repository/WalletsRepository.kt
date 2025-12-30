@@ -11,12 +11,13 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions")
 interface WalletsRepository {
 
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     suspend fun shouldSaveUserWalletsSync(): Boolean
 
-    @Deprecated("Hot wallet make always save user wallets. Do not use this method")
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     fun shouldSaveUserWallets(): Flow<Boolean>
 
-    @Deprecated("Hot wallet make always save user wallets. Do not use this method")
+    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     suspend fun saveShouldSaveUserWallets(item: Boolean)
 
     suspend fun useBiometricAuthentication(): Boolean
@@ -64,10 +65,13 @@ interface WalletsRepository {
     suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId)
 
     @Throws
-    suspend fun setWalletName(walletId: String, walletName: String)
+    suspend fun setWalletName(walletId: UserWalletId, walletName: String)
 
     @Throws
-    suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo
+    suspend fun upgradeWallet(walletId: UserWalletId)
+
+    @Throws
+    suspend fun getWalletInfo(walletId: UserWalletId): UserWalletRemoteInfo
 
     @Throws
     suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean = true): List<UserWalletRemoteInfo>

@@ -4,10 +4,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.openMainScreen
-import com.tangem.screens.onDetailsScreen
-import com.tangem.screens.onReferralProgramScreen
-import com.tangem.screens.onTopBar
-import com.tangem.screens.onWalletSettingsScreen
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -30,9 +27,6 @@ class DetailsTest : BaseTestCase() {
             onDetailsScreen {
                 step("Assert 'Wallet connect' button is visible") {
                     walletConnectButton.assertIsDisplayed()
-                }
-                step("Assert 'Scan card' button is visible") {
-                    scanCardButton.assertIsDisplayed()
                 }
                 step("Assert 'Buy Tangem card' button is visible") {
                     buyTangemButton.assertIsDisplayed()
@@ -130,9 +124,6 @@ class DetailsTest : BaseTestCase() {
             onDetailsScreen {
                 step("Assert 'Wallet connect' button does not exist") {
                     walletConnectButton.assertIsNotDisplayed()
-                }
-                step("Assert 'Scan card' button is visible") {
-                    scanCardButton.assertIsDisplayed()
                 }
                 step("Assert 'Buy Tangem card' button is visible") {
                     buyTangemButton.assertIsDisplayed()

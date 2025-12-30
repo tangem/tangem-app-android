@@ -1400,6 +1400,7 @@
   <string name="tangempay_onboarding_title">Obtén tu tarjeta Tangem Pay gratuita en minutos</string>
   <string name="tangempay_payment_account">Cuenta de pago</string>
   <string name="tangempay_payment_account_sync_needed">La cuenta de pago no está sincronizada</string>
+  <string name="tangempay_pin_validation_error_message">PIN no válido: evitar secuencias o repeticiones</string>
   <string name="tangempay_service_unavailable_description">Estamos solucionando un problema técnico. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="tangempay_service_unavailable_title">Servicio temporalmente no disponible</string>
   <string name="tangempay_service_unreachable_try_later">No es posible mostrar los datos en este momento, pero los pagos con tarjeta siguen funcionando.</string>

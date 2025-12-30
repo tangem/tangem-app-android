@@ -175,7 +175,7 @@ private fun TransactionCardData(
                 balance = swapCardState.balance.orMaskWithStars(swapCardState.isBalanceHidden),
                 textFieldValue = swapCardState.amountTextFieldValue,
                 amountEquivalent = swapCardState.amountEquivalent,
-                tokenIconUrl = swapCardState.tokenIconUrl ?: "",
+                tokenIconUrl = swapCardState.tokenIconUrl.orEmpty(),
                 tokenCurrency = swapCardState.tokenCurrency,
                 priceImpact = priceImpact,
                 networkIconRes = if (swapCardState.isNotNativeToken) swapCardState.networkIconRes else null,
@@ -374,7 +374,7 @@ private fun MainButton(state: SwapStateHolder) {
             modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(id = R.string.swapping_swap_action),
             iconResId = state.swapButton.walletInteractionIcon,
-            enabled = state.swapButton.enabled,
+            enabled = state.swapButton.isEnabled,
             onClick = state.swapButton.onClick,
         )
     }
@@ -437,7 +437,7 @@ private val state = SwapStateHolder(
         ),
         SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),
-    swapButton = SwapButton(enabled = true, onClick = {}, walletInteractionIcon = null),
+    swapButton = SwapButton(isEnabled = true, onClick = {}, walletInteractionIcon = null),
     onRefresh = {},
     onBackClicked = {},
     onChangeCardsClicked = {},
