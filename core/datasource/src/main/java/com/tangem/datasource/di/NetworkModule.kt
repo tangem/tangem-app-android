@@ -5,7 +5,6 @@ import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
-import com.tangem.datasource.api.common.config.MoonPay
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
@@ -21,6 +20,7 @@ import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.di.utils.RetrofitApiBuilder.Timeouts
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -129,7 +129,16 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemVisaApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayApi {
+    fun provideTangemPayApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemPay,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideVisaApi(retrofitApiBuilder: RetrofitApiBuilder): VisaApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemPay,
             applyTimeoutAnnotations = false,
