@@ -2,7 +2,6 @@ package com.tangem.feature.swap.ui.market
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
-import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -19,9 +17,6 @@ import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.presentation.R
 
 internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
-    item {
-        SpacerH32()
-    }
     item {
         Text(
             text = stringResourceSafe(R.string.markets_common_title),

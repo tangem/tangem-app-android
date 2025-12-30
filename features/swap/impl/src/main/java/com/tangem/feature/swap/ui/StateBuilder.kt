@@ -617,13 +617,14 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         tokensDataState: CurrenciesGroup,
     ): SwapStateHolder {
+        val currentMarketsState = uiState.selectTokenState?.marketsState
         return uiState.copy(
             selectTokenState = tokensDataConverter.convert(
                 value = CurrenciesGroupWithFromCurrency(
                     fromCurrency = fromToken,
                     group = tokensDataState,
                 ),
-            ),
+            ).copy(marketsState = currentMarketsState),
         )
     }
 

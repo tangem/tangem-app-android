@@ -54,3 +54,13 @@ internal sealed interface TokenListUMData {
         override val tokensList: ImmutableList<TokensListItemUM> = persistentListOf()
     }
 }
+
+internal val SwapSelectTokenStateHolder.isNotFoundState: Boolean
+    get() = availableTokens.isEmpty() && unavailableTokens.isEmpty() &&
+        tokensListData.tokensList.isEmpty() && isAfterSearch &&
+        marketsState !is SwapMarketState.Content && marketsState !is SwapMarketState.Loading
+
+internal val SwapSelectTokenStateHolder.isEmptyState: Boolean
+    get() = availableTokens.isEmpty() && unavailableTokens.isEmpty() &&
+        tokensListData.tokensList.isEmpty() && !isAfterSearch &&
+        marketsState !is SwapMarketState.Content && marketsState !is SwapMarketState.Loading

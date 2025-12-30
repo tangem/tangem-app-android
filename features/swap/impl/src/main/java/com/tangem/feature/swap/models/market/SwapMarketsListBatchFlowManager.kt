@@ -7,7 +7,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.feature.swap.models.market.converter.SwapMarketsTokenItemConverter
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
-import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -56,43 +55,6 @@ internal class SwapMarketsListBatchFlowManager(
                 started = SharingStarted.Eagerly,
                 initialValue = persistentListOf(),
             )
-
-    val onLastBatchLoadedSuccess = batchFlow.state
-        .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
-        .mapNotNull { batchListState ->
-            when (val status = batchListState.status) {
-                is PaginationStatus.Paginating -> {
-                    if (status.lastResult is BatchFetchResult.Success) {
-                        batchListState.data.lastOrNull()?.key
-                    } else {
-                        null
-                    }
-                }
-                is PaginationStatus.EndOfPagination -> {
-                    batchListState.data.lastOrNull()?.key
-                }
-                else -> null
-            }
-        }
-
-    val onFirstBatchLoadedSuccess = batchFlow.state
-        .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
-        .mapNotNull { batchListState ->
-            when (val status = batchListState.status) {
-                is PaginationStatus.Paginating -> {
-                    if (status.lastResult is BatchFetchResult.Success) {
-                        batchListState.data.size == 1
-                    } else {
-                        null
-                    }
-                }
-                is PaginationStatus.EndOfPagination -> {
-                    batchListState.data.size == 1
-                }
-                else -> null
-            }
-        }
-        .filter { it }
 
     val isInInitialLoadingErrorState = batchFlow.state
         .map { it.status is PaginationStatus.InitialLoadingError }
@@ -225,13 +187,6 @@ internal class SwapMarketsListBatchFlowManager(
         }
     }
 
-    fun updateUIWithSameState() {
-        modelScope.launch(dispatchers.default) {
-            val current = batchFlow.state.value.data
-            updateState(current, forceUpdate = true)
-        }.saveIn(updateStateJob)
-    }
-
     fun loadCharts(batchKeys: Set<Int>) {
         if (batchKeys.isEmpty()) return
 
@@ -263,39 +218,6 @@ internal class SwapMarketsListBatchFlowManager(
         }
     }
 
-    fun updateQuotes() {
-        modelScope.launch {
-            actionsFlow.emit(
-                BatchAction.CancelUpdates {
-                    it.updateRequest is TokenMarketUpdateRequest.UpdateQuotes
-                },
-            )
-
-            actionsFlow.emit(
-                BatchAction.UpdateBatches(
-                    keys = batchFlow
-                        .state
-                        .value
-                        .data
-                        .map { it.key }
-                        .toSet(),
-                    updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
-                        currencyId = currentAppCurrency().code,
-                    ),
-                    async = true,
-                    operationId = "update quotes",
-                ),
-            )
-        }
-    }
-
-    fun clearStateAndStopAllActions() {
-        resultBatches.value = ResultBatches()
-        modelScope.launch {
-            actionsFlow.emit(BatchAction.Reset)
-        }
-    }
-
     fun getBatchKeysByItemIds(ids: List<CryptoCurrency.RawID>): Set<Int> {
         val currentData = batchFlow.state.value.data
 
@@ -303,16 +225,6 @@ internal class SwapMarketsListBatchFlowManager(
             .filter { d -> d.data.any { ids.contains(it.id) } }
             .map { it.key }
             .toSet()
-    }
-
-    fun getTokenById(id: CryptoCurrency.RawID): TokenMarket? {
-        return batchFlow
-            .state
-            .value
-            .data
-            .map { it.data }
-            .flatten()
-            .find { it.id == id }
     }
 
     private data class ResultBatches(
