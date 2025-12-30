@@ -16,7 +16,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.common_backup),
                 showBackButton = true,
                 showSkipButton = false,
-                showFeedbackButton = true,
             )
             is WalletActivationRoute.ManualBackupPhrase -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP_PHRASE,
@@ -24,7 +23,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.common_backup),
                 showBackButton = true,
                 showSkipButton = false,
-                showFeedbackButton = true,
             )
             is WalletActivationRoute.ManualBackupCheck -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP_CHECK,
@@ -32,7 +30,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.common_backup),
                 showBackButton = true,
                 showSkipButton = false,
-                showFeedbackButton = true,
             )
             is WalletActivationRoute.ManualBackupCompleted -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP_COMPLETED,
@@ -40,7 +37,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.common_backup),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
             is WalletActivationRoute.SetAccessCode -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_ACCESS_CODE,
@@ -48,7 +44,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.access_code_navtitle),
                 showBackButton = false,
                 showSkipButton = true,
-                showFeedbackButton = false,
             )
             is WalletActivationRoute.ConfirmAccessCode -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_ACCESS_CODE,
@@ -56,7 +51,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.access_code_navtitle),
                 showBackButton = true,
                 showSkipButton = true,
-                showFeedbackButton = false,
             )
             is WalletActivationRoute.PushNotifications -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_NOTIFICATIONS,
@@ -64,7 +58,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.onboarding_title_notifications),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
             is WalletActivationRoute.SetupFinished -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_DONE,
@@ -72,7 +65,6 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 title = resourceReference(R.string.common_done),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
         }
     }

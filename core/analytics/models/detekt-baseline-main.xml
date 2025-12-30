@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:TechAnalyticsEvent.kt$TechAnalyticsEvent.KeyboardIdentifier${ put("Package", it) put("GPUrl", "https://play.google.com/store/apps/details?id=$packageName") }</ID>
+    <ID>UseEmptyCounterpart:AnalyticsEvent.kt$AnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:Basic.kt$Basic$mapOf()</ID>
+    <ID>UseEmptyCounterpart:ExceptionAnalyticsEvent.kt$ExceptionAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:MainScreenAnalyticsEvent.kt$MainScreenAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingAnalyticsEvent.kt$OnboardingAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingAnalyticsEvent.kt$OnboardingAnalyticsEvent.CreateWallet$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingAnalyticsEvent.kt$OnboardingAnalyticsEvent.Error$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingAnalyticsEvent.kt$OnboardingAnalyticsEvent.Onboarding$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingAnalyticsEvent.kt$OnboardingAnalyticsEvent.SeedPhrase$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TechAnalyticsEvent.kt$TechAnalyticsEvent$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

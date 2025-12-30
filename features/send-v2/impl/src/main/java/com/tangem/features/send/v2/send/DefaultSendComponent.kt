@@ -88,10 +88,17 @@ internal class DefaultSendComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SendConfirmComponent -> {
+                        val fromCurrency = params.currency
+                        val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
+                            .takeIf { model.isAccountModeFlow.value }
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
                                 source = model.analyticsSendSource,
+                                sendBlockchain = fromCurrency.network.name,
+                                sendToken = fromCurrency.symbol,
+                                fromDerivationIndex = fromDerivationIndex,
+                                toDerivationIndex = null,
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {

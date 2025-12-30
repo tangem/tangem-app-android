@@ -137,6 +137,7 @@ class AccountListConverterTest {
                             group = UserTokensResponse.GroupType.NETWORK,
                             sort = UserTokensResponse.SortType.BALANCE,
                             totalAccounts = 1,
+                            totalArchivedAccounts = 0,
                         ),
                         accounts = emptyList(),
                         unassignedTokens = emptyList(),

@@ -18,8 +18,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.features.welcome.component.impl.PreviewWelcomeComponent
 import com.tangem.tap.features.welcome.ui.WelcomeScreenState
