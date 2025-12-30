@@ -1,8 +1,8 @@
 package com.tangem.features.feed.model.news.details.factory
 
-import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
+import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
 import com.tangem.features.feed.ui.news.details.state.RelatedTokensUM
 import com.tangem.utils.Provider
@@ -12,6 +12,7 @@ internal class NewsDetailsStateFactory(
     private val currentStateProvider: Provider<NewsDetailsUM>,
     private val shareManager: ShareManager,
     private val onStateUpdate: (NewsDetailsUM) -> Unit,
+    private val onRetryClick: () -> Unit,
 ) {
 
     fun updateArticles(articles: List<ArticleUM>, selectedIndex: Int) {
@@ -20,6 +21,7 @@ internal class NewsDetailsStateFactory(
         onStateUpdate(
             currentState.copy(
                 articles = articles.toImmutableList(),
+                articlesStateUM = ArticlesStateUM.Content,
                 selectedArticleIndex = selectedIndex,
                 onShareClick = {
                     currentArticle?.let {
@@ -50,13 +52,13 @@ internal class NewsDetailsStateFactory(
         onStateUpdate(currentState.copy(relatedTokensUM = relatedTokens))
     }
 
-    fun createRelatedTokensContent(
-        items: List<MarketsListItemUM>,
-        onTokenClick: (MarketsListItemUM) -> Unit,
-    ): RelatedTokensUM.Content {
-        return RelatedTokensUM.Content(
-            items = items.toImmutableList(),
-            onTokenClick = onTokenClick,
-        )
+    fun createErrorState() {
+        val currentState = currentStateProvider()
+        onStateUpdate(currentState.copy(articlesStateUM = ArticlesStateUM.LoadingError(onRetryClick)))
+    }
+
+    fun createLoadingState() {
+        val currentState = currentStateProvider()
+        onStateUpdate(currentState.copy(articlesStateUM = ArticlesStateUM.Loading))
     }
 }
