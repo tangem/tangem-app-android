@@ -13,7 +13,7 @@ internal class SendConfirmInitialStateTransformer(
         return ConfirmUM.Content(
             walletName = walletName,
             isSending = false,
-            showTapHelp = isShowTapHelp,
+            isShowTapHelp = isShowTapHelp,
             sendingFooter = TextReference.EMPTY,
             notifications = persistentListOf(),
         )
