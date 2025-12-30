@@ -19,7 +19,7 @@ internal class SwapAmountSelectQuoteTransformer(
     private val quoteUM: SwapQuoteUM,
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
     private val secondaryMinimumAmountBoundary: EnterAmountBoundary?,
-    private val needApplyFCARestrictions: Boolean,
+    private val isNeedApplyFCARestrictions: Boolean,
 ) : Transformer<SwapAmountUM> {
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
@@ -31,7 +31,7 @@ internal class SwapAmountSelectQuoteTransformer(
         return prevState.copy(
             isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
             selectedQuote = quoteUM,
-            showFCAWarning = needApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
+            isShowFCAWarning = isNeedApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
             primaryAmount = if (prevState.selectedAmountType == SwapAmountType.From) {
                 val swapAmountField = prevState.primaryAmount as? SwapAmountFieldUM.Content
                 val amountField = swapAmountField?.amountField as? AmountState.Data

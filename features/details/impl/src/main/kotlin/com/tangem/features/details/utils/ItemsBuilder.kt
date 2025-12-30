@@ -14,6 +14,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
+private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
+
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(private val router: Router) {
 
@@ -36,6 +38,30 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
             isSupportChatAvailable = isSupportChatAvailable,
         ).let(::add)
     }.toImmutableList()
+
+    fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
+        return items.toMutableList().map { block ->
+            if (block.id == "shop" && block is DetailsItemUM.Basic) {
+                val newItems = block
+                    .items
+                    .toMutableList()
+                    .apply { add(getTangemPayItem(onClick = onClick)) }
+                block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != TANGEM_PAY_ITEM_ID }.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
 
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
@@ -113,5 +139,14 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
                 ),
             ).let(::add)
         }.toPersistentList(),
+    )
+
+    private fun getTangemPayItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = TANGEM_PAY_ITEM_ID,
+        block = BlockUM(
+            text = resourceReference(R.string.tangempay_get_tangem_pay),
+            iconRes = R.drawable.ic_tangem_pay_24,
+            onClick = onClick,
+        ),
     )
 }

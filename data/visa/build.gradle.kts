@@ -17,7 +17,10 @@ dependencies {
     /** Project - Data */
     implementation(projects.core.datasource)
     implementation(projects.core.error)
+    implementation(projects.core.error.ext)
+    implementation(projects.core.security)
     implementation(projects.data.common)
+    implementation(projects.data.wallets)
 
     /** Project - Domain */
     implementation(projects.domain.visa)
@@ -36,6 +39,9 @@ dependencies {
 
     /** Feature API - remove after removing [HotWalletFeatureToggles] */
     implementation(projects.features.hotWallet.api)
+
+    /** Feature API - remove after removing [TangemPayFeatureToggles] */
+    implementation(projects.features.tangempay.details.api)
 
     /** Project - Utils */
     implementation(projects.core.utils)
@@ -59,6 +65,7 @@ dependencies {
     /** Libs - Tangem */
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.hot.core)
     implementation(projects.libs.tangemSdkApi)
 
     /** DI */
