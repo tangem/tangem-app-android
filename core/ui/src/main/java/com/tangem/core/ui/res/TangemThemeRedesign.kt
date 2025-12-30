@@ -1,4 +1,5 @@
 @file:Suppress("LongMethod")
+
 package com.tangem.core.ui.res
 
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,7 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
         CompositionLocalProvider(
             LocalTangemColors provides themeColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
-            LocalTangemTypography provides TangemTypography(InterFamily),
+            LocalTangemTypography2 provides TangemTypography2(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
             content()
@@ -97,9 +98,10 @@ private fun lightThemeColors2(): TangemColors2 {
     )
     val button = TangemColors2.Button(
         backgroundPrimary = TangemColorPalette.Dark6,
-        backgroundSecondary = TangemColorPalette.Dark6.copy(alpha = 0.1f),
+        backgroundSecondary = TangemColorPalette.Dark_10,
         backgroundDisabled = TangemColorPalette.Light3,
         backgroundPositive = TangemColorPalette.Azure,
+        backgroundPrimaryInverse = TangemColorPalette.White,
         textSecondary = TangemColorPalette.Dark6,
         textPrimary = TangemColorPalette.Light2,
         textDisabled = text.neutral.tertiary,
@@ -236,9 +238,10 @@ private fun darkThemeColors2(): TangemColors2 {
     )
     val button = TangemColors2.Button(
         backgroundPrimary = TangemColorPalette.Light1V2,
-        backgroundSecondary = TangemColorPalette.White.copy(alpha = 0.1f),
+        backgroundSecondary = TangemColorPalette.Light_10,
         backgroundDisabled = TangemColorPalette.Dark5,
         backgroundPositive = TangemColorPalette.Azure,
+        backgroundPrimaryInverse = TangemColorPalette.Light_10,
         textSecondary = TangemColorPalette.Light4,
         textPrimary = TangemColorPalette.Dark4,
         textDisabled = text.neutral.secondary,

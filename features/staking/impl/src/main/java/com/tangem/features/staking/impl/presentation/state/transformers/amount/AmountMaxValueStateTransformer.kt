@@ -4,7 +4,7 @@ import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldSetMaxAmountTransformer
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.transformer.Transformer
@@ -13,7 +13,7 @@ internal class AmountMaxValueStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val minimumTransactionAmount: EnterAmountBoundary?,
     private val actionType: StakingActionCommonType,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Transformer<StakingUiState> {
 
     private val maxEnterAmountConverter = MaxEnterAmountConverter()
@@ -38,7 +38,7 @@ internal class AmountMaxValueStateTransformer(
             amountState = AmountRequirementStateTransformer(
                 maxAmount = maxEnterAmount,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                yield = yield,
+                integration = integration,
                 actionType = prevState.actionType,
             ).transform(updatedAmountState),
         )
