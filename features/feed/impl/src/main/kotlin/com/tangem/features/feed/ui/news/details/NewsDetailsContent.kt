@@ -51,11 +51,13 @@ internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modif
         pageCount = { state.articles.size },
     )
 
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }
-            .collect { page ->
-                state.onArticleIndexChanged(page)
-            }
+    if (state.articles.isNotEmpty()) {
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }
+                .collect { page ->
+                    state.onArticleIndexChanged(page)
+                }
+        }
     }
 
     LaunchedEffect(state.selectedArticleIndex) {
