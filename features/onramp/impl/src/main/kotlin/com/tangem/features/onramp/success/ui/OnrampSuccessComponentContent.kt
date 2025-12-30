@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -21,7 +22,10 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.expressStatus.ExpressStatusBlock
 import com.tangem.common.ui.expressStatus.ExpressStatusNotificationBlock
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.CircleShimmer
+import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.containers.FooterContainer
@@ -131,11 +135,14 @@ private fun AmountBlock(state: OnrampSuccessComponentUM.Content) {
             error = { },
             contentDescription = null,
         )
-        ResizableText(
+        Text(
             text = state.fromAmount.resolveReference(),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
+            autoSize = TextAutoSize.StepBased(
+                maxFontSize = TangemTheme.typography.h2.fontSize,
+            ),
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
