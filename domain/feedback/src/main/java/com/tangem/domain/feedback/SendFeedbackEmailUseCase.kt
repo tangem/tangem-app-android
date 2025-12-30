@@ -97,6 +97,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.Visa.FeatureIsBeta,
             -> this
             is FeedbackEmailType.DirectUserRequest,
+            is FeedbackEmailType.BackupProblem,
             is FeedbackEmailType.RateCanBeBetter,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
