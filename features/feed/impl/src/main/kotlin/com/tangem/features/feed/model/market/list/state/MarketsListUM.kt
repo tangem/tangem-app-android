@@ -1,0 +1,72 @@
+package com.tangem.features.feed.model.market.list.state
+
+import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.currency.CryptoCurrency
+import kotlinx.collections.immutable.ImmutableList
+
+internal data class MarketsListUM(
+    val list: ListUM,
+    val marketsSearchBar: MarketsSearchBar,
+    val selectedSortBy: SortByTypeUM,
+    val sortByBottomSheet: TangemBottomSheetConfig,
+    val selectedInterval: TrendInterval,
+    val onIntervalClick: (TrendInterval) -> Unit,
+    val onSortByButtonClick: () -> Unit,
+    val marketsNotificationUM: MarketsNotificationUM?,
+    val onSearchClicked: () -> Unit,
+) {
+    val isInSearchMode
+        get() = marketsSearchBar.searchBarUM.isActive &&
+            marketsSearchBar.searchBarUM.query.isNotEmpty()
+
+    enum class TrendInterval(val text: TextReference) {
+        H24(resourceReference(R.string.markets_selector_interval_24h_title)),
+        D7(resourceReference(R.string.markets_selector_interval_7d_title)),
+        M1(resourceReference(R.string.markets_selector_interval_1m_title)),
+    }
+}
+
+internal data class MarketsSearchBar(
+    val searchBarUM: SearchBarUM,
+    val shouldAlwaysShowSearchBar: Boolean,
+)
+
+internal enum class SortByTypeUM(val text: TextReference) {
+    Rating(resourceReference(R.string.markets_sort_by_rating_title)),
+    Trending(resourceReference(R.string.markets_sort_by_trending_title)),
+    ExperiencedBuyers(resourceReference(R.string.markets_sort_by_experienced_buyers_title)),
+    TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
+    TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
+    Staking(resourceReference(R.string.common_staking)),
+    YieldSupply(resourceReference(R.string.markets_sort_by_yield_mode_title)),
+}
+
+@Immutable
+internal sealed class ListUM {
+
+    data class Content(
+        val items: ImmutableList<MarketsListItemUM>,
+        val shouldShowUnder100kTokensNotification: Boolean,
+        val shouldShowUnder100kTokensNotificationWasHidden: Boolean,
+        val loadMore: () -> Unit,
+        val visibleIdsChanged: (List<CryptoCurrency.RawID>) -> Unit,
+        val onShowTokensUnder100kClicked: () -> Unit,
+        val triggerScrollReset: StateEvent<Unit>,
+        val onItemClick: (MarketsListItemUM) -> Unit,
+    ) : ListUM()
+
+    data object Loading : ListUM()
+
+    data class LoadingError(
+        val onRetryClicked: () -> Unit,
+    ) : ListUM()
+
+    data object SearchNothingFound : ListUM()
+}
