@@ -61,8 +61,8 @@
   <string name="account_unsaved_dialog_message_create">Are you sure you want to discard new account?</string>
   <string name="account_unsaved_dialog_message_edit">Are you sure you want to discard edits?</string>
   <string name="account_unsaved_dialog_title">Unsaved Changes</string>
-  <string name="accounts_migration_alert_message">Some custom tokens were moved from “%1$s” to “%2$s” as their derivation belongs to that account.</string>
-  <string name="accounts_migration_alert_title">Some custom tokens were moved</string>
+  <string name="accounts_migration_alert_message">Some custom tokens will be automatically moved from “%1$s” to “%2$s” as their derivation belongs to that account.</string>
+  <string name="accounts_migration_alert_title">Some custom tokens will be automatically moved</string>
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
   <string name="action_buttons_sell_navigation_bar_title">Sell</string>
