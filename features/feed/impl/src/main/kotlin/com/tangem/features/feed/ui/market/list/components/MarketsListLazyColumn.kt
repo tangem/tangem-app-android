@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM.Companion.TOKEN_LAZY_LIST_ID_SEPARATOR
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -176,6 +177,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
                 onClick = onShowTokensClick,
             ),
         )
+        SpacerH12()
     }
 }
 
