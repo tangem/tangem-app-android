@@ -88,13 +88,13 @@ internal class TxHistoryListManager(
 
     private fun updateState(batchListState: BatchListState<Int, PaginationWrapper<TxInfo>>) {
         state.update { state ->
-            val clearUiBatches =
+            val shouldClearUiBatches =
                 state.status is PaginationStatus.InitialLoading && batchListState.status is PaginationStatus.Paginating
             state.copy(
                 status = batchListState.status,
                 uiBatches = uiManager.createOrUpdateUiBatches(
                     newCurrencyBatches = batchListState.data,
-                    clearUiBatches = clearUiBatches,
+                    shouldClearUiBatches = shouldClearUiBatches,
                 ),
             )
         }

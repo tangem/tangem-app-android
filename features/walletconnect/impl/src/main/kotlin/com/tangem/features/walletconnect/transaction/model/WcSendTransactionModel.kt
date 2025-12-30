@@ -171,7 +171,7 @@ internal class WcSendTransactionModel @Inject constructor(
         feeReloadState.value = false
         modelScope.launch {
             feeSelectorReloadTrigger.triggerUpdate(
-                FeeSelectorData(removeSuggestedFee = feeStateConfiguration !is FeeStateConfiguration.Suggestion),
+                FeeSelectorData(isRemoveSuggestedFee = feeStateConfiguration !is FeeStateConfiguration.Suggestion),
             )
         }
     }
@@ -297,6 +297,7 @@ internal class WcSendTransactionModel @Inject constructor(
         stackNavigation.pop()
     }
 
+    @Deprecated("Use TangemBlockUrlBuilder instead")
     private fun onApproveLearnMoreClick() {
         val code = SupportedLanguages.getCurrentSupportedLanguageCode()
             .takeIf { it == SupportedLanguages.RUSSIAN }
