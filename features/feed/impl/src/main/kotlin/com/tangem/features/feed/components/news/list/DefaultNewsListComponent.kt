@@ -51,7 +51,7 @@ internal class DefaultNewsListComponent(
 
     @Serializable
     data class Params(
-        val onArticleClicked: (Int) -> Unit,
+        val onArticleClicked: (currentArticle: Int, prefetchedArticles: List<Int>) -> Unit,
         val onBackClick: () -> Unit,
     )
 }
