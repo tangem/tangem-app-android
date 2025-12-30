@@ -18,6 +18,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ripple
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -39,6 +40,9 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState, modifier: Modifier 
 
 @Composable
 internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: Modifier = Modifier) {
+    LaunchedEffect(state) {
+        state.onPromoShown()
+    }
     val bgColor = TangemTheme.colors.control.unchecked
     Column(modifier = modifier) {
         Row(

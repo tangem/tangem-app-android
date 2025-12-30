@@ -64,6 +64,15 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         selectedWallet: UserWallet,
     ): Action {
         return when {
+            isAnyWalletUnlocked(state, wallets) -> {
+                Action.UnlockWallet(
+                    selectedWallet = selectedWallet,
+                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
+                )
+            }
+            isAnyWalletNameChanged(state, wallets) -> {
+                getRenameWalletsAction(state, wallets)
+            }
             isAnyHotWalletUpgraded(state, wallets) -> {
                 getHotWalletsUpgradedAction(state, wallets, selectedWallet)
             }
@@ -77,15 +86,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                 Action.ReinitializeNewWallet(
                     prevWalletId = state.getPrevSelectedWallet().id,
                     selectedWallet = selectedWallet,
-                )
-            }
-            isAnyWalletNameChanged(state, wallets) -> {
-                getRenameWalletsAction(state, wallets)
-            }
-            isAnyWalletUnlocked(state, wallets) -> {
-                Action.UnlockWallet(
-                    selectedWallet = selectedWallet,
-                    unlockedWallets = wallets.filterNot(UserWallet::isLocked),
                 )
             }
             isSelectedWalletCardsCountChanged(state, selectedWallet) -> {
