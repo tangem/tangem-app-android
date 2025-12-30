@@ -15,7 +15,7 @@ internal class SetConfirmationStateResetAssentTransformer(
             confirmationState = if (confirmationState is StakingStates.ConfirmationState.Data) {
                 confirmationState.copy(
                     isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
-                        sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+                        sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
                     },
                     innerState = InnerConfirmationStakingState.ASSENT,
                 )

@@ -11,7 +11,7 @@ internal data class SwapSelectTokenStateHolder(
     val unavailableTokens: ImmutableList<TokenToSelectState>,
     val tokensListData: TokenListUMData,
     val isBalanceHidden: Boolean,
-    val afterSearch: Boolean,
+    val isAfterSearch: Boolean,
     val onSearchEntered: (String) -> Unit,
     val onTokenSelected: (String) -> Unit,
 )
@@ -25,7 +25,7 @@ internal sealed class TokenToSelectState {
         val name: String,
         val symbol: String,
         val tokenIcon: CurrencyIconState,
-        val available: Boolean = true,
+        val isAvailable: Boolean = true,
         val addedTokenBalanceData: TokenBalanceData? = null,
     ) : TokenToSelectState()
 }
