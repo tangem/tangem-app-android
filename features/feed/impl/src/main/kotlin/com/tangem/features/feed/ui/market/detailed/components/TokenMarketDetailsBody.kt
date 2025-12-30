@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -203,6 +205,13 @@ private fun LazyListScope.loadingInfoBlocks() {
 
 private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
     item("related-news") {
+        val listState = rememberLazyListState()
+        val articlesReadStatus = remember(relatedNews.articles) {
+            relatedNews.articles.map { it.isViewed }
+        }
+        LaunchedEffect(articlesReadStatus) {
+            listState.requestScrollToItem(0)
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -220,7 +229,7 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
                 verticalAlignment = Alignment.CenterVertically,
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                state = rememberLazyListState(),
+                state = listState,
             ) {
                 items(
                     items = relatedNews.articles,
