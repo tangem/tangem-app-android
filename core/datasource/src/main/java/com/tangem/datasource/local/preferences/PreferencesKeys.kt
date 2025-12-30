@@ -154,6 +154,7 @@ object PreferencesKeys {
     }
 
     val TANGEM_PAY_WITHDRAW_ORDERS_KEY by lazy { stringPreferencesKey(name = "tangemPayWithdrawOrders") }
+    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { booleanPreferencesKey(name = "tangemPayEligibility") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion

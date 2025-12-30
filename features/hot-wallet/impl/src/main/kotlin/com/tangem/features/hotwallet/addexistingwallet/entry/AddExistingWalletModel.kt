@@ -15,8 +15,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
-import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
@@ -25,6 +25,7 @@ import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,7 @@ import javax.inject.Inject
 internal class AddExistingWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val notificationsRepository: NotificationsRepository,
+    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
@@ -78,8 +79,8 @@ internal class AddExistingWalletModel @Inject constructor(
 
     private fun navigateToPushNotificationsOrNext() {
         modelScope.launch {
-            val shouldAskNotificationPermissions = notificationsRepository.shouldAskNotificationPermissionsViaBs()
-            if (shouldAskNotificationPermissions) {
+            val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
+            if (shouldRequestPush) {
                 stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)

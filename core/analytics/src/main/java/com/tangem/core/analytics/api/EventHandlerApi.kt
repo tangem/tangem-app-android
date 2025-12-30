@@ -27,11 +27,7 @@ interface AnalyticsHandler : AnalyticsEventHandler {
 
     fun id(): String
 
-    fun send(eventId: String, params: Map<String, String> = emptyMap())
-
-    override fun send(event: AnalyticsEvent) {
-        send(event.id, event.params)
-    }
+    override fun send(event: AnalyticsEvent)
 }
 
 interface AnalyticsHandlerHolder {

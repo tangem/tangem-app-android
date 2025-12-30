@@ -406,7 +406,7 @@
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
   <string name="tangempay_onboarding_title">在幾分鐘內獲得免費的 Tangem Pay 卡</string>
   <string name="tangempay_payment_account">付款帳戶</string>
-  <string name="tangempay_payment_account_sync_needed">需要同步支付账户</string>
+  <string name="tangempay_payment_account_sync_needed">付款帳戶未同步</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题。请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服務暫時無法使用</string>
   <string name="tangempay_service_unreachable_try_later">目前無法顯示資料，但卡片支付仍可正常使用。</string>
@@ -414,7 +414,7 @@
   <string name="tangempay_tangem_visa_card">使用 USDC 進行日常支付</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">使用您的卡片或戒指恢复对支付账户的访问</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">點擊下方按鈕以恢復存取權限</string>
   <string name="tangempay_your_pin_code">您的PIN码</string>
   <string name="token_details_hide_alert_hide">隱藏</string>
   <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>

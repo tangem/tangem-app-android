@@ -1,9 +1,11 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.raise.catch
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -22,6 +24,7 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -109,15 +112,21 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun createOrder(userWalletId: UserWalletId) = withContext(dispatcherProvider.io) {
         launch {
-            requestHelper.runWithErrorLogs(TAG) {
-                val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-                val result = requestHelper.request(userWalletId) { authHeader ->
-                    tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
-                }.result ?: error("Create order result is null")
+            catch(
+                block = {
+                    val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+                    val response = requestHelper.performRequest(userWalletId) { authHeader ->
+                        tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
+                    }.getOrNull()
 
-                val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
-                tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
-            }
+                    val result = requireNotNull(response?.result)
+                    val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
+                    tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
+                },
+                catch = {
+                    Timber.tag(TAG).e("createOrder: $it")
+                },
+            )
         }
     }
 
@@ -180,9 +189,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
             )
         }.map { response ->
             val id = response.result?.id
-            val isPaeraCustomer = !id.isNullOrEmpty()
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer)
-            isPaeraCustomer
+            val isTangemPayEnabled = response.result?.isTangemPayEnabled == true
+            val shouldShowTangemPayBlock = !id.isNullOrEmpty() && isTangemPayEnabled
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, shouldShowTangemPayBlock)
+            shouldShowTangemPayBlock
         }.mapLeft { error ->
             if (error is VisaApiError.NotPaeraCustomer) {
                 tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
@@ -195,7 +205,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val response = requestHelper.performWithoutToken {
             tangemPayApi.checkCustomerEligibility()
         }.getOrNull()
-        return response?.result?.isTangemPayAvailable == true
+
+        val isAvailable = response?.result?.isTangemPayAvailable == true
+        tangemPayStorage.storeTangemPayEligibility(eligibility = isAvailable)
+
+        return isAvailable
+    }
+
+    override suspend fun getCustomerEligibility(): Boolean {
+        return tangemPayStorage.getTangemPayEligibility()
     }
 
     override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
@@ -204,5 +222,18 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
         tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
+    }
+
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.setTangemPayEnabledStatus(
+                authHeader = authHeader,
+                body = SetTangemPayEnabledRequest(isTangemPayEnabled = false),
+            )
+        }.map {
+            val address = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
+            setHideMainOnboardingBanner(userWalletId)
+        }
     }
 }

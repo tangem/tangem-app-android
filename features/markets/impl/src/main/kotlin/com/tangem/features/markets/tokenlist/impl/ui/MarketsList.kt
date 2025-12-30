@@ -176,14 +176,14 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                 )
             }
 
-            val marketsNotification = state.marketsNotificationUM
+            val marketsNotificationUM = state.marketsNotificationUM
             AnimatedVisibility(
-                state.isInSearchMode.not() &&
-                    state.selectedSortBy != SortByTypeUM.YieldSupply,
+                state.list !is ListUM.LoadingError &&
+                    state.isInSearchMode.not() && state.selectedSortBy != SortByTypeUM.YieldSupply,
             ) {
                 val showMore = stringResourceSafe(R.string.common_show_more)
 
-                when (marketsNotification) {
+                when (marketsNotificationUM) {
                     is MarketsNotificationUM.YieldSupplyPromo -> {
                         val description = stringResourceSafe(
                             R.string.markets_yield_supply_banner_description,
@@ -199,7 +199,7 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                         }
 
                         YieldSupplyInMarketsPromoNotification(
-                            config = marketsNotification.config.copy(
+                            config = marketsNotificationUM.config.copy(
                                 subtitle = clickableDescription,
                             ),
                             modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),

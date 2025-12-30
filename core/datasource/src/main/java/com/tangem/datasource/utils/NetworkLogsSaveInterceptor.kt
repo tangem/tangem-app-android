@@ -32,8 +32,16 @@ class NetworkLogsSaveInterceptor(
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        val host = request.url.host
+        val path = request.url.encodedPath
+        val isRestrictedUrl = restrictedForLogURLs.contains(host + path)
+        val isRestrictedHost = restrictedForLogHosts.any { host.contains(it) }
 
-        logRequestMessage(chain, request)
+        if (isRestrictedUrl || isRestrictedHost) {
+            logEmptyRequestMessage(chain, request)
+        } else {
+            logRequestMessage(chain, request)
+        }
 
         val startNs = System.nanoTime()
         val response: Response
@@ -44,11 +52,6 @@ class NetworkLogsSaveInterceptor(
             throw e
         }
 
-        val host = request.url.host
-        val path = request.url.encodedPath
-        val isRestrictedUrl = restrictedForLogURLs.contains(host + path)
-        val isRestrictedHost = restrictedForLogHosts.any { host.contains(it) }
-
         if (isRestrictedUrl || isRestrictedHost) {
             logResponseWithEmptyMessage(response, startNs)
         } else {
@@ -56,6 +59,13 @@ class NetworkLogsSaveInterceptor(
         }
 
         return response
+    }
+
+    private fun logEmptyRequestMessage(chain: Interceptor.Chain, request: Request) {
+        val connection = chain.connection()
+        val connectionProtocol = if (connection != null) " ${connection.protocol()}" else ""
+
+        saveLogMessage("--> ${request.method} ${request.url}$connectionProtocol\n")
     }
 
     private fun logRequestMessage(chain: Interceptor.Chain, request: Request) {

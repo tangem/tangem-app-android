@@ -18,6 +18,7 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.UserCountryError
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
@@ -116,7 +117,7 @@ internal class MarketsListModel @Inject constructor(
                         flow4 = shouldShowYieldModeMarketPromoUseCase(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ),
+                        ).conflate(),
                         flow5 = getUserCountryUseCase.invoke(),
                     ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo, userCountry ->
                         MarketsItemsData(
@@ -134,7 +135,7 @@ internal class MarketsListModel @Inject constructor(
                         flow3 = shouldShowYieldModeMarketPromoUseCase(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ),
+                        ).conflate(),
                         flow4 = getUserCountryUseCase.invoke(),
                     ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo, userCountry ->
                         MarketsItemsData(
@@ -147,7 +148,8 @@ internal class MarketsListModel @Inject constructor(
                     }
                 }
             }.collect { marketsItemsData ->
-                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo
+                val isApplyFCARestrictions = marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
+                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo && !isApplyFCARestrictions
                 if (marketsListUMStateManager.state.value.marketsNotificationUM == null && shouldShowYieldModePromo) {
                     analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoShown())
                 }

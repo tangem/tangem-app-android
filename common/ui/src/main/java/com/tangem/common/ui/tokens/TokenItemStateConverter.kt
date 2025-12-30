@@ -52,6 +52,8 @@ class TokenItemStateConverter(
     },
     private val onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)? = null,
     private val onYieldPromoCloseClick: (() -> Unit)? = null,
+    private val onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)? = null,
+    private val onYieldPromoClicked: ((cryptoCurrency: CryptoCurrency) -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
         createTitleState(
             currencyStatus = currencyStatus,
@@ -76,6 +78,8 @@ class TokenItemStateConverter(
             yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKey,
             onApyLabelClick = onApyLabelClick,
             onYieldPromoCloseClick = onYieldPromoCloseClick,
+            onYieldPromoShown = onYieldPromoShown,
+            onYieldPromoClicked = onYieldPromoClicked,
         )
     },
     private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
@@ -395,12 +399,15 @@ class TokenItemStateConverter(
             }
         }
 
+        @Suppress("LongParameterList")
         private fun createPromoBannerState(
             status: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
             yieldSupplyPromoBannerKey: String?,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
             onYieldPromoCloseClick: (() -> Unit)?,
+            onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
+            onYieldPromoClicked: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
         ): TokenItemState.PromoBannerState {
             val token = status.currency as? CryptoCurrency.Token ?: return TokenItemState.PromoBannerState.Empty
             if (status.value !is CryptoCurrencyStatus.Loaded) {
@@ -420,10 +427,14 @@ class TokenItemStateConverter(
                     wrappedList(yieldSupplyApy),
                 ),
                 onPromoBannerClick = {
+                    onYieldPromoClicked?.invoke(status.currency)
                     onApyLabelClick?.invoke(status, ApySource.YIELD_SUPPLY, yieldSupplyApy.toString())
                 },
                 onCloseClick = {
                     onYieldPromoCloseClick?.invoke()
+                },
+                onPromoShown = {
+                    onYieldPromoShown?.invoke(status.currency)
                 },
             )
         }
