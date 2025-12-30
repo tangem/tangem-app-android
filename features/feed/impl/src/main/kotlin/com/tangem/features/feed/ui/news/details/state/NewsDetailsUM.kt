@@ -8,6 +8,7 @@ import com.tangem.domain.models.news.RelatedToken
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class NewsDetailsUM(
+    val articlesStateUM: ArticlesStateUM,
     val articles: ImmutableList<ArticleUM>,
     val selectedArticleIndex: Int,
     val onShareClick: () -> Unit,
@@ -16,6 +17,13 @@ internal data class NewsDetailsUM(
     val onArticleIndexChanged: (Int) -> Unit,
     val relatedTokensUM: RelatedTokensUM = RelatedTokensUM.Loading,
 )
+
+@Immutable
+internal sealed interface ArticlesStateUM {
+    data object Loading : ArticlesStateUM
+    data object Content : ArticlesStateUM
+    data class LoadingError(val onRetryClicked: () -> Unit) : ArticlesStateUM
+}
 
 internal data class ArticleUM(
     val id: Int,
