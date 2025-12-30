@@ -14,17 +14,18 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
-internal class NewsListBatchFlowManager(
+internal open class NewsListBatchFlowManager(
     getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
     private val currentLanguage: Provider<String>,
     private val currentCategoryIds: Provider<List<Int>>,
-    private val modelScope: CoroutineScope,
-    private val dispatchers: CoroutineDispatcherProvider,
+    protected val modelScope: CoroutineScope,
+    protected val dispatchers: CoroutineDispatcherProvider,
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, NewsListConfig, Nothing>>()
     private val converter by lazy {
@@ -40,6 +41,19 @@ internal class NewsListBatchFlowManager(
     )
 
     private val resultBatches = MutableStateFlow<List<Batch<Int, List<ArticleConfigUM>>>>(emptyList())
+
+    val rawArticlesFlow: StateFlow<ImmutableList<ShortArticle>> = batchFlow.state
+        .map { batchListState ->
+            batchListState.data
+                .flatMap { batch -> batch.data }
+                .toImmutableList()
+        }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = persistentListOf(),
+        )
 
     val uiItems: StateFlow<ImmutableList<ArticleConfigUM>>
         get() = batchFlow.state
@@ -64,15 +78,14 @@ internal class NewsListBatchFlowManager(
             initialValue = false,
         )
 
-    val paginationStatus: StateFlow<PaginationStatus<List<ShortArticle>>>
-        get() = batchFlow.state
-            .map { it.status }
-            .distinctUntilChanged()
-            .stateIn(
-                scope = modelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = PaginationStatus.InitialLoading,
-            )
+    val paginationStatus: StateFlow<PaginationStatus<List<ShortArticle>>> = batchFlow.state
+        .map { it.status }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = PaginationStatus.InitialLoading,
+        )
 
     init {
         batchFlow.state
