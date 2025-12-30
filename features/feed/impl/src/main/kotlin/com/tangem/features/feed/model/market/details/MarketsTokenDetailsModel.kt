@@ -40,11 +40,11 @@ import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.converter.DescriptionConverter
 import com.tangem.features.feed.model.market.details.converter.ExchangeItemStateConverter
-import com.tangem.features.feed.model.market.details.converter.RelatedNewsConverter
 import com.tangem.features.feed.model.market.details.converter.TokenMarketInfoConverter
 import com.tangem.features.feed.model.market.details.formatter.*
 import com.tangem.features.feed.model.market.details.state.QuotesStateUpdater
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
+import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMConverter
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.lib.crypto.BlockchainUtils
@@ -143,8 +143,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         // ==================
     )
 
-    private val relatedNewsConverter by lazy {
-        RelatedNewsConverter()
+    private val shortArticleToArticleConfigUMConverter by lazy {
+        ShortArticleToArticleConfigUMConverter(isTrending = Provider { false })
     }
 
     private val descriptionConverter = DescriptionConverter(
@@ -311,7 +311,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 ),
             ).onRight { articles ->
                 state.update { marketsTokenDetailsUM ->
-                    val relatedNews = relatedNewsConverter.convert(articles)
+                    val relatedNews = shortArticleToArticleConfigUMConverter.convert(articles)
                     marketsTokenDetailsUM.copy(
                         relatedNews = marketsTokenDetailsUM.relatedNews.copy(
                             articles = relatedNews,
