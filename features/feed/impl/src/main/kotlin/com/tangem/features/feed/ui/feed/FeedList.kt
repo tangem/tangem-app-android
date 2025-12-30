@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleCard
 import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.common.ui.news.ShowMoreArticlesCard
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -41,39 +43,31 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
 
 @Composable
-internal fun FeedListHeader(searchBarUM: SearchBarUM, modifier: Modifier = Modifier) {
+internal fun FeedListHeader(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-    SearchBar(
+    FeedSearchBar(
+        feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
             .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp),
-        state = searchBarUM,
-        colors = TangemSearchBarDefaults.defaultTextFieldColors.copy(
-            focusedContainerColor = TangemTheme.colors.field.focused,
-            unfocusedContainerColor = TangemTheme.colors.field.focused,
-        ),
     )
 }
 
 @Composable
 internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-
     AnimatedContent(
         modifier = modifier,
         targetState = state.globalState,
@@ -100,6 +94,33 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun FeedSearchBar(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(36.dp))
+            .background(color = TangemTheme.colors.field.focused)
+            .clickable(onClick = feedListSearchBar.onBarClick)
+            .padding(14.dp),
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size20),
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_search_24),
+            tint = TangemTheme.colors.icon.informative,
+            contentDescription = null,
+        )
+
+        SpacerW(14.dp)
+
+        Text(
+            text = feedListSearchBar.placeholderText.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
 
@@ -248,33 +269,26 @@ private fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallb
 @Suppress("CanBeNonNullable")
 @Composable
 private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
-    AnimatedContent(news) { newsUM ->
-        when (newsUM) {
-            is NewsUM.Content -> {
-                if (newsUM.content.isNotEmpty()) {
+    AnimatedContent(news.newsUMState) { newsUMState ->
+        when (newsUMState) {
+            NewsUMState.LOADING -> NewsLoadingBlock()
+            NewsUMState.CONTENT -> {
+                if (news.content.isNotEmpty()) {
                     NewsContentBlock(
                         feedListCallbacks = feedListCallbacks,
-                        news = newsUM,
+                        news = news,
                         trendingArticle = trendingArticle,
                     )
                 }
             }
-            NewsUM.Loading -> {
-                NewsLoadingBlock()
-            }
-            is NewsUM.Error -> {
-                NewsErrorBlock(onRetryClick = newsUM.onRetryClicked)
-            }
+            NewsUMState.ERROR -> NewsErrorBlock(onRetryClick = news.onRetryClicked)
         }
     }
 }
 
+@Suppress("LongMethod")
 @Composable
-private fun NewsContentBlock(
-    feedListCallbacks: FeedListCallbacks,
-    news: NewsUM.Content,
-    trendingArticle: ArticleConfigUM?,
-) {
+private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
     Column {
         Header(
             title = {
@@ -307,7 +321,7 @@ private fun NewsContentBlock(
                                 append(stringResourceSafe(R.string.feed_tangem_ai))
                             }
                         },
-                        style = TangemTheme.typography.h3,
+                        style = TangemTheme.typography.subtitle1,
                     )
                 }
             },
@@ -315,21 +329,23 @@ private fun NewsContentBlock(
         )
         SpacerH(12.dp)
 
-        trendingArticle?.let { article ->
-            ArticleCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                articleConfigUM = article,
-                onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
-                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
-            )
-            SpacerH(12.dp)
+        if (trendingArticle != null) {
+            Column {
+                ArticleCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    articleConfigUM = trendingArticle,
+                    onArticleClick = { feedListCallbacks.onArticleClick(trendingArticle.id) },
+                    colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+                )
+                SpacerH(12.dp)
+            }
         }
 
         LazyRow(
             verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             state = rememberLazyListState(),
         ) {
@@ -341,12 +357,22 @@ private fun NewsContentBlock(
                     articleConfigUM = article,
                     onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
                     modifier = Modifier
-                        .height(164.dp)
-                        .widthIn(max = 216.dp),
+                        .heightIn(min = 164.dp)
+                        .width(216.dp),
                     colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 )
             }
+
+            item {
+                ShowMoreArticlesCard(
+                    modifier = Modifier
+                        .width(216.dp)
+                        .heightIn(min = 164.dp),
+                    onClick = feedListCallbacks.onOpenAllNews,
+                )
+            }
         }
+        SpacerH(32.dp)
     }
 }
 
@@ -388,10 +414,16 @@ private fun Charts(
                     }
                 }
                 is MarketChartUM.LoadingError -> {
-                    UnableToLoadData(
-                        onRetryClick = marketChart.onRetryClicked,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 35.dp, horizontal = 10.dp),
+                    ) {
+                        UnableToLoadData(
+                            onRetryClick = marketChart.onRetryClicked,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
                 is MarketChartUM.Content -> {
                     marketChart.items.fastForEach { chart ->
@@ -468,10 +500,18 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
             onSeeAllClick = {},
         )
         SpacerH(12.dp)
-        UnableToLoadData(
-            onRetryClick = onRetryClick,
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        BlockCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+        ) {
+            UnableToLoadData(
+                onRetryClick = onRetryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 35.dp, horizontal = 10.dp),
+            )
+        }
     }
 }
 
@@ -481,7 +521,7 @@ private const val GRADIENT_END = 0.5f
 private val LinearGradientFirstPart = Color(0xFF635EEC)
 private val LinearGradientSecondPart = Color(0xFFE05AED)
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 1500)
 @Composable
 private fun FeedListPreview() {
     TangemThemePreview {

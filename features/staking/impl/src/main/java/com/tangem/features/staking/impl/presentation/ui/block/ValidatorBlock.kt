@@ -25,8 +25,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.StakingStates.ValidatorState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
@@ -63,20 +64,20 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
             modifier = Modifier.padding(12.dp),
         ) {
             InputRowAsyncImage(
-                imageUrl = validatorState.chosenValidator.image.orEmpty(),
+                imageUrl = state.chosenTarget.image.orEmpty(),
                 onImageError = { ValidatorImagePlaceholder() },
                 modifier = Modifier
                     .size(24.dp)
                     .clip(TangemTheme.shapes.roundedCornersXLarge),
             )
             Text(
-                text = validatorState.chosenValidator.name,
+                text = state.chosenTarget.name,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
             SpacerWMax()
             Text(
-                text = validatorState.getInfoTitleNeutral().resolveReference(),
+                text = state.getInfoTitleNeutral().resolveReference(),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -91,16 +92,16 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
 @Composable
 private fun StakingStates.ValidatorState.Data.getInfoTitleColored() = combinedReference(
     annotatedReference {
-        append(getRewardTypeShortText(chosenValidator.rewardInfo?.type ?: Yield.RewardType.UNKNOWN).resolveReference())
+        append(getRewardTypeShortText(chosenTarget.rewardInfo?.type ?: RewardType.UNKNOWN).resolveReference())
         appendSpace()
         appendColored(
-            text = chosenValidator.rewardInfo?.rate.orZero().format { percent() },
+            text = chosenTarget.rewardInfo?.rate.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
 )
 
 private fun StakingStates.ValidatorState.Data.getInfoTitleNeutral() = combinedReference(
-    getRewardTypeShortText(chosenValidator.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
-    stringReference(" " + chosenValidator.rewardInfo?.rate?.orZero().format { percent() }),
+    getRewardTypeShortText(chosenTarget.rewardInfo?.type ?: RewardType.UNKNOWN),
+    stringReference(" " + chosenTarget.rewardInfo?.rate.orZero().format { percent() }),
 )

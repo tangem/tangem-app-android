@@ -41,8 +41,9 @@ fun TrendingLoadingArticle(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun DefaultLoadingArticle() {
+fun DefaultLoadingArticle(modifier: Modifier = Modifier) {
     BlockCard(
+        modifier = modifier,
         colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {

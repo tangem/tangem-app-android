@@ -5,6 +5,8 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
@@ -124,7 +126,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
         )
     }
 
-    private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO, rewardType: Yield.RewardType): Yield.Validator {
+    private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO, rewardType: RewardType): Yield.Validator {
         val address = validatorDTO.address.asMandatory("address")
 
         return Yield.Validator(
@@ -142,7 +144,7 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
         )
     }
 
-    private fun createRewardInfo(validatorDTO: YieldDTO.ValidatorDTO, rewardType: Yield.RewardType): Yield.RewardInfo? {
+    private fun createRewardInfo(validatorDTO: YieldDTO.ValidatorDTO, rewardType: RewardType): RewardInfo? {
         val aprOrApy = validatorDTO.apr
         val commission = validatorDTO.commission
         // gross = net / (1 - commission)
@@ -162,17 +164,17 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             } else {
                 netApy
             }
-            grossAprOrApy?.let { Yield.RewardInfo(rate = it, type = rewardType) }
+            grossAprOrApy?.let { RewardInfo(rate = it, type = rewardType) }
         } catch (_: Exception) {
-            aprOrApy?.let { Yield.RewardInfo(rate = it, type = rewardType) }
+            aprOrApy?.let { RewardInfo(rate = it, type = rewardType) }
         }
     }
 
-    private fun convertRewardType(rewardTypeDTO: YieldDTO.RewardTypeDTO): Yield.RewardType {
+    private fun convertRewardType(rewardTypeDTO: YieldDTO.RewardTypeDTO): RewardType {
         return when (rewardTypeDTO) {
-            YieldDTO.RewardTypeDTO.APY -> Yield.RewardType.APY
-            YieldDTO.RewardTypeDTO.APR -> Yield.RewardType.APR
-            else -> Yield.RewardType.UNKNOWN
+            YieldDTO.RewardTypeDTO.APY -> RewardType.APY
+            YieldDTO.RewardTypeDTO.APR -> RewardType.APR
+            else -> RewardType.UNKNOWN
         }
     }
 

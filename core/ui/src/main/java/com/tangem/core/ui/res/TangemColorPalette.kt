@@ -18,6 +18,18 @@ object TangemColorPalette {
     val Dark6 = Color(0xFF1E1E1E)
     // endregion Dark
 
+    // region Dark Alpha
+    val Dark_10 = Color(0x1A1E1E1E)
+    val Dark_20 = Color(0x331E1E1E)
+    val Dark_30 = Color(0x4D1E1E1E)
+    val Dark_40 = Color(0x661E1E1E)
+    val Dark_50 = Color(0x801E1E1E)
+    val Dark_60 = Color(0x991E1E1E)
+    val Dark_70 = Color(0xB31E1E1E)
+    val Dark_80 = Color(0xCC1E1E1E)
+    val Dark_90 = Color(0xE61E1E1E)
+    // endregion Dark Alpha
+
     // region Light
     val Light1 = Color(0xFFF5F5F5)
     val Light1V2 = Color(0xFFF4F4F4)
@@ -26,6 +38,18 @@ object TangemColorPalette {
     val Light4 = Color(0xFFC9C9C9)
     val Light5 = Color(0xFFB0B0B0)
     // endregion Light
+
+    // region Light Alpha
+    val Light_10 = Color(0x1AFFFFFF)
+    val Light_20 = Color(0x33FFFFFF)
+    val Light_30 = Color(0x4DFFFFFF)
+    val Light_40 = Color(0x66FFFFFF)
+    val Light_50 = Color(0x80FFFFFF)
+    val Light_60 = Color(0x99FFFFFF)
+    val Light_70 = Color(0xB3FFFFFF)
+    val Light_80 = Color(0xCCFFFFFF)
+    val Light_90 = Color(0xE6FFFFFF)
+    // endregion Light Alpha
 
     // region Green
     val Green = Color(0xFF0C9F3D)
