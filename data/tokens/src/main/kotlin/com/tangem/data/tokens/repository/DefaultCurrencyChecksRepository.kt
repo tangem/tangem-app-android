@@ -9,7 +9,7 @@ import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.utils.getTotalStakingBalance
 import com.tangem.domain.tokens.model.CurrencyAmount
@@ -136,7 +136,7 @@ internal class DefaultCurrencyChecksRepository(
 
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
-        val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
+        val stakingBalance = balanceValue.stakingBalance as? StakingBalance.Data
         val stakingTotalBalance = stakingBalance?.getTotalStakingBalance(
             blockchainId = currencyStatus.currency.network.rawId,
         ).orZero()

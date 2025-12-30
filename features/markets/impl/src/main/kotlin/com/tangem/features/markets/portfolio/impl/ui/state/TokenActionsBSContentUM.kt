@@ -47,6 +47,10 @@ internal data class TokenActionsBSContentUM(
             text = resourceReference(R.string.common_stake),
             iconRes = R.drawable.ic_staking_24,
         ),
+        YieldMode(
+            text = resourceReference(R.string.common_yield_mode),
+            iconRes = R.drawable.ic_analytics_up_mini_24,
+        ),
         ;
 
         val order: Int = ordinal

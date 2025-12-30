@@ -1504,6 +1504,7 @@
   <string name="tangempay_onboarding_title">無料のTangem Payカードを数分でゲットしましょう</string>
   <string name="tangempay_payment_account">支払いアカウント</string>
   <string name="tangempay_payment_account_sync_needed">支払アカウントが同期されていません</string>
+  <string name="tangempay_pin_validation_error_message">無効な暗証番号：連続や繰り返しを避けてください</string>
   <string name="tangempay_service_unavailable_description">技術的な問題を修正しています。後でもう一度お試しください。</string>
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>

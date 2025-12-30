@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.markets.impl.R
 
 @Immutable
@@ -38,5 +39,13 @@ internal sealed class QuickActionUM(
         title = resourceReference(R.string.common_stake),
         description = resourceReference(R.string.stake_token_description),
         icon = R.drawable.ic_staking_24,
+    )
+
+    data class YieldMode(
+        private val apy: String,
+    ) : QuickActionUM(
+        title = resourceReference(R.string.common_yield_mode),
+        description = resourceReference(R.string.yield_module_main_screen_promo_banner_message, wrappedList(apy)),
+        icon = R.drawable.ic_analytics_up_mini_24,
     )
 }

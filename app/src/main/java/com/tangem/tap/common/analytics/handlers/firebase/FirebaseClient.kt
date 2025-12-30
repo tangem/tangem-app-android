@@ -20,7 +20,7 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
     private val fbAnalytics = Firebase.analytics
     private val fbCrashlytics = Firebase.crashlytics
 
-    private val eventConverter = FirebaseAnalyticsEventConverter()
+    private val eventConverter = UnderscoreAnalyticsEventConverter()
 
     override fun setUserId(userId: String) {
         Firebase.analytics.setUserId(userId)

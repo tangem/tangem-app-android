@@ -20,7 +20,7 @@ internal class SwapProviderStateConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val selectedProvider: ExpressProvider,
     private val isNeedBestRateBadge: Boolean,
-    private val needApplyFCARestrictions: Boolean,
+    private val isNeedApplyFCARestrictions: Boolean,
 ) : Converter<SwapQuoteUM, SwapProviderState> {
 
     override fun convert(value: SwapQuoteUM): SwapProviderState {
@@ -41,7 +41,7 @@ internal class SwapProviderStateConverter(
         }
 
         val additionalBadge = when {
-            needApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
+            isNeedApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
             isNeedBestRateBadge && isBestRate -> AdditionalBadge.BestTrade
             else -> AdditionalBadge.Empty
         }
@@ -59,7 +59,7 @@ internal class SwapProviderStateConverter(
 
     private fun SwapQuoteUM.Error.convertToErrorContent(): SwapProviderState {
         val additionalBadge = when {
-            needApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
+            isNeedApplyFCARestrictions && provider.isRestrictedByFCA() -> AdditionalBadge.FCAWarningList
             else -> AdditionalBadge.Empty
         }
 

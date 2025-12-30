@@ -1,10 +1,10 @@
 package com.tangem.domain.yield.supply.usecase
 
 import com.google.common.truth.Truth.assertThat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -18,8 +18,8 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -60,7 +60,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
                 priceChange = null,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -92,7 +92,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
                 priceChange = null,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -123,7 +123,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
                 priceChange = null,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -168,7 +168,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
                 priceChange = null,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -275,7 +275,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = amount.multiply(fiatRate),
                 fiatRate = fiatRate,
                 priceChange = BigDecimal("-0.000058200000000008245"),
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -489,7 +489,7 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 fiatAmount = null,
                 fiatRate = BigDecimal.ONE,
                 priceChange = null,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

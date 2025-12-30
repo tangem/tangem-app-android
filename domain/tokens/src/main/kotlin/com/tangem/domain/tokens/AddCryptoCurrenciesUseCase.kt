@@ -12,8 +12,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -28,9 +29,10 @@ import kotlinx.coroutines.coroutineScope
 @Suppress("LongParameterList")
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
+    private val walletManagersFacade: WalletManagersFacade,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
 ) {
@@ -73,12 +75,14 @@ class AddCryptoCurrenciesUseCase(
             )
             val currencyToAdd = currency.takeUnless(existingCurrencies::contains) ?: return@either
 
-            addCurrencies(userWalletId, currencyToAdd)
+            val addedCurrencies = addCurrencies(userWalletId, currencyToAdd)
 
             coroutineScope {
+                syncTokens(userWalletId, addedCurrencies)
+
                 awaitAll(
                     async { refreshUpdatedNetworks(userWalletId, currencyToAdd, existingCurrencies) },
-                    async { refreshUpdatedYieldBalances(userWalletId, currencyToAdd) },
+                    async { refreshUpdatedStakingBalances(userWalletId, currencyToAdd) },
                     async { refreshUpdatedQuotes(currencyToAdd) },
                 )
             }
@@ -102,26 +106,48 @@ class AddCryptoCurrenciesUseCase(
 
         val foundToken = existingCurrencies
             .filterIsInstance<CryptoCurrency.Token>()
-            .firstOrNull {
-                it.network.backendId == networkId &&
-                    !it.isCustom &&
-                    it.contractAddress.equals(contractAddress, true)
+            .firstOrNull { token ->
+                token.network.backendId == networkId &&
+                    !token.isCustom &&
+                    token.contractAddress.equals(contractAddress, true)
             }
         if (foundToken != null) {
             return@either foundToken
         }
         val tokenToAdd = createTokenCurrency(userWalletId, contractAddress, networkId)
-        addCurrencies(userWalletId, tokenToAdd)
+        val addedCurrencies = addCurrencies(userWalletId, tokenToAdd)
 
         coroutineScope {
+            syncTokens(userWalletId = userWalletId, addedCurrencies = addedCurrencies)
+
             awaitAll(
                 async { refreshUpdatedNetworks(userWalletId, tokenToAdd, existingCurrencies) },
-                async { refreshUpdatedYieldBalances(userWalletId, tokenToAdd) },
+                async { refreshUpdatedStakingBalances(userWalletId, tokenToAdd) },
                 async { refreshUpdatedQuotes(tokenToAdd) },
             )
         }
 
         tokenToAdd
+    }
+
+    private suspend fun syncTokens(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
+        createWalletManagers(userWalletId = userWalletId, currencies = addedCurrencies)
+        currenciesRepository.syncTokens(userWalletId)
+    }
+
+    /**
+     * Creates wallet managers for the given [currencies] if they do not already exist.
+     * The method will generate addresses for new networks to ensure the stability of the "Push notifications" feature.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param currencies The list of cryptocurrencies for which to create wallet managers.
+     */
+    private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+
+        for (network in networks) {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        }
     }
 
     /**
@@ -149,11 +175,9 @@ class AddCryptoCurrenciesUseCase(
                 networks = setOfNotNull(networksToUpdate, networkToUpdate),
             ),
         )
-
-        currenciesRepository.syncTokens(userWalletId)
     }
 
-    private suspend fun refreshUpdatedYieldBalances(
+    private suspend fun refreshUpdatedStakingBalances(
         userWalletId: UserWalletId,
         addedCurrency: CryptoCurrency,
     ): Either<Throwable, Unit> = either {
@@ -162,17 +186,17 @@ class AddCryptoCurrenciesUseCase(
             currencyId = addedCurrency.id,
             network = addedCurrency.network,
         )
-            .getOrElse {
-                when (it) {
-                    is StakingIdFactory.Error.UnableToGetAddress -> raise(IllegalStateException("$it"))
+            .getOrElse { error ->
+                when (error) {
+                    is StakingIdFactory.Error.UnableToGetAddress -> raise(IllegalStateException("$error"))
                     StakingIdFactory.Error.UnsupportedCurrency -> Unit.right()
                 }
 
                 return@either
             }
 
-        singleYieldBalanceFetcher(
-            params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
+        singleStakingBalanceFetcher(
+            params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
         )
             .bind()
     }
@@ -205,12 +229,14 @@ class AddCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, currency: CryptoCurrency) {
-        catch(
-            { currenciesRepository.addCurrenciesCache(userWalletId, listOf(currency)) },
-        ) {
-            raise(it)
-        }
+    private suspend fun Raise<Throwable>.addCurrencies(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+    ): List<CryptoCurrency> {
+        return catch(
+            block = { currenciesRepository.addCurrenciesCache(userWalletId, listOf(currency)) },
+            catch = ::raise,
+        )
     }
 
     /**

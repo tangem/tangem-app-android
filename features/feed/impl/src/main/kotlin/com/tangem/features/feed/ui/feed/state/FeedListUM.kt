@@ -1,10 +1,9 @@
 package com.tangem.features.feed.ui.feed.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.event.StateEvent
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -14,9 +13,10 @@ internal data class FeedListUM(
     val currentDate: String,
     val searchBar: SearchBarUM,
     val feedListCallbacks: FeedListCallbacks,
-    val news: ImmutableList<ArticleConfigUM>,
+    val news: NewsUM,
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
+    val globalState: GlobalFeedState = GlobalFeedState.Content,
 )
 
 internal data class FeedListCallbacks(
@@ -27,6 +27,13 @@ internal data class FeedListCallbacks(
     val onMarketItemClick: (MarketsListItemUM) -> Unit,
     val onSortTypeClick: (SortByTypeUM) -> Unit,
 )
+
+@Immutable
+internal sealed interface NewsUM {
+    data object Loading : NewsUM
+    data class Content(val content: ImmutableList<ArticleConfigUM>) : NewsUM
+    data class Error(val onRetryClicked: () -> Unit) : NewsUM
+}
 
 internal data class MarketChartConfig(
     val marketCharts: ImmutableMap<SortByTypeUM, MarketChartUM>,
@@ -40,7 +47,6 @@ internal sealed interface MarketChartUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
-        val triggerScrollReset: StateEvent<Unit>,
         val sortChartConfig: SortChartConfigUM,
     ) : MarketChartUM
 
@@ -49,7 +55,14 @@ internal sealed interface MarketChartUM {
     data class LoadingError(val onRetryClicked: () -> Unit) : MarketChartUM
 }
 
-data class SortChartConfigUM(
+internal data class SortChartConfigUM(
     val sortByType: SortByTypeUM,
     val isSelected: Boolean,
 )
+
+@Immutable
+internal sealed interface GlobalFeedState {
+    data object Loading : GlobalFeedState
+    data object Content : GlobalFeedState
+    data class Error(val onRetryClicked: () -> Unit) : GlobalFeedState
+}

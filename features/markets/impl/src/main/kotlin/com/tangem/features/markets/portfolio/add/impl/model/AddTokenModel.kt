@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.add.impl.model
 
+import com.tangem.common.ui.addtoken.AddTokenUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -10,13 +11,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.markets.portfolio.add.impl.model.AddTokenUiBuilder.Companion.toggleProgress
-import com.tangem.common.ui.addtoken.AddTokenUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -74,7 +75,8 @@ internal class AddTokenModel @Inject constructor(
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
 
             val cryptoCurrency = selectedNetwork.cryptoCurrency
-            val accountId = selectedPortfolio.account.account.account.accountId
+            val account = selectedPortfolio.account.account.account
+            val accountId = account.accountId
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
                 .onLeft {
                     processError(error = it)
@@ -90,6 +92,11 @@ internal class AddTokenModel @Inject constructor(
             if (status == null) {
                 processError(error = null)
             } else {
+                when (account) {
+                    is Account.CryptoPortfolio -> if (!account.isMainAccount) {
+                        analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
+                    }
+                }
                 params.callbacks.onTokenAdded(status.status)
             }
             uiState.value = um.toggleProgress(false)

@@ -54,7 +54,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
 ) : BaseWalletClickIntents(), WalletCardClickIntents {
 
     override fun onRenameBeforeConfirmationClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreen.EditWalletTapped)
+        analyticsEventHandler.send(MainScreen.EditWalletTapped())
 
         router.dialogNavigation.activate(
             configuration = WalletDialogConfig.RenameWallet(
@@ -65,7 +65,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDeleteBeforeConfirmationClick(userWalletId: UserWalletId) {
-        analyticsEventHandler.send(MainScreen.DeleteWalletTapped)
+        analyticsEventHandler.send(MainScreen.DeleteWalletTapped())
 
         walletEventSender.send(
             event = WalletEvent.ShowAlert(

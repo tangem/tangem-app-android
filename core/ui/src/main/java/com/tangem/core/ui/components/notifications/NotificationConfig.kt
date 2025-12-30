@@ -38,6 +38,7 @@ data class NotificationConfig(
             val additionalText: TextReference? = null,
             @DrawableRes val iconResId: Int? = null,
             val onClick: () -> Unit,
+            val shouldShowProgress: Boolean = false,
         ) : ButtonsState()
 
         data class SecondaryButtonConfig(

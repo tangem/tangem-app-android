@@ -67,11 +67,13 @@ internal object AccountDomainModule {
         accountsCRUDRepository: AccountsCRUDRepository,
         mainAccountTokensMigration: MainAccountTokensMigration,
         cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
+        singleAccountListFetcher: SingleAccountListFetcher,
     ): RecoverCryptoPortfolioUseCase {
         return RecoverCryptoPortfolioUseCase(
             crudRepository = accountsCRUDRepository,
             mainAccountTokensMigration = mainAccountTokensMigration,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
+            singleAccountListFetcher = singleAccountListFetcher,
         )
     }
 

@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -17,17 +18,20 @@ internal class SendAnalyticHelper @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
-    fun sendSuccessAnalytics(cryptoCurrency: CryptoCurrency, sendUM: SendUM) {
+    fun sendSuccessAnalytics(cryptoCurrency: CryptoCurrency, sendUM: SendUM, account: Account.CryptoPortfolio?) {
         val destinationUM = sendUM.destinationUM as? DestinationUM.Content
         val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
+        val isNotMainAccount = account != null && !account.isMainAccount
+        val derivationIndex = if (isNotMainAccount) account.derivationIndex.value else null
         analyticsEventHandler.send(
             SendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
-                nonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
+                isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
                 ensStatus = getEnsStatus(sendUM),
+                derivationIndex = derivationIndex,
             ),
         )
         analyticsEventHandler.send(
@@ -53,13 +57,13 @@ internal class SendAnalyticHelper @Inject constructor(
         }
     }
 
-    private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EnsStatus {
-        val blockchainAddressForEns =
+    private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EmptyFull {
+        val isBlockchainAddressForEns =
             (sendUM.destinationUM as? DestinationUM.Content)?.addressTextField?.isAddressEns
-        return if (blockchainAddressForEns == true) {
-            AnalyticsParam.EnsStatus.FULL
+        return if (isBlockchainAddressForEns == true) {
+            AnalyticsParam.EmptyFull.Full
         } else {
-            AnalyticsParam.EnsStatus.EMPTY
+            AnalyticsParam.EmptyFull.Empty
         }
     }
 }

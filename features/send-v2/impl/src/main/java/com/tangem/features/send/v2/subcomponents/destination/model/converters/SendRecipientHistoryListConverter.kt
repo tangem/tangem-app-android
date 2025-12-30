@@ -39,8 +39,8 @@ internal class SendRecipientHistoryListConverter(
         } else {
             item.sourceType is TxInfo.SourceType.Single
         }
-        val notZero = !item.amount.isZero()
-        isTransfer && isSingleAddress && isNotContract && item.isOutgoing && notZero
+        val isNotZero = !item.amount.isZero()
+        isTransfer && isSingleAddress && isNotContract && item.isOutgoing && isNotZero
     }
         .take(RECENT_LIST_SIZE)
         .mapIndexed { index, tx ->

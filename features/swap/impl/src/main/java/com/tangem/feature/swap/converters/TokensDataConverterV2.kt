@@ -60,7 +60,7 @@ internal class TokensDataConverterV2(
                 onSearchEntered = onSearchEntered,
                 onTokenSelected = onTokenSelected,
                 isBalanceHidden = isBalanceHidden,
-                afterSearch = tokensDataState.isAfterSearch,
+                isAfterSearch = tokensDataState.isAfterSearch,
             ),
         )
     }
