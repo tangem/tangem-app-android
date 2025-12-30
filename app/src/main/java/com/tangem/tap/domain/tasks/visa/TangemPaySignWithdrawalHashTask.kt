@@ -14,19 +14,11 @@ import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
 
-class TangemPaySignWithdrawalHashTask(
-    private val cardId: String,
-    private val hash: ByteArray,
-) : CardSessionRunnable<String> {
+class TangemPaySignWithdrawalHashTask(private val hash: ByteArray) : CardSessionRunnable<String> {
 
     override fun run(session: CardSession, callback: CompletionCallback<String>) {
         val card = session.environment.card ?: run {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
-            return
-        }
-
-        if (card.cardId != cardId) {
-            callback(CompletionResult.Failure(VisaActivationError.CardIdNotMatched.tangemError))
             return
         }
 

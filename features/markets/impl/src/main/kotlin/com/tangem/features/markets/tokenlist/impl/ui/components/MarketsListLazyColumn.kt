@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -174,6 +175,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
                 onClick = onShowTokensClick,
             ),
         )
+        SpacerH12()
     }
 }
 
