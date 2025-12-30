@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class OnboardingEvent(
     category: String,
@@ -33,7 +34,12 @@ sealed class OnboardingEvent(
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
             },
-        )
+        ), AppsFlyerIncludedEvent {
+            override val appsFlyerReplacedEvent = when (creationType) {
+                WalletCreationType.NewSeed, WalletCreationType.PrivateKey -> "wallet_created_successfully"
+                WalletCreationType.SeedImport -> "wallet_imported"
+            }
+        }
 
         sealed class WalletCreationType(val value: String) {
             data object PrivateKey : WalletCreationType(value = "Private Key")
