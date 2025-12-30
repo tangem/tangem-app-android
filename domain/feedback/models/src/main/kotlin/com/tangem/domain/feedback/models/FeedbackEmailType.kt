@@ -18,6 +18,9 @@ sealed interface FeedbackEmailType {
     /** User rate the app as "can be better" */
     data class RateCanBeBetter(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
+    /** User has problem with backup */
+    data class BackupProblem(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
+
     /** User has problem with scanning */
     data object ScanningProblem : FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
