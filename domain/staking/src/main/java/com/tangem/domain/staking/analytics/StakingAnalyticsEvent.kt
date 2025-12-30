@@ -2,7 +2,6 @@ package com.tangem.domain.staking.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.staking.analytics.StakingAnalyticsEvent.ButtonRewards.addIfValueIsNotNull
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.models.staking.action.StakingActionType
 
@@ -24,11 +23,11 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data object WhatIsStaking : StakingAnalyticsEvent(
+    class WhatIsStaking : StakingAnalyticsEvent(
         event = "Link - What Is Staking",
     )
 
-    data object AmountScreenOpened : StakingAnalyticsEvent(
+    class AmountScreenOpened : StakingAnalyticsEvent(
         event = "Amount Screen Opened",
     )
 
@@ -54,7 +53,7 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data object RewardScreenOpened : StakingAnalyticsEvent(
+    class RewardScreenOpened : StakingAnalyticsEvent(
         event = "Reward Screen Opened",
     )
 
@@ -67,7 +66,7 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data object ButtonMax : StakingAnalyticsEvent(
+    class ButtonMax : StakingAnalyticsEvent(
         event = "Button - Max",
     )
 
@@ -98,7 +97,7 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data object ButtonRewards : StakingAnalyticsEvent(
+    class ButtonRewards : StakingAnalyticsEvent(
         event = "Button - Rewards",
     )
 
@@ -112,9 +111,9 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data object ButtonShare : StakingAnalyticsEvent(event = "Button - Share")
+    class ButtonShare : StakingAnalyticsEvent(event = "Button - Share")
 
-    data object ButtonExplore : StakingAnalyticsEvent(event = "Button - Explore")
+    class ButtonExplore : StakingAnalyticsEvent(event = "Button - Explore")
 
     data class StakeKitApiError(
         val stakingError: StakingError.StakeKitApiError,
@@ -145,12 +144,6 @@ sealed class StakingAnalyticsEvent(
         },
     )
 
-    fun MutableMap<String, String>.addIfValueIsNotNull(key: String, value: Any?) {
-        if (value != null) {
-            put(key, value.toString())
-        }
-    }
-
     data class TransactionError(
         val errorCode: String,
     ) : StakingAnalyticsEvent(
@@ -178,4 +171,11 @@ sealed class StakingAnalyticsEvent(
 
 enum class StakeScreenSource {
     Info, Amount, Confirmation, Validators,
+}
+
+@Suppress("CanBeNonNullable")
+fun MutableMap<String, String>.addIfValueIsNotNull(key: String, value: Any?) {
+    if (value != null) {
+        put(key, value.toString())
+    }
 }

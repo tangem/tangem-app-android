@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NamedArguments:CheckIsCurrencyNotAddedUseCase.kt$CheckIsCurrencyNotAddedUseCase$isCurrencyNotAdded(userWalletId, networkId, derivationPath, contractAddress)</ID>
-    <ID>NamedArguments:CreateCryptoCurrencyUseCase.kt$CreateCryptoCurrencyUseCase$createCustomToken(userWalletId, networkId, derivationPath, formValues)</ID>
-    <ID>NamedArguments:ValidateTokenFormUseCase.kt$ValidateTokenFormUseCase$zipOrAccumulate( { ensureIsContractAddressValid(formValues.contractAddress, networkId) }, { ensureIsDecimalsValid(formValues.decimals) }, { ensure(formValues.name.isNotBlank()) { CustomTokenFormValidationException.EmptyName } }, { ensure(formValues.symbol.isNotBlank()) { CustomTokenFormValidationException.EmptySymbol } }, ) { contractAddress, decimals, _, _ -&gt; AddCustomTokenForm.Validated.All( contractAddress = contractAddress, symbol = formValues.symbol, name = formValues.name, decimals = decimals, ) }</ID>
-  </CurrentIssues>
-</SmellBaseline>

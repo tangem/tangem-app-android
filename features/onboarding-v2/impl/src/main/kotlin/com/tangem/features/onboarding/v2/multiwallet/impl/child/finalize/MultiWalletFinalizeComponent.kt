@@ -36,6 +36,7 @@ internal class MultiWalletFinalizeComponent(
     private val resetCardsComponent = resetCardsComponentFactory.create(
         context = child("ResetCardsComponent"),
         params = ResetCardsComponent.Params(
+            source = ResetCardsComponent.Params.Source.Onboarding,
             callbacks = model.resetCardsModelCallbacks,
         ),
     )
