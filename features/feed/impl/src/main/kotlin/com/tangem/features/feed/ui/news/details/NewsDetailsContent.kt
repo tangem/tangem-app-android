@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.news.details
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -40,12 +42,45 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.ui.news.details.components.NewsDetailsPlaceholder
 import com.tangem.features.feed.ui.news.details.components.RelatedTokensBlock
 import com.tangem.features.feed.ui.news.details.state.*
 
 @Composable
 internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
+    AnimatedContent(
+        targetState = state.articlesStateUM,
+        modifier = modifier,
+    ) { animatedState ->
+        when (animatedState) {
+            ArticlesStateUM.Content -> {
+                Content(state = state, background = background)
+            }
+            ArticlesStateUM.Loading -> {
+                NewsDetailsPlaceholder(background = background)
+            }
+            is ArticlesStateUM.LoadingError -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(background),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    UnableToLoadData(
+                        onRetryClick = animatedState.onRetryClicked,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 35.dp, horizontal = 10.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Content(state: NewsDetailsUM, background: Color) {
     val pagerState = rememberPagerState(
         initialPage = state.selectedArticleIndex,
         pageCount = { state.articles.size },
@@ -67,7 +102,7 @@ internal fun NewsDetailsContent(state: NewsDetailsUM, modifier: Modifier = Modif
     }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(background),
     ) {
@@ -318,6 +353,7 @@ private fun PreviewNewsDetailsContent() {
     TangemThemePreview {
         NewsDetailsContent(
             state = NewsDetailsUM(
+                articlesStateUM = ArticlesStateUM.Content,
                 articles = MockArticlesFactory.createMockArticles(),
                 selectedArticleIndex = 0,
                 onShareClick = {},
