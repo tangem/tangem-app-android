@@ -62,7 +62,6 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         val dataToSign = VisaDataToSignByCustomerWallet(hashToSign = challenge.challenge)
         val approveResult = runVisaCustomerWalletApproveTask(
             session = session,
-            cardId = card.cardId,
             targetAddress = address,
             dataToSign = dataToSign,
         )
@@ -103,14 +102,13 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
 
     private suspend fun runVisaCustomerWalletApproveTask(
         session: CardSession,
-        cardId: String,
         targetAddress: String,
         dataToSign: VisaDataToSignByCustomerWallet,
     ): CompletionResult<VisaSignedDataByCustomerWallet> {
         val deferred = CompletableDeferred<CompletionResult<VisaSignedDataByCustomerWallet>>()
         val task = VisaCustomerWalletApproveTask(
             visaDataForApprove = VisaCustomerWalletApproveTask.Input(
-                cardId = cardId,
+                cardId = null,
                 targetAddress = targetAddress,
                 hashToSign = dataToSign.hashToSign,
                 sign = dataToSign::sign,
