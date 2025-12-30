@@ -55,10 +55,11 @@ class ApplyAccountListSortingUseCase(
             val updatedAccountList = withError(
                 transform = { Error.DataOperationFailed("Unable to create AccountList: $it") },
             ) {
-                AccountList(
+                AccountList.invoke(
                     userWalletId = accountList.userWalletId,
                     accounts = sortedAccounts,
                     totalAccounts = accountList.totalAccounts,
+                    totalArchivedAccounts = accountList.totalArchivedAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
                 )
@@ -69,8 +70,15 @@ class ApplyAccountListSortingUseCase(
                 return@eitherOn
             }
 
-            accountsCRUDRepository.saveAccounts(accountList = updatedAccountList)
+            applySorting(accountList = updatedAccountList)
         }
+
+    private suspend fun applySorting(accountList: AccountList) {
+        catch(
+            block = { accountsCRUDRepository.saveAccounts(accountList) },
+            catch = { accountsCRUDRepository.saveAccountsLocally(accountList) },
+        )
+    }
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
