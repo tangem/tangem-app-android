@@ -1,6 +1,7 @@
 package com.tangem.data.pay.datasource
 
 import arrow.core.Either
+import com.tangem.data.wallets.cold.UserWalletIdPreflightReadFilter
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.WithdrawalSignatureResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -17,7 +18,10 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
         userWallet: UserWallet,
     ): Either<Throwable, TangemPayInitialCredentials> {
         return when (userWallet) {
-            is UserWallet.Cold -> tangemSdkManager.tangemPayProduceInitialCredentials(cardId = userWallet.cardId)
+            is UserWallet.Cold -> {
+                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+                tangemSdkManager.tangemPayProduceInitialCredentials(preflightReadFilter = preflightReadFilter)
+            }
             is UserWallet.Hot -> tangemPayHotSdkManager.produceInitialCredentials(userWallet)
         }
     }
@@ -27,7 +31,10 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
         hash: String,
     ): Either<Throwable, WithdrawalSignatureResult> {
         return when (userWallet) {
-            is UserWallet.Cold -> tangemSdkManager.getWithdrawalSignature(cardId = userWallet.cardId, hash = hash)
+            is UserWallet.Cold -> {
+                val preflightReadFilter = UserWalletIdPreflightReadFilter(userWallet.walletId)
+                tangemSdkManager.getWithdrawalSignature(hash = hash, preflightReadFilter = preflightReadFilter)
+            }
             is UserWallet.Hot -> tangemPayHotSdkManager.getWithdrawalSignature(hotWallet = userWallet, hash = hash)
         }
     }
