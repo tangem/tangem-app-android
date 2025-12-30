@@ -78,6 +78,8 @@ internal class TokenListStateConverter(
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, apySource, apy) },
         onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
+        onYieldPromoShown = clickIntents::onYieldPromoShown,
+        onYieldPromoClicked = clickIntents::onYieldPromoClicked,
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
