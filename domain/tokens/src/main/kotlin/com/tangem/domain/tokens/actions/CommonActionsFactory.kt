@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -32,12 +33,14 @@ internal class CommonActionsFactory(
      * @param userWallet            the user's cold wallet
      * @param cryptoCurrencyStatus  the status of the cryptocurrency
      * @param stakingAvailability   the staking availability for the cryptocurrency
+     * @param yieldSupplyAvailability the yield supply availability for the cryptocurrency
      * @param shouldShowSwapStories a flag indicating whether to show swap stories
      */
     suspend fun create(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
+        yieldSupplyAvailability: YieldSupplyAvailability,
         shouldShowSwapStories: Boolean,
     ): Set<ActionState> = coroutineScope {
         val isAddressAvailable = isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)
@@ -127,6 +130,10 @@ internal class CommonActionsFactory(
 
             // region HideToken
             addHideTokenAction()
+            // endregion
+
+            // region YieldMode
+            addYieldSupplyAction(yieldSupplyAvailability)
             // endregion
         }
     }
