@@ -8,6 +8,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
@@ -34,6 +35,7 @@ internal class TokenListAnalyticsSender @Inject constructor(
 ) {
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
+    private val yieldPromoShownMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
     private val loadingTraces = mutableMapOf<UserWalletId, Trace>()
 
@@ -232,6 +234,19 @@ internal class TokenListAnalyticsSender @Inject constructor(
         if (unreachableCurrencies.isNotEmpty()) {
             analyticsEventHandler.send(MainScreen.NetworksUnreachable(unreachableCurrencies))
         }
+    }
+
+    fun sendYieldPromoShown(userWalletId: UserWalletId, token: String, blockchain: String) {
+        val key = "${userWalletId.stringValue}_${blockchain}_$token"
+        if (yieldPromoShownMap[key] == true) return
+
+        analyticsEventHandler.send(
+            MainScreenAnalyticsEvent.YieldPromo(
+                token = token,
+                blockchain = blockchain,
+            ),
+        )
+        yieldPromoShownMap[key] = true
     }
 
     companion object {
