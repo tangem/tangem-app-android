@@ -126,7 +126,8 @@ class VisaCustomerWalletApproveTask(
                         extendedPublicKey = extendedPublicKey,
                     )
 
-                    visaDataForApprove.sign(rsvSignature, visaDataForApprove.targetAddress)
+                    val signedData = visaDataForApprove.sign(rsvSignature, visaDataForApprove.targetAddress)
+                    callback(CompletionResult.Success(signedData))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
