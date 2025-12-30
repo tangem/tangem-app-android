@@ -14,6 +14,7 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.list.NewsListModel
 import com.tangem.features.feed.ui.news.list.NewsListContent
 import kotlinx.serialization.Serializable
@@ -51,7 +52,11 @@ internal class DefaultNewsListComponent(
 
     @Serializable
     data class Params(
-        val onArticleClicked: (currentArticle: Int, prefetchedArticles: List<Int>) -> Unit,
+        val onArticleClicked: (
+            currentArticle: Int,
+            prefetchedArticles: List<Int>,
+            paginationConfig: NewsListConfig?,
+        ) -> Unit,
         val onBackClick: () -> Unit,
     )
 }
