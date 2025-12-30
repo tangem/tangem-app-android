@@ -1,9 +1,7 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
-import androidx.annotation.StringRes
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
 import com.tangem.wallet.R
@@ -32,7 +30,7 @@ internal sealed class CardInfo(
 
     class SignedHashes(hashes: String) : CardInfo(
         titleRes = TextReference.Res(R.string.details_row_title_signed_hashes),
-        subtitle = TextReference.Res(R.string.details_row_subtitle_signed_hashes_format, hashes),
+        subtitle = TextReference.Res(R.string.details_row_subtitle_signed_hashes_format, wrappedList(hashes)),
     )
 
     class SecurityMode(securityOption: SecurityOption, clickable: Boolean) : CardInfo(
@@ -47,7 +45,7 @@ internal sealed class CardInfo(
         isClickable = true,
     )
 
-    class AccessCodeRecovery(val isEnabled: Boolean) : CardInfo(
+    class AccessCodeRecovery(isEnabled: Boolean) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_access_code_recovery_title),
         subtitle = if (isEnabled) {
             TextReference.Res(R.string.common_enabled)
@@ -62,22 +60,4 @@ internal sealed class CardInfo(
         subtitle = description,
         isClickable = true,
     )
-}
-
-// TODO("Remove and use the same from coreUI")
-internal sealed interface TextReference {
-    class Res(@StringRes val id: Int, val formatArgs: List<Any> = emptyList()) : TextReference {
-        constructor(@StringRes id: Int, vararg formatArgs: Any) : this(id, formatArgs.toList())
-    }
-
-    class Str(val value: String) : TextReference
-}
-
-@Composable
-@ReadOnlyComposable
-internal fun TextReference.resolveReference(): String {
-    return when (this) {
-        is TextReference.Res -> stringResourceSafe(this.id, *this.formatArgs.toTypedArray())
-        is TextReference.Str -> this.value
-    }
 }
