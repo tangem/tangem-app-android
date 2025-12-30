@@ -16,6 +16,6 @@ class CurrenciesStatusesOperations {
 
         data class DataError(val cause: Throwable) : Error()
 
-        data object EmptyYieldBalances : Error()
+        data object EmptyStakingBalances : Error()
     }
 }

@@ -101,15 +101,16 @@ internal class KaspaCustomFeeConverter(
             // check that there is reveal transaction info (= krc-20 token transfer)
             // return without changes otherwise
             if (minimumFee.revealTransactionFee != null && minimumFeeAmountValue != null) {
-                getOrNull(FEE_AMOUNT_INDEX)?.let {
-                    val valueDecimal = it.value.parseToBigDecimal(it.decimals)
+                val customFeeFieldUM = getOrNull(FEE_AMOUNT_INDEX)
+                if (customFeeFieldUM != null) {
+                    val valueDecimal = customFeeFieldUM.value.parseToBigDecimal(customFeeFieldUM.decimals)
                     // krc-20 transaction will be failed if custom fee value is less than minimum,
                     // so we set value to minimum in this case
                     if (valueDecimal < minimumFee.amount.value) {
-                        val fixedValue = minimumFeeAmountValue.parseBigDecimal(it.decimals)
+                        val fixedValue = minimumFeeAmountValue.parseBigDecimal(customFeeFieldUM.decimals)
                         set(
                             FEE_AMOUNT_INDEX,
-                            it.copy(
+                            customFeeFieldUM.copy(
                                 value = fixedValue,
                                 label = getFiatReference(
                                     rate = currencyStatus.fiatRate,

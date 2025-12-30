@@ -8,16 +8,19 @@ interface TangemPayOnboardingComponent : ComposableContentComponent {
 
     sealed class Params {
 
-        abstract val userWalletId: UserWalletId?
-
         data class Deeplink(
             val deeplink: String,
-            override val userWalletId: UserWalletId?,
         ) : Params()
 
         data class ContinueOnboarding(
-            override val userWalletId: UserWalletId?,
+            val userWalletId: UserWalletId,
         ) : Params()
+
+        data class FromBannerOnMain(
+            val userWalletId: UserWalletId,
+        ) : Params()
+
+        data object FromBannerInSettings : Params()
     }
 
     interface Factory : ComponentFactory<Params, TangemPayOnboardingComponent>
