@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.core.error.ext)
     implementation(projects.core.security)
     implementation(projects.data.common)
+    implementation(projects.data.wallets)
 
     /** Project - Domain */
     implementation(projects.domain.visa)
@@ -38,6 +39,9 @@ dependencies {
 
     /** Feature API - remove after removing [HotWalletFeatureToggles] */
     implementation(projects.features.hotWallet.api)
+
+    /** Feature API - remove after removing [TangemPayFeatureToggles] */
+    implementation(projects.features.tangempay.details.api)
 
     /** Project - Utils */
     implementation(projects.core.utils)

@@ -151,15 +151,18 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         data class TangemPayRefreshNeeded(
-            @DrawableRes val tangemIcon: Int?,
-            val onRefreshClick: () -> Unit,
+            @DrawableRes private val tangemIcon: Int?,
+            private val onRefreshClick: () -> Unit,
+            private val buttonText: TextReference,
+            private val shouldShowProgress: Boolean,
         ) : Warning(
             title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
             subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
             buttonsState = ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(id = R.string.home_button_scan),
+                text = buttonText,
                 iconResId = tangemIcon,
                 onClick = onRefreshClick,
+                shouldShowProgress = shouldShowProgress,
             ),
         )
     }
