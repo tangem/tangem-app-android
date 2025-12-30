@@ -25,116 +25,112 @@ internal class SwapSelectTokenPreviewProvider {
             isBalanceHidden = false,
             onSearchEntered = {},
             onTokenSelected = {},
-            marketsState = SwapMarketState.Content(
-                items = listOf(
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("1"),
-                        name = "Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = "",
-                        ratingPosition = "10",
-                        marketCap = "$6.233 B",
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.UP,
-                        chartData = MarketChartRawData(
-                            y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
-                        ),
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("2"),
-                        name = "Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = null,
-                        ratingPosition = "10",
-                        marketCap = "$6.233 B",
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.NEUTRAL,
-                        chartData = null,
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("3"),
-                        name = "Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = null,
-                        ratingPosition = "10",
-                        marketCap = "$6.23348172384781234 B",
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.DOWN,
-                        chartData = MarketChartRawData(
-                            y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
-                        ),
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("4"),
-                        name = "Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = null,
-                        ratingPosition = "10",
-                        marketCap = null,
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.UP,
-                        chartData = MarketChartRawData(
-                            y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
-                        ),
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("5"),
-                        name = "Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = null,
-                        ratingPosition = null,
-                        marketCap = "$6.233 B",
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.UP,
-                        chartData = MarketChartRawData(
-                            y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
-                        ),
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                    MarketsListItemUM(
-                        id = CryptoCurrency.RawID("6"),
-                        name = "Bitcoin",
-                        currencySymbol = "BTC",
-                        iconUrl = null,
-                        ratingPosition = null,
-                        marketCap = null,
-                        price = MarketsListItemUM.Price(text = "31 285.72$"),
-                        trendPercentText = "12.43%",
-                        trendType = PriceChangeType.UP,
-                        chartData = MarketChartRawData(
-                            y = persistentListOf(0.4, 0.2, 0.4, 0.1, 0.4, 2.0, 5.0, 0.1, 2.0, 2.0, 3.0),
-                        ),
-                        isUnder100kMarketCap = false,
-                        stakingRate = stringReference("APY 12.34%"),
-                        updateTimestamp = 0,
-                    ),
-                ).toImmutableList(),
-                loadMore = { true },
-                onItemClick = { },
-            ),
+            marketsState = createPreviewMarketsState(),
         )
     }
 
+    private fun createPreviewMarketsState() = SwapMarketState.Content(
+        items = createPreviewMarketItems(),
+        loadMore = { },
+        onItemClick = { },
+        visibleIdsChanged = { },
+    )
+
+    private fun createPreviewMarketItems() = listOf(
+        createMarketItem(
+            id = "1",
+            iconUrl = "",
+            ratingPosition = "10",
+            marketCap = "$6.233 B",
+            trendType = PriceChangeType.UP,
+            chartData = PREVIEW_CHART_DATA,
+        ),
+        createMarketItem(
+            id = "2",
+            ratingPosition = "10",
+            marketCap = "$6.233 B",
+            trendType = PriceChangeType.NEUTRAL,
+            chartData = null,
+        ),
+        createMarketItem(
+            id = "3",
+            name = "Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin",
+            ratingPosition = "10",
+            marketCap = "$6.23348172384781234 B",
+            trendType = PriceChangeType.DOWN,
+            chartData = PREVIEW_CHART_DATA,
+        ),
+        createMarketItem(
+            id = "4",
+            ratingPosition = "10",
+            marketCap = null,
+            trendType = PriceChangeType.UP,
+            chartData = PREVIEW_CHART_DATA,
+        ),
+        createMarketItem(
+            id = "5",
+            ratingPosition = null,
+            marketCap = "$6.233 B",
+            trendType = PriceChangeType.UP,
+            chartData = PREVIEW_CHART_DATA,
+        ),
+        createMarketItem(
+            id = "6",
+            ratingPosition = null,
+            marketCap = null,
+            trendType = PriceChangeType.UP,
+            chartData = PREVIEW_CHART_DATA,
+        ),
+    ).toImmutableList()
+
+    private fun createMarketItem(
+        id: String,
+        name: String = "Bitcoin",
+        iconUrl: String? = null,
+        ratingPosition: String?,
+        marketCap: String?,
+        trendType: PriceChangeType,
+        chartData: MarketChartRawData?,
+    ) = MarketsListItemUM(
+        id = CryptoCurrency.RawID(id),
+        name = name,
+        currencySymbol = "BTC",
+        iconUrl = iconUrl,
+        ratingPosition = ratingPosition,
+        marketCap = marketCap,
+        price = MarketsListItemUM.Price(text = "31 285.72$"),
+        trendPercentText = "12.43%",
+        trendType = trendType,
+        chartData = chartData,
+        isUnder100kMarketCap = false,
+        stakingRate = stringReference("APY 12.34%"),
+        updateTimestamp = 0,
+    )
+
     companion object {
+        private const val CHART_VALUE_1 = 0.4
+        private const val CHART_VALUE_2 = 0.2
+        private const val CHART_VALUE_3 = 0.1
+        private const val CHART_VALUE_4 = 2.0
+        private const val CHART_VALUE_5 = 5.0
+        private const val CHART_VALUE_6 = 3.0
+
+        private val PREVIEW_CHART_DATA = MarketChartRawData(
+            y = persistentListOf(
+                CHART_VALUE_1,
+                CHART_VALUE_2,
+                CHART_VALUE_1,
+                CHART_VALUE_3,
+                CHART_VALUE_1,
+                CHART_VALUE_4,
+                CHART_VALUE_5,
+                CHART_VALUE_3,
+                CHART_VALUE_4,
+                CHART_VALUE_4,
+                CHART_VALUE_6,
+            ),
+        )
+
         private val previewToken = TokenToSelectState.TokenToSelect(
             tokenIcon = CurrencyIconState.CoinIcon(
                 url = "",
