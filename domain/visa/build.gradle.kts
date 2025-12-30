@@ -12,9 +12,10 @@ android {
 dependencies {
     /** Project - Core */
     api(projects.core.pagination)
-    implementation(projects.core.utils)
-    implementation(projects.core.error)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.error)
+    implementation(projects.core.security)
+    implementation(projects.core.utils)
 
     /** Project - Domain */
     api(projects.domain.models)
@@ -23,6 +24,9 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+
+    /** Feature API - remove after removing [TangemPayFeatureToggles] */
+    implementation(projects.features.tangempay.details.api)
 
     /** Security */
     implementation(deps.spongecastle.core)

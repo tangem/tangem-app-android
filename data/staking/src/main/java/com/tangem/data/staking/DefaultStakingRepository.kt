@@ -3,11 +3,11 @@ package com.tangem.data.staking
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultStakingRepository(
     private val stakeKitRepository: StakeKitRepository,
     private val p2pEthPoolRepository: P2PEthPoolRepository,
-    private val stakingBalanceStoreV2: YieldsBalancesStore,
+    private val stakingBalanceStoreV2: StakingBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
@@ -106,13 +106,13 @@ internal class DefaultStakingRepository(
         return withContext(dispatchers.default) {
             val balances = stakingBalanceStoreV2.getAllSyncOrNull(userWalletId) ?: return@withContext false
 
-            val hasDataYieldBalance by lazy {
-                balances.any { yieldBalance ->
-                    (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
+            val hasDataStakingBalance by lazy {
+                balances.any { stakingBalance ->
+                    stakingBalance is StakingBalance.Data
                 }
             }
 
-            balances.isNotEmpty() && hasDataYieldBalance
+            balances.isNotEmpty() && hasDataStakingBalance
         }
     }
 
@@ -135,7 +135,7 @@ internal class DefaultStakingRepository(
                         address = address,
                     ),
                 )
-                if (balance != null && balance is YieldBalance.Data && balance.balance.items.isNotEmpty()) {
+                if ((balance as? StakingBalance.Data.StakeKit)?.balance?.items?.isNotEmpty() == true) {
                     return true
                 } else {
                     stakingFeatureToggles.isCardanoStakingEnabled
