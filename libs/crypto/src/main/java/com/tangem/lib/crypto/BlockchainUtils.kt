@@ -120,6 +120,10 @@ object BlockchainUtils {
         return blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet
     }
 
+    fun isClore(blockchainId: String): Boolean {
+        return Blockchain.fromId(blockchainId) == Blockchain.Clore
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,

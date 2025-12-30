@@ -120,27 +120,18 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             block = {
                 val publicKeyBase64 = getPublicKeyBase64()
                 val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
-                val result = requireNotNull(
-                    requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
-                        tangemPayApi.revealCardDetails(
-                            authHeader = authHeader,
-                            body = CardDetailsRequest(sessionId = sessionId),
-                        )
-                    }.getOrNull()?.result,
-                )
+                val response = requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                    tangemPayApi.getPin(authHeader = authHeader, sessionId = sessionId)
+                }.getOrNull()
+                val result = requireNotNull(response?.result)
 
-                val encryptedPin = result.pin
-                val pin = if (encryptedPin != null) {
-                    rainCryptoUtil.decryptPin(
-                        base64Secret = encryptedPin.secret,
-                        base64Iv = encryptedPin.iv,
-                        secretKeyBytes = secretKeyBytes,
-                    ).takeIf { !it.isNullOrEmpty() }
-                } else {
-                    null
-                }
+                val pin = rainCryptoUtil.decryptPin(
+                    base64Secret = result.secret,
+                    base64Iv = result.iv,
+                    secretKeyBytes = secretKeyBytes,
+                ).takeIf { !it.isNullOrEmpty() }
+
                 secretKeyBytes.fill(0)
-
                 pin.right()
             },
             catch = ::catchException,
@@ -148,14 +139,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     override suspend fun setPin(userWalletId: UserWalletId, pin: String): Either<UniversalError, SetPinResult> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            val publicKeyBase64 = getPublicKeyBase64()
-            val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
-            val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
-            secretKeyBytes.fill(0)
+        return catch(
+            block = {
+                val publicKeyBase64 = getPublicKeyBase64()
+                val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+                val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
+                secretKeyBytes.fill(0)
 
-            val status = requireNotNull(
-                requestHelper.request(userWalletId) { authHeader ->
+                val response = requestHelper.performRequest(userWalletId) { authHeader ->
                     tangemPayApi.setPin(
                         authHeader = authHeader,
                         body = SetPinRequest(
@@ -164,27 +155,41 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                             iv = encryptedData.ivBase64,
                         ),
                     )
-                }.result?.result,
-            )
-            when (status) {
-                SetPinResult.SUCCESS.name -> SetPinResult.SUCCESS
-                SetPinResult.PIN_TOO_WEAK.name -> SetPinResult.PIN_TOO_WEAK
-                SetPinResult.DECRYPTION_ERROR.name -> SetPinResult.DECRYPTION_ERROR
-                else -> SetPinResult.UNKNOWN_ERROR
-            }
-        }
+                }.getOrNull()
+                val status = requireNotNull(response?.result?.result)
+                val result = when (status) {
+                    SetPinResult.SUCCESS.name -> SetPinResult.SUCCESS
+                    SetPinResult.PIN_TOO_WEAK.name -> SetPinResult.PIN_TOO_WEAK
+                    SetPinResult.DECRYPTION_ERROR.name -> SetPinResult.DECRYPTION_ERROR
+                    else -> SetPinResult.UNKNOWN_ERROR
+                }
+                result.right()
+            },
+            catch = ::catchException,
+        )
     }
 
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            storage.getAddToWalletDone(requestHelper.getCustomerWalletAddress(userWalletId))
-        }
+        return catch(
+            block = {
+                storage.getAddToWalletDone(
+                    customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId),
+                ).right()
+            },
+            catch = ::catchException,
+        )
     }
 
     override suspend fun setAddToWalletAsDone(userWalletId: UserWalletId): Either<UniversalError, Unit> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(userWalletId), isDone = true)
-        }
+        return catch(
+            block = {
+                storage.storeAddToWalletDone(
+                    customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId),
+                    isDone = true,
+                ).right()
+            },
+            catch = ::catchException,
+        )
     }
 
     override suspend fun freezeCard(
