@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -63,7 +64,7 @@ internal interface InnerWalletRouter {
 
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
 
-    fun openTangemPayOnboarding(userWalletId: UserWalletId)
+    fun openTangemPayOnboarding(mode: AppRoute.TangemPayOnboarding.Mode)
 
     fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
 

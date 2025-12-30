@@ -13,6 +13,7 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
@@ -104,7 +105,7 @@ internal object OnrampDataModule {
         hotCryptoResponseStore: HotCryptoResponseStore,
         userWalletsStore: UserWalletsStore,
         tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
+        appCurrencyResponseStore: AppCurrencyResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
         userTokensResponseStore: UserTokensResponseStore,
@@ -114,7 +115,7 @@ internal object OnrampDataModule {
             hotCryptoResponseStore = hotCryptoResponseStore,
             userWalletsStore = userWalletsStore,
             tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
+            appCurrencyResponseStore = appCurrencyResponseStore,
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
             userTokensResponseStore = userTokensResponseStore,
