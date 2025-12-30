@@ -164,7 +164,7 @@ internal class LegacyScanProcessor @Inject constructor(
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
             analyticsEventHandler.send(
-                event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(
+                event = OnboardingAnalyticsEvent.Error.OfflineAttestationFailed(
                     analyticsSource,
                 ),
             )
