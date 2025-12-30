@@ -14,6 +14,8 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
+private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
+
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(private val router: Router) {
 
@@ -37,11 +39,24 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
         ).let(::add)
     }.toImmutableList()
 
-    fun addVisaItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+    fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
         return items.toMutableList().map { block ->
             if (block.id == "shop" && block is DetailsItemUM.Basic) {
-                val newItems = block.items.toMutableList().apply { add(getVisaItem()) }
+                val newItems = block
+                    .items
+                    .toMutableList()
+                    .apply { add(getTangemPayItem(onClick = onClick)) }
                 block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != TANGEM_PAY_ITEM_ID }.toImmutableList())
             } else {
                 block
             }
@@ -126,14 +141,12 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
         }.toPersistentList(),
     )
 
-    private fun getVisaItem(): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
-        id = "get_tangem_visa",
+    private fun getTangemPayItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = TANGEM_PAY_ITEM_ID,
         block = BlockUM(
-            text = resourceReference(R.string.details_get_visa),
+            text = resourceReference(R.string.tangempay_get_tangem_pay),
             iconRes = R.drawable.ic_tangem_pay_24,
-            onClick = {
-                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
-            },
+            onClick = onClick,
         ),
     )
 }
