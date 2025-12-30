@@ -13,7 +13,7 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 
 internal sealed class SendWithSwapAnalyticEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = CommonSendAnalyticEvents.SEND_CATEGORY, event = event, params = params) {
 
     data class TransactionScreenOpened(

@@ -132,16 +132,16 @@ private fun ProviderContentState(
                             modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
                         )
                     }
-                    AnimatedContent(targetState = state.name, label = "") {
+                    AnimatedContent(targetState = state.name, label = "") { name ->
                         Text(
-                            text = it,
+                            text = name,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.primary1,
                         )
                     }
-                    AnimatedContent(targetState = state.type, label = "") {
+                    AnimatedContent(targetState = state.type, label = "") { type ->
                         Text(
-                            text = it,
+                            text = type,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
@@ -162,9 +162,9 @@ private fun ProviderContentState(
                         end = TangemTheme.dimens.spacing56,
                     ),
                 ) {
-                    AnimatedContent(targetState = state.subtitle, label = "") {
+                    AnimatedContent(targetState = state.subtitle, label = "") { subtitle ->
                         Text(
-                            text = it.resolveReference(),
+                            text = subtitle.resolveReference(),
                             style = TangemTheme.typography.body2,
                             color = TangemTheme.colors.text.tertiary,
                             overflow = TextOverflow.Ellipsis,
@@ -179,9 +179,9 @@ private fun ProviderContentState(
                         } else {
                             TangemTheme.colors.text.warning
                         }
-                        AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") {
+                        AnimatedContent(targetState = state.percentLowerThenBest.value, label = "") { percentValue ->
                             Text(
-                                text = if (it > 0) "+$it%" else "$it%",
+                                text = if (percentValue > 0) "+$percentValue%" else "$percentValue%",
                                 style = TangemTheme.typography.body2,
                                 color = textColor,
                                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
@@ -231,25 +231,25 @@ private fun ProviderUnavailableState(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             ) {
                 Row {
-                    AnimatedContent(targetState = state.name, label = "") {
+                    AnimatedContent(targetState = state.name, label = "") { name ->
                         Text(
-                            text = it,
+                            text = name,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                         )
                     }
-                    AnimatedContent(targetState = state.type, label = "") {
+                    AnimatedContent(targetState = state.type, label = "") { type ->
                         Text(
-                            text = it,
+                            text = type,
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
                         )
                     }
                 }
-                AnimatedContent(targetState = state.alertText, label = "") {
+                AnimatedContent(targetState = state.alertText, label = "") { alertText ->
                     Text(
-                        text = it.resolveReference(),
+                        text = alertText.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                         modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),

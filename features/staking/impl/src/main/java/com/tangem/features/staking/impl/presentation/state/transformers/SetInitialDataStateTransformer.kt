@@ -90,7 +90,7 @@ internal class SetInitialDataStateTransformer(
         val status = cryptoCurrencyStatus.value
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = with(status) {
-                !amount.isNullOrZero() && sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+                !amount.isNullOrZero() && sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
             },
             showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             infoItems = getInfoItems(),
