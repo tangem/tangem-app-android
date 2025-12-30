@@ -4,7 +4,7 @@
   <string name="access_code_alert_skip_ok">Trotzdem überspringen</string>
   <string name="access_code_alert_skip_title">Zugangscode nicht festgelegt</string>
   <string name="access_code_alert_validation_cancel">Code ändern</string>
-  <string name="access_code_alert_validation_description">Dein Zugangscode dient zum Entsperren Deiner Wallet und zum Schutz des Zugriffs auf Deine Vermögenswerte.</string>
+  <string name="access_code_alert_validation_description">Dein Zugangscode entsperrt und schützt den Zugriff auf Deine Geldbörse.</string>
   <string name="access_code_alert_validation_ok">Trotzdem verwenden</string>
   <string name="access_code_alert_validation_title">Dieser Zugangscode kann leicht erraten werden</string>
   <string name="access_code_check_title">Zugangscode eingeben</string>
@@ -44,10 +44,12 @@
   <string name="account_form_edit_button">Speichern</string>
   <string name="account_form_name">Kontoname</string>
   <string name="account_form_name_already_exist_error_description">Der Kontoname ist bereits vorhanden</string>
+  <string name="account_form_name_already_exist_error_title">Der Kontoname wird bereits verwendet.</string>
   <string name="account_form_placeholder_edit_account">Konto</string>
   <string name="account_form_placeholder_new_account">Neues Konto</string>
   <string name="account_form_title_create">Konto hinzufügen</string>
   <string name="account_form_title_edit">Konto bearbeiten</string>
+  <string name="account_generic_error_dialog_message">Bitte versuche es später erneut. Sollte das Problem weiterhin bestehen, kontaktiere bitte unseren Support. Wir helfen Dir gerne bei der Lösung.</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
   <string name="account_main_account_title">Hauptkonto</string>
   <string name="account_recover_limit_dialog_description">Du hast das Limit von %1$s aktiven Konten bereits überschritten. Archiviere eines zur Wiederherstellung</string>
@@ -95,7 +97,7 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens im %1$s -Netzwerk werden von dieser Karte oder Ring aufgrund einer Firmware-Einschränkung nicht unterstützt.</string>
   <string name="alert_troubleshooting_scan_card_title">Hast du Probleme beim Scannen deiner Karte oder Ring?</string>
   <string name="alert_unsupported_card">Diese Karte oder Ring ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
-  <string name="app_settings_access_code_warning">Lege zunächst einen Zugangscode fest, um die Biometrie zu aktivieren.</string>
+  <string name="app_settings_access_code_warning">Lege einen Zugangscode fest, um die Biometrie zu aktivieren.</string>
   <string name="app_settings_biometrics_footer">Verwende die %1$s um Deine Wallet zu entsperren und sensible Aktionen wie das Signieren von Transaktionen zu bestätigen. Bei Hardware-Wallets ist zum Signieren weiterhin eine Karte oder ein Ring erforderlich.</string>
   <string name="app_settings_default_fee">Standardgebühr</string>
   <string name="app_settings_default_fee_footer">Aktiviere die Option Standardgebühr, um die Transaktionsgebühren automatisch festzulegen und die Gebührenseite beim Senden von Geldern zu überspringen. Du kannst bei Bedarf jederzeit zu dieser Seite zurückkehren.</string>
@@ -144,10 +146,10 @@
   <string name="balance_hidden_title">Guthaben sind ausgeblendet</string>
   <string name="beta_mode_warning_message">Laut den Blockchain-Entwicklern befinden sich der Kaspa-Token derzeit in der Betaphase. Bleibe dran für Updates!</string>
   <string name="beta_mode_warning_title">Beta-Phase</string>
-  <string name="biometric_disabled_warning_description">Die biometrischen Daten sind auf Deinem Gerät deaktiviert, sodass Du sie nicht zum Entsperren Deine Wallet verwenden kannst. Aktiviere die Biometrie in den Einstellungen Deines Geräts, um diese Methode wieder zu verwenden.</string>
+  <string name="biometric_disabled_warning_description">Die Biometrie ist auf Deinem Gerät deaktiviert, daher kannst Du sie nicht zum Entsperren Deiner Wallets verwenden. Aktiviere die Biometrie in den Geräteeinstellungen, um diese Methode wieder nutzen zu können.</string>
   <string name="biometric_disabled_warning_title">Biometrische Authentifizierung deaktiviert</string>
   <string name="biometric_lockout_permanent_warning_description">Bitte Karte oder Ring scannen</string>
-  <string name="biometric_lockout_permanent_warning_description_2">Du hast das Limit an biometrischen Entsperrversuchen erreicht. Bitte entsperren Deine Wallet durch Antippen Deines Geräts oder gib den Zugangscode ein.</string>
+  <string name="biometric_lockout_permanent_warning_description_2">Du hast das Limit an biometrischen Entsperrversuchen erreicht. Bitte entsperre Deine Wallet mit einer Karte/einem Ring oder gib Deinen Zugangscode ein.</string>
   <string name="biometric_lockout_permanent_warning_title">Biometrische Authentifizierung gesperrt</string>
   <string name="biometric_lockout_warning_description">Bitte versuche es in 30 Sekunden erneut oder scanne die Karte oder Ring</string>
   <string name="biometric_lockout_warning_description_2">Die biometrische Anmeldung ist vorübergehend gesperrt. Bitte versuche es in 30 Sekunden erneut oder entsperre Deine Wallet durch Antippen Deines Geräts oder mit einem Zugangscode.</string>
@@ -373,6 +375,7 @@
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_to">An</string>
+  <string name="common_to_wallet_name">Zu %s</string>
   <string name="common_today">Heute</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d Token</item>
@@ -384,6 +387,7 @@
   <string name="common_transfer">Überweisung</string>
   <string name="common_unable_to_load">Die Daten konnten nicht geladen werden…</string>
   <string name="common_understand">Ich verstehe</string>
+  <string name="common_understand_continue">Ich verstehe, fahre bitte fort.</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">Staking beenden</string>
@@ -397,6 +401,7 @@
   <string name="currency_subtitle_expanded">Verfügbare Netzwerke</string>
   <string name="custom_token_another_account_dialog_description">Die Ableitung Deines Tokens entspricht der Ableitung von %1$s. Dein Token wird diesem Konto gutgeschrieben.</string>
   <string name="custom_token_another_account_dialog_title">Die Herleitung stammt aus einem anderen Bericht.</string>
+  <string name="custom_token_another_account_snackbar_text">Token hinzugefügt %1$s Konto</string>
   <string name="custom_token_contract_address_input_title">Vertragsadresse</string>
   <string name="custom_token_creation_error_invalid_contract_address">Vertragsadresse ist ungültig</string>
   <string name="custom_token_creation_error_network_not_selected">Bitte wähle das Netzwerk</string>
@@ -448,7 +453,7 @@
   <string name="disclaimer_error_loading">Überprüfe deine Internetverbindung oder wechseln zu einem anderen Netzwerk</string>
   <string name="disclaimer_title">Nutzungsbedingungen</string>
   <string name="domain_receive_assets_default_address">Standardadresse</string>
-  <string name="domain_receive_assets_legacy_address">Legacy adresse</string>
+  <string name="domain_receive_assets_legacy_address">Legacy %s adresse</string>
   <string name="domain_receive_assets_navigation_title">Empfangen von Vermögenswerten</string>
   <string name="domain_receive_assets_network_name_address">%s Adresse</string>
   <string name="domain_receive_assets_onboarding_description">Das Senden von Vermögenswerten in anderen Netzwerken führt zu dauerhaftem Verlust.</string>
@@ -541,6 +546,7 @@
   <string name="feedback_preface_scan_failed">Bitte sag uns, welche Karte oder Ring du hast</string>
   <string name="feedback_preface_support">Hallo Support-Team,</string>
   <string name="feedback_preface_tx_failed">Bitte erzähle uns mehr über dein Problem. Jedes kleine Detail kann helfen.</string>
+  <string name="feedback_subject_backup_problem">Problem mit der Sicherung</string>
   <string name="feedback_subject_pre_activated_wallet">Zuvor aktivierte Wallet</string>
   <string name="feedback_subject_rate_negative">Meine Vorschläge</string>
   <string name="feedback_subject_scan_failed">Kann eine Karte oder Ring nicht scannen</string>
@@ -593,10 +599,13 @@
   <string name="hw_backup_hardware_upgrade_title">Aktualisiere Deine aktuelle Wallet</string>
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Bitte sicher Deine Wallet, bevor Du einen Zugangscode erstellst.</string>
+  <string name="hw_backup_need_finish_first">Sicherung zuerst beenden</string>
   <string name="hw_backup_need_title">Zuerst die Sicherung abschließen</string>
   <string name="hw_backup_no_backup">Unvollständig</string>
   <string name="hw_backup_section_other_title">Andere Methoden</string>
+  <string name="hw_backup_seed_description">Speicher Deinen Wiederherstellungssatz an einem sicheren Ort und halte diesen stets geheim, um Dein Geld zu schützen.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
+  <string name="hw_backup_to_secure_description">Um Deine Wallet mit einem Zugangscode zu sichern, schließe den Sicherungsvorgang ab.</string>
   <string name="hw_backup_to_upgrade_description">Um Deine Wallet auf Hardware umzustellen, erstelle vorher ein Backup.</string>
   <string name="hw_create_keys_description">Deine privaten Schlüssel sind sicher verschlüsselt und auf Deinem Telefon gespeichert.</string>
   <string name="hw_create_keys_title">Schlüssel werden in der App gespeichert</string>
@@ -617,8 +626,9 @@
   <string name="hw_remove_wallet_notification_description_has_backup">Für diese Wallet existiert ein Backup. Überprüfe dieses bitte, bevor Du sie entfernst, um sicherzustellen, dass Du sie später wiederherstellen kannst.</string>
   <string name="hw_remove_wallet_notification_description_without_backup">Wenn Du diese Wallet ohne Backup entfernst, verlierst Du dauerhaft den Zugriff auf Deine Assets.</string>
   <string name="hw_remove_wallet_notification_title">Diese Wallet dauerhaft entfernen?</string>
-  <string name="hw_remove_wallet_warning_access">Mir ist bewusst, dass ich den Zugriff auf meine Wallet verliere kann, wenn ich sie vor der Entfernung nicht gesichert habe.</string>
+  <string name="hw_remove_wallet_warning_access">Mir ist bewusst, dass ich den Zugriff auf meine Wallet verlieren kann, wenn ich sie vor der Entfernung nicht gesichert habe.</string>
   <string name="hw_remove_wallet_warning_device">Mir ist bewusst, dass durch das Entfernen meiner Wallet diese nicht gelöscht, sondern lediglich von meinem Gerät entfernt wird.</string>
+  <string name="hw_upgrade">Upgrade</string>
   <string name="hw_upgrade_backup_description">Es wird keine Seed-Phrase mehr benötigt – Deine Tangem-Karte oder Dein Tangem-Ring wird zu Deinem sicheren Backup.</string>
   <string name="hw_upgrade_backup_title">Backup mit Tangem</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Ein Upgrade ist nicht möglich. Auf diesem Gerät ist bereits eine Wallet vorhanden.</string>
@@ -719,6 +729,7 @@
   <string name="markets_sort_by_top_gainers_title">Top-Gewinner</string>
   <string name="markets_sort_by_top_losers_title">Top-Verlierer</string>
   <string name="markets_sort_by_trending_title">Beliebt</string>
+  <string name="markets_sort_by_yield_mode_title">Ertragsmodus</string>
   <string name="markets_staking_banner_description_placeholder">Staking ist der einfachste Weg, um Belohnungen für Deine Kryptowährung zu erhalten. %s</string>
   <string name="markets_staking_banner_title">Verdiene bis zu %s APY</string>
   <string name="markets_token_added">Token hinzugefügt</string>
@@ -793,6 +804,19 @@
   <string name="mobile_wallet_requires_min_os_warning_body">Du musst auf die folgende Version aktualisieren: %1$s um eine mobile Wallet zu erstellen</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet erfordert %1$s oder später</string>
   <string name="news_all_news">Alle Neuigkeiten</string>
+  <string name="news_like">Gefällt mir</string>
+  <plurals name="news_published_hours_ago">
+    <item quantity="one">%dStunde her</item>
+    <item quantity="other">%dStunden her</item>
+  </plurals>
+  <plurals name="news_published_minutes_ago">
+    <item quantity="one">%dMinute her</item>
+    <item quantity="other">%dMinuten her</item>
+  </plurals>
+  <string name="news_quick_recap">Kurze Zusammenfassung</string>
+  <string name="news_related_news">Verwandte Nachrichten</string>
+  <string name="news_related_tokens">Verwandte Token</string>
+  <string name="news_sources">Quellen</string>
   <string name="news_stay_in_the_loop">Auf dem Laufenden bleiben</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
   <string name="nft_about_title">Über NFT</string>
@@ -968,6 +992,7 @@
   <string name="onramp_currency_other">Andere Währungen</string>
   <string name="onramp_currency_popular">Beliebte Fiats</string>
   <string name="onramp_currency_search">Suche nach Währung</string>
+  <string name="onramp_error_transaction_already_processed">Diese Transaktion wurde bereits verarbeitet. Es sind keine weiteren Maßnahmen erforderlich.</string>
   <string name="onramp_fetching_best_rates">Die besten Preise erzielen...</string>
   <string name="onramp_instant_status">Sofort</string>
   <string name="onramp_legal">Durch die Nutzung der Onramp-Funktionalität stimmst Du den %1$s und %2$s des Anbieters zu.</string>
@@ -1064,6 +1089,7 @@
   <string name="reset_card_to_factory_button_title">Karte oder Ring zurücksetzen</string>
   <string name="reset_card_to_factory_condition_1">Mir ist bewusst, dass ich nach der Durchführung dieser Aktion keinen Zugriff mehr auf die aktuelle Wallet habe.</string>
   <string name="reset_card_to_factory_condition_2">Mir ist klar, dass ich diese Karte oder Ring nicht verwenden kann, um meinen Zugangscode auf den anderen Karten oder Ringe der aktuellen Wallet wiederherzustellen</string>
+  <string name="reset_card_to_factory_condition_3">Mir ist bewusst, dass ich den Zugang zu meiner Tangem Pay Karte und allen darauf befindlichen Geldern vollständig verliere, ohne die Möglichkeit der Wiederherstellung</string>
   <string name="reset_card_with_backup_to_factory_message">Durch das Zurücksetzen auf Werkseinstellungen wird die Wallet vollständig von der ausgewählten Karte oder Ring gelöscht. Du kannst die aktuelle Wallet nicht wiederherstellen oder die Karte oder Ring verwenden, um den Zugangscode wiederherzustellen.</string>
   <string name="reset_card_without_backup_to_factory_message">Beim Zurücksetzen auf die Werkseinstellungen wird die Wallet der ausgewählten Karte oder Ring vollständig gelöscht und aus der App entfernt. Es ist nicht möglich, die aktuelle Wallet wiederherzustellen.</string>
   <string name="reset_cards_dialog_complete_description">Alle Tangem-Geräte wurden zurückgesetzt.</string>
@@ -1217,6 +1243,8 @@
   <string name="staking_account_initialization_footer">Eine Netzwerkgebühr ist eine kleine Zahlung, die erforderlich ist, um Deine Transaktion auf der Blockchain zu verarbeiten und zu bestätigen.</string>
   <string name="staking_account_initialization_message">Um mit dem Staking zu beginnen, muss Dein TON-Konto mit einer Transaktion von 1 TON aktiviert werden. Das Guthaben verbleibt auf Deinem Konto, dieser Schritt dient lediglichder aktivierung für das Staking.</string>
   <string name="staking_account_initialization_title">Kontoaktivierung</string>
+  <string name="staking_alert_network_fee_updated_message">Die Netzwerkgebühr hat sich geändert. Bitte überprüfe den neuen Betrag, bevor Du fortfährst.</string>
+  <string name="staking_alert_network_fee_updated_title">Netzwerkgebühr aktualisiert</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Der Betrag der unstaked wird, wird aufgrund der Netzwerkregeln auf %1$s TRX gerundet.</string>
@@ -1255,6 +1283,7 @@
   <string name="staking_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Du die Verwendung Deines Tokens für das Staking genehmigst.</string>
   <string name="staking_legal">Indem Du die Staking-Funktionalität nutzt, stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="staking_locked">Gesperrt</string>
+  <string name="staking_max_amount_requirement_error">Höchstbetrag: %s</string>
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
   <string name="staking_no_validators_error_message">Derzeit sind keine aktiven Validatoren für das Staking verfügbar. Bitte versuchen Sie es später erneut.</string>
@@ -1407,6 +1436,7 @@
   <string name="tangem_pay_freeze_card_success">Ihre Karte ist eingefroren.</string>
   <string name="tangem_pay_get_help">Hilfe erhalten</string>
   <string name="tangem_pay_other">Andere</string>
+  <string name="tangem_pay_rooted_device_subtitle">Nicht nutzbar auf gerooteten Geräten</string>
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
   <string name="tangem_pay_status_pending">Ausstehend</string>
@@ -1419,6 +1449,8 @@
   <string name="tangem_pay_unfreeze_card_failed">Entsperren der Karte fehlgeschlagen. Versuchen Sie es später erneut.</string>
   <string name="tangem_pay_unfreeze_card_success">Ihre Karte ist entsperrt.</string>
   <string name="tangem_pay_withdrawal">Abhebung</string>
+  <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
+  <string name="tangempay_cancel_kyc">KYC abbrechen</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
   <string name="tangempay_card_details_card_number">Kartennummer</string>
@@ -1446,6 +1478,7 @@
   <string name="tangempay_card_details_open_wallet_step_5">Alles erledigt! Deine Karte ist einsatzbereit.</string>
   <string name="tangempay_card_details_open_wallet_title">Karte zu Google Pay hinzufügen</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Karte zu Apple Pay hinzufügen</string>
+  <string name="tangempay_card_details_pin_code">Pin Code</string>
   <string name="tangempay_card_details_receive_description">Teile Deine Adresse mit oder zeig den QR-Code.</string>
   <string name="tangempay_card_details_receive_error_description">Es wurden technische Probleme festgestellt. Bitte versuche es später erneut oder kontaktiere den Support.</string>
   <string name="tangempay_card_details_receive_error_title">Empfangen ist jetzt nicht verfügbar</string>
@@ -1454,12 +1487,15 @@
   <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio gegen eine Karte.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
+  <string name="tangempay_card_details_view_pin_code_description">Komm zurück zur App, falls du es vergisst.</string>
+  <string name="tangempay_card_details_view_pin_code_title">Dein PIN-Code</string>
   <string name="tangempay_card_details_withdraw">Auszahlung</string>
   <string name="tangempay_card_details_withdraw_error_title">Auszahlung derzeit nicht möglich</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">Sie können keinen Tausch oder eine neue Auszahlung starten, bis die aktuelle abgeschlossen ist.</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Auszahlung läuft</string>
   <string name="tangempay_change_pin_code">PIN-Code ändern</string>
   <string name="tangempay_come_back_if_forget_pin">Kehren Sie zur App zurück, falls Sie ihn vergessen.</string>
+  <string name="tangempay_factory_settings_warning_title">Mir ist bewusst, dass ich den Zugriff auf meine Tangem Pay Card und alle darauf befindlichen Guthaben vollständig und ohne Möglichkeit der Wiederherstellung verliere.</string>
   <string name="tangempay_failed_to_issue_card">Kartenausstellung fehlgeschlagen</string>
   <string name="tangempay_failed_to_issue_card_retry_description">Ein technischer Fehler ist aufgetreten, bitte versuchen Sie es erneut, indem Sie auf die Schaltfläche unten klicken</string>
   <string name="tangempay_failed_to_issue_card_support_description">Ein technischer Fehler ist aufgetreten, bitte kontaktieren Sie den Support</string>
@@ -1471,11 +1507,14 @@
   <string name="tangempay_issuing_your_card">Ausstellung Deiner Karte</string>
   <string name="tangempay_issuing_your_card_description">Wir bereiten Ihre Karte vor. Dies kann etwas dauern.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">Konvertierung bestätigen</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Möchtest Du den KYC wirklich abbrechen? Du kannst später jederzeit weiter machen.</string>
   <string name="tangempay_kyc_failed_description">Wir konnten Ihr Profil nicht verifizieren. Bei Fragen wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_kyc_failed_title">Leider konnten wir Ihre Identität nicht verifizieren</string>
   <string name="tangempay_kyc_in_progress">KYC in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Über die Schaltflächen unten kannst Du Deinen aktuellen KYC-Status einsehen oder ihn abbrechen.</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
@@ -1487,15 +1526,18 @@
   <string name="tangempay_onboarding_security_title">Unerreichte Privatsphäre</string>
   <string name="tangempay_onboarding_title">Erhalten Sie Ihre kostenlose Tangem Pay Card in wenigen Minuten</string>
   <string name="tangempay_payment_account">Zahlungskonto</string>
-  <string name="tangempay_payment_account_sync_needed">Synchronisierung des Zahlungskontos erforderlich</string>
+  <string name="tangempay_payment_account_sync_needed">Zahlungskonto ist nicht synchronisiert</string>
+  <string name="tangempay_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
   <string name="tangempay_service_unavailable_description">Wir beheben ein technisches Problem. Bitte versuchen Sie es später erneut.</string>
   <string name="tangempay_service_unavailable_title">Service vorübergehend nicht verfügbar</string>
   <string name="tangempay_service_unreachable_try_later">Daten können derzeit nicht angezeigt werden, Kartenzahlungen funktionieren jedoch weiterhin.</string>
-  <string name="tangempay_sync_needed">Synchronisation erforderlich</string>
+  <string name="tangempay_set_pin_code">Satz \nPIN-Code</string>
+  <string name="tangempay_sync_needed">Nicht synchronisiert</string>
+  <string name="tangempay_sync_needed_restore_access">Zugang wiederherstellen</string>
   <string name="tangempay_tangem_visa_card">Nutzen Sie USDC für alltägliche Zahlungen</string>
-  <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht verfügbar</string>
+  <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Verwenden Sie Ihre Karte oder Ihren Ring, um den Zugriff auf Ihr Zahlungskonto wiederherzustellen</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">Klicken Sie auf die Schaltfläche unten, um den Zugriff wiederherzustellen</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
   <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
   <string name="toast_balances_hidden">Guthaben versteckt</string>
@@ -1756,6 +1798,8 @@
   <string name="warning_button_ok">OK, habe ich verstanden!</string>
   <string name="warning_button_really_cool">Echt toll!</string>
   <string name="warning_button_refresh">Aktualisieren</string>
+  <string name="warning_clore_migration_message">Laut der offiziellen Dokumentation von Clore werden alle Münzen, die vor dem 21. Dezember erhalten wurden, in Clore (ERC-20 Token) migriert; Münzen, die nach diesem Datum erhalten wurden, nicht. Eine Lösung für den Transfer ist in Arbeit — bleibt dran.</string>
+  <string name="warning_clore_migration_title">Migration des Clore-Netzwerks</string>
   <string name="warning_demo_mode_message">Du befindest sich derzeit im Demo-Modus</string>
   <string name="warning_demo_mode_title">Demo-Modus aktiv</string>
   <string name="warning_developer_card_message">Die Karte, die du gescannt hast, ist eine Entwicklerkarte. Verwenden  diese nicht zur Erstellung Ihrer Wallet.</string>
@@ -1958,7 +2002,7 @@
   <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
   <string name="yield_module_alert_description">Wenn der Yield-Modus aktiviert ist, gehen alle zukünftigen Einzahlungen an diese Adresse an Aave. Du kannst über Dein Guthaben weiterhin frei verfügen.</string>
   <string name="yield_module_alert_title">Deine %s wird an Aave übermittelt</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Die Lieferung von %1$s %2$s an Aave steht noch aus.</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">Lieferung %1$s %2$s nach Aave</string>
   <string name="yield_module_approve_needed_notification_cta">Genehmigen</string>
   <string name="yield_module_approve_needed_notification_description">Die Genehmigung Deines Tokens wurde widerrufen. Erteilen diese erneut, um die Servicefunktionalität fortzusetzen.</string>
   <string name="yield_module_approve_needed_notification_title">Genehmigung erforderlich</string>
@@ -2039,6 +2083,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
   <string name="yield_module_token_details_earn_notification_title">Ertragsmodus</string>
+  <string name="yield_module_transaction_deploy_contract">Yield-Mode-Vertragsbereitstellung</string>
   <string name="yield_module_transaction_enter">Ertragsmodus aktivieren</string>
   <string name="yield_module_transaction_enter_subtitle">%1$s geliefert an Aave</string>
   <string name="yield_module_transaction_exit">Ertragsmodus deaktiviert</string>
