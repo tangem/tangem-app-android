@@ -4,10 +4,11 @@ import arrow.core.Either
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.repository.NewsRepository
+import kotlinx.coroutines.flow.Flow
 
 class GetNewsUseCase(private val repository: NewsRepository) {
 
-    suspend fun getNews(limit: Int, newsListConfig: NewsListConfig): Either<Throwable, List<ShortArticle>> =
+    fun getNews(limit: Int, newsListConfig: NewsListConfig): Either<Throwable, Flow<List<ShortArticle>>> =
         Either.catch {
             repository.getNews(
                 config = newsListConfig,
