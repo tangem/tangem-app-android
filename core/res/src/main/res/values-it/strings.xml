@@ -163,7 +163,8 @@
   <string name="tangempay_onboarding_security_title">Privacy senza rivali</string>
   <string name="tangempay_onboarding_title">Ottieni la tua carta Tangem Pay gratuita in pochi minuti</string>
   <string name="tangempay_payment_account">Conto di pagamento</string>
-  <string name="tangempay_payment_account_sync_needed">Sincronizzazione del conto di pagamento necessaria</string>
+  <string name="tangempay_payment_account_sync_needed">Il conto di pagamento non è sincronizzato</string>
+  <string name="tangempay_pin_validation_error_message">PIN non valido: evitare sequenze o ripetizioni</string>
   <string name="tangempay_service_unavailable_description">Stiamo risolvendo un problema tecnico. Riprova più tardi.</string>
   <string name="tangempay_service_unavailable_title">Servizio temporaneamente non disponibile</string>
   <string name="tangempay_service_unreachable_try_later">Al momento non è possibile visualizzare i dati, ma i pagamenti con carta continuano a funzionare.</string>
@@ -171,7 +172,7 @@
   <string name="tangempay_tangem_visa_card">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
   <string name="tangempay_title">Tangem Pay</string>
-  <string name="tangempay_use_tangem_device_to_restore_payment_account">Usa la tua carta o il tuo anello per ripristinare l\'accesso al tuo conto di pagamento</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">Fare clic sul pulsante in basso per ripristinare l\'accesso</string>
   <string name="tangempay_your_pin_code">Il tuo codice PIN</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="visa_onboarding_pin_code_description">Imposta un codice di 4 cifre.\nVerrà utilizzato per i pagamenti.</string>
