@@ -8,7 +8,7 @@ import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import java.math.BigDecimal
 
 /**
- * Factory for creating mock P2P ETH Pool account responses for testing
+ * Factory for creating mock P2PEthPool account responses for testing
  */
 object MockP2PEthPoolAccountResponseFactory {
 
@@ -35,7 +35,7 @@ object MockP2PEthPoolAccountResponseFactory {
             availableToUnstake = stakedAmount,
             availableToWithdraw = BigDecimal.ZERO,
             exitQueue = P2PEthPoolExitQueueDTO(
-                total = 0.0,
+                total = BigDecimal.ZERO,
                 requests = emptyList(),
             ),
         )
@@ -55,7 +55,7 @@ object MockP2PEthPoolAccountResponseFactory {
             availableToUnstake = BigDecimal.ZERO,
             availableToWithdraw = BigDecimal.ZERO,
             exitQueue = P2PEthPoolExitQueueDTO(
-                total = 0.0,
+                total = BigDecimal.ZERO,
                 requests = emptyList(),
             ),
         )
