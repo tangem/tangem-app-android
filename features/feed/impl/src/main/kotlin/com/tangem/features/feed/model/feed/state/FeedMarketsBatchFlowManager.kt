@@ -1,13 +1,12 @@
-package com.tangem.features.feed.ui.feed.state
+package com.tangem.features.feed.model.feed.state
 
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.model.converter.MarketsTokenItemConverter
+import com.tangem.features.feed.model.converter.*
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
-import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
@@ -18,8 +17,11 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
+import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
 internal class FeedMarketsBatchFlowManager(
@@ -44,7 +46,7 @@ internal class FeedMarketsBatchFlowManager(
             }
         }.stateIn(
             scope = modelScope,
-            started = SharingStarted.Companion.Eagerly,
+            started = Eagerly,
             initialValue = emptyMap(),
         )
 
@@ -60,7 +62,7 @@ internal class FeedMarketsBatchFlowManager(
             }
         }.stateIn(
             scope = modelScope,
-            started = SharingStarted.Companion.Eagerly,
+            started = Eagerly,
             initialValue = emptyMap(),
         )
 
@@ -76,7 +78,7 @@ internal class FeedMarketsBatchFlowManager(
             }
         }.stateIn(
             scope = modelScope,
-            started = SharingStarted.Companion.Eagerly,
+            started = Eagerly,
             initialValue = emptyMap(),
         )
 
@@ -141,11 +143,29 @@ internal class FeedMarketsBatchFlowManager(
         private val dispatchers: CoroutineDispatcherProvider,
     ) {
         private val updateStateJob = JobHolder()
-        private val resultBatches = MutableStateFlow(ResultBatches())
-        private val uiBatches = resultBatches.map { it.uiBatches }
+
+        private val batchConverter = object : BatchItemConverter<TokenMarket, MarketsListItemUM> {
+
+            private val internalConverter: MarketsTokenItemConverter
+                get() = MarketsTokenItemConverter(
+                    currentTrendInterval = MarketsListUM.TrendInterval.H24,
+                    appCurrency = currentAppCurrency(),
+                )
+
+            override fun convert(item: TokenMarket) = internalConverter.convert(item)
+
+            override fun update(prevDomain: TokenMarket, currentUI: MarketsListItemUM, newDomain: TokenMarket) =
+                internalConverter.update(prevDomain, currentUI, newDomain)
+        }
+
+        private val stateManager = BatchListStateManager<Int, TokenMarket, MarketsListItemUM>(
+            converter = batchConverter,
+            dispatchers = dispatchers,
+        )
 
         val uiItems: StateFlow<ImmutableList<MarketsListItemUM>> =
-            uiBatches
+            stateManager.state
+                .map { it.uiBatches }
                 .map { batches ->
                     batches.asSequence()
                         .map { it.data }
@@ -155,7 +175,7 @@ internal class FeedMarketsBatchFlowManager(
                 .distinctUntilChanged()
                 .stateIn(
                     scope = modelScope,
-                    started = SharingStarted.Companion.Eagerly,
+                    started = Eagerly,
                     initialValue = persistentListOf(),
                 )
 
@@ -170,7 +190,7 @@ internal class FeedMarketsBatchFlowManager(
             .distinctUntilChanged()
             .stateIn(
                 scope = modelScope,
-                started = SharingStarted.Companion.Eagerly,
+                started = Eagerly,
                 initialValue = false,
             )
 
@@ -185,7 +205,7 @@ internal class FeedMarketsBatchFlowManager(
             .distinctUntilChanged()
             .stateIn(
                 scope = modelScope,
-                started = SharingStarted.Companion.Eagerly,
+                started = Eagerly,
                 initialValue = false,
             )
 
@@ -210,15 +230,11 @@ internal class FeedMarketsBatchFlowManager(
         init {
             batchFlow.state
                 .map { it.data }
-                .distinctUntilChanged { a, b ->
-                    a.size == b.size &&
-                        a.map { it.key } == b.map { it.key } &&
-                        a.map { it.data }.flatten() == b.map { it.data }.flatten()
-                }
-                .onEach {
+                .distinctBatchesContent()
+                .onEach { newList ->
                     coroutineScope {
                         launch {
-                            updateState(it)
+                            stateManager.update(newList = newList, forceUpdate = false)
                         }.saveIn(updateStateJob)
                     }
                 }
@@ -226,77 +242,9 @@ internal class FeedMarketsBatchFlowManager(
                 .launchIn(modelScope)
         }
 
-        private suspend fun updateState(newList: List<Batch<Int, List<TokenMarket>>>, forceUpdate: Boolean = false) =
-            withContext(dispatchers.default) {
-                resultBatches.update { resultBatches ->
-                    val items = resultBatches.uiBatches
-                    val previousList = resultBatches.processedItems
-
-                    val converter = MarketsTokenItemConverter(
-                        currentTrendInterval = MarketsListUM.TrendInterval.H24,
-                        appCurrency = currentAppCurrency(),
-                    )
-
-                    if (newList.isEmpty()) {
-                        return@update ResultBatches(processedItems = emptyList())
-                    }
-
-                    val isInitialLoading =
-                        forceUpdate || previousList.isNullOrEmpty() || newList.first().key != previousList.first().key
-
-                    val outItems = if (isInitialLoading) {
-                        newList.map { batch ->
-                            Batch(
-                                key = batch.key,
-                                data = converter.convertList(batch.data),
-                            )
-                        }
-                    } else {
-                        // As nextBatchSize = 0, we only have one batch, but keep the logic for safety
-                        if (previousList.size != newList.size) {
-                            val keysToAdd = newList.map { it.key }.subtract(previousList.map { it.key }.toSet())
-                            val newBatches = newList.filter { keysToAdd.contains(it.key) }
-
-                            items + newBatches.map { batch ->
-                                Batch(
-                                    key = batch.key,
-                                    data = converter.convertList(batch.data),
-                                )
-                            }
-                        } else {
-                            items.mapIndexed { batchIndex, batch ->
-                                val prevBatch = previousList[batchIndex]
-                                val newBatch = newList[batchIndex]
-                                if (prevBatch == newBatch) return@mapIndexed batch
-
-                                Batch(
-                                    key = batch.key,
-                                    data = batch.data.mapIndexed { index, marketsListItemUM ->
-                                        val prevItem = prevBatch.data.getOrNull(index)
-                                        val newItem = newBatch.data.getOrNull(index)
-                                        if (prevItem != null && newItem != null) {
-                                            converter.update(prevItem, marketsListItemUM, newItem)
-                                        } else {
-                                            newItem?.let { converter.convert(it) } ?: marketsListItemUM
-                                        }
-                                    },
-                                )
-                            }
-                        }
-                    }
-
-                    currentCoroutineContext().ensureActive()
-
-                    ResultBatches(
-                        uiBatches = outItems,
-                        processedItems = newList,
-                    )
-                }
-            }
-
         fun reload(fiatPriceCurrency: String) {
             modelScope.launch(dispatchers.default) {
-                resultBatches.value = ResultBatches()
+                stateManager.state.value = BatchListState()
                 actionsFlow.emit(
                     BatchAction.Reload(
                         requestParams = TokenMarketListConfig(
@@ -366,16 +314,11 @@ internal class FeedMarketsBatchFlowManager(
         }
 
         fun getTokenMarketById(tokenId: CryptoCurrency.RawID): TokenMarket? {
-            return resultBatches.value.processedItems
+            return stateManager.state.value.processedItems
                 ?.asSequence()
                 ?.flatMap { it.data }
                 ?.firstOrNull { it.id == tokenId }
         }
-
-        private data class ResultBatches(
-            val uiBatches: List<Batch<Int, List<MarketsListItemUM>>> = emptyList(),
-            val processedItems: List<Batch<Int, List<TokenMarket>>>? = null,
-        )
     }
 
     private fun TokenMarketListConfig.Order.toSortByTypeUM(): SortByTypeUM {
