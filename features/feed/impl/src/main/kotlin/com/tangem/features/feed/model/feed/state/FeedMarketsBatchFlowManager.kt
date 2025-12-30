@@ -244,7 +244,10 @@ internal class FeedMarketsBatchFlowManager(
 
         fun reload(fiatPriceCurrency: String) {
             modelScope.launch(dispatchers.default) {
-                stateManager.state.value = BatchListState()
+                stateManager.state.value = BatchListState(
+                    processedItems = emptyList(),
+                    uiBatches = emptyList(),
+                )
                 actionsFlow.emit(
                     BatchAction.Reload(
                         requestParams = TokenMarketListConfig(
@@ -315,9 +318,9 @@ internal class FeedMarketsBatchFlowManager(
 
         fun getTokenMarketById(tokenId: CryptoCurrency.RawID): TokenMarket? {
             return stateManager.state.value.processedItems
-                ?.asSequence()
-                ?.flatMap { it.data }
-                ?.firstOrNull { it.id == tokenId }
+                .asSequence()
+                .flatMap { it.data }
+                .firstOrNull { it.id == tokenId }
         }
     }
 

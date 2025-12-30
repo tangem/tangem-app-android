@@ -15,8 +15,10 @@ import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.model.news.details.NewsDetailsModel
 import com.tangem.features.feed.ui.news.details.NewsDetailsContent
+import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import kotlinx.serialization.Serializable
 
 internal class DefaultNewsDetailsComponent(
@@ -41,7 +43,8 @@ internal class DefaultNewsDetailsComponent(
             endButton = TopAppBarButtonUM.Icon(
                 iconRes = R.drawable.ic_share_24,
                 onClicked = state.onShareClick,
-                isEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                isEnabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
+                    state.articlesStateUM is ArticlesStateUM.Content,
             ),
         )
     }
@@ -61,5 +64,6 @@ internal class DefaultNewsDetailsComponent(
         val onBackClicked: () -> Unit,
         val onTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),
         val preselectedArticlesId: List<Int> = emptyList(),
+        val paginationConfig: NewsListConfig? = null,
     )
 }

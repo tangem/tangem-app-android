@@ -23,18 +23,11 @@ interface NewsRepository {
     fun getNewsListBatchFlow(context: NewsListBatchingContext, batchSize: Int): NewsListBatchFlow
 
     /**
-     * Returns list of short article by config.
+     * Returns flow of list of short article by config.
      *
      * @param config config for getting news list
      */
-    suspend fun getNews(config: NewsListConfig, limit: Int): List<ShortArticle>
-
-    /**
-     * Returns detailed article by id with locale configuration.
-     * @param newsId news identification
-     * @param language current locale
-     */
-    suspend fun getDetailedArticle(newsId: Int, language: String?): DetailedArticle
+    fun getNews(config: NewsListConfig, limit: Int): Flow<List<ShortArticle>>
 
     /**
      * Observes cached detailed articles.

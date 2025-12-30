@@ -324,6 +324,7 @@ internal class FeedComponentModel @Inject constructor(
                                     NewsUMState.ERROR,
                                     -> emptyList()
                                 },
+                            paginationConfig = null,
                         )
                     },
                     onOpenAllNews = {

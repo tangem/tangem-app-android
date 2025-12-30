@@ -13,7 +13,12 @@ internal class BatchListStateManager<Key, Domain, UI>(
     private val converter: BatchItemConverter<Domain, UI>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
-    val state = MutableStateFlow(BatchListState<Key, Domain, UI>())
+    val state = MutableStateFlow(
+        BatchListState<Key, Domain, UI>(
+            uiBatches = emptyList(),
+            processedItems = emptyList(),
+        ),
+    )
 
     suspend fun update(newList: List<Batch<Key, List<Domain>>>, forceUpdate: Boolean) =
         withContext(dispatchers.default) {
@@ -26,7 +31,7 @@ internal class BatchListStateManager<Key, Domain, UI>(
                 }
 
                 val isInitialLoading = forceUpdate ||
-                    previousList.isNullOrEmpty() ||
+                    previousList.isEmpty() ||
                     newList.firstOrNull()?.key != previousList.firstOrNull()?.key
 
                 val outItems = if (isInitialLoading) {
@@ -77,8 +82,8 @@ internal class BatchListStateManager<Key, Domain, UI>(
 }
 
 internal data class BatchListState<K, Domain, UI>(
-    val uiBatches: List<Batch<K, List<UI>>> = emptyList(),
-    val processedItems: List<Batch<K, List<Domain>>>? = emptyList(),
+    val uiBatches: List<Batch<K, List<UI>>>,
+    val processedItems: List<Batch<K, List<Domain>>>,
 )
 
 internal interface BatchItemConverter<Domain, UI> {

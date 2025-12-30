@@ -1,25 +1,24 @@
 package com.tangem.features.feed.model.news.list
 
-import com.tangem.common.ui.R
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.chip.entity.ChipUM
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
+import com.tangem.features.feed.model.news.list.calculator.NewsListStateManager
+import com.tangem.features.feed.model.news.list.loader.NewsCategoriesLoader
 import com.tangem.features.feed.model.news.list.statemanager.NewsListBatchFlowManager
 import com.tangem.features.feed.ui.news.list.state.NewsListState
 import com.tangem.features.feed.ui.news.list.state.NewsListUM
-import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.Provider
 import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -38,6 +37,14 @@ internal class NewsListModel @Inject constructor(
     private val params = paramsContainer.require<DefaultNewsListComponent.Params>()
     private val selectedCategoryId = MutableStateFlow<Int?>(null)
     private val currentLanguage = SupportedLanguages.getCurrentSupportedLanguageCode()
+
+    private val categoriesLoader by lazy {
+        NewsCategoriesLoader(
+            getNewsCategoriesUseCase = getNewsCategoriesUseCase,
+            defaultAllNewsCategoryId = DEFAULT_ALL_NEWS_CATEGORIES_ID,
+            onCategoryClick = ::onCategoryClick,
+        )
+    }
 
     private val batchFlowManager by lazy {
         NewsListBatchFlowManager(
@@ -61,6 +68,7 @@ internal class NewsListModel @Inject constructor(
                 params.onArticleClicked(
                     /* currentArticle */ articleId,
                     /* prefetchedArticles */ getCurrentFetchedArticlesIds(),
+                    /* paginationConfig */ createNewsListConfig(),
                 )
             },
             onBackClick = params.onBackClick,
@@ -76,31 +84,7 @@ internal class NewsListModel @Inject constructor(
 
     private fun loadCategories() {
         modelScope.launch(dispatchers.default) {
-            val allCategoriesChip = ChipUM(
-                id = DEFAULT_ALL_NEWS_CATEGORIES_ID,
-                text = TextReference.Res(R.string.news_all_news),
-                isSelected = true,
-                onClick = { onCategoryClick(DEFAULT_ALL_NEWS_CATEGORIES_ID) },
-            )
-            val filterChips = getNewsCategoriesUseCase
-                .invoke()
-                .fold(
-                    ifLeft = {
-                        persistentListOf()
-                    },
-                    ifRight = { categories ->
-                        (listOf(allCategoriesChip) + categories.map { articleCategory ->
-                            ChipUM(
-                                id = articleCategory.id,
-                                text = TextReference.Str(articleCategory.name),
-                                isSelected = false,
-                                onClick = {
-                                    onCategoryClick(articleCategory.id)
-                                },
-                            )
-                        }).toPersistentList()
-                    },
-                )
+            val filterChips = categoriesLoader.load()
             _state.update { currentState ->
                 currentState.copy(filters = filterChips)
             }
@@ -114,23 +98,16 @@ internal class NewsListModel @Inject constructor(
                 batchFlowManager.isInInitialLoadingErrorState,
                 batchFlowManager.paginationStatus,
             ) { articles, isError, paginationStatus ->
-                when {
-                    isError -> NewsListState.LoadingError(
-                        onRetryClicked = {
-                            loadCategories()
-                            batchFlowManager.reload()
-                        },
-                    ) to persistentListOf()
-                    paginationStatus is PaginationStatus.InitialLoading && articles.isEmpty() -> {
-                        NewsListState.Loading to persistentListOf()
-                    }
-                    articles.isEmpty() -> {
-                        NewsListState.Loading to persistentListOf()
-                    }
-                    else -> {
-                        NewsListState.Content(loadMore = { batchFlowManager.loadMore() }) to articles
-                    }
-                }
+                NewsListStateManager.calculateState(
+                    articles = articles,
+                    isError = isError,
+                    paginationStatus = paginationStatus,
+                    onRetryClick = {
+                        loadCategories()
+                        batchFlowManager.reload()
+                    },
+                    onLoadMore = { batchFlowManager.loadMore() },
+                )
             }.collect { (listState, articles) ->
                 _state.update { currentState ->
                     currentState.copy(
@@ -166,6 +143,15 @@ internal class NewsListModel @Inject constructor(
 
     private fun getCurrentFetchedArticlesIds(): List<Int> {
         return state.value.listOfArticles.map { it.id }
+    }
+
+    private fun createNewsListConfig(): NewsListConfig {
+        return NewsListConfig(
+            language = currentLanguage,
+            snapshot = null,
+            tokenIds = emptyList(),
+            categoryIds = selectedCategoryId.value?.takeIf { it > 0 }?.let { listOf(it) }.orEmpty(),
+        )
     }
 
     companion object {
