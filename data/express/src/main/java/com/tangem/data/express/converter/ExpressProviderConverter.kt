@@ -19,6 +19,7 @@ internal class ExpressProviderConverter : Converter<ExchangeProvider, ExpressPro
             privacyPolicy = value.privacyPolicy,
             isRecommended = value.isRecommended,
             slippage = value.slippage,
+            isExchangeOnlyWithinSingleAddress = value.isExchangeOnlyWithinSingleAddress,
         )
     }
 
