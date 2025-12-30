@@ -42,6 +42,9 @@ data class MessageBottomSheetUMV2(
     }
 
     @Immutable
+    data class IconImage(@DrawableRes internal var res: Int) : Element
+
+    @Immutable
     data class Chip(
         internal var text: TextReference,
         var type: Type = Type.Unspecified,
@@ -54,6 +57,7 @@ data class MessageBottomSheetUMV2(
     @Immutable
     data class InfoBlock(
         internal var icon: Icon? = null,
+        internal var iconImage: IconImage? = null,
         internal var chip: Chip? = null,
         var title: TextReference? = null,
         var body: TextReference? = null,
@@ -105,6 +109,10 @@ fun MessageBottomSheetUMV2.InfoBlock.icon(@DrawableRes res: Int, init: MessageBo
     apply {
         icon = MessageBottomSheetUMV2.Icon(res).apply(init)
     }
+
+fun MessageBottomSheetUMV2.InfoBlock.iconImage(@DrawableRes res: Int) = apply {
+    iconImage = MessageBottomSheetUMV2.IconImage(res)
+}
 
 fun MessageBottomSheetUMV2.InfoBlock.chip(text: TextReference, init: MessageBottomSheetUMV2.Chip.() -> Unit = {}) =
     apply {

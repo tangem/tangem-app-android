@@ -519,13 +519,14 @@ internal class DefaultTangemSdkManager(
     }
 
     override suspend fun tangemPayProduceInitialCredentials(
-        cardId: String,
+        preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, TangemPayInitialCredentials> {
         return coroutineScope {
             val result = runTaskAsyncReturnOnMain(
                 runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
-                cardId = cardId,
+                cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                preflightReadFilter = preflightReadFilter,
             )
 
             return@coroutineScope when (result) {
@@ -536,14 +537,15 @@ internal class DefaultTangemSdkManager(
     }
 
     override suspend fun getWithdrawalSignature(
-        cardId: String,
         hash: String,
+        preflightReadFilter: PreflightReadFilter,
     ): Either<Throwable, WithdrawalSignatureResult> {
         return coroutineScope {
             val result = runTaskAsyncReturnOnMain(
-                runnable = TangemPaySignWithdrawalHashTask(cardId = cardId, hash = hash.hexToBytes()),
-                cardId = cardId,
+                runnable = TangemPaySignWithdrawalHashTask(hash = hash.hexToBytes()),
+                cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+                preflightReadFilter = preflightReadFilter,
             )
 
             return@coroutineScope when (result) {
