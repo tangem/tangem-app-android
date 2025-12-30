@@ -162,6 +162,7 @@ class TangemColors2 internal constructor(
         backgroundSecondary: Color,
         backgroundDisabled: Color,
         backgroundPositive: Color,
+        backgroundPrimaryInverse: Color,
         textPrimary: Color,
         textSecondary: Color,
         textDisabled: Color,
@@ -177,6 +178,8 @@ class TangemColors2 internal constructor(
         var backgroundDisabled by mutableStateOf(backgroundDisabled)
             private set
         var backgroundPositive by mutableStateOf(backgroundPositive)
+            private set
+        var backgroundPrimaryInverse by mutableStateOf(backgroundPrimaryInverse)
             private set
         var textPrimary by mutableStateOf(textPrimary)
             private set
@@ -198,6 +201,7 @@ class TangemColors2 internal constructor(
             backgroundSecondary = other.backgroundSecondary
             backgroundDisabled = other.backgroundDisabled
             backgroundPositive = other.backgroundPositive
+            backgroundPrimaryInverse = other.backgroundPrimaryInverse
             textPrimary = other.textPrimary
             textSecondary = other.textSecondary
             textDisabled = other.textDisabled
