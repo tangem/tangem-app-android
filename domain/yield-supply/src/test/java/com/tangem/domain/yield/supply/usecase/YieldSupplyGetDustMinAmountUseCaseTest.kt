@@ -46,7 +46,7 @@ class YieldSupplyGetDustMinAmountUseCaseTest {
                 fiatAmount = BigDecimal.ZERO,
                 fiatRate = fiatRate,
                 priceChange = BigDecimal.ZERO,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),

@@ -36,7 +36,7 @@ internal fun SendWithSwapContent(
     stackState: ChildStack<SendWithSwapRoute, ComposableContentComponent>,
     onLinkClick: (String) -> Unit,
 ) {
-    val navigationUM = navigationUM as? NavigationUM.Content ?: return
+    val navigationUMContent = navigationUM as? NavigationUM.Content ?: return
 
     Column(
         modifier = Modifier
@@ -47,9 +47,9 @@ internal fun SendWithSwapContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AppBarWithBackButton(
-            text = navigationUM.title.resolveReference(),
-            onBackClick = navigationUM.backIconClick,
-            iconRes = navigationUM.additionalIconRes,
+            text = navigationUMContent.title.resolveReference(),
+            onBackClick = navigationUMContent.backIconClick,
+            iconRes = navigationUMContent.additionalIconRes,
             modifier = Modifier.height(TangemTheme.dimens.size56),
         )
         Children(
@@ -93,7 +93,7 @@ internal fun SendWithSwapContent(
                     )
                 }
                 NavigationPrimaryButton(
-                    navigationUM.primaryButton,
+                    navigationUMContent.primaryButton,
                     modifier = Modifier.padding(
                         start = 16.dp,
                         end = 16.dp,

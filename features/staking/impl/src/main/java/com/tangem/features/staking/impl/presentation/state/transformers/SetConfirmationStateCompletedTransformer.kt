@@ -26,7 +26,7 @@ internal class SetConfirmationStateCompletedTransformer(
         return if (this is StakingStates.ConfirmationState.Data) {
             copy(
                 isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
-                    sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+                    sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
                 },
                 innerState = InnerConfirmationStakingState.COMPLETED,
                 footerText = TextReference.EMPTY,

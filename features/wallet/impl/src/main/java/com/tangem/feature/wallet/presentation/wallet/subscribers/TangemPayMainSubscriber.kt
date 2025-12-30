@@ -9,7 +9,6 @@ import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
@@ -27,7 +26,6 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val stateController: WalletStateController,
     private val clickIntents: WalletClickIntents,
-    private val innerWalletRouter: InnerWalletRouter,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val analytics: WalletTangemPayAnalyticsEventSender,
@@ -48,7 +46,8 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                             stateController.update(
                                 transformer = TangemPayRefreshNeededStateTransformer(
                                     userWalletId = userWalletId,
-                                    onRefreshClick = { clickIntents.onRefreshPayToken(userWalletId) },
+                                    userWallet = userWallet,
+                                    onRefreshClick = { clickIntents.onRefreshPayToken(userWallet) },
                                 ),
                             )
                         }
@@ -57,7 +56,10 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                                 transformer = TangemPayUnavailableStateTransformer(userWalletId),
                             )
                         }
-                        else -> {
+                        TangemPayCustomerInfoError.ExposedDeviceError -> {
+                            stateController.update(TangemPayExposedDeviceTransformer(userWalletId))
+                        }
+                        TangemPayCustomerInfoError.UnknownError -> {
                             // hide TangemPay block
                             Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
                             stateController.update(
@@ -79,6 +81,13 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                 updateTangemPay(data = state.info, userWalletId = userWalletId)
                 analytics.send(customerInfo = state.info)
             }
+            is MainCustomerInfoContentState.OnboardingBanner -> stateController.update(
+                transformer = TangemPayOnboardingBannerStateTransformer(
+                    userWalletId = userWalletId,
+                    onClick = clickIntents::onOnboardingBannerClick,
+                    closeOnClick = clickIntents::onOnboardingBannerCloseClick,
+                ),
+            )
         }
     }
 
@@ -91,15 +100,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                 userWalletId = userWalletId,
                 value = data,
                 cardFrozenState = cardFrozenState,
-                onClickKyc = { innerWalletRouter.openTangemPayOnboarding(userWalletId) },
-                onIssuingCard = clickIntents::onIssuingCardClicked,
-                onIssuingFailed = clickIntents::onIssuingFailedClicked,
-                openDetails = { config ->
-                    innerWalletRouter.openTangemPayDetails(
-                        userWalletId = userWalletId,
-                        config = config,
-                    )
-                },
+                tangemPayClickIntents = clickIntents,
             ),
         )
     }

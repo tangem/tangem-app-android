@@ -51,6 +51,7 @@ import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
@@ -87,15 +88,18 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPa
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
-import com.tangem.features.markets.entry.BottomSheetState
-import com.tangem.features.markets.entry.MarketsEntryComponent
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent) {
+internal fun WalletScreen(
+    state: WalletScreenState,
+    bottomSheetContent: @Composable (() -> Unit),
+    bottomSheetHeaderHeightProvider: () -> Dp,
+    onBottomSheetStateChange: (BottomSheetState) -> Unit,
+) {
     // It means that screen is still initializing
     if (state.selectedWalletIndex == NOT_INITIALIZED_WALLET_INDEX) return
 
@@ -116,8 +120,10 @@ internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: Marke
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
-        marketsEntryComponent = marketsEntryComponent,
+        bottomSheetContent = bottomSheetContent,
         alertConfig = alertConfig,
+        bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
+        onBottomSheetStateChange = onBottomSheetStateChange,
     )
 
     WalletEventEffect(
@@ -136,9 +142,11 @@ private fun WalletContent(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
-    marketsEntryComponent: MarketsEntryComponent,
     alertConfig: WalletAlertState?,
     onAutoScrollReset: () -> Unit,
+    bottomSheetHeaderHeightProvider: () -> Dp,
+    onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    bottomSheetContent: @Composable (() -> Unit),
 ) {
     /*
      * Don't pass key to remember, because it will brake scroll animation.
@@ -286,25 +294,15 @@ private fun WalletContent(
         )
     }
 
-    val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
-
-    var headerSize by remember { mutableStateOf(0.dp) }
-
     BaseScaffoldWithMarkets(
         state = state,
         listState = listState,
         selectedWallet = selectedWallet,
         snackbarHostState = snackbarHostState,
-        bottomSheetHeaderHeightProvider = { headerSize },
+        bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         alertConfig = alertConfig,
-        onBottomSheetStateChange = { bottomSheetState.value = it },
-        bottomSheetContent = {
-            marketsEntryComponent.BottomSheetContent(
-                bottomSheetState = bottomSheetState,
-                onHeaderSizeChange = { headerSize = it },
-                modifier = Modifier,
-            )
-        },
+        onBottomSheetStateChange = onBottomSheetStateChange,
+        bottomSheetContent = bottomSheetContent,
         content = scaffoldContent,
     )
 }
@@ -394,7 +392,11 @@ private inline fun BaseScaffoldWithMarkets(
     val maxHeight = LocalWindowSize.current.height
 
     val coroutineScope = rememberCoroutineScope()
-    val backgroundPrimary = TangemTheme.colors.background.primary
+    val background = if (state.isNewMarketEnabled) {
+        TangemTheme.colors.background.tertiary
+    } else {
+        TangemTheme.colors.background.primary
+    }
 
     val showMarketsHint by remember {
         derivedStateOf {
@@ -407,7 +409,7 @@ private inline fun BaseScaffoldWithMarkets(
     }
 
     CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember { mutableStateOf(backgroundPrimary) },
+        LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
     ) {
         val backgroundColor = LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
@@ -798,16 +800,11 @@ private fun WalletScreen_Preview(@PreviewParameter(WalletScreenPreviewProvider::
     TangemThemePreview {
         WalletScreen(
             state = data,
-            marketsEntryComponent = object : MarketsEntryComponent {
-                @Composable
-                override fun BottomSheetContent(
-                    bottomSheetState: State<BottomSheetState>,
-                    onHeaderSizeChange: (Dp) -> Unit,
-                    modifier: Modifier,
-                ) {
-                    Text("Markets Content")
-                }
+            bottomSheetContent = {
+                Text("Markets Content")
             },
+            bottomSheetHeaderHeightProvider = { 10.dp },
+            onBottomSheetStateChange = {},
         )
     }
 }

@@ -3,7 +3,6 @@ package com.tangem.data.account.fetcher
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -38,7 +37,6 @@ class FetchWalletAccountsErrorHandlerTest {
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
-    private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
 
     private val handler = FetchWalletAccountsErrorHandler(
         tangemTechApi = tangemTechApi,
@@ -46,17 +44,18 @@ class FetchWalletAccountsErrorHandlerTest {
         userTokensSaver = userTokensSaver,
         userTokensResponseStore = userTokensResponseStore,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
-        eTagsStore = eTagsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse =
+    private val pushWalletAccounts: suspend (List<WalletAccountDTO>, String) -> GetWalletAccountsResponse =
         mockk(relaxed = true)
     private val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
 
     @BeforeEach
     fun setupEach() {
         clearMocks(
+            tangemTechApi,
+            userWalletsStore,
             userTokensSaver,
             userTokensResponseStore,
             defaultWalletAccountsResponseFactory,
@@ -129,7 +128,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 ),
             )
         } returns apiResponse
-        coEvery { pushWalletAccounts(userWalletId, listOf(accountDTO)) } returns savedAccountsResponse
+        coEvery { pushWalletAccounts(listOf(accountDTO), eTagValue) } returns savedAccountsResponse
 
         // Act
         handler.handle(
@@ -150,8 +149,7 @@ class FetchWalletAccountsErrorHandlerTest {
                     walletType = WalletType.COLD,
                 ),
             )
-            eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
-            pushWalletAccounts(userWalletId, listOf(accountDTO))
+            pushWalletAccounts(listOf(accountDTO), eTagValue)
             storeWalletAccounts(userWalletId, savedAccountsResponse)
         }
 
@@ -182,6 +180,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 group = UserTokensResponse.GroupType.NONE,
                 sort = UserTokensResponse.SortType.MANUAL,
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
             ),
             accounts = listOf(accountDTO),
             unassignedTokens = emptyList(),

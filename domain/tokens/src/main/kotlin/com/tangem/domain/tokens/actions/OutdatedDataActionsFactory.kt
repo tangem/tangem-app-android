@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -31,11 +32,13 @@ internal class OutdatedDataActionsFactory(
      * @param userWallet            the user's cold wallet
      * @param cryptoCurrencyStatus  the status of the cryptocurrency
      * @param stakingAvailability   the staking availability for the cryptocurrency
+     * @param yieldSupplyAvailability the yield supply availability for the cryptocurrency
      */
     suspend fun create(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         stakingAvailability: StakingAvailability,
+        yieldSupplyAvailability: YieldSupplyAvailability,
     ): Set<ActionState> = coroutineScope {
         val sources = cryptoCurrencyStatus.value.sources
 
@@ -128,6 +131,10 @@ internal class OutdatedDataActionsFactory(
 
             // region HideToken
             addHideTokenAction()
+            // endregion
+
+            // region Yield Mode
+            addYieldSupplyAction(yieldSupplyAvailability)
             // endregion
         }
     }

@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:ShortArticle.kt$ShortArticle$val viewed: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenReceiveConfig.kt$TokenReceiveConfig$val showMemoDisclaimer: Boolean</ID>
+    <ID>BooleanPropertyNaming:UserWallet.kt$UserWallet.Hot$val backedUp: Boolean</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs$val signatureVerification: Boolean?</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs$val validatorAddress: Boolean?</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs$val validatorAddresses: Boolean?</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs.Amount$val required: Boolean</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs.Duration$val required: Boolean</ID>
+    <ID>BooleanPropertyNaming:YieldBalanceItem.kt$PendingAction.PendingActionArgs.TronResource$val required: Boolean</ID>
+    <ID>CastNullableToNonNullableType:DerivationPathAdapterWithMigration.kt$DerivationPathAdapterWithMigration$as</ID>
+    <ID>MultilineLambdaItParameter:MobileWallet.kt$MobileWallet${ ExtendedPublicKey( publicKey = publicKey, chainCode = it, ) }</ID>
+    <ID>NoNameShadowing:Account.kt$Account.CryptoPortfolio.Companion$derivationIndex</ID>
+    <ID>NullableBooleanCheck:CryptoCurrency.kt$CryptoCurrency$iconUrl?.isNotBlank() ?: true</ID>
+    <ID>NullableToStringCall:AccountName.kt$AccountName.Error.Empty$${Empty::class.simpleName}</ID>
+    <ID>NullableToStringCall:AccountName.kt$AccountName.Error.ExceedsMaxLength$${ExceedsMaxLength::class.simpleName}</ID>
+    <ID>NullableToStringCall:DerivationIndex.kt$DerivationIndex.Error.NegativeDerivationIndex$${this::class.simpleName}</ID>
+    <ID>UnsafeCallOnNullableType:MobileWalletAsStringSerializer.kt$MobileWalletAsStringSerializer$moshi.adapter(MobileWallet::class.java).fromJson(decoder.decodeString())!!</ID>
+    <ID>UnsafeCallOnNullableType:ScanResponseAsStringSerializer.kt$ScanResponseAsStringSerializer$moshi.adapter(ScanResponse::class.java).fromJson(decoder.decodeString())!!</ID>
+    <ID>UseEmptyCounterpart:ScanResponse.kt$ScanResponse$mapOf()</ID>
+    <ID>UseOrEmpty:CardDTO.kt$CardDTO.FirmwareVersion$type.rawValue ?: ""</ID>
+    <ID>UseOrEmpty:UserWalletId.kt$UserWalletId$value?.toHexString() ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

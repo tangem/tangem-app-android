@@ -45,11 +45,11 @@ internal class AccountTokenItemConverter(
     fun createAvailableItemConverter(): TokenItemStateConverter {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
-            subtitleStateProvider = {
+            subtitleStateProvider = { status ->
                 createSubtitleState(
-                    status = it,
+                    status = status,
                     isAvailable = true,
-                    text = stringReference(value = it.currency.symbol),
+                    text = stringReference(value = status.currency.symbol),
                 )
             },
             subtitle2StateProvider = ::createSubtitle2State,
@@ -64,15 +64,15 @@ internal class AccountTokenItemConverter(
         return TokenItemStateConverter(
             appCurrency = appCurrency,
             iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
-            titleStateProvider = {
+            titleStateProvider = { status ->
                 TokenItemState.TitleState.Content(
-                    text = stringReference(value = it.currency.name),
+                    text = stringReference(value = status.currency.name),
                     isAvailable = false,
                 )
             },
-            subtitleStateProvider = {
+            subtitleStateProvider = { status ->
                 createSubtitleState(
-                    status = it,
+                    status = status,
                     isAvailable = false,
                     text = unavailableErrorText,
                 )

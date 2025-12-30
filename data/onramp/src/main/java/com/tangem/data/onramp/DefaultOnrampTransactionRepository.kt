@@ -1,6 +1,7 @@
 package com.tangem.data.onramp
 
 import com.tangem.data.onramp.converters.TransactionConverter
+import com.tangem.data.onramp.models.OnrampTerminalTransactionDTO
 import com.tangem.data.onramp.models.OnrampTransactionDTO
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -15,7 +16,9 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 internal class DefaultOnrampTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
@@ -47,6 +50,7 @@ internal class DefaultOnrampTransactionRepository(
     override fun getAllTransactions(): Flow<List<OnrampTransaction>> {
         return appPreferencesStore
             .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+            .onStart { cleanupExpiredTerminalTransactions() }
             .map { transactions -> transactions.map(transactionConverter::convert) }
     }
 
@@ -63,6 +67,7 @@ internal class DefaultOnrampTransactionRepository(
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<OnrampTransaction>> = appPreferencesStore
         .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+        .onStart { cleanupExpiredTerminalTransactions() }
         .map { transactions ->
             transactions.filter {
                 it.userWalletId == userWalletId && it.toCurrencyId == cryptoCurrencyId.value
@@ -100,5 +105,65 @@ internal class DefaultOnrampTransactionRepository(
                 }
             }
         }
+    }
+
+    override suspend fun isHandledTransaction(txId: String): Boolean = withContext(dispatchers.io) {
+        val terminated = appPreferencesStore.getObjectSetSync<OnrampTerminalTransactionDTO>(
+            PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+        )
+
+        terminated.any { it.txId == txId }
+    }
+
+    override suspend fun storeHandledTransaction(txId: String) {
+        withContext(dispatchers.io) {
+            appPreferencesStore.editData { mutablePreferences ->
+                runCatching {
+                    val archived = mutablePreferences.getObjectSet<OnrampTerminalTransactionDTO>(
+                        PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                    ).orEmpty().toMutableSet()
+
+                    val record = OnrampTerminalTransactionDTO(
+                        txId = txId,
+                        terminatedAt = System.currentTimeMillis(),
+                    )
+
+                    archived.add(record)
+
+                    mutablePreferences.setObjectSet(
+                        key = PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                        value = archived,
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun cleanupExpiredTerminalTransactions() {
+        withContext(dispatchers.io) {
+            appPreferencesStore.editData { mutablePreferences ->
+                runCatching {
+                    val archived = mutablePreferences.getObjectSet<OnrampTerminalTransactionDTO>(
+                        PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                    )?.toMutableSet() ?: return@editData
+
+                    val oneWeekAgo = System.currentTimeMillis() -
+                        TimeUnit.DAYS.toMillis(HANDLED_TRANSACTIONS_RETENTION_DAYS)
+                    val cleaned = archived
+                        .filterTo(mutableSetOf()) { it.terminatedAt > oneWeekAgo }
+
+                    if (cleaned.size != archived.size) {
+                        mutablePreferences.setObjectSet(
+                            key = PreferencesKeys.ONRAMP_HANDLED_TRANSACTIONS_KEY,
+                            value = cleaned,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private companion object {
+        const val HANDLED_TRANSACTIONS_RETENTION_DAYS = 7L
     }
 }

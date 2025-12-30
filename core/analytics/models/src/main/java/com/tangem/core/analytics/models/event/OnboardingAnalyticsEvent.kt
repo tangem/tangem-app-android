@@ -2,6 +2,8 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 
 sealed class OnboardingAnalyticsEvent(
     category: String,
@@ -12,11 +14,100 @@ sealed class OnboardingAnalyticsEvent(
     sealed class Onboarding(
         event: String,
         params: Map<String, String> = mapOf(),
+    ) : OnboardingAnalyticsEvent(category = "Onboarding", event = event, params = params) {
+
+        class AppsFlyerOnlyEntryScreenView : Onboarding(event = "wallet_entry_screen_view"), AppsFlyerOnlyEvent
+
+        class Started(
+            source: String,
+        ) : Onboarding(
+            event = "Onboarding Started",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source,
+            ),
+        )
+
+        class Finished(
+            source: String,
+        ) : Onboarding(
+            event = "Onboarding Finished",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source,
+            ),
+        )
+
+        class ButtonMobileWallet(
+            source: String,
+        ) : Onboarding(
+            event = "Button - Mobile Wallet",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source,
+            ),
+        )
+    }
+
+    sealed class CreateWallet(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : OnboardingAnalyticsEvent(category = "Onboarding / Create Wallet", event = event, params = params) {
+
+        class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
+
+        class WalletCreatedSuccessfully(
+            source: String,
+            creationType: WalletCreationType = WalletCreationType.NewSeed,
+            seedPhraseLength: Int? = null,
+            passPhraseState: AnalyticsParam.EmptyFull,
+        ) : CreateWallet(
+            event = "Wallet Created Successfully",
+            params = buildMap {
+                put(AnalyticsParam.SOURCE, source)
+                put("Creation Type", creationType.value)
+                put("Passphrase", passPhraseState.value)
+                if (seedPhraseLength != null) {
+                    put("Seed Phrase Length", seedPhraseLength.toString())
+                }
+            },
+        ), AppsFlyerIncludedEvent {
+            override val appsFlyerReplacedEvent = when (creationType) {
+                WalletCreationType.NewSeed -> "wallet_created_successfully"
+                WalletCreationType.SeedImport -> "wallet_imported"
+            }
+        }
+
+        sealed class WalletCreationType(val value: String) {
+            data object NewSeed : WalletCreationType(value = "New Seed")
+            data object SeedImport : WalletCreationType(value = "Seed Import")
+        }
+    }
+
+    sealed class SeedPhrase(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : OnboardingAnalyticsEvent(category = "Onboarding / Seed Phrase", event = event, params = params) {
+
+        class CreateMobileScreenOpened(
+            source: String,
+        ) : SeedPhrase(
+            event = "Create Mobile Screen Opened",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source,
+            ),
+        )
+
+        class ButtonImportWallet : SeedPhrase("Button - Import Wallet")
+        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
+        class ButtonImport : SeedPhrase("Button - Import")
+    }
+
+    sealed class Error(
+        event: String,
+        params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Error", event = event, params = params) {
 
         data class OfflineAttestationFailed(
             val source: AnalyticsParam.ScreensSources,
-        ) : Onboarding(
+        ) : Error(
             event = "Offline Attestation Failed",
             params = mapOf(AnalyticsParam.SOURCE to source.value),
         )
