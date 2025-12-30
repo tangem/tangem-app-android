@@ -19,6 +19,7 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -79,13 +80,18 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
         }
 
-        override fun onArticleClick(articleId: Int, preselectedArticlesId: List<Int>) {
+        override fun onArticleClick(
+            articleId: Int,
+            preselectedArticlesId: List<Int>,
+            paginationConfig: NewsListConfig?,
+        ) {
             innerRouter.push(
                 FeedEntryChildFactory.Child.NewsDetails(
                     params = DefaultNewsDetailsComponent.Params(
                         articleId = articleId,
                         onBackClicked = { onChildBack() },
                         preselectedArticlesId = preselectedArticlesId,
+                        paginationConfig = paginationConfig,
                         onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
                     ),
                 ),
@@ -179,7 +185,11 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                     },
                     onBackClicked = { router.pop() },
                     onArticleClick = { articleId, preselectedArticlesId ->
-                        clickIntents.onArticleClick(articleId, preselectedArticlesId)
+                        clickIntents.onArticleClick(
+                            articleId = articleId,
+                            preselectedArticlesId = preselectedArticlesId,
+                            paginationConfig = null,
+                        )
                     },
                 ),
             )

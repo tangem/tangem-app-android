@@ -11,10 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,7 +71,7 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
     ) { animatedState ->
         when (animatedState) {
             is GlobalFeedState.Loading -> {
-                FeeListLoading(
+                FeedListLoading(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
@@ -88,7 +85,7 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
                 )
             }
             is GlobalFeedState.Content -> {
-                FeeListContent(
+                FeedListContent(
                     modifier = Modifier,
                     state = state,
                 )
@@ -125,7 +122,7 @@ private fun FeedSearchBar(feedListSearchBar: FeedListSearchBar, modifier: Modifi
 }
 
 @Composable
-private fun FeeListContent(state: FeedListUM, modifier: Modifier = Modifier) {
+private fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     Column(
         modifier = modifier
@@ -289,6 +286,13 @@ private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendi
 @Suppress("LongMethod")
 @Composable
 private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
+    val listState = rememberLazyListState()
+    val articlesReadStatus = remember(news.content) {
+        news.content.map { it.isViewed }
+    }
+    LaunchedEffect(articlesReadStatus) {
+        listState.requestScrollToItem(0)
+    }
     Column {
         Header(
             title = {
@@ -347,7 +351,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
             verticalAlignment = Alignment.CenterVertically,
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            state = rememberLazyListState(),
+            state = listState,
         ) {
             items(
                 items = news.content,
