@@ -51,8 +51,8 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                     }
 
                     scope.launch {
-                        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet, currencyId).getOrElse {
-                            Timber.e("Error on getting cryptoCurrency: $it")
+                        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet, currencyId).getOrElse { error ->
+                            Timber.e("Error on getting cryptoCurrency: $error")
                             return@launch
                         }
                         // Convert using universal parser to account for regional separators

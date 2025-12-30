@@ -1,17 +1,20 @@
 package com.tangem.feature.wallet.child.wallet
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
@@ -22,6 +25,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogCon
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -36,18 +41,28 @@ import kotlinx.coroutines.launch
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
+    marketsEntryComponentFactory: MarketsEntryComponent.Factory,
+    feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
-    private val marketsEntryComponentFactory: MarketsEntryComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
+    private val feedFeatureToggle: FeedFeatureToggle,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
 
+    private val feedEntryComponent by lazy {
+        feedEntryComponentFactory.create(child("feedEntryComponent"))
+    }
+    private val marketsEntryComponent by lazy {
+        marketsEntryComponentFactory.create(child("marketsEntryComponent"))
+    }
+
     init {
         lifecycle.subscribe(model.screenLifecycleProvider)
+        doOnResume { model.onResume() }
         componentScope.launch { model.innerWalletRouter.navigateToFlow.collect { navigate(it) } }
     }
 
@@ -112,21 +127,50 @@ internal class WalletComponent @AssistedInject constructor(
         },
     )
 
-    private val marketsEntryComponent = marketsEntryComponentFactory.create(child("marketsEntryComponent"))
-
     @Composable
     override fun Content(modifier: Modifier) {
+        val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
+        var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
 
         WalletScreen(
             state = model.uiState.collectAsStateWithLifecycle().value,
-            marketsEntryComponent = marketsEntryComponent,
+            bottomSheetContent = {
+                BottomSheetContent(
+                    bottomSheetState = bottomSheetState,
+                    onHeaderSizeChange = { headerSize = it },
+                    modifier = modifier,
+                )
+            },
+            bottomSheetHeaderHeightProvider = { headerSize },
+            onBottomSheetStateChange = { bottomSheetState.value = it },
         )
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
             is ComposableBottomSheetComponent -> dialog.BottomSheet()
             else -> {}
+        }
+    }
+
+    @Composable
+    private fun BottomSheetContent(
+        bottomSheetState: State<BottomSheetState>,
+        onHeaderSizeChange: (Dp) -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        if (feedFeatureToggle.isFeedEnabled) {
+            feedEntryComponent.BottomSheetContent(
+                bottomSheetState = bottomSheetState,
+                onHeaderSizeChange = onHeaderSizeChange,
+                modifier = modifier,
+            )
+        } else {
+            marketsEntryComponent.BottomSheetContent(
+                bottomSheetState = bottomSheetState,
+                onHeaderSizeChange = onHeaderSizeChange,
+                modifier = modifier,
+            )
         }
     }
 
