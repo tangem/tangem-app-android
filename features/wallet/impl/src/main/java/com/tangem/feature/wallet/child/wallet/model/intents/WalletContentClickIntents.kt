@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
@@ -24,6 +25,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -61,6 +63,10 @@ internal interface WalletContentClickIntents {
 
     fun onYieldPromoCloseClick()
 
+    fun onYieldPromoShown(cryptoCurrency: CryptoCurrency)
+
+    fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency)
+
     fun onAccountExpandClick(account: Account)
 
     fun onAccountCollapseClick(account: Account)
@@ -80,7 +86,7 @@ internal interface WalletContentClickIntents {
     fun onNFTClick(userWallet: UserWallet)
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -99,6 +105,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val accountDependencies: AccountDependencies,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
+    private val tokenListAnalyticsSender: TokenListAnalyticsSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -201,6 +208,27 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onYieldPromoCloseClick() {
         modelScope.launch {
             yieldSupplySetShouldShowMainPromoUseCase(false)
+        }
+    }
+
+    override fun onYieldPromoShown(cryptoCurrency: CryptoCurrency) {
+        modelScope.launch(dispatchers.io) {
+            tokenListAnalyticsSender.sendYieldPromoShown(
+                userWalletId = stateHolder.getSelectedWalletId(),
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            )
+        }
+    }
+
+    override fun onYieldPromoClicked(cryptoCurrency: CryptoCurrency) {
+        modelScope.launch(dispatchers.io) {
+            analyticsEventHandler.send(
+                MainScreenAnalyticsEvent.YieldPromoClicked(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
         }
     }
 
