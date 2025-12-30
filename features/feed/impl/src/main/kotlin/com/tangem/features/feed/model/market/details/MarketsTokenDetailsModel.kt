@@ -309,20 +309,22 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     snapshot = null,
                     tokenIds = listOf(params.token.id.value),
                 ),
-            ).onRight { articles ->
-                state.update { marketsTokenDetailsUM ->
-                    val relatedNews = shortArticleToArticleConfigUMConverter.convert(articles)
-                    marketsTokenDetailsUM.copy(
-                        relatedNews = marketsTokenDetailsUM.relatedNews.copy(
-                            articles = relatedNews,
-                            onArticledClicked = { articledId ->
-                                params.onArticleClick(
-                                    /* articledId */ articledId,
-                                    /* preselectedIds */ relatedNews.map { it.id },
-                                )
-                            },
-                        ),
-                    )
+            ).onRight { listOfArticles ->
+                listOfArticles.collect { articles ->
+                    state.update { marketsTokenDetailsUM ->
+                        val relatedNews = shortArticleToArticleConfigUMConverter.convert(articles)
+                        marketsTokenDetailsUM.copy(
+                            relatedNews = marketsTokenDetailsUM.relatedNews.copy(
+                                articles = relatedNews,
+                                onArticledClicked = { articledId ->
+                                    params.onArticleClick(
+                                        /* articledId */ articledId,
+                                        /* preselectedIds */ relatedNews.map { it.id },
+                                    )
+                                },
+                            ),
+                        )
+                    }
                 }
             }
         }
