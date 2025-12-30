@@ -1532,6 +1532,7 @@
   <string name="tangempay_onboarding_title">Откройте виртуальную \nTangem Pay Card</string>
   <string name="tangempay_payment_account">Платежный аккаунт</string>
   <string name="tangempay_payment_account_sync_needed">Платежный аккаунт не синхронизирован</string>
+  <string name="tangempay_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
   <string name="tangempay_service_unavailable_description">Мы устраняем техническую проблему. Пожалуйста, попробуйте позже.</string>
   <string name="tangempay_service_unavailable_title">Сервис временно недоступен</string>
   <string name="tangempay_service_unreachable_try_later">Не можем показать данные карты, но оплаты продолжают работать.</string>
