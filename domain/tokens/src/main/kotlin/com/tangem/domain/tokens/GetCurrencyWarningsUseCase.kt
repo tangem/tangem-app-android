@@ -41,16 +41,16 @@ class GetCurrencyWarningsUseCase(
 
         // don't add here notifications that require async requests
         return combine(
-            getCoinRelatedWarnings(
+            flow = getCoinRelatedWarnings(
                 userWalletId = userWalletId,
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
-            flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
-            flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
-            flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
+            flow2 = flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
+            flow3 = flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
+            flow4 = flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
         ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource ->
             setOfNotNull(
                 maybeRentWarning,
@@ -62,6 +62,7 @@ class GetCurrencyWarningsUseCase(
                 getBeaconChainShutdownWarning(rawId = currency.network.id.rawId),
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
+                getCloreMigrationWarning(currency),
             )
         }.flowOn(dispatchers.io)
     }
@@ -261,11 +262,20 @@ class GetCurrencyWarningsUseCase(
         }
     }
 
+    private fun getCloreMigrationWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
+        return if (currency.symbol == CLORE_SYMBOL && BlockchainUtils.isClore(currency.network.rawId)) {
+            CryptoCurrencyWarning.MigrationClore
+        } else {
+            null
+        }
+    }
+
     private fun BigDecimal?.isZero(): Boolean {
         return this?.signum() == 0
     }
 
     companion object {
         private const val MATIC_SYMBOL = "MATIC"
+        private const val CLORE_SYMBOL = "CLORE"
     }
 }
