@@ -4,12 +4,13 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -233,11 +234,13 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onAccountExpandClick(account: Account) {
         val userWalletId = stateHolder.getSelectedWalletId()
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountShowTokens())
         accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
     }
 
     override fun onAccountCollapseClick(account: Account) {
         val userWalletId = stateHolder.getSelectedWalletId()
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountHideTokens())
         accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
@@ -288,7 +291,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     token = currencyStatus.currency.symbol,
                     blockchain = currencyStatus.currency.network.name,
                     action = "Staking",
-                    state = if (currencyStatus.value.yieldBalance is YieldBalance.Data) {
+                    state = if (currencyStatus.value.stakingBalance is StakingBalance.Data) {
                         "Enabled"
                     } else {
                         "Disabled"
@@ -392,7 +395,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Full,
+                        state = AnalyticsParam.EmptyFull.Full,
                         allAssetsCount = state.allAssetsCount,
                         collectionsCount = state.collectionsCount,
                         noCollectionAssetsCount = state.noCollectionAssetsCount,
@@ -402,7 +405,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Empty -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Empty,
+                        state = AnalyticsParam.EmptyFull.Empty,
                         allAssetsCount = 0,
                         collectionsCount = 0,
                         noCollectionAssetsCount = 0,
