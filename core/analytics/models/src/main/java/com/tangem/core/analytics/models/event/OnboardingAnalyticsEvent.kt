@@ -2,6 +2,8 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.AppsFlyerOnlyEvent
 
 sealed class OnboardingAnalyticsEvent(
     category: String,
@@ -13,6 +15,8 @@ sealed class OnboardingAnalyticsEvent(
         event: String,
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding", event = event, params = params) {
+
+        class AppsFlyerOnlyEntryScreenView : Onboarding(event = "wallet_entry_screen_view"), AppsFlyerOnlyEvent
 
         class Started(
             source: String,
@@ -64,7 +68,12 @@ sealed class OnboardingAnalyticsEvent(
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
             },
-        )
+        ), AppsFlyerIncludedEvent {
+            override val appsFlyerReplacedEvent = when (creationType) {
+                WalletCreationType.NewSeed -> "wallet_created_successfully"
+                WalletCreationType.SeedImport -> "wallet_imported"
+            }
+        }
 
         sealed class WalletCreationType(val value: String) {
             data object NewSeed : WalletCreationType(value = "New Seed")
@@ -85,6 +94,7 @@ sealed class OnboardingAnalyticsEvent(
                 AnalyticsParam.SOURCE to source,
             ),
         )
+
         class ButtonImportWallet : SeedPhrase("Button - Import Wallet")
         class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
         class ButtonImport : SeedPhrase("Button - Import")
