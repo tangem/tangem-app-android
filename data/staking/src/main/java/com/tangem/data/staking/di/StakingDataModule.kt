@@ -5,7 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.staking.*
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
-import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
@@ -55,7 +55,7 @@ internal object StakingDataModule {
     fun provideStakingRepository(
         stakeKitRepository: StakeKitRepository,
         p2pEthPoolRepository: P2PEthPoolRepository,
-        yieldsBalancesStore: YieldsBalancesStore,
+        stakingBalancesStore: StakingBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
@@ -64,7 +64,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
             p2pEthPoolRepository = p2pEthPoolRepository,
-            stakingBalanceStoreV2 = yieldsBalancesStore,
+            stakingBalanceStoreV2 = stakingBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
             walletManagersFacade = walletManagersFacade,
@@ -78,11 +78,13 @@ internal object StakingDataModule {
         p2pApi: P2PEthPoolApi,
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         dispatchers: CoroutineDispatcherProvider,
+        stakingFeatureToggles: StakingFeatureToggles,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pApi = p2pApi,
             p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             dispatchers = dispatchers,
+            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 
@@ -134,11 +136,11 @@ internal object StakingDataModule {
     @Provides
     @Singleton
     fun provideStakingCleaner(
-        yieldsBalancesStore: YieldsBalancesStore,
+        stakingBalancesStore: StakingBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): StakingCleaner {
         return DefaultStakingCleaner(
-            yieldsBalancesStore = yieldsBalancesStore,
+            stakingBalancesStore = stakingBalancesStore,
             dispatchers = dispatchers,
         )
     }

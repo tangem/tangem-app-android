@@ -20,7 +20,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -175,7 +175,7 @@ class TokenItemStateConverter(
             return totalAmount.format { crypto(currency) }
         }
 
-        private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
+        private fun CryptoCurrencyStatus.getStakedBalance() = (value.stakingBalance as? StakingBalance.Data)
             ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
 
         private fun createTitleState(
@@ -281,14 +281,18 @@ class TokenItemStateConverter(
             val stakingAvailability = stakingApyMap[currencyStatus.currency] as? StakingAvailability.Available
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
-            val yieldBalance = currencyStatus.value.yieldBalance
-            val hasStakedBalance = yieldBalance is YieldBalance.Data
+            val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
+            val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
 
             val rateInfo = when (val stakingOptions = stakingAvailability.option) {
-                is StakingOption.P2P -> null // todo p2p
-                is StakingOption.StakeKit -> if (hasStakedBalance) {
+                is StakingOption.P2P -> {
+                    // P2P or no balance: use preferred validators
+                    // TODO add p2p logic
+                    null
+                }
+                is StakingOption.StakeKit -> if (stakeKitBalance != null) {
                     val validatorsByAddress = stakingOptions.yield.validators.associateBy { it.address }
-                    yieldBalance.balance.items
+                    stakeKitBalance.balance.items
                         .mapNotNull { it.validatorAddress }
                         .firstNotNullOfOrNull { address ->
                             validatorsByAddress[address]?.rewardInfo
@@ -310,7 +314,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.rate,
-                isActive = hasStakedBalance,
+                isActive = stakeKitBalance != null, // todo add p2p check
                 rewardType = rateInfo?.type,
             )
         }

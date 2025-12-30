@@ -21,6 +21,7 @@ dependencies {
     api(projects.domain.networks)
     api(projects.domain.staking)
     api(projects.domain.quotes)
+    api(projects.domain.walletManager)
     api(projects.domain.wallets)
     api(projects.domain.wallets.models)
     api(projects.domain.promo)

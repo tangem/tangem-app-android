@@ -7,27 +7,27 @@ internal sealed class OnboardingVisaAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Onboarding / Visa", event, params) {
 
-    data object ActivationScreenOpened : OnboardingVisaAnalyticsEvent(
+    class ActivationScreenOpened : OnboardingVisaAnalyticsEvent(
         event = "Activation Screen Opened",
     )
 
-    data object ButtonActivate : OnboardingVisaAnalyticsEvent(
+    class ButtonActivate : OnboardingVisaAnalyticsEvent(
         event = "Button - Activate",
     )
 
-    data object SettingAccessCodeStarted : OnboardingVisaAnalyticsEvent(
+    class SettingAccessCodeStarted : OnboardingVisaAnalyticsEvent(
         event = "Setting Access Code Started",
     )
 
-    data object AccessCodeEntered : OnboardingVisaAnalyticsEvent(
+    class AccessCodeEntered : OnboardingVisaAnalyticsEvent(
         event = "Access Code Entered",
     )
 
-    data object AccessCodeReenterScreen : OnboardingVisaAnalyticsEvent(
+    class AccessCodeReenterScreen : OnboardingVisaAnalyticsEvent(
         event = "Access Code Re-enter Screen",
     )
 
-    data object OnboardingVisa : OnboardingVisaAnalyticsEvent(
+    class OnboardingVisa : OnboardingVisaAnalyticsEvent(
         event = "Onboarding / Visa",
     )
 
@@ -38,48 +38,48 @@ internal sealed class OnboardingVisaAnalyticsEvent(
         params = mapOf("Type" to type),
     )
 
-    data object WalletPrepare : OnboardingVisaAnalyticsEvent(
+    class WalletPrepare : OnboardingVisaAnalyticsEvent(
         event = "Wallet Prepare",
     )
 
-    data object ButtonApprove : OnboardingVisaAnalyticsEvent(
+    class ButtonApprove : OnboardingVisaAnalyticsEvent(
         event = "Button - Approve",
     )
 
-    data object GoToWebsiteOpened : OnboardingVisaAnalyticsEvent(
+    class GoToWebsiteOpened : OnboardingVisaAnalyticsEvent(
         event = "Go To Website Opened",
     )
 
-    data object ButtonBrowser : OnboardingVisaAnalyticsEvent(
+    class ButtonBrowser : OnboardingVisaAnalyticsEvent(
         event = "Button - Browser",
     )
 
-    data object ButtonShareLink : OnboardingVisaAnalyticsEvent(
+    class ButtonShareLink : OnboardingVisaAnalyticsEvent(
         event = "Button - Share Link",
     )
 
-    data object ActivationInProgressScreen : OnboardingVisaAnalyticsEvent(
+    class ActivationInProgressScreen : OnboardingVisaAnalyticsEvent(
         event = "Activation In Progress Screen",
     )
 
-    data object PinCodeScreenOpened : OnboardingVisaAnalyticsEvent(
+    class PinCodeScreenOpened : OnboardingVisaAnalyticsEvent(
         event = "PIN Code Screen Opened",
     )
 
-    data object PinEntered : OnboardingVisaAnalyticsEvent(
+    class PinEntered : OnboardingVisaAnalyticsEvent(
         event = "PIN Entered",
         params = mapOf("Type" to "Visa"),
     )
 
-    data object BiometricScreenOpened : OnboardingVisaAnalyticsEvent(
+    class BiometricScreenOpened : OnboardingVisaAnalyticsEvent(
         event = "Biometric Screen Opened",
     )
 
-    data object SuccessScreenOpened : OnboardingVisaAnalyticsEvent(
+    class SuccessScreenOpened : OnboardingVisaAnalyticsEvent(
         event = "Success Screen Opened",
     )
 
-    data object ErrorPinValidation : OnboardingVisaAnalyticsEvent(
+    class ErrorPinValidation : OnboardingVisaAnalyticsEvent(
         event = "Error - Pin Validation",
     )
 }

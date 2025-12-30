@@ -31,6 +31,19 @@ internal sealed class CustomTokenAnalyticsEvent(
         ),
     )
 
+    class AddTokenToAnotherAccount(
+        currencySymbol: String,
+        derivationPath: String,
+        source: ManageTokensSource,
+    ) : CustomTokenAnalyticsEvent(
+        event = "Button - Add Token To Another Account",
+        params = mapOf(
+            AnalyticsParam.Key.TOKEN_PARAM to currencySymbol,
+            AnalyticsParam.Key.DERIVATION to derivationPath,
+            AnalyticsParam.Key.SOURCE to source.analyticsName,
+        ),
+    )
+
     class NetworkSelected(networkName: String, source: ManageTokensSource) : CustomTokenAnalyticsEvent(
         event = "Custom Token Network Selected",
         params = mapOf(

@@ -155,9 +155,9 @@ internal class SendAmountModel @Inject constructor(
         minAmountBoundary = getMinimumTransactionAmountSyncUseCase(
             userWalletId = params.userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-        ).getOrNull()?.let {
+        ).getOrNull()?.let { amount ->
             EnterAmountBoundary(
-                amount = it,
+                amount = amount,
                 fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
             )
         }
@@ -183,6 +183,7 @@ internal class SendAmountModel @Inject constructor(
         account: Account.CryptoPortfolio?,
         isAccountsMode: Boolean,
     ) {
+        val userWallet = userWallet
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             val walletTitle = if (isOnlyOneWallet) {
@@ -190,7 +191,7 @@ internal class SendAmountModel @Inject constructor(
             } else {
                 resourceReference(
                     R.string.send_from_wallet_name,
-                    WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
+                    WrappedList(listOf(userWallet.name)), // TODO [REDACTED_TASK_KEY]
                 )
             }
             _uiState.update {
@@ -297,10 +298,10 @@ internal class SendAmountModel @Inject constructor(
     private fun confirmConvertToToken() {
         val amountParams = params as? SendAmountComponentParams.AmountParams ?: return
         val amountFieldData = uiState.value as? AmountState.Data
-        _uiState.update {
-            (it as? AmountState.Data)?.copy(
+        _uiState.update { state ->
+            (state as? AmountState.Data)?.copy(
                 isPrimaryButtonEnabled = false,
-            ) ?: it
+            ) ?: state
         }
 
         val isEnterInFiatSelected = amountFieldData?.amountTextField?.isFiatValue == true
@@ -352,7 +353,9 @@ internal class SendAmountModel @Inject constructor(
     private fun subscribeOnAmountUpdateTriggerUpdates() {
         sendAmountUpdateListener.updateAmountTriggerFlow
             .onEach { (amount, isEnterInFiat) ->
-                isEnterInFiat?.let { onCurrencyChangeClick(isEnterInFiat) }
+                if (isEnterInFiat != null) {
+                    onCurrencyChangeClick(isEnterInFiat)
+                }
                 onAmountValueChange(amount)
                 saveResult()
             }.launchIn(modelScope)

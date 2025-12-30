@@ -1,8 +1,8 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
-import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -25,8 +25,8 @@ class FirebaseAnalyticsHandler(
         client.clearUserId()
     }
 
-    override fun send(eventId: String, params: Map<String, String>) {
-        client.logEvent(eventId, params)
+    override fun send(event: AnalyticsEvent) {
+        client.logEvent(event.id, event.params)
     }
 
     override fun sendException(event: ExceptionAnalyticsEvent) {
@@ -49,7 +49,7 @@ class FirebaseAnalyticsHandler(
     class Builder : AnalyticsHandlerBuilder {
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
             !data.isDebug -> FirebaseClient()
-            data.isDebug && data.logConfig.firebase -> FirebaseLogClient(data.jsonConverter)
+            data.isDebug && data.logConfig.isFirebaseLogEnabled -> FirebaseLogClient(data.jsonConverter)
             else -> null
         }?.let { FirebaseAnalyticsHandler(it) }
     }

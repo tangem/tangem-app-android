@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
 
     /* Libs - SDK */

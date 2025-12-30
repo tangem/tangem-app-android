@@ -83,9 +83,9 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
                 iconState = getIconState(value.status),
-                onGoToProviderClick = {
-                    analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
-                    clickIntents.onGoToProviderClick(it)
+                onGoToProviderClick = { url ->
+                    analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
+                    clickIntents.onGoToProviderClick(url)
                 },
                 onClick = { clickIntents.onExpressTransactionClick(value.txId) },
                 onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
@@ -117,7 +117,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
 
     private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
         {
-            analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+            analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
             clickIntents.onGoToProviderClick(externalTxUrl)
         }
     } else {
@@ -269,7 +269,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
             icon = R.drawable.ic_arrow_top_right_24,
             text = resourceReference(R.string.common_go_to_provider),
             onClick = {
-                analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+                analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
                 clickIntents.onGoToProviderClick(externalTxUrl)
             },
         )

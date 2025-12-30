@@ -13,6 +13,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.wallets.models)
+    api(projects.domain.yieldSupply.models)
 
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)

@@ -100,8 +100,8 @@ internal class SwapTransactionSender @AssistedInject constructor(
             toAddress = destination,
             expressProvider = provider,
             rateType = rateType,
-            expressOperationType,
-        ).getOrElse { onExpressError(it); return }
+            expressOperationType = expressOperationType,
+        ).getOrElse { error -> onExpressError(error); return }
 
         createAndSendCexTransaction(
             fromAmount = fromAmount,
@@ -143,9 +143,9 @@ internal class SwapTransactionSender @AssistedInject constructor(
             destination = swapTransaction.txTo,
             userWalletId = userWallet.walletId,
             network = fromStatus.currency.network,
-        ).getOrElse {
-            Timber.e(it, "Failed to create swap CEX tx data")
-            onSendError(SendTransactionError.UnknownError(Exception(it)))
+        ).getOrElse { error ->
+            Timber.e(error, "Failed to create swap CEX tx data")
+            onSendError(SendTransactionError.UnknownError(Exception(error)))
             return
         }
 

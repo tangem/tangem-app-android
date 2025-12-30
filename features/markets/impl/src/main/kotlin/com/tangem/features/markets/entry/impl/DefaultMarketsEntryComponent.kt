@@ -15,10 +15,10 @@ import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory.Child
 import com.tangem.features.markets.entry.impl.ui.EntryBottomSheetContent

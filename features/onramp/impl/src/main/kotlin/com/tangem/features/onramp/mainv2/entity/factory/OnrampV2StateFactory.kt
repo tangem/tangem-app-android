@@ -86,6 +86,7 @@ internal class OnrampV2StateFactory(
             is OnrampError.AmountError.TooSmallError,
             OnrampError.RedirectError.VerificationFailed,
             OnrampError.RedirectError.WrongRequestId,
+            OnrampError.AlreadyHandledTransaction,
             -> currentStateProvider() // ignore error state
         }
     }

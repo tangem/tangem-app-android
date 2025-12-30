@@ -296,6 +296,7 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     } else {
         PrimaryButton(
@@ -304,6 +305,7 @@ private fun SinglePrimaryButton(config: NotificationButtonsState.PrimaryButtonCo
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     }
 }

@@ -60,7 +60,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
     val state: StateFlow<CountryListUM> get() = controller.state
 
     init {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectResidenceOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectResidenceOpened())
         updateCountriesList()
         modelScope.launch { subscribeOnUpdateState() }
     }
