@@ -78,7 +78,12 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultNewsListComponent(
                     appComponentContext = appComponentContext,
                     params = DefaultNewsListComponent.Params(
-                        onArticleClicked = { feedEntryClickIntents.onArticleClick(articleId = it) },
+                        onArticleClicked = { currentArticle, prefetchedArticles ->
+                            feedEntryClickIntents.onArticleClick(
+                                articleId = currentArticle,
+                                preselectedArticlesId = prefetchedArticles,
+                            )
+                        },
                         onBackClick = onBackClicked,
                     ),
                 )
