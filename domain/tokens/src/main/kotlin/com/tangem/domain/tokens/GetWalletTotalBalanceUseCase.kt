@@ -26,9 +26,9 @@ class GetWalletTotalBalanceUseCase(
     private val walletBalanceCache = ConcurrentHashMap<UserWalletId, TotalFiatBalance.Loaded>()
 
     operator fun invoke(
-        userTallestIds: Collection<UserWalletId>,
+        userWalletsIds: Collection<UserWalletId>,
     ): LceFlow<TokenListError, Map<UserWalletId, TotalFiatBalance>> {
-        val flows = userTallestIds.distinct()
+        val flows = userWalletsIds.distinct()
             .map { userWalletId ->
                 invoke(userWalletId).map { maybeBalance ->
                     userWalletId to maybeBalance
