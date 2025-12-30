@@ -58,14 +58,13 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
         }
         FooterBlock(
             readMore = content.readMore,
-            readMoreUrl = content.readMoreUrl,
-            onReadMoreClick = content.onReadMoreClick,
+            onReadMoreClick = { content.onReadMoreClick(content.readMoreUrl) },
         )
     }
 }
 
 @Composable
-private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMoreClick: (String) -> Unit) {
+private fun FooterBlock(readMore: TextReference, onReadMoreClick: () -> Unit) {
     val linkText = readMore.resolveReference()
     val fullString = stringResourceSafe(R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.length - linkText.length
@@ -81,7 +80,7 @@ private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMore
     val click = { i: Int ->
         val readMoreStyle = requireNotNull(annotatedString.spanStyles.getOrNull(1))
         if (i in readMoreStyle.start..readMoreStyle.end) {
-            onReadMoreClick(readMoreUrl)
+            onReadMoreClick()
         }
     }
 
@@ -102,7 +101,7 @@ private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMore
 private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
     content.feeItems.forEachIndexed { index, feeItem ->
         val isSelected = feeItem.feeType == content.selectedFee
-        val showDivider = content.feeItems.lastIndex != index
+        val shouldShowDivider = content.feeItems.lastIndex != index
         val symbol = " ${feeItem.symbolCrypto}"
         val preDotText = "${feeItem.amountCrypto}$symbol"
         val postDot = feeItem.amountFiatFormatted
@@ -117,7 +116,7 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
                     ellipsizeOffset = ellipsizeOffset,
                     isSelected = isSelected,
                     onSelect = { content.onSelectFeeType(feeItem.feeType) },
-                    showDivider = showDivider,
+                    showDivider = shouldShowDivider,
                 )
             }
             FeeType.PRIORITY -> {
@@ -129,7 +128,7 @@ private fun FeeItemsBlock(content: ChooseFeeBottomSheetConfig) {
                     ellipsizeOffset = ellipsizeOffset,
                     isSelected = isSelected,
                     onSelect = { content.onSelectFeeType(feeItem.feeType) },
-                    showDivider = showDivider,
+                    showDivider = shouldShowDivider,
                 )
             }
         }
