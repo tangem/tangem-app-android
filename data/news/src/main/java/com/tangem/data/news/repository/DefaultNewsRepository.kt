@@ -128,32 +128,11 @@ internal class DefaultNewsRepository(
         newsBatchFlow: NewsListBatchFlow,
         scope: CoroutineScope,
     ): NewsListBatchFlow {
-        return object : NewsListBatchFlow {
-            override val state: StateFlow<BatchListState<Int, List<ShortArticle>>> =
-                combine(
-                    newsBatchFlow.state,
-                    newsViewedStore.getAll(),
-                ) { batchListState, viewedFlags ->
-                    val updatedBatches = batchListState.data.map { batch ->
-                        val updatedArticles = batch.data.map { article ->
-                            val isViewed = viewedFlags[article.id] == true
-                            article.copy(viewed = isViewed)
-                        }
-                        Batch(key = batch.key, data = updatedArticles)
-                    }
-                    BatchListState(
-                        data = updatedBatches,
-                        status = batchListState.status,
-                    )
-                }.stateIn(
-                    scope = scope,
-                    started = SharingStarted.Eagerly,
-                    initialValue = BatchListState(emptyList(), newsBatchFlow.state.value.status),
-                )
-
-            override val updateResults: SharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<ShortArticle>>>> =
-                newsBatchFlow.updateResults
-        }
+        return NewsBatchFlowWithViewedStatus(
+            upstream = newsBatchFlow,
+            newsViewedStore = newsViewedStore,
+            scope = scope,
+        )
     }
 
     private suspend fun fetchDetailedArticlesInternal(newsIds: Collection<Int>, language: String?) =
@@ -339,6 +318,37 @@ internal class DefaultNewsRepository(
         val snapshot: String?,
         val params: NewsListConfig,
     )
+
+    private class NewsBatchFlowWithViewedStatus(
+        private val upstream: NewsListBatchFlow,
+        newsViewedStore: NewsViewedStore,
+        scope: CoroutineScope,
+    ) : NewsListBatchFlow {
+
+        override val state: StateFlow<BatchListState<Int, List<ShortArticle>>> = combine(
+            upstream.state,
+            newsViewedStore.getAll(),
+        ) { batchListState, viewedFlags ->
+            val updatedBatches = batchListState.data.map { batch ->
+                val updatedArticles = batch.data.map { article ->
+                    val isViewed = viewedFlags[article.id] == true
+                    article.copy(viewed = isViewed)
+                }
+                Batch(key = batch.key, data = updatedArticles)
+            }
+            BatchListState(
+                data = updatedBatches,
+                status = batchListState.status,
+            )
+        }.stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = BatchListState(emptyList(), upstream.state.value.status),
+        )
+
+        override val updateResults: SharedFlow<Pair<Nothing, BatchUpdateResult<Int, List<ShortArticle>>>>
+            get() = upstream.updateResults
+    }
 
     private companion object {
         private const val INITIAL_BATCH_KEY = 0
