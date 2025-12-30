@@ -33,11 +33,15 @@
     },
     {
         "name": "HOT_WALLET_ENABLED",
-        "version": "undefined"
+        "version": "5.32.0"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
         "version": "5.31.0"
+    },
+    {
+        "name": "TANGEM_PAY_ENTRYPOINT_ENABLED",
+        "version": "undefined"
     },
     {
         "name": "NEW_TOKEN_RECEIVE_ENABLED",
