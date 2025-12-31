@@ -10,6 +10,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
@@ -87,7 +88,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     private fun UserWallet.isCompatible(): Boolean = when (this) {
         is UserWallet.Cold ->
             scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
-        is UserWallet.Hot -> true
+        is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
     private suspend fun List<UserWallet>.addPaeraCustomersData(): List<UserWalletData> {
