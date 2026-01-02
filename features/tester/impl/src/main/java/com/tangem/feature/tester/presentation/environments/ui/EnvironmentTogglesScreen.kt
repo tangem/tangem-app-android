@@ -140,7 +140,7 @@ private fun EnvironmentButtons(uiModel: EnvironmentTogglesScreenUM.ApiInfoUM, on
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = TangemTheme.colors.control.checked,
                         activeContentColor = TangemTheme.colors.text.primary2,
-                        inactiveContainerColor = TangemTheme.colors.control.unchecked,
+                        inactiveContainerColor = TangemTheme.colors.control.default,
                         inactiveContentColor = TangemTheme.colors.text.primary1,
                     ),
                     border = BorderStroke(0.dp, TangemTheme.colors.background.tertiary),
