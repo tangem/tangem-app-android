@@ -260,7 +260,7 @@ internal fun lightThemeColors(redesign: Boolean = false): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Dark6,
-            unchecked = TangemColorPalette.Light2,
+            default = TangemColorPalette.Light2,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
@@ -314,7 +314,7 @@ internal fun darkThemeColors(): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Azure,
-            unchecked = TangemColorPalette.Dark4,
+            default = TangemColorPalette.Dark4,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
