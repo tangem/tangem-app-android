@@ -50,7 +50,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
         targetValue = when (state.style) {
             LabelStyle.ACCENT -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
-            LabelStyle.REGULAR -> TangemTheme.colors.control.unchecked
+            LabelStyle.REGULAR -> TangemTheme.colors.control.default
             LabelStyle.WARNING -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
         },
     )
