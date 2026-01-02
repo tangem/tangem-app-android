@@ -14,6 +14,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
@@ -31,6 +32,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
     @Assisted private val params: FeeSelectorParams.FeeSelectorBlockParams,
     @Assisted onResult: (feeSelectorUM: FeeSelectorUM) -> Unit,
     private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorBlockComponent, AppComponentContext by appComponentContext {
 
     private val model: FeeSelectorModel = getOrCreateModel(params = params)
@@ -80,6 +82,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
+            isGaslessFeatureEnabled = sendFeatureToggles.isGaslessTransactionsEnabled,
             modifier = modifier
                 .conditional(isScreenSource && isNotSingleFee) {
                     Modifier.clickable {
