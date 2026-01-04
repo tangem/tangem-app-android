@@ -71,10 +71,12 @@ internal class SdkTransactionTypeConverter(
             "buyVoucher",
             "buyVoucherPOL",
             "delegate",
+            "pooledStake",
             -> TxInfo.TransactionType.Staking.Stake
             "sellVoucher_new",
             "sellVoucher_newPOL",
             "undelegate",
+            "pooledUnstake",
             -> TxInfo.TransactionType.Staking.Unstake
             "unstakeClaimTokens_new",
             "unstakeClaimTokens_newPOL",
