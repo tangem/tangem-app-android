@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -17,8 +16,10 @@ import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.feed.state.FeedMarketsBatchFlowManager
+import com.tangem.features.feed.model.feed.state.TrendingNewsStateFactory
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -31,6 +32,8 @@ import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import javax.inject.Inject
+import kotlin.collections.all
+import kotlin.collections.map
 
 @Stable
 @ModelScoped
@@ -65,17 +68,15 @@ internal class FeedComponentModel @Inject constructor(
     internal val state: StateFlow<FeedListUM>
         field = MutableStateFlow<FeedListUM>(initialState())
 
-    private val searchBarStateFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SearchBarStateFactory(
-            currentStateProvider = Provider { state.value },
-            onStateUpdate = { newState -> state.update { newState } },
-        )
-    }
-
     private val trendingNewsStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         TrendingNewsStateFactory(
             currentStateProvider = Provider { state.value },
             onStateUpdate = { newState -> state.update { newState } },
+            onRetryClicked = {
+                modelScope.launch(dispatchers.default) {
+                    fetchTrendingNewsUseCase.invoke()
+                }
+            },
         )
     }
 
@@ -96,14 +97,7 @@ internal class FeedComponentModel @Inject constructor(
                 flow4 = manageTrendingNewsUseCase.observeTrendingNews(),
             ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult ->
                 updateMarketCharts(itemsByOrder, loadingStatesByOrder, errorStatesByOrder)
-                trendingNewsStateFactory.updateTrendingNewsState(
-                    result = trendingNewsResult,
-                    onRetryClicked = {
-                        modelScope.launch(dispatchers.default) {
-                            fetchTrendingNewsUseCase.invoke()
-                        }
-                    },
-                )
+                trendingNewsStateFactory.updateTrendingNewsState(result = trendingNewsResult)
                 updateGlobalState()
                 val currentSortType = state.value.marketChartConfig.currentSortByType
                 val items = itemsByOrder[currentSortType]
@@ -136,12 +130,9 @@ internal class FeedComponentModel @Inject constructor(
     private fun initialState(): FeedListUM {
         return FeedListUM(
             currentDate = getCurrentDate(),
-            searchBar = SearchBarUM(
+            feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(R.string.markets_search_header_title),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = { },
+                onBarClick = { params.feedClickIntents.onMarketOpenClick(null) },
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
@@ -151,7 +142,11 @@ internal class FeedComponentModel @Inject constructor(
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = NewsUM.Loading,
+            news = NewsUM(
+                content = persistentListOf(),
+                onRetryClicked = {},
+                newsUMState = NewsUMState.LOADING,
+            ),
             trendingArticle = null,
             marketChartConfig = MarketChartConfig(
                 marketCharts = buildMap {
@@ -235,10 +230,10 @@ internal class FeedComponentModel @Inject constructor(
             val newsState = currentState.news
             val marketCharts = currentState.marketChartConfig.marketCharts
 
-            val isNewsLoading = newsState is NewsUM.Loading
+            val isNewsLoading = newsState.newsUMState == NewsUMState.LOADING
             val areAllChartsLoading = marketCharts.values.all { it is MarketChartUM.Loading }
 
-            val isNewsError = newsState is NewsUM.Error
+            val isNewsError = newsState.newsUMState == NewsUMState.ERROR
             val areAllChartsError = marketCharts.values.all { it is MarketChartUM.LoadingError }
 
             val newGlobalState = when {
@@ -304,7 +299,6 @@ internal class FeedComponentModel @Inject constructor(
     private fun updateCallbacks() {
         state.update { feedListUM ->
             feedListUM.copy(
-                searchBar = state.value.searchBar.copy(onQueryChange = searchBarStateFactory::onSearchQueryChange),
                 feedListCallbacks = feedListUM.feedListCallbacks.copy(
                     onSortTypeClick = ::onSortTypeClick,
                     onMarketItemClick = { item ->
@@ -320,7 +314,18 @@ internal class FeedComponentModel @Inject constructor(
                         params.feedClickIntents.onMarketOpenClick(sortBy)
                     },
                     onArticleClick = { articleId ->
-                        params.feedClickIntents.onArticleClick(articleId)
+                        val trendingArticleId = state.value.trendingArticle?.id
+                        params.feedClickIntents.onArticleClick(
+                            articleId = articleId,
+                            preselectedArticlesId = listOfNotNull(trendingArticleId) +
+                                when (state.value.news.newsUMState) {
+                                    NewsUMState.CONTENT -> state.value.news.content.map { it.id }
+                                    NewsUMState.LOADING,
+                                    NewsUMState.ERROR,
+                                    -> emptyList()
+                                },
+                            paginationConfig = null,
+                        )
                     },
                     onOpenAllNews = {
                         params.feedClickIntents.onOpenAllNews()
