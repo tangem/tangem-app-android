@@ -94,12 +94,12 @@ internal object StakingDomainModule {
     @Singleton
     fun provideFetchStakingOptionsUseCase(
         stakeKitRepository: StakeKitRepository,
-        p2pRepository: P2PEthPoolRepository,
+        p2pEthPoolRepository: P2PEthPoolRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): FetchStakingOptionsUseCase {
         return FetchStakingOptionsUseCase(
             stakeKitRepository = stakeKitRepository,
-            p2pRepository = p2pRepository,
+            p2pEthPoolRepository = p2pEthPoolRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
