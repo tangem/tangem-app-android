@@ -28,7 +28,11 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.audits.AuditLabel
+import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.extensions.annotatedReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -50,6 +54,7 @@ private const val READ_MORE_TAG = "READ_MORE"
 @Composable
 internal fun FeeSelectorBlockContent(
     state: FeeSelectorUM,
+    isGaslessFeatureEnabled: Boolean,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -68,16 +73,25 @@ internal fun FeeSelectorBlockContent(
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick)
+        FeeSelectorDescription(
+            state = state,
+            isGaslessFeatureEnabled = isGaslessFeatureEnabled,
+            onReadMoreClick = onReadMoreClick,
+        )
     }
 }
 
 @Composable
-private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun FeeSelectorDescription(
+    state: FeeSelectorUM,
+    isGaslessFeatureEnabled: Boolean,
+    onReadMoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         FeeSelectorStaticPart(modifier = Modifier.weight(1f), onReadMoreClick = onReadMoreClick)
         when (state) {
-            is FeeSelectorUM.Content -> FeeContent(state)
+            is FeeSelectorUM.Content -> FeeContent(state, isGaslessFeatureEnabled)
             is FeeSelectorUM.Loading -> FeeLoading()
             is FeeSelectorUM.Error -> FeeError()
         }
@@ -122,7 +136,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
             }
         }
         TangemTooltip(
-            text = annotatedString,
+            text = annotatedReference(annotatedString),
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing6)
                 .size(TangemTheme.dimens.size16)
@@ -160,9 +174,18 @@ private fun FeeLoading() {
 }
 
 @Composable
-private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
+private fun FeeContent(state: FeeSelectorUM.Content, isGaslessFeatureEnabled: Boolean, modifier: Modifier = Modifier) {
     val fiatRate = state.feeFiatRateUM
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (isGaslessFeatureEnabled) {
+            AuditLabel(
+                state = AuditLabelUM(
+                    text = stringReference(state.selectedFeeItem.fee.amount.currencySymbol),
+                    type = AuditLabelUM.Type.General,
+                ),
+            )
+        }
+
         EllipsisText(
             text = if (state.feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
                 getFiatString(
@@ -205,13 +228,18 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
 @Composable
 private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM) {
     TangemThemePreview {
-        FeeSelectorBlockContent(modifier = Modifier.fillMaxWidth(), state = state, onReadMoreClick = {})
+        FeeSelectorBlockContent(
+            modifier = Modifier.fillMaxWidth(),
+            isGaslessFeatureEnabled = true,
+            state = state,
+            onReadMoreClick = {},
+        )
     }
 }
 
 private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
     private val maxFeeItem = FeeItem.Market(
-        fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Ethereum)),
+        fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Hedera)),
     )
     private val lowFeeItem =
         FeeItem.Market(Fee.Common(amount = Amount(value = BigDecimal("0.0002876"), blockchain = Blockchain.Ethereum)))
