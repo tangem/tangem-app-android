@@ -14,8 +14,8 @@ internal fun YieldBalanceWrapperDTO.toDomain(source: StatusSource = StatusSource
 internal fun P2PEthPoolAccountResponse.toDomain(
     source: StatusSource = StatusSource.CACHE,
 ): StakingBalance {
-    return P2PEthPoolStakingBalanceConverter.convert(
-        response = this,
+    return P2PEthPoolStakingBalanceConverter.convertAll(
+        responses = setOf(this),
         source = source,
-    )
+    ).first()
 }
