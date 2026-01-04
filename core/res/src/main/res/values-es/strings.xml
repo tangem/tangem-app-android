@@ -20,6 +20,8 @@
   <string name="account_details_archive_action">Archivar</string>
   <string name="account_details_archive_description">Estás archivando esta cuenta, pero siempre puede recuperarla.</string>
   <string name="account_details_title">Cuenta</string>
+  <string name="account_edit_failure_dialog_title">No se puede editar la cuenta</string>
+  <string name="accounts_migration_alert_message">Algunos tokens personalizados se moverán automáticamente de \"%1$s\" a \"%2$s\" ya que su derivación pertenece a esa cuenta.</string>
   <string name="action_buttons_buy_empty_search_message">¿No encuentra el token en su billetera? Consulte la sección de Mercados para encontrarlo y añadirlo a la compra</string>
   <string name="action_buttons_sell_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la venta</string>
   <string name="action_buttons_sell_navigation_bar_title">Vender</string>
