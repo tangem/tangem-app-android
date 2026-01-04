@@ -7,10 +7,11 @@ import androidx.compose.ui.graphics.Color
 /**
  * Utility class for keeping themed color reference from app theme.
  *
- * It necessary to use [Immutable] annotation for runtime stability.
+ * It is necessary to use [Immutable] annotation for runtime stability.
  *
  * @property value color provider from theme
  */
+@Deprecated("Use TextReference with applied SpanStyleReference for colored text.")
 @Immutable
 data class ColorReference(val value: @Composable () -> Color)
 

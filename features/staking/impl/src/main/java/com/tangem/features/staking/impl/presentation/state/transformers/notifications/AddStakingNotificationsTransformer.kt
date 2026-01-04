@@ -15,9 +15,9 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.StakingErrors
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -33,6 +33,7 @@ import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
@@ -47,38 +48,53 @@ internal class AddStakingNotificationsTransformer(
     private val stakingError: StakingError?,
     private val currencyCheck: CryptoCurrencyCheck,
     private val isSubtractAvailable: Boolean,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
 ) : Transformer<StakingUiState> {
 
     private val stakingInfoNotificationsFactory = StakingInfoNotificationsFactory(
         cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-        yield = yield,
+        integration = integration,
         isSubtractAvailable = isSubtractAvailable,
     )
 
-    @Suppress("LongMethod")
     override fun transform(prevState: StakingUiState): StakingUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val balance = cryptoCurrencyStatus.value.amount.orZero()
-
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
         val amountState = prevState.amountState as? AmountState.Data ?: return prevState
-        val feeState = confirmationState.feeState as? FeeState.Content
 
-        val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
-        val feeValue = feeState?.fee?.amount?.value.orZero()
-        val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
-
-        val isEnterAction = prevState.actionType is StakingActionCommonType.Enter
-        val isFeeCoverage = checkFeeCoverage(
-            amountValue = amountValue,
-            feeValue = feeValue,
-            balance = balance,
-            isSubtractAvailable = isSubtractAvailable,
-            reduceAmountBy = reduceAmountBy,
+        val sendingAmount = calculateSendingAmount(
+            prevState = prevState,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amountState = amountState,
+            confirmationState = confirmationState,
         )
-        val minimumRequirement = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum.orZero()
-        val sendingAmount = if (isEnterAction) {
+        val notifications = buildNotifications(
+            prevState = prevState,
+            amountState = amountState,
+            confirmationState = confirmationState,
+            sendingAmount = sendingAmount,
+        )
+        val isActualSources = areSourcesActual(cryptoCurrencyStatus)
+
+        return prevState.copy(
+            confirmationState = confirmationState.copy(
+                notifications = notifications,
+                isPrimaryButtonEnabled = isPrimaryButtonEnabled(notifications, isActualSources),
+            ),
+        )
+    }
+
+    private fun calculateSendingAmount(
+        prevState: StakingUiState,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        amountState: AmountState.Data,
+        confirmationState: StakingStates.ConfirmationState.Data,
+    ): BigDecimal {
+        val isEnterAction = prevState.actionType is StakingActionCommonType.Enter
+        return if (isEnterAction) {
+            val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
+            val feeValue = (confirmationState.feeState as? FeeState.Content)?.fee?.amount?.value.orZero()
+            val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
             checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isSubtractAvailable,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -87,62 +103,88 @@ internal class AddStakingNotificationsTransformer(
                 reduceAmountBy = reduceAmountBy,
             )
         } else {
-            // No amount is taken from account balance on exit or pending actions
             BigDecimal.ZERO
         }
-
-        val notifications = if (isAccountInitializedProvider.invoke()) {
-            buildList {
-                // errors
-                addErrorNotifications(
-                    prevState = prevState,
-                    feeError = feeError,
-                    sendingAmount = sendingAmount,
-                    onReload = prevState.clickIntents::getFee,
-                    feeValue = feeValue,
-                )
-                addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
-                // warnings
-                addWarningNotifications(
-                    prevState = prevState,
-                    amountState = amountState,
-                    feeState = feeState,
-                    sendingAmount = sendingAmount,
-                    isFeeCoverage = isFeeCoverage && isEnterAction && !sendingAmount.equals(minimumRequirement),
-                )
-
-                stakingInfoNotificationsFactory.addInfoNotifications(
-                    notifications = this,
-                    prevState = prevState,
-                    sendingAmount = sendingAmount,
-                    actionAmount = amountValue,
-                    feeValue = feeValue,
-                    tonBalanceExtraFeeThreshold = TON_BALANCE_EXTRA_FEE_THRESHOLD,
-                )
-            }.toImmutableList()
-        } else {
-            buildList {
-                addTonInitializeAccountNotification(prevState)
-            }.toImmutableList()
-        }
-
-        val isActualSources = with(cryptoCurrencyStatus.value) {
-            sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
-        }
-
-        return prevState.copy(
-            confirmationState = confirmationState.copy(
-                notifications = notifications.toImmutableList(),
-                isPrimaryButtonEnabled = notifications.none {
-                    it is StakingNotification.Error ||
-                        it is NotificationUM.Error ||
-                        it is NotificationUM.Warning.NetworkFeeUnreachable ||
-                        it is StakingNotification.Warning.TransactionInProgress ||
-                        it is StakingNotification.Warning.InitializeTonAccount
-                } && isActualSources,
-            ),
-        )
     }
+
+    private fun buildNotifications(
+        prevState: StakingUiState,
+        amountState: AmountState.Data,
+        confirmationState: StakingStates.ConfirmationState.Data,
+        sendingAmount: BigDecimal,
+    ) = if (isAccountInitializedProvider.invoke()) {
+        buildInitializedAccountNotifications(
+            prevState = prevState,
+            amountState = amountState,
+            confirmationState = confirmationState,
+            sendingAmount = sendingAmount,
+        )
+    } else {
+        buildList { addTonInitializeAccountNotification(prevState) }.toImmutableList()
+    }
+
+    private fun buildInitializedAccountNotifications(
+        prevState: StakingUiState,
+        amountState: AmountState.Data,
+        confirmationState: StakingStates.ConfirmationState.Data,
+        sendingAmount: BigDecimal,
+    ) = buildList {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val balance = cryptoCurrencyStatus.value.amount.orZero()
+        val feeState = confirmationState.feeState as? FeeState.Content
+        val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
+        val feeValue = feeState?.fee?.amount?.value.orZero()
+        val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
+        val isEnterAction = prevState.actionType is StakingActionCommonType.Enter
+        val minimumRequirement = integration.enterMinimumAmount.orZero()
+
+        val isFeeCoverage = checkFeeCoverage(
+            amountValue = amountValue,
+            feeValue = feeValue,
+            balance = balance,
+            isSubtractAvailable = isSubtractAvailable,
+            reduceAmountBy = reduceAmountBy,
+        )
+
+        addErrorNotifications(
+            prevState = prevState,
+            feeError = feeError,
+            sendingAmount = sendingAmount,
+            onReload = prevState.clickIntents::getFee,
+            feeValue = feeValue,
+        )
+        addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
+        addWarningNotifications(
+            prevState = prevState,
+            amountState = amountState,
+            feeState = feeState,
+            sendingAmount = sendingAmount,
+            isFeeCoverage = isFeeCoverage && isEnterAction && !sendingAmount.equals(minimumRequirement),
+        )
+        stakingInfoNotificationsFactory.addInfoNotifications(
+            notifications = this,
+            prevState = prevState,
+            sendingAmount = sendingAmount,
+            actionAmount = amountValue,
+            feeAmount = feeState?.fee?.amount,
+            isFeeApproximate = feeState?.isFeeApproximate == true,
+            onAmountReduceByFeeClick = prevState.clickIntents::onAmountReduceByFeeClick,
+            tonBalanceExtraFeeThreshold = TON_BALANCE_EXTRA_FEE_THRESHOLD,
+        )
+    }.toImmutableList()
+
+    private fun areSourcesActual(cryptoCurrencyStatus: CryptoCurrencyStatus) = with(cryptoCurrencyStatus.value) {
+        sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
+    }
+
+    private fun isPrimaryButtonEnabled(notifications: ImmutableList<NotificationUM>, isActualSources: Boolean) =
+        notifications.none {
+            it is StakingNotification.Error ||
+                it is NotificationUM.Error ||
+                it is NotificationUM.Warning.NetworkFeeUnreachable ||
+                it is StakingNotification.Warning.TransactionInProgress ||
+                it is StakingNotification.Warning.InitializeTonAccount
+        } && isActualSources
 
     private fun MutableList<NotificationUM>.addStakingErrorNotifications(
         stakingError: StakingError?,

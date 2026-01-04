@@ -28,6 +28,7 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
             is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
             is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.BackupProblem -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CardAttestationFailed,
             -> addPhoneInfoBody()

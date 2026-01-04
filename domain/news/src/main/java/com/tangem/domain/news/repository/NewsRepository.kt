@@ -2,9 +2,11 @@ package com.tangem.domain.news.repository
 
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
+import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.models.news.TrendingNews
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
+import com.tangem.domain.news.model.NewsListConfig
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,11 +23,11 @@ interface NewsRepository {
     fun getNewsListBatchFlow(context: NewsListBatchingContext, batchSize: Int): NewsListBatchFlow
 
     /**
-     * Returns detailed article by id with locale configuration.
-     * @param newsId news identification
-     * @param language current locale
+     * Returns flow of list of short article by config.
+     *
+     * @param config config for getting news list
      */
-    suspend fun getDetailedArticle(newsId: Int, language: String?): DetailedArticle
+    fun getNews(config: NewsListConfig, limit: Int): Flow<List<ShortArticle>>
 
     /**
      * Observes cached detailed articles.
@@ -51,12 +53,12 @@ interface NewsRepository {
     fun observeTrendingNews(): Flow<TrendingNews>
 
     /**
-     * Updates viewed flag for provided trending articles.
-     */
-    suspend fun updateTrendingNewsViewed(articleIds: Collection<Int>, viewed: Boolean)
-
-    /**
      * Returns available categories.
      */
     suspend fun getCategories(): List<ArticleCategory>
+
+    /**
+     * Updates viewed flag for provided news articles (applies to both regular and trending news).
+     */
+    suspend fun updateNewsViewed(articleIds: Collection<Int>, viewed: Boolean)
 }

@@ -22,7 +22,7 @@ data class P2PEthPoolAction(
 )
 
 /**
- * Types of P2P staking actions
+ * Types of P2PEthPool staking actions
  */
 @Serializable
 enum class P2PEthPoolActionType {
@@ -33,7 +33,7 @@ enum class P2PEthPoolActionType {
 }
 
 /**
- * Status of P2P staking action
+ * Status of P2PEthPool staking action
  */
 @Serializable
 enum class P2PEthPoolActionStatus {
@@ -46,7 +46,7 @@ enum class P2PEthPoolActionStatus {
 }
 
 /**
- * Transaction details for P2P staking action
+ * Transaction details for P2PEthPool staking action
  */
 data class P2PEthPoolStakingTransaction(
     val id: String?,

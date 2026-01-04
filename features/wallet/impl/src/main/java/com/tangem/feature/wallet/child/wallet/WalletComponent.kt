@@ -54,7 +54,10 @@ internal class WalletComponent @AssistedInject constructor(
     private val model: WalletModel = getOrCreateModel()
 
     private val feedEntryComponent by lazy {
-        feedEntryComponentFactory.create(child("feedEntryComponent"))
+        feedEntryComponentFactory.create(
+            context = child("feedEntryComponent"),
+            entryRoute = null,
+        )
     }
     private val marketsEntryComponent by lazy {
         marketsEntryComponentFactory.create(child("marketsEntryComponent"))

@@ -364,6 +364,7 @@ internal class DefaultStakeKitRepository(
     }
 
     override fun getStakingAvailability(
+        integrationId: StakingIntegrationID.StakeKit,
         rawCurrencyId: CryptoCurrency.RawID,
         symbol: String,
     ): Flow<StakingAvailability> {
@@ -381,7 +382,7 @@ internal class DefaultStakeKitRepository(
                 )
 
                 if (prefetchedYield != null) {
-                    StakingAvailability.Available(StakingOption.StakeKit(prefetchedYield))
+                    StakingAvailability.Available(StakingOption.StakeKit(integrationId, prefetchedYield))
                 } else {
                     StakingAvailability.TemporaryUnavailable
                 }
@@ -389,6 +390,7 @@ internal class DefaultStakeKitRepository(
     }
 
     override suspend fun getStakingAvailabilitySync(
+        integrationId: StakingIntegrationID.StakeKit,
         rawCurrencyId: CryptoCurrency.RawID,
         symbol: String,
     ): StakingAvailability {
@@ -404,7 +406,7 @@ internal class DefaultStakeKitRepository(
         )
 
         return if (prefetchedYield != null) {
-            StakingAvailability.Available(StakingOption.StakeKit(prefetchedYield))
+            StakingAvailability.Available(StakingOption.StakeKit(integrationId, prefetchedYield))
         } else {
             StakingAvailability.TemporaryUnavailable
         }
