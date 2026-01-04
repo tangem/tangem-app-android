@@ -55,18 +55,18 @@ sealed interface StakingBalance {
         data class P2PEthPool(
             override val stakingId: StakingID,
             override val source: StatusSource,
-            val account: P2PEthPoolStakingAccount,
+            val accounts: List<P2PEthPoolStakingAccount>,
         ) : Data {
 
-            override val totalStaked: SerializedBigDecimal = account.stake.assets
+            override val totalStaked: SerializedBigDecimal = accounts.sumOf { it.stake.assets }
 
-            override val totalRewards: SerializedBigDecimal = account.stake.totalEarnedAssets
+            override val totalRewards: SerializedBigDecimal = accounts.sumOf { it.stake.totalEarnedAssets }
 
-            override val unstakingAmount: SerializedBigDecimal = account.exitQueue.total
+            override val unstakingAmount: SerializedBigDecimal = accounts.sumOf { it.exitQueue.total }
 
-            override val withdrawableAmount: SerializedBigDecimal = account.availableToWithdraw
+            override val withdrawableAmount: SerializedBigDecimal = accounts.sumOf { it.availableToWithdraw }
 
-            override val entries: List<StakingBalanceEntry> = account.toStakingBalanceEntries()
+            override val entries: List<StakingBalanceEntry> = accounts.flatMap { it.toStakingBalanceEntries() }
         }
     }
 
