@@ -5,14 +5,9 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
-import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -23,12 +18,11 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
-import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
+import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 class GetFeeForGaslessUseCase(
     private val walletManagersFacade: WalletManagersFacade,
@@ -38,6 +32,12 @@ class GetFeeForGaslessUseCase(
     private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val getFeeUseCase: GetFeeUseCase,
 ) {
+
+    private val tokenFeeCalculator = TokenFeeCalculator(
+        walletManagersFacade = walletManagersFacade,
+        gaslessTransactionRepository = gaslessTransactionRepository,
+        demoConfig = demoConfig,
+    )
 
     suspend operator fun invoke(
         userWallet: UserWallet,
@@ -67,12 +67,12 @@ class GetFeeForGaslessUseCase(
 
                     val walletManager = prepareWalletManager(userWallet, network)
 
-                    val initialFee = calculateInitialFee(
+                    val initialFee = tokenFeeCalculator.calculateInitialFee(
                         userWallet = userWallet,
                         network = network,
                         walletManager = walletManager,
                         transactionData = transactionData,
-                    )
+                    ).bind()
 
                     selectFeePaymentStrategy(
                         userWallet = userWallet,
@@ -101,27 +101,6 @@ class GetFeeForGaslessUseCase(
         val ethereumWalletManager = walletManager as? EthereumWalletManager
             ?: raiseIllegalStateError("WalletManager type ${walletManager?.javaClass?.name} not supported")
         return ethereumWalletManager
-    }
-
-    private suspend fun Raise<GetFeeError>.calculateInitialFee(
-        userWallet: UserWallet,
-        network: Network,
-        walletManager: EthereumWalletManager,
-        transactionData: TransactionData,
-    ): TransactionFee {
-        val transactionSender = if (userWallet is UserWallet.Cold &&
-            demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
-        ) {
-            demoTransactionSender(userWallet, network)
-        } else {
-            walletManager
-        }
-
-        val maybeFee = when (val result = transactionSender.getFee(transactionData = transactionData)) {
-            is Result.Success -> result.data
-            is Result.Failure -> raise(result.mapToFeeError())
-        }
-        return maybeFee
     }
 
     private suspend fun Raise<GetFeeError>.selectFeePaymentStrategy(
@@ -183,104 +162,12 @@ class GetFeeForGaslessUseCase(
         val tokenForPayFeeStatus = supportedGaslessTokensStatusesSortedByBalanceDesc.firstOrNull()
             ?: raise(GaslessError.NoSupportedTokensFound)
 
-        return calculateTokenFee(
+        return tokenFeeCalculator.calculateTokenFee(
             walletManager = walletManager,
             tokenForPayFeeStatus = tokenForPayFeeStatus,
             nativeCurrencyStatus = nativeCurrencyStatus,
             initialFee = initialFee,
-        )
-    }
-
-    private suspend fun Raise<GetFeeError>.calculateTokenFee(
-        walletManager: EthereumWalletManager,
-        tokenForPayFeeStatus: CryptoCurrencyStatus,
-        nativeCurrencyStatus: CryptoCurrencyStatus,
-        initialFee: Fee.Ethereum,
-    ): TransactionFeeExtended {
-        val tokenForPayFee = tokenForPayFeeStatus.currency as? CryptoCurrency.Token
-            ?: raiseIllegalStateError("only tokens are supported")
-
-        val transferFeeToContractAmount = createTokenAmount(tokenForPayFee, BigDecimal(FEE_TRANSFER_AMOUNT))
-        val feeDestination = gaslessTransactionRepository.getTokenFeeReceiverAddress()
-        val feeTransferGasLimitResult = walletManager.getGasLimit(
-            amount = transferFeeToContractAmount,
-            destination = feeDestination,
-            callData = TransferERC20TokenCallData(
-                destination = feeDestination,
-                amount = transferFeeToContractAmount,
-            ),
-        )
-
-        val feeTransferGasLimit = when (feeTransferGasLimitResult) {
-            is Result.Failure -> raise(GetFeeError.DataError(feeTransferGasLimitResult.error))
-            is Result.Success -> feeTransferGasLimitResult.data
-        }
-
-        val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
-
-        val maxTokenFeeGas = initialFee.gasLimit + feeTransferGasLimit + baseGas
-
-        val maxFeePerGas = when (initialFee) {
-            is Fee.Ethereum.EIP1559 -> initialFee.maxFeePerGas
-            is Fee.Ethereum.Legacy -> initialFee.gasPrice
-            is Fee.Ethereum.TokenCurrency -> raiseIllegalStateError("initialFee could only be native")
-        }
-
-        val feeInNativeCurrency = maxTokenFeeGas
-            .multiply(maxFeePerGas)
-            .multiply(GAS_PRICE_MULTIPLIER.toBigInteger())
-
-        val nativeFiatRate = nativeCurrencyStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
-        val tokenFiatRate = tokenForPayFeeStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
-        val coinPriceInToken = nativeFiatRate.divide(
-            tokenFiatRate,
-            maxOf(nativeCurrencyStatus.currency.decimals, tokenForPayFee.decimals),
-            RoundingMode.DOWN,
-        )
-
-        val feeInTokenCurrency = coinPriceInToken.multiply(feeInNativeCurrency.toBigDecimal())
-
-        val tokenBalance = tokenForPayFeeStatus.value.amount ?: BigDecimal.ZERO
-        if (tokenBalance < feeInTokenCurrency) {
-            raise(GaslessError.NotEnoughFunds)
-        }
-
-        val amount = createTokenAmount(tokenForPayFee, feeInTokenCurrency)
-
-        val fee = Fee.Ethereum.TokenCurrency(
-            amount = amount,
-            gasLimit = maxTokenFeeGas,
-            coinPriceInToken = coinPriceInToken,
-            feeTransferGasLimit = feeTransferGasLimit,
-            baseGas = baseGas,
-        )
-        return TransactionFeeExtended(
-            transactionFee = TransactionFee.Single(normal = fee),
-            feeTokenId = tokenForPayFee.id,
-        )
-    }
-
-    private fun createTokenAmount(token: CryptoCurrency.Token, value: BigDecimal): Amount = Amount(
-        token = Token(
-            symbol = token.symbol,
-            contractAddress = token.contractAddress,
-            decimals = token.decimals,
-        ),
-        value = value,
-    )
-
-    private suspend fun Raise<GetFeeError>.demoTransactionSender(
-        userWallet: UserWallet,
-        network: Network,
-    ): DemoTransactionSender {
-        return DemoTransactionSender(
-            walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
-                ?: raiseIllegalStateError("WalletManager is null"),
-        )
-    }
-
-    private fun Raise<GetFeeError>.raiseIllegalStateError(error: String): Nothing {
-        raise(GetFeeError.DataError(IllegalStateException(error)))
+        ).bind()
     }
 
     private companion object {
