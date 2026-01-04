@@ -239,19 +239,19 @@ private fun StandardBottomSheet(
                     }
                     val newTarget =
                         when (val oldTarget = state.anchoredDraggableState.targetValue) {
-                            Hidden -> if (newAnchors.hasAnchorFor(Hidden)) Hidden else oldTarget
+                            Hidden -> if (newAnchors.hasPositionFor(Hidden)) Hidden else oldTarget
                             PartiallyExpanded ->
                                 when {
-                                    newAnchors.hasAnchorFor(PartiallyExpanded) -> PartiallyExpanded
-                                    newAnchors.hasAnchorFor(Expanded) -> Expanded
-                                    newAnchors.hasAnchorFor(Hidden) -> Hidden
+                                    newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
+                                    newAnchors.hasPositionFor(Expanded) -> Expanded
+                                    newAnchors.hasPositionFor(Hidden) -> Hidden
                                     else -> oldTarget
                                 }
                             Expanded ->
                                 when {
-                                    newAnchors.hasAnchorFor(Expanded) -> Expanded
-                                    newAnchors.hasAnchorFor(PartiallyExpanded) -> PartiallyExpanded
-                                    newAnchors.hasAnchorFor(Hidden) -> Hidden
+                                    newAnchors.hasPositionFor(Expanded) -> Expanded
+                                    newAnchors.hasPositionFor(PartiallyExpanded) -> PartiallyExpanded
+                                    newAnchors.hasPositionFor(Hidden) -> Hidden
                                     else -> oldTarget
                                 }
                         }
