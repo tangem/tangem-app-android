@@ -1,6 +1,8 @@
 package com.tangem.core.ui.res
 
 import android.app.Activity
+import androidx.compose.foundation.ComposeFoundationFlags
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -27,6 +29,7 @@ import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.valentinilk.shimmer.Shimmer
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TangemTheme(
     activity: Activity,
@@ -36,6 +39,9 @@ fun TangemTheme(
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    // TODO Research and implement in redesign [REDACTED_TASK_KEY]
+    ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = false
+
     val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
     val windowSize = rememberWindowSize(activity = activity)
 
@@ -148,10 +154,20 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemTypography.current
 
+    val typography2: TangemTypography2
+        @Composable
+        @ReadOnlyComposable
+        get() = TangemTypography2(InterFamily)
+
     val dimens: TangemDimens
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens.current
+
+    val dimens2: TangemDimens2
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemDimens2.current
 
     val shapes: TangemShapes
         @Composable
@@ -244,7 +260,7 @@ internal fun lightThemeColors(redesign: Boolean = false): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Dark6,
-            unchecked = TangemColorPalette.Light2,
+            default = TangemColorPalette.Light2,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
@@ -298,7 +314,7 @@ internal fun darkThemeColors(): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Azure,
-            unchecked = TangemColorPalette.Dark4,
+            default = TangemColorPalette.Dark4,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
@@ -337,8 +353,16 @@ internal val LocalTangemTypography = staticCompositionLocalOf {
     TangemTypography(RobotoFamily)
 }
 
+internal val LocalTangemTypography2 = staticCompositionLocalOf {
+    TangemTypography2(InterFamily)
+}
+
 private val LocalTangemDimens = staticCompositionLocalOf {
     TangemDimens()
+}
+
+private val LocalTangemDimens2 = staticCompositionLocalOf {
+    TangemDimens2()
 }
 
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
