@@ -2088,6 +2088,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private fun Fee.increaseEthGasLimitInNeeded(increaseBy: Int): Fee {
         return when (this) {
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
             is Fee.Ethereum.EIP1559,
             is Fee.Ethereum.Legacy,
             -> this.increaseGasLimitBy(increaseBy)
@@ -2123,6 +2124,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return when (this) {
             is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
             is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
         }
     }
 
