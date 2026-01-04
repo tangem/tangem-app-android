@@ -9,6 +9,8 @@
   <string name="access_code_alert_validation_title">Код доступа может быть легко угадан</string>
   <string name="access_code_check_title">Введите код доступа</string>
   <string name="access_code_check_warining_delete">Неверный код доступа. Ваш мобильный кошелёк будет удалён после ещё %s неверных попыток.</string>
+  <string name="access_code_check_warining_lock">Неверный код доступа. Приложение будет заблокировано после ещё %s неудачных попыток.</string>
+  <string name="access_code_check_warining_wait">Неверный код доступа.\nПожалуйста, подождите %s секунд и попробуйте снова.</string>
   <string name="access_code_confirm_description">Подтвердите ваш код доступа, чтобы продолжить.</string>
   <string name="access_code_confirm_title">Повторите код доступа</string>
   <string name="access_code_create_description">Установите %s-значный код доступа для разблокировки кошелька.</string>
@@ -633,6 +635,7 @@
   <string name="hw_remove_wallet_notification_title">Забыть этот кошелек?</string>
   <string name="hw_remove_wallet_warning_access">Я понимаю, что если я не создал резервную копию кошелька перед его удалением, я могу потерять к нему доступ.</string>
   <string name="hw_remove_wallet_warning_device">Я понимаю, что удаление моего кошелька не стирает его — оно просто удаляет его с моего устройства.</string>
+  <string name="hw_upgrade">Апгрейд</string>
   <string name="hw_upgrade_backup_description">Фраза восстановления больше не нужна — ваша карта или кольцо Tangem становятся вашей надёжной резервной копией.</string>
   <string name="hw_upgrade_backup_title">Резервное копирование</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Это устройство не может быть использовано для апгрейда, оно уже содержит другой кошелек.</string>
@@ -814,6 +817,23 @@
   <string name="mobile_wallet_requires_min_os_warning_body">Обновитесь до версии %1$s, чтобы создать мобильный кошелёк</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобильный кошелек требует %1$s или новее.</string>
   <string name="news_all_news">Все новости</string>
+  <string name="news_like">Нравится</string>
+  <plurals name="news_published_hours_ago">
+    <item quantity="one">%dч назад</item>
+    <item quantity="few">%dч назад</item>
+    <item quantity="many">%dч назад</item>
+    <item quantity="other">%dч назад</item>
+  </plurals>
+  <plurals name="news_published_minutes_ago">
+    <item quantity="one">%dмин назад</item>
+    <item quantity="few">%dмин назад</item>
+    <item quantity="many">%dмин назад</item>
+    <item quantity="other">%dмин назад</item>
+  </plurals>
+  <string name="news_quick_recap">Резюме</string>
+  <string name="news_related_news">Связанные новости</string>
+  <string name="news_related_tokens">Связанные токены</string>
+  <string name="news_sources">Источники</string>
   <string name="news_stay_in_the_loop">Будьте в курсе</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="nft_about_title">О NFT</string>
