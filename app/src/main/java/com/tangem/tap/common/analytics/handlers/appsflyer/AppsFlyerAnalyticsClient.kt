@@ -2,16 +2,17 @@ package com.tangem.tap.common.analytics.handlers.appsflyer
 
 import android.content.Context
 import com.appsflyer.AppsFlyerLib
+import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
 import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
+import timber.log.Timber
 
 interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
 internal class AppsFlyerClient(
     private val context: Context,
     key: String,
-    appId: String,
 ) : AppsFlyerAnalyticsClient {
 
     private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
@@ -19,8 +20,15 @@ internal class AppsFlyerClient(
 
     init {
         appsFlyerLib.init(key, null, context)
-        appsFlyerLib.setAppId(appId)
-        appsFlyerLib.start(context)
+        appsFlyerLib.start(context, key, object : AppsFlyerRequestListener {
+            override fun onSuccess() {
+                Timber.d("AppsFlyer initialized successfully")
+            }
+
+            override fun onError(p0: Int, p1: String) {
+                Timber.e("AppsFlyer initialization error: $p0, $p1")
+            }
+        })
     }
 
     override fun setUserId(userId: String) {
