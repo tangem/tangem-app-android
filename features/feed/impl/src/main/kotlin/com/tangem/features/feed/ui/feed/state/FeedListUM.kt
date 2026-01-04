@@ -3,15 +3,15 @@ package com.tangem.features.feed.ui.feed.state
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toPersistentList
 
 internal data class FeedListUM(
     val currentDate: String,
-    val searchBar: SearchBarUM,
+    val feedListSearchBar: FeedListSearchBar,
     val feedListCallbacks: FeedListCallbacks,
     val news: NewsUM,
     val trendingArticle: ArticleConfigUM?,
@@ -28,11 +28,21 @@ internal data class FeedListCallbacks(
     val onSortTypeClick: (SortByTypeUM) -> Unit,
 )
 
-@Immutable
-internal sealed interface NewsUM {
-    data object Loading : NewsUM
-    data class Content(val content: ImmutableList<ArticleConfigUM>) : NewsUM
-    data class Error(val onRetryClicked: () -> Unit) : NewsUM
+internal data class FeedListSearchBar(
+    val onBarClick: () -> Unit,
+    val placeholderText: TextReference,
+)
+
+internal data class NewsUM(
+    val content: ImmutableList<ArticleConfigUM>,
+    val onRetryClicked: () -> Unit,
+    val newsUMState: NewsUMState,
+)
+
+internal enum class NewsUMState {
+    LOADING,
+    CONTENT,
+    ERROR,
 }
 
 internal data class MarketChartConfig(

@@ -9,4 +9,10 @@ sealed class GetFeeError {
         data object KaspaZeroUtxo : BlockchainErrors()
         data object SuiOneCoinRequired : BlockchainErrors()
     }
+
+    sealed class GaslessError : GetFeeError() {
+        data object NetworkIsNotSupported : GaslessError()
+        data object NoSupportedTokensFound : GaslessError()
+        data object NotEnoughFunds : GaslessError()
+    }
 }
