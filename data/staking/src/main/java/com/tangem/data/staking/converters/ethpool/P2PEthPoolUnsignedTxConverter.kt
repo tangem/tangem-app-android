@@ -6,7 +6,7 @@ import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 /**
- * Converter from P2P Unsigned Transaction DTO to Domain model
+ * Converter from P2PEthPool Unsigned Transaction DTO to Domain model
  */
 internal object P2PEthPoolUnsignedTxConverter : Converter<P2PEthPoolUnsignedTxDTO, P2PEthPoolUnsignedTx> {
 
