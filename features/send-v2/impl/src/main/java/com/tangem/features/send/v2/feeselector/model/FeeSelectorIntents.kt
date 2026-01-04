@@ -1,7 +1,9 @@
 package com.tangem.features.send.v2.feeselector.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.features.send.v2.api.entity.FeeItem
 
+@Stable
 internal interface FeeSelectorIntents {
     fun onFeeItemSelected(feeItem: FeeItem)
     fun onCustomFeeValueChange(index: Int, value: String)

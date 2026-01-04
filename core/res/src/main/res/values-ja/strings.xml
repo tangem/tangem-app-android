@@ -61,8 +61,8 @@
   <string name="account_unsaved_dialog_message_create">新しいアカウントを破棄してもよろしいですか？</string>
   <string name="account_unsaved_dialog_message_edit">編集内容を破棄してもよろしいですか？</string>
   <string name="account_unsaved_dialog_title">保存されていない変更</string>
-  <string name="accounts_migration_alert_message">一部のカスタムトークンは、その派生がそのアカウントに属しているため、「 %1$s 」から「 %2$s 」に移動されました。</string>
-  <string name="accounts_migration_alert_title">一部のカスタムトークンが移動されました</string>
+  <string name="accounts_migration_alert_message">一部のカスタムトークンは、その派生元（デリベーション）が該当アカウントに属しているため、自動的に「%1$s」から「%2$s」へ移動されます。</string>
+  <string name="accounts_migration_alert_title">一部のカスタムトークンは自動的に移動されます</string>
   <string name="action_buttons_buy_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して買付できるようにします。</string>
   <string name="action_buttons_sell_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して売却できるようにします。</string>
   <string name="action_buttons_sell_navigation_bar_title">売却</string>
@@ -127,15 +127,15 @@
   </plurals>
   <string name="auth_wallet_mobile_description">モバイルウォレット</string>
   <string name="backup_complete_description">ウォレットのバックアップが正常に完了しました。</string>
-  <string name="backup_complete_seed_description">これらの単語は一度失うと復元できません。安全な場所に保管してください。</string>
+  <string name="backup_complete_seed_description">これらの単語は、紛失すると復元できません。安全に保管してください。</string>
   <string name="backup_complete_title">バックアップが完了しました</string>
-  <string name="backup_info_description">シークレットリカバリーフレーズとは、ウォレットへのアクセスや復元のために使う、固定された%s個のランダムな単語のセットです。</string>
+  <string name="backup_info_description">シークレットリカバリーフレーズは、ウォレットへのアクセスおよび復元に使用する、%s個のランダムな単語のセットです。</string>
   <string name="backup_info_keep_description">これらの単語は紛失した場合、復元できません。大切に保管してください。</string>
   <string name="backup_info_keep_title">安全に保管してください</string>
   <string name="backup_info_save_description">これらの%s個の単語を安全な場所に保存し、決して誰とも共有しないでください。</string>
   <string name="backup_info_save_title">復元は不可能です</string>
   <string name="backup_info_title">リカバリーフレーズ</string>
-  <string name="backup_seed_caution">これらの単語は誰にも教えないでください。Tangemがこれらの単語を尋ねることは、絶対にありません。以下の%s個の単語はウォレットのリカバリーフレーズです。デバイスを紛失した場合、これらの単語を使用してウォレットを復元できます。</string>
+  <string name="backup_seed_caution">以下の%s個の単語が、あなたのウォレットのリカバリーフレーズです。これらの単語は絶対に他人と共有しないでください。Tangemがこれらを尋ねることは決してありません。デバイスを紛失した場合、このフレーズを使ってウォレットを復元できます。</string>
   <string name="backup_seed_description">これらの%s個の単語を番号順に書き留め、安全かつ他人の目に触れない場所に保管してください</string>
   <string name="backup_seed_responsibility">ウォレットの安全確保およびリカバリーフレーズの安全なバックアップは、すべてご自身の責任となります。</string>
   <string name="backup_seed_title">リカバリーフレーズ</string>
@@ -539,6 +539,7 @@
   <string name="feedback_preface_scan_failed">お持ちのカードまたはリングについて教えてください</string>
   <string name="feedback_preface_support">サポートチームの皆さん、こんにちは。</string>
   <string name="feedback_preface_tx_failed">問題について詳しく教えてください。どんな些細なことでも役に立ちます。</string>
+  <string name="feedback_subject_backup_problem">バックアップの問題</string>
   <string name="feedback_subject_pre_activated_wallet">以前に有効化されたウォレット</string>
   <string name="feedback_subject_rate_negative">私の提案</string>
   <string name="feedback_subject_scan_failed">カード / リングをスキャンできません</string>
@@ -557,7 +558,7 @@
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
-  <string name="hardware_wallet_backup_feature_description">バックアップは2枚または3枚のTangemカードを使って作成されます。紛失や破損に備えて、それぞれ別々の安全な場所に保管してください—シードフレーズは不要です。</string>
+  <string name="hardware_wallet_backup_feature_description">バックアップは2〜3枚のTangemカードを使用して作成されます。紛失や破損に備え、カードはそれぞれ安全な別の場所に保管してください。シードフレーズは不要です。</string>
   <string name="hardware_wallet_backup_feature_title">複数のカードでバックアップ</string>
   <string name="hardware_wallet_create_title">Tangemウォレットを追加</string>
   <string name="hardware_wallet_key_feature_description">あなたの秘密鍵はTangemカード内部で直接生成され、決してカードの外に出ることはありません。</string>
@@ -578,7 +579,7 @@
   <string name="hw_activation_need_title">ウォレットの設定を完了する</string>
   <string name="hw_activation_need_warning_description">アクセスコードでアプリを保護して、設定を完了してください。</string>
   <string name="hw_backup_alert_description">終了すると、最初からやり直す必要があります。</string>
-  <string name="hw_backup_alert_title">セットアップを中止してもよろしいですか？</string>
+  <string name="hw_backup_alert_title">アクティベーションを終了してもよろしいですか？</string>
   <string name="hw_backup_banner_description">暗号資産をオフラインで厳重保管。カードサイズで、金庫以上の安心を。</string>
   <string name="hw_backup_close_description">実行すると、最初からやり直す必要があります。</string>
   <string name="hw_backup_google_drive_description">Googleドライブのバックアップから既存のウォレットを復元する</string>
@@ -628,7 +629,7 @@
   <string name="hw_upgrade_error_wallet2_card_required">操作中にエラーが発生しました。</string>
   <string name="hw_upgrade_funds_access_description">処理中も、資金は安全に保たれ、常にアクセス可能です。</string>
   <string name="hw_upgrade_funds_access_title">資金へのアクセス</string>
-  <string name="hw_upgrade_general_security_description">ウォレットのデータはアプリから削除され、ハードウェアウォレットに保存されます</string>
+  <string name="hw_upgrade_general_security_description">ウォレット情報はアプリから削除され、ハードウェアウォレットに保存されます</string>
   <string name="hw_upgrade_general_security_title">セキュリティ全般</string>
   <string name="hw_upgrade_key_migration_description">秘密鍵はアプリからTangemハードウェアウォレットへ移行されます</string>
   <string name="hw_upgrade_key_migration_title">キーの移行</string>
@@ -802,6 +803,7 @@
   </plurals>
   <string name="news_quick_recap">クイックまとめ</string>
   <string name="news_related_news">関連ニュース</string>
+  <string name="news_related_tokens">関連トークン</string>
   <string name="news_sources">情報源</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
@@ -884,8 +886,8 @@
   <string name="onboarding_activation_error_message">操作を繰り返してください。カードは工場出荷時の設定にリセットされます。</string>
   <string name="onboarding_activation_error_title">アクティベーションに失敗しました</string>
   <string name="onboarding_add_tokens">トークンを追加する</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">バックアップカードまたはリングを1つ追加しました。バックアップ処理が終了すると、これ以上バックアップデバイスを追加することはできません。もう一つカードまたはリングがある場合、バックアップに追加してください。バックアップ処理を続けますか？</string>
-  <string name="onboarding_backup_exit_warning">バックアップ手続きは部分的に完了しています。現在終了することはできません。</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">バックアップ用のカードまたはリングを1つ追加しました。バックアップが完了すると、これ以上デバイスを追加することはできません。追加のカードまたはリングをお持ちの場合は、今のうちに追加してください。続行しますか？</string>
+  <string name="onboarding_backup_exit_warning">バックアップは一部完了しており、現在は中断できません。</string>
   <string name="onboarding_bottom_sheet_passphrase_description">パスフレーズは、リカバリーフレーズに単語やフレーズを追加することで、追加の保護を提供する任意のセキュリティ機能です。これにより、新しいウォレットアドレスのセットが作成されます。</string>
   <string name="onboarding_button_add_backup_card">バックアップ用のカードまたはリングを追加</string>
   <string name="onboarding_button_backup_card">カードをスキャン</string>
@@ -933,7 +935,7 @@
   <string name="onboarding_seed_phrase_intro_legacy">レガシー</string>
   <string name="onboarding_seed_user_validation_message">シードフレーズを正しく書き込んだかどうかを確認するために、2番目、7番目、11番目の単語を入力してください。</string>
   <string name="onboarding_seed_user_validation_title">では、確認してみましょう</string>
-  <string name="onboarding_subtitle_no_backup_cards">バックアップ処理を開始するには、最大2つのバックアップカードまたはリングを追加します。</string>
+  <string name="onboarding_subtitle_no_backup_cards">バックアップを開始するには、最大2枚のバックアップカードまたはリングを追加してください。</string>
   <string name="onboarding_subtitle_one_backup_card">カードまたはリングをもう1つ追加するか、バックアップ処理を完了します</string>
   <string name="onboarding_subtitle_scan_backup_card_format">番号%sのバックアップカードを準備してください</string>
   <string name="onboarding_subtitle_scan_primary">プライマリカードまたはリングをスキャンして、バックアップ処理を開始します。</string>
@@ -1068,8 +1070,8 @@
   <string name="reset_card_to_factory_condition_1">この操作を実行すると、現在のウォレットにアクセスできなくなることを理解しています。</string>
   <string name="reset_card_to_factory_condition_2">このカードを使用して、現在のウォレットの他のカードのアクセスコードを回復させられないことを認識しています。</string>
   <string name="reset_card_to_factory_condition_3">復元は不可能であり、Tangem Payカードおよびカード上のすべての資金へのアクセスを完全に失うことを理解しました</string>
-  <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
-  <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
+  <string name="reset_card_with_backup_to_factory_message">初期化を行うと、選択したカードまたはリングからウォレットは完全に消去されます。現在のウォレットを復元することはできず、このカードまたはリングを使ってアクセスコードを復旧することもできません。</string>
+  <string name="reset_card_without_backup_to_factory_message">初期化を行うと、選択したカードまたはリングからウォレットが完全に消去され、アプリからも削除されます。現在のウォレットは復元できません。</string>
   <string name="reset_cards_dialog_complete_description">すべてのTangemデバイスがリセットされました。</string>
   <string name="reset_cards_dialog_first_description">アクティベーション処理中に問題が発生しました。カードを1枚ずつリセットしてください。</string>
   <string name="reset_cards_dialog_first_title">カード認証に失敗しました</string>
@@ -1232,6 +1234,7 @@
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">APR：1年間で得られる利息を単利で表示します。得た利息は残高に加算されず、その利息にはさらに利息がつきません。</string>
+  <string name="staking_details_annual_percentage_yield">年利（APY）</string>
   <string name="staking_details_annual_percentage_yield_info">APY：1年間で得られる合計利息を複利込みで表示します。複利とは、得た利息が残高に加算され、その利息にもさらに利息がつくことを意味します。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
@@ -1353,7 +1356,7 @@
   <string name="staking_your_stakes">あなたのステーキング</string>
   <string name="story_awe_description">カードまたはリング内に秘密鍵を保管しながら、暗号資産を安全に保管します</string>
   <string name="story_awe_title">革新的なハードウェアウォレット</string>
-  <string name="story_backup_description">1つのウォレットに最大3枚のカードまたは3本のリング</string>
+  <string name="story_backup_description">1つのウォレットに、最大3枚のカードまたはリングを追加</string>
   <string name="story_backup_title">安全なバックアップ</string>
   <string name="story_currencies_description">ビットコイン、イーサリアム、その他多くの暗号資産を同時に管理できるハードウェアウォレット – オール・イン・ワンのカード / リング</string>
   <string name="story_currencies_title">数千の通貨</string>
@@ -1508,7 +1511,9 @@
   <string name="tangempay_service_unavailable_description">技術的な問題を修正しています。後でもう一度お試しください。</string>
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
-  <string name="tangempay_sync_needed">同期が必要です</string>
+  <string name="tangempay_set_pin_code">\nPINコードの設定</string>
+  <string name="tangempay_sync_needed">未同期</string>
+  <string name="tangempay_sync_needed_restore_access">アクセスを復元</string>
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -1717,7 +1722,7 @@
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="warning_approval_in_progress_message">許可付与のプロセスは現在進行中であり、まもなく完了する予定です。</string>
   <string name="warning_approval_in_progress_title">承認中</string>
-  <string name="warning_backup_errors_message">カードまたはリングのアクティベーションが正しく完了しませんでした。デバイスのNFCモジュールに問題があるか、カードまたはリングをデバイスに正しくタップしていないことが原因かもしれません。サポートチームにお問い合わせください。</string>
+  <string name="warning_backup_errors_message">アクティベーションが正常に完了しませんでした。NFCの問題、またはタップ方法が正しくない可能性があります。サポートチームまでお問い合わせください。</string>
   <string name="warning_backup_errors_title">アクティベーションに失敗しました</string>
   <string name="warning_beacon_chain_retirement_content">2024年12月3日、BEP-2ネットワークはネットワーク開発者の決定により使用不能となり、サポートは終了しました。</string>
   <string name="warning_beacon_chain_retirement_title">BNBビーコンチェーンは閉鎖されました</string>
@@ -1728,6 +1733,8 @@
   <string name="warning_button_ok">はい、わかりました!</string>
   <string name="warning_button_really_cool">すごくクールだ！</string>
   <string name="warning_button_refresh">リフレッシュ</string>
+  <string name="warning_clore_migration_message">Cloreの公式ドキュメントによると、12月21日以前に受け取ったすべてのコインは Clore（ERC-20トークン）へ移行されますが、同日以降に受け取ったコインは移行されません。送金（移行）ソリューションは現在準備中です。続報をお待ちください。</string>
+  <string name="warning_clore_migration_title">Cloreネットワークの移行</string>
   <string name="warning_demo_mode_message">現在デモモードです</string>
   <string name="warning_demo_mode_title">デモモードが有効になっています</string>
   <string name="warning_developer_card_message">スキャンしたカードは開発者カードです。ウォレットの作成には使用しないでください。</string>
@@ -1775,7 +1782,7 @@
   <string name="warning_network_unreachable_message">現在、ネットワークにアクセスできません。しばらくしてからもう一度お試しください。</string>
   <string name="warning_network_unreachable_title">ネットワークにアクセスできません</string>
   <string name="warning_no_account_title">ウォレットに入金</string>
-  <string name="warning_no_backup_message">ウォレットがバックアップされていません。アセットを保護するために今すぐこの手順を実行してください。</string>
+  <string name="warning_no_backup_message">ウォレットはまだバックアップされていません。今すぐバックアップして資産を保護しましょう。</string>
   <string name="warning_no_backup_title">バックアップがありません</string>
   <string name="warning_number_of_signed_hashes_incorrect_message">このカードは以前取引に使用されたことがあります。信頼できない出所から受け取った場合は、全資金を引き出すことを検討してください。あなたのカードであれば、何もする必要はありません。</string>
   <string name="warning_number_of_signed_hashes_incorrect_title">カードはすでに取引に署名済みです</string>
@@ -1914,10 +1921,10 @@
   <string name="welcome_create_wallet_use_hardware_description">Tangemハードウェアウォレットを使用する</string>
   <string name="welcome_create_wallet_use_hardware_title">詳細を見る・購入する</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
-  <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか?</string>
+  <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか？</string>
   <string name="welcome_interrupted_backup_alert_resume">はい、再開します</string>
   <string name="welcome_interrupted_backup_discard_discard">破棄</string>
-  <string name="welcome_interrupted_backup_discard_message">バックアップを破棄する場合は、デバイスを工場出荷時の設定にリセットしてやり直す必要があります。</string>
+  <string name="welcome_interrupted_backup_discard_message">今バックアップを破棄すると、デバイスを初期化して最初からやり直す必要があります。</string>
   <string name="welcome_interrupted_backup_discard_resume">バックアップを再開する</string>
   <string name="welcome_interrupted_backup_discard_title">これはやり直しができないアクションです</string>
   <string name="welcome_unlock">%sでログイン</string>

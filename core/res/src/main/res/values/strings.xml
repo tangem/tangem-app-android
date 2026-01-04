@@ -539,6 +539,10 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
   <string name="exсhange_token_description">Swap any asset in your portfolio for this token</string>
+  <string name="fee_selector_choose_speed_description">Higher speed means faster confirmation and a higher network fee. %s</string>
+  <string name="fee_selector_choose_speed_title">Choose speed</string>
+  <string name="fee_selector_choose_token_description">Choose which token to use to pay the network fee. %s</string>
+  <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">Trending Now</string>
