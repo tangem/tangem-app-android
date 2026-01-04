@@ -12,6 +12,7 @@ import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.raiseIllegalStateError
 import java.math.BigDecimal
 
 class GetAvailableFeeTokensUseCase(
@@ -81,9 +82,5 @@ class GetAvailableFeeTokensUseCase(
                     supportedGaslessTokens.contains(currencyStatus.currency)
             }
             .toList()
-    }
-
-    private fun Raise<GetFeeError>.raiseIllegalStateError(error: String): Nothing {
-        raise(GetFeeError.DataError(IllegalStateException(error)))
     }
 }
