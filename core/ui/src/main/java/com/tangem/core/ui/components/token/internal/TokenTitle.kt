@@ -90,7 +90,7 @@ private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier
                 color = if (isActive) {
                     TangemTheme.colors.text.accent.copy(alpha = 0.1f)
                 } else {
-                    TangemTheme.colors.control.unchecked
+                    TangemTheme.colors.control.default
                 },
                 shape = TangemTheme.shapes.roundedCornersSmall2,
             ),
