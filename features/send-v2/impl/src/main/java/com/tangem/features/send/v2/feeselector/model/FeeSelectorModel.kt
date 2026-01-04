@@ -1,246 +1,43 @@
 package com.tangem.features.send.v2.feeselector.model
 
 import androidx.compose.runtime.Stable
-import arrow.core.getOrElse
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.blockchain.common.AmountType
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.settings.NeverShowTapHelpUseCase
-import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
-import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
-import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
-import com.tangem.features.send.v2.api.entity.FeeItem
-import com.tangem.features.send.v2.api.entity.FeeNonce
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadListener
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
-import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents.GasPriceInserter
-import com.tangem.features.send.v2.feeselector.model.transformers.*
-import com.tangem.utils.TangemBlogUrlBuilder
+import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.transformer.update
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val urlOpener: UrlOpener,
-    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
-    private val feeSelectorReloadListener: FeeSelectorReloadListener,
-    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
-    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
-    private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val analyticsEventHandler: AnalyticsEventHandler,
-) : Model(), FeeSelectorIntents, FeeSelectorModelCallback {
+    private val feeSelectorLogicFactory: FeeSelectorLogic.Factory,
+    private val sendFeatureToggles: SendFeatureToggles,
+) : Model() {
 
     private val params = paramsContainer.require<FeeSelectorParams>()
-    private var appCurrency: AppCurrency = AppCurrency.Default
+    private val feeSelectorLogic = feeSelectorLogicFactory.create(
+        params = params,
+        modelScope = modelScope,
+    )
 
-    val feeSelectorBottomSheet = SlotNavigation<Unit>()
+    val uiState = feeSelectorLogic.uiState
+    val intents: FeeSelectorIntents = feeSelectorLogic
 
-    val uiState: StateFlow<FeeSelectorUM>
-        field = MutableStateFlow<FeeSelectorUM>(params.state)
-
-    init {
-        initAppCurrency()
-        subscribeOnFeeReloadTriggerUpdates()
-        subscribeOnFeeCheckReloadTriggerUpdates()
-        subscribeOnFeeLoadingStateTriggerUpdates()
-        loadFee()
+    fun onChildBack() {
+        // TODO("Not yet implemented")
     }
 
-    fun updateState(feeSelectorUM: FeeSelectorUM) {
-        uiState.value = feeSelectorUM
-    }
-
-    fun onReadMoreClicked() {
-        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
-    }
-
-    private fun initAppCurrency() {
-        modelScope.launch {
-            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-        }
-    }
-
-    private fun loadFee() {
-        if (uiState.value !is FeeSelectorUM.Content) {
-            uiState.update(FeeSelectorLoadingTransformer)
-        }
-        modelScope.launch {
-            params.onLoadFee()
-                .fold(
-                    ifLeft = { error -> uiState.update(FeeSelectorErrorTransformer(error)) },
-                    ifRight = { fee ->
-                        uiState.update(
-                            FeeSelectorLoadedTransformer(
-                                cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-                                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
-                                appCurrency = appCurrency,
-                                fees = fee,
-                                feeStateConfiguration = params.feeStateConfiguration,
-                                isFeeApproximate = isFeeApproximate(fee.normal.amount.type),
-                                feeSelectorIntents = this@FeeSelectorModel,
-                            ),
-                        )
-                    },
-                )
-        }
-    }
-
-    private fun isFeeApproximate(amountType: AmountType): Boolean {
-        val networkId = params.feeCryptoCurrencyStatus.currency.network.id
-        return isFeeApproximateUseCase(networkId = networkId, amountType = amountType)
-    }
-
-    override fun onFeeItemSelected(feeItem: FeeItem) {
-        if (feeItem is FeeItem.Custom) {
-            analyticsEventHandler.send(
-                CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(categoryName = params.analyticsCategoryName),
-            )
-        }
-        uiState.update(FeeItemSelectedTransformer(feeItem))
-        if (feeItem !is FeeItem.Custom) {
-            onDoneClick()
-        }
-    }
-
-    override fun onCustomFeeValueChange(index: Int, value: String) {
-        uiState.update(
-            FeeSelectorCustomValueChangedTransformer(
-                index = index,
-                value = value,
-                intents = this,
-                appCurrency = appCurrency,
-                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
-            ),
-        )
-    }
-
-    override fun onNonceChange(value: String) {
-        uiState.update(FeeSelectorNonceChangeTransformer(value = value))
-    }
-
-    override fun onDoneClick() {
-        val feeSelectorUM = uiState.value as? FeeSelectorUM.Content ?: return
-        analyticsEventHandler.send(
-            CommonSendFeeAnalyticEvents.SelectedFee(
-                categoryName = params.analyticsCategoryName,
-                feeType = feeSelectorUM.toAnalyticType(),
-                source = params.analyticsSendSource,
-            ),
-        )
-        val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
-        if (feeSelectorUM.selectedFeeItem is FeeItem.Custom && isCustomFeeEdited) {
-            analyticsEventHandler.send(GasPriceInserter(categoryName = params.analyticsCategoryName))
-        }
-        if (feeSelectorUM.feeNonce is FeeNonce.Nonce) {
-            analyticsEventHandler.send(
-                NonceInserted(
-                    categoryName = params.analyticsCategoryName,
-                    token = params.feeCryptoCurrencyStatus.currency.symbol,
-                    blockchain = params.feeCryptoCurrencyStatus.currency.network.name,
-                ),
-            )
+    fun getInitialRoute(): FeeSelectorRoute {
+        if (sendFeatureToggles.isGaslessTransactionsEnabled.not()) {
+            return FeeSelectorRoute.ChooseSpeed
         }
 
-        (params as? FeeSelectorParams.FeeSelectorDetailsParams)?.callback?.onFeeResult(uiState.value)
-    }
-
-    override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
-        uiState.value = feeSelectorUM
-        feeSelectorBottomSheet.dismiss()
-    }
-
-    fun showFeeSelector() {
-        analyticsEventHandler.send(
-            CommonSendAnalyticEvents.FeeScreenOpened(
-                categoryName = params.analyticsCategoryName,
-                source = params.analyticsSendSource,
-            ),
-        )
-        analyticsEventHandler.send(
-            CommonSendAnalyticEvents.ScreenReopened(
-                categoryName = params.analyticsCategoryName,
-                source = SendScreenSource.Fee,
-            ),
-        )
-        modelScope.launch {
-            neverShowTapHelpUseCase()
-            feeSelectorBottomSheet.activate(Unit)
-        }
-    }
-
-    private fun subscribeOnFeeReloadTriggerUpdates() {
-        feeSelectorReloadListener.reloadTriggerFlow
-            .onEach { data ->
-                if (data.isRemoveSuggestedFee) {
-                    uiState.update(FeeSelectorRemoveSuggestedTransformer)
-                }
-                loadFee()
-            }
-            .launchIn(modelScope)
-    }
-
-    private fun subscribeOnFeeLoadingStateTriggerUpdates() {
-        feeSelectorReloadListener.loadingStateTriggerFlow
-            .onEach { uiState.update(FeeSelectorLoadingTransformer) }
-            .launchIn(modelScope)
-    }
-
-    private fun subscribeOnFeeCheckReloadTriggerUpdates() {
-        feeSelectorCheckReloadListener.checkReloadTriggerFlow
-            .onEach { checkLoadFee() }
-            .launchIn(modelScope)
-    }
-
-    private fun checkLoadFee() {
-        modelScope.launch {
-            params.onLoadFee().fold(
-                ifRight = { newFee ->
-                    feeSelectorAlertFactory.getFeeUpdatedAlert(
-                        newTransactionFee = newFee,
-                        feeSelectorUM = uiState.value,
-                        proceedAction = {
-                            modelScope.launch {
-                                feeSelectorCheckReloadTrigger.callbackCheckResult(true)
-                            }
-                        },
-                        stopAction = {
-                            modelScope.launch {
-                                feeSelectorCheckReloadTrigger.callbackCheckResult(false)
-                            }
-                        },
-                    )
-                },
-                ifLeft = { feeError ->
-                    feeSelectorCheckReloadTrigger.callbackCheckResult(false)
-                    feeSelectorAlertFactory.getFeeUnreachableErrorState(::loadFee)
-                },
-            )
-        }
+        // TODO: Add logic to choose initial route based on other conditions
+        return FeeSelectorRoute.ChooseSpeed
     }
 }
