@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -21,6 +22,7 @@ import com.tangem.core.ui.components.tooltip.TangemTooltip
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 
 /**
@@ -112,6 +114,7 @@ fun InputRowEnterInfoAmount(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 fun InputRowEnterInfoAmountV2(
     title: TextReference,
@@ -139,20 +142,23 @@ fun InputRowEnterInfoAmountV2(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = titleColor,
+                    modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TITLE),
                 )
                 if (description != null) {
                     TangemTooltip(
                         modifier = Modifier
                             .size(16.dp)
-                            .clip(CircleShape),
-                        text = description.resolveReference(),
+                            .clip(CircleShape)
+                            .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TOOLTIP_ICON),
+                        text = description,
                         content = { contentModifier ->
                             Icon(
                                 modifier = contentModifier.size(16.dp),
@@ -183,7 +189,8 @@ fun InputRowEnterInfoAmountV2(
                     backgroundColor = Color.Transparent,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing8)
-                        .weight(1f),
+                        .weight(1f)
+                        .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD),
                 )
                 info?.let { info ->
                     Text(
@@ -192,7 +199,8 @@ fun InputRowEnterInfoAmountV2(
                         color = infoColor,
                         modifier = Modifier
                             .padding(start = TangemTheme.dimens.spacing8)
-                            .align(Alignment.Bottom),
+                            .align(Alignment.Bottom)
+                            .testTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT),
                     )
                 }
             }
