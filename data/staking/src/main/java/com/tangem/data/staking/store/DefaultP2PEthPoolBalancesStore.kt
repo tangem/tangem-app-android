@@ -46,12 +46,10 @@ internal class DefaultP2PEthPoolBalancesStore(
             runtimeStore.store(
                 value = cachedData.map { (stringWalletId, responses) ->
                     val key = UserWalletId(stringWalletId)
-                    val value = responses.map { response ->
-                        P2PEthPoolStakingBalanceConverter.convert(
-                            response = response,
-                            source = StatusSource.CACHE,
-                        )
-                    }.toSet()
+                    val value = P2PEthPoolStakingBalanceConverter.convertAll(
+                        responses = responses,
+                        source = StatusSource.CACHE,
+                    )
 
                     key to value
                 }.toMap(),
@@ -116,12 +114,10 @@ internal class DefaultP2PEthPoolBalancesStore(
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>) {
-        val newBalances = values.map { response ->
-            P2PEthPoolStakingBalanceConverter.convert(
-                response = response,
-                source = StatusSource.ACTUAL,
-            )
-        }.toSet()
+        val newBalances = P2PEthPoolStakingBalanceConverter.convertAll(
+            responses = values,
+            source = StatusSource.ACTUAL,
+        )
 
         runtimeStore.update(default = emptyMap()) { saved ->
             saved.toMutableMap().apply {
