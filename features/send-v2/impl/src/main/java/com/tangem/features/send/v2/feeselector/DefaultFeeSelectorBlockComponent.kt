@@ -17,7 +17,7 @@ import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorBlockModel
 import com.tangem.features.send.v2.feeselector.ui.FeeSelectorBlockContent
 import com.tangem.utils.extensions.isSingleItem
 import dagger.assisted.Assisted
@@ -35,7 +35,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
     private val sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorBlockComponent, AppComponentContext by appComponentContext {
 
-    private val model: FeeSelectorModel = getOrCreateModel(params = params)
+    private val model: FeeSelectorBlockModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.feeSelectorBottomSheet,
