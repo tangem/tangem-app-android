@@ -1,27 +1,15 @@
 package com.tangem.data.staking.store
 
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import kotlinx.coroutines.flow.Flow
 
-/** Store of StakeKit [StakingBalance] */
-interface StakingBalancesStore {
+/**
+ * Store for StakeKit staking balances.
+ *
+ * Extends [BaseStakingBalancesStore] with StakeKit-specific storage operations.
+ */
+interface StakingBalancesStore : BaseStakingBalancesStore {
 
-    fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>>
-
-    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): StakingBalance?
-
-    suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<StakingBalance>?
-
-    suspend fun refresh(userWalletId: UserWalletId, stakingId: StakingID)
-
-    suspend fun refresh(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
-
+    /** Store actual StakeKit yield balances */
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>)
-
-    suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
-
-    suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 }
