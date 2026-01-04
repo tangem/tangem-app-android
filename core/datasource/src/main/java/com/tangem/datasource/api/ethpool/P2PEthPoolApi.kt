@@ -2,9 +2,7 @@ package com.tangem.datasource.api.ethpool
 
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastRequest
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolDepositRequest
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolUnstakeRequest
-import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolWithdrawRequest
+import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolTransactionRequest
 import com.tangem.datasource.api.ethpool.models.response.*
 import retrofit2.http.*
 
@@ -31,13 +29,13 @@ interface P2PEthPoolApi {
      * Create unsigned transaction for depositing ETH into a vault.
      *
      * @param network Ethereum pool network: "mainnet" or "hoodi"
-     * @param body Deposit parameters (delegator address, vault address, amount)
+     * @param body Transaction parameters (delegator address, vault address, amount)
      */
     @POST("api/v1/staking/pool/{network}/staking/deposit")
     suspend fun createDepositTransaction(
         @Path("network") network: String,
-        @Body body: P2PEthPoolDepositRequest,
-    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolDepositResponse>>
+        @Body body: P2PEthPoolTransactionRequest,
+    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolTransactionResponse>>
 
     /**
      * Prepare unstake transaction
@@ -45,13 +43,13 @@ interface P2PEthPoolApi {
      * Create unsigned transaction to initiate unstaking process.
      *
      * @param network Ethereum pool network: "mainnet" or "hoodi"
-     * @param body Unstake parameters (staker public key, stake transaction hash)
+     * @param body Transaction parameters (delegator address, vault address, amount)
      */
     @POST("api/v1/staking/pool/{network}/staking/unstake")
     suspend fun createUnstakeTransaction(
         @Path("network") network: String,
-        @Body body: P2PEthPoolUnstakeRequest,
-    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolUnstakeResponse>>
+        @Body body: P2PEthPoolTransactionRequest,
+    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolTransactionResponse>>
 
     /**
      * Prepare withdrawal transaction
@@ -59,13 +57,13 @@ interface P2PEthPoolApi {
      * Create unsigned transaction to withdraw available funds from exit queue.
      *
      * @param network Ethereum pool network: "mainnet" or "hoodi"
-     * @param body Withdrawal parameters (staker address)
+     * @param body Transaction parameters (delegator address, vault address, amount)
      */
     @POST("api/v1/staking/pool/{network}/staking/withdraw")
     suspend fun createWithdrawTransaction(
         @Path("network") network: String,
-        @Body body: P2PEthPoolWithdrawRequest,
-    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolWithdrawResponse>>
+        @Body body: P2PEthPoolTransactionRequest,
+    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolTransactionResponse>>
 
     /**
      * Broadcast signed transaction
@@ -107,6 +105,7 @@ interface P2PEthPoolApi {
      * @param vaultAddress Ethereum address of the vault
      * @param period Optional period filter (30, 60, or 90 days)
      */
+    // TODO p2p not used, consider removing this method
     @GET("api/v1/staking/pool/{network}/account/{delegatorAddress}/vault/{vaultAddress}/rewards")
     suspend fun getRewards(
         @Path("network") network: String,

@@ -1,0 +1,239 @@
+package com.tangem.features.feed.components.market.details.portfolio.impl.model
+
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
+import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
+import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
+import com.tangem.features.feed.impl.R
+import com.tangem.utils.Provider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.collections.immutable.toImmutableList
+
+@Suppress("LongParameterList")
+internal class TokenActionsHandler @AssistedInject constructor(
+    private val router: Router,
+    private val clipboardManager: ClipboardManager,
+    private val uiMessageSender: UiMessageSender,
+    private val reduxStateHolder: ReduxStateHolder,
+    @Assisted private val currentAppCurrency: Provider<AppCurrency>,
+    @Assisted private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+    @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    private val messageSender: UiMessageSender,
+    private val shareManager: ShareManager,
+    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
+) {
+
+    private val disabledActionsInDemoMode = buildSet {
+        add(TokenActionsBSContentUM.Action.Sell)
+    }
+
+    fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        onHandleQuickAction(
+            HandledQuickAction(
+                action = action,
+                cryptoCurrencyData = cryptoCurrencyData,
+            ),
+        )
+        val userWallet = cryptoCurrencyData.userWallet
+        if (userWallet is UserWallet.Cold && handleDemoMode(action, userWallet)) return
+
+        when (action) {
+            TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Receive -> onReceiveClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.CopyAddress -> onCopyAddress(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Sell -> onSellClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Send -> onSendClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.YieldMode -> onYieldModeClick(cryptoCurrencyData)
+        }
+    }
+
+    private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
+        val isDemoCard = isDemoCardUseCase.invoke(userWallet.cardId)
+        val isNeededShowDemoWarning = isDemoCard && disabledActionsInDemoMode.contains(action)
+
+        if (isNeededShowDemoWarning) {
+            showDemoModeWarning()
+        }
+
+        return isNeededShowDemoWarning
+    }
+
+    private fun showDemoModeWarning() {
+        val message = DialogMessage(
+            message = resourceReference(R.string.alert_demo_feature_disabled),
+        )
+        messageSender.send(message)
+    }
+
+    private fun onReceiveClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val cryptoCurrencyStatus = cryptoCurrencyData.status
+        val currency = cryptoCurrencyStatus.currency
+        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return
+
+        updateTokenReceiveBSConfig {
+            TangemBottomSheetConfig(
+                isShown = true,
+                onDismissRequest = {
+                    updateTokenReceiveBSConfig {
+                        it.copy(isShown = false)
+                    }
+                },
+                content = TokenReceiveBottomSheetConfig(
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
+                    showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+                    onCopyClick = { clipboardManager.setText(networkAddress.defaultAddress.value, isSensitive = true) },
+                    onShareClick = { shareManager.shareText(networkAddress.defaultAddress.value) },
+                ),
+            )
+        }
+    }
+
+    private fun onCopyAddress(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val cryptoCurrencyStatus = cryptoCurrencyData.status
+        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return
+        val addresses = networkAddress.availableAddresses
+            .mapToAddressModels(cryptoCurrencyStatus.currency)
+            .toImmutableList()
+        val defaultAddress = addresses.firstOrNull()?.value ?: return
+
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
+        uiMessageSender.send(SnackbarMessage(resourceReference(R.string.wallet_notification_address_copied)))
+    }
+
+    private fun onBuyClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        router.push(
+            AppRoute.Onramp(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                currency = cryptoCurrencyData.status.currency,
+                source = OnrampSource.MARKETS,
+            ),
+        )
+    }
+
+    private fun onSellClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        reduxStateHolder.dispatch(
+            TradeCryptoAction.Sell(
+                cryptoCurrencyStatus = cryptoCurrencyData.status,
+                appCurrencyCode = currentAppCurrency().code,
+            ),
+        )
+    }
+
+    private fun onExchangeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        router.push(
+            AppRoute.Swap(
+                currencyFrom = cryptoCurrencyData.status.currency,
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                isInitialReverseOrder = true,
+                screenSource = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        )
+    }
+
+    private fun onSendClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val route = AppRoute.SendEntryPoint(
+            userWalletId = cryptoCurrencyData.userWallet.walletId,
+            currency = cryptoCurrencyData.status.currency,
+        )
+        router.push(route)
+    }
+
+    private fun onStakeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val option = cryptoCurrencyData.actions.firstOrNull { it is TokenActionsState.ActionState.Stake }
+            ?.let { it as TokenActionsState.ActionState.Stake }
+            ?.option ?: return
+
+        router.push(
+            AppRoute.Staking(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                cryptoCurrency = cryptoCurrencyData.status.currency,
+                integrationId = option.integrationId,
+            ),
+        )
+    }
+
+    private fun onYieldModeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val yieldSupplyApy = cryptoCurrencyData.actions.filterIsInstance<TokenActionsState.ActionState.YieldMode>()
+            .firstOrNull()?.apy ?: return
+
+        val (userWalletId, cryptoCurrencyStatus) = cryptoCurrencyData.let { currencyData ->
+            currencyData.userWallet.walletId to currencyData.status
+        }
+        val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+        val isActiveYield = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+
+        when {
+            tokenEnterStatus != null -> router.push(
+                AppRoute.CurrencyDetails(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrencyStatus.currency,
+                    navigationAction = NavigationAction.YieldSupply(
+                        isActive = isActiveYield,
+                    ),
+                ),
+            )
+            isActiveYield -> {
+                router.push(
+                    AppRoute.YieldSupplyActive(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        apy = yieldSupplyApy,
+                    ),
+                )
+            }
+            else -> {
+                router.push(
+                    AppRoute.YieldSupplyPromo(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        apy = yieldSupplyApy,
+                    ),
+                )
+            }
+        }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            currentAppCurrency: Provider<AppCurrency>,
+            updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
+            onHandleQuickAction: (HandledQuickAction) -> Unit,
+        ): TokenActionsHandler
+    }
+
+    data class HandledQuickAction(
+        val action: TokenActionsBSContentUM.Action,
+        val cryptoCurrencyData: PortfolioData.CryptoCurrencyData,
+    )
+}
