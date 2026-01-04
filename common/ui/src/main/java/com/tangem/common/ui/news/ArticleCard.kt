@@ -1,6 +1,7 @@
 package com.tangem.common.ui.news
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -82,6 +86,7 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
             style = TangemTheme.typography.h3,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
 
         SpacerH(8.dp)
@@ -97,6 +102,41 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
             modifier = Modifier.padding(horizontal = 46.dp),
             tags = articleConfigUM.tags.toImmutableList(),
         )
+    }
+}
+
+@Composable
+fun ShowMoreArticlesCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    BlockCard(
+        modifier = modifier,
+        onClick = onClick,
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 31.dp, horizontal = 12.dp),
+        ) {
+            Image(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_show_more_news_48),
+                contentDescription = stringResourceSafe(R.string.common_show_more),
+            )
+
+            SpacerH(16.dp)
+
+            Text(
+                text = stringResourceSafe(R.string.news_all_news),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+
+            Text(
+                text = stringResourceSafe(R.string.news_stay_in_the_loop),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
     }
 }
 
