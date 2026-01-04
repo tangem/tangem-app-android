@@ -149,8 +149,8 @@ internal class StakingIdFactoryTest {
                 expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Cardano),
             ),
             CreateModel(
-                currencyId = createCurrencyId(blockchain = StakingIntegrationID.P2P.EthereumPooled.blockchain),
-                expected = createStakingId(integrationId = StakingIntegrationID.P2P.EthereumPooled),
+                currencyId = createCurrencyId(blockchain = StakingIntegrationID.P2PEthPool.blockchain),
+                expected = createStakingId(integrationId = StakingIntegrationID.P2PEthPool),
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(
