@@ -20,6 +20,8 @@ import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
+import com.tangem.features.staking.impl.presentation.ui.utils.toDrawableRes
+import com.tangem.features.staking.impl.presentation.ui.utils.toImageUrl
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -42,7 +44,8 @@ internal fun StakingClaimRewardsValidatorContent(
                     caption = item.getAprTextNeutral(),
                     infoTitle = item.formattedFiatAmount,
                     infoSubtitle = item.formattedCryptoAmount,
-                    imageUrl = item.target?.image.orEmpty(),
+                    imageUrl = item.target?.image.toImageUrl(),
+                    iconRes = item.target?.image.toDrawableRes(),
                     onImageError = { ValidatorImagePlaceholder() },
                     modifier = Modifier
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
