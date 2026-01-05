@@ -119,7 +119,11 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
-                ApiConfig.ID.News -> News(authProvider = appAuthProvider)
+                ApiConfig.ID.News -> News(
+                    appVersionProvider = appVersionProvider,
+                    authProvider = appAuthProvider,
+                    appInfoProvider = appInfoProvider,
+                )
                 ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = appVersionProvider)
                 ApiConfig.ID.GaslessTxService -> GaslessTxService(
                     authProvider = appAuthProvider,
@@ -379,6 +383,14 @@ internal class ProdApiConfigsManagerTest {
                 baseUrl = baseUrl,
                 headers = mapOf(
                     "api-key" to ProviderSuspend { TANGEM_API_KEY },
+                    "version" to ProviderSuspend { VERSION_NAME },
+                    "platform" to ProviderSuspend { "android" },
+                    "system_version" to ProviderSuspend { "Android 16" },
+                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "timezone" to ProviderSuspend {
+                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+                    },
+                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                 ),
             ),
         )
