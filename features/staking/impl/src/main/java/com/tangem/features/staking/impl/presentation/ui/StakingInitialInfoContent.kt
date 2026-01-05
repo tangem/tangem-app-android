@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -32,9 +36,9 @@ import androidx.compose.ui.unit.Density
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
-import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
@@ -55,6 +59,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
+import com.tangem.features.staking.impl.presentation.ui.utils.toImageReference
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.extensions.orZero
 
@@ -275,16 +280,9 @@ private fun ActiveStakingBlock(
     modifier: Modifier = Modifier,
 ) {
     val (icon, iconTint) = balance.type.getIcon()
-    InputRowImageInfo(
-        subtitle = balance.title,
-        caption = balance.subtitle ?: balance.getAprTextNeutral(),
-        infoTitle = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden),
-        infoSubtitle = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden),
-        imageUrl = balance.getImage(),
-        iconRes = icon,
-        iconTint = iconTint,
-        subtitleEndIconRes = R.drawable.ic_staking_pending_transaction.takeIf { balance.isPending },
-        onImageError = { ValidatorImagePlaceholder() },
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .background(TangemTheme.colors.background.action)
             .clickable(
@@ -295,8 +293,96 @@ private fun ActiveStakingBlock(
                     onAnalytic()
                     onClick(balance)
                 },
-            ),
-    )
+            )
+            .padding(TangemTheme.dimens.spacing12),
+    ) {
+        StakingBalanceIcon(
+            balance = balance,
+            icon = icon,
+            iconTint = iconTint,
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row {
+                Text(
+                    text = balance.title.resolveReference(),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                if (balance.isPending) {
+                    Spacer(modifier = Modifier.width(TangemTheme.dimens.spacing4))
+                    Icon(
+                        painter = rememberVectorPainter(
+                            image = ImageVector.vectorResource(id = R.drawable.ic_staking_pending_transaction),
+                        ),
+                        tint = TangemTheme.colors.icon.informative,
+                        contentDescription = null,
+                        modifier = Modifier.size(TangemTheme.dimens.size18),
+                    )
+                }
+            }
+            val caption = balance.subtitle ?: balance.getAprTextNeutral()
+            Text(
+                text = caption.resolveAnnotatedReference(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+            )
+        }
+
+        SpacerW12()
+
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            if (balance.formattedCryptoAmount != null) {
+                Text(
+                    text = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden).resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.StakingBalanceIcon(balance: BalanceState, icon: Int?, iconTint: Color) {
+    if (balance.hasImage() || icon != null) {
+        StakingTargetIcon(
+            image = if (balance.hasImage()) balance.target?.image.toImageReference() else null,
+            onImageError = if (icon != null) {
+                {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.spacing36)
+                            .clip(TangemTheme.shapes.roundedCornersXLarge)
+                            .background(iconTint.copy(alpha = 0.08f)),
+                    ) {
+                        Icon(
+                            painter = rememberVectorPainter(
+                                image = ImageVector.vectorResource(id = icon),
+                            ),
+                            tint = iconTint,
+                            contentDescription = null,
+                            modifier = Modifier.size(TangemTheme.dimens.size18),
+                        )
+                    }
+                }
+            } else {
+                { ValidatorImagePlaceholder() }
+            },
+            modifier = Modifier
+                .size(TangemTheme.dimens.spacing36)
+                .clip(TangemTheme.shapes.roundedCornersXLarge),
+        )
+        SpacerW12()
+    }
 }
 
 @Composable
@@ -341,13 +427,12 @@ private fun BalanceType.getIcon() = when (this) {
     else -> null to TangemTheme.colors.icon.informative
 }
 
-@Composable
-private fun BalanceState.getImage() = when (type) {
+private fun BalanceState.hasImage() = when (type) {
     BalanceType.UNSTAKING,
     BalanceType.UNSTAKED,
     BalanceType.LOCKED,
-    -> null
-    else -> target?.image
+    -> false
+    else -> target?.image != null
 }
 
 private val textGradientColors = listOf(
