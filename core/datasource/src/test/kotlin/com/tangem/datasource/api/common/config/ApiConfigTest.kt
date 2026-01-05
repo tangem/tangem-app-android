@@ -75,6 +75,11 @@ class ApiConfigTest {
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
                 ApiConfig.ID.News -> News(authProvider = appAuthProvider)
                 ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = mockk())
+                ApiConfig.ID.GaslessTxService -> GaslessTxService(
+                    authProvider = appAuthProvider,
+                    appVersionProvider = mockk(),
+                    appInfoProvider = mockk(),
+                )
             }
         }
     }
