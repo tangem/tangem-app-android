@@ -25,8 +25,8 @@ sealed interface StakingTarget {
     /** Whether this target is active and available for staking */
     val isActive: Boolean
 
-    /** Image URL for display (validator logo or vault icon) */
-    val image: String?
+    /** Image for display (validator logo or vault icon) */
+    val image: StakingTargetImage?
 
     /** Whether this is a strategic partner (shows special badge in UI) */
     val isStrategicPartner: Boolean
@@ -40,7 +40,7 @@ sealed interface StakingTarget {
         override val rewardInfo: RewardInfo? = delegate.rewardInfo
         override val isPreferred: Boolean = delegate.preferred
         override val isActive: Boolean = delegate.status == Yield.Validator.ValidatorStatus.ACTIVE
-        override val image: String? = delegate.image
+        override val image: StakingTargetImage? = delegate.image?.let { StakingTargetImage.Url(it) }
         override val isStrategicPartner: Boolean = delegate.isStrategicPartner
     }
 
@@ -56,7 +56,7 @@ sealed interface StakingTarget {
         )
         override val isPreferred: Boolean = true
         override val isActive: Boolean = true
-        override val image: String? = null
+        override val image = StakingTargetImage.Local(StakingLocalImageType.P2P_VAULT)
         override val isStrategicPartner: Boolean = true
     }
 }
