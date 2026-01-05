@@ -72,7 +72,9 @@ class GetAvailableFeeTokensUseCase(
         } ?: raiseIllegalStateError("no native currency found")
     }
 
-    private fun getGaslessTokens(userCurrenciesStatuses: List<CryptoCurrencyStatus>): List<CryptoCurrencyStatus> {
+    private suspend fun getGaslessTokens(
+        userCurrenciesStatuses: List<CryptoCurrencyStatus>,
+    ): List<CryptoCurrencyStatus> {
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens()
         return userCurrenciesStatuses
             .asSequence()
