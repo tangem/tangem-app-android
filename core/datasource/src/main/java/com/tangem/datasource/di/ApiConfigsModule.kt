@@ -60,7 +60,15 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideNewsConfig(authProvider: AuthProvider): ApiConfig = News(authProvider = authProvider)
+    fun provideNewsConfig(
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig = News(
+        appVersionProvider = appVersionProvider,
+        appInfoProvider = appInfoProvider,
+        authProvider = authProvider,
+    )
 
     @Provides
     @IntoSet
