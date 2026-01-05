@@ -235,6 +235,11 @@ sealed class TokenItemState {
             val isFlickering: Boolean = false,
         ) : FiatAmountState()
 
+        data class Icon(
+            val iconRes: Int,
+            val tint: IconTint = IconTint.Inactive,
+        ) : FiatAmountState()
+
         data object Loading : FiatAmountState()
 
         data object Locked : FiatAmountState()

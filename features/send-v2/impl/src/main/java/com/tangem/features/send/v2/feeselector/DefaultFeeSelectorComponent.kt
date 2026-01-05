@@ -7,6 +7,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -16,6 +17,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.component.FeeSelectorComponentParams
+import com.tangem.features.send.v2.feeselector.component.extended.FeeExtendedSelectorComponent
 import com.tangem.features.send.v2.feeselector.component.speed.FeeSpeedSelectorComponent
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
@@ -29,13 +31,20 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: FeeSelectorParams.FeeSelectorDetailsParams,
     @Assisted private val onDismiss: () -> Unit,
+    private val feeExtendedSelectorComponent: FeeExtendedSelectorComponent.Factory,
     private val feeSpeedSelectorComponentFactory: FeeSpeedSelectorComponent.Factory,
 ) : FeeSelectorComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = instanceKeeper.getOrCreateSimple { StackNavigation<FeeSelectorRoute>() }
     private val innerRouter = InnerRouter<FeeSelectorRoute>(
         stackNavigation = stackNavigation,
-        popCallback = { model.onChildBack() },
+        popCallback = {
+            stackNavigation.pop { success ->
+                if (!success) {
+                    dismiss()
+                }
+            }
+        },
     )
     private val model: FeeSelectorModel = getOrCreateModel(params = params, router = innerRouter)
 
@@ -59,10 +68,11 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
 
         FeeSelectorModalBottomSheet(
             childStack = contentStack,
-            onDismiss = ::dismiss,
             state = state,
             feeSelectorIntents = model.intents,
             feeDisplaySource = params.feeDisplaySource,
+            onDismiss = onDismiss,
+            onBack = innerRouter::pop,
         )
     }
 
@@ -73,17 +83,21 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
         )
 
         val componentParams = FeeSelectorComponentParams(
+            parentParams = params,
             state = model.uiState,
             intents = model.intents,
         )
 
         return when (config) {
+            FeeSelectorRoute.NetworkFee -> feeExtendedSelectorComponent.create(
+                appComponentContext = appComponentContext,
+                params = componentParams,
+            )
             FeeSelectorRoute.ChooseSpeed -> feeSpeedSelectorComponentFactory.create(
                 appComponentContext = appComponentContext,
                 params = componentParams,
             )
             FeeSelectorRoute.ChooseToken -> TODO()
-            FeeSelectorRoute.NetworkFee -> TODO()
         }
     }
 

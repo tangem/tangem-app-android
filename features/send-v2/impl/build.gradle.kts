@@ -71,6 +71,7 @@ dependencies {
     implementation(projects.domain.swap.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.transaction)
 
 
     /** Compose libraries */

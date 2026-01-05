@@ -207,32 +207,18 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
     noinline onBack: (() -> Unit)? = null,
     noinline bsContent: @Composable ColumnScope.() -> Unit,
 ) {
-    if (onBack != null) {
-        ModalBottomSheetWithBackHandling(
-            modifier = modifier,
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = Color.Transparent,
-            shape = TangemTheme.shapes.roundedCornersLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            onBack = onBack,
-            dragHandle = null,
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    } else {
-        ModalBottomSheet(
-            modifier = modifier,
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = Color.Transparent,
-            shape = TangemTheme.shapes.roundedCornersLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            dragHandle = null,
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    }
+    ModalBottomSheetWithBackHandling(
+        modifier = modifier,
+        onDismissRequest = config.onDismissRequest,
+        sheetState = sheetState,
+        containerColor = Color.Transparent,
+        shape = TangemTheme.shapes.roundedCornersLarge,
+        contentWindowInsets = { WindowInsetsZero },
+        onBack = onBack,
+        dragHandle = null,
+        content = bsContent,
+        scrimColor = TangemTheme.colors.overlay.secondary,
+    )
 }
 
 // region Preview

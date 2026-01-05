@@ -16,9 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +37,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.inputrow.InputRowEnter
@@ -309,7 +312,7 @@ private fun ExpandedCustomFeeItems(
 }
 
 @Composable
-private fun RegularFeeItemContent(
+internal fun RegularFeeItemContent(
     title: TextReference,
     @DrawableRes iconRes: Int,
     iconBackgroundColor: Color,
@@ -318,6 +321,7 @@ private fun RegularFeeItemContent(
     preDot: TextReference? = null,
     postDot: TextReference? = null,
     ellipsizeOffset: Int? = null,
+    showSelectorIcon: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -343,6 +347,16 @@ private fun RegularFeeItemContent(
                 postDot = postDot,
                 ellipsizeOffset = ellipsizeOffset,
             )
+
+            if (showSelectorIcon) {
+                SpacerWMax()
+
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_select_18_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         }
     }
 }
