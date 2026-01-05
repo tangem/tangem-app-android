@@ -27,6 +27,7 @@ import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
 import com.tangem.features.send.v2.impl.R
 
+@Suppress("LongParameterList")
 @Composable
 internal fun FeeSelectorModalBottomSheet(
     childStack: ChildStack<FeeSelectorRoute, ComposableContentComponent>,
@@ -34,6 +35,7 @@ internal fun FeeSelectorModalBottomSheet(
     feeSelectorIntents: FeeSelectorIntents,
     feeDisplaySource: FeeSelectorParams.FeeDisplaySource,
     onDismiss: () -> Unit,
+    onBack: () -> Unit,
 ) {
     if (state !is FeeSelectorUM.Content) return
 
@@ -44,25 +46,44 @@ internal fun FeeSelectorModalBottomSheet(
             content = TangemBottomSheetConfigContent.Empty,
         ),
         containerColor = TangemTheme.colors.background.tertiary,
+        onBack = if (childStack.backStack.isNotEmpty()) onBack else null,
         title = {
-            FeeTitle(childStack = childStack, feeDisplaySource = feeDisplaySource, onDismiss = onDismiss)
+            FeeTitle(
+                childStack = childStack,
+                feeDisplaySource = feeDisplaySource,
+                onBack = onBack,
+            )
         },
         content = {
             Content(childStack = childStack)
         },
-        footer = if (state.selectedFeeItem is FeeItem.Custom) {
-            {
-                PrimaryButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    enabled = state.isPrimaryButtonEnabled,
-                    text = stringResourceSafe(R.string.common_done),
-                    onClick = feeSelectorIntents::onDoneClick,
-                )
+        footer = when {
+            childStack.active.configuration is FeeSelectorRoute.NetworkFee -> {
+                {
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        enabled = state.isPrimaryButtonEnabled,
+                        text = stringResourceSafe(R.string.common_confirm),
+                        onClick = feeSelectorIntents::onDoneClick,
+                    )
+                }
             }
-        } else {
-            null
+            childStack.active.configuration is FeeSelectorRoute.ChooseSpeed &&
+                state.selectedFeeItem is FeeItem.Custom -> {
+                {
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        enabled = state.isPrimaryButtonEnabled,
+                        text = stringResourceSafe(R.string.common_done),
+                        onClick = feeSelectorIntents::onDoneClick,
+                    )
+                }
+            }
+            else -> null
         },
     )
 }
@@ -71,7 +92,7 @@ internal fun FeeSelectorModalBottomSheet(
 private fun FeeTitle(
     childStack: ChildStack<FeeSelectorRoute, ComposableContentComponent>,
     feeDisplaySource: FeeSelectorParams.FeeDisplaySource,
-    onDismiss: () -> Unit,
+    onBack: () -> Unit,
 ) {
     Children(
         stack = childStack,
@@ -79,17 +100,25 @@ private fun FeeTitle(
     ) { current ->
         when (feeDisplaySource) {
             FeeSelectorParams.FeeDisplaySource.Screen -> {
-                TangemModalBottomSheetTitle(
-                    title = current.configuration.title,
-                    endIconRes = R.drawable.ic_close_24,
-                    onEndClick = onDismiss,
-                )
+                if (childStack.backStack.isNotEmpty()) {
+                    TangemModalBottomSheetTitle(
+                        title = current.configuration.title,
+                        startIconRes = R.drawable.ic_back_24,
+                        onStartClick = onBack,
+                    )
+                } else {
+                    TangemModalBottomSheetTitle(
+                        title = current.configuration.title,
+                        endIconRes = R.drawable.ic_close_24,
+                        onEndClick = onBack,
+                    )
+                }
             }
             FeeSelectorParams.FeeDisplaySource.BottomSheet -> {
                 TangemModalBottomSheetTitle(
                     title = current.configuration.title,
                     startIconRes = R.drawable.ic_back_24,
-                    onStartClick = onDismiss,
+                    onStartClick = onBack,
                 )
             }
         }
