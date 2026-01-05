@@ -1,8 +1,9 @@
 package com.tangem.data.transaction
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.transaction.converters.GaslessTokenDtoToCryptoCurrencyConverter
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -17,9 +18,9 @@ import java.math.BigInteger
 class DefaultGaslessTransactionRepository(
     private val gaslessTxServiceApi: GaslessTxServiceApi,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
+    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
 
-    private val gaslessTokenDtoToCryptoCurrency = GaslessTokenDtoToCryptoCurrencyConverter()
     private val supportedTokensState = MutableStateFlow<Set<CryptoCurrency>?>(null)
 
     override fun isNetworkSupported(network: Network): Boolean {
@@ -27,16 +28,27 @@ class DefaultGaslessTransactionRepository(
         return SUPPORTED_BLOCKCHAINS.contains(blockchain)
     }
 
-    override suspend fun getSupportedTokens(): Set<CryptoCurrency> {
+    override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
         return withContext(coroutineDispatcherProvider.io) {
             val storedTokens = supportedTokensState.value
-            if (storedTokens != null) {
+            if (storedTokens != null && storedTokens.isNotEmpty()) {
                 return@withContext storedTokens
             }
+
             val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
             if (supportedTokensData.isSuccess) {
-                val supportedTokens = supportedTokensData.result.tokens.map {
-                    gaslessTokenDtoToCryptoCurrency.convert(it)
+                val supportedTokens = supportedTokensData.result.tokens.mapNotNull { token ->
+                    val blockchain = Blockchain.fromChainId(token.chainId) ?: return@mapNotNull null
+                    responseCryptoCurrenciesFactory.createToken(
+                        blockchain = blockchain,
+                        sdkToken = Token(
+                            contractAddress = token.tokenAddress,
+                            name = token.tokenName,
+                            symbol = token.tokenSymbol,
+                            decimals = token.decimals,
+                        ),
+                        network = network,
+                    )
                 }.toSet()
                 // update local cache
                 supportedTokensState.update { supportedTokens }
