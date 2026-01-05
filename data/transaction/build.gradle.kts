@@ -24,6 +24,9 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
+    /** Common */
+    implementation(projects.data.common)
+
     /** Domain */
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.legacy)
