@@ -149,7 +149,9 @@ class GetFeeForGaslessUseCase(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
             )
 
-        val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens()
+        val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(
+            network = nativeCurrencyStatus.currency.network,
+        )
         val supportedGaslessTokensStatusesSortedByBalanceDesc = networkCurrenciesStatuses
             .filterNot { it.value.amount == BigDecimal.ZERO || it.currency !is CryptoCurrency.Token }
             .sortedByDescending { it.value.amount }
