@@ -12,6 +12,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
+import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_GASLESS_API_KEY
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
@@ -45,6 +46,7 @@ internal class ProdApiConfigsManagerTest {
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
     private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
+    private val tangemGaslessApiKeyProvider = mockk<ProviderSuspend<String>>()
 
     private lateinit var manager: ProdApiConfigsManager
 
@@ -63,6 +65,8 @@ internal class ProdApiConfigsManagerTest {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
+        every { appAuthProvider.getGaslessServiceApiKey(any()) } returns tangemGaslessApiKeyProvider
+        coEvery { tangemGaslessApiKeyProvider.invoke() } returns TANGEM_GASLESS_API_KEY
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
         coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
@@ -117,6 +121,11 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
                 ApiConfig.ID.News -> News(authProvider = appAuthProvider)
                 ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = appVersionProvider)
+                ApiConfig.ID.GaslessTxService -> GaslessTxService(
+                    authProvider = appAuthProvider,
+                    appVersionProvider = appVersionProvider,
+                    appInfoProvider = appInfoProvider,
+                )
             }
         }
     }
@@ -133,6 +142,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.P2PEthPool -> createP2PModel()
             ApiConfig.ID.News -> createNewsModel()
             ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
+            ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
         }
     }
 
@@ -269,6 +279,37 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
+                ),
+            ),
+        )
+    }
+
+    private fun createGaslessTxServiceModel(): TestModel {
+        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            DEBUG_BUILD_TYPE,
+            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
+            INTERNAL_BUILD_TYPE,
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD to "https://tangem.com/"
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+        return TestModel(
+            id = ApiConfig.ID.GaslessTxService,
+            expected = ApiEnvironmentConfig(
+                environment = environment,
+                baseUrl = baseUrl,
+                headers = mapOf(
+                    "Authorization" to ProviderSuspend { "Bearer $TANGEM_GASLESS_API_KEY" },
+                    "version" to ProviderSuspend { VERSION_NAME },
+                    "platform" to ProviderSuspend { "android" },
+                    "system_version" to ProviderSuspend { "Android 16" },
+                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "timezone" to ProviderSuspend {
+                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+                    },
+                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                 ),
             ),
         )
