@@ -33,6 +33,7 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         const val BLOCK_AID_API_KEY = "block_aid_api_key"
         const val TANGEM_API_KEY = "tangem_api_key"
         const val TANGEM_API_KEY_DEV = "tangem_api_key_dev"
+        const val TANGEM_GASLESS_API_KEY = "tangem_gasless_api_key"
         const val TANGEM_API_KEY_STAGE = "tangem_api_key_stage"
         const val YIELD_MODULE_KEY = "yield_module_api_key"
         const val YIELD_MODULE_KEY_DEV = "yield_module_api_key_dev"
