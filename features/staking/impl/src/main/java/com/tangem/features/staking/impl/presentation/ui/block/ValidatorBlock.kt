@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.inputrow.inner.InputRowAsyncImage
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -30,7 +29,9 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates.ValidatorState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
+import com.tangem.features.staking.impl.presentation.ui.StakingTargetIcon
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
+import com.tangem.features.staking.impl.presentation.ui.utils.toImageReference
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -63,8 +64,8 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(12.dp),
         ) {
-            InputRowAsyncImage(
-                imageUrl = state.chosenTarget.image.orEmpty(),
+            StakingTargetIcon(
+                image = state.chosenTarget.image.toImageReference(),
                 onImageError = { ValidatorImagePlaceholder() },
                 modifier = Modifier
                     .size(24.dp)

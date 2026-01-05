@@ -7,7 +7,7 @@ package com.tangem.domain.staking.model.ethpool
  */
 object P2PEthPoolStakingConfig {
 
-    const val USE_TESTNET: Boolean = true
+    const val USE_TESTNET: Boolean = false
 
     val activeNetwork: P2PEthPoolNetwork
         get() = if (USE_TESTNET) P2PEthPoolNetwork.TESTNET else P2PEthPoolNetwork.MAINNET
