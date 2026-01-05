@@ -44,7 +44,7 @@ class GetAvailableFeeTokensUseCase(
                         return@either listOf(nativeCurrencyStatus)
                     }
 
-                    val gaslessTokens = getGaslessTokens(userCurrenciesStatuses)
+                    val gaslessTokens = getGaslessTokens(network, userCurrenciesStatuses)
                     buildList {
                         add(nativeCurrencyStatus)
                         addAll(gaslessTokens)
@@ -73,9 +73,10 @@ class GetAvailableFeeTokensUseCase(
     }
 
     private suspend fun getGaslessTokens(
+        network: Network,
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
     ): List<CryptoCurrencyStatus> {
-        val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens()
+        val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(network)
         return userCurrenciesStatuses
             .asSequence()
             .filter { currencyStatus ->
