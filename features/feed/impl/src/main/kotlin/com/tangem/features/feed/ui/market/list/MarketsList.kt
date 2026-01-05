@@ -146,7 +146,7 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                 state.list !is ListUM.LoadingError && state.isInSearchMode.not() &&
                     state.selectedSortBy != SortByTypeUM.YieldSupply,
             ) {
-                val wrappedNotification = remember(this) { state.marketsNotificationUM }
+                val wrappedNotification = remember(state.list) { state.marketsNotificationUM }
                 val showMore = stringResourceSafe(R.string.common_show_more)
 
                 when (wrappedNotification) {
