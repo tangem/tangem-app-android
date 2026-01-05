@@ -14,8 +14,8 @@ import javax.inject.Inject
 @ModelScoped
 internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
 ) : Model() {
 
@@ -28,16 +28,12 @@ internal class FeeSelectorModel @Inject constructor(
     val uiState = feeSelectorLogic.uiState
     val intents: FeeSelectorIntents = feeSelectorLogic
 
-    fun onChildBack() {
-        // TODO("Not yet implemented")
-    }
-
     fun getInitialRoute(): FeeSelectorRoute {
         if (sendFeatureToggles.isGaslessTransactionsEnabled.not()) {
             return FeeSelectorRoute.ChooseSpeed
         }
 
         // TODO: Add logic to choose initial route based on other conditions
-        return FeeSelectorRoute.ChooseSpeed
+        return FeeSelectorRoute.NetworkFee
     }
 }
