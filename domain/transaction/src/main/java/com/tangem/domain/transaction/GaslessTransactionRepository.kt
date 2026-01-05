@@ -8,7 +8,7 @@ interface GaslessTransactionRepository {
 
     fun isNetworkSupported(network: Network): Boolean
 
-    suspend fun getSupportedTokens(): Set<CryptoCurrency>
+    suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency>
 
     fun getTokenFeeReceiverAddress(): String
 
