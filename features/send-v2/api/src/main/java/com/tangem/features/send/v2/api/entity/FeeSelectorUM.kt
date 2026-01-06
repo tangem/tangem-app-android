@@ -7,6 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.R
 import com.tangem.features.send.v2.api.entity.FeeItem.*
@@ -61,6 +62,7 @@ data class FeeExtraInfo(
     val isFeeApproximate: Boolean,
     val isFeeConvertibleToFiat: Boolean,
     val isTronToken: Boolean,
+    val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
 )
 
 sealed class FeeNonce {
