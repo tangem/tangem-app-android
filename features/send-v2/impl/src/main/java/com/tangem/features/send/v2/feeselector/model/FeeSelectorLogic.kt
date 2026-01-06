@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.feeselector.model
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.raise.either
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -12,6 +13,8 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.v2.api.entity.FeeItem
@@ -32,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
@@ -47,6 +51,8 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeatureToggles: SendFeatureToggles,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -103,6 +109,20 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             )
         }
         uiState.update(FeeItemSelectedTransformer(feeItem))
+    }
+
+    override fun onTokenSelected(status: CryptoCurrencyStatus) {
+        uiState.update { state ->
+            if (state is FeeSelectorUM.Content) {
+                state.copy(
+                    feeExtraInfo = state.feeExtraInfo.copy(
+                        feeCryptoCurrencyStatus = status,
+                    ),
+                )
+            } else {
+                state
+            }
+        }
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
@@ -208,20 +228,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                     }
                 },
                 ifRight = { fee ->
-                    Either.Right(
-                        LoadedFeeResult.Extended(
-                            fee = fee,
-                            selectedToken = if (params.feeCryptoCurrencyStatus.currency.id != fee.feeTokenId) {
-                                getSingleCryptoCurrencyStatusUseCase
-                                    .invokeMultiWalletSync(
-                                        userWalletId = TODO(),
-                                        cryptoCurrencyId = fee.feeTokenId,
-                                    ).getOrNull()
-                            } else {
-                                params.feeCryptoCurrencyStatus
-                            },
-                        ),
-                    )
+                    populateExtendedFee(fee)
                 },
             )
         } else {
@@ -229,10 +236,42 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         }
     }
 
+    private suspend fun populateExtendedFee(
+        fee: TransactionFeeExtended,
+    ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
+        val selectedToken = if (params.feeCryptoCurrencyStatus.currency.id != fee.feeTokenId) {
+            getSingleCryptoCurrencyStatusUseCase
+                .invokeMultiWalletSync(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrencyId = fee.feeTokenId,
+                ).getOrElse {
+                    raise(GetFeeError.DataError(IllegalStateException("No token found for id: ${fee.feeTokenId}")))
+                }
+        } else {
+            params.feeCryptoCurrencyStatus
+        }
+
+        val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
+            GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
+        }.bind()
+
+        val availableTokens = getAvailableFeeTokensUseCase.invoke(
+            userWallet = userWallet,
+            network = params.cryptoCurrencyStatus.currency.network,
+        ).bind()
+
+        LoadedFeeResult.Extended(
+            fee = fee,
+            selectedToken = selectedToken,
+            availableTokens = availableTokens,
+        )
+    }
+
     sealed class LoadedFeeResult {
         data class Extended(
             val fee: TransactionFeeExtended,
             val selectedToken: CryptoCurrencyStatus?,
+            val availableTokens: List<CryptoCurrencyStatus>,
         ) : LoadedFeeResult()
 
         data class Basic(val fee: TransactionFee) : LoadedFeeResult()

@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -322,5 +323,13 @@ internal object TransactionDomainModule {
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsGaslessFeeSupportedForNetwork(
+        gaslessTransactionRepository: GaslessTransactionRepository,
+    ): IsGaslessFeeSupportedForNetwork {
+        return IsGaslessFeeSupportedForNetwork(gaslessTransactionRepository)
     }
 }
