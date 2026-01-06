@@ -25,14 +25,14 @@ import javax.inject.Inject
 @ModelScoped
 internal class FeeSelectorBlockModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val urlOpener: UrlOpener,
 ) : Model(), FeeSelectorModelCallback {
 
-    private val params = paramsContainer.require<FeeSelectorParams>()
+    private val params = paramsContainer.require<FeeSelectorParams.FeeSelectorBlockParams>()
     private val feeSelectorLogic = feeSelectorLogicFactory.create(
         params = params,
         modelScope = modelScope,
