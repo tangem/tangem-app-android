@@ -97,4 +97,18 @@ internal object ApiConfigsModule {
     fun provideMoonPayConfig(): ApiConfig {
         return MoonPay()
     }
+
+    @Provides
+    @IntoSet
+    fun provideGaslessServiceConfig(
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return GaslessTxService(
+            authProvider = authProvider,
+            appVersionProvider = appVersionProvider,
+            appInfoProvider = appInfoProvider,
+        )
+    }
 }
