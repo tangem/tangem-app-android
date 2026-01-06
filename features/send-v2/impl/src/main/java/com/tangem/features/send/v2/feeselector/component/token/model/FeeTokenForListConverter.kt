@@ -1,7 +1,6 @@
-package com.tangem.features.send.v2.feeselector.component.extended.entity
+package com.tangem.features.send.v2.feeselector.component.token.model
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
-import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -13,7 +12,7 @@ import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
-internal class SelectedTokenItemConverter(
+internal class FeeTokenForListConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val onTokenClick: () -> Unit,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
@@ -38,10 +37,7 @@ internal class SelectedTokenItemConverter(
                 }
 
                 state.copy(
-                    fiatAmountState = TokenItemState.FiatAmountState.Icon(
-                        iconRes = R.drawable.ic_select_18_24,
-                        tint = IconTint.Informative,
-                    ),
+                    fiatAmountState = TokenItemState.FiatAmountState.Empty,
                     subtitleState = TokenItemState.SubtitleState.TextContent(
                         value = resourceReference(
                             R.string.common_balance,
