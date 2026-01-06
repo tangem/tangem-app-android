@@ -42,6 +42,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.FeeSelectorBlockTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.impl.R
@@ -238,11 +241,48 @@ private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvi
 }
 
 private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
-    private val maxFeeItem = FeeItem.Market(
-        fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Hedera)),
-    )
-    private val lowFeeItem =
-        FeeItem.Market(Fee.Common(amount = Amount(value = BigDecimal("0.0002876"), blockchain = Blockchain.Ethereum)))
+    private val maxFeeItem
+        get() = FeeItem.Market(
+            fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Hedera)),
+        )
+    private val lowFeeItem
+        get() = FeeItem.Market(
+            Fee.Common(
+                amount = Amount(
+                    value = BigDecimal("0.0002876"),
+                    blockchain = Blockchain.Ethereum,
+                ),
+            ),
+        )
+
+    val cryptoCurrencyStatus
+        get() = CryptoCurrencyStatus(
+            currency = CryptoCurrency.Coin(
+                id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
+                network = Network(
+                    id = Network.ID(
+                        value = "bitcoin",
+                        derivationPath = Network.DerivationPath.None,
+                    ),
+                    backendId = "bitcoin",
+                    name = "Bitcoin",
+                    currencySymbol = "BTC",
+                    derivationPath = Network.DerivationPath.None,
+                    isTestnet = false,
+                    standardType = Network.StandardType.Unspecified("bitcoin"),
+                    hasFiatFeeRate = false,
+                    canHandleTokens = false,
+                    transactionExtrasType = Network.TransactionExtrasType.NONE,
+                    nameResolvingType = Network.NameResolvingType.NONE,
+                ),
+                name = "Bitcoin",
+                symbol = "BTC",
+                decimals = 8,
+                iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/medium/bitcoin.png",
+                isCustom = false,
+            ),
+            value = CryptoCurrencyStatus.Loading,
+        )
 
     override val values: Sequence<FeeSelectorUM> = sequenceOf(
         FeeSelectorUM.Content(
@@ -253,6 +293,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = true,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(
@@ -269,6 +310,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = true,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(
