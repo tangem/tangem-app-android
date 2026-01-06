@@ -11,7 +11,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.v2.feeselector.component.extended.entity.FeeExtendedSelectorUM
-import com.tangem.features.send.v2.feeselector.component.extended.entity.SelectedTokenItemConverter
 import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
