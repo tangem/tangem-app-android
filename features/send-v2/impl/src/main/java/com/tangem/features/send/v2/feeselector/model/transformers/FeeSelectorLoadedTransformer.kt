@@ -11,6 +11,7 @@ import com.tangem.features.send.v2.feeselector.model.FeeSelectorLogic.LoadedFeeR
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLoadedTransformer(
@@ -61,6 +62,7 @@ internal class FeeSelectorLoadedTransformer(
                 isTronToken = cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
                     isTron(cryptoCurrencyStatus.currency.network.rawId),
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                availableFeeCurrencies = getAvailableFeeCurrencies(),
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(
@@ -77,5 +79,10 @@ internal class FeeSelectorLoadedTransformer(
                 FeeNonce.None
             },
         )
+    }
+
+    private fun getAvailableFeeCurrencies(): ImmutableList<CryptoCurrencyStatus>? {
+        if (fees !is LoadedFeeResult.Extended) return null
+        return fees.availableTokens.toImmutableList()
     }
 }
