@@ -96,6 +96,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             feeDisplaySource = FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
         ),
         onResult = model::onFeeResult,
     )

@@ -78,6 +78,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
         ),
         onResult = model::onFeeResult,
     )

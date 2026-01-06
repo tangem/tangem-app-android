@@ -63,6 +63,7 @@ data class FeeExtraInfo(
     val isFeeConvertibleToFiat: Boolean,
     val isTronToken: Boolean,
     val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+    val availableFeeCurrencies: ImmutableList<CryptoCurrencyStatus>? = null,
 )
 
 sealed class FeeNonce {

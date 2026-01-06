@@ -92,6 +92,7 @@ internal class SendConfirmComponent(
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
         ),
         onResult = model::onFeeResult,
     )
