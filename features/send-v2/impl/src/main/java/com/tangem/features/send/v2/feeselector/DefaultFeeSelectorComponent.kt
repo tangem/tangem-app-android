@@ -17,6 +17,7 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.v2.feeselector.component.extended.FeeExtendedSelectorComponent
 import com.tangem.features.send.v2.feeselector.component.speed.FeeSpeedSelectorComponent
+import com.tangem.features.send.v2.feeselector.component.token.FeeTokenSelectorComponent
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
 import com.tangem.features.send.v2.feeselector.ui.FeeSelectorModalBottomSheet
@@ -28,8 +29,9 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: FeeSelectorParams.FeeSelectorDetailsParams,
     @Assisted private val onDismiss: () -> Unit,
-    private val feeExtendedSelectorComponent: FeeExtendedSelectorComponent.Factory,
+    private val feeExtendedSelectorComponentFactory: FeeExtendedSelectorComponent.Factory,
     private val feeSpeedSelectorComponentFactory: FeeSpeedSelectorComponent.Factory,
+    private val feeTokenSelectorComponentFactory: FeeTokenSelectorComponent.Factory,
 ) : FeeSelectorComponent, AppComponentContext by appComponentContext {
 
     private val model: FeeSelectorModel = getOrCreateModel(params = params)
@@ -86,7 +88,7 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
         )
 
         return when (config) {
-            FeeSelectorRoute.NetworkFee -> feeExtendedSelectorComponent.create(
+            FeeSelectorRoute.NetworkFee -> feeExtendedSelectorComponentFactory.create(
                 appComponentContext = appComponentContext,
                 params = componentParams,
             )
@@ -94,7 +96,10 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
                 appComponentContext = appComponentContext,
                 params = componentParams,
             )
-            FeeSelectorRoute.ChooseToken -> TODO()
+            FeeSelectorRoute.ChooseToken -> feeTokenSelectorComponentFactory.create(
+                appComponentContext = appComponentContext,
+                params = componentParams,
+            )
         }
     }
 
