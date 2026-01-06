@@ -6,12 +6,14 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 
 sealed class FeeSelectorParams {
     abstract val state: FeeSelectorUM
+    abstract val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)?
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
@@ -22,6 +24,7 @@ sealed class FeeSelectorParams {
 
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
+        override val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)? = null,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -33,6 +36,7 @@ sealed class FeeSelectorParams {
 
     data class FeeSelectorDetailsParams(
         override val state: FeeSelectorUM,
+        override val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)? = null,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
