@@ -1,11 +1,18 @@
 package com.tangem.features.send.v2.feeselector.model
 
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeNonce
@@ -38,6 +45,8 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val sendFeatureToggles: SendFeatureToggles,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
@@ -51,10 +60,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         loadFee()
     }
 
-    fun updateState(feeSelectorUM: FeeSelectorUM) {
-        uiState.value = feeSelectorUM
-    }
-
     private fun initAppCurrency() {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
@@ -66,18 +71,18 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             uiState.update(FeeSelectorLoadingTransformer)
         }
         modelScope.launch {
-            params.onLoadFee()
+            callLoadFee()
                 .fold(
                     ifLeft = { error -> uiState.update(FeeSelectorErrorTransformer(error)) },
                     ifRight = { fee ->
                         uiState.update(
                             FeeSelectorLoadedTransformer(
                                 cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-                                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
+                                feeCryptoCurrencyStatus = fee.selectedTokenOrNull ?: params.feeCryptoCurrencyStatus,
                                 appCurrency = appCurrency,
                                 fees = fee,
                                 feeStateConfiguration = params.feeStateConfiguration,
-                                isFeeApproximate = isFeeApproximate(fee.normal.amount.type),
+                                isFeeApproximate = isFeeApproximate(fee.transactionFee.normal.amount.type),
                                 feeSelectorIntents = this@FeeSelectorLogic,
                             ),
                         )
@@ -98,9 +103,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
             )
         }
         uiState.update(FeeItemSelectedTransformer(feeItem))
-        if (feeItem !is FeeItem.Custom) {
-            onDoneClick()
-        }
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
@@ -141,8 +143,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 ),
             )
         }
-
-        (params as? FeeSelectorParams.FeeSelectorDetailsParams)?.callback?.onFeeResult(uiState.value)
     }
 
     private fun subscribeOnFeeReloadTriggerUpdates() {
@@ -170,10 +170,10 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
     private fun checkLoadFee() {
         modelScope.launch {
-            params.onLoadFee().fold(
+            callLoadFee().fold(
                 ifRight = { newFee ->
                     feeSelectorAlertFactory.getFeeUpdatedAlert(
-                        newTransactionFee = newFee,
+                        newTransactionFee = newFee.transactionFee,
                         feeSelectorUM = uiState.value,
                         proceedAction = {
                             modelScope.launch {
@@ -193,6 +193,61 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 },
             )
         }
+    }
+
+    @Suppress("UnreachableCode")
+    private suspend fun callLoadFee(): Either<GetFeeError, LoadedFeeResult> {
+        val extended = params.onLoadFeeExtended
+        return if (extended != null && sendFeatureToggles.isGaslessTransactionsEnabled) {
+            extended().fold(
+                ifLeft = { error ->
+                    if (error is GetFeeError.GaslessError) {
+                        params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+                    } else {
+                        Either.Left(error)
+                    }
+                },
+                ifRight = { fee ->
+                    Either.Right(
+                        LoadedFeeResult.Extended(
+                            fee = fee,
+                            selectedToken = if (params.feeCryptoCurrencyStatus.currency.id != fee.feeTokenId) {
+                                getSingleCryptoCurrencyStatusUseCase
+                                    .invokeMultiWalletSync(
+                                        userWalletId = TODO(),
+                                        cryptoCurrencyId = fee.feeTokenId,
+                                    ).getOrNull()
+                            } else {
+                                params.feeCryptoCurrencyStatus
+                            },
+                        ),
+                    )
+                },
+            )
+        } else {
+            params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+        }
+    }
+
+    sealed class LoadedFeeResult {
+        data class Extended(
+            val fee: TransactionFeeExtended,
+            val selectedToken: CryptoCurrencyStatus?,
+        ) : LoadedFeeResult()
+
+        data class Basic(val fee: TransactionFee) : LoadedFeeResult()
+
+        val selectedTokenOrNull: CryptoCurrencyStatus?
+            get() = when (this) {
+                is Extended -> selectedToken
+                is Basic -> null
+            }
+
+        val transactionFee: TransactionFee
+            get() = when (this) {
+                is Extended -> fee.transactionFee
+                is Basic -> fee
+            }
     }
 
     @AssistedFactory
