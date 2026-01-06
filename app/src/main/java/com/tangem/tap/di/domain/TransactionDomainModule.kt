@@ -5,12 +5,18 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
+import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -264,5 +270,57 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
     ): SendLargeSolanaTransactionUseCase {
         return SendLargeSolanaTransactionUseCase(cardSdkConfigRepository, walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAvailableFeeTokensUseCase(
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    ): GetAvailableFeeTokensUseCase {
+        return GetAvailableFeeTokensUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForGaslessUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        demoConfig: DemoConfig,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getFeeUseCase: GetFeeUseCase,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    ): GetFeeForGaslessUseCase {
+        return GetFeeForGaslessUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = demoConfig,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            getFeeUseCase = getFeeUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForTokenUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        demoConfig: DemoConfig,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    ): GetFeeForTokenUseCase {
+        return GetFeeForTokenUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = demoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+        )
     }
 }
