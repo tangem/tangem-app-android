@@ -1,13 +1,13 @@
 package com.tangem.features.send.v2.feeselector.model.transformers
 
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorLogic.LoadedFeeResult
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -17,7 +17,7 @@ internal class FeeSelectorLoadedTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrency: AppCurrency,
-    private val fees: TransactionFee,
+    private val fees: LoadedFeeResult,
     private val feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration,
     private val isFeeApproximate: Boolean,
     private val feeSelectorIntents: FeeSelectorIntents,
@@ -25,7 +25,7 @@ internal class FeeSelectorLoadedTransformer(
 
     private val feeItemsConverter = FeeItemConverter(
         feeStateConfiguration = feeStateConfiguration,
-        normalFee = fees.normal,
+        normalFee = fees.transactionFee.normal,
         feeSelectorIntents = feeSelectorIntents,
         appCurrency = appCurrency,
         cryptoCurrencyStatus = feeCryptoCurrencyStatus,
@@ -37,7 +37,9 @@ internal class FeeSelectorLoadedTransformer(
         } else {
             null
         }
-        val feeItems: ImmutableList<FeeItem> = feeItemsConverter.convert(FeeItemConverter.Input(fees, prevCustomFee))
+        val feeItems: ImmutableList<FeeItem> = feeItemsConverter.convert(
+            FeeItemConverter.Input(fees.transactionFee, prevCustomFee),
+        )
 
         val selectedFee = when (prevState) {
             is FeeSelectorUM.Content -> feeItems.first { it.isSameClass(prevState.selectedFeeItem) }
@@ -50,7 +52,7 @@ internal class FeeSelectorLoadedTransformer(
 
         return FeeSelectorUM.Content(
             isPrimaryButtonEnabled = true,
-            fees = fees,
+            fees = fees.transactionFee,
             feeItems = feeItems,
             selectedFeeItem = selectedFee,
             feeExtraInfo = FeeExtraInfo(
@@ -58,6 +60,7 @@ internal class FeeSelectorLoadedTransformer(
                 isFeeConvertibleToFiat = feeCryptoCurrencyStatus.currency.network.hasFiatFeeRate,
                 isTronToken = cryptoCurrencyStatus.currency is CryptoCurrency.Token &&
                     isTron(cryptoCurrencyStatus.currency.network.rawId),
+                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(
@@ -65,7 +68,7 @@ internal class FeeSelectorLoadedTransformer(
                     appCurrency = appCurrency,
                 )
             },
-            feeNonce = if (fees.normal is Fee.Ethereum) {
+            feeNonce = if (fees.transactionFee.normal is Fee.Ethereum) {
                 FeeNonce.Nonce(
                     nonce = nonce,
                     onNonceChange = feeSelectorIntents::onNonceChange,
