@@ -50,6 +50,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.feeselector.component.speed.FeeSpeedSelectorIntents
 import com.tangem.features.send.v2.feeselector.component.speed.StubFeeSpeedSelectorIntents
@@ -473,6 +476,7 @@ private class FeeSpeedSelectorUMContentProvider : CollectionPreviewParameterProv
                 isFeeApproximate = true,
                 isFeeConvertibleToFiat = true,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal.TEN,
@@ -484,44 +488,74 @@ private class FeeSpeedSelectorUMContentProvider : CollectionPreviewParameterProv
     ),
 )
 
-private val customFeeItem = FeeItem.Custom(
-    fee = Fee.Common(Amount(value = BigDecimal("0.05"), blockchain = Blockchain.Ethereum)),
-    customValues = persistentListOf(
-        CustomFeeFieldUM(
-            value = "0.119806",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = "ETH",
+private val cryptoCurrencyStatus
+    get() = CryptoCurrencyStatus(
+        currency = CryptoCurrency.Coin(
+            id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
+            network = Network(
+                id = Network.ID(
+                    value = "bitcoin",
+                    derivationPath = Network.DerivationPath.None,
+                ),
+                backendId = "bitcoin",
+                name = "Bitcoin",
+                currencySymbol = "BTC",
+                derivationPath = Network.DerivationPath.None,
+                isTestnet = false,
+                standardType = Network.StandardType.Unspecified("bitcoin"),
+                hasFiatFeeRate = false,
+                canHandleTokens = false,
+                transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
+            ),
+            name = "Bitcoin",
+            symbol = "BTC",
             decimals = 8,
-            title = resourceReference(R.string.send_max_fee),
-            footer = resourceReference(R.string.send_custom_amount_fee_footer),
-            label = stringReference("~ 0,03 \$"),
-            isReadonly = false,
+            iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/medium/bitcoin.png",
+            isCustom = false,
         ),
-        CustomFeeFieldUM(
-            value = "40000",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = "GWEI",
-            decimals = 8,
-            title = resourceReference(R.string.send_gas_price),
-            footer = resourceReference(R.string.send_gas_price_footer),
-            label = null,
-            isReadonly = false,
+        value = CryptoCurrencyStatus.Loading,
+    )
+
+private val customFeeItem
+    get() = FeeItem.Custom(
+        fee = Fee.Common(Amount(value = BigDecimal("0.05"), blockchain = Blockchain.Ethereum)),
+        customValues = persistentListOf(
+            CustomFeeFieldUM(
+                value = "0.119806",
+                onValueChange = {},
+                keyboardOptions = KeyboardOptions(),
+                keyboardActions = KeyboardActions(),
+                symbol = "ETH",
+                decimals = 8,
+                title = resourceReference(R.string.send_max_fee),
+                footer = resourceReference(R.string.send_custom_amount_fee_footer),
+                label = stringReference("~ 0,03 \$"),
+                isReadonly = false,
+            ),
+            CustomFeeFieldUM(
+                value = "40000",
+                onValueChange = {},
+                keyboardOptions = KeyboardOptions(),
+                keyboardActions = KeyboardActions(),
+                symbol = "GWEI",
+                decimals = 8,
+                title = resourceReference(R.string.send_gas_price),
+                footer = resourceReference(R.string.send_gas_price_footer),
+                label = null,
+                isReadonly = false,
+            ),
+            CustomFeeFieldUM(
+                value = "31400",
+                onValueChange = {},
+                keyboardOptions = KeyboardOptions(),
+                keyboardActions = KeyboardActions(),
+                symbol = null,
+                decimals = 8,
+                title = resourceReference(R.string.send_gas_limit),
+                footer = resourceReference(R.string.send_gas_limit_footer),
+                label = null,
+                isReadonly = false,
+            ),
         ),
-        CustomFeeFieldUM(
-            value = "31400",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = null,
-            decimals = 8,
-            title = resourceReference(R.string.send_gas_limit),
-            footer = resourceReference(R.string.send_gas_limit_footer),
-            label = null,
-            isReadonly = false,
-        ),
-    ),
-)
+    )
