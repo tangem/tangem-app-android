@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.send.v2.feeselector.component.extended.model.FeeExtendedSelectorModel
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorBlockModel
 import com.tangem.features.send.v2.feeselector.component.speed.model.FeeSpeedSelectorModel
+import com.tangem.features.send.v2.feeselector.component.token.model.FeeTokenSelectorModel
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
 import dagger.Binds
 import dagger.Module
@@ -33,5 +34,10 @@ internal interface FeeSelectorModelModule {
     @Binds
     @IntoMap
     @ClassKey(FeeSpeedSelectorModel::class)
-    fun bindFeeSelectorSpeedModel(model: FeeSpeedSelectorModel): Model
+    fun bindFeeSpeedSelectorModel(model: FeeSpeedSelectorModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeeTokenSelectorModel::class)
+    fun bindFeeTokenSelectorModel(model: FeeTokenSelectorModel): Model
 }
