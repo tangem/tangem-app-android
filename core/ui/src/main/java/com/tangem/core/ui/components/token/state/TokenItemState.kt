@@ -243,6 +243,8 @@ sealed class TokenItemState {
         data object Loading : FiatAmountState()
 
         data object Locked : FiatAmountState()
+
+        data object Empty : FiatAmountState()
     }
 
     @Immutable
