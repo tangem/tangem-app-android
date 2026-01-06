@@ -22,7 +22,7 @@ data class GaslessTransactionRequest(
     val chainId: Int,
 
     @Json(name = "eip7702auth")
-    val eip7702Auth: Eip7702Authorization? = null,
+    val eip7702Auth: Eip7702AuthorizationDTO? = null,
 )
 
 @JsonClass(generateAdapter = true)
@@ -72,7 +72,7 @@ data class FeeData(
  * Optional field, used only when EOA delegation is required.
  */
 @JsonClass(generateAdapter = true)
-data class Eip7702Authorization(
+data class Eip7702AuthorizationDTO(
     @Json(name = "chainId")
     val chainId: Int,
 
