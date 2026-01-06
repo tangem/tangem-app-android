@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,6 +52,10 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
         }
         is TokenFiatAmountState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
+        }
+        is TokenFiatAmountState.Empty -> {
+            // Empty box for proper measurements
+            Box(modifier)
         }
         null -> Unit
     }
