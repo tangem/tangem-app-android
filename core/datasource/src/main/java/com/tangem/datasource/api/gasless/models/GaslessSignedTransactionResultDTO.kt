@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonClass
  * Contains the signed transaction data and gas parameters.
  */
 @JsonClass(generateAdapter = true)
-data class GaslessSignedTransactionResult(
+data class GaslessSignedTransactionResultDTO(
     @Json(name = "signedTransaction")
     val signedTransaction: String,
 
