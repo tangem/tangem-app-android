@@ -15,7 +15,7 @@ internal sealed interface FeeSelectorRoute : Route {
 
     @Serializable
     data object NetworkFee : FeeSelectorRoute {
-        override val title: TextReference = resourceReference(R.string.common_fee_selector_title)
+        override val title: TextReference = resourceReference(R.string.common_network_fee_title)
     }
 
     @Serializable

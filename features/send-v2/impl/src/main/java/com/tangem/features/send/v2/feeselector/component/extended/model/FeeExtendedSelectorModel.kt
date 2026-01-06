@@ -13,6 +13,7 @@ import com.tangem.features.send.v2.feeselector.component.FeeSelectorComponentPar
 import com.tangem.features.send.v2.feeselector.component.extended.entity.FeeExtendedSelectorUM
 import com.tangem.features.send.v2.feeselector.component.extended.entity.SelectedTokenItemConverter
 import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -29,44 +30,48 @@ class FeeExtendedSelectorModel @Inject constructor(
 
     private val params = paramsContainer.require<FeeSelectorComponentParams>()
     private var appCurrency: AppCurrency = AppCurrency.Default
+    private val tokenConverter = SelectedTokenItemConverter(
+        appCurrencyProvider = Provider { appCurrency },
+        onTokenClick = { router.push(FeeSelectorRoute.ChooseToken) },
+    )
+
+    init {
+        initAppCurrency()
+    }
 
     val uiState: StateFlow<FeeExtendedSelectorUM>
         field = MutableStateFlow<FeeExtendedSelectorUM>(getInitialState())
 
     init {
-        modelScope.launch {
-            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-            uiState.value = getInitialState()
-        }
-
         params.state
+            .filterIsInstance<FeeSelectorUM.Content>()
             .onEach(::onParentStateUpdated)
             .launchIn(modelScope)
     }
 
     private fun getInitialState(): FeeExtendedSelectorUM {
-        val status = params.parentParams.feeCryptoCurrencyStatus
         val parentContentState = params.state.value as FeeSelectorUM.Content
 
         return FeeExtendedSelectorUM(
             parent = parentContentState,
-            token = SelectedTokenItemConverter(
-                appCurrency = appCurrency,
-                onTokenClick = {
-                    router.push(FeeSelectorRoute.ChooseToken)
-                },
-            ).convert(status),
+            token = tokenConverter.convert(parentContentState.feeExtraInfo.feeCryptoCurrencyStatus),
             fee = parentContentState.selectedFeeItem,
-            onFeeClick = {
-                router.push(FeeSelectorRoute.ChooseSpeed)
-            },
+            onFeeClick = { router.push(FeeSelectorRoute.ChooseSpeed) },
         )
     }
 
-    private fun onParentStateUpdated(state: FeeSelectorUM) {
+    private fun initAppCurrency() {
+        modelScope.launch {
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+        }
+    }
+
+    private fun onParentStateUpdated(state: FeeSelectorUM.Content) {
         uiState.update { current ->
             current.copy(
-                parent = state as FeeSelectorUM.Content,
+                parent = state,
+                token = tokenConverter.convert(state.feeExtraInfo.feeCryptoCurrencyStatus),
+                fee = state.selectedFeeItem,
             )
         }
     }
