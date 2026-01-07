@@ -15,7 +15,7 @@ import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 sealed class FeeSelectorParams {
     abstract val state: FeeSelectorUM
     abstract val userWalletId: UserWalletId
-    abstract val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)?
+    abstract val onLoadFeeExtended: (suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended>)?
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
     abstract val feeCryptoCurrencyStatus: CryptoCurrencyStatus
@@ -27,7 +27,9 @@ sealed class FeeSelectorParams {
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
         override val userWalletId: UserWalletId,
-        override val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)? = null,
+        override val onLoadFeeExtended: (
+            suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended>
+        )? = null,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -40,7 +42,9 @@ sealed class FeeSelectorParams {
     data class FeeSelectorDetailsParams(
         override val state: FeeSelectorUM,
         override val userWalletId: UserWalletId,
-        override val onLoadFeeExtended: (suspend () -> Either<GetFeeError, TransactionFeeExtended>)? = null,
+        override val onLoadFeeExtended: (
+            suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended>
+        )? = null,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
         override val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
