@@ -77,12 +77,17 @@ class GetAvailableFeeTokensUseCase(
         userCurrenciesStatuses: List<CryptoCurrencyStatus>,
     ): List<CryptoCurrencyStatus> {
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(network)
+            .mapNotNull {
+                (it as? CryptoCurrency.Token)?.contractAddress?.lowercase()
+            }.toSet()
         return userCurrenciesStatuses
             .asSequence()
+            .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
-                currencyStatus.currency is CryptoCurrency.Token &&
+                val token = currencyStatus.currency
+                token is CryptoCurrency.Token &&
                     currencyStatus.value.amount?.let { amount -> amount > BigDecimal.ZERO } == true &&
-                    supportedGaslessTokens.contains(currencyStatus.currency)
+                    supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
             .toList()
     }
