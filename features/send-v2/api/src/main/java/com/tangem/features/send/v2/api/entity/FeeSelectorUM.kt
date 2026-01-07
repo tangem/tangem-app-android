@@ -1,6 +1,8 @@
 package com.tangem.features.send.v2.api.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -44,7 +46,7 @@ sealed class FeeSelectorUM {
                 is Custom,
                 -> AnalyticsParam.FeeType.Custom
                 is Fast -> AnalyticsParam.FeeType.Max
-                is Market -> AnalyticsParam.FeeType.Normal
+                is Market, is FeeItem.Loading -> AnalyticsParam.FeeType.Normal
                 is Slow -> AnalyticsParam.FeeType.Min
             }
         }
@@ -82,6 +84,16 @@ sealed class FeeItem {
 
     fun isSameClass(other: FeeItem): Boolean {
         return this::class == other::class
+    }
+
+    fun isLoading(): Boolean {
+        return this is Loading
+    }
+
+    object Loading : FeeItem() {
+        override val title: TextReference = resourceReference(R.string.common_fee_selector_option_market)
+        override val iconRes: Int = R.drawable.ic_bird_24
+        override val fee: Fee = Fee.Common(Amount(BigDecimal.ZERO, Blockchain.Unknown))
     }
 
     data class Suggested(
