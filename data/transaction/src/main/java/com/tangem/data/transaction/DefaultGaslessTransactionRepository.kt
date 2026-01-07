@@ -26,7 +26,7 @@ class DefaultGaslessTransactionRepository(
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
 
-    private val supportedTokensState = MutableStateFlow<Set<CryptoCurrency>?>(null)
+    private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
@@ -37,28 +37,37 @@ class DefaultGaslessTransactionRepository(
 
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
         return withContext(coroutineDispatcherProvider.io) {
-            val storedTokens = supportedTokensState.value
+            val storedTokens = supportedTokensState.value[network.id]
             if (storedTokens != null && storedTokens.isNotEmpty()) {
                 return@withContext storedTokens
             }
 
             val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
             if (supportedTokensData.isSuccess) {
-                val supportedTokens = supportedTokensData.result.tokens.mapNotNull { token ->
-                    val blockchain = Blockchain.fromChainId(token.chainId) ?: return@mapNotNull null
-                    responseCryptoCurrenciesFactory.createToken(
-                        blockchain = blockchain,
-                        sdkToken = Token(
-                            contractAddress = token.tokenAddress,
-                            name = token.tokenName,
-                            symbol = token.tokenSymbol,
-                            decimals = token.decimals,
-                        ),
-                        network = network,
-                    )
-                }.toSet()
+                val networkBlockchain = Blockchain.fromNetworkId(network.backendId)
+                    ?: error("Cannot determine blockchain for network id: ${network.backendId}")
+                val supportedTokens = supportedTokensData.result.tokens
+                    .filter {
+                        it.chainId == networkBlockchain.getChainId()
+                    }
+                    .map { token ->
+                        responseCryptoCurrenciesFactory.createToken(
+                            blockchain = networkBlockchain,
+                            sdkToken = Token(
+                                contractAddress = token.tokenAddress,
+                                name = token.tokenName,
+                                symbol = token.tokenSymbol,
+                                decimals = token.decimals,
+                            ),
+                            network = network,
+                        )
+                    }.toSet()
                 // update local cache
-                supportedTokensState.update { supportedTokens }
+                supportedTokensState.update { current ->
+                    val newMap = current.toMutableMap()
+                    newMap[network.id] = supportedTokens
+                    newMap
+                }
                 return@withContext supportedTokens
             } else {
                 error("Gasless service returned unsuccessful response")

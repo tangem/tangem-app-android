@@ -101,13 +101,21 @@ internal class TokenFeeCalculator(
 
             val nativeFiatRate = nativeCurrencyStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
             val tokenFiatRate = tokenForPayFeeStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
-            val coinPriceInToken = nativeFiatRate.divide(
+
+            val coinPriceInTokenInBigDecimal = nativeFiatRate.divide(
                 tokenFiatRate,
                 maxOf(nativeCurrencyStatus.currency.decimals, tokenForPayFee.decimals),
-                RoundingMode.DOWN,
+                RoundingMode.UP,
             )
 
-            val feeInTokenCurrency = coinPriceInToken.multiply(feeInNativeCurrency.toBigDecimal())
+            val coinPriceInTokenBigInt = coinPriceInTokenInBigDecimal
+                .movePointRight(tokenForPayFee.decimals)
+                .increaseByPercent(PERCENT_TO_INCREASE_TOKEN_PRICE)
+                .toBigInteger()
+
+            val feeInTokenCurrency = coinPriceInTokenInBigDecimal.multiply(
+                feeInNativeCurrency.toBigDecimal(),
+            )
 
             val tokenBalance = tokenForPayFeeStatus.value.amount ?: BigDecimal.ZERO
             if (tokenBalance < feeInTokenCurrency) {
@@ -119,7 +127,7 @@ internal class TokenFeeCalculator(
             val fee = Fee.Ethereum.TokenCurrency(
                 amount = amount,
                 gasLimit = maxTokenFeeGas,
-                coinPriceInToken = coinPriceInToken,
+                coinPriceInToken = coinPriceInTokenBigInt,
                 feeTransferGasLimit = feeTransferGasLimit,
                 baseGas = baseGas,
             )
@@ -151,8 +159,28 @@ internal class TokenFeeCalculator(
 
     private companion object {
         /** Amount in token units for fee transfer */
-        const val FEE_TRANSFER_AMOUNT = 10000
+        const val FEE_TRANSFER_AMOUNT = 0.01 // calculate using decimals
         /** Gas price safety multiplier for fee calculation */
         const val GAS_PRICE_MULTIPLIER = 2
+        const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
+
+        /**
+         * Increases BigDecimal value by specified percentage.
+         *
+         * @param percent percentage to increase by (e.g., 1 for 1%, 10 for 10%)
+         * @return value increased by specified percentage (value * (1 + percent/100))
+         *
+         * Example:
+         * ```
+         * BigDecimal("100").increaseByPercent(1)  // 101
+         * BigDecimal("100").increaseByPercent(10) // 110
+         * BigDecimal("100").increaseByPercent(50) // 150
+         * ```
+         */
+        private fun BigDecimal.increaseByPercent(percent: Int): BigDecimal {
+            require(percent >= 0) { "Percent must be non-negative" }
+            val multiplier = BigDecimal.ONE.add(BigDecimal(percent).divide(BigDecimal("100")))
+            return this.multiply(multiplier)
+        }
     }
 }

@@ -151,11 +151,17 @@ class GetFeeForGaslessUseCase(
 
         val supportedGaslessTokens = gaslessTransactionRepository.getSupportedTokens(
             network = nativeCurrencyStatus.currency.network,
-        )
+        ).mapNotNull { currency ->
+            (currency as? CryptoCurrency.Token)?.contractAddress
+        }.toSet()
+
         val supportedGaslessTokensStatusesSortedByBalanceDesc = networkCurrenciesStatuses
             .filterNot { it.value.amount == BigDecimal.ZERO || it.currency !is CryptoCurrency.Token }
             .sortedByDescending { it.value.amount }
-            .filter { it.currency in supportedGaslessTokens }
+            .filter { status ->
+                val token = status.currency as? CryptoCurrency.Token ?: return@filter false
+                token.contractAddress.lowercase() in supportedGaslessTokens
+            }
 
         /**
          * Selects token with highest balance to maximize chances of successful fee payment.
@@ -170,12 +176,5 @@ class GetFeeForGaslessUseCase(
             nativeCurrencyStatus = nativeCurrencyStatus,
             initialFee = initialFee,
         ).bind()
-    }
-
-    private companion object {
-        /** Amount in token units for fee transfer */
-        const val FEE_TRANSFER_AMOUNT = 10000
-        /** Gas price safety multiplier for fee calculation */
-        const val GAS_PRICE_MULTIPLIER = 2
     }
 }

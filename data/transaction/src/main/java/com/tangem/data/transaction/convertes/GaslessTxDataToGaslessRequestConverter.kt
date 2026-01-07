@@ -23,7 +23,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         )
     }
 
-    private fun convertTransaction(transaction: com.tangem.domain.transaction.models.Transaction): TransactionData {
+    private fun convertTransaction(transaction: GaslessTransactionData.Transaction): TransactionData {
         return TransactionData(
             to = transaction.to,
             value = transaction.value.toString(),
@@ -31,7 +31,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         )
     }
 
-    private fun convertFee(fee: com.tangem.domain.transaction.models.Fee): FeeData {
+    private fun convertFee(fee: GaslessTransactionData.Fee): FeeData {
         return FeeData(
             feeToken = fee.feeToken,
             maxTokenFee = fee.maxTokenFee.toString(),
