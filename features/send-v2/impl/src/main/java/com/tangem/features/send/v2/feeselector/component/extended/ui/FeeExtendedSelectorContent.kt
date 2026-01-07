@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fee
@@ -61,12 +62,15 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
 
         val feeFiatRateUM = state.parent.feeFiatRateUM
         val fee = state.fee.fee
+        val isChooseSpeedAvailable = state.parent.feeItems.size > 1
 
         RegularFeeItemContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
-                .clickable(onClick = state.onFeeClick)
+                .conditional(isChooseSpeedAvailable) {
+                    clickable(onClick = state.onFeeClick)
+                }
                 .background(
                     TangemTheme.colors.background.action,
                     RoundedCornerShape(TangemTheme.dimens.radius14),
@@ -93,7 +97,8 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
                 null
             },
             ellipsizeOffset = fee.amount.currencySymbol.length,
-            showSelectorIcon = true,
+            showSelectorIcon = isChooseSpeedAvailable,
+            isLoading = state.fee.isLoading(),
         )
     }
 }

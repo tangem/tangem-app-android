@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 internal class SelectedTokenItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val onTokenClick: () -> Unit,
+    private val isTokenSelectionAvailable: Boolean,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
@@ -24,9 +25,14 @@ internal class SelectedTokenItemConverter(
         }
 
         val appCurrency = appCurrencyProvider()
+
         val tokenItemConverter = TokenItemStateConverter(
             appCurrency = appCurrencyProvider(),
-            onItemClick = { _, _ -> onTokenClick() },
+            onItemClick = if (isTokenSelectionAvailable) {
+                { _, _ -> onTokenClick() }
+            } else {
+                null
+            },
         )
 
         val state = tokenItemConverter.convert(value)
@@ -38,10 +44,14 @@ internal class SelectedTokenItemConverter(
                 }
 
                 state.copy(
-                    fiatAmountState = TokenItemState.FiatAmountState.Icon(
-                        iconRes = R.drawable.ic_select_18_24,
-                        tint = IconTint.Informative,
-                    ),
+                    fiatAmountState = if (isTokenSelectionAvailable) {
+                        TokenItemState.FiatAmountState.Icon(
+                            iconRes = R.drawable.ic_select_18_24,
+                            tint = IconTint.Informative,
+                        )
+                    } else {
+                        TokenItemState.FiatAmountState.Empty
+                    },
                     subtitleState = TokenItemState.SubtitleState.TextContent(
                         value = resourceReference(
                             R.string.common_balance,
@@ -50,7 +60,6 @@ internal class SelectedTokenItemConverter(
                         isAvailable = false,
                     ),
                     subtitle2State = null,
-
                 )
             }
             else -> state

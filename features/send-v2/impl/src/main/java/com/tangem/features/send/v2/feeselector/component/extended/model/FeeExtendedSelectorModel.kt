@@ -29,10 +29,6 @@ class FeeExtendedSelectorModel @Inject constructor(
 
     private val params = paramsContainer.require<FeeSelectorComponentParams>()
     private var appCurrency: AppCurrency = AppCurrency.Default
-    private val tokenConverter = SelectedTokenItemConverter(
-        appCurrencyProvider = Provider { appCurrency },
-        onTokenClick = { router.push(FeeSelectorRoute.ChooseToken) },
-    )
 
     init {
         initAppCurrency()
@@ -44,19 +40,13 @@ class FeeExtendedSelectorModel @Inject constructor(
     init {
         params.state
             .filterIsInstance<FeeSelectorUM.Content>()
-            .onEach(::onParentStateUpdated)
+            .onEach { state -> uiState.value = convertState(state) }
             .launchIn(modelScope)
     }
 
     private fun getInitialState(): FeeExtendedSelectorUM {
         val parentContentState = params.state.value as FeeSelectorUM.Content
-
-        return FeeExtendedSelectorUM(
-            parent = parentContentState,
-            token = tokenConverter.convert(parentContentState.feeExtraInfo.feeCryptoCurrencyStatus),
-            fee = parentContentState.selectedFeeItem,
-            onFeeClick = { router.push(FeeSelectorRoute.ChooseSpeed) },
-        )
+        return convertState(parentContentState)
     }
 
     private fun initAppCurrency() {
@@ -65,13 +55,18 @@ class FeeExtendedSelectorModel @Inject constructor(
         }
     }
 
-    private fun onParentStateUpdated(state: FeeSelectorUM.Content) {
-        uiState.update { current ->
-            current.copy(
-                parent = state,
-                token = tokenConverter.convert(state.feeExtraInfo.feeCryptoCurrencyStatus),
-                fee = state.selectedFeeItem,
-            )
-        }
+    private fun convertState(state: FeeSelectorUM.Content): FeeExtendedSelectorUM {
+        val tokenConverter = SelectedTokenItemConverter(
+            appCurrencyProvider = Provider { appCurrency },
+            onTokenClick = { router.push(FeeSelectorRoute.ChooseToken) },
+            isTokenSelectionAvailable = state.feeExtraInfo.availableFeeCurrencies.orEmpty().size > 1,
+        )
+
+        return FeeExtendedSelectorUM(
+            parent = state,
+            token = tokenConverter.convert(state.feeExtraInfo.feeCryptoCurrencyStatus),
+            fee = state.selectedFeeItem,
+            onFeeClick = { router.push(FeeSelectorRoute.ChooseSpeed) },
+        )
     }
 }
