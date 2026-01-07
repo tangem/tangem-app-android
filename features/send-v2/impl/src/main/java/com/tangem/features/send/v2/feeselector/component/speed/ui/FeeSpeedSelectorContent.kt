@@ -38,6 +38,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.inputrow.InputRowEnter
@@ -325,6 +326,7 @@ internal fun RegularFeeItemContent(
     postDot: TextReference? = null,
     ellipsizeOffset: Int? = null,
     showSelectorIcon: Boolean = false,
+    isLoading: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -349,6 +351,7 @@ internal fun RegularFeeItemContent(
                 preDot = preDot,
                 postDot = postDot,
                 ellipsizeOffset = ellipsizeOffset,
+                isLoading = isLoading,
             )
 
             if (showSelectorIcon) {
@@ -371,6 +374,7 @@ private fun FeeDescription(
     preDot: TextReference? = null,
     postDot: TextReference? = null,
     ellipsizeOffset: Int? = null,
+    isLoading: Boolean = false,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
@@ -379,8 +383,12 @@ private fun FeeDescription(
             style = TangemTheme.typography.subtitle2,
             modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE),
         )
-        if (preDot != null) {
-            FeeValueContent(preDot = preDot, postDot = postDot, ellipsizeOffset = ellipsizeOffset)
+        when {
+            isLoading -> TextShimmer(
+                modifier = Modifier.width(122.dp),
+                style = TangemTheme.typography.caption1,
+            )
+            preDot != null -> FeeValueContent(preDot = preDot, postDot = postDot, ellipsizeOffset = ellipsizeOffset)
         }
     }
 }
