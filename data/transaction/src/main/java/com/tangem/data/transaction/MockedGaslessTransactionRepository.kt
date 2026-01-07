@@ -25,9 +25,9 @@ class MockedGaslessTransactionRepository(
         val usdcPolygon = responseCryptoCurrenciesFactory.createToken(
             blockchain = Blockchain.Polygon,
             sdkToken = Token(
-                contractAddress = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-                name = "USD Coin",
-                symbol = "USDC",
+                contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                name = "Tether",
+                symbol = "USDT",
                 decimals = 6,
             ),
             network = network,

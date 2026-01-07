@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -37,8 +38,11 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -95,6 +99,8 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -245,10 +251,10 @@ internal class SendModel @Inject constructor(
         showAlertError()
     }
 
-    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+    suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        val transferTransaction = if (predefinedValues is PredefinedValues.Content.Deeplink) {
+        return if (predefinedValues is PredefinedValues.Content.Deeplink) {
             val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
             createTransferTransactionUseCase(
                 amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus) ?: error("Invalid amount"),
@@ -271,15 +277,37 @@ internal class SendModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
             )
-        }.getOrElse {
-            return GetFeeError.DataError(it).left()
         }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val transferTransaction = prepareTransferTransaction()
+            .getOrElse { return GetFeeError.DataError(it).left() }
 
         return getFeeUseCase(
             transactionData = transferTransaction,
             userWallet = userWallet,
             network = params.currency.network,
         )
+    }
+
+    suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        val transferTransaction = prepareTransferTransaction()
+            .getOrElse { return GetFeeError.DataError(it).left() }
+
+        return if (maybeToken == null) {
+            getFeeForGaslessUseCase(
+                transactionData = transferTransaction,
+                userWallet = userWallet,
+                network = params.currency.network,
+            )
+        } else {
+            getFeeForTokenUseCase(
+                transactionData = transferTransaction,
+                userWallet = userWallet,
+                token = maybeToken.currency,
+            )
+        }
     }
 
     fun showAlertError() {

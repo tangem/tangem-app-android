@@ -291,7 +291,6 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetFeeForGaslessUseCase(
         walletManagersFacade: WalletManagersFacade,
-        demoConfig: DemoConfig,
         gaslessTransactionRepository: GaslessTransactionRepository,
         currenciesRepository: CurrenciesRepository,
         getFeeUseCase: GetFeeUseCase,
@@ -299,7 +298,7 @@ internal object TransactionDomainModule {
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             walletManagersFacade = walletManagersFacade,
-            demoConfig = demoConfig,
+            demoConfig = DemoConfig,
             gaslessTransactionRepository = gaslessTransactionRepository,
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
@@ -311,7 +310,6 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetFeeForTokenUseCase(
         walletManagersFacade: WalletManagersFacade,
-        demoConfig: DemoConfig,
         gaslessTransactionRepository: GaslessTransactionRepository,
         currenciesRepository: CurrenciesRepository,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
@@ -319,7 +317,7 @@ internal object TransactionDomainModule {
         return GetFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
             walletManagersFacade = walletManagersFacade,
-            demoConfig = demoConfig,
+            demoConfig = DemoConfig,
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
         )

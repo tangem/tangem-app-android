@@ -22,6 +22,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -47,7 +48,8 @@ internal class FeeTokenSelectorModel @Inject constructor(
         initAppCurrency()
 
         params.state
-            .onEach { uiState.value = stateFromParent(it as FeeSelectorUM.Content) }
+            .filterIsInstance<FeeSelectorUM.Content>()
+            .onEach { state -> uiState.value = stateFromParent(state) }
             .launchIn(modelScope)
     }
 
