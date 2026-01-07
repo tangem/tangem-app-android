@@ -43,7 +43,8 @@ internal class FeeSelectorLoadedTransformer(
         )
 
         val selectedFee = when (prevState) {
-            is FeeSelectorUM.Content -> feeItems.first { it.isSameClass(prevState.selectedFeeItem) }
+            is FeeSelectorUM.Content ->
+                feeItems.firstOrNull { it.isSameClass(prevState.selectedFeeItem) } ?: FeeItem.Loading
             is FeeSelectorUM.Error,
             FeeSelectorUM.Loading,
             -> feeItems.find { it is FeeItem.Suggested } ?: feeItems.first { it is FeeItem.Market }
@@ -52,7 +53,7 @@ internal class FeeSelectorLoadedTransformer(
         val nonce = ((prevState as? FeeSelectorUM.Content)?.feeNonce as? FeeNonce.Nonce)?.nonce
 
         return FeeSelectorUM.Content(
-            isPrimaryButtonEnabled = true,
+            isPrimaryButtonEnabled = selectedFee !is FeeItem.Loading,
             fees = fees.transactionFee,
             feeItems = feeItems,
             selectedFeeItem = selectedFee,
