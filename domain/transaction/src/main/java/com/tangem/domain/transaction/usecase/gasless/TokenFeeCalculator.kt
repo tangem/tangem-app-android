@@ -114,7 +114,9 @@ internal class TokenFeeCalculator(
                 .toBigInteger()
 
             val feeInTokenCurrency = coinPriceInTokenInBigDecimal.multiply(
-                feeInNativeCurrency.toBigDecimal(),
+                feeInNativeCurrency
+                    .toBigDecimal()
+                    .movePointLeft(nativeCurrencyStatus.currency.decimals),
             )
 
             val tokenBalance = tokenForPayFeeStatus.value.amount ?: BigDecimal.ZERO
