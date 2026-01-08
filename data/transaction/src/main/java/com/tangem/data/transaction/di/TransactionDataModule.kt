@@ -2,10 +2,11 @@ package com.tangem.data.transaction.di
 
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.DefaultFeeRepository
+import com.tangem.data.transaction.DefaultGaslessTransactionRepository
 import com.tangem.data.transaction.DefaultTransactionRepository
 import com.tangem.data.transaction.DefaultWalletAddressServiceRepository
-import com.tangem.data.transaction.MockedGaslessTransactionRepository
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
+import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
@@ -73,12 +74,13 @@ internal object TransactionDataModule {
     @Singleton
     fun provideGaslessTransactionRepository(
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        gaslessTxServiceApi: GaslessTxServiceApi,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
     ): GaslessTransactionRepository {
-        return MockedGaslessTransactionRepository(responseCryptoCurrenciesFactory)
-        // return DefaultGaslessTransactionRepository(
-        //     gaslessTxServiceApi,
-        //     coroutineDispatcherProvider,
-        //     responseCryptoCurrenciesFactory,
-        // )
+        return DefaultGaslessTransactionRepository(
+            gaslessTxServiceApi,
+            coroutineDispatcherProvider,
+            responseCryptoCurrenciesFactory,
+        )
     }
 }
