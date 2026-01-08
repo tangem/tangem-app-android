@@ -296,7 +296,7 @@ internal class ProdApiConfigsManagerTest {
             INTERNAL_BUILD_TYPE,
             EXTERNAL_BUILD_TYPE,
             RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD to "https://tangem.com/"
+            -> ApiEnvironment.PROD to "https://gasless.tangem.org/"
             else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
         }
         return TestModel(
