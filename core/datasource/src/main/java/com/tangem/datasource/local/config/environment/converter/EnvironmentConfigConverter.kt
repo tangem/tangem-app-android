@@ -33,6 +33,8 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             yieldModuleApiKey = value.yieldModuleApiKey,
             yieldModuleApiKeyDev = value.yieldModuleApiKeyDev,
             bffStaticToken = value.bffStaticToken,
+            gaslessTxApiKeyDev = value.gaslessTxApiKeyDev,
+            gaslessTxApiKey = value.gaslessTxApiKey,
         )
     }
 }
