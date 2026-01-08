@@ -2,7 +2,6 @@ package com.tangem.data.transaction
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -17,7 +16,7 @@ class MockedGaslessTransactionRepository(
 ) : GaslessTransactionRepository {
 
     override fun isNetworkSupported(network: Network): Boolean {
-        val blockchain = Blockchain.fromNetworkId(network.backendId) ?: return false
+        val blockchain = Blockchain.fromId(network.rawId)
         return SUPPORTED_BLOCKCHAINS.contains(blockchain)
     }
 
@@ -35,11 +34,16 @@ class MockedGaslessTransactionRepository(
         return setOf(usdcPolygon)
     }
 
+    override fun getChainIdForNetwork(network: Network): Int {
+        val networkBlockchain = Blockchain.fromId(network.rawId)
+        return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+    }
+
     override fun getTokenFeeReceiverAddress(): String {
         return TOKEN_RECEIVER_ADDRESS
     }
 
-    override suspend fun sendGaslessTransaction(
+    override suspend fun signGaslessTransaction(
         gaslessTransactionData: GaslessTransactionData,
         signature: String,
         userAddress: String,
