@@ -52,6 +52,8 @@ class EnvironmentConfigModel(
     @Json(name = "blinkApiKey") val blinkApiKey: String?,
     @Json(name = "tatumApiKey") val tatumApiKey: String?,
     @Json(name = "bffStaticToken") val bffStaticToken: String?,
+    @Json(name = "gaslessTxApiKeyDev") val gaslessTxApiKeyDev: String?,
+    @Json(name = "gaslessTxApiKey") val gaslessTxApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
