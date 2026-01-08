@@ -63,13 +63,8 @@ internal class DefaultAuthProvider(
         return ProviderSuspend {
             when (apiEnvironment.invoke()) {
                 ApiEnvironment.DEV,
-                ApiEnvironment.DEV_2,
-                ApiEnvironment.DEV_3,
-                -> environmentConfigStorage.getConfigSync().tangemApiKeyDev // TODO add gaslessTxApiKeyDev
-                ApiEnvironment.STAGE,
-                ApiEnvironment.STAGE_2,
-                -> environmentConfigStorage.getConfigSync().tangemApiKeyStage // TODO add gaslessTxApiKeyStage
-                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey // TODO add gaslessTxApiKey
+                -> environmentConfigStorage.getConfigSync().gaslessTxApiKeyDev
+                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().gaslessTxApiKey
                 else -> error("No gasless tx api config provided for ${apiEnvironment.invoke()}")
             } ?: error("No gasless tx api config provided")
         }
