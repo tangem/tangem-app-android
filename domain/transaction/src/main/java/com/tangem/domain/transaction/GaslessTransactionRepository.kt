@@ -51,7 +51,7 @@ interface GaslessTransactionRepository {
      * @throws IllegalStateException if network is not supported or chainId cannot be determined
      * @throws Exception if service returns error or network request fails
      */
-    suspend fun sendGaslessTransaction(
+    suspend fun signGaslessTransaction(
         gaslessTransactionData: GaslessTransactionData,
         signature: String,
         userAddress: String,
@@ -63,4 +63,6 @@ interface GaslessTransactionRepository {
      * Hardcoded value as baseGas
      */
     fun getBaseGasForTransaction(): BigInteger
+
+    fun getChainIdForNetwork(network: Network): Int
 }

@@ -2,7 +2,6 @@ package com.tangem.data.transaction
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.convertes.GaslessSignedTransactionResultConverter
 import com.tangem.data.transaction.convertes.GaslessTransactionRequestBuilder
@@ -27,11 +26,12 @@ class DefaultGaslessTransactionRepository(
 ) : GaslessTransactionRepository {
 
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
+
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
     override fun isNetworkSupported(network: Network): Boolean {
-        val blockchain = Blockchain.fromNetworkId(network.backendId) ?: return false
+        val blockchain = Blockchain.fromId(network.rawId)
         return SUPPORTED_BLOCKCHAINS.contains(blockchain)
     }
 
@@ -44,8 +44,7 @@ class DefaultGaslessTransactionRepository(
 
             val supportedTokensData = gaslessTxServiceApi.getSupportedTokens().getOrThrow()
             if (supportedTokensData.isSuccess) {
-                val networkBlockchain = Blockchain.fromNetworkId(network.backendId)
-                    ?: error("Cannot determine blockchain for network id: ${network.backendId}")
+                val networkBlockchain = Blockchain.fromId(network.rawId)
                 val supportedTokens = supportedTokensData.result.tokens
                     .filter {
                         it.chainId == networkBlockchain.getChainId()
@@ -79,16 +78,14 @@ class DefaultGaslessTransactionRepository(
         return TOKEN_RECEIVER_ADDRESS
     }
 
-    override suspend fun sendGaslessTransaction(
+    override suspend fun signGaslessTransaction(
         gaslessTransactionData: GaslessTransactionData,
         signature: String,
         userAddress: String,
         network: Network,
         eip7702Auth: Eip7702Authorization?,
     ): GaslessSignedTransactionResult = withContext(coroutineDispatcherProvider.io) {
-        val blockchain = Blockchain.fromNetworkId(network.backendId)
-            ?: error("Cannot determine blockchain for network id: ${network.backendId}")
-
+        val blockchain = Blockchain.fromId(network.rawId)
         val transactionRequest = gaslessTransactionRequestBuilder.build(
             gaslessTransaction = gaslessTransactionData,
             signature = signature,
@@ -111,9 +108,14 @@ class DefaultGaslessTransactionRepository(
         return BASE_GAS_FOR_TRANSACTION
     }
 
+    override fun getChainIdForNetwork(network: Network): Int {
+        val networkBlockchain = Blockchain.fromId(network.rawId)
+        return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+    }
+
     private companion object {
 
-        const val TOKEN_RECEIVER_ADDRESS = "0x"
+        const val TOKEN_RECEIVER_ADDRESS = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
 
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("100000")
         val SUPPORTED_BLOCKCHAINS = arrayOf(
