@@ -81,12 +81,14 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 
         val isScreenSource = params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen
         val isNotSingleFee = (state as? FeeSelectorUM.Content)?.feeItems?.isSingleItem() == false
+        val isGaslessAvailable = state is FeeSelectorUM.Content &&
+            (state as FeeSelectorUM.Content).feeExtraInfo.transactionFeeExtended != null
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
             isGaslessFeatureEnabled = sendFeatureToggles.isGaslessTransactionsEnabled,
             modifier = modifier
-                .conditional(isScreenSource && isNotSingleFee) {
+                .conditional(isScreenSource && (isNotSingleFee || isGaslessAvailable)) {
                     Modifier.clickable {
                         model.showFeeSelector()
                     }
