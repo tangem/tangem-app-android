@@ -38,13 +38,17 @@ internal class FeeSelectorLoadedTransformer(
         } else {
             null
         }
+
         val feeItems: ImmutableList<FeeItem> = feeItemsConverter.convert(
             FeeItemConverter.Input(fees.transactionFee, prevCustomFee),
         )
 
         val selectedFee = when (prevState) {
-            is FeeSelectorUM.Content ->
-                feeItems.firstOrNull { it.isSameClass(prevState.selectedFeeItem) } ?: FeeItem.Loading
+            is FeeSelectorUM.Content -> if (prevState.selectedFeeItem is FeeItem.Loading) {
+                feeItems.firstOrNull { it is FeeItem.Market }
+            } else {
+                feeItems.firstOrNull { it.isSameClass(prevState.selectedFeeItem) }
+            } ?: FeeItem.Loading
             is FeeSelectorUM.Error,
             FeeSelectorUM.Loading,
             -> feeItems.find { it is FeeItem.Suggested } ?: feeItems.first { it is FeeItem.Market }
@@ -64,6 +68,7 @@ internal class FeeSelectorLoadedTransformer(
                     isTron(cryptoCurrencyStatus.currency.network.rawId),
                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 availableFeeCurrencies = getAvailableFeeCurrencies(),
+                transactionFeeExtended = (fees as? LoadedFeeResult.Extended)?.fee,
             ),
             feeFiatRateUM = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
                 FeeFiatRateUM(
