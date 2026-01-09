@@ -89,14 +89,11 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     fun getInitialRoute(): FeeSelectorRoute {
-        if (sendFeatureToggles.isGaslessTransactionsEnabled.not()) {
-            return FeeSelectorRoute.ChooseSpeed
-        }
-
-        return if (isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network)) {
-            FeeSelectorRoute.NetworkFee
-        } else {
-            FeeSelectorRoute.ChooseSpeed
+        return when {
+            sendFeatureToggles.isGaslessTransactionsEnabled && params.onLoadFeeExtended != null &&
+                isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ->
+                FeeSelectorRoute.NetworkFee
+            else -> FeeSelectorRoute.ChooseSpeed
         }
     }
 }
