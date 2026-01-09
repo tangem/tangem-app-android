@@ -36,6 +36,7 @@ import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
@@ -111,6 +112,7 @@ internal class SendConfirmModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
+    private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -388,11 +390,21 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
-        val result = sendTransactionUseCase(
-            txData = txData,
-            userWallet = userWallet,
-            network = cryptoCurrency.network,
-        )
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+
+        val result = if (feeExtended != null) {
+            createAndSendGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+        } else {
+            sendTransactionUseCase(
+                txData = txData,
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+            )
+        }
 
         _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
 
