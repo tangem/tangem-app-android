@@ -6,6 +6,7 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -14,10 +15,7 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
-import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
-import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
+import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -329,5 +327,23 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
     ): IsGaslessFeeSupportedForNetwork {
         return IsGaslessFeeSupportedForNetwork(gaslessTransactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendGaslessTransactionUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        getSingCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): CreateAndSendGaslessTransactionUseCase {
+        return CreateAndSendGaslessTransactionUseCase(
+            walletManagersFacade = walletManagersFacade,
+            getSingleCryptoCurrencyStatusUseCase = getSingCryptoCurrencyStatusUseCase,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
     }
 }
