@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.v2.api.R
 import com.tangem.features.send.v2.api.entity.FeeItem.*
 import kotlinx.collections.immutable.ImmutableList
@@ -66,6 +67,7 @@ data class FeeExtraInfo(
     val isTronToken: Boolean,
     val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     val availableFeeCurrencies: ImmutableList<CryptoCurrencyStatus>? = null,
+    val transactionFeeExtended: TransactionFeeExtended? = null,
 )
 
 sealed class FeeNonce {
