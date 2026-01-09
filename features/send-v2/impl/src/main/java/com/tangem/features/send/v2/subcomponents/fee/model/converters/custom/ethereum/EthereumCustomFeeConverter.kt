@@ -14,6 +14,7 @@ import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkExceedBalance
 import com.tangem.features.send.v2.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class EthereumCustomFeeConverter(
@@ -38,12 +39,16 @@ internal class EthereumCustomFeeConverter(
     )
 
     override fun convert(value: Fee.Ethereum): ImmutableList<CustomFeeFieldUM> {
+        if (value is Fee.Ethereum.TokenCurrency) {
+            return persistentListOf()
+        }
+
         return buildList {
             add(convertFeeValue(value))
 
             addAll(
                 when (value) {
-                    is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+                    is Fee.Ethereum.TokenCurrency -> error("unreachable")
                     is Fee.Ethereum.EIP1559 -> eipFeeConverter.convert(value)
                     is Fee.Ethereum.Legacy -> legacyFeeConverter.convert(value)
                 },
@@ -56,7 +61,7 @@ internal class EthereumCustomFeeConverter(
 
     override fun convertBack(normalFee: Fee.Ethereum, value: ImmutableList<CustomFeeFieldUM>): Fee.Ethereum {
         return when (normalFee) {
-            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+            is Fee.Ethereum.TokenCurrency -> error("unreachable")
             is Fee.Ethereum.EIP1559 -> eipFeeConverter.convertBack(normalFee = normalFee, value = value)
             is Fee.Ethereum.Legacy -> legacyFeeConverter.convertBack(normalFee = normalFee, value = value)
         }
@@ -64,7 +69,7 @@ internal class EthereumCustomFeeConverter(
 
     override fun getGasLimitIndex(feeValue: Fee.Ethereum): Int {
         return when (feeValue) {
-            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+            is Fee.Ethereum.TokenCurrency -> error("unreachable")
             is Fee.Ethereum.EIP1559 -> eipFeeConverter.getGasLimitIndex(feeValue)
             is Fee.Ethereum.Legacy -> legacyFeeConverter.getGasLimitIndex(feeValue)
         }
@@ -77,7 +82,7 @@ internal class EthereumCustomFeeConverter(
         value: String,
     ): ImmutableList<CustomFeeFieldUM> {
         return when (feeValue) {
-            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+            is Fee.Ethereum.TokenCurrency -> error("unreachable")
             is Fee.Ethereum.EIP1559 -> eipFeeConverter.onValueChange(
                 feeValue = feeValue,
                 customValues = customValues,

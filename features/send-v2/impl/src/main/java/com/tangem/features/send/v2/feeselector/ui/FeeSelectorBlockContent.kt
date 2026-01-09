@@ -213,7 +213,10 @@ private fun FeeContent(state: FeeSelectorUM.Content, isGaslessFeatureEnabled: Bo
                 .padding(start = TangemTheme.dimens.spacing4)
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
-        if (!state.feeItems.isSingleItem()) {
+
+        val isGaslessAvailable = isGaslessFeatureEnabled && state.feeExtraInfo.transactionFeeExtended != null
+
+        if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
             Icon(
                 modifier = Modifier
                     .size(width = 18.dp, height = 24.dp)
