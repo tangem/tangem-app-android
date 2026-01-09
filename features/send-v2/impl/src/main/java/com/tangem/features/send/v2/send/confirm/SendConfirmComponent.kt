@@ -105,7 +105,6 @@ internal class SendConfirmComponent(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = NotificationData(
@@ -116,6 +115,7 @@ internal class SendConfirmComponent(
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             ),
         ),
     )
