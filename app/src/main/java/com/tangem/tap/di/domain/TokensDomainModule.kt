@@ -294,9 +294,8 @@ internal object TokensDomainModule {
     @Singleton
     fun provideIsAmountSubtractAvailableUseCase(
         currenciesRepository: CurrenciesRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): IsAmountSubtractAvailableUseCase {
-        return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
+        return IsAmountSubtractAvailableUseCase(currenciesRepository)
     }
 
     @Provides

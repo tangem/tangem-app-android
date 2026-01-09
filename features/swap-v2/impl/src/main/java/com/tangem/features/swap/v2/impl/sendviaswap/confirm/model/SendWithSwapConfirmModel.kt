@@ -357,6 +357,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
+                    feeCryptoCurrencyStatus = params.primaryFeePaidCurrencyStatusFlow.value,
                 ),
             )
             swapNotificationsUpdateTrigger.triggerUpdate(
