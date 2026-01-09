@@ -102,7 +102,6 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
@@ -113,6 +112,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
                 isIgnoreReduce = false,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             ),
         ),
     )
