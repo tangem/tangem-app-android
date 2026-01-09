@@ -7,10 +7,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.gasless.EthereumGaslessDataProvider
 import com.tangem.blockchain.blockchains.ethereum.models.EIP7702AuthorizationData
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionSigner
-import com.tangem.blockchain.common.UnmarshalHelper
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.formatHex
@@ -47,14 +44,14 @@ class CreateAndSendGaslessTransactionUseCase(
         userWallet: UserWallet,
         transactionData: TransactionData,
         fee: TransactionFeeExtended,
-    ): Either<SendTransactionError, Unit> = either {
+    ): Either<SendTransactionError, String> = either {
         catch(
             block = {
                 val uncompiledTxData = validateTransactionData(transactionData)
                 val context = prepareGaslessContext(userWallet, uncompiledTxData, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context, uncompiledTxData)
                 val remoteSignedData = signTransactionOnBackend(context, signedData, uncompiledTxData)
-                broadcastSignedTransaction(remoteSignedData)
+                broadcastSignedTransaction(context, remoteSignedData)
             },
             catch = {
                 raise(SendTransactionError.DataError(it.message))
@@ -202,9 +199,18 @@ class CreateAndSendGaslessTransactionUseCase(
         )
     }
 
-    @Suppress("UnusedParameter")
-    private fun broadcastSignedTransaction(remoteSignedData: GaslessSignedTransactionResult) {
-        TODO("Will be implemented later")
+    private suspend fun broadcastSignedTransaction(
+        context: GaslessContext,
+        remoteSignedData: GaslessSignedTransactionResult,
+    ): String {
+        val transactionSender = context.walletManager as? TransactionSender ?: error(
+            "WalletManager for network ${context.tokenForFeeStatus.currency.network.id} " +
+                "does not support transaction sending",
+        )
+        return when (val result = transactionSender.broadcastTransaction(remoteSignedData.signedTransaction)) {
+            is Result.Failure -> throw result.error
+            is Result.Success -> result.data.hash
+        }
     }
 
     private suspend fun signHashes(
@@ -268,9 +274,13 @@ class CreateAndSendGaslessTransactionUseCase(
         val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
             ?: error("Ethereum call data is required")
 
+        // Native amount is always zero in gasless transactions for now
+        // we don't support gasless transfers of native currency
+        val nativeAmount = BigInteger.ZERO
+
         return GaslessTransactionData.Transaction(
             to = getDestinationAddress(transactionData),
-            value = amount,
+            value = nativeAmount,
             data = callData.data,
         )
     }
