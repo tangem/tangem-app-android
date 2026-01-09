@@ -32,12 +32,10 @@ import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
@@ -58,7 +56,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
-    private var selectedToken: CryptoCurrencyStatus? = null
     val uiState = MutableStateFlow<FeeSelectorUM>(params.state)
 
     init {
@@ -115,34 +112,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     }
 
     override fun onTokenSelected(status: CryptoCurrencyStatus) {
-        if (status.currency !is CryptoCurrency.Token ||
-            status.currency.id == params.feeCryptoCurrencyStatus.currency.id) {
-            selectedToken = null
-            loadFee()
-            return
-        }
         uiState.update(FeeSelectorTokenSelectedTransformer(status))
-
-        uiState.update { state ->
-            if (state is FeeSelectorUM.Content) {
-                state.copy(
-                    selectedFeeItem = FeeItem.Loading,
-                    feeItems = persistentListOf(FeeItem.Loading),
-                    feeExtraInfo = state.feeExtraInfo.copy(
-                        feeCryptoCurrencyStatus = status,
-                    ),
-                )
-            } else {
-                state
-            }
-        }
-
-        if (status.currency is CryptoCurrency.Token) {
-            selectedToken = status
-        } else {
-            selectedToken = null
-        }
-
         loadFee()
     }
 
@@ -240,6 +210,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun callLoadFee(): Either<GetFeeError, LoadedFeeResult> {
         val extended = params.onLoadFeeExtended
         return if (extended != null && sendFeatureToggles.isGaslessTransactionsEnabled) {
+            val selectedToken = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.feeCryptoCurrencyStatus
+                ?.takeIf { it.currency is CryptoCurrency.Token }
+
             extended(selectedToken).fold(
                 ifLeft = { error ->
                     if (error is GetFeeError.GaslessError) {
