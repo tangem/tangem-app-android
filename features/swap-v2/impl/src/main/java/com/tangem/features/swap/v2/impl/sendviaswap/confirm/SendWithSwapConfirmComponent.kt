@@ -107,7 +107,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
-            feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
@@ -121,6 +120,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             ),
         ),
     )
