@@ -3,6 +3,7 @@ package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
@@ -26,7 +27,10 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.EstimateFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForGaslessTxUseCase
+import com.tangem.domain.transaction.usecase.gasless.EstimateFeeForTokenUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
@@ -64,6 +68,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 import com.tangem.utils.transformer.update as transformerUpdate
 
 @Suppress("LongParameterList", "LargeClass")
@@ -73,6 +78,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val router: Router,
     private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
+    private val estimateFeeForTokenUseCase: EstimateFeeForTokenUseCase,
+    private val estimateFeeForGaslessTxUseCase: EstimateFeeForGaslessTxUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val sendNotificationsUpdateTrigger: SendNotificationsUpdateTrigger,
@@ -106,6 +113,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         get() = uiState.value.destinationUM as? DestinationUM.Content
     private val feeSelectorUM
         get() = uiState.value.feeSelectorUM as? FeeSelectorUM.Content
+    private val feeUMV2
+        get() = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
 
     val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
     val secondaryCurrency: CryptoCurrency = requireNotNull(amountUM?.secondaryCryptoCurrencyStatus?.currency) {
@@ -143,7 +152,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
 
     init {
-        initAmountSubtractAvailability()
+        updateAmountSubtractAvailability()
         configConfirmNavigation()
         initialState()
         subscribeOnNotificationUpdates()
@@ -152,6 +161,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
+        updateAmountSubtractAvailability()
         updateConfirmNotifications()
     }
 
@@ -243,11 +253,43 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
+    suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        val defaultError = GetFeeError.UnknownError.left()
+        val provider = (confirmData.quote as? SwapQuoteUM.Content)?.provider ?: return defaultError
+        val amountValue = confirmData.enteredAmount ?: return defaultError
+
+        return when (val providerType = provider.type) {
+            ExpressProviderType.CEX -> {
+                if (maybeToken != null) {
+                    estimateFeeForTokenUseCase(
+                        amount = amountValue,
+                        userWallet = params.userWallet,
+                        tokenCurrencyStatus = maybeToken,
+                    )
+                } else {
+                    estimateFeeForGaslessTxUseCase(
+                        amount = amountValue,
+                        userWallet = params.userWallet,
+                        cryptoCurrencyStatus = primaryCurrencyStatus,
+                    )
+                }
+            }
+            ExpressProviderType.DEX,
+            ExpressProviderType.DEX_BRIDGE,
+            ExpressProviderType.ONRAMP,
+            -> GetFeeError.DataError(
+                cause = IllegalStateException("Provider $providerType is not supported in Send With Swap"),
+            ).left()
+        }
+    }
+
     private fun onSendClick() {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
             uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
+            val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
             swapTransactionSender.sendTransaction(
+                feeExtended = feeExtended,
                 confirmData = confirmData,
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
@@ -305,12 +347,15 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
-    private fun initAmountSubtractAvailability() {
+    private fun updateAmountSubtractAvailability() {
         modelScope.launch {
+            val isGaslessEthTx =
+                feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
             isAmountSubtractAvailable =
                 isAmountSubtractAvailableUseCase(
-                    params.userWallet.walletId,
-                    primaryCurrencyStatus.currency,
+                    userWalletId = params.userWallet.walletId,
+                    currency = primaryCurrencyStatus.currency,
+                    isGaslessEthTx = isGaslessEthTx,
                 ).getOrElse { false }
         }
     }
