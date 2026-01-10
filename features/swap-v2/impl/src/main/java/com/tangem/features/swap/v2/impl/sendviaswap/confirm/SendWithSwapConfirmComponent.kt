@@ -90,6 +90,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         params = FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = model::loadFee,
+            onLoadFeeExtended = model::loadFeeExtended,
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
