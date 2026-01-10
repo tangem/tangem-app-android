@@ -363,4 +363,23 @@ internal object TransactionDomainModule {
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForGaslessTxUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        estimateFeeUseCase: EstimateFeeUseCase,
+    ): EstimateFeeForGaslessTxUseCase {
+        return EstimateFeeForGaslessTxUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            estimateFeeUseCase = estimateFeeUseCase,
+        )
+    }
 }
