@@ -26,7 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object TransactionDomainModule {
@@ -344,6 +344,23 @@ internal object TransactionDomainModule {
             gaslessTransactionRepository = gaslessTransactionRepository,
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForTokenUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    ): EstimateFeeForTokenUseCase {
+        return EstimateFeeForTokenUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
         )
     }
 }

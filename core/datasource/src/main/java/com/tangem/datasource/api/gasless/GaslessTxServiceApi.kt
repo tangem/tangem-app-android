@@ -14,7 +14,7 @@ interface GaslessTxServiceApi {
     @GET("api/v1/tokens")
     suspend fun getSupportedTokens(): ApiResponse<GaslessServiceResponse<GaslessSupportedTokens>>
 
-    @POST("api/v1/sign")
+    @POST("api/v1/transaction/sign")
     suspend fun signGaslessTransaction(
         @Body transaction: GaslessTransactionRequest,
     ): ApiResponse<GaslessServiceResponse<GaslessSignedTransactionResultDTO>>
