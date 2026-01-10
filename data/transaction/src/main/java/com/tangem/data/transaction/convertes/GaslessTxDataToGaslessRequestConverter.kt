@@ -1,5 +1,6 @@
 package com.tangem.data.transaction.convertes
 
+import com.tangem.blockchain.extensions.formatHex
 import com.tangem.datasource.api.gasless.models.FeeData
 import com.tangem.datasource.api.gasless.models.TransactionData
 import com.tangem.domain.transaction.models.GaslessTransactionData
@@ -27,7 +28,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
         return TransactionData(
             to = transaction.to,
             value = transaction.value.toString(),
-            data = transaction.data.toHexString(),
+            data = transaction.data.toHexString().formatHex(),
         )
     }
 
