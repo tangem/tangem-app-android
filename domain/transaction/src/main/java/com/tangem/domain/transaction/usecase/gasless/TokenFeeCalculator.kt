@@ -23,6 +23,7 @@ import com.tangem.domain.transaction.error.GetFeeError.GaslessError
 import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -53,6 +54,37 @@ internal class TokenFeeCalculator(
                 is Result.Failure -> raise(result.mapToFeeError())
             }
             maybeFee
+        }
+    }
+
+    suspend fun estimateInitialFee(
+        userWallet: UserWallet,
+        amount: BigDecimal,
+        tokenCurrencyStatus: CryptoCurrencyStatus,
+    ): Either<GetFeeError, TransactionFee> {
+        return either {
+            val network = tokenCurrencyStatus.currency.network
+            val amountData = amount.convertToSdkAmount(tokenCurrencyStatus)
+            val result = if (userWallet is UserWallet.Cold &&
+                demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
+            ) {
+                demoTransactionSender(userWallet, network).estimateFee(
+                    amount = amountData,
+                    destination = "",
+                )
+            } else {
+                walletManagersFacade.estimateFee(
+                    amount = amountData,
+                    userWalletId = userWallet.walletId,
+                    network = network,
+                )
+            }
+
+            when (result) {
+                is Result.Success -> result.data
+                is Result.Failure -> raise(result.mapToFeeError())
+                null -> raise(GetFeeError.UnknownError)
+            }
         }
     }
 
