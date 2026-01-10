@@ -17,8 +17,10 @@ import com.tangem.domain.swap.models.SwapTxType
 import com.tangem.domain.swap.usecase.GetSwapDataUseCase
 import com.tangem.domain.swap.usecase.SwapTransactionSentUseCase
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
@@ -35,6 +37,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val swapTransactionSentUseCase: SwapTransactionSentUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
+    private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     @Assisted private val userWallet: UserWallet,
 ) {
 
@@ -45,6 +48,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         onExpressError: (ExpressError) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
         expressOperationType: ExpressOperationType,
+        feeExtended: TransactionFeeExtended?,
     ) {
         val provider = confirmData.quote?.provider ?: return
 
@@ -56,6 +60,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
                 onSendSuccess = onSendSuccess,
                 onSendError = onSendError,
                 expressOperationType = expressOperationType,
+                feeExtended = feeExtended,
             )
             ExpressProviderType.DEX,
             ExpressProviderType.DEX_BRIDGE,
@@ -74,6 +79,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         onExpressError: (ExpressError) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
         expressOperationType: ExpressOperationType,
+        feeExtended: TransactionFeeExtended?,
     ) {
         val fromStatus = confirmData.fromCryptoCurrencyStatus ?: return
         val toStatus = confirmData.toCryptoCurrencyStatus ?: return
@@ -114,6 +120,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             onSendSuccess = onSendSuccess,
             onExpressError = onExpressError,
             onSendError = onSendError,
+            feeExtended = feeExtended,
         )
     }
 
@@ -123,6 +130,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         toStatus: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         fee: Fee,
+        feeExtended: TransactionFeeExtended?,
         provider: ExpressProvider,
         swapData: SwapDataModel,
         onSendSuccess: (String, Long, SwapDataModel) -> Unit,
@@ -161,11 +169,22 @@ internal class SwapTransactionSender @AssistedInject constructor(
             txData.destinationAddress
         }
 
-        sendTransactionUseCase(
-            txData = txData,
-            userWallet = userWallet,
-            network = fromStatus.currency.network,
-        ).fold(
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+
+        val result = if (feeExtended != null && isFeeInTokenCurrency) {
+            createAndSendGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+        } else {
+            sendTransactionUseCase(
+                txData = txData,
+                userWallet = userWallet,
+                network = fromStatus.currency.network,
+            )
+        }
+        result.fold(
             ifLeft = { onSendError(it) },
             ifRight = { txHash ->
                 val timestamp = System.currentTimeMillis()
