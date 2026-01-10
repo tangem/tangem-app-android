@@ -9,6 +9,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
@@ -38,23 +39,14 @@ class EstimateFeeForTokenUseCase(
 
     suspend operator fun invoke(
         userWallet: UserWallet,
-        token: CryptoCurrency,
+        tokenCurrencyStatus: CryptoCurrencyStatus,
         amount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
+            val token = tokenCurrencyStatus.currency
             if (!gaslessTransactionRepository.isNetworkSupported(token.network)) {
                 raise(GetFeeError.GaslessError.NetworkIsNotSupported)
             }
-
-            val userCurrenciesStatusesByNetwork = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                userWallet.walletId,
-            ).getOrNull()?.filter {
-                it.currency.network.id == token.network.id
-            } ?: raiseIllegalStateError("currencies list is null for userWalletId=${userWallet.walletId}")
-
-            val tokenCurrencyStatus = userCurrenciesStatusesByNetwork.find {
-                it.currency.id == token.id
-            } ?: raiseIllegalStateError("token currency not found for network ${token.network.id}")
 
             val amountData = amount.convertToSdkAmount(tokenCurrencyStatus)
             val result = if (userWallet is UserWallet.Cold &&
@@ -88,6 +80,12 @@ class EstimateFeeForTokenUseCase(
                 networkId = token.network.id,
                 derivationPath = token.network.derivationPath,
             )
+
+            val userCurrenciesStatusesByNetwork = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
+                userWallet.walletId,
+            ).getOrNull()?.filter {
+                it.currency.network.id == token.network.id
+            } ?: raiseIllegalStateError("currencies list is null for userWalletId=${userWallet.walletId}")
 
             val nativeCurrencyStatus = userCurrenciesStatusesByNetwork.find {
                 it.currency.id == nativeCurrency.id
