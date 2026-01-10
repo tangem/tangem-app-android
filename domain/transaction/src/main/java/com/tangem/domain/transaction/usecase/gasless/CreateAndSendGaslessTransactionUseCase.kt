@@ -266,11 +266,6 @@ class CreateAndSendGaslessTransactionUseCase(
     }
 
     private fun buildTransaction(transactionData: TransactionData.Uncompiled): GaslessTransactionData.Transaction {
-        val amount = transactionData.amount.value
-            ?.movePointRight(transactionData.amount.decimals)
-            ?.toBigInteger()
-            ?: error("Transaction amount value is null")
-
         val callData = (transactionData.extras as? EthereumTransactionExtras)?.callData
             ?: error("Ethereum call data is required")
 
