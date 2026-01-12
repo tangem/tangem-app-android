@@ -18,12 +18,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.model.market.list.analytics.MarketsListAnalyticsEvent
-import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
-import com.tangem.features.feed.model.market.list.statemanager.MarketsListUMStateManager
 import com.tangem.features.feed.model.market.list.state.ListUM
 import com.tangem.features.feed.model.market.list.state.MarketsListUM
 import com.tangem.features.feed.model.market.list.state.MarketsNotificationUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
+import com.tangem.features.feed.model.market.list.statemanager.MarketsListUMStateManager
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -263,18 +263,6 @@ internal class MarketsListModel @Inject constructor(
             }
         }
 
-        searchMarketsListManager
-            .isSearchNotFoundState
-            .onEach { isTokenFound ->
-                if (isTokenFound) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(isTokenFound = false))
-                }
-            }.launchIn(modelScope)
-
-        searchMarketsListManager.onFirstBatchLoadedSuccess.onEach {
-            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(isTokenFound = true))
-        }.launchIn(modelScope)
-
         // analytics
         initAnalytics()
 
@@ -291,13 +279,19 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun initAnalytics() {
-        containerBottomSheetState.onEach { bottomSheetState ->
-            if (bottomSheetState == BottomSheetState.EXPANDED) {
-                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened())
-            }
+        searchMarketsListManager
+            .isSearchNotFoundState
+            .onEach { isTokenFound ->
+                if (isTokenFound) {
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(isTokenFound = false))
+                }
+            }.launchIn(modelScope)
+
+        searchMarketsListManager.onFirstBatchLoadedSuccess.onEach {
+            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(isTokenFound = true))
         }.launchIn(modelScope)
 
-        state.filter { it.isInSearchMode.not() }
+        state
             .map { MarketsListAnalyticsEvent.SortBy(it.selectedSortBy, it.selectedInterval) }.distinctUntilChanged()
             .onEach {
                 analyticsEventHandler.send(it)
