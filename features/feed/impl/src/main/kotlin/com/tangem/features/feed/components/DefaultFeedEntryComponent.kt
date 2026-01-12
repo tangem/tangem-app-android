@@ -129,13 +129,17 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier,
     ) {
-        BackHandler(enabled = bottomSheetState.value == BottomSheetState.EXPANDED) {
+        val stackStack = stack.subscribeAsState()
+        BackHandler(
+            enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
+                stackStack.value.active.configuration !is FeedEntryChildFactory.Child.Feed,
+        ) {
             onChildBack()
         }
 
         EntryContent(
             bottomSheetState = bottomSheetState,
-            stackState = stack.subscribeAsState(),
+            stackState = stackStack,
             onHeaderSizeChange = onHeaderSizeChange,
             isOpenedInBottomSheet = true,
         )
