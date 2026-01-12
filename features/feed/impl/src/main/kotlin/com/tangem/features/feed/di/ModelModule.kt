@@ -2,6 +2,7 @@ package com.tangem.features.feed.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
@@ -41,4 +42,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(NewsListModel::class)
     fun provideNewsListModel(model: NewsListModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(FeedEntryModel::class)
+    fun provideFeedEntryModel(model: FeedEntryModel): Model
 }
