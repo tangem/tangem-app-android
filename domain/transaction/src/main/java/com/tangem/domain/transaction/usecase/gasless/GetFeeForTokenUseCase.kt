@@ -12,6 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -24,6 +25,7 @@ class GetFeeForTokenUseCase(
     private val demoConfig: DemoConfig,
     private val currenciesRepository: CurrenciesRepository,
     private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -38,7 +40,7 @@ class GetFeeForTokenUseCase(
         transactionData: TransactionData,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
-            if (!gaslessTransactionRepository.isNetworkSupported(token.network)) {
+            if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(token.network)) {
                 raise(GetFeeError.GaslessError.NetworkIsNotSupported)
             }
 
