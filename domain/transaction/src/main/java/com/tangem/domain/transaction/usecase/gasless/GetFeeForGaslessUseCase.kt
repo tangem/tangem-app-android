@@ -15,6 +15,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
@@ -24,6 +25,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 class GetFeeForGaslessUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
@@ -31,6 +33,7 @@ class GetFeeForGaslessUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
     private val tokenFeeCalculator = TokenFeeCalculator(
@@ -53,7 +56,7 @@ class GetFeeForGaslessUseCase(
                         derivationPath = network.derivationPath,
                     )
 
-                    if (!gaslessTransactionRepository.isNetworkSupported(network)) {
+                    if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         getFeeUseCase.invoke(userWallet, network, transactionData).fold(
                             ifLeft = { raise(it) },
                             ifRight = { fee ->
