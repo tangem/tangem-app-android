@@ -51,6 +51,7 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
@@ -118,6 +119,7 @@ internal class SwapModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getTangemPayCurrencyStatusUseCase: GetTangemPayCurrencyStatusUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
+    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -149,6 +151,7 @@ internal class SwapModel @Inject constructor(
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
+        iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
     )
 
     private val inputNumberFormatter =
