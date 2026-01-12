@@ -169,7 +169,7 @@ class CreateAndSendGaslessTransactionUseCase(
 
         val eip7702Auth = Eip7702Authorization(
             chainId = context.chainId,
-            address = transactionData.sourceAddress,
+            address = eip7702Data.executorAddress,
             nonce = eip7702Data.nonce,
             yParity = extendedEip7702Data.recId,
             r = extendedEip7702Data.r.toFormattedHex(),
@@ -310,10 +310,11 @@ class CreateAndSendGaslessTransactionUseCase(
 
     private fun getDestinationAddress(txData: TransactionData.Uncompiled): String {
         val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+        val contractAddress = txData.contractAddress
         return if (ethereumCallData is EthereumYieldSupplySendCallData) {
             ethereumCallData.destinationAddress
         } else {
-            txData.destinationAddress
+            contractAddress ?: error("supports only Token transaction with contract address")
         }
     }
 
