@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.appsflyer
 
 import android.content.Context
+import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
@@ -17,18 +18,39 @@ internal class AppsFlyerClient(
 
     private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
     private val eventConverter = UnderscoreAnalyticsEventConverter()
+    private val logEventListener = object : AppsFlyerRequestListener {
+        override fun onSuccess() {
+            Timber.tag("AppsFlyerClient").i("AppsFlyerRequestListener send")
+        }
+
+        override fun onError(p0: Int, p1: String) {
+            Timber.tag("AppsFlyerClient").e("AppsFlyerRequestListener onError: $p0, $p1")
+        }
+    }
 
     init {
-        appsFlyerLib.init(key, null, context)
-        appsFlyerLib.start(context, key, object : AppsFlyerRequestListener {
-            override fun onSuccess() {
-                Timber.d("AppsFlyer initialized successfully")
-            }
+        val conversionListener = object : AppsFlyerConversionListener {
+            override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {}
+            override fun onConversionDataFail(p0: String?) {}
+            override fun onAppOpenAttribution(p0: Map<String?, String?>?) {}
+            override fun onAttributionFailure(p0: String?) {}
+        }
 
-            override fun onError(p0: Int, p1: String) {
-                Timber.e("AppsFlyer initialization error: $p0, $p1")
-            }
-        })
+        appsFlyerLib.run {
+            setAppId(context.packageName)
+            setDebugLog(true)
+
+            init(key, conversionListener, context)
+            start(context, key, object : AppsFlyerRequestListener {
+                override fun onSuccess() {
+                    Timber.i("AppsFlyer initialized successfully")
+                }
+
+                override fun onError(p0: Int, p1: String) {
+                    Timber.e("AppsFlyer initialization error: $p0, $p1")
+                }
+            })
+        }
     }
 
     override fun setUserId(userId: String) {
@@ -44,6 +66,7 @@ internal class AppsFlyerClient(
             context,
             event,
             eventConverter.convertEventParams(params),
+            logEventListener,
         )
     }
 }
