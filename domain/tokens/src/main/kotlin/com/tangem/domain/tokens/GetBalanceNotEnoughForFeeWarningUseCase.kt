@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -27,6 +28,7 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
     suspend operator fun invoke(
         fee: BigDecimal,
@@ -41,9 +43,15 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
             val isFeePaidByCoin = tokenStatus.currency is CryptoCurrency.Token
             val isFeePaidByToken =
                 feePaidCurrency is FeePaidCurrency.Token && tokenStatus.currency.id != feePaidCurrency.tokenId
+            val isNetworkSupportGasless = currencyChecksRepository.isNetworkSupportedForGaslessTx(
+                coinStatus.currency.network,
+            )
 
             val warning = when {
-                feePaidCurrency is FeePaidCurrency.Coin && isFeePaidByCoin && fee > coinBalance -> {
+                feePaidCurrency is FeePaidCurrency.Coin &&
+                    isFeePaidByCoin &&
+                    fee > coinBalance &&
+                    !isNetworkSupportGasless -> {
                     CryptoCurrencyWarning.BalanceNotEnoughForFee(
                         tokenCurrency = tokenStatus.currency,
                         coinCurrency = coinStatus.currency,
