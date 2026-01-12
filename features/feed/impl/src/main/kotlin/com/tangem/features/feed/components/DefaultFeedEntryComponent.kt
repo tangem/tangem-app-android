@@ -12,6 +12,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
@@ -25,6 +26,7 @@ import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListCo
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.components.FeedEntryRoute
+import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.feed.FeedModelClickIntents
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.EntryContent
@@ -38,6 +40,8 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     @Assisted entryRoute: FeedEntryRoute?,
     private val feedEntryChildFactory: FeedEntryChildFactory,
 ) : FeedEntryComponent, AppComponentContext by context {
+
+    private val model: FeedEntryModel = getOrCreateModel()
 
     private val stackNavigation = StackNavigation<FeedEntryChildFactory.Child>()
 
@@ -129,12 +133,17 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier,
     ) {
+        val bsState by bottomSheetState
         val stackStack = stack.subscribeAsState()
         BackHandler(
             enabled = bottomSheetState.value == BottomSheetState.EXPANDED &&
                 stackStack.value.active.configuration !is FeedEntryChildFactory.Child.Feed,
         ) {
             onChildBack()
+        }
+
+        LaunchedEffect(bsState) {
+            model.containerBottomSheetState.value = bsState
         }
 
         EntryContent(
