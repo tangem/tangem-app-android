@@ -30,11 +30,6 @@ class DefaultGaslessTransactionRepository(
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
 
-    override fun isNetworkSupported(network: Network): Boolean {
-        val blockchain = Blockchain.fromId(network.rawId)
-        return SUPPORTED_BLOCKCHAINS.contains(blockchain)
-    }
-
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
         return withContext(coroutineDispatcherProvider.io) {
             val storedTokens = supportedTokensState.value[network.id]
@@ -118,14 +113,5 @@ class DefaultGaslessTransactionRepository(
         const val TOKEN_RECEIVER_ADDRESS = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
 
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("100000")
-        val SUPPORTED_BLOCKCHAINS = arrayOf(
-            Blockchain.Ethereum,
-            Blockchain.BSC,
-            Blockchain.Base,
-            Blockchain.Polygon,
-            Blockchain.Arbitrum,
-            Blockchain.XDC,
-            Blockchain.Optimism,
-        )
     }
 }
