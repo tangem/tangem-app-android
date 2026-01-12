@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -72,10 +73,12 @@ internal object TokensDataModule {
     fun provideCurrencyChecksRepository(
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        sendFeatureToggles: SendFeatureToggles,
     ): CurrencyChecksRepository {
         return DefaultCurrencyChecksRepository(
             walletManagersFacade = walletManagersFacade,
             coroutineDispatchers = coroutineDispatcherProvider,
+            sendFeatureToggles = sendFeatureToggles,
         )
     }
 
