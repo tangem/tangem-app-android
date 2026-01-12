@@ -10,6 +10,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.raiseIllegalStateError
@@ -19,6 +20,7 @@ class GetAvailableFeeTokensUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
     /**
@@ -40,7 +42,7 @@ class GetAvailableFeeTokensUseCase(
 
                     val nativeCurrencyStatus = getNativeCurrencyStatus(userWallet, network, userCurrenciesStatuses)
 
-                    if (!gaslessTransactionRepository.isNetworkSupported(network)) {
+                    if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         return@either listOf(nativeCurrencyStatus)
                     }
 

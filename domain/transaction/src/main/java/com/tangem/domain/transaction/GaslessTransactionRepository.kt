@@ -9,8 +9,6 @@ import java.math.BigInteger
 
 interface GaslessTransactionRepository {
 
-    fun isNetworkSupported(network: Network): Boolean
-
     suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency>
 
     fun getTokenFeeReceiverAddress(): String

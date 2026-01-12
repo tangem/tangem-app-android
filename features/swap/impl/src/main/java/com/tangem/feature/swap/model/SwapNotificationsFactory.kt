@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
@@ -32,6 +33,7 @@ import java.math.BigDecimal
 @Suppress("LargeClass")
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
+    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
     fun getInitialErrorStateNotifications(code: Int, onRefreshClick: () -> Unit): ImmutableList<NotificationUM> {
@@ -294,7 +296,8 @@ internal class SwapNotificationsFactory(
         val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeEnoughState.feeCurrency != fromToken
-        if (shouldShowCoverWarning) {
+        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromToken.network)
+        if (shouldShowCoverWarning && !isGaslessAvailable) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
                     fromToken = fromToken,

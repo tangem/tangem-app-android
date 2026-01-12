@@ -282,11 +282,13 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         dispatchers: CoroutineDispatcherProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): GetBalanceNotEnoughForFeeWarningUseCase {
         return GetBalanceNotEnoughForFeeWarningUseCase(
             currenciesRepository = currenciesRepository,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             dispatchers = dispatchers,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 

@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TransactionRepository
@@ -277,11 +278,13 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         currenciesRepository: CurrenciesRepository,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): GetAvailableFeeTokensUseCase {
         return GetAvailableFeeTokensUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 
@@ -293,6 +296,7 @@ internal object TransactionDomainModule {
         currenciesRepository: CurrenciesRepository,
         getFeeUseCase: GetFeeUseCase,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): GetFeeForGaslessUseCase {
         return GetFeeForGaslessUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -301,6 +305,7 @@ internal object TransactionDomainModule {
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             getFeeUseCase = getFeeUseCase,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 
@@ -311,6 +316,7 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         currenciesRepository: CurrenciesRepository,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): GetFeeForTokenUseCase {
         return GetFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -318,15 +324,16 @@ internal object TransactionDomainModule {
             demoConfig = DemoConfig,
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 
     @Provides
     @Singleton
     fun provideIsGaslessFeeSupportedForNetwork(
-        gaslessTransactionRepository: GaslessTransactionRepository,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): IsGaslessFeeSupportedForNetwork {
-        return IsGaslessFeeSupportedForNetwork(gaslessTransactionRepository)
+        return IsGaslessFeeSupportedForNetwork(currencyChecksRepository)
     }
 
     @Provides
@@ -354,6 +361,7 @@ internal object TransactionDomainModule {
         gaslessTransactionRepository: GaslessTransactionRepository,
         currenciesRepository: CurrenciesRepository,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForTokenUseCase {
         return EstimateFeeForTokenUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -361,6 +369,7 @@ internal object TransactionDomainModule {
             demoConfig = DemoConfig,
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 
@@ -372,6 +381,7 @@ internal object TransactionDomainModule {
         currenciesRepository: CurrenciesRepository,
         getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
         estimateFeeUseCase: EstimateFeeUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): EstimateFeeForGaslessTxUseCase {
         return EstimateFeeForGaslessTxUseCase(
             gaslessTransactionRepository = gaslessTransactionRepository,
@@ -380,6 +390,7 @@ internal object TransactionDomainModule {
             currenciesRepository = currenciesRepository,
             getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
             estimateFeeUseCase = estimateFeeUseCase,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 }
