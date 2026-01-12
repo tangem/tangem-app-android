@@ -23,8 +23,7 @@ internal data class MarketsListUM(
     val onSearchClicked: () -> Unit,
 ) {
     val isInSearchMode
-        get() = marketsSearchBar.searchBarUM.isActive &&
-            marketsSearchBar.searchBarUM.query.isNotEmpty()
+        get() = marketsSearchBar.searchBarUM.query.isNotEmpty()
 
     enum class TrendInterval(val text: TextReference) {
         H24(resourceReference(R.string.markets_selector_interval_24h_title)),
