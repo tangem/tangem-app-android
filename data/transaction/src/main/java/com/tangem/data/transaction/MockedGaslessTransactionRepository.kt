@@ -15,11 +15,6 @@ class MockedGaslessTransactionRepository(
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : GaslessTransactionRepository {
 
-    override fun isNetworkSupported(network: Network): Boolean {
-        val blockchain = Blockchain.fromId(network.rawId)
-        return SUPPORTED_BLOCKCHAINS.contains(blockchain)
-    }
-
     override suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency> {
         val usdcPolygon = responseCryptoCurrenciesFactory.createToken(
             blockchain = Blockchain.Polygon,
