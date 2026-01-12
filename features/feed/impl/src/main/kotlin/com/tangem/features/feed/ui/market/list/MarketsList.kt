@@ -59,7 +59,8 @@ internal fun TopBarWithSearch(
     val focusRequester: FocusRequester = remember { FocusRequester() }
 
     AnimatedContent(
-        targetState = !marketsSearchBar.shouldAlwaysShowSearchBar && !marketsSearchBar.searchBarUM.isActive,
+        targetState = !marketsSearchBar.shouldAlwaysShowSearchBar &&
+            !marketsSearchBar.searchBarUM.isActive && marketsSearchBar.searchBarUM.query.isEmpty(),
     ) { showAppBarWithBackIcon ->
         if (showAppBarWithBackIcon) {
             AppBarWithBackButtonAndIcon(
