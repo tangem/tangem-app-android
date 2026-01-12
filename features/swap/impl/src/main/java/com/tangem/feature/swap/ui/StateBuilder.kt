@@ -25,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.models.StoryContent
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.converters.TokensDataConverterV2
@@ -64,6 +65,7 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
+    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -76,7 +78,7 @@ internal class StateBuilder(
     )
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(actions)
+        SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
     }
 
     fun createInitialLoadingState(
