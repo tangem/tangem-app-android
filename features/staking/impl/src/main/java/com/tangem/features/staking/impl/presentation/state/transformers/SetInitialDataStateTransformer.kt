@@ -104,6 +104,10 @@ internal class SetInitialDataStateTransformer(
                 onRefresh = { clickIntents.onRefreshSwipe(it.value) },
                 isRefreshing = false,
             ),
+            legalUrls = StakingStates.InitialInfoState.LegalUrls(
+                termsOfServiceUrl = integration.legalUrls.termsOfServiceUrl,
+                privacyPolicyUrl = integration.legalUrls.privacyPolicyUrl,
+            ),
         )
     }
 
