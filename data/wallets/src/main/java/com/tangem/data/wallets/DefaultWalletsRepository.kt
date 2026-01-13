@@ -50,9 +50,6 @@ internal class DefaultWalletsRepository(
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
 
-    private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
-        MutableStateFlow(mutableSetOf())
-
     @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
@@ -337,16 +334,6 @@ internal class DefaultWalletsRepository(
                     .plus(userWalletId.stringValue to isEnabled),
             )
         }
-    }
-
-    override fun isUpgradeWalletNotificationEnabled(userWalletId: UserWalletId): Flow<Boolean> {
-        return upgradeWalletNotificationDisabled.map {
-            it.contains(userWalletId)
-        }
-    }
-
-    override suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId) {
-        upgradeWalletNotificationDisabled.update { it.plus(userWalletId) }
     }
 
     override suspend fun setWalletName(walletId: UserWalletId, walletName: String) = withContext(dispatchers.io) {
