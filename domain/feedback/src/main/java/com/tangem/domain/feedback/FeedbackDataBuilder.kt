@@ -54,6 +54,10 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("User Wallet ID", userWalletId)
     }
 
+    fun addCustomerId(customerId: String) {
+        builder.appendKeyValue("ID: ", customerId)
+    }
+
     fun addUserWalletMetaInfo(walletMetaInfo: WalletMetaInfo) {
         builder.appendKeyValue("Mobile Wallet is backed up", walletMetaInfo.hotWalletIsBackedUp?.toString())
         builder.appendKeyValue("Card ID", walletMetaInfo.cardId)
@@ -116,6 +120,7 @@ internal class FeedbackDataBuilder {
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.FeatureIsBeta,
             is FeedbackEmailType.Visa.Withdrawal,
+            is FeedbackEmailType.Visa.KycRejected,
             -> return
             is FeedbackEmailType.Visa.DisputeV2 -> when (type.item) {
                 is TangemPayTxHistoryItem.Collateral -> "Receive/Withdraw"
