@@ -3,17 +3,25 @@ package com.tangem.feature.swap
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesScreen
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.model.SwapModel
+import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.swap.SwapComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -23,9 +31,17 @@ import dagger.assisted.AssistedInject
 internal class DefaultSwapComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: SwapComponent.Params,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
 
     private val model: SwapModel = getOrCreateModel(params)
+
+    private val bottomSheetSlot = childSlot(
+        source = model.bottomSheetNavigation,
+        serializer = AddToPortfolioRoute.serializer(),
+        handleBackButton = false,
+        childFactory = { configuration, context -> bottomSheetChild(context) },
+    )
 
     init {
         lifecycle.subscribe(
@@ -36,6 +52,8 @@ internal class DefaultSwapComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
+
         Crossfade(
             modifier = Modifier.background(TangemTheme.colors.background.secondary),
             targetState = model.currentScreen,
@@ -69,6 +87,19 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 }
             }
         }
+
+        bottomSheet.child?.instance?.BottomSheet()
+    }
+
+    @Suppress("UnsafeCallOnNullableType")
+    private fun bottomSheetChild(componentContext: ComponentContext): ComposableBottomSheetComponent {
+        return addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = model.newAddToPortfolioManager!!,
+                callback = model.addToPortfolioCallback,
+            ),
+        )
     }
 
     @AssistedFactory

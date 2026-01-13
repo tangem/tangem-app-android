@@ -31,7 +31,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
@@ -50,7 +50,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioManager as NewAddToPortfolioManager
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager as NewAddToPortfolioManager
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -96,6 +96,9 @@ internal class MarketsPortfolioModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<MarketsPortfolioRoute> = SlotNavigation()
     val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
+        override fun onSuccess(id: CryptoCurrency.ID) {
+            bottomSheetNavigation.dismiss()
+        }
     }
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()

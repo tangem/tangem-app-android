@@ -51,7 +51,7 @@ internal class DefaultMarketsTokenDetailsComponent(
             context = child("my_portfolio"),
             params = MarketsPortfolioComponent.Params(
                 updatedParams.token,
-                analyticsParams = analyticsParams?.source?.let { MarketsPortfolioComponent.AnalyticsParams(it) },
+                analyticsParams = analyticsParams?.source?.let { MarketsPortfolioAnalyticsParams(it) },
             ),
         )
     } else {

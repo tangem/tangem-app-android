@@ -26,6 +26,9 @@ dependencies {
     implementation(projects.common.uiMarkets)
     implementation(projects.common.uiCharts)
 
+    /** Data modules */
+    implementation(projects.data.common)
+
     /** Domain modules **/
     implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
@@ -58,6 +61,7 @@ dependencies {
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.wallet.api)
     implementation(projects.features.swap.api)
+    implementation(projects.features.feed.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -87,6 +91,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.decompose.ext.compose)
 
     /** DI */
     implementation(deps.hilt.android)
