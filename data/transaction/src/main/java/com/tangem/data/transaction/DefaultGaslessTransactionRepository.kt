@@ -69,8 +69,15 @@ class DefaultGaslessTransactionRepository(
         }
     }
 
-    override fun getTokenFeeReceiverAddress(): String {
-        return TOKEN_RECEIVER_ADDRESS
+    override suspend fun getTokenFeeReceiverAddress(): String {
+        return withContext(coroutineDispatcherProvider.io) {
+            val response = gaslessTxServiceApi.getFeeRecipient().getOrThrow()
+            if (response.isSuccess) {
+                response.result.address
+            } else {
+                error("Gasless service returned unsuccessful response")
+            }
+        }
     }
 
     override suspend fun signGaslessTransaction(
