@@ -38,9 +38,7 @@ internal class ItemsBuilder @Inject constructor() {
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
         onAccessCodeClick: () -> Unit,
-        walletUpgradeDismissed: Boolean,
         onUpgradeWalletClick: () -> Unit,
-        onDismissUpgradeWalletClick: () -> Unit,
         onBackupClick: () -> Unit,
         onCardSettingsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
@@ -48,9 +46,7 @@ internal class ItemsBuilder @Inject constructor() {
         .addAll(
             buildUpgradeWalletItem(
                 userWallet = userWallet,
-                walletUpgradeDismissed = walletUpgradeDismissed,
                 onUpgradeWalletClick = onUpgradeWalletClick,
-                onDismissUpgradeWalletClick = onDismissUpgradeWalletClick,
             ),
         )
         .addAll(buildAccessCodeItem(userWallet, onAccessCodeClick))
@@ -122,24 +118,17 @@ internal class ItemsBuilder @Inject constructor() {
 
     private fun buildUpgradeWalletItem(
         userWallet: UserWallet,
-        walletUpgradeDismissed: Boolean,
         onUpgradeWalletClick: () -> Unit,
-        onDismissUpgradeWalletClick: () -> Unit,
     ): List<WalletSettingsItemUM> = when (userWallet) {
         is UserWallet.Cold -> emptyList()
-        is UserWallet.Hot -> if (!walletUpgradeDismissed) {
-            listOf(
-                WalletSettingsItemUM.UpgradeWallet(
-                    id = "upgrade_wallet",
-                    title = resourceReference(id = R.string.hw_upgrade_to_cold_banner_title),
-                    description = resourceReference(id = R.string.hw_upgrade_to_cold_banner_description),
-                    onClick = onUpgradeWalletClick,
-                    onDismissClick = onDismissUpgradeWalletClick,
-                ),
-            )
-        } else {
-            emptyList()
-        }
+        is UserWallet.Hot -> listOf(
+            WalletSettingsItemUM.UpgradeWallet(
+                id = "upgrade_wallet",
+                title = resourceReference(id = R.string.hw_upgrade_to_cold_banner_title),
+                description = resourceReference(id = R.string.hw_upgrade_to_cold_banner_description),
+                onClick = onUpgradeWalletClick,
+            ),
+        )
     }
 
     private fun buildNotificationsPermissionItem() = WalletSettingsItemUM.NotificationPermission(
