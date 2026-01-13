@@ -284,6 +284,7 @@ class TokenItemStateConverter(
 
             val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
+            val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
 
             val rateInfo = when (val stakingOptions = stakingAvailability.option) {
                 is StakingOption.P2PEthPool -> {
@@ -316,7 +317,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.rate,
-                isActive = stakeKitBalance != null, // todo add p2p check
+                isActive = stakeKitBalance != null || p2pEthPoolBalance != null,
                 rewardType = rateInfo?.type,
             )
         }
