@@ -294,6 +294,6 @@ sealed class WcAnalyticAccountEvents(
     )
 
     companion object {
-        const val WC_CATEGORY_ACCOUNT_NAME = "WalletConnect - Account"
+        const val WC_CATEGORY_ACCOUNT_NAME = "WalletConnect / Account"
     }
 }
