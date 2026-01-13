@@ -1,6 +1,9 @@
 package com.tangem.features.feed.ui.news.list.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -44,7 +47,13 @@ internal fun NewsListLazyColumn(
         }
     }
 
-    AnimatedContent(targetState = screenState, label = "NewsListTransition") { state ->
+    AnimatedContent(
+        transitionSpec = {
+            fadeIn() togetherWith fadeOut()
+        },
+        targetState = screenState,
+        label = "NewsListTransition",
+    ) { state ->
         when (state) {
             NewsListScreenState.Content -> {
                 Content(
