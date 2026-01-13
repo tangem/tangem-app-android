@@ -84,5 +84,7 @@ sealed interface FeedbackEmailType {
         ) : Visa()
 
         data class FeatureIsBeta(override val walletMetaInfo: WalletMetaInfo) : Visa()
+
+        data class KycRejected(override val walletMetaInfo: WalletMetaInfo, val customerId: String) : Visa()
     }
 }
