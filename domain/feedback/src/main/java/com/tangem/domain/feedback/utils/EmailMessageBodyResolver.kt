@@ -39,6 +39,7 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
             is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
+            is FeedbackEmailType.Visa.KycRejected -> addTangemPayKycRejectedRequestBody(type)
         }
 
         return build()
@@ -68,6 +69,12 @@ internal class EmailMessageBodyResolver(
         type.walletMetaInfo?.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayKycRejectedRequestBody(type: FeedbackEmailType.Visa.KycRejected) {
+        addTangemPayPhoneInfoBody(type)
+        addDelimiter()
+        addCustomerId(customerId = type.customerId)
     }
 
     private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(

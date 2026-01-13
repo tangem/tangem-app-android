@@ -23,6 +23,7 @@ import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
@@ -123,6 +124,17 @@ internal class WalletComponent @AssistedInject constructor(
                                     dialogConfig.onWarningAcknowledged(tokenAction)
                                 }
                             },
+                        ),
+                    )
+                }
+                is WalletDialogConfig.KycRejected -> {
+                    KycRejectedComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = KycRejectedComponent.Params(
+                            walletId = dialogConfig.walletId,
+                            customerId = dialogConfig.customerId,
+                            callbacks = model.tangemPayKycRejectedCallbacks,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
                 }

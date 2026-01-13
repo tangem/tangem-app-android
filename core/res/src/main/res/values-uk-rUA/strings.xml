@@ -607,7 +607,7 @@
   <string name="hw_backup_hardware_create_title">Створити новий гаманець</string>
   <string name="hw_backup_hardware_description">Підвищіть рівень своєї безпеки за допомогою просунутого апаратного гаманця Tangem.</string>
   <string name="hw_backup_hardware_title">Апаратний гаманець</string>
-  <string name="hw_backup_hardware_upgrade_description">Перенесіть свій поточний гаманець у Tangem.</string>
+  <string name="hw_backup_hardware_upgrade_description">Перетворіть поточний гаманець на холодний гаманець Tangem.</string>
   <string name="hw_backup_hardware_upgrade_title">Оновіть поточний гаманець</string>
   <string name="hw_backup_need_action">Перейти до бекапу</string>
   <string name="hw_backup_need_description">Будь ласка, створіть резервну копію свого гаманця, перш ніж створювати код доступу.</string>
@@ -1767,7 +1767,7 @@
   <string name="wallet_settings_access_code_description">Цей код доступу захищає ваш гаманець і використовується для входу та підписання транзакцій.</string>
   <string name="wallet_settings_access_code_title">Встановити/Змінити код доступу</string>
   <string name="wallet_settings_change_access_code_title">Змінити код доступу</string>
-  <string name="wallet_settings_push_notifications_description">Отримуйте сповіщення про вхідні транзакції в гаманці та оновлення Tangem.</string>
+  <string name="wallet_settings_push_notifications_description">Отримуйте сповіщення про вхідні транзакції в гаманці.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">Push-повідомлення наразі можуть не працювати на пристроях Huawei. Ми активно працюємо над розв\'язанням цієї проблеми та плануємо випустити виправлення в наступному оновленні. Дякуємо за розуміння!</string>
   <string name="wallet_settings_push_notifications_title">Сповіщення про транзакції</string>
   <string name="wallet_settings_set_access_code_title">Встановити код доступу</string>

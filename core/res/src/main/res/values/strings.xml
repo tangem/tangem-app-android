@@ -539,9 +539,9 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
   <string name="exсhange_token_description">Swap any asset in your portfolio for this token</string>
-  <string name="fee_selector_choose_speed_description">Higher speed means faster confirmation and a higher network fee. %s</string>
+  <string name="fee_selector_choose_speed_description">Higher speed means faster confirmation\nand a higher network fee. %s</string>
   <string name="fee_selector_choose_speed_title">Choose speed</string>
-  <string name="fee_selector_choose_token_description">Choose which token to use to pay the network fee. %s</string>
+  <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
   <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
   <string name="feed_tangem_ai">Tangem AI</string>
@@ -600,7 +600,7 @@
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
   <string name="hw_backup_hardware_description">Level up your security with the superior Tangem hardware wallet.</string>
   <string name="hw_backup_hardware_title">Hardware wallet</string>
-  <string name="hw_backup_hardware_upgrade_description">Move your current wallet into Tangem.</string>
+  <string name="hw_backup_hardware_upgrade_description">Convert your current mobile wallet into a Tangem cold wallet.</string>
   <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
@@ -625,7 +625,7 @@
   <string name="hw_remove_wallet_confirmation_title">Are you sure you want to do this?</string>
   <string name="hw_remove_wallet_nav_title">Forget wallet</string>
   <string name="hw_remove_wallet_notification_action_backup_go">Go to backup</string>
-  <string name="hw_remove_wallet_notification_action_backup_view">View backup</string>
+  <string name="hw_remove_wallet_notification_action_backup_view">View recovery phrase</string>
   <string name="hw_remove_wallet_notification_action_forget">Forget wallet</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Forget anyway</string>
   <string name="hw_remove_wallet_notification_description_has_backup">This wallet has a backup. Ensure you can recover it before forgetting the wallet.</string>
@@ -1264,6 +1264,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
+  <string name="staking_details_autocompound_rewards_earned">Rewards are compounded to your staking balance. Funds earned: %s</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_banner_text">How Staking Works?</string>
@@ -1516,10 +1517,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
   <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
+  <string name="tangempay_kyc_has_failed">KYC has failed</string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
+  <string name="tangempay_kyc_rejected">KYC rejected</string>
+  <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
+  <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
+  <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
@@ -1783,7 +1789,7 @@
   <string name="wallet_settings_access_code_description">This access code protects your wallet and is used to log in and sign transactions.</string>
   <string name="wallet_settings_access_code_title">Set/Change access code</string>
   <string name="wallet_settings_change_access_code_title">Change access code</string>
-  <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
+  <string name="wallet_settings_push_notifications_description">Get push notifications for incoming wallet transactions.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">Push notifications may currently not work on Huawei devices. We\'re actively working on a solution and will release a fix in an upcoming update. Thank you for your understanding!</string>
   <string name="wallet_settings_push_notifications_title">Transaction notifications</string>
   <string name="wallet_settings_set_access_code_title">Set access code</string>
