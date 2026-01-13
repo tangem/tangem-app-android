@@ -30,10 +30,18 @@ internal class AppsFlyerClient(
 
     init {
         val conversionListener = object : AppsFlyerConversionListener {
-            override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {}
-            override fun onConversionDataFail(p0: String?) {}
-            override fun onAppOpenAttribution(p0: Map<String?, String?>?) {}
-            override fun onAttributionFailure(p0: String?) {}
+            override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {
+                Timber.i("AppsFlyer conversion data success: ${p0.orEmpty()}")
+            }
+            override fun onConversionDataFail(p0: String?) {
+                Timber.e("AppsFlyer conversion data failure: ${p0.orEmpty()}")
+            }
+            override fun onAppOpenAttribution(p0: Map<String?, String?>?) {
+                Timber.i("AppsFlyer app open attribution: ${p0.orEmpty()}")
+            }
+            override fun onAttributionFailure(p0: String?) {
+                Timber.e("AppsFlyer attribution failure: ${p0.orEmpty()}")
+            }
         }
 
         appsFlyerLib.run {
@@ -41,6 +49,7 @@ internal class AppsFlyerClient(
             setDebugLog(true)
 
             init(key, conversionListener, context)
+            Timber.i("Starting AppsFlyer SDK")
             start(context, key, object : AppsFlyerRequestListener {
                 override fun onSuccess() {
                     Timber.i("AppsFlyer initialized successfully")
@@ -50,6 +59,7 @@ internal class AppsFlyerClient(
                     Timber.e("AppsFlyer initialization error: $p0, $p1")
                 }
             })
+            Timber.i("AppsFlyer SDK started")
         }
     }
 
@@ -62,6 +72,7 @@ internal class AppsFlyerClient(
     }
 
     override fun logEvent(event: String, params: Map<String, String>) {
+        Timber.tag("AppsFlyer").i("Logging event: $event with params: $params")
         appsFlyerLib.logEvent(
             context,
             event,
