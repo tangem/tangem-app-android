@@ -143,8 +143,8 @@ internal class MyPortfolioUMFactory(
     ): List<PortfolioData.CryptoCurrencyData> {
         val networkIds = networks.map(TokenMarketInfo.Network::networkId)
 
-        return mapNotNull {
-            it.takeIf { networkIds.contains(it.status.currency.network.backendId) }
+        return mapNotNull { currencyData ->
+            currencyData.takeIf { networkIds.contains(it.status.currency.network.backendId) }
         }
     }
 }
