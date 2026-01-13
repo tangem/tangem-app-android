@@ -22,11 +22,11 @@ internal class PortfolioAnalyticsEvent(
         )
 
         fun popupToChooseAccount() = PortfolioAnalyticsEvent(
-            event = "Popup to choose account",
+            event = "Choose Account Opened",
         )
 
         fun addToNotMainAccount() = PortfolioAnalyticsEvent(
-            event = "Button - Add (token not to main Account)",
+            event = "Button - Add To Account",
         )
 
         fun addToPortfolioWalletChanged() = PortfolioAnalyticsEvent(event = "Wallet Selected")
