@@ -52,7 +52,6 @@ internal sealed class WalletSettingsItemUM {
         val title: TextReference,
         val description: TextReference,
         val onClick: () -> Unit,
-        val onDismissClick: () -> Unit,
     ) : WalletSettingsItemUM()
 }
 
