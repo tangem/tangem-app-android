@@ -48,6 +48,7 @@ class SendFeedbackEmailUseCase(
 
     private fun getAddress(type: FeedbackEmailType): String {
         return when {
+            type is FeedbackEmailType.Visa.KycRejected -> PAERA_SUPPORT_EMAIL
             type.isVisaEmail() -> TANGEM_VISA_SUPPORT_EMAIL
             type.walletMetaInfo?.isStart2Coin == true -> START2COIN_SUPPORT_EMAIL
             else -> TANGEM_SUPPORT_EMAIL
@@ -95,6 +96,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.DisputeV2,
             is FeedbackEmailType.Visa.FeatureIsBeta,
+            is FeedbackEmailType.Visa.KycRejected,
             -> this
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.BackupProblem,
