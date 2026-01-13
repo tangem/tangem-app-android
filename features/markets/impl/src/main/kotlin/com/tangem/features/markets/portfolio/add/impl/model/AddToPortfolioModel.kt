@@ -101,7 +101,7 @@ internal class AddToPortfolioModel @Inject constructor(
             val data = featureDataFlow.value
 
             // you must control it via [AddToPortfolioManager.state]
-            if (!data.availableToAdd) {
+            if (!data.isAvailableToAdd) {
                 finishFlow()
                 return@channelFlow
             }
@@ -182,8 +182,8 @@ internal class AddToPortfolioModel @Inject constructor(
             messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
 
             setupTokenActionsFlow(selectedPortfolio, addedToken)
-                .onEach {
-                    tokenActionsData.emit(it)
+                .onEach { cryptoCurrencyData ->
+                    tokenActionsData.emit(cryptoCurrencyData)
                     navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
                 }
                 .onEmpty { finishFlow() }
@@ -192,8 +192,8 @@ internal class AddToPortfolioModel @Inject constructor(
             callbackDelegate.onLaterClick.receiveAsFlow().first()
             finishFlow()
         }
-            .catch {
-                Timber.e(it)
+            .catch { error ->
+                Timber.e(error)
                 params.callback.onDismiss()
             }
             .launchIn(modelScope)
@@ -213,14 +213,15 @@ internal class AddToPortfolioModel @Inject constructor(
             }
     }
 
-    private suspend fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> {
-        val selectedAccount = selectedPortfolio.first().account.account.account.accountId
+    private fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> = flow {
+        val selectedPortfolioValue = selectedPortfolio.first()
+        val selectedAccount = selectedPortfolioValue.account.account.account.accountId
         portfolioSelectorController.selectAccount(selectedAccount)
         val changedPortfolio = setupPortfolioFlow(data)
             .drop(1)
             .onEach { portfolio -> navigation.pushNew(routeToNetworkSelector(portfolio)) }
         val changedNetwork = setupNetworkFlow(changedPortfolio)
-        return combine(
+        combine(
             flow = changedPortfolio,
             flow2 = changedNetwork,
             transform = { newPortfolio, newNetwork ->
@@ -228,7 +229,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 selectedNetwork.tryEmit(newNetwork)
                 navigation.popToFirst()
             },
-        )
+        ).collect { emit(it) }
     }
 
     private fun setupTokenActionsFlow(
@@ -276,7 +277,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 isAccountMode = isAccountMode,
                 userWallet = availableToAddWallets.userWallet,
                 account = availableToAddAccount,
-                availableMorePortfolio = !data.isSinglePortfolio,
+                hasMorePortfoliosAvailable = !data.isSinglePortfolio,
             )
         },
     )
@@ -293,7 +294,7 @@ internal class AddToPortfolioModel @Inject constructor(
                     account = selectedPortfolio.account,
                 ) ?: return@transform null,
                 selectedNetwork = selectedNetwork,
-                availableMoreNetwork = !selectedPortfolio.account.isSingleNetwork,
+                hasMoreNetworksAvailable = !selectedPortfolio.account.isSingleNetwork,
             )
         },
     )
