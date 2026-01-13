@@ -303,7 +303,7 @@
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_later">Später</string>
-  <string name="common_learn_more">Mehr erfahren</string>
+  <string name="common_learn_more">Mehr erfahren</string>
   <string name="common_left">%1$s übrig</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Gesperrt</string>
@@ -627,8 +627,8 @@
   <string name="hw_remove_wallet_notification_action_backup_view">Backup anzeigen</string>
   <string name="hw_remove_wallet_notification_action_forget">Entferne Deine Wallet für immer!</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Trotzdem entfernen!</string>
-  <string name="hw_remove_wallet_notification_description_has_backup">Für diese Wallet existiert ein Backup. Überprüfe dieses bitte, bevor Du sie entfernst, um sicherzustellen, dass Du sie später wiederherstellen kannst.</string>
-  <string name="hw_remove_wallet_notification_description_without_backup">Wenn Du diese Wallet ohne Backup entfernst, verlierst Du dauerhaft den Zugriff auf Deine Assets.</string>
+  <string name="hw_remove_wallet_notification_description_has_backup">Diese Wallet verfügt über ein Backup. Stelle sicher, dass Du es wiederherstellen kannst, bevor die Wallet resettet wird.</string>
+  <string name="hw_remove_wallet_notification_description_without_backup">Wenn Du diese Wallet ohne Backup löschst, verlierst Du dauerhaft den Zugriff auf Dein Guthaben.</string>
   <string name="hw_remove_wallet_notification_title">Bist du sicher, dass du diese Wallet vergessen willst?</string>
   <string name="hw_remove_wallet_warning_access">Mir ist bewusst, dass ich den Zugriff auf meine Wallet verlieren kann, wenn ich sie vor der Entfernung nicht gesichert habe.</string>
   <string name="hw_remove_wallet_warning_device">Mir ist bewusst, dass durch das Entfernen meiner Wallet diese nicht gelöscht, sondern lediglich von meinem Gerät entfernt wird.</string>
@@ -2016,7 +2016,7 @@
   <string name="yield_module_balance_info_sheet_subtitle">Deine Gelder werden derzeit dem Aave-Protokoll bereitgestellt, Du kannst sie jedoch jederzeit verwalten.</string>
   <string name="yield_module_balance_info_sheet_title">Deine%s ist in Aave hinterlegt</string>
   <string name="yield_module_chart_loading_error">Chart konnte nicht geladen werden...</string>
-  <string name="yield_module_deposit_error_notification_title">Das Bereitstellen von %1$s %2$s bei Aave steht aus.</string>
+  <string name="yield_module_deposit_error_notification_title">Lieferung %1$s %2$s nach Aave.</string>
   <string name="yield_module_disable_button">Deaktiviere den Yield-Modus</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Verfügbar</string>
@@ -2082,7 +2082,7 @@
   <string name="yield_module_supply">Angebot</string>
   <string name="yield_module_supply_apr">Effektiver Jahreszins für Versorgung</string>
   <string name="yield_module_token_details_earn_notification_apy">Effektiver Jahreszins</string>
-  <string name="yield_module_token_details_earn_notification_description">Die Zinsen fallen automatisch an.</string>
+  <string name="yield_module_token_details_earn_notification_description">Zinsen fallen automatisch an.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Zinsen fallen automatisch an</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
