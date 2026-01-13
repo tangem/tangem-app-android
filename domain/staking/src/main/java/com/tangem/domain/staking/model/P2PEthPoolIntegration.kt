@@ -73,6 +73,13 @@ class P2PEthPoolIntegration(
 
     override val rewardClaiming: RewardClaiming = RewardClaiming.AUTO
 
+    // Legal URLs
+
+    override val legalUrls: StakingLegalUrls = StakingLegalUrls(
+        termsOfServiceUrl = TERMS_OF_SERVICE_URL,
+        privacyPolicyUrl = PRIVACY_POLICY_URL,
+    )
+
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken = token
 
     private fun calculateMaximumStakeAmount(): BigDecimal? {
@@ -88,5 +95,8 @@ class P2PEthPoolIntegration(
         private const val MIN_COOLDOWN_DAYS = 1
         private const val MAX_COOLDOWN_DAYS = 4
         private val DEFAULT_MINIMUM_STAKE = BigDecimal("0.01")
+
+        private const val TERMS_OF_SERVICE_URL = "https://www.p2p.org/terms-of-use"
+        private const val PRIVACY_POLICY_URL = "https://www.p2p.org/privacy-policy"
     }
 }

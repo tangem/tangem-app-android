@@ -112,7 +112,10 @@ internal fun StakingInitialInfoContent(
 
             item(STAKE_PRIMARY_BUTTON_KEY) {
                 SpacerH12()
-                StakeButtonBlock(buttonState)
+                StakeButtonBlock(
+                    legalUrls = state.legalUrls,
+                    buttonState = buttonState,
+                )
             }
         }
     }
@@ -386,7 +389,10 @@ private fun RowScope.StakingBalanceIcon(balance: BalanceState, icon: Int?, iconT
 }
 
 @Composable
-private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
+private fun StakeButtonBlock(
+    legalUrls: StakingStates.InitialInfoState.LegalUrls,
+    buttonState: NavigationButtonsState,
+) {
     val state = buttonState as? NavigationButtonsState.Data
     val primaryButton = state?.primaryButton
 
@@ -395,7 +401,12 @@ private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        state?.onTextClick?.let { StakingTosText(it) }
+        state?.let { buttonsState ->
+            StakingTosText(
+                onTermsOfServiceClick = { buttonsState.onTextClick(legalUrls.termsOfServiceUrl) },
+                onPrivacyPolicyClick = { buttonsState.onTextClick(legalUrls.privacyPolicyUrl) },
+            )
+        }
         NavigationPrimaryButton(primaryButton = primaryButton)
     }
 }

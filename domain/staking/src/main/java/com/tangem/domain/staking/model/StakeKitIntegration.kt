@@ -59,6 +59,13 @@ class StakeKitIntegration(
 
     override val rewardClaiming: RewardClaiming = yield.metadata.rewardClaiming.toRewardClaiming()
 
+    // Legal URLs
+
+    override val legalUrls: StakingLegalUrls = StakingLegalUrls(
+        termsOfServiceUrl = TERMS_OF_SERVICE_URL,
+        privacyPolicyUrl = PRIVACY_POLICY_URL,
+    )
+
     // Basic
 
     override fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken =
@@ -97,5 +104,10 @@ class StakeKitIntegration(
             Yield.Metadata.RewardClaiming.MANUAL -> RewardClaiming.MANUAL
             Yield.Metadata.RewardClaiming.UNKNOWN -> RewardClaiming.UNKNOWN
         }
+    }
+
+    companion object {
+        private const val TERMS_OF_SERVICE_URL = "https://docs.yield.xyz/docs/terms-of-use"
+        private const val PRIVACY_POLICY_URL = "https://docs.yield.xyz/docs/privacy-policy"
     }
 }

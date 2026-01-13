@@ -51,6 +51,10 @@ sealed interface StakingIntegration {
 
     val rewardClaiming: RewardClaiming
 
+    // Legal URLs
+
+    val legalUrls: StakingLegalUrls
+
     // Basic
 
     fun getCurrentToken(rawCurrencyId: CryptoCurrency.RawID?): YieldToken
