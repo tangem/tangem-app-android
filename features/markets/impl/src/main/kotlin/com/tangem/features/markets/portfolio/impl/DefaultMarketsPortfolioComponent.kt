@@ -65,7 +65,9 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
         MarketsPortfolioRoute.AddToPortfolio -> addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = model.newAddToPortfolioManager!!,
+                addToPortfolioManager = requireNotNull(model.newAddToPortfolioManager) {
+                    "newAddToPortfolioManager must be initialized"
+                },
                 callback = model.addToPortfolioCallback,
             ),
         )

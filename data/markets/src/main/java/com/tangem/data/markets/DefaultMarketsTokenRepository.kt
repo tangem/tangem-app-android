@@ -90,13 +90,13 @@ internal class DefaultMarketsTokenRepository(
                     requestTimeStamp.set(res.timestamp ?: 0)
                 }
 
-                val last = res.tokens.size < request.limit
+                val isLast = res.tokens.size < request.limit
 
                 val tokenMarketListWithMaxApy = TokenMarketListConverter.convert(res)
 
                 return BatchFetchResult.Success(
                     data = tokenMarketListWithMaxApy.tokens,
-                    last = last,
+                    last = isLast,
                     empty = res.tokens.isEmpty(),
                 )
             }
@@ -227,8 +227,8 @@ internal class DefaultMarketsTokenRepository(
                 currencyId = tokenId.value,
                 field = QuotesFetcher.Field.ALL_PRICES,
             )
-                .getOrElse {
-                    val error = it as QuotesFetcher.Error.ApiOperationError
+                .getOrElse { fetchError ->
+                    val error = fetchError as QuotesFetcher.Error.ApiOperationError
 
                     val errorEvent = createDetailsErrorEvent(
                         error = error.apiError,
@@ -274,7 +274,7 @@ internal class DefaultMarketsTokenRepository(
                 name = token.name,
                 symbol = token.symbol,
                 decimals = network.decimalCount ?: error("Unknown decimal"),
-                contractAddress = network.contractAddress!!,
+                contractAddress = requireNotNull(network.contractAddress) { "Contract address is required for token" },
             )
         }
     }
