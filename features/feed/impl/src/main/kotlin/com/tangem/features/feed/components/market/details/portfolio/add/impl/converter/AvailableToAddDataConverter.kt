@@ -12,9 +12,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AvailableToAddAccount
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AvailableToAddData
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AvailableToAddWallet
+import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddAccount
+import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddData
+import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddWallet
 import javax.inject.Inject
 
 internal class AvailableToAddDataConverter @Inject constructor(

@@ -8,10 +8,12 @@ import androidx.compose.runtime.snapshotFlow
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -37,6 +39,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -60,6 +63,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
+import com.tangem.feature.swap.converters.TokenMarketInfoToParamsConverter
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
@@ -130,6 +134,8 @@ internal class SwapModel @Inject constructor(
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val newAddToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -204,6 +210,7 @@ internal class SwapModel @Inject constructor(
 
     private val fromTokenBalanceJobHolder = JobHolder()
     private val toTokenBalanceJobHolder = JobHolder()
+    private val addToPortfolioJobHolder = JobHolder()
 
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
@@ -320,7 +327,7 @@ internal class SwapModel @Inject constructor(
                     items = uiItems,
                     loadMore = { searchMarketsListManager.loadMore() },
                     onItemClick = { item ->
-                        // TODO [REDACTED_TASK_KEY]  Add currency to swap form market list
+                        addToPortfolioItem(item)
                     },
                     visibleIdsChanged = { visibleMarketItemIds.value = it },
                 )
@@ -349,6 +356,32 @@ internal class SwapModel @Inject constructor(
                 searchMarketsListManager.loadCharts(visibleBatchKeys)
             }
         }
+    }
+
+    private fun addToPortfolioItem(item: MarketsListItemUM) {
+        modelScope.launch {
+            val tokenInfo = getTokenMarketInfoUseCase(
+                selectedAppCurrencyFlow.value,
+                item.id,
+                item.currencySymbol,
+            ).getOrNull() ?: return@launch
+
+            val converter = TokenMarketInfoToParamsConverter()
+            val param = converter.convert(tokenInfo)
+
+            newAddToPortfolioManager = newAddToPortfolioManagerFactory
+                .create(
+                    modelScope,
+                    param,
+                    null,
+                ).apply {
+                    setTokenNetworks(tokenInfo.networks.orEmpty())
+                }
+
+            newAddToPortfolioManager?.state
+                ?.firstOrNull { it is AddToPortfolioManager.State.AvailableToAdd }
+                ?.run { bottomSheetNavigation.activate(AddToPortfolioRoute) }
+        }.saveIn(addToPortfolioJobHolder)
     }
 
     fun onStart() {

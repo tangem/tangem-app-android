@@ -9,7 +9,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedPortfolio
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.ChooseNetworkModel
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.ui.ChooseNetworkContent
 import dagger.assisted.Assisted

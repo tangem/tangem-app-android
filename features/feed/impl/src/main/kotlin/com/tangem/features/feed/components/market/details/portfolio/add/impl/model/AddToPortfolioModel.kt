@@ -19,7 +19,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.account.PortfolioSelectorController
-import com.tangem.features.feed.components.market.details.portfolio.add.api.*
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddAccount
+import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddData
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedNetwork
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.ChooseNetworkComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.TokenActionsComponent
@@ -88,6 +93,11 @@ internal class AddToPortfolioModel @Inject constructor(
         channelFlow<Unit> {
             fun finishFlow() {
                 params.callback.onDismiss()
+                channel.close()
+            }
+
+            fun successFinishFlow(id: CryptoCurrency.ID) {
+                params.callback.onSuccess(id)
                 channel.close()
             }
 
@@ -188,11 +198,11 @@ internal class AddToPortfolioModel @Inject constructor(
                     tokenActionsData.emit(cryptoCurrencyData)
                     navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
                 }
-                .onEmpty { finishFlow() }
+                .onEmpty { successFinishFlow(addedToken.currency.id) }
                 .launchIn(this)
 
             callbackDelegate.onLaterClick.receiveAsFlow().first()
-            finishFlow()
+            successFinishFlow(addedToken.currency.id)
         }
             .catch { throwable ->
                 Timber.e(throwable)
@@ -316,8 +326,8 @@ internal class AddToPortfolioModel @Inject constructor(
         network: TokenMarketInfo.Network,
         account: AvailableToAddAccount,
     ): CryptoCurrency? {
-        val accountIndex = when (account.account) {
-            is AccountStatus.CryptoPortfolio -> account.account.account.derivationIndex
+        val accountIndex = when (val accountStatus = account.account) {
+            is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,

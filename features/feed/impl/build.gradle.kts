@@ -24,7 +24,6 @@ dependencies {
     api(projects.features.sendV2.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
-    api(projects.features.account.api)
 
     /* Data */
     implementation(projects.data.common)
