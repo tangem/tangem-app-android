@@ -27,6 +27,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.Visa.FailedIssueCard,
             is FeedbackEmailType.Visa.Withdrawal,
             is FeedbackEmailType.Visa.FeatureIsBeta,
+            is FeedbackEmailType.Visa.KycRejected,
             is FeedbackEmailType.PreActivatedWallet,
             is FeedbackEmailType.BackupProblem,
             -> R.string.feedback_preface_support
