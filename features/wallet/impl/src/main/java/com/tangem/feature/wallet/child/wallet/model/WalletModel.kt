@@ -39,6 +39,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.Dem
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
@@ -107,6 +108,7 @@ internal class WalletModel @Inject constructor(
 ) : Model() {
 
     val askBiometryModelCallbacks = AskBiometryModelCallbacks()
+    val tangemPayKycRejectedCallbacks = TangemPayKycRejectedCallbacks()
     val askForPushNotificationsModelCallbacks = AskForPushNotificationsCallbacks()
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
@@ -766,6 +768,20 @@ internal class WalletModel @Inject constructor(
         override fun onDenied() {
             analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.Off))
             innerWalletRouter.dialogNavigation.dismiss()
+        }
+    }
+
+    inner class TangemPayKycRejectedCallbacks : KycRejectedCallbacks {
+        override fun onClickYourProfile(userWalletId: UserWalletId) {
+            clickIntents.onKycRejectedOpenProfileClicked(userWalletId)
+        }
+
+        override fun onClickGoToSupport(customerId: String) {
+            clickIntents.onKycRejectedGoToSupportClicked(customerId)
+        }
+
+        override fun onClickHideKyc(userWalletId: UserWalletId) {
+            clickIntents.onKycRejectedHideKycClicked(userWalletId)
         }
     }
 
