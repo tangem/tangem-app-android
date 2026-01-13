@@ -8,7 +8,7 @@ import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
-import com.tangem.features.feed.model.news.list.calculator.NewsListStateManager
+import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.model.news.list.loader.NewsCategoriesLoader
 import com.tangem.features.feed.model.news.list.statemanager.NewsListBatchFlowManager
 import com.tangem.features.feed.ui.news.list.state.NewsListState
