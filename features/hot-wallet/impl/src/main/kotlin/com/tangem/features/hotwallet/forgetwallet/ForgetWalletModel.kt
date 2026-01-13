@@ -38,31 +38,19 @@ internal class ForgetWalletModel @Inject constructor(
         field = MutableStateFlow(
             ForgetWalletUM(
                 onBackClick = { router.pop() },
-                firstCheckboxChecked = false,
-                secondCheckboxChecked = false,
-                onFirstCheckboxClick = ::onFirstCheckboxClick,
-                onSecondCheckboxClick = ::onSecondCheckboxClick,
+                isCheckboxChecked = false,
+                onCheckboxClick = ::onCheckboxClick,
                 onForgetWalletClick = ::onForgetWalletClick,
                 isForgetButtonEnabled = false,
             ),
         )
 
-    private fun onFirstCheckboxClick() {
-        uiState.update {
-            val newValue = !it.firstCheckboxChecked
-            it.copy(
-                firstCheckboxChecked = newValue,
-                isForgetButtonEnabled = newValue && it.secondCheckboxChecked,
-            )
-        }
-    }
-
-    private fun onSecondCheckboxClick() {
-        uiState.update {
-            val newValue = !it.secondCheckboxChecked
-            it.copy(
-                secondCheckboxChecked = newValue,
-                isForgetButtonEnabled = it.firstCheckboxChecked && newValue,
+    private fun onCheckboxClick() {
+        uiState.update { currentState ->
+            val newValue = !currentState.isCheckboxChecked
+            currentState.copy(
+                isCheckboxChecked = newValue,
+                isForgetButtonEnabled = newValue,
             )
         }
     }
