@@ -14,11 +14,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.AnnotatedString.Builder
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -399,6 +396,7 @@ private fun createStyledText(
             link = LinkAnnotation.Clickable(
                 tag = text,
                 linkInteractionListener = { onClick() },
+                styles = TextLinkStyles(style = spanStyleReference()),
             ),
             block = {
                 appendStyled(
