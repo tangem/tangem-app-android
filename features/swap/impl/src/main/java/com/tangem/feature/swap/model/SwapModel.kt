@@ -33,6 +33,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -64,6 +65,8 @@ import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
+import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapNavScreen
@@ -71,6 +74,7 @@ import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
@@ -120,6 +124,8 @@ internal class SwapModel @Inject constructor(
     private val getTangemPayCurrencyStatusUseCase: GetTangemPayCurrencyStatusUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -160,6 +166,7 @@ internal class SwapModel @Inject constructor(
                 ?: error("NumberFormat is not DecimalFormat"),
         )
     private val amountDebouncer = Debouncer()
+    private val searchDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
 
     private var dataState by mutableStateOf(SwapProcessDataState())
@@ -196,6 +203,19 @@ internal class SwapModel @Inject constructor(
 
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
+
+    private val searchQueryState = MutableStateFlow("")
+    private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+    private val searchMarketsListManager by lazy {
+        SwapMarketsListBatchFlowManager(
+            getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
+            currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
+            currentSearchText = Provider { searchQueryState.value },
+            modelScope = modelScope,
+            dispatchers = dispatchers,
+        )
+    }
 
     val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
@@ -259,6 +279,61 @@ internal class SwapModel @Inject constructor(
                 uiState = stateBuilder.updateBalanceHiddenState(uiState, isBalanceHidden)
             }
             .launchIn(modelScope)
+
+        if (swapFeatureToggles.isMarketListFeatureEnabled) {
+            combine(
+                flow = searchQueryState
+                    .onEach { searchQuery ->
+                        searchMarketsListManager.reload(searchQuery)
+                    },
+                flow2 = searchMarketsListManager.uiItems,
+                flow3 = searchMarketsListManager.isInInitialLoadingErrorState,
+                flow4 = searchMarketsListManager.isSearchNotFoundState,
+            ) { searchQuery, uiItems, isError, isSearchNotFound ->
+                when {
+                    searchQuery.isEmpty() -> {
+                        visibleMarketItemIds.value = emptyList()
+                        null
+                    }
+                    isError -> SwapMarketState.LoadingError(
+                        onRetryClicked = { searchMarketsListManager.reload(searchQuery) },
+                    )
+                    isSearchNotFound -> SwapMarketState.SearchNothingFound
+                    uiItems.isEmpty() -> SwapMarketState.Loading
+                    else -> SwapMarketState.Content(
+                        items = uiItems,
+                        loadMore = { searchMarketsListManager.loadMore() },
+                        onItemClick = { item ->
+                            // TODO [REDACTED_TASK_KEY]  Add currency to swap form market list
+                        },
+                        visibleIdsChanged = { visibleMarketItemIds.value = it },
+                    )
+                }
+            }
+                .distinctUntilChanged()
+                .onEach { marketsState ->
+                    uiState.selectTokenState?.let { currentSelectState ->
+                        uiState = uiState.copy(
+                            selectTokenState = currentSelectState.copy(
+                                marketsState = marketsState,
+                            ),
+                        )
+                    }
+                }
+                .launchIn(modelScope)
+        }
+
+        modelScope.launch {
+            visibleMarketItemIds.mapNotNull { rawIDS ->
+                if (rawIDS.isNotEmpty()) {
+                    searchMarketsListManager.getBatchKeysByItemIds(rawIDS)
+                } else {
+                    null
+                }
+            }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
+                searchMarketsListManager.loadCharts(visibleBatchKeys)
+            }
+        }
     }
 
     fun onStart() {
@@ -987,8 +1062,10 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun onSearchEntered(searchQuery: String) {
-        modelScope.launch(dispatchers.io) {
-            val tokenDataState = dataState.tokensDataState ?: return@launch
+        searchDebouncer.debounce(modelScope, DEBOUNCE_SEARCH_DELAY) {
+            searchQueryState.value = searchQuery
+
+            val tokenDataState = dataState.tokensDataState ?: return@debounce
             val group = if (isOrderReversed) {
                 tokenDataState.fromGroup
             } else {
@@ -1811,6 +1888,7 @@ internal class SwapModel @Inject constructor(
         const val INITIAL_AMOUNT = ""
         const val UPDATE_DELAY = 10000L
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
+        const val DEBOUNCE_SEARCH_DELAY = 500L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
         const val CHANGELLY_PROVIDER_ID = "changelly"
     }
