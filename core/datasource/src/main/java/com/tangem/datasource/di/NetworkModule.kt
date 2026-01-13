@@ -37,6 +37,7 @@ import javax.inject.Singleton
 internal object NetworkModule {
 
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
+    private const val TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS = 60L
     private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
 
     private const val P2P_ETH_POOL_API_TIMEOUT_SECONDS = 60L
@@ -196,6 +197,12 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.GaslessTxService,
             applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+            ),
         )
     }
 }
