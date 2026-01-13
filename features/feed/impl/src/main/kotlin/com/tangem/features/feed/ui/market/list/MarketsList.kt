@@ -47,6 +47,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 
 private const val SHOW_MORE_KEY = "privacyPolicy"
+private const val DELAY_FOR_FOCUS_REQUEST = 200L
 
 @Composable
 internal fun TopBarWithSearch(
@@ -56,13 +57,17 @@ internal fun TopBarWithSearch(
     marketsSearchBar: MarketsSearchBar,
 ) {
     val background = LocalMainBottomSheetColor.current.value
-    val focusRequester: FocusRequester = remember { FocusRequester() }
+    val focusRequester = remember { FocusRequester() }
+
+    val shouldShowAppBar = !marketsSearchBar.shouldAlwaysShowSearchBar &&
+        !marketsSearchBar.searchBarUM.isActive &&
+        marketsSearchBar.searchBarUM.query.isEmpty()
 
     AnimatedContent(
-        targetState = !marketsSearchBar.shouldAlwaysShowSearchBar &&
-            !marketsSearchBar.searchBarUM.isActive && marketsSearchBar.searchBarUM.query.isEmpty(),
-    ) { showAppBarWithBackIcon ->
-        if (showAppBarWithBackIcon) {
+        targetState = shouldShowAppBar,
+        label = "TopBarTransition",
+    ) { showAppBar ->
+        if (showAppBar) {
             AppBarWithBackButtonAndIcon(
                 onBackClick = onBackClick,
                 backButtonEnabled = buttonsEnabled,
@@ -85,9 +90,10 @@ internal fun TopBarWithSearch(
                 ),
                 focusRequester = focusRequester,
             )
-            LaunchedEffect(marketsSearchBar.shouldAlwaysShowSearchBar) {
-                if (marketsSearchBar.shouldAlwaysShowSearchBar) {
-                    delay(timeMillis = 200)
+
+            if (marketsSearchBar.shouldAlwaysShowSearchBar || marketsSearchBar.searchBarUM.isActive) {
+                LaunchedEffect(Unit) {
+                    delay(DELAY_FOR_FOCUS_REQUEST)
                     focusRequester.requestFocus()
                 }
             }
