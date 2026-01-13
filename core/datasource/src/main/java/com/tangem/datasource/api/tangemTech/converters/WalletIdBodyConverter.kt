@@ -12,6 +12,8 @@ object WalletIdBodyConverter {
             walletId = userWallet.walletId.stringValue,
             name = userWallet.name,
             walletType = WalletType.from(userWallet),
+            refcode = conversionData?.refcode,
+            campaign = conversionData?.campaign,
             cards = publicKeys?.map { publicKeyById ->
                 CardInfoBody(
                     cardId = publicKeyById.key,
