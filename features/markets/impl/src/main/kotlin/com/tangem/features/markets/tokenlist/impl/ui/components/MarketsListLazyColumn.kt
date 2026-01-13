@@ -101,7 +101,7 @@ internal fun MarketsListLazyColumn(
                         )
                     }
 
-                    if (isInSearchMode && state.showUnder100kTokensNotification) {
+                    if (isInSearchMode && state.shouldShowUnder100kTokensNotification) {
                         item(key = "show tokens under 100k".hashCode()) {
                             ShowTokensUnder100kItem(
                                 onShowTokensClick = state.onShowTokensUnder100kClicked,
@@ -126,7 +126,7 @@ internal fun MarketsListLazyColumn(
         triggerLoadMoreCheckOnItemsCountChange = true,
         onLoadMore = remember(state) {
             {
-                if (state is ListUM.Content && state.showUnder100kTokensNotification.not()) {
+                if (state is ListUM.Content && state.shouldShowUnder100kTokensNotification.not()) {
                     state.loadMore()
                     true
                 } else {
@@ -197,8 +197,8 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
 private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
     val visibleItems by remember {
         derivedStateOf {
-            listState.layoutInfo.visibleItemsInfo.mapNotNull {
-                (it.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first()
+            listState.layoutInfo.visibleItemsInfo.mapNotNull { item ->
+                (item.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first()
                     ?.let { rawId -> CryptoCurrency.RawID(rawId) }
             }
         }

@@ -107,10 +107,10 @@ private fun Content(
             .fillMaxSize(),
     ) {
         TopBar(
-            modifier = Modifier.onGloballyPositioned {
-                if (it.size.height > 0) {
+            modifier = Modifier.onGloballyPositioned { coordinates ->
+                if (coordinates.size.height > 0) {
                     with(density) {
-                        onHeaderSizeChange(it.size.height.toDp())
+                        onHeaderSizeChange(coordinates.size.height.toDp())
                     }
                 }
             },
@@ -174,7 +174,7 @@ private fun TopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showPriceSubtitle by remember {
+    val shouldShowPriceSubtitle by remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex > 1
         }
@@ -183,7 +183,7 @@ private fun TopBar(
     TangemTopAppBar(
         modifier = modifier,
         title = tokenName,
-        subtitle = if (showPriceSubtitle) tokenPrice else null,
+        subtitle = if (shouldShowPriceSubtitle) tokenPrice else null,
         startButton = TopAppBarButtonUM.Back(
             onBackClicked = onBackClick,
             enabled = isBackButtonEnabled,
@@ -240,8 +240,8 @@ private fun TokenPriceText(
 
     val color = remember(generalColor) { Animatable(generalColor) }
 
-    EventEffect(triggerPriceChange) {
-        val nextColor = when (it) {
+    EventEffect(triggerPriceChange) { changeType ->
+        val nextColor = when (changeType) {
             PriceChangeType.UP,
             -> growColor
             PriceChangeType.DOWN -> fallColor

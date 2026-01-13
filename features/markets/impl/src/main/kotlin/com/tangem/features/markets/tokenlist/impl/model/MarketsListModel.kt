@@ -52,7 +52,7 @@ internal class MarketsListModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
-    private var updateQuotesJob = JobHolder()
+    private val updateQuotesJob = JobHolder()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -63,6 +63,8 @@ internal class MarketsListModel @Inject constructor(
     )
 
     private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+
+    private lateinit var activeListManager: MarketsListBatchFlowManager
 
     private val marketsListUMStateManager = MarketsListUMStateManager(
         currentVisibleIds = Provider { visibleItemIds.value },
@@ -95,7 +97,9 @@ internal class MarketsListModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    private var activeListManager: MarketsListBatchFlowManager = mainMarketsListManager
+    init {
+        activeListManager = mainMarketsListManager
+    }
 
     private val _tokenSelected = MutableSharedFlow<Pair<TokenMarket, AppCurrency>>()
 
@@ -173,8 +177,8 @@ internal class MarketsListModel @Inject constructor(
             }
         }
 
-        state.onEach {
-            if (it.list !is ListUM.Content) {
+        state.onEach { currentState ->
+            if (currentState.list !is ListUM.Content) {
                 visibleItemIds.value = emptyList()
             }
         }.launchIn(modelScope)
@@ -188,8 +192,8 @@ internal class MarketsListModel @Inject constructor(
         }.launchIn(modelScope)
 
         // load charts when new batch is being loaded
-        mainMarketsListManager.onLastBatchLoadedSuccess.onEach {
-            mainMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+        mainMarketsListManager.onLastBatchLoadedSuccess.onEach { batchKey ->
+            mainMarketsListManager.loadCharts(setOf(batchKey), marketsListUMStateManager.selectedInterval)
             modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
         }.launchIn(modelScope)
 
@@ -210,15 +214,19 @@ internal class MarketsListModel @Inject constructor(
 
         // reload list when sorting type has changed
         modelScope.launch {
-            marketsListUMStateManager.state.map { it.selectedSortBy }.distinctUntilChanged().drop(1).collectLatest {
-                mainMarketsListManager.reload()
-            }
+            marketsListUMStateManager.state
+                .map { state -> state.selectedSortBy }
+                .distinctUntilChanged()
+                .drop(1)
+                .collectLatest {
+                    mainMarketsListManager.reload()
+                }
         }
 
         // listen current visible batch and update charts
         modelScope.launch {
-            visibleItemIds.mapNotNull {
-                if (it.isNotEmpty()) {
+            visibleItemIds.mapNotNull { itemIds ->
+                if (itemIds.isNotEmpty()) {
                     activeListManager.getBatchKeysByItemIds(visibleItemIds.value)
                 } else {
                     null
@@ -252,20 +260,20 @@ internal class MarketsListModel @Inject constructor(
         }
 
         modelScope.launch {
-            searchMarketsListManager.onLastBatchLoadedSuccess.collectLatest {
-                searchMarketsListManager.loadCharts(setOf(it), marketsListUMStateManager.selectedInterval)
+            searchMarketsListManager.onLastBatchLoadedSuccess.collectLatest { batchKey ->
+                searchMarketsListManager.loadCharts(setOf(batchKey), marketsListUMStateManager.selectedInterval)
                 modelScope.loadQuotesWithTimer(timeMillis = UPDATE_QUOTES_TIMER_MILLIS)
             }
         }
 
-        searchMarketsListManager.isSearchNotFoundState.onEach {
-            if (it) {
-                analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = false))
+        searchMarketsListManager.isSearchNotFoundState.onEach { isNotFound ->
+            if (isNotFound) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(wasTokenFound = false))
             }
         }.launchIn(modelScope)
 
         searchMarketsListManager.onFirstBatchLoadedSuccess.onEach {
-            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = true))
+            analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(wasTokenFound = true))
         }.launchIn(modelScope)
 
         // analytics

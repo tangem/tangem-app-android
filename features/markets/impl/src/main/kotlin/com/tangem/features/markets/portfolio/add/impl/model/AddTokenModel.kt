@@ -78,8 +78,8 @@ internal class AddTokenModel @Inject constructor(
             val account = selectedPortfolio.account.account.account
             val accountId = account.accountId
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
-                .onLeft {
-                    processError(error = it)
+                .onLeft { error ->
+                    processError(error = error)
                     uiState.value = um.toggleProgress(false)
                     return@launch
                 }

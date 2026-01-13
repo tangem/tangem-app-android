@@ -29,15 +29,19 @@ internal class MarketsListUMStateManager(
     private val onShowTokensUnder100kClicked: () -> Unit,
 ) {
 
-    private var sortByBottomSheetIsShown
+    val state = MutableStateFlow(createInitialState())
+    val isInSearchStateFlow = state.map { it.searchBar.isActive }.distinctUntilChanged()
+    val searchQueryFlow = state.map { it.searchBar.query }.distinctUntilChanged()
+
+    private var isSortByBottomSheetShown
         get() = state.value.sortByBottomSheet.isShown
         set(value) = state.update { it.copy(sortByBottomSheet = it.sortByBottomSheet.copy(isShown = value)) }
 
     var searchQuery
         get() = state.value.searchBar.query
-        private set(value) = state.update {
-            it.copy(
-                searchBar = it.searchBar.copy(
+        private set(value) = state.update { currentState ->
+            currentState.copy(
+                searchBar = currentState.searchBar.copy(
                     query = value,
                     isActive = value.isNotEmpty(),
                 ),
@@ -50,41 +54,41 @@ internal class MarketsListUMStateManager(
 
     var selectedSortByType
         get() = state.value.selectedSortBy
-        set(value) = state.update {
-            it.copy(
+        set(value) = state.update { currentState ->
+            currentState.copy(
                 selectedSortBy = value,
-                sortByBottomSheet = it.sortByBottomSheet.copy(
-                    content = (it.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
+                sortByBottomSheet = currentState.sortByBottomSheet.copy(
+                    content = (currentState.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
                         selectedOption = value,
                     ),
                 ),
-                list = if (it.list is ListUM.Content && it.selectedSortBy != value) {
-                    it.list.copy(triggerScrollReset = triggeredEvent(Unit) { consumeTriggerResetScrollEvent() })
+                list = if (currentState.list is ListUM.Content && currentState.selectedSortBy != value) {
+                    currentState.list.copy(
+                        triggerScrollReset = triggeredEvent(Unit) { consumeTriggerResetScrollEvent() },
+                    )
                 } else {
-                    it.list
+                    currentState.list
                 },
             )
         }
 
     var selectedInterval
         get() = state.value.selectedInterval
-        set(value) = state.update {
-            it.copy(
+        set(value) = state.update { currentState ->
+            currentState.copy(
                 selectedInterval = value,
-                list = if (it.list is ListUM.Content &&
-                    it.selectedSortBy != SortByTypeUM.Rating &&
-                    it.selectedInterval != value
+                list = if (currentState.list is ListUM.Content &&
+                    currentState.selectedSortBy != SortByTypeUM.Rating &&
+                    currentState.selectedInterval != value
                 ) {
-                    it.list.copy(triggerScrollReset = triggeredEvent(Unit) { consumeTriggerResetScrollEvent() })
+                    currentState.list.copy(
+                        triggerScrollReset = triggeredEvent(Unit) { consumeTriggerResetScrollEvent() },
+                    )
                 } else {
-                    it.list
+                    currentState.list
                 },
             )
         }
-
-    val state = MutableStateFlow(state())
-    val isInSearchStateFlow = state.map { it.searchBar.isActive }.distinctUntilChanged()
-    val searchQueryFlow = state.map { it.searchBar.query }.distinctUntilChanged()
 
     fun onUiItemsChanged(
         isInErrorState: Boolean,
@@ -127,7 +131,7 @@ internal class MarketsListUMStateManager(
             return currentState.copy(
                 list = generalContentState(itemsWithFilteredPriceChange)
                     .copy(
-                        showUnder100kTokensNotificationWasHidden = currentState.showUnder100kButtonAlreadyPressed(),
+                        wasUnder100kTokensNotificationHidden = currentState.showUnder100kButtonAlreadyPressed(),
                     ),
                 marketsNotificationUM = marketsNotificationUM,
             )
@@ -144,8 +148,8 @@ internal class MarketsListUMStateManager(
 
             return currentState.copy(
                 list = generalContentState(filtered).copy(
-                    showUnder100kTokensNotificationWasHidden = false,
-                    showUnder100kTokensNotification = true,
+                    wasUnder100kTokensNotificationHidden = false,
+                    shouldShowUnder100kTokensNotification = true,
                     onShowTokensUnder100kClicked = {
                         onShowTokensUnder100kClicked()
                         state.update { s ->
@@ -153,8 +157,8 @@ internal class MarketsListUMStateManager(
                                 s.copy(
                                     list = s.list.copy(
                                         items = searchUiItemsCached,
-                                        showUnder100kTokensNotification = false,
-                                        showUnder100kTokensNotificationWasHidden = true,
+                                        shouldShowUnder100kTokensNotification = false,
+                                        wasUnder100kTokensNotificationHidden = true,
                                     ),
                                 )
                             } ?: s
@@ -170,17 +174,17 @@ internal class MarketsListUMStateManager(
     }
 
     private fun MarketsListUM.showUnder100kButtonAlreadyPressed(): Boolean {
-        return this.list is ListUM.Content && this.isInSearchMode && this.list.showUnder100kTokensNotificationWasHidden
+        return this.list is ListUM.Content && this.isInSearchMode && this.list.wasUnder100kTokensNotificationHidden
     }
 
     // Show price change animation for visible items only
     private fun ImmutableList<MarketsListItemUM>.filterPriceChangeByVisibility(): ImmutableList<MarketsListItemUM> {
         val visibleItemIds = currentVisibleIds()
-        return map {
-            it.copy(
-                price = it.price.copy(
-                    changeType = if (visibleItemIds.contains(it.id)) {
-                        it.price.changeType
+        return map { item ->
+            item.copy(
+                price = item.price.copy(
+                    changeType = if (visibleItemIds.contains(item.id)) {
+                        item.price.changeType
                     } else {
                         null
                     },
@@ -194,15 +198,43 @@ internal class MarketsListUMStateManager(
             items = newItems,
             loadMore = onLoadMoreUiItems,
             visibleIdsChanged = visibleItemsChanged,
-            showUnder100kTokensNotification = false,
+            shouldShowUnder100kTokensNotification = false,
             onShowTokensUnder100kClicked = {},
             triggerScrollReset = consumedEvent(),
             onItemClick = onTokenClick,
-            showUnder100kTokensNotificationWasHidden = false,
+            wasUnder100kTokensNotificationHidden = false,
         )
     }
 
-    private fun state(): MarketsListUM = MarketsListUM(
+    private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
+        state.update { currentState ->
+            currentState.copy(
+                selectedSortBy = sortByTypeUM,
+                sortByBottomSheet = currentState.sortByBottomSheet.copy(
+                    isShown = false,
+                    content = (currentState.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
+                        selectedOption = sortByTypeUM,
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun consumeTriggerResetScrollEvent() {
+        state.update { currentState ->
+            currentState.copy(
+                list = if (currentState.list is ListUM.Content) {
+                    currentState.list.copy(
+                        triggerScrollReset = consumedEvent(),
+                    )
+                } else {
+                    currentState.list
+                },
+            )
+        }
+    }
+
+    private fun createInitialState(): MarketsListUM = MarketsListUM(
         list = ListUM.Loading,
         searchBar = SearchBarUM(
             placeholderText = resourceReference(R.string.markets_search_header_title),
@@ -214,10 +246,10 @@ internal class MarketsListUMStateManager(
         selectedSortBy = SortByTypeUM.Rating,
         selectedInterval = MarketsListUM.TrendInterval.H24,
         onIntervalClick = { selectedInterval = it },
-        onSortByButtonClick = { sortByBottomSheetIsShown = true },
+        onSortByButtonClick = { isSortByBottomSheetShown = true },
         sortByBottomSheet = TangemBottomSheetConfig(
             isShown = false,
-            onDismissRequest = { sortByBottomSheetIsShown = false },
+            onDismissRequest = { isSortByBottomSheetShown = false },
             content = SortByBottomSheetContentUM(
                 selectedOption = SortByTypeUM.Rating,
                 onOptionClicked = ::onBottomSheetOptionClicked,
@@ -225,32 +257,4 @@ internal class MarketsListUMStateManager(
         ),
         marketsNotificationUM = null,
     )
-
-    private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {
-        state.update {
-            it.copy(
-                selectedSortBy = sortByTypeUM,
-                sortByBottomSheet = it.sortByBottomSheet.copy(
-                    isShown = false,
-                    content = (it.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
-                        selectedOption = sortByTypeUM,
-                    ),
-                ),
-            )
-        }
-    }
-
-    private fun consumeTriggerResetScrollEvent() {
-        state.update {
-            it.copy(
-                list = if (it.list is ListUM.Content) {
-                    it.list.copy(
-                        triggerScrollReset = consumedEvent(),
-                    )
-                } else {
-                    it.list
-                },
-            )
-        }
-    }
 }

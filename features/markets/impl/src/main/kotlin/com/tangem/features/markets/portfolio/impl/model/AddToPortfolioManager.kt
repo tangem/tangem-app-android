@@ -124,8 +124,8 @@ internal class AddToPortfolioManager @Inject constructor(
             return
         }
 
-        update {
-            it.toMutableMap().apply {
+        update { currentMap ->
+            currentMap.toMutableMap().apply {
                 this[userWalletId] = if (isAddAction) {
                     this[userWalletId].orEmpty() + network
                 } else {

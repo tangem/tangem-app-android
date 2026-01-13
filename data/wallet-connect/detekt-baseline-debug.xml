@@ -27,7 +27,6 @@
     <ID>MultilineLambdaItParameter:WcEthMessageSignUseCase.kt$LegacySdkHelper${ val char = it.toInt().toChar() if (char.isAscii()) char else return null }</ID>
     <ID>MultilineLambdaItParameter:WcEthNetwork.kt$WcEthNetwork${ if (this == WcEthMethodName.AddEthereumChain) { WcEthMethod.AddEthereumChain(rawChain = it).right() } else { WcEthMethod.SwitchEthereumChain(rawChain = it).right() } }</ID>
     <ID>MultilineLambdaItParameter:WcEthNetwork.kt$WcEthNetwork${ if (this == WcEthMethodName.SignTransaction) { WcEthMethod.SignTransaction(transaction = it).right() } else { WcEthMethod.SendTransaction(transaction = it).right() } }</ID>
-    <ID>MultilineLambdaItParameter:WcNetworksConverter.kt$WcNetworksConverter${ val walletAddress = walletManagersFacade.getDefaultAddress(wallet.walletId, it) walletAddress?.lowercase() == caip10.accountAddress.lowercase() }</ID>
     <ID>MultilineLambdaItParameter:WcPairSdkDelegate.kt$WcPairSdkDelegate${ proposalCallback.cancel() return@coroutineScope it.left() }</ID>
     <ID>MultilineLambdaItParameter:WcPairSdkDelegate.kt$WcPairSdkDelegate${ store.removePendingApproval(forSave) it.left() }</ID>
     <ID>MultilineLambdaItParameter:WcSdkSessionConverter.kt$WcSdkSessionConverter${ WcAppMetaDataConverter.convert( value = WcAppMetaDataConverter.Input( originUrl = value.originUrl, peerMetaData = it, ), ) }</ID>
