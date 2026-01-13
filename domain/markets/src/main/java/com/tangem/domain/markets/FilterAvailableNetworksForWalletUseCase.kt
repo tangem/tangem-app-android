@@ -12,7 +12,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 class FilterAvailableNetworksForWalletUseCase(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewRepository: Boolean,
+    private val shouldUseNewRepository: Boolean,
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
 
@@ -32,13 +32,13 @@ class FilterAvailableNetworksForWalletUseCase(
             excludedBlockchains = excludedBlockchains,
         )
 
-        return networks.filter {
-            val blockchain = Blockchain.fromNetworkId(it.networkId)
+        return networks.filter { network ->
+            val blockchain = Blockchain.fromNetworkId(network.networkId)
             supportedBlockchains.contains(blockchain)
         }.toSet()
     }
 
-    private fun getWallets() = if (useNewRepository) {
+    private fun getWallets() = if (shouldUseNewRepository) {
         userWalletsListRepository.requireUserWalletsSync()
     } else {
         userWalletsListManager.userWalletsSync
