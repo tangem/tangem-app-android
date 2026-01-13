@@ -6,7 +6,7 @@ import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContent
 
 internal class PortfolioAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params) {
 
     data class EventBuilder(
@@ -52,7 +52,7 @@ internal class PortfolioAnalyticsEvent(
                 },
                 params = buildMap {
                     put("Token", token.symbol)
-                    source?.let { put("Source", source) }
+                    if (source != null) put("Source", source)
                     put("blockchain", blockchainName)
                 },
             )
