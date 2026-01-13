@@ -546,6 +546,7 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
   <string name="exсhange_token_description">Обменяйте любой актив в вашем портфеле на этот токен</string>
+  <string name="fee_selector_choose_token_title">Выбрать токен</string>
   <string name="feed_market_and_news">Рынок и Новости</string>
   <string name="feed_trending_now">В тренде</string>
   <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
@@ -602,7 +603,7 @@
   <string name="hw_backup_hardware_create_title">Создать новый кошелек</string>
   <string name="hw_backup_hardware_description">Повысьте уровень безопасности с помощью продвинутого аппаратного кошелька Tangem.</string>
   <string name="hw_backup_hardware_title">Аппаратный кошелёк</string>
-  <string name="hw_backup_hardware_upgrade_description">Перенести текущий кошелёк в Tangem Wallet.</string>
+  <string name="hw_backup_hardware_upgrade_description">Перенесите свой текущий кошелек в холодный кошелек Tangem.</string>
   <string name="hw_backup_hardware_upgrade_title">Улучшить текущий кошелёк</string>
   <string name="hw_backup_need_action">Перейти к бэкапу</string>
   <string name="hw_backup_need_description">Пожалуйста, создайте резервную копию вашего кошелька перед установкой кода доступа.</string>
@@ -627,7 +628,7 @@
   <string name="hw_remove_wallet_confirmation_title">Вы уверены, что хотите выполнить эту операцию?</string>
   <string name="hw_remove_wallet_nav_title">Забыть кошелек</string>
   <string name="hw_remove_wallet_notification_action_backup_go">Перейти к резервному копированию</string>
-  <string name="hw_remove_wallet_notification_action_backup_view">Посмотреть резервное копирование</string>
+  <string name="hw_remove_wallet_notification_action_backup_view">Показать фразу восстановления</string>
   <string name="hw_remove_wallet_notification_action_forget">Забыть кошелек</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Забыть всё равно</string>
   <string name="hw_remove_wallet_notification_description_has_backup">Резервная копия этого кошелька существует. Проверьте её перед удалением, чтобы убедиться, что сможете восстановить кошелёк позже.</string>
@@ -1479,6 +1480,7 @@
   <string name="tangem_pay_unfreeze_card_success">Карта разморожена</string>
   <string name="tangem_pay_withdrawal">Вывести</string>
   <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
+  <string name="tangempay_cancel_kyc">Отменить KYC</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
   <string name="tangempay_card_details_card_number">Номер</string>
@@ -1534,6 +1536,8 @@
   <string name="tangempay_issuing_your_card">Выпускаем карту</string>
   <string name="tangempay_issuing_your_card_description">Выпускаем карту, это займет немного времени.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">Подтвердите отмену</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените KYC сейчас, вы сможете потом начать его заново</string>
   <string name="tangempay_kyc_failed_description">Не удалось подтвердить ваш профиль. Если у вас есть вопросы, обратитесь в службу поддержки.</string>
   <string name="tangempay_kyc_failed_title">К сожалению, нам не удалось подтвердить вашу личность</string>
   <string name="tangempay_kyc_in_progress">KYC в процессе</string>
@@ -1659,7 +1663,9 @@
   <string name="visa_onboarding_pin_code_title">Установить ПИН-код</string>
   <string name="visa_onboarding_pin_not_accepted">ПИН не принят. Попробуйте ещё раз или введите другой код.</string>
   <string name="visa_onboarding_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
+  <string name="visa_transaction_details_currency_code">Код валюты</string>
   <string name="visa_unlock_notification_button">Разблокировать</string>
+  <string name="visa_unlock_notification_subtitle">Отсканируйте свою карту, чтобы разблокировать доступ</string>
   <string name="wallet_add_common_title">Выберите тип кошелька</string>
   <string name="wallet_add_hardware_description">Отсканируйте вашу карту или кольцо Tangem, чтобы восстановить её или импортировать из другого кошелька.</string>
   <string name="wallet_add_hardware_info_create">Создать аппаратный кошелёк</string>
@@ -1740,8 +1746,8 @@
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_access_code_description">Код доступа защищает кошелёк и нужен для входа и подписания транзакций.</string>
   <string name="wallet_settings_access_code_title">Установить/изменить код доступа</string>
-  <string name="wallet_settings_change_access_code_title">Изменить Код Доступа</string>
-  <string name="wallet_settings_push_notifications_description">Получайте уведомления о входящих транзакциях в кошельке и обновлениях Tangem.</string>
+  <string name="wallet_settings_change_access_code_title">Изменить код доступа</string>
+  <string name="wallet_settings_push_notifications_description">Получайте push-уведомления о входящих транзакциях в кошелек.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">В настоящий момент push-уведомления могут не работать на устройствах Huawei. Мы уже работаем над решением этой проблемы и планируем исправление в ближайших обновлениях. Спасибо за понимание!</string>
   <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
   <string name="wallet_settings_set_access_code_title">Установить Код Доступа</string>
@@ -1781,6 +1787,7 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Сумма получения не может быть менее %s</string>
   <string name="warning_express_pair_unavailable_message">Это может произойти из-за того, что провайдер временно не предоставляет обмен выбранной вами пары. Пожалуйста, подождите некоторое время и попробуйте снова. (Код %s)</string>
   <string name="warning_express_pair_unavailable_title">Выбранная пара временно недоступна</string>
+  <string name="warning_express_providers_fca_warning_title">Предупреждающий список FCA</string>
   <string name="warning_express_refresh_required_title">Сервис временно недоступен</string>
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
   <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>

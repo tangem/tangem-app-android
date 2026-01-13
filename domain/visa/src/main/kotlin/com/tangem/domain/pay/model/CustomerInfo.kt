@@ -15,10 +15,25 @@ data class MainScreenCustomerInfo(
 )
 
 data class CustomerInfo(
+    val customerId: String?,
     val productInstance: ProductInstance?,
-    val isKycApproved: Boolean,
+    val kycStatus: KycStatus,
     val cardInfo: CardInfo?,
 ) {
+
+    enum class KycStatus {
+        /** Initial state */
+        INIT,
+
+        /** Performing the check */
+        PENDING,
+
+        /** SumSub approved */
+        APPROVED,
+
+        /** The check failed, documents rejected */
+        REJECTED,
+    }
 
     data class ProductInstance(
         val id: String,
