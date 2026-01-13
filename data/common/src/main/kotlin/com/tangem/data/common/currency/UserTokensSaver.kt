@@ -72,6 +72,8 @@ class UserTokensSaver(
             val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
                 walletName = userWallet.name,
                 walletType = WalletType.from(userWallet),
+                refcode = conversionData?.refcode,
+                campaign = conversionData?.campaign,
             )
 
             pushLegacy(userWalletId = userWalletId, response = enrichedResponse, onFailSend = onFailSend)
