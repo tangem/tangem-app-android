@@ -95,8 +95,8 @@ internal class PortfolioTokenUMConverter(
                         )
                     }
                 },
-                onQuickActionLongClick = {
-                    if (it == QuickActionUM.Receive) {
+                onQuickActionLongClick = { quickAction ->
+                    if (quickAction == QuickActionUM.Receive) {
                         tokenActionsHandler.handle(
                             action = TokenActionsBSContentUM.Action.CopyAddress,
                             cryptoCurrencyData = cryptoData,
@@ -111,7 +111,9 @@ internal class PortfolioTokenUMConverter(
                 if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
                     when (action) {
                         is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
-                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
+                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(
+                            shouldShowBadge = action.showBadge,
+                        )
                         is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
                         is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
                         is TokenActionsState.ActionState.YieldMode -> QuickActionUM.YieldMode(apy = action.apy)
