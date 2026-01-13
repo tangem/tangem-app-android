@@ -29,7 +29,9 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
-private const val APPROVED_KYC_STATUS = "APPROVED"
+private const val APPROVED_KYC_STATUS = "approved"
+private const val IN_PROGRESS_KYC_STATUS = "in_progress"
+private const val DECLINED_KYC_STATUS = "declined"
 private const val TAG = "TangemPay: OnboardingRepository"
 
 @Suppress("LongParameterList")
@@ -168,8 +170,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
             ProductInstance(id = instance.id, cardId = instance.cardId, cardFrozenState = cardFrozenState)
         }
         return CustomerInfo(
+            customerId = response?.id,
             productInstance = productInstance,
-            isKycApproved = response?.kyc?.status == APPROVED_KYC_STATUS,
+            kycStatus = getKycStatus(status = response?.kyc?.status),
             cardInfo = cardInfo,
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
@@ -234,6 +237,15 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             setHideMainOnboardingBanner(userWalletId)
+        }
+    }
+
+    private fun getKycStatus(status: String?): CustomerInfo.KycStatus {
+        return when (status?.lowercase()) {
+            IN_PROGRESS_KYC_STATUS -> CustomerInfo.KycStatus.PENDING
+            DECLINED_KYC_STATUS -> CustomerInfo.KycStatus.REJECTED
+            APPROVED_KYC_STATUS -> CustomerInfo.KycStatus.APPROVED
+            else -> CustomerInfo.KycStatus.INIT
         }
     }
 }
