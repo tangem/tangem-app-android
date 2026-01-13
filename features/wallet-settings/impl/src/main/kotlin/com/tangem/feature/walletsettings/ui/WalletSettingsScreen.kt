@@ -281,7 +281,6 @@ private fun UpgradeWalletBlock(model: WalletSettingsItemUM.UpgradeWallet, modifi
             iconResId = R.drawable.ic_hardware_backup_36,
             iconSize = 36.dp,
             onClick = model.onClick,
-            onCloseClick = model.onDismissClick,
             shouldShowArrowIcon = false,
         ),
         modifier = modifier,
@@ -493,7 +492,6 @@ private fun Preview_WalletSettingsScreen1() {
                 title = stringReference("Upgrade wallet with a hardware backup"),
                 description = stringReference("Keep your crypto safe with Tangem’s best-in-class hardware wallet."),
                 onClick = {},
-                onDismissClick = {},
             ),
         )
     }
