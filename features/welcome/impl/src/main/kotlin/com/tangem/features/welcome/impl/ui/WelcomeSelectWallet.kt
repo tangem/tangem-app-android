@@ -83,7 +83,7 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
             BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
 
             if (state.showUnlockWithBiometricButton) {
-                SecondaryButton(
+                PrimaryButton(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
