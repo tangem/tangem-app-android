@@ -7,7 +7,7 @@ sealed interface MarketsDataAnalyticsEvent {
 
     sealed class List(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Markets", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
@@ -26,7 +26,7 @@ sealed interface MarketsDataAnalyticsEvent {
 
     sealed class Details(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
