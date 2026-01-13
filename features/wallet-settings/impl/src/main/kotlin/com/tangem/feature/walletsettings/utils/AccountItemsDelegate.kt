@@ -16,7 +16,6 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -45,7 +44,6 @@ internal class AccountItemsDelegate @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val accountListSortingSaver: AccountListSortingSaver,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -53,15 +51,16 @@ internal class AccountItemsDelegate @Inject constructor(
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
 
+    fun isAccountsSupported(wallet: UserWallet) = accountsFeatureToggles.isFeatureEnabled && wallet.isAccountsSupported
+
     fun loadAccount(wallet: UserWallet): Flow<List<WalletSettingsAccountsUM>> {
-        if (!accountsFeatureToggles.isFeatureEnabled || !wallet.isAccountsSupported) return flowOf(emptyList())
+        if (!isAccountsSupported(wallet)) return flowOf(emptyList())
 
         return combine(
             flow = singleAccountStatusListSupplier(userWalletId),
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
             flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-            flow4 = isAccountsModeEnabledUseCase(),
-            flow5 = accountListSortingSaver.accountsOrderFlow,
+            flow4 = accountListSortingSaver.accountsOrderFlow,
             transform = ::buildUiList,
         )
     }
@@ -70,7 +69,6 @@ internal class AccountItemsDelegate @Inject constructor(
         accountStatusList: AccountStatusList,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
-        isAccountsMode: Boolean,
         accountsOrder: List<AccountId>?,
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
@@ -98,10 +96,7 @@ internal class AccountItemsDelegate @Inject constructor(
         )
 
         add(header)
-
-        if (isAccountsMode) {
-            addAll(accounts.map(::mapAccount).applySortingOrder(order = accountsOrder))
-        }
+        addAll(accounts.map(::mapAccount).applySortingOrder(order = accountsOrder))
 
         val isAddAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
         val shouldShowDescription = accounts.size > 1
