@@ -31,6 +31,7 @@ internal class TokensDataConverterV2(
 
     override fun transform(prevState: SwapStateHolder): SwapStateHolder {
         val accountList = tokensDataState.accountCurrencyList
+        val currentMarketsState = prevState.selectTokenState?.marketsState
         return prevState.copy(
             selectTokenState = SwapSelectTokenStateHolder(
                 availableTokens = persistentListOf(),
@@ -57,6 +58,7 @@ internal class TokensDataConverterV2(
                         }.toPersistentList(),
                     )
                 },
+                marketsState = currentMarketsState,
                 onSearchEntered = onSearchEntered,
                 onTokenSelected = onTokenSelected,
                 isBalanceHidden = isBalanceHidden,
