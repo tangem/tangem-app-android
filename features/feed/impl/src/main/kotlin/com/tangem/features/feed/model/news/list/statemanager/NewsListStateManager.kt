@@ -1,4 +1,4 @@
-package com.tangem.features.feed.model.news.list.calculator
+package com.tangem.features.feed.model.news.list.statemanager
 
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.features.feed.ui.news.list.state.NewsListState
