@@ -55,7 +55,7 @@ internal class MarketsListBatchFlowManager(
 
         private val internalConverter: MarketsTokenItemConverter
             get() = MarketsTokenItemConverter(
-                currentTrendInterval = currentTrendInterval(), // Теперь тут всегда актуальное значение
+                currentTrendInterval = currentTrendInterval(),
                 appCurrency = currentAppCurrency(),
             )
 
