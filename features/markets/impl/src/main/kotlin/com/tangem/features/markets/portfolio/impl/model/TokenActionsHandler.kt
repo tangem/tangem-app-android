@@ -73,14 +73,14 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
-        val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
-        val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
+        val isDemoCard = isDemoCardUseCase.invoke(userWallet.cardId)
+        val shouldShowDemoWarning = isDemoCard && disabledActionsInDemoMode.contains(action)
 
-        if (needShowDemoWarning) {
+        if (shouldShowDemoWarning) {
             showDemoModeWarning()
         }
 
-        return needShowDemoWarning
+        return shouldShowDemoWarning
     }
 
     private fun showDemoModeWarning() {
