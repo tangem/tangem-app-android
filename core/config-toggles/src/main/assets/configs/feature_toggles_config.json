@@ -66,5 +66,9 @@
     {
         "name": "GASLESS_TRANSACTIONS_ENABLED",
         "version": "5.33.0"
+    },
+    {
+        "name": "SWAP_MARKET_LIST_ENABLED",
+        "version": "undefined"
     }
 ]

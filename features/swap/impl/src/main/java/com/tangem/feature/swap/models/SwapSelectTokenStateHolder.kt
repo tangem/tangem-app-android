@@ -3,12 +3,14 @@ package com.tangem.feature.swap.models
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.feature.swap.models.market.state.SwapMarketState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 internal data class SwapSelectTokenStateHolder(
     val availableTokens: ImmutableList<TokenToSelectState>,
     val unavailableTokens: ImmutableList<TokenToSelectState>,
+    val marketsState: SwapMarketState? = null,
     val tokensListData: TokenListUMData,
     val isBalanceHidden: Boolean,
     val isAfterSearch: Boolean,
@@ -52,3 +54,13 @@ internal sealed interface TokenListUMData {
         override val tokensList: ImmutableList<TokensListItemUM> = persistentListOf()
     }
 }
+
+internal val SwapSelectTokenStateHolder.isNotFoundState: Boolean
+    get() = availableTokens.isEmpty() && unavailableTokens.isEmpty() &&
+        tokensListData.tokensList.isEmpty() && isAfterSearch &&
+        marketsState !is SwapMarketState.Content && marketsState !is SwapMarketState.Loading
+
+internal val SwapSelectTokenStateHolder.isEmptyState: Boolean
+    get() = availableTokens.isEmpty() && unavailableTokens.isEmpty() &&
+        tokensListData.tokensList.isEmpty() && !isAfterSearch &&
+        marketsState !is SwapMarketState.Content && marketsState !is SwapMarketState.Loading
