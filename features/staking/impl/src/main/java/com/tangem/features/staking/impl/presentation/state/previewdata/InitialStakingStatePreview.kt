@@ -60,6 +60,10 @@ internal object InitialStakingStatePreview {
         onInfoClick = {},
         yieldBalance = InnerYieldBalanceState.Empty,
         pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
+        legalUrls = StakingStates.InitialInfoState.LegalUrls(
+            termsOfServiceUrl = "https://docs.yield.xyz/docs/terms-of-use",
+            privacyPolicyUrl = "https://docs.yield.xyz/docs/privacy-policy",
+        ),
     )
 
     val stateWithYield = defaultState.copy(
