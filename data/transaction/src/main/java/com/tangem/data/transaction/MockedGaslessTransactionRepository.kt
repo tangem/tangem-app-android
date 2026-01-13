@@ -34,7 +34,7 @@ class MockedGaslessTransactionRepository(
         return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
     }
 
-    override fun getTokenFeeReceiverAddress(): String {
+    override suspend fun getTokenFeeReceiverAddress(): String {
         return TOKEN_RECEIVER_ADDRESS
     }
 
