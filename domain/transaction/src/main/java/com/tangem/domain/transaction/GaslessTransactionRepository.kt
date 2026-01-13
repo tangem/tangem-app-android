@@ -11,7 +11,7 @@ interface GaslessTransactionRepository {
 
     suspend fun getSupportedTokens(network: Network): Set<CryptoCurrency>
 
-    fun getTokenFeeReceiverAddress(): String
+    suspend fun getTokenFeeReceiverAddress(): String
 
     /**
      * Sends gasless transaction to the gasless service for signing and returns the signed result.

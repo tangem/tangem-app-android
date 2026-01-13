@@ -198,7 +198,7 @@ class TokenFeeCalculatorTest {
         val initialFee = createMockEIP1559Fee()
 
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
 
         // When
@@ -231,7 +231,7 @@ class TokenFeeCalculatorTest {
         val initialFee = createMockEIP1559Fee()
 
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
 
         // When
@@ -252,7 +252,7 @@ class TokenFeeCalculatorTest {
     @Test
     fun `calculateTokenFee should return error when fiatRate is null`() = runTest {
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
         // Given
         val tokenStatus = createMockTokenStatus(
@@ -285,7 +285,7 @@ class TokenFeeCalculatorTest {
 
         val failure = Result.Failure(BlockchainSdkError.NPError("Gas limit fetch failed"))
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns failure
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
 
         // When
         val result = tokenFeeCalculator.calculateTokenFee(
@@ -314,7 +314,7 @@ class TokenFeeCalculatorTest {
         )
 
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
 
         // When
@@ -332,7 +332,7 @@ class TokenFeeCalculatorTest {
     @Test
     fun `calculateTokenFee should reject TokenCurrency as initial fee`() = runTest {
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
 
         // Given
@@ -389,7 +389,7 @@ class TokenFeeCalculatorTest {
         val initialFee = createMockEIP1559Fee()
 
         coEvery { mockWalletManager.getGasLimit(any(), any(), any()) } returns Result.Success(BigInteger("60000"))
-        every { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
+        coEvery { gaslessTransactionRepository.getTokenFeeReceiverAddress() } returns "0xFeeReceiver"
         every { gaslessTransactionRepository.getBaseGasForTransaction() } returns BigInteger("21000")
 
         // When
