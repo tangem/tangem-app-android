@@ -70,15 +70,8 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
         Spacer(modifier = Modifier.height(48.dp))
         CheckboxItem(
             modifier = Modifier.padding(horizontal = 16.dp),
-            checked = state.firstCheckboxChecked,
-            onCheckedChange = state.onFirstCheckboxClick,
-            text = stringResourceSafe(R.string.hw_remove_wallet_warning_device),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        CheckboxItem(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            checked = state.secondCheckboxChecked,
-            onCheckedChange = state.onSecondCheckboxClick,
+            checked = state.isCheckboxChecked,
+            onCheckedChange = state.onCheckboxClick,
             text = stringResourceSafe(R.string.hw_remove_wallet_warning_access),
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -142,10 +135,8 @@ private fun PreviewForgetWalletContent() {
         ForgetWalletContent(
             state = ForgetWalletUM(
                 onBackClick = {},
-                firstCheckboxChecked = true,
-                secondCheckboxChecked = false,
-                onFirstCheckboxClick = {},
-                onSecondCheckboxClick = {},
+                isCheckboxChecked = false,
+                onCheckboxClick = {},
                 onForgetWalletClick = {},
                 isForgetButtonEnabled = false,
             ),

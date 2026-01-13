@@ -86,8 +86,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
-    private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
-    private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -140,10 +138,9 @@ internal class WalletSettingsModel @Inject constructor(
             flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId)
                 .distinctUntilChanged()
                 .conflate(),
-            flow3 = isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
-            flow4 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow5 = accountItemsDelegate.loadAccount(wallet),
-        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
+            flow3 = walletCardItemDelegate.cardItemFlow(wallet),
+            flow4 = accountItemsDelegate.loadAccount(wallet),
+        ) { nftEnabled, notificationsEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -156,7 +153,6 @@ internal class WalletSettingsModel @Inject constructor(
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
-                        isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
@@ -197,7 +193,6 @@ internal class WalletSettingsModel @Inject constructor(
         isNFTEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
-        isUpgradeNotificationEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
         val isAccountsFeatureEnabled = accountItemsDelegate.isAccountsSupported(userWallet)
@@ -254,9 +249,7 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
             onAccessCodeClick = { onAccessCodeClick(userWallet) },
-            walletUpgradeDismissed = isUpgradeNotificationEnabled,
             onUpgradeWalletClick = { onUpgradeWalletClick() },
-            onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
             onBackupClick = ::onBackupClick,
             onCardSettingsClick = ::onCardSettingsClick,
             accountsUM = accountList,
@@ -408,12 +401,6 @@ internal class WalletSettingsModel @Inject constructor(
             unlockWalletIfNeedAndProceed {
                 router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
             }
-        }
-    }
-
-    private fun onDismissUpgradeWalletClick() {
-        modelScope.launch {
-            dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
         }
     }
 
