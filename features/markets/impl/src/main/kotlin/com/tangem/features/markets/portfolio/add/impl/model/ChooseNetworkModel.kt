@@ -82,9 +82,9 @@ internal class ChooseNetworkModel @Inject constructor(
             userWalletId = userWalletId,
             networkId = rawNetworkId,
             isMainNetwork = isMainNetwork,
-        ).getOrElse {
+        ).getOrElse { error ->
             Timber.e(
-                it,
+                error,
                 """
                     Failed to check currency unsupported state
                     |- User wallet ID: $userWalletId
@@ -94,7 +94,7 @@ internal class ChooseNetworkModel @Inject constructor(
             )
 
             val message = SnackbarMessage(
-                message = it.localizedMessage?.let(::stringReference) ?: resourceReference(R.string.common_error),
+                message = error.localizedMessage?.let(::stringReference) ?: resourceReference(R.string.common_error),
             )
             messageSender.send(message)
 
