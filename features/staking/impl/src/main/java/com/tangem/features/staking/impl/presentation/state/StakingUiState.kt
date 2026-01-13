@@ -71,7 +71,13 @@ internal sealed class StakingStates {
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
             val pullToRefreshConfig: PullToRefreshConfig,
+            val legalUrls: LegalUrls,
         ) : InitialInfoState()
+
+        data class LegalUrls(
+            val termsOfServiceUrl: String,
+            val privacyPolicyUrl: String,
+        )
 
         data class Empty(
             override val isPrimaryButtonEnabled: Boolean = false,
