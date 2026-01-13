@@ -108,6 +108,9 @@ configurations.androidTestImplementation {
     exclude(module = "protobuf-lite")
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
 
 dependencies {
     implementation(projects.domain.legacy)
@@ -393,11 +396,10 @@ dependencies {
     implementation(files("libs/dexprotector-annotations.jar"))
 
     /** Testing libraries */
+    testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
+    testRuntimeOnly(deps.test.junit5.engine)
     androidTestImplementation(deps.test.junit.android)
     androidTestImplementation(deps.test.espresso)
     androidTestImplementation(deps.test.espresso.intents)

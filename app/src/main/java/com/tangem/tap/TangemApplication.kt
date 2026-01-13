@@ -66,6 +66,7 @@ import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -248,6 +249,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val abTestsManager: ABTestsManager
         get() = entryPoint.getABTestsManager()
 
+    private val appsFlyerClientFactory: AppsFlyerClient.Factory
+        get() = entryPoint.getAppsFlyerClientFactory()
+
     // endregion
 
     private val appScope = MainScope()
@@ -421,7 +425,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder(appsFlyerClientFactory))
 
         factory.addFilter(oneTimeEventFilter)
         factory.addFilter(AppsFlyerEventFilter())
