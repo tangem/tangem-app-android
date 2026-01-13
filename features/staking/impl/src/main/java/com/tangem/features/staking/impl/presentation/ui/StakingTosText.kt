@@ -15,11 +15,8 @@ import com.tangem.features.staking.impl.R
 private const val TERMS_OF_USE_KEY = "termsOfUse"
 private const val PRIVACY_POLICY_KEY = "privacyPolicy"
 
-private const val TERMS_OF_USE_URL = "https://docs.yield.xyz/docs/terms-of-use#/"
-private const val PRIVACY_POLICY_URL = "https://docs.yield.xyz/docs/privacy-policy#/"
-
 @Composable
-internal fun StakingTosText(onTextClick: (String) -> Unit) {
+internal fun StakingTosText(onTermsOfServiceClick: () -> Unit, onPrivacyPolicyClick: () -> Unit) {
     val termsOfUse = stringResourceSafe(R.string.common_terms_of_use)
     val privacyPolicy = stringResourceSafe(R.string.common_privacy_policy)
     val tosText = stringResourceSafe(R.string.staking_legal, termsOfUse, privacyPolicy)
@@ -45,20 +42,23 @@ internal fun StakingTosText(onTextClick: (String) -> Unit) {
             textAlign = TextAlign.Center,
         ),
         onClick = { offset ->
-            clickableAnnotation.getStringAnnotations(
+            val isTermsOfUseClicked = clickableAnnotation.getStringAnnotations(
                 tag = TERMS_OF_USE_KEY,
                 start = offset,
                 end = offset,
-            ).firstOrNull()?.let {
-                onTextClick(TERMS_OF_USE_URL)
-            }
+            ).any()
 
-            clickableAnnotation.getStringAnnotations(
+            val isPrivacyPolicyClicked = clickableAnnotation.getStringAnnotations(
                 tag = PRIVACY_POLICY_KEY,
                 start = offset,
                 end = offset,
-            ).firstOrNull()?.let {
-                onTextClick(PRIVACY_POLICY_URL)
+            ).any()
+
+            if (isTermsOfUseClicked) {
+                onTermsOfServiceClick()
+            }
+            if (isPrivacyPolicyClicked) {
+                onPrivacyPolicyClick()
             }
         },
         modifier = Modifier.testTag(StakingDetailsScreenTestTags.TOS_TEXT),
