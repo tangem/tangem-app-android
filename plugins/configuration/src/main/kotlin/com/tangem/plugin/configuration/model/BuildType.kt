@@ -69,6 +69,7 @@ internal enum class BuildType(
         id = "internal",
         appIdSuffix = "internal",
         versionSuffix = "internal",
+        obfuscating = true,
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
             BuildConfigField.LogEnabled(isEnabled = true),
@@ -90,6 +91,7 @@ internal enum class BuildType(
         id = "external",
         appIdSuffix = "external",
         versionSuffix = "external",
+        obfuscating = true,
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
             BuildConfigField.LogEnabled(isEnabled = false),
@@ -109,6 +111,7 @@ internal enum class BuildType(
      * */
     Release(
         id = "release",
+        obfuscating = true,
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
             BuildConfigField.LogEnabled(isEnabled = false),
