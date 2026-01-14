@@ -59,7 +59,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
 
     private val params: ChooseManagedTokensComponent.Params = paramsContainer.require()
     private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
-        .create(mode = ManageTokensMode.None)
+        .create(mode = ManageTokensMode.Wallet(params.userWalletId))
 
     private val manageTokensListManager = manageTokensListManagerFactory.create(
         scope = modelScope,
