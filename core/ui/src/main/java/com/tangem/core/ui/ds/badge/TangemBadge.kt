@@ -33,6 +33,29 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * Tangem badge component to display a small piece of information with optional icon.
  * [Figma](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8441-83535&m=dev)
  *
+ * @param badgeUM       [TangemBadgeUM] containing all the badge parameters.
+ * @param modifier      Modifier to be applied to the badge.
+ *
+[REDACTED_AUTHOR]
+ */
+@Composable
+fun TangemBadge(badgeUM: TangemBadgeUM, modifier: Modifier = Modifier) {
+    TangemBadge(
+        text = badgeUM.text,
+        iconRes = badgeUM.iconRes,
+        size = badgeUM.size,
+        shape = badgeUM.shape,
+        color = badgeUM.color,
+        type = badgeUM.type,
+        iconPosition = badgeUM.iconPosition,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Tangem badge component to display a small piece of information with optional icon.
+ * [Figma](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8441-83535&m=dev)
+ *
  * @param text          TextReference for the badge label.
  * @param modifier      Modifier to be applied to the badge.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the badge.
