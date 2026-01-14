@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -329,7 +330,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                     )
                 }
             },
-            onSeeAllClick = feedListCallbacks.onOpenAllNews,
+            onSeeAllClick = { feedListCallbacks.onOpenAllNews(false) },
         )
         SpacerH(12.dp)
 
@@ -356,23 +357,36 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
             items(
                 items = news.content,
                 key = ArticleConfigUM::id,
+                contentType = { "article" },
             ) { article ->
+                val articleModifier = if (news.content.indexOf(article) == FOURTH_ITEM_INDEX) {
+                    Modifier.onFirstVisible(
+                        minFractionVisible = 0.5f,
+                        callback = feedListCallbacks.onSliderScroll,
+                    )
+                } else {
+                    Modifier
+                }
                 ArticleCard(
                     articleConfigUM = article,
                     onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
-                    modifier = Modifier
+                    modifier = articleModifier
                         .heightIn(min = 164.dp)
                         .width(216.dp),
                     colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 )
             }
 
-            item {
+            item(contentType = "show_more") {
                 ShowMoreArticlesCard(
                     modifier = Modifier
                         .width(216.dp)
-                        .heightIn(min = 164.dp),
-                    onClick = feedListCallbacks.onOpenAllNews,
+                        .heightIn(min = 164.dp)
+                        .onFirstVisible(
+                            minFractionVisible = 0.5f,
+                            callback = feedListCallbacks.onSliderEndReached,
+                        ),
+                    onClick = { feedListCallbacks.onOpenAllNews(true) },
                 )
             }
         }
@@ -520,6 +534,7 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
 }
 
 private const val DEFAULT_CHART_SIZE_IN_MARKET = 5
+private const val FOURTH_ITEM_INDEX = 3
 private const val GRADIENT_START = 0f
 private const val GRADIENT_END = 0.5f
 private val LinearGradientFirstPart = Color(0xFF635EEC)
