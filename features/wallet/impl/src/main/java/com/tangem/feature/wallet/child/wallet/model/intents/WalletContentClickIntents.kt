@@ -233,15 +233,13 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onAccountExpandClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
         analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountShowTokens())
-        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
+        accountDependencies.expandedAccountsHolder.expandAccount(account.accountId)
     }
 
     override fun onAccountCollapseClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
         analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountHideTokens())
-        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
+        accountDependencies.expandedAccountsHolder.collapseAccount(account.accountId)
     }
 
     private fun openYieldSupply(
