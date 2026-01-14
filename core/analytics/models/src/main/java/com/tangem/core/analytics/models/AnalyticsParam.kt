@@ -78,6 +78,7 @@ sealed class AnalyticsParam {
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
+        data object MarketPulse : ScreensSources("Market Pulse")
         data object TangemPay : ScreensSources("Tangem Pay")
         data object WalletSettings : ScreensSources("Wallet Settings")
         data object Upgrade : ScreensSources("Upgrade")
