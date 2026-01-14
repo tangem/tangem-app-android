@@ -409,7 +409,7 @@ private inline fun BaseScaffoldWithMarkets(
     }
 
     CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
     ) {
         val backgroundColor = LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
