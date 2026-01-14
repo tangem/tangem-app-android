@@ -158,7 +158,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val background = TangemTheme.colors.background.tertiary
         CompositionLocalProvider(
-            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+            LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
         ) {
             val bottomSheetState = remember {
                 derivedStateOf { BottomSheetState.EXPANDED }
