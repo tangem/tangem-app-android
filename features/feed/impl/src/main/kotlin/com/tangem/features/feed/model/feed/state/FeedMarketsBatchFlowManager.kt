@@ -66,15 +66,15 @@ internal class FeedMarketsBatchFlowManager(
             initialValue = emptyMap(),
         )
 
-    val errorStatesByOrder: StateFlow<Map<SortByTypeUM, Boolean>> =
+    val errorStatesByOrder: StateFlow<Map<SortByTypeUM, Throwable?>> =
         combine(
             TokenMarketListConfig.Order.entries.mapNotNull { order ->
-                managersByOrder[order]?.hasError?.map { hasError -> order to hasError }
+                managersByOrder[order]?.error?.map { error -> order to error }
             },
         ) { errorStatesList ->
-            errorStatesList.associate { (order, hasError) ->
+            errorStatesList.associate { (order, error) ->
                 val sortByType = order.toSortByTypeUM()
-                sortByType to hasError
+                sortByType to error
             }
         }.stateIn(
             scope = modelScope,
@@ -194,19 +194,19 @@ internal class FeedMarketsBatchFlowManager(
                 initialValue = false,
             )
 
-        val hasError = batchFlow.state
+        val error = batchFlow.state
             .map { state ->
                 when (val status = state.status) {
-                    is PaginationStatus.InitialLoadingError -> true
-                    is PaginationStatus.Paginating -> status.lastResult is BatchFetchResult.Error
-                    else -> false
+                    is PaginationStatus.InitialLoadingError -> status.throwable
+                    is PaginationStatus.Paginating -> (status.lastResult as? BatchFetchResult.Error)?.throwable
+                    else -> null
                 }
             }
             .distinctUntilChanged()
             .stateIn(
                 scope = modelScope,
                 started = Eagerly,
-                initialValue = false,
+                initialValue = null,
             )
 
         val onLastBatchLoadedSuccess = batchFlow.state
