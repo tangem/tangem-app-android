@@ -22,6 +22,12 @@ class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
         useUnmergedTree = true
     }
 
+    val chooseSpeedTitle: KNode = child {
+        hasTestTag(BaseBottomSheetTestTags.TITLE)
+        hasText(getResourceString(R.string.fee_selector_choose_speed_title))
+        useUnmergedTree = true
+    }
+
     fun regularFeeSelectorItem(title: String): KNode = child {
         hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_FEE_ITEM)
         hasAnyDescendant(withText(title))
@@ -94,6 +100,12 @@ class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
     val doneButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_done))
+        useUnmergedTree = true
+    }
+
+    val confirmButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_confirm))
         useUnmergedTree = true
     }
 }
