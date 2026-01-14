@@ -52,6 +52,10 @@
         "version": "5.30.0"
     },
     {
+        "name": "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
         "version": "5.31.0"
     },
