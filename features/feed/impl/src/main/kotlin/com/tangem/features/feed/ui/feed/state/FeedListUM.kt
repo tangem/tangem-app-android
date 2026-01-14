@@ -23,9 +23,11 @@ internal data class FeedListCallbacks(
     val onSearchClick: () -> Unit,
     val onMarketOpenClick: (sortBy: SortByTypeUM) -> Unit,
     val onArticleClick: (id: Int) -> Unit,
-    val onOpenAllNews: () -> Unit,
+    val onOpenAllNews: (isFromCarouselButton: Boolean) -> Unit,
     val onMarketItemClick: (MarketsListItemUM) -> Unit,
-    val onSortTypeClick: (SortByTypeUM) -> Unit,
+    val onSortTypeClick: (sortBy: SortByTypeUM) -> Unit,
+    val onSliderScroll: () -> Unit,
+    val onSliderEndReached: () -> Unit,
 )
 
 internal data class FeedListSearchBar(
