@@ -172,6 +172,9 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Assert 'Fee selector' bottom sheet title is displayed") {
                 onSendSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
             }
+            step("Click on '$marketSelectorItem' selector item") {
+                onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(marketSelectorItem).performClick() }
+            }
             step("Assert '$fastSelectorItem' selector item is displayed") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
             }
@@ -261,6 +264,9 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Click on 'Done' button") {
                 onSendSelectNetworkFeeBottomSheet { doneButton.performClick() }
             }
+            step("Click on 'Confirm' button") {
+                onSendSelectNetworkFeeBottomSheet { confirmButton.performClick() }
+            }
             step("Assert fee block is displayed with new fee amount: '$newFeeAmount'") {
                 checkNetworkFeeBlock(currentFeeAmount = newFeeAmount, withFeeSelector = true)
             }
@@ -323,8 +329,8 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Click on fee selector icon") {
                 onSendConfirmScreen { feeSelectorIcon.performClick() }
             }
-            step("Assert 'Fee selector' bottom sheet title is displayed") {
-                onSendSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
+            step("Assert 'Choose speed' bottom sheet title is displayed") {
+                onSendSelectNetworkFeeBottomSheet { chooseSpeedTitle.assertIsDisplayed() }
             }
             step("Assert '$fastSelectorItem' selector item is displayed") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
@@ -386,7 +392,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val tokenName = "VeThor"
         val mockState = "Vechain"
         val tokenAmount = "0.1"
-        val feeAmount = "<$0.01"
+        val feeAmount = "~$0.01"
         val marketSelectorItem = getResourceString(R.string.common_fee_selector_option_market)
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
@@ -421,8 +427,8 @@ class SendFeeScreenTest : BaseTestCase() {
             step("Click on fee selector icon") {
                 onSendConfirmScreen { feeSelectorIcon.performClick() }
             }
-            step("Assert 'Fee selector' bottom sheet title is displayed") {
-                onSendSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
+            step("Assert 'Choose speed' bottom sheet title is displayed") {
+                onSendSelectNetworkFeeBottomSheet { chooseSpeedTitle.assertIsDisplayed() }
             }
             step("Assert '$fastSelectorItem' selector item is displayed") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
