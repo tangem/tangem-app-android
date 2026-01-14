@@ -9,6 +9,7 @@ import com.tangem.datasource.local.news.details.NewsDetailsStore
 import com.tangem.datasource.local.news.trending.TrendingNewsStore
 import com.tangem.datasource.local.news.viewed.NewsViewedStore
 import com.tangem.domain.models.news.*
+import com.tangem.domain.news.NewsErrorResolver
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
@@ -32,6 +33,7 @@ internal class DefaultNewsRepository(
     private val newsDetailsStore: NewsDetailsStore,
     private val trendingNewsStore: TrendingNewsStore,
     private val newsViewedStore: NewsViewedStore,
+    private val newsErrorResolver: NewsErrorResolver,
 ) : NewsRepository {
 
     override fun getNewsListBatchFlow(context: NewsListBatchingContext, batchSize: Int): NewsListBatchFlow {
@@ -176,12 +178,7 @@ internal class DefaultNewsRepository(
                     trendingNewsStore.clear()
                     trendingNewsStore.store(
                         key = TRENDING_NEWS_KEY,
-                        value = TrendingNews.Error(
-                            NewsError.Unknown(
-                                message = apiResponse.cause.message,
-                                code = null,
-                            ),
-                        ),
+                        value = TrendingNews.Error(error = newsErrorResolver.resolve(apiResponse.cause.cause)),
                     )
                 }
                 is ApiResponse.Success<NewsTrendingResponse> -> {
