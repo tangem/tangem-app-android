@@ -32,6 +32,8 @@ internal object FeedListPreviewDataProvider {
                 onOpenAllNews = {},
                 onMarketItemClick = {},
                 onSortTypeClick = {},
+                onSliderScroll = {},
+                onSliderEndReached = {},
             ),
             news = NewsUM(
                 content = articles.filter { it.isTrending.not() }.toImmutableList(),
