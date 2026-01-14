@@ -40,8 +40,7 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val addressTextFieldHint: KNode = child {
-        hasParent(withTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD))
-        useUnmergedTree = true
+        hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD)
     }
 
     fun recipientNetworkCaution(network: String): KNode = child {
