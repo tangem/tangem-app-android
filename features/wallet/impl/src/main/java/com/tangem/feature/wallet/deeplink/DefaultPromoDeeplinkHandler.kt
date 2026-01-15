@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.deeplink
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.routing.deeplink.DeeplinkConst.PROMO_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -19,6 +20,7 @@ import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.PromoCodeActivationResult.*
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
+import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
@@ -44,9 +46,13 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PromoDeeplinkHandler {
+
+    private val refcode: String? = queryParams[DeeplinkConst.REF_KEY]
+    private val campaign: String? = queryParams[DeeplinkConst.CAMPAIGN_KEY]
 
     init {
         analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart())
@@ -122,6 +128,14 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                     Timber.tag(LOG_TAG).d(
                         "Start activation promoCode ${promoCode.mask()} address ${bitcoinAddress.mask()}",
                     )
+
+                    if (refcode != null) {
+                        launch {
+                            bindRefcodeWithWalletUseCase(refcode = refcode, campaign = campaign)
+                                .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
+                        }
+                    }
+
                     activatePromoCode(bitcoinAddress = bitcoinAddress, promoCode = promoCode)
                 } else {
                     uiMessageSender.send(GlobalLoadingMessage(false))
