@@ -17,6 +17,8 @@ data class UserTokensResponse(
     @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
     @Json(name = "name") val walletName: String? = null,
     @Json(name = "type") val walletType: WalletType? = null,
+    @Json(name = "ref") val refcode: String? = null,
+    @Json(name = "campaign") val campaign: String? = null,
 ) {
 
     @JsonClass(generateAdapter = true)
