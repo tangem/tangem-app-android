@@ -2,6 +2,7 @@ package com.tangem.data.news.repository
 
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.news.models.response.NewsTrendingResponse
@@ -55,16 +56,24 @@ internal class DefaultNewsRepository(
 
     override fun getNews(config: NewsListConfig, limit: Int): Flow<List<ShortArticle>> {
         return flow {
-            val response = newsApi.getNews(
+            val items = newsApi.getNews(
                 page = FIRST_PAGE,
                 limit = limit,
                 language = config.language,
                 snapshot = config.snapshot,
                 tokenIds = config.tokenIds.takeIf { it.isNotEmpty() },
                 categoryIds = config.categoryIds.takeIf { it.isNotEmpty() },
-            ).getOrThrow()
+            ).fold(
+                onSuccess = { response ->
+                    response.items
+                },
+                onError = { error ->
+                    Timber.e(error, "Failed to get list of news")
+                    emptyList()
+                },
+            )
 
-            val shortArticles = response.items.map { it.toDomainShortArticle() }
+            val shortArticles = items.map { it.toDomainShortArticle() }
             emit(shortArticles)
         }
             .flowOn(dispatchers.io)
