@@ -69,13 +69,20 @@ internal open class NewsListBatchFlowManager(
                 initialValue = persistentListOf(),
             )
 
-    val isInInitialLoadingErrorState = batchFlow.state
-        .map { it.status is PaginationStatus.InitialLoadingError }
+    val initialLoadingError: StateFlow<Throwable?> = batchFlow.state
+        .map { state ->
+            val status = state.status
+            if (status is PaginationStatus.InitialLoadingError) {
+                status.throwable
+            } else {
+                null
+            }
+        }
         .distinctUntilChanged()
         .stateIn(
             scope = modelScope,
             started = SharingStarted.Eagerly,
-            initialValue = false,
+            initialValue = null,
         )
 
     val paginationStatus: StateFlow<PaginationStatus<List<ShortArticle>>> = batchFlow.state
