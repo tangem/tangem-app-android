@@ -60,6 +60,7 @@ internal class DefaultNewsDetailsComponent(
 
     @Serializable
     data class Params(
+        val screenSource: String,
         val articleId: Int,
         val onBackClicked: () -> Unit,
         val onTokenClick: ((TokenMarketParams, AppCurrency) -> Unit),

@@ -220,7 +220,7 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
         ) {
             Text(
                 modifier = Modifier.padding(start = 16.dp),
-                text = "Related news",
+                text = stringResourceSafe(R.string.news_related_news),
                 style = TangemTheme.typography.h3,
                 color = TangemTheme.colors.text.primary1,
             )
