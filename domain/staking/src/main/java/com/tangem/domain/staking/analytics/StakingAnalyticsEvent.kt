@@ -167,6 +167,11 @@ sealed class StakingAnalyticsEvent(
         event = "Button - Activate",
         params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
     )
+
+    data class NotEnoughFee(val token: String) : StakingAnalyticsEvent(
+        event = "Notice - Not Enough Fee",
+        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+    )
 }
 
 enum class StakeScreenSource {
