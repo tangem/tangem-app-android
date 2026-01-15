@@ -3,7 +3,6 @@ package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
@@ -349,13 +348,14 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateAmountSubtractAvailability() {
         modelScope.launch {
-            val isGaslessEthTx =
-                feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
+            val feeTokenId =
+                feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: primaryCurrencyStatus.currency.id
             isAmountSubtractAvailable =
                 isAmountSubtractAvailableUseCase(
                     userWalletId = params.userWallet.walletId,
                     currency = primaryCurrencyStatus.currency,
-                    isGaslessEthTx = isGaslessEthTx,
+                    maybeGaslessFee = fee?.let { feeTokenId to fee },
                 ).getOrElse { false }
         }
     }

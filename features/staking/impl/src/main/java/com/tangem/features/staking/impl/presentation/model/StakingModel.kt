@@ -1439,8 +1439,10 @@ internal class StakingModel @Inject constructor(
     }
 
     private suspend fun checkIfSubtractAvailable() {
-        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrencyStatus.currency)
-            .getOrElse { false }
+        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
+            userWalletId = userWalletId,
+            currency = cryptoCurrencyStatus.currency,
+        ).getOrElse { false }
     }
 
     private fun isTopHeatupCase(): Boolean {
