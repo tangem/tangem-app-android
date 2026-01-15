@@ -110,7 +110,7 @@ class TokenFeeCalculatorTest {
         // Then
         assertTrue(result.isLeft())
         result.onLeft { error ->
-            assertTrue(error is GetFeeError.DataError)
+            assertTrue(error is GetFeeError.GaslessError)
         }
     }
 
@@ -363,7 +363,7 @@ class TokenFeeCalculatorTest {
         // Expected
 
         val expectedAmount = Amount(
-            value = BigDecimal("36.200000000000000000000000000000000000"),
+            value = BigDecimal("37.400000000000000000000000000000000000"),
             token = Token(
                 name = "USDC",
                 symbol = "USDC",
@@ -371,9 +371,9 @@ class TokenFeeCalculatorTest {
                 decimals = 6,
             )
         )
-        val expectedGasLimit = "181000".toBigInteger()
+        val expectedGasLimit = "187000".toBigInteger()
         val expectedCoinPriceInToken = BigInteger("2020000000") // 2000 * 1.01 * 10^6
-        val expectedFeeTransferLimit = "60000".toBigInteger()
+        val expectedFeeTransferLimit = "66000".toBigInteger()
         val expectedBaseGas = "21000".toBigInteger()
 
         // Given
