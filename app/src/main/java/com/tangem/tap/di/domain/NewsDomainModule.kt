@@ -42,6 +42,11 @@ internal object NewsDomainModule {
     }
 
     @Provides
+    fun provideToggleArticleLikedUseCase(repository: NewsRepository): ToggleArticleLikedUseCase {
+        return ToggleArticleLikedUseCase(repository)
+    }
+
+    @Provides
     fun provideGetNewsUseCase(repository: NewsRepository): GetNewsUseCase {
         return GetNewsUseCase(repository)
     }

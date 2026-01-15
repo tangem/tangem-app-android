@@ -61,4 +61,10 @@ interface NewsRepository {
      * Updates viewed flag for provided news articles (applies to both regular and trending news).
      */
     suspend fun updateNewsViewed(articleIds: Collection<Int>, viewed: Boolean)
+
+    /**
+     * Toggle news liked state
+     * @return an actual liked state of the article
+     */
+    suspend fun toggleNewsLiked(articleId: Int): Boolean
 }

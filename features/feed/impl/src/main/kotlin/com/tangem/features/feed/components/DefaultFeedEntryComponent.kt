@@ -10,6 +10,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -51,7 +52,12 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
     )
 
     private val clickIntents = object : FeedEntryClickIntents {
-        override fun onMarketItemClick(token: TokenMarketParams, appCurrency: AppCurrency) {
+        override fun onMarketItemClick(
+            token: TokenMarketParams,
+            appCurrency: AppCurrency,
+            source: String,
+            newsId: Int?,
+        ) {
             innerRouter.push(
                 route = FeedEntryChildFactory.Child.TokenDetails(
                     params = DefaultMarketsTokenDetailsComponent.Params(
@@ -60,11 +66,16 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         shouldShowPortfolio = true,
                         analyticsParams = DefaultMarketsTokenDetailsComponent.AnalyticsParams(
                             blockchain = null,
-                            source = "Market",
+                            newsId = newsId,
+                            source = source,
                         ),
                         onBackClicked = { onChildBack() },
                         onArticleClick = { articleId, preselectedArticlesId ->
-                            onArticleClick(articleId, preselectedArticlesId)
+                            onArticleClick(
+                                articleId = articleId,
+                                preselectedArticlesId = preselectedArticlesId,
+                                screenSource = AnalyticsParam.ScreensSources.Markets,
+                            )
                         },
                     ),
                 ),
@@ -76,7 +87,13 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
                         onBackClicked = { onChildBack() },
-                        onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
+                        onTokenClick = { token, currency ->
+                            onMarketItemClick(
+                                token = token,
+                                appCurrency = currency,
+                                source = AnalyticsParam.ScreensSources.Market.value,
+                            )
+                        },
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
                         shouldAlwaysShowSearchBar = sortBy == null,
                     ),
@@ -87,16 +104,25 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         override fun onArticleClick(
             articleId: Int,
             preselectedArticlesId: List<Int>,
+            screenSource: AnalyticsParam.ScreensSources,
             paginationConfig: NewsListConfig?,
         ) {
             innerRouter.push(
                 FeedEntryChildFactory.Child.NewsDetails(
                     params = DefaultNewsDetailsComponent.Params(
+                        screenSource = screenSource.value,
                         articleId = articleId,
                         onBackClicked = { onChildBack() },
                         preselectedArticlesId = preselectedArticlesId,
                         paginationConfig = paginationConfig,
-                        onTokenClick = { token, currency -> onMarketItemClick(token, currency) },
+                        onTokenClick = { token, currency ->
+                            onMarketItemClick(
+                                token = token,
+                                appCurrency = currency,
+                                source = AnalyticsParam.ScreensSources.NewsPage.value,
+                                newsId = articleId,
+                            )
+                        },
                     ),
                 ),
             )
@@ -201,6 +227,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                         clickIntents.onArticleClick(
                             articleId = articleId,
                             preselectedArticlesId = preselectedArticlesId,
+                            screenSource = AnalyticsParam.ScreensSources.Token,
                             paginationConfig = null,
                         )
                     },
@@ -209,17 +236,31 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
                 DefaultMarketsTokenListComponent.Params(
                     onBackClicked = { router.pop() },
-                    onTokenClick = { token, currency -> clickIntents.onMarketItemClick(token, currency) },
+                    onTokenClick = { token, currency ->
+                        clickIntents.onMarketItemClick(
+                            token = token,
+                            appCurrency = currency,
+                            source = AnalyticsParam.ScreensSources.Market.value,
+                        )
+                    },
                     preselectedSortType = SortByTypeUM.Rating,
                     shouldAlwaysShowSearchBar = false,
                 ),
             )
             is FeedEntryRoute.NewsDetail -> FeedEntryChildFactory.Child.NewsDetails(
                 DefaultNewsDetailsComponent.Params(
+                    screenSource = AnalyticsParam.ScreensSources.NewsLink.value,
                     articleId = entryRoute.articleId,
                     onBackClicked = { router.pop() },
                     preselectedArticlesId = entryRoute.preselectedArticlesId,
-                    onTokenClick = { token, currency -> clickIntents.onMarketItemClick(token, currency) },
+                    onTokenClick = { token, currency ->
+                        clickIntents.onMarketItemClick(
+                            token = token,
+                            appCurrency = currency,
+                            source = AnalyticsParam.ScreensSources.NewsPage.value,
+                            newsId = entryRoute.articleId,
+                        )
+                    },
                 ),
             )
             null -> FeedEntryChildFactory.Child.Feed

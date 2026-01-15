@@ -6,7 +6,7 @@ import com.tangem.datasource.api.news.models.response.NewsOriginalArticleDto
 import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
 import com.tangem.domain.models.news.*
 
-internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
+internal fun NewsDetailsResponse.toDomainDetailedArticle(isLiked: Boolean): DetailedArticle {
     return DetailedArticle(
         id = id,
         createdAt = createdAt,
@@ -20,6 +20,7 @@ internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
         shortContent = shortContent,
         content = content,
         originalArticles = originalArticles.map { it.toDomainOriginalArticle() },
+        isLiked = isLiked,
     )
 }
 
