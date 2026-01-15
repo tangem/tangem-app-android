@@ -226,6 +226,7 @@ internal class AddStakingNotificationsTransformer(
             isSubtractionAvailable = isSubtractAvailable,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onClick = prevState.clickIntents::openTokenDetails,
+            onNotEnoughFeeNotificationShow = prevState.clickIntents::onNotEnoughFeeNotificationShow,
         )
         addTonExtraFeeErrorNotification()
         addExceedsBalanceNotification(
@@ -233,7 +234,7 @@ internal class AddStakingNotificationsTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
             onClick = prevState.clickIntents::openTokenDetails,
-            onAnalyticsEvent = { /* no-op */ },
+            onAnalyticsEvent = { prevState.clickIntents.onNotEnoughFeeNotificationShow() },
         )
         if (!BlockchainUtils.isCardano(network.rawId)) {
             addDustWarningNotification(
@@ -298,12 +299,14 @@ internal class AddStakingNotificationsTransformer(
         isSubtractionAvailable: Boolean,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onClick: (CryptoCurrency) -> Unit,
+        onNotEnoughFeeNotificationShow: () -> Unit,
     ) {
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (!isSubtractionAvailable) return
 
         val showNotification = sendingAmount + feeAmount > balance
         if (showNotification) {
+            onNotEnoughFeeNotificationShow()
             val notification = if (actionType is StakingActionCommonType.Enter) {
                 NotificationUM.Error.TotalExceedsBalance
             } else {
