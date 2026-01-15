@@ -269,6 +269,7 @@ internal class FeedComponentModel @Inject constructor(
             params.feedClickIntents.onMarketItemClick(
                 token = tokenMarket.toSerializableParam(),
                 appCurrency = currentAppCurrency.value,
+                source = AnalyticsParam.ScreensSources.Market.value,
             )
         }
     }
@@ -317,6 +318,7 @@ internal class FeedComponentModel @Inject constructor(
                     -> emptyList()
                 },
             paginationConfig = null,
+            screenSource = AnalyticsParam.ScreensSources.Markets,
         )
     }
 
