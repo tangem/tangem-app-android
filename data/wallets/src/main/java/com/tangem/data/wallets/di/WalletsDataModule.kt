@@ -3,6 +3,7 @@ package com.tangem.data.wallets.di
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
+import com.tangem.data.wallets.DefaultWalletsPromoRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
@@ -21,6 +22,7 @@ import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
+import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
@@ -65,6 +67,24 @@ internal object WalletsDataModule {
     @Singleton
     fun provideMigrateNamesRepository(appPreferencesStore: AppPreferencesStore): WalletNamesMigrationRepository {
         return DefaultWalletNamesMigrationRepository(appPreferencesStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletsPromoRepository(
+        appPreferencesStore: AppPreferencesStore,
+        tangemTechApi: TangemTechApi,
+        userWalletsStore: UserWalletsStore,
+        appsFlyerConversionStore: AppsFlyerConversionStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WalletsPromoRepository {
+        return DefaultWalletsPromoRepository(
+            appPreferencesStore = appPreferencesStore,
+            tangemTechApi = tangemTechApi,
+            userWalletsStore = userWalletsStore,
+            appsFlyerConversionStore = appsFlyerConversionStore,
+            dispatchers = dispatchers,
+        )
     }
 }
 
