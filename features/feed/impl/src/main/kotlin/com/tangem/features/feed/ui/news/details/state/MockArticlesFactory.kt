@@ -48,6 +48,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = true,
         ),
         ArticleUM(
             id = 2,
@@ -76,6 +77,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 3,
@@ -104,6 +106,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 4,
@@ -132,6 +135,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 5,
@@ -146,6 +150,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 6,
@@ -161,6 +166,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 7,
@@ -175,6 +181,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 8,
@@ -189,6 +196,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 9,
@@ -204,6 +212,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
         ArticleUM(
             id = 10,
@@ -219,6 +228,7 @@ internal object MockArticlesFactory {
             sources = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
+            isLiked = false,
         ),
     ).toPersistentList()
 }
