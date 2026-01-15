@@ -170,6 +170,10 @@ internal class SavedSwapTransactionListConverter(
     }
 
     private fun UserTokensResponse.Token.getDerivationIndex(): DerivationIndex? {
-        return accountId?.toIntOrNull()?.let { DerivationIndex(it).getOrNull() }
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        val accountNodeRecognizer = AccountNodeRecognizer(blockchain)
+        return derivationPath
+            ?.let { accountNodeRecognizer.recognize(it) }
+            ?.let { DerivationIndex(it.toInt()).getOrNull() }
     }
 }
