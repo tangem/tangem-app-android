@@ -89,7 +89,7 @@ class EstimateFeeForGaslessTxUseCase(
                     )
                 },
                 catch = {
-                    raise(GetFeeError.DataError(it))
+                    raise(GaslessError.DataError(it))
                 },
             )
         }
