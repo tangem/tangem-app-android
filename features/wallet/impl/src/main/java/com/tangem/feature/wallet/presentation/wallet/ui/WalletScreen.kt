@@ -492,7 +492,7 @@ private inline fun BaseScaffoldWithMarkets(
                             color = if (state.showMarketsOnboarding) {
                                 Color.Black.copy(alpha = .65f)
                             } else {
-                                BottomSheetDefaults.ScrimColor
+                                Color.Black.copy(alpha = .40f)
                             },
                             visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                                 state.showMarketsOnboarding,
