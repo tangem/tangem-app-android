@@ -156,6 +156,15 @@ private fun lightThemeColors2(): TangemColors2 {
         borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
         borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
     )
+    val tabs = TangemColors2.Tabs(
+        textPrimary = TangemColorPalette.Light2,
+        textSecondary = TangemColorPalette.Dark4,
+        textTertiary = TangemColorPalette.Black,
+        backgroundPrimary = TangemColorPalette.Dark6,
+        backgroundSecondary = TangemColorPalette.Dark_10,
+        backgroundTertiary = TangemColorPalette.White,
+        backgroundQuaternary = TangemColorPalette.Dark_20,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -168,6 +177,7 @@ private fun lightThemeColors2(): TangemColors2 {
         field = field,
         skeleton = skeleton,
         markers = markers,
+        tabs = tabs,
     )
 }
 
@@ -296,6 +306,15 @@ private fun darkThemeColors2(): TangemColors2 {
         borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
         borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
     )
+    val tabs = TangemColors2.Tabs(
+        textPrimary = TangemColorPalette.Dark4,
+        textSecondary = TangemColorPalette.Light5,
+        textTertiary = TangemColorPalette.White,
+        backgroundPrimary = TangemColorPalette.Light1,
+        backgroundSecondary = TangemColorPalette.Light_10,
+        backgroundTertiary = TangemColorPalette.Light_10,
+        backgroundQuaternary = TangemColorPalette.Light_10,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -308,5 +327,6 @@ private fun darkThemeColors2(): TangemColors2 {
         field = field,
         skeleton = skeleton,
         markers = markers,
+        tabs = tabs,
     )
 }
