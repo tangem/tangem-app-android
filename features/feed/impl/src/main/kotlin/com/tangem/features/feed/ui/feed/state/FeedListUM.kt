@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 internal data class FeedListUM(
     val currentDate: String,
@@ -51,7 +51,12 @@ internal data class MarketChartConfig(
     val marketCharts: ImmutableMap<SortByTypeUM, MarketChartUM>,
     val currentSortByType: SortByTypeUM = SortByTypeUM.TopGainers,
 ) {
-    fun getFilterPreset() = SortByTypeUM.entries.filter { it != SortByTypeUM.Rating }.toPersistentList()
+    fun getFilterPreset() = persistentListOf(
+        SortByTypeUM.Trending,
+        SortByTypeUM.ExperiencedBuyers,
+        SortByTypeUM.TopGainers,
+        SortByTypeUM.TopLosers,
+    )
 }
 
 @Immutable
