@@ -1,5 +1,6 @@
 package com.tangem.features.feed.model.news.list
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +9,7 @@ import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsCategoriesUseCase
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
+import com.tangem.features.feed.model.news.list.analytics.NewsListAnalyticsEvent
 import com.tangem.features.feed.model.news.list.statemanager.NewsListStateManager
 import com.tangem.features.feed.model.news.list.loader.NewsCategoriesLoader
 import com.tangem.features.feed.model.news.list.statemanager.NewsListBatchFlowManager
@@ -31,6 +33,7 @@ internal class NewsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getNewsCategoriesUseCase: GetNewsCategoriesUseCase,
     private val getNewsListBatchFlowUseCase: GetNewsListBatchFlowUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -56,6 +59,10 @@ internal class NewsListModel @Inject constructor(
             modelScope = modelScope,
             dispatchers = dispatchers,
         )
+    }
+
+    private val newsListStateManager by lazy(LazyThreadSafetyMode.NONE) {
+        NewsListStateManager(analyticsEventHandler)
     }
 
     private val _state = MutableStateFlow(
@@ -95,12 +102,12 @@ internal class NewsListModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             combine(
                 batchFlowManager.uiItems,
-                batchFlowManager.isInInitialLoadingErrorState,
+                batchFlowManager.initialLoadingError,
                 batchFlowManager.paginationStatus,
-            ) { articles, isError, paginationStatus ->
-                NewsListStateManager.calculateState(
+            ) { articles, loadingError, paginationStatus ->
+                newsListStateManager.calculateState(
                     articles = articles,
-                    isError = isError,
+                    error = loadingError,
                     paginationStatus = paginationStatus,
                     onRetryClick = {
                         loadCategories()
@@ -124,6 +131,9 @@ internal class NewsListModel @Inject constructor(
             DEFAULT_ALL_NEWS_CATEGORIES_ID
         } else {
             categoryId
+        }
+        if (newCategoryId != DEFAULT_ALL_NEWS_CATEGORIES_ID) {
+            analyticsEventHandler.send(NewsListAnalyticsEvent.NewsCategoriesClick(newCategoryId))
         }
         selectedCategoryId.value = newCategoryId
         _state.update { currentState ->
