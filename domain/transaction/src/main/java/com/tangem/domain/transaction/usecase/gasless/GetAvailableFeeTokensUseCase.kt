@@ -53,7 +53,7 @@ class GetAvailableFeeTokensUseCase(
                     }
                 },
                 catch = {
-                    raise(GetFeeError.DataError(it))
+                    raise(GetFeeError.GaslessError.DataError(it))
                 },
             )
         }
