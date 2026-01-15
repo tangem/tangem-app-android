@@ -2,6 +2,7 @@ package com.tangem.features.feed.model.news.details
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,14 +12,17 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
+import com.tangem.domain.models.news.OriginalArticle
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.domain.news.usecase.MarkArticleAsViewedUseCase
 import com.tangem.domain.news.usecase.ObserveNewsDetailsUseCase
+import com.tangem.domain.news.usecase.ToggleArticleLikedUseCase
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
-import com.tangem.features.feed.model.news.details.factory.NewsDetailsIndexManager
+import com.tangem.features.feed.model.news.details.analytics.NewsDetailsAnalyticsEvent
 import com.tangem.features.feed.model.news.details.converter.NewsDetailsConverter
-import com.tangem.features.feed.model.news.details.loader.NewsRelatedTokensLoader
+import com.tangem.features.feed.model.news.details.factory.NewsDetailsIndexManager
 import com.tangem.features.feed.model.news.details.factory.NewsDetailsStateFactory
+import com.tangem.features.feed.model.news.details.loader.NewsRelatedTokensLoader
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
@@ -45,13 +49,15 @@ internal class NewsDetailsModel @Inject constructor(
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val markArticleAsViewedUseCase: MarkArticleAsViewedUseCase,
+    private val toggleArticleLikedUseCase: ToggleArticleLikedUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultNewsDetailsComponent.Params>()
     private val currentLanguage = Locale.getDefault().language
 
-    private val newsDetailsConverter = NewsDetailsConverter(onSourceClick = urlOpener::openUrl)
+    private val newsDetailsConverter = NewsDetailsConverter(onSourceClick = ::onOriginalArticleClick)
 
     private val paginationManager: NewsDetailsPaginationManager? = params.paginationConfig?.let { config ->
         NewsDetailsPaginationManager(
@@ -90,7 +96,7 @@ internal class NewsDetailsModel @Inject constructor(
             articles = persistentListOf(),
             selectedArticleIndex = -1,
             onShareClick = {},
-            onLikeClick = { /* [REDACTED_TODO_COMMENT] */ },
+            onLikeClick = ::onLikeClick,
             onBackClick = params.onBackClicked,
             onArticleIndexChanged = ::onArticleIndexChanged,
         ),
@@ -108,7 +114,34 @@ internal class NewsDetailsModel @Inject constructor(
     val state: StateFlow<NewsDetailsUM> = _state.asStateFlow()
 
     init {
+        trackScreenOpened()
         loadNews()
+    }
+
+    private fun trackScreenOpened() {
+        analyticsEventHandler.send(
+            event = NewsDetailsAnalyticsEvent.NewsArticleOpened(
+                source = params.screenSource,
+                newsId = params.articleId,
+            ),
+        )
+    }
+
+    private fun onLikeClick(articleId: Int) {
+        modelScope.launch {
+            toggleArticleLikedUseCase.toggleLiked(articleId)
+            analyticsEventHandler.send(NewsDetailsAnalyticsEvent.NewsLikeClicked(articleId))
+        }
+    }
+
+    private fun onOriginalArticleClick(originalArticle: OriginalArticle) {
+        analyticsEventHandler.send(
+            NewsDetailsAnalyticsEvent.RelatedNewsClicked(
+                newsId = params.articleId,
+                relatedNewsId = originalArticle.id,
+            ),
+        )
+        urlOpener.openUrl(originalArticle.url)
     }
 
     private fun onArticleIndexChanged(newIndex: Int) {
