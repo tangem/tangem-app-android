@@ -26,6 +26,7 @@ import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 
 internal class TokenFeeCalculator(
@@ -51,7 +52,7 @@ internal class TokenFeeCalculator(
 
             val maybeFee = when (val result = transactionSender.getFee(transactionData = transactionData)) {
                 is Result.Success -> result.data
-                is Result.Failure -> raise(result.mapToFeeError())
+                is Result.Failure -> raise(GaslessError.DataError(result.error))
             }
             maybeFee
         }
@@ -115,7 +116,7 @@ internal class TokenFeeCalculator(
             val feeTransferGasLimit = when (feeTransferGasLimitResult) {
                 is Result.Failure -> raise(GetFeeError.DataError(feeTransferGasLimitResult.error))
                 is Result.Success -> feeTransferGasLimitResult.data
-            }
+            }.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
 
             val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
 
@@ -197,6 +198,7 @@ internal class TokenFeeCalculator(
         /** Gas price safety multiplier for fee calculation */
         const val GAS_PRICE_MULTIPLIER = 2
         const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
+        const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
 
         /**
          * Increases BigDecimal value by specified percentage.
@@ -215,6 +217,12 @@ internal class TokenFeeCalculator(
             require(percent >= 0) { "Percent must be non-negative" }
             val multiplier = BigDecimal.ONE.add(BigDecimal(percent).divide(BigDecimal("100")))
             return this.multiply(multiplier)
+        }
+
+        private fun BigInteger.increaseByPercent(percent: Int): BigInteger {
+            require(percent >= 0) { "Percent must be non-negative" }
+            val multiplier = BigDecimal.ONE.add(BigDecimal(percent).divide(BigDecimal("100")))
+            return BigDecimal(this).multiply(multiplier).toBigInteger()
         }
     }
 }
