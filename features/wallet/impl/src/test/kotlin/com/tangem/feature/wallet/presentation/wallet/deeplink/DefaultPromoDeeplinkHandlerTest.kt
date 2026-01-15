@@ -25,6 +25,7 @@ import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
+import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.DefaultPromoDeeplinkHandler
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
@@ -66,6 +67,9 @@ class DefaultPromoDeeplinkHandlerTest {
     @MockK
     private lateinit var analyticsEventHandler: AnalyticsEventHandler
 
+    @MockK
+    private lateinit var bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase
+
     private lateinit var messages: MutableList<UiMessage>
 
     @Before
@@ -105,6 +109,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -137,6 +142,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -168,6 +174,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -205,6 +212,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -246,6 +254,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -362,6 +371,7 @@ class DefaultPromoDeeplinkHandlerTest {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+            bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -393,6 +403,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -433,6 +444,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -494,6 +506,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -546,6 +559,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -604,6 +618,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -661,6 +676,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -714,6 +730,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -767,6 +784,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
+                bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
