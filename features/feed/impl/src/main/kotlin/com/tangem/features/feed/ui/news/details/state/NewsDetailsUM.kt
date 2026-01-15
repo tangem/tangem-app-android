@@ -12,7 +12,7 @@ internal data class NewsDetailsUM(
     val articles: ImmutableList<ArticleUM>,
     val selectedArticleIndex: Int,
     val onShareClick: () -> Unit,
-    val onLikeClick: () -> Unit,
+    val onLikeClick: (articleId: Int) -> Unit,
     val onBackClick: () -> Unit,
     val onArticleIndexChanged: (Int) -> Unit,
     val relatedTokensUM: RelatedTokensUM = RelatedTokensUM.Loading,
@@ -36,6 +36,7 @@ internal data class ArticleUM(
     val sources: ImmutableList<SourceUM>,
     val newsUrl: String,
     val relatedTokens: ImmutableList<RelatedToken>,
+    val isLiked: Boolean,
 )
 
 internal data class SourceUM(
