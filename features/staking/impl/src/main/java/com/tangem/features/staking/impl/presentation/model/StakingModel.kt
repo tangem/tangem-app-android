@@ -1120,6 +1120,14 @@ internal class StakingModel @Inject constructor(
         )
     }
 
+    override fun onNotEnoughFeeNotificationShow() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvent.NotEnoughFee(
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
+    }
+
     override fun onActivateTonAccountClick() {
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ButtonActivate(
