@@ -106,10 +106,12 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun checkIfSubtractAvailable() {
+        val feeCurrencyId = notificationData.feeCryptoCurrencyStatus.currency.id
+        val fee = notificationData.fee
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
             userWalletId = userWalletId,
             currency = currency,
-            isGaslessEthTx = notificationData.fee is Fee.Ethereum.TokenCurrency,
+            maybeGaslessFee = fee?.let { feeCurrencyId to fee },
         ).getOrElse { false }
     }
 
