@@ -6,9 +6,13 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.news.models.response.NewsTrendingResponse
 import com.tangem.datasource.local.news.details.NewsDetailsStore
+import com.tangem.datasource.local.news.liked.NewsLikedStore
 import com.tangem.datasource.local.news.trending.TrendingNewsStore
 import com.tangem.datasource.local.news.viewed.NewsViewedStore
-import com.tangem.domain.models.news.*
+import com.tangem.domain.models.news.ArticleCategory
+import com.tangem.domain.models.news.DetailedArticle
+import com.tangem.domain.models.news.ShortArticle
+import com.tangem.domain.models.news.TrendingNews
 import com.tangem.domain.news.NewsErrorResolver
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
@@ -27,12 +31,14 @@ import timber.log.Timber
  * Implementation of [NewsRepository].
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultNewsRepository(
     private val newsApi: NewsApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val newsDetailsStore: NewsDetailsStore,
     private val trendingNewsStore: TrendingNewsStore,
     private val newsViewedStore: NewsViewedStore,
+    private val newsLikedStore: NewsLikedStore,
     private val newsErrorResolver: NewsErrorResolver,
 ) : NewsRepository {
 
@@ -71,9 +77,17 @@ internal class DefaultNewsRepository(
     }
 
     override fun observeDetailedArticles(): Flow<Map<Int, DetailedArticle>> {
-        return newsDetailsStore.getAll().map { articles ->
-            articles.associateBy(DetailedArticle::id)
-        }
+        return newsDetailsStore.getAll()
+            .combine(newsLikedStore.getAll()) { articles, likedFlags ->
+                articles.map { article ->
+                    article.copy(
+                        isLiked = isNewsLiked(article.id),
+                    )
+                }
+            }
+            .map { articles ->
+                articles.associateBy(DetailedArticle::id)
+            }
     }
 
     override suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?) {
@@ -118,6 +132,16 @@ internal class DefaultNewsRepository(
         newsViewedStore.updateViewed(articleIds, viewed)
     }
 
+    private suspend fun isNewsLiked(articleId: Int): Boolean {
+        return newsLikedStore.getSync()[articleId] == true
+    }
+
+    override suspend fun toggleNewsLiked(articleId: Int): Boolean = withContext(dispatchers.io) {
+        val isNewsLikedValue = !isNewsLiked(articleId)
+        newsLikedStore.updateLiked(listOf(articleId), isNewsLikedValue)
+        isNewsLikedValue
+    }
+
     private fun updateViewedStatusForNewsBatch(
         newsBatchFlow: NewsListBatchFlow,
         scope: CoroutineScope,
@@ -148,7 +172,9 @@ internal class DefaultNewsRepository(
                     async {
                         newsApi.getNewsDetails(newsId = newsId, language = language)
                             .getOrThrow()
-                            .toDomainDetailedArticle()
+                            .toDomainDetailedArticle(
+                                isLiked = isNewsLiked(newsId),
+                            )
                     }
                 }.awaitAll()
             }
