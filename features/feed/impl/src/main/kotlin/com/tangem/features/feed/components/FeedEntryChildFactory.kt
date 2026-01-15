@@ -2,6 +2,7 @@ package com.tangem.features.feed.components
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
@@ -82,6 +83,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                             feedEntryClickIntents.onArticleClick(
                                 articleId = currentArticle,
                                 preselectedArticlesId = prefetchedArticles,
+                                screenSource = AnalyticsParam.ScreensSources.NewsList,
                                 paginationConfig = paginationConfig,
                             )
                         },
