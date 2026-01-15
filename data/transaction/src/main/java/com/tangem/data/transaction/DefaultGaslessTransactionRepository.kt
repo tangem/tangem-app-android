@@ -116,9 +116,6 @@ class DefaultGaslessTransactionRepository(
     }
 
     private companion object {
-
-        const val TOKEN_RECEIVER_ADDRESS = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
-
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("100000")
     }
 }
