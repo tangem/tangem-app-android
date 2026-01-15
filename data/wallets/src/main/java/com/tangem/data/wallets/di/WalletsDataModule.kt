@@ -1,6 +1,7 @@
 package com.tangem.data.wallets.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.DefaultWalletNamesMigrationRepository
 import com.tangem.data.wallets.DefaultWalletsRepository
 import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
@@ -10,6 +11,7 @@ import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -40,6 +42,8 @@ internal object WalletsDataModule {
         userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
         authProvider: AuthProvider,
+        walletServerBinder: WalletServerBinder,
+        appsFlyerConversionStore: AppsFlyerConversionStore,
         accountsFeatureToggles: AccountsFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): WalletsRepository {
@@ -50,6 +54,8 @@ internal object WalletsDataModule {
             seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
             authProvider = authProvider,
+            walletServerBinder = walletServerBinder,
+            appsFlyerConversionStore = appsFlyerConversionStore,
             accountsFeatureToggles = accountsFeatureToggles,
             moshi = moshi,
         )
