@@ -112,10 +112,11 @@ private fun Content(state: NewsDetailsUM, background: Color) {
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
+                    val article = state.articles[page]
                     ArticleDetail(
-                        article = state.articles[page],
+                        article = article,
                         modifier = Modifier.fillMaxSize(),
-                        onLikeClick = state.onLikeClick,
+                        onLikeClick = { state.onLikeClick(article.id) },
                         relatedTokensUM = state.relatedTokensUM,
                     )
                 }
@@ -176,13 +177,23 @@ private fun ArticleDetail(
 
             SpacerH(24.dp)
 
-            SecondaryButtonIconStart(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                iconResId = R.drawable.ic_heart_20,
-                text = stringResourceSafe(R.string.news_like),
-                size = TangemButtonSize.RoundedAction,
-                onClick = onLikeClick,
-            )
+            if (article.isLiked) {
+                PrimaryButtonIconStart(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    iconResId = R.drawable.ic_heart_20,
+                    text = stringResourceSafe(R.string.news_like),
+                    size = TangemButtonSize.RoundedAction,
+                    onClick = { onLikeClick() },
+                )
+            } else {
+                SecondaryButtonIconStart(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    iconResId = R.drawable.ic_heart_20,
+                    text = stringResourceSafe(R.string.news_like),
+                    size = TangemButtonSize.RoundedAction,
+                    onClick = { onLikeClick() },
+                )
+            }
 
             RelatedTokensBlock(
                 relatedTokensUM = relatedTokensUM,
