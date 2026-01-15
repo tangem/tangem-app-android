@@ -78,6 +78,7 @@ internal class DefaultMarketsTokenDetailsComponent(
                 ).screenOpened(
                     blockchain = analyticsParams.blockchain,
                     source = analyticsParams.source,
+                    newsId = analyticsParams.newsId,
                 ),
             )
         }
@@ -138,5 +139,6 @@ internal class DefaultMarketsTokenDetailsComponent(
     data class AnalyticsParams(
         val blockchain: String?,
         val source: String,
+        val newsId: Int? = null,
     )
 }
