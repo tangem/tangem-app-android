@@ -86,7 +86,7 @@ class GetFeeForGaslessUseCase(
                     )
                 },
                 catch = {
-                    raise(GetFeeError.DataError(it))
+                    raise(GaslessError.DataError(it))
                 },
             )
         }
