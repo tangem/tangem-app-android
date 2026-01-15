@@ -12,12 +12,13 @@ internal class MarketDetailsAnalyticsEvent(
     data class EventBuilder(
         val token: TokenMarketParams,
     ) {
-        fun screenOpened(blockchain: String?, source: String) = MarketDetailsAnalyticsEvent(
+        fun screenOpened(blockchain: String?, source: String, newsId: Int? = null) = MarketDetailsAnalyticsEvent(
             event = "Token Chart Screen Opened",
             params = buildMap {
                 put("Token", token.symbol)
                 blockchain?.let { put("blockchain", it) }
                 put("Source", source)
+                newsId?.let { put("News Id", it.toString()) }
             },
         )
 
