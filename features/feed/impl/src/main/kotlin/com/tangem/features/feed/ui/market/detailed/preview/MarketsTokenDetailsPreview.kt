@@ -46,6 +46,8 @@ internal object MarketsTokenDetailsPreview {
         relatedNews = MarketsTokenDetailsUM.RelatedNews(
             articles = persistentListOf(),
             onArticledClicked = {},
+            onFirstVisible = {},
+            onScroll = {},
         ),
     )
 
@@ -136,6 +138,8 @@ internal object MarketsTokenDetailsPreview {
         relatedNews = MarketsTokenDetailsUM.RelatedNews(
             articles = persistentListOf(),
             onArticledClicked = {},
+            onFirstVisible = {},
+            onScroll = {},
         ),
     )
 }
