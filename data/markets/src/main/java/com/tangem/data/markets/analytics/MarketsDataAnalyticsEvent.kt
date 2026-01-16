@@ -2,6 +2,7 @@ package com.tangem.data.markets.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
 
 sealed interface MarketsDataAnalyticsEvent {
 
@@ -81,9 +82,5 @@ sealed interface MarketsDataAnalyticsEvent {
         Network("Network"),
         Custom("Custom"),
         Unknown("Unknown"),
-    }
-
-    private companion object {
-        const val IS_NOT_HTTP_ERROR = "Is not http error"
     }
 }

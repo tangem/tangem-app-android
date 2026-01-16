@@ -3,11 +3,13 @@ package com.tangem.features.feed.model.news.details
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
@@ -33,6 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
 
@@ -129,7 +132,9 @@ internal class NewsDetailsModel @Inject constructor(
 
     private fun onLikeClick(articleId: Int) {
         modelScope.launch {
-            toggleArticleLikedUseCase.toggleLiked(articleId)
+            toggleArticleLikedUseCase
+                .toggleLiked(articleId)
+                .onLeft { Timber.e(it) }
             analyticsEventHandler.send(NewsDetailsAnalyticsEvent.NewsLikeClicked(articleId))
         }
     }
@@ -202,7 +207,35 @@ internal class NewsDetailsModel @Inject constructor(
         observeNewsDetailsUseCase.prefetch(
             newsIds = params.preselectedArticlesId,
             language = currentLanguage,
-        ).mapLeft {
+        ).onLeft { errors ->
+            errors.onEach { (newsId, throwable) ->
+                when {
+                    // an article is opened from deeplink and is not found
+                    params.screenSource == AnalyticsParam.ScreensSources.NewsLink.value &&
+                        newsId == params.articleId &&
+                        throwable is ApiResponseError.HttpException &&
+                        throwable.code == ApiResponseError.HttpException.Code.NOT_FOUND
+                    -> {
+                        analyticsEventHandler.send(
+                            NewsDetailsAnalyticsEvent.NewsLinkMismatch(
+                                newsId = params.articleId,
+                            ),
+                        )
+                    }
+                    // global request executing error
+                    newsId < 0 -> {
+                        Timber.e(throwable)
+                    }
+                    else -> {
+                        analyticsEventHandler.send(
+                            NewsDetailsAnalyticsEvent.NewsArticleLoadError(
+                                newsId = newsId,
+                            ),
+                        )
+                    }
+                }
+            }
+        }.mapLeft {
             stateFactory.createErrorState()
         }
     }

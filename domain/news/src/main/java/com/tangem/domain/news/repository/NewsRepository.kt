@@ -1,5 +1,6 @@
 package com.tangem.domain.news.repository
 
+import arrow.core.Either
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
 import com.tangem.domain.models.news.ShortArticle
@@ -37,7 +38,7 @@ interface NewsRepository {
     /**
      * Fetches and caches detailed articles for provided ids in parallel.
      */
-    suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?)
+    suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?): Either<Map<Int, Throwable>, Unit>
 
     /**
      * Fetch list of trending news by limit and with correct locale and store it in runtime data store.
@@ -64,7 +65,6 @@ interface NewsRepository {
 
     /**
      * Toggle news liked state
-     * @return an actual liked state of the article
      */
-    suspend fun toggleNewsLiked(articleId: Int): Boolean
+    suspend fun toggleNewsLiked(articleId: Int)
 }

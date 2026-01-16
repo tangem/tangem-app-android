@@ -22,6 +22,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.price
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
@@ -36,6 +37,7 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
+import com.tangem.features.feed.components.market.details.analytics.MarketTokenAnalyticsEvent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.converter.DescriptionConverter
@@ -242,6 +244,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             relatedNews = MarketsTokenDetailsUM.RelatedNews(
                 articles = persistentListOf(),
                 onArticledClicked = {},
+                onFirstVisible = {},
+                onScroll = {},
             ),
         ),
     )
@@ -322,10 +326,36 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                                         /* preselectedIds */ relatedNews.map { it.id },
                                     )
                                 },
+                                onFirstVisible = {
+                                    analyticsEventHandler.send(
+                                        MarketTokenAnalyticsEvent.TokenNewsViewed(
+                                            token = params.token.symbol,
+                                        ),
+                                    )
+                                },
+                                onScroll = {
+                                    analyticsEventHandler.send(
+                                        MarketTokenAnalyticsEvent.TokenNewsCarouselScrolled(
+                                            token = params.token.symbol,
+                                        ),
+                                    )
+                                },
                             ),
                         )
                     }
                 }
+            }.onLeft { throwable ->
+                val (code, message) = if (throwable is ApiResponseError.HttpException) {
+                    throwable.code.numericCode to throwable.message.orEmpty()
+                } else {
+                    null to ""
+                }
+                analyticsEventHandler.send(
+                    MarketTokenAnalyticsEvent.TokenNewsLoadError(
+                        code = code,
+                        message = message,
+                    ),
+                )
             }
         }
     }

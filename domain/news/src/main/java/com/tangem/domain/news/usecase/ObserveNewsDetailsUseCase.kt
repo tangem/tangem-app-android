@@ -24,7 +24,6 @@ class ObserveNewsDetailsUseCase(
     /**
      * Prefetches the given article ids (can be called with current + next ids for pager preloading).
      */
-    suspend fun prefetch(newsIds: Collection<Int>, language: String?): Either<Throwable, Unit> = Either.catch {
+    suspend fun prefetch(newsIds: Collection<Int>, language: String?): Either<Map<Int, Throwable>, Unit> =
         repository.fetchDetailedArticles(newsIds, language)
-    }
 }

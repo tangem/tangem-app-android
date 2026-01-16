@@ -76,5 +76,7 @@ internal data class MarketsTokenDetailsUM(
     data class RelatedNews(
         val articles: ImmutableList<ArticleConfigUM>,
         val onArticledClicked: (id: Int) -> Unit,
+        val onFirstVisible: () -> Unit,
+        val onScroll: () -> Unit,
     )
 }

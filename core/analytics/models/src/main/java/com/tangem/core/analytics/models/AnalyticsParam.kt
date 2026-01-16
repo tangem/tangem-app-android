@@ -1,5 +1,7 @@
 package com.tangem.core.analytics.models
 
+const val IS_NOT_HTTP_ERROR = "Is not http error"
+
 sealed class AnalyticsParam {
 
     sealed class CardBalanceState(val value: String) {
