@@ -2,6 +2,7 @@ package com.tangem.features.feed.model.market.list.statemanager
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.event.consumedEvent
@@ -9,12 +10,8 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.impl.R
-import com.tangem.features.feed.model.market.list.state.ListUM
-import com.tangem.features.feed.model.market.list.state.MarketsListUM
-import com.tangem.features.feed.model.market.list.state.MarketsNotificationUM
-import com.tangem.features.feed.model.market.list.state.MarketsSearchBar
-import com.tangem.features.feed.model.market.list.state.SortByBottomSheetContentUM
-import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
+import com.tangem.features.feed.model.market.list.state.*
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -35,6 +32,7 @@ internal class MarketsListUMStateManager(
     private val onTokenClick: (MarketsListItemUM) -> Unit,
     private val onShowTokensUnder100kClicked: () -> Unit,
     private val onBackClick: () -> Unit,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     val state = MutableStateFlow(state())
@@ -246,7 +244,10 @@ internal class MarketsListUMStateManager(
             ),
         ),
         marketsNotificationUM = null,
-        onSearchClicked = { changeSearchBarIsActive(true) },
+        onSearchClicked = {
+            analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
+            changeSearchBarIsActive(true)
+        },
     )
 
     private fun onBottomSheetOptionClicked(sortByTypeUM: SortByTypeUM) {

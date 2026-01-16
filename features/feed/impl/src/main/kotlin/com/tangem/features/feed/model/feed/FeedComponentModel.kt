@@ -172,7 +172,10 @@ internal class FeedComponentModel @Inject constructor(
             currentDate = getCurrentDate(),
             feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(R.string.markets_search_header_title),
-                onBarClick = { params.feedClickIntents.onMarketOpenClick(null) },
+                onBarClick = {
+                    analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
+                    params.feedClickIntents.onMarketOpenClick(null)
+                },
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
