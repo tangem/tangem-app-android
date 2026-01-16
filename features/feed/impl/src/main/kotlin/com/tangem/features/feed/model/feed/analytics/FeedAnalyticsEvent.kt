@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
 import com.tangem.core.analytics.models.OneTimePerSessionEvent
 
 internal sealed class FeedAnalyticsEvent(
@@ -89,8 +90,4 @@ internal sealed class FeedAnalyticsEvent(
     )
 
     class TokenSearchedClicked : FeedAnalyticsEvent(event = "Token Searched Clicked")
-
-    private companion object {
-        const val IS_NOT_HTTP_ERROR = "Is not http error"
-    }
 }
