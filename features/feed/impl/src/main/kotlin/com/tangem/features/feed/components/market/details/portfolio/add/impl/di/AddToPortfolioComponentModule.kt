@@ -1,7 +1,7 @@
 package com.tangem.features.feed.components.market.details.portfolio.add.impl.di
 
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.DefaultAddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.ui.DefaultAddToPortfolioManager
 import dagger.Binds
