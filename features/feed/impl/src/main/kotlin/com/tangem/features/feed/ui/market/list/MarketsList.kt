@@ -83,7 +83,7 @@ internal fun TopBarWithSearch(
                 modifier = Modifier
                     .drawBehind { drawRect(background) }
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 8.dp),
                 state = marketsSearchBar.searchBarUM,
                 colors = TangemSearchBarDefaults.defaultTextFieldColors.copy(
                     focusedContainerColor = TangemTheme.colors.field.focused,
