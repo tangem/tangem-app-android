@@ -13,8 +13,8 @@ import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedNetwork
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedPortfolio
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedNetwork
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.impl.R
 import javax.inject.Inject
