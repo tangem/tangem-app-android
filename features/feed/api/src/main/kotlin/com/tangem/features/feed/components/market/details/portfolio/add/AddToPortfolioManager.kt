@@ -1,17 +1,17 @@
-package com.tangem.features.feed.components.market.details.portfolio.add.api
+package com.tangem.features.feed.components.market.details.portfolio.add
 
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
 
-internal interface AddToPortfolioManager {
+interface AddToPortfolioManager {
 
     val token: TokenMarketParams
-    val analyticsParams: MarketsPortfolioComponent.AnalyticsParams?
+    val analyticsParams: AnalyticsParams?
     val portfolioFetcher: PortfolioFetcher
 
     val state: StateFlow<State>
@@ -28,11 +28,16 @@ internal interface AddToPortfolioManager {
         data object NothingToAdd : State
     }
 
+    @Serializable
+    data class AnalyticsParams(
+        val source: String,
+    )
+
     interface Factory {
         fun create(
             scope: CoroutineScope,
             token: TokenMarketParams,
-            analyticsParams: MarketsPortfolioComponent.AnalyticsParams?,
+            analyticsParams: AnalyticsParams?,
         ): AddToPortfolioManager
     }
 }
