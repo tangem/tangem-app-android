@@ -29,11 +29,12 @@ internal class DefaultMarketsTokenListComponent(
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
+        val bsState by bottomSheetState
         TopBarWithSearch(
             onBackClick = params.onBackClicked,
             onSearchClick = state.onSearchClicked,
             marketsSearchBar = state.marketsSearchBar,
-            buttonsEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+            bottomSheetState = bsState,
         )
     }
 
