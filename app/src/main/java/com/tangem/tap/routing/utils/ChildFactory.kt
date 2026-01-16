@@ -45,8 +45,7 @@ import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Par
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
-import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
-import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
+import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -118,8 +117,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
-    private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
-    private val yieldSupplyActiveComponentFactory: YieldSupplyActiveComponent.Factory,
+    private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val feedFeatureToggle: FeedFeatureToggle,
@@ -706,25 +704,15 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = kycComponentFactory,
                 )
             }
-            is AppRoute.YieldSupplyPromo -> {
+            is AppRoute.YieldSupplyEntry -> {
                 createComponentChild(
                     context = context,
-                    params = YieldSupplyPromoComponent.Params(
-                        userWalletId = route.userWalletId,
-                        currency = route.cryptoCurrency,
-                        apy = route.apy,
-                    ),
-                    componentFactory = yieldSupplyPromoComponentFactory,
-                )
-            }
-            is AppRoute.YieldSupplyActive -> {
-                createComponentChild(
-                    context = context,
-                    params = YieldSupplyActiveComponent.Params(
+                    params = YieldSupplyEntryComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
+                        apy = route.apy,
                     ),
-                    componentFactory = yieldSupplyActiveComponentFactory,
+                    componentFactory = yieldSupplyEntryComponentFactory,
                 )
             }
             is AppRoute.NewsDetails -> {

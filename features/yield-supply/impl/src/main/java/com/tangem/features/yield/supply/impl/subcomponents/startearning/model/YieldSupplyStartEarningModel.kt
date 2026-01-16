@@ -21,7 +21,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -245,18 +245,21 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         },
                     )
                 },
-                ifRight = {
-                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
+                ifRight = { txsData ->
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM, txsData)
                 },
             )
         }
     }
 
-    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWalletId,
-            cryptoCurrency,
-            YieldSupplyEnterStatus.Enter,
+    private suspend fun onStartEarningTransactionSuccess(
+        yieldSupplyFeeUM: YieldSupplyFeeUM.Content,
+        txsData: List<String>,
+    ) {
+        yieldSupplyRepository.saveTokenProtocolPendingStatus(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txsData),
         )
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
