@@ -3,9 +3,8 @@ package com.tangem.features.feed.components.market.details.portfolio.add.impl.ui
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.account.PortfolioFetcher
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.converter.AvailableToAddDataConverter
-import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -17,7 +16,7 @@ import kotlinx.coroutines.flow.*
 internal class DefaultAddToPortfolioManager @AssistedInject constructor(
     private val availableToAddDataConverter: AvailableToAddDataConverter,
     @Assisted override val token: TokenMarketParams,
-    @Assisted override val analyticsParams: MarketsPortfolioComponent.AnalyticsParams?,
+    @Assisted override val analyticsParams: AddToPortfolioManager.AnalyticsParams?,
     @Assisted val scope: CoroutineScope,
     dispatchers: CoroutineDispatcherProvider,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
@@ -66,7 +65,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
         override fun create(
             scope: CoroutineScope,
             token: TokenMarketParams,
-            analyticsParams: MarketsPortfolioComponent.AnalyticsParams?,
+            analyticsParams: AddToPortfolioManager.AnalyticsParams?,
         ): DefaultAddToPortfolioManager
     }
 }
