@@ -243,6 +243,12 @@ private fun StakingRewardBlock(
                 append(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
+        RewardBlockType.EthereumEarnedRewards -> {
+            resourceReference(
+                id = R.string.staking_details_autocompound_rewards_earned,
+                formatArgs = wrappedList(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden)),
+            ) to TangemTheme.colors.text.primary1
+        }
         RewardBlockType.RewardUnavailable.DefaultRewardUnavailable -> {
             resourceReference(R.string.staking_details_auto_claiming_rewards_daily_text) to
                 TangemTheme.colors.text.tertiary
