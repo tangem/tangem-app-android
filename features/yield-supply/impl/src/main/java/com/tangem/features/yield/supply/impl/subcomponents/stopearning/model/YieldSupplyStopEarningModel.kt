@@ -21,7 +21,7 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -167,18 +167,18 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                     params.callback.onTransactionProgress(false)
                 },
-                ifRight = {
-                    onStopEarningTransactionSuccess()
+                ifRight = { txData ->
+                    onStopEarningTransactionSuccess(txData)
                 },
             )
         }
     }
 
-    private suspend fun onStopEarningTransactionSuccess() {
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWallet.walletId,
-            cryptoCurrency,
-            YieldSupplyEnterStatus.Exit,
+    private suspend fun onStopEarningTransactionSuccess(txId: String) {
+        yieldSupplyRepository.saveTokenProtocolPendingStatus(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyPendingStatus = YieldSupplyPendingStatus.Exit(listOf(txId)),
         )
         analytics.send(
             YieldSupplyAnalytics.FundsWithdrawn(
