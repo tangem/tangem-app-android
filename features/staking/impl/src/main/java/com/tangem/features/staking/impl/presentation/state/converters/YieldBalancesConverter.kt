@@ -83,6 +83,16 @@ internal class YieldBalancesConverter(
         val blockchainId = cryptoCurrencyStatus.currency.network.rawId
         val isCoin = cryptoCurrencyStatus.currency.id.isCoin
 
+        val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
+        if (p2pEthPoolBalance != null) {
+            val hasEarnedRewards = !p2pEthPoolBalance.totalRewards.isZero()
+            return if (hasEarnedRewards) {
+                RewardBlockType.EthereumEarnedRewards
+            } else {
+                RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
+            }
+        }
+
         val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
         val rewards = stakeKitBalance?.balance?.items
             ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
