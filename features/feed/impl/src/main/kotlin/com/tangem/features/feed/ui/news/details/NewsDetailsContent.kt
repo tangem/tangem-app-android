@@ -142,108 +142,121 @@ private fun ArticleDetail(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(bottom = 56.dp + WindowInsets.navigationBars.getBottom(density).dp),
-    ) {
-        item("content") {
-            ArticleHeader(
-                title = article.title,
-                createdAt = article.createdAt.resolveReference(),
-                score = article.score,
-                tags = article.tags,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-            )
+    val background = LocalMainBottomSheetColor.current.value
+    val pagerHeight = 32.dp
+    val contentPadding = pagerHeight + 56.dp + with(density) {
+        WindowInsets.navigationBars.getBottom(this).div(this.density)
+    }.dp
 
-            if (article.shortContent.isNotEmpty()) {
-                QuickRecap(
-                    content = article.shortContent,
+    Box(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = contentPadding),
+        ) {
+            item("content") {
+                ArticleHeader(
+                    title = article.title,
+                    createdAt = article.createdAt.resolveReference(),
+                    score = article.score,
+                    tags = article.tags,
                     modifier = Modifier
-                        .padding(top = 32.dp)
+                        .padding(top = 16.dp)
                         .padding(horizontal = 16.dp),
                 )
-            }
 
-            Text(
-                text = article.content,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-            )
-
-            SpacerH(24.dp)
-
-            if (article.isLiked) {
-                PrimaryButtonIconStart(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    iconResId = R.drawable.ic_heart_20,
-                    text = stringResourceSafe(R.string.news_like),
-                    size = TangemButtonSize.RoundedAction,
-                    onClick = { onLikeClick() },
-                )
-            } else {
-                SecondaryButtonIconStart(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    iconResId = R.drawable.ic_heart_20,
-                    text = stringResourceSafe(R.string.news_like),
-                    size = TangemButtonSize.RoundedAction,
-                    onClick = { onLikeClick() },
-                )
-            }
-
-            RelatedTokensBlock(
-                relatedTokensUM = relatedTokensUM,
-                onItemClick = when (relatedTokensUM) {
-                    is RelatedTokensUM.Content -> relatedTokensUM.onTokenClick
-                    else -> null
-                },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            if (article.sources.isNotEmpty()) {
-                SpacerH(24.dp)
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResourceSafe(R.string.news_sources),
-                        style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.primary1,
-                    )
-                    Text(
-                        text = "${article.sources.size}",
-                        style = TangemTheme.typography.h3,
-                        color = TangemTheme.colors.text.tertiary,
+                if (article.shortContent.isNotEmpty()) {
+                    QuickRecap(
+                        content = article.shortContent,
+                        modifier = Modifier
+                            .padding(top = 32.dp)
+                            .padding(horizontal = 16.dp),
                     )
                 }
-            }
-        }
 
-        if (article.sources.isNotEmpty()) {
-            item("sources") {
-                LazyRow(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    state = rememberLazyListState(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(
-                        items = article.sources,
-                        key = SourceUM::id,
-                    ) { source ->
-                        SourceItem(
-                            source = source,
-                            modifier = Modifier.fillParentMaxHeight(),
+                Text(
+                    text = article.content,
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.primary1,
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 16.dp),
+                )
+
+                SpacerH(24.dp)
+
+                if (article.isLiked) {
+                    PrimaryButtonIconStart(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        iconResId = R.drawable.ic_heart_20,
+                        text = stringResourceSafe(R.string.news_like),
+                        size = TangemButtonSize.RoundedAction,
+                        onClick = { onLikeClick() },
+                    )
+                } else {
+                    SecondaryButtonIconStart(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        iconResId = R.drawable.ic_heart_20,
+                        text = stringResourceSafe(R.string.news_like),
+                        size = TangemButtonSize.RoundedAction,
+                        onClick = { onLikeClick() },
+                    )
+                }
+
+                RelatedTokensBlock(
+                    relatedTokensUM = relatedTokensUM,
+                    onItemClick = when (relatedTokensUM) {
+                        is RelatedTokensUM.Content -> relatedTokensUM.onTokenClick
+                        else -> null
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+
+                if (article.sources.isNotEmpty()) {
+                    SpacerH(24.dp)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = stringResourceSafe(R.string.news_sources),
+                            style = TangemTheme.typography.h3,
+                            color = TangemTheme.colors.text.primary1,
+                        )
+                        Text(
+                            text = "${article.sources.size}",
+                            style = TangemTheme.typography.h3,
+                            color = TangemTheme.colors.text.tertiary,
                         )
                     }
                 }
             }
+
+            if (article.sources.isNotEmpty()) {
+                item("sources") {
+                    LazyRow(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        state = rememberLazyListState(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(
+                            items = article.sources,
+                            key = SourceUM::id,
+                        ) { source ->
+                            SourceItem(
+                                source = source,
+                                modifier = Modifier.fillParentMaxHeight(),
+                            )
+                        }
+                    }
+                }
+            }
         }
+        BottomFade(
+            modifier = Modifier
+                .align(Alignment.BottomCenter),
+            backgroundColor = background,
+        )
     }
 }
 
