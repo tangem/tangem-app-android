@@ -23,6 +23,7 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -51,10 +52,10 @@ private const val DELAY_FOR_FOCUS_REQUEST = 200L
 
 @Composable
 internal fun TopBarWithSearch(
-    buttonsEnabled: Boolean,
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit,
     marketsSearchBar: MarketsSearchBar,
+    bottomSheetState: BottomSheetState = BottomSheetState.EXPANDED,
 ) {
     val background = LocalMainBottomSheetColor.current.value
     val focusRequester = remember { FocusRequester() }
@@ -70,8 +71,8 @@ internal fun TopBarWithSearch(
         if (showAppBar) {
             AppBarWithBackButtonAndIcon(
                 onBackClick = onBackClick,
-                backButtonEnabled = buttonsEnabled,
-                endButtonEnabled = buttonsEnabled,
+                backButtonEnabled = bottomSheetState == BottomSheetState.EXPANDED,
+                endButtonEnabled = bottomSheetState == BottomSheetState.EXPANDED,
                 text = stringResourceSafe(R.string.markets_common_title),
                 iconRes = R.drawable.ic_search_24,
                 onIconClick = onSearchClick,
@@ -91,8 +92,11 @@ internal fun TopBarWithSearch(
                 focusRequester = focusRequester,
             )
 
-            if (marketsSearchBar.shouldAlwaysShowSearchBar || marketsSearchBar.searchBarUM.isActive) {
-                LaunchedEffect(Unit) {
+            val shouldRequestFocus =
+                (marketsSearchBar.shouldAlwaysShowSearchBar || marketsSearchBar.searchBarUM.isActive) &&
+                    bottomSheetState == BottomSheetState.EXPANDED
+            if (shouldRequestFocus) {
+                LaunchedEffect(bottomSheetState) {
                     delay(DELAY_FOR_FOCUS_REQUEST)
                     focusRequester.requestFocus()
                 }
