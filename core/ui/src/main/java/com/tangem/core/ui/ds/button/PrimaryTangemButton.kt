@@ -23,6 +23,28 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * [Primary Tangem button](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=5854-4732&t=euYo1qCxPlQl3Fa6-4)
  *
+ * @param buttonUM     TangemButtonUM data model containing button properties.
+ * @param modifier     Modifier to be applied to the button.
+ */
+@Composable
+fun PrimaryTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
+    PrimaryTangemButton(
+        onClick = buttonUM.onClick,
+        modifier = modifier,
+        text = buttonUM.text,
+        descriptionText = buttonUM.descriptionText,
+        iconRes = buttonUM.iconRes,
+        iconPosition = buttonUM.iconPosition,
+        enabled = buttonUM.isEnabled,
+        size = buttonUM.size,
+        state = buttonUM.state,
+        shape = buttonUM.shape,
+    )
+}
+
+/**
+ * [Primary Tangem button](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=5854-4732&t=euYo1qCxPlQl3Fa6-4)
+ *
  * @param onClick       Lambda to be invoked when the button is clicked.
  * @param modifier      Modifier to be applied to the button.
  * @param text          TextReference for the button label.
@@ -40,6 +62,7 @@ fun PrimaryTangemButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: TextReference? = null,
+    descriptionText: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     enabled: Boolean = true,
@@ -66,6 +89,7 @@ fun PrimaryTangemButton(
             .clip(shape.toShape(size))
             .then(backgroundModifier),
         text = text,
+        descriptionText = descriptionText,
         contentColor = contentColor,
         enabled = enabled,
         size = size,
