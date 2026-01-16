@@ -1,8 +1,4 @@
 # Только shrinking — без обфускации и оптимизаций
--dontobfuscate
--dontoptimize
-
--dontusemixedcaseclassnames
 -flattenpackagehierarchy
 -adaptclassstrings
 
