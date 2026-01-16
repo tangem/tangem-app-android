@@ -20,8 +20,6 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.features.feed.impl.R
@@ -43,7 +41,6 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val shareManager: ShareManager,
-    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -186,41 +183,13 @@ internal class TokenActionsHandler @AssistedInject constructor(
         val yieldSupplyApy = cryptoCurrencyData.actions.filterIsInstance<TokenActionsState.ActionState.YieldMode>()
             .firstOrNull()?.apy ?: return
 
-        val (userWalletId, cryptoCurrencyStatus) = cryptoCurrencyData.let { currencyData ->
-            currencyData.userWallet.walletId to currencyData.status
-        }
-        val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
-        val isActiveYield = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
-
-        when {
-            tokenEnterStatus != null -> router.push(
-                AppRoute.CurrencyDetails(
-                    userWalletId = userWalletId,
-                    currency = cryptoCurrencyStatus.currency,
-                    navigationAction = NavigationAction.YieldSupply(
-                        isActive = isActiveYield,
-                    ),
-                ),
-            )
-            isActiveYield -> {
-                router.push(
-                    AppRoute.YieldSupplyActive(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        apy = yieldSupplyApy,
-                    ),
-                )
-            }
-            else -> {
-                router.push(
-                    AppRoute.YieldSupplyPromo(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        apy = yieldSupplyApy,
-                    ),
-                )
-            }
-        }
+        router.push(
+            AppRoute.YieldSupplyEntry(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                cryptoCurrency = cryptoCurrencyData.status.currency,
+                apy = yieldSupplyApy,
+            ),
+        )
     }
 
     @AssistedFactory
