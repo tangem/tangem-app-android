@@ -6,10 +6,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -28,6 +33,7 @@ import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -35,10 +41,12 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
+import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.promo.GetStoryContentUseCase
@@ -58,9 +66,11 @@ import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.converters.TokenMarketInfoToParamsConverter
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -69,6 +79,7 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
@@ -80,11 +91,14 @@ import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
@@ -100,6 +114,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.collections.filter
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
@@ -137,7 +152,11 @@ internal class SwapModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val sendFeatureToggles: SendFeatureToggles,
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
+    swapFeatureToggles: SwapFeatureToggles,
+    private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
+    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
+    private val excludedBlockchains: ExcludedBlockchains,
+    private val getUserWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -214,6 +233,7 @@ internal class SwapModel @Inject constructor(
 
     private val fromTokenBalanceJobHolder = JobHolder()
     private val toTokenBalanceJobHolder = JobHolder()
+    private val addToPortfolioJobHolder = JobHolder()
 
     private var isAmountChangedByUser: Boolean = false
     private var lastPermissionNotificationTokens: Pair<String, String>? = null
@@ -233,6 +253,24 @@ internal class SwapModel @Inject constructor(
 
     val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
+
+    val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
+    val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
+        override fun onDismiss() = bottomSheetNavigation.dismiss()
+
+        override fun onSuccess(addedToken: CryptoCurrency) {
+            modelScope.launch {
+                bottomSheetNavigation.dismiss()
+                getAccountCurrencyStatusUseCase.invoke(userWalletId, addedToken)
+                    .firstOrNull {
+                        it.status.value is CryptoCurrencyStatus.Loaded
+                    }?.let { (account, status) ->
+                        applyAddedToken(status, account)
+                    }
+            }
+        }
+    }
+    var addToPortfolioManager: AddToPortfolioManager? = null
 
     init {
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
@@ -318,7 +356,7 @@ internal class SwapModel @Inject constructor(
                         items = uiItems,
                         loadMore = { searchMarketsListManager.loadMore() },
                         onItemClick = { item ->
-                            // TODO [REDACTED_TASK_KEY]  Add currency to swap form market list
+                            addToPortfolioItem(item)
                         },
                         visibleIdsChanged = { visibleMarketItemIds.value = it },
                     )
@@ -424,21 +462,7 @@ internal class SwapModel @Inject constructor(
                     )
                 }
 
-                (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let { coin ->
-                    subscribeToCoinBalanceUpdates(
-                        userWalletId = userWalletId,
-                        coin = coin,
-                        isFromCurrency = true,
-                    )
-                }
-
-                (dataState.toCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let { coin ->
-                    subscribeToCoinBalanceUpdates(
-                        userWalletId = userWalletId,
-                        coin = coin,
-                        isFromCurrency = false,
-                    )
-                }
+                subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
                 Timber.e(error)
 
@@ -461,6 +485,47 @@ internal class SwapModel @Inject constructor(
                     initTokens(isReverseFromTo)
                 }
             }
+        }
+    }
+
+    private fun applyAddedToken(addedToken: CryptoCurrencyStatus, addedAccount: Account.CryptoPortfolio?) {
+        modelScope.launch {
+            runCatching(dispatchers.io) {
+                swapInteractor.getTokensDataState(initialCurrencyFrom)
+            }.onSuccess { state ->
+                updateTokensState(state)
+
+                applyInitialTokenChoice(
+                    state = state,
+                    selectedCurrency = addedToken,
+                    selectedAccount = addedAccount,
+                    isReverseFromTo = isOrderReversed,
+                )
+
+                subscribeToCoinBalanceUpdatesIfNeeded()
+
+                swapRouter.back()
+            }.onFailure { error ->
+                Timber.e(error)
+            }
+        }
+    }
+
+    private fun subscribeToCoinBalanceUpdatesIfNeeded() {
+        (dataState.fromCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let { coin ->
+            subscribeToCoinBalanceUpdates(
+                userWalletId = userWalletId,
+                coin = coin,
+                isFromCurrency = true,
+            )
+        }
+
+        (dataState.toCryptoCurrency?.currency as? CryptoCurrency.Coin)?.let { coin ->
+            subscribeToCoinBalanceUpdates(
+                userWalletId = userWalletId,
+                coin = coin,
+                isFromCurrency = false,
+            )
         }
     }
 
@@ -1931,6 +1996,42 @@ internal class SwapModel @Inject constructor(
 
             sendFeedbackEmailUseCase(email)
         }
+    }
+
+    private fun addToPortfolioItem(item: MarketsListItemUM) {
+        modelScope.launch {
+            val tokenInfo = getTokenMarketInfoUseCase(
+                selectedAppCurrencyFlow.value,
+                item.id,
+                item.currencySymbol,
+            ).getOrNull() ?: return@launch
+
+            val converter = TokenMarketInfoToParamsConverter()
+            val param = converter.convert(tokenInfo)
+            val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
+
+            val networks = tokenInfo.networks?.filter { network ->
+                BlockchainUtils.isSupportedNetworkId(
+                    blockchainId = network.networkId,
+                    excludedBlockchains = excludedBlockchains,
+                    hotExcludedBlockchains = hotWalletExcludedBlockchains,
+                    hasOnlyHotWallets = hasOnlyHotWallets,
+                )
+            }.orEmpty()
+
+            addToPortfolioManager = addToPortfolioManagerFactory
+                .create(
+                    scope = modelScope,
+                    token = param,
+                    analyticsParams = null,
+                ).apply {
+                    setTokenNetworks(networks)
+                }
+
+            addToPortfolioManager?.state
+                ?.firstOrNull { it is AddToPortfolioManager.State.AvailableToAdd }
+                ?.run { bottomSheetNavigation.activate(AddToPortfolioRoute) }
+        }.saveIn(addToPortfolioJobHolder)
     }
 
     private fun CryptoCurrency.getNetworkInfo(): NetworkInfo {
