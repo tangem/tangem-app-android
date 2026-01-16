@@ -174,7 +174,12 @@ private fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
     val expandIndicator = remember {
         ContextualFlowRowOverflow.expandIndicator {
             val remainingItems = tags.size - shownItemCount
-            Label(state = LabelUM(TextReference.Str("${StringsSigns.PLUS}$remainingItems")))
+            Label(
+                state = LabelUM(
+                    text = TextReference.Str("${StringsSigns.PLUS}$remainingItems"),
+                    maxLines = 1,
+                ),
+            )
         }
     }
     ContextualFlowRow(
