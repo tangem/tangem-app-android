@@ -22,7 +22,6 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -103,7 +102,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val accountDependencies: AccountDependencies,
-    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
@@ -199,7 +197,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is NavigationAction.YieldSupply -> openYieldSupply(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = currencyStatus,
-                navigationAction = navigationAction,
                 apy = apy,
             )
         }
@@ -242,32 +239,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         accountDependencies.expandedAccountsHolder.collapseAccount(account.accountId)
     }
 
-    private fun openYieldSupply(
-        userWalletId: UserWalletId,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        navigationAction: NavigationAction.YieldSupply,
-        apy: String,
-    ) {
-        modelScope.launch {
-            val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
-            when {
-                tokenEnterStatus != null -> router.openTokenDetails(
-                    userWalletId = userWalletId,
-                    currencyStatus = cryptoCurrencyStatus,
-                    navigationAction = navigationAction,
-                )
-                navigationAction.isActive -> router.openYieldSupplyActiveScreen(
-                    userWalletId = userWalletId,
-                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                    apy = apy,
-                )
-                else -> router.openYieldSupplyPromoScreen(
-                    userWalletId = userWalletId,
-                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                    apy = apy,
-                )
-            }
-        }
+    private fun openYieldSupply(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
+        router.openYieldSupplyEntryScreen(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            apy = apy,
+        )
     }
 
     private fun sendApyLabelClickAnalytics(navigationAction: NavigationAction, currencyStatus: CryptoCurrencyStatus) {
