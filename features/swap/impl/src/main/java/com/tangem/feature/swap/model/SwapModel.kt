@@ -1119,6 +1119,7 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun onTokenSelect(id: String) {
         val tokens = dataState.tokensDataState ?: return
         val (foundToken, foundAccount) = getSelectedTokenAndAccount(tokens, id)
@@ -1149,6 +1150,8 @@ internal class SwapModel @Inject constructor(
                         coin = newToken,
                         isFromCurrency = true,
                     )
+                } else {
+                    fromTokenBalanceJobHolder.cancel()
                 }
             } else {
                 fromToken = initialFromStatus
@@ -1167,6 +1170,8 @@ internal class SwapModel @Inject constructor(
                         coin = newToken,
                         isFromCurrency = false,
                     )
+                } else {
+                    toTokenBalanceJobHolder.cancel()
                 }
             }
 
@@ -1221,6 +1226,7 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun subscribeToCoinBalanceUpdates(
         userWalletId: UserWalletId,
         coin: CryptoCurrency.Coin,
@@ -1243,20 +1249,25 @@ internal class SwapModel @Inject constructor(
                         ).getOrNull() ?: currencyStatus,
                     )
 
-                    uiState = if (isFromCurrency) {
-                        dataState = dataState.copy(
-                            fromCryptoCurrency = currencyStatus,
-                            fromAccount = account,
-                        )
-                        stateBuilder.updateSendCurrencyBalance(uiState, currencyStatus)
-                    } else {
-                        dataState = dataState.copy(
-                            toCryptoCurrency = currencyStatus,
-                            toAccount = account,
-                        )
-                        stateBuilder.updateReceiveCurrencyBalance(uiState, currencyStatus)
+                    uiState = when {
+                        isFromCurrency && currencyStatus.currency.id == dataState.fromCryptoCurrency?.currency?.id -> {
+                            dataState = dataState.copy(
+                                fromCryptoCurrency = currencyStatus,
+                                fromAccount = account,
+                            )
+                            stateBuilder.updateSendCurrencyBalance(uiState, currencyStatus)
+                        }
+                        !isFromCurrency && currencyStatus.currency.id == dataState.toCryptoCurrency?.currency?.id -> {
+                            dataState = dataState.copy(
+                                toCryptoCurrency = currencyStatus,
+                                toAccount = account,
+                            )
+                            stateBuilder.updateReceiveCurrencyBalance(uiState, currencyStatus)
+                        }
+                        else -> {
+                            uiState
+                        }
                     }
-
                     startLoadingQuotesFromLastState(isSilent = true)
                 }
         } else {
@@ -1276,14 +1287,19 @@ internal class SwapModel @Inject constructor(
                         ).getOrNull() ?: status,
                     )
 
-                    uiState = if (isFromCurrency) {
-                        dataState = dataState.copy(fromCryptoCurrency = status)
-                        stateBuilder.updateSendCurrencyBalance(uiState, status)
-                    } else {
-                        dataState = dataState.copy(toCryptoCurrency = status)
-                        stateBuilder.updateReceiveCurrencyBalance(uiState, status)
+                    uiState = when {
+                        isFromCurrency && status.currency.id == dataState.fromCryptoCurrency?.currency?.id -> {
+                            dataState = dataState.copy(fromCryptoCurrency = status)
+                            stateBuilder.updateSendCurrencyBalance(uiState, status)
+                        }
+                        !isFromCurrency && status.currency.id == dataState.toCryptoCurrency?.currency?.id -> {
+                            dataState = dataState.copy(toCryptoCurrency = status)
+                            stateBuilder.updateReceiveCurrencyBalance(uiState, status)
+                        }
+                        else -> {
+                            uiState
+                        }
                     }
-
                     startLoadingQuotesFromLastState(isSilent = true)
                 }
         }.flowOn(dispatchers.main)
