@@ -14,7 +14,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.model.MarketsPortfolioModel
 import com.tangem.features.feed.components.market.details.portfolio.impl.model.MarketsPortfolioRoute
