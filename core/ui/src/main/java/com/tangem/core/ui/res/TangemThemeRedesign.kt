@@ -2,8 +2,12 @@
 
 package com.tangem.core.ui.res
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 
 /**
  * Provides additional theming for redesigned components.
@@ -21,12 +25,17 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
         colorScheme = tangemColorScheme(colors = themeColors),
     ) {
         CompositionLocalProvider(
+            LocalRedesignEnabled provides true,
             LocalTangemColors provides themeColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
             LocalTangemTypography2 provides TangemTypography2(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
-            content()
+            ProvideHaze {
+                Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
+                    content()
+                }
+            }
         }
     }
 }
