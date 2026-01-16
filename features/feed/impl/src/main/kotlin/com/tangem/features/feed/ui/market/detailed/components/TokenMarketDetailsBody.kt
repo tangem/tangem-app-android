@@ -3,7 +3,7 @@ package com.tangem.features.feed.ui.market.detailed.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,9 +11,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.news.ArticleCard
-import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.items.DescriptionItem
@@ -23,6 +23,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM.RelatedNews
+
+private const val FOURTH_ITEM_INDEX = 3
 
 @Suppress("CanBeNonNullable") // TODO will be removed after [REDACTED_JIRA]
 internal fun LazyListScope.tokenMarketDetailsBody(
@@ -215,7 +217,11 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 32.dp, top = 20.dp),
+                .padding(bottom = 32.dp, top = 20.dp)
+                .onFirstVisible(
+                    minFractionVisible = 0.5f,
+                    callback = relatedNews.onFirstVisible,
+                ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
@@ -231,14 +237,23 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 state = listState,
             ) {
-                items(
+                itemsIndexed(
                     items = relatedNews.articles,
-                    key = ArticleConfigUM::id,
-                ) { article ->
+                    key = { index, article -> article.id },
+                ) { index, article ->
+                    val articleModifier = if (index == FOURTH_ITEM_INDEX) {
+                        Modifier.onFirstVisible(
+                            minFractionVisible = 0.5f,
+                            callback = relatedNews.onScroll,
+                        )
+                    } else {
+                        Modifier
+                    }
+
                     ArticleCard(
                         articleConfigUM = article,
                         onArticleClick = { relatedNews.onArticledClicked(article.id) },
-                        modifier = Modifier
+                        modifier = articleModifier
                             .height(164.dp)
                             .width(216.dp),
                         colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
