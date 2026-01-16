@@ -75,6 +75,7 @@ internal class MarketsListModel @Inject constructor(
             shouldAlwaysShowSearchBar = Provider { params.shouldAlwaysShowSearchBar },
             preselectedSortType = Provider { params.preselectedSortType },
             onBackClick = params.onBackClicked,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
