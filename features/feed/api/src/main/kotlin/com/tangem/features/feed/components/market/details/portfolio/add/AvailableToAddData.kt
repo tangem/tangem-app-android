@@ -1,4 +1,4 @@
-package com.tangem.features.feed.components.market.details.portfolio.add.api
+package com.tangem.features.feed.components.market.details.portfolio.add
 
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.account.AccountId
@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
-internal data class AvailableToAddData(
+data class AvailableToAddData(
     val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet>,
 ) {
     val isAvailableToAdd: Boolean
@@ -18,7 +18,7 @@ internal data class AvailableToAddData(
         get() = availableToAddWallets.size == 1 && availableToAddWallets.values.first().accounts.size == 1
 }
 
-internal data class AvailableToAddWallet(
+data class AvailableToAddWallet(
     val userWallet: UserWallet,
     val accounts: List<AccountStatus>,
     val availableNetworks: Set<TokenMarketInfo.Network>,
@@ -26,7 +26,7 @@ internal data class AvailableToAddWallet(
 )
 
 @Serializable
-internal data class AvailableToAddAccount(
+data class AvailableToAddAccount(
     val account: AccountStatus,
     val availableNetworks: Set<TokenMarketInfo.Network>,
     val addedNetworks: Set<Network>,
@@ -44,14 +44,14 @@ internal data class AvailableToAddAccount(
 }
 
 @Serializable
-internal data class SelectedPortfolio(
+data class SelectedPortfolio(
     val userWallet: UserWallet,
     val account: AvailableToAddAccount,
     val isAccountMode: Boolean,
     val isAvailableMorePortfolio: Boolean,
 )
 
-internal data class SelectedNetwork(
+data class SelectedNetwork(
     val selectedNetwork: TokenMarketInfo.Network,
     val cryptoCurrency: CryptoCurrency,
     val isAvailableMoreNetwork: Boolean,
