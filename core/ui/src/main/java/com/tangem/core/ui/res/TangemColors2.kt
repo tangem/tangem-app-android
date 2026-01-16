@@ -1,4 +1,5 @@
 @file:Suppress("LongParameterList")
+
 package com.tangem.core.ui.res
 
 import androidx.compose.runtime.Stable
@@ -20,6 +21,7 @@ class TangemColors2 internal constructor(
     val fill: Fill,
     val skeleton: Skeleton,
     val markers: Markers,
+    val tabs: Tabs,
 ) {
 
     @Stable
@@ -524,6 +526,42 @@ class TangemColors2 internal constructor(
         }
     }
 
+    @Stable
+    class Tabs internal constructor(
+        textPrimary: Color,
+        textSecondary: Color,
+        textTertiary: Color,
+        backgroundPrimary: Color,
+        backgroundSecondary: Color,
+        backgroundTertiary: Color,
+        backgroundQuaternary: Color,
+    ) {
+        var textPrimary by mutableStateOf(textPrimary)
+            private set
+        var textSecondary by mutableStateOf(textSecondary)
+            private set
+        var textTertiary by mutableStateOf(textTertiary)
+            private set
+        var backgroundPrimary by mutableStateOf(backgroundPrimary)
+            private set
+        var backgroundSecondary by mutableStateOf(backgroundSecondary)
+            private set
+        var backgroundTertiary by mutableStateOf(backgroundTertiary)
+            private set
+        var backgroundQuaternary by mutableStateOf(backgroundQuaternary)
+            private set
+
+        fun update(other: Tabs) {
+            textPrimary = other.textPrimary
+            textSecondary = other.textSecondary
+            textTertiary = other.textTertiary
+            backgroundPrimary = other.backgroundPrimary
+            backgroundSecondary = other.backgroundSecondary
+            backgroundTertiary = other.backgroundTertiary
+            backgroundQuaternary = other.backgroundQuaternary
+        }
+    }
+
     fun update(other: TangemColors2) {
         text.update(other.text)
         graphic.update(other.graphic)
@@ -536,5 +574,6 @@ class TangemColors2 internal constructor(
         fill.update(other.fill)
         skeleton.update(other.skeleton)
         markers.update(other.markers)
+        tabs.update(other.tabs)
     }
 }
