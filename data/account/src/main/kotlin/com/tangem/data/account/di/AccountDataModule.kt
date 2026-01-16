@@ -108,10 +108,16 @@ internal object AccountDataModule {
     @Provides
     @Singleton
     fun provideMainAccountTokensMigration(
+        defaultMainAccountTokensMigration: DefaultMainAccountTokensMigration,
+    ): MainAccountTokensMigration = defaultMainAccountTokensMigration
+
+    @Provides
+    @Singleton
+    fun provideDefaultMainAccountTokensMigration(
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userTokensSaver: UserTokensSaver,
         accountTokenMigrationStore: AccountTokenMigrationStore,
-    ): MainAccountTokensMigration {
+    ): DefaultMainAccountTokensMigration {
         return DefaultMainAccountTokensMigration(
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             accountTokenMigrationStore = accountTokenMigrationStore,
