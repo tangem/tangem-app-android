@@ -41,4 +41,22 @@ internal sealed class NewsDetailsAnalyticsEvent(
     ), OneTimePerSessionEvent {
         override val oneTimeEventId: String = event + newsId
     }
+
+    data class NewsArticleLoadError(
+        private val newsId: Int,
+    ) : NewsDetailsAnalyticsEvent(
+        event = "News Article Load Error",
+        params = mapOf(
+            "News Id" to newsId.toString(),
+        ),
+    )
+
+    data class NewsLinkMismatch(
+        private val newsId: Int,
+    ) : NewsDetailsAnalyticsEvent(
+        event = "News Link Mismatch",
+        params = mapOf(
+            "News Id" to newsId.toString(),
+        ),
+    )
 }
