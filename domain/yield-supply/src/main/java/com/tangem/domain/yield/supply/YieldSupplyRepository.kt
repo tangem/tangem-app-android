@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import kotlinx.coroutines.flow.Flow
 
@@ -72,13 +72,25 @@ interface YieldSupplyRepository {
      *
      * @param userWalletId the wallet the action was performed with
      * @param cryptoCurrency the currency or token the action relates to
-     * @param yieldSupplyEnterStatus the last action intent: [YieldSupplyEnterStatus.Enter] or [YieldSupplyEnterStatus.Exit]
+     * @param yieldSupplyPendingStatus the last action intent: [YieldSupplyPendingStatus.Enter] or [YieldSupplyPendingStatus.Exit]
      */
-    suspend fun saveTokenProtocolStatus(
+    suspend fun saveTokenProtocolPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-        yieldSupplyEnterStatus: YieldSupplyEnterStatus?,
+        yieldSupplyPendingStatus: YieldSupplyPendingStatus?,
     )
+
+    /**
+     * Retrieve the hashes of pending (unconfirmed) transactions for the given wallet and currency.
+     *
+     * @param userWalletId the wallet to query
+     * @param cryptoCurrencyStatus the currency status containing network information
+     * @return list of transaction hashes that are still unconfirmed, or an empty list if none exist
+     */
+    suspend fun getPendingTxHashes(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): List<String>
 
     /**
      * Get the last saved user‑initiated yield protocol action for the given wallet and currency, if any.
@@ -91,23 +103,10 @@ interface YieldSupplyRepository {
      * @param cryptoCurrency the currency or token to query
      * @return the last action intent or null if nothing has been recorded
      */
-    fun getTokenProtocolStatus(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus?
-
-    /**
-     * Get the pending status of the yield protocol action for the given wallet and currency, if any.
-     *
-     * Used to determine whether the UI should display an intermediate "processing" state
-     * until the protocol status retrieved from backend reflects the change. The value is
-     * transient (in‑memory only) and is not persisted across app restarts.
-     *
-     * @param userWalletId the wallet to query
-     * @param cryptoCurrencyStatus the currency status to query
-     * @return the pending action intent or null if nothing has been recorded
-     */
-    suspend fun getTokenPendingStatus(
+    fun getTokenProtocolPendingStatus(
         userWalletId: UserWalletId,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): YieldSupplyEnterStatus?
+        cryptoCurrency: CryptoCurrency,
+    ): YieldSupplyPendingStatus?
 
     fun getShouldShowYieldPromoBanner(): Flow<Boolean>
 
