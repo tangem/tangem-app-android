@@ -32,7 +32,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.api.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioModel
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioRoutes
 import com.tangem.features.feed.impl.R
