@@ -26,6 +26,9 @@ dependencies {
     implementation(projects.common.uiMarkets)
     implementation(projects.common.uiCharts)
 
+    /** Data modules */
+    implementation(projects.data.common)
+
     /** Domain modules **/
     implementation(projects.domain.models)
     implementation(projects.domain.appCurrency)
@@ -60,6 +63,7 @@ dependencies {
     implementation(projects.features.swap.api)
     implementation(projects.features.sendV2.api)
     implementation(projects.features.sendV2.impl)
+    implementation(projects.features.feed.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
