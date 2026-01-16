@@ -3,6 +3,7 @@ package com.tangem.features.feed.model.news.list.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
 
 internal sealed class NewsListAnalyticsEvent(
     event: String,
@@ -28,8 +29,4 @@ internal sealed class NewsListAnalyticsEvent(
             "Selected Categories" to categoryId.toString(),
         ),
     )
-
-    private companion object {
-        const val IS_NOT_HTTP_ERROR = "Is not http error"
-    }
 }
