@@ -1,5 +1,9 @@
 package com.tangem.data.news.repository
 
+import arrow.core.Either
+import arrow.core.flatten
+import arrow.core.left
+import arrow.core.right
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.fold
@@ -90,7 +94,7 @@ internal class DefaultNewsRepository(
             .combine(newsLikedStore.getAll()) { articles, likedFlags ->
                 articles.map { article ->
                     article.copy(
-                        isLiked = isNewsLiked(article.id),
+                        isLiked = likedFlags[article.id] == true,
                     )
                 }
             }
@@ -99,9 +103,10 @@ internal class DefaultNewsRepository(
             }
     }
 
-    override suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?) {
-        fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
-    }
+    override suspend fun fetchDetailedArticles(
+        newsIds: Collection<Int>,
+        language: String?,
+    ): Either<Map<Int, Throwable>, Unit> = fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
 
     override suspend fun fetchTrendingNews(limit: Int, language: String?) {
         fetchAndStoreTrendingNews(limit = limit, language = language)
@@ -145,10 +150,9 @@ internal class DefaultNewsRepository(
         return newsLikedStore.getSync()[articleId] == true
     }
 
-    override suspend fun toggleNewsLiked(articleId: Int): Boolean = withContext(dispatchers.io) {
+    override suspend fun toggleNewsLiked(articleId: Int) = withContext(dispatchers.io) {
         val isNewsLikedValue = !isNewsLiked(articleId)
         newsLikedStore.updateLiked(listOf(articleId), isNewsLikedValue)
-        isNewsLikedValue
     }
 
     private fun updateViewedStatusForNewsBatch(
@@ -162,9 +166,12 @@ internal class DefaultNewsRepository(
         )
     }
 
-    private suspend fun fetchDetailedArticlesInternal(newsIds: Collection<Int>, language: String?) =
+    private suspend fun fetchDetailedArticlesInternal(
+        newsIds: Collection<Int>,
+        language: String?,
+    ): Either<Map<Int, Throwable>, Unit> = Either.catch {
         withContext(dispatchers.io) {
-            if (newsIds.isEmpty()) return@withContext
+            if (newsIds.isEmpty()) return@withContext Unit.right()
 
             val uniqueIds = newsIds.distinct()
             val idsToFetch = buildList {
@@ -174,26 +181,42 @@ internal class DefaultNewsRepository(
                 }
             }
 
-            if (idsToFetch.isEmpty()) return@withContext
+            if (idsToFetch.isEmpty()) return@withContext Unit.right()
 
             val fetchedArticles = supervisorScope {
                 idsToFetch.map { newsId ->
                     async {
-                        newsApi.getNewsDetails(newsId = newsId, language = language)
-                            .getOrThrow()
-                            .toDomainDetailedArticle(
-                                isLiked = isNewsLiked(newsId),
-                            )
+                        Either.catch {
+                            newsApi.getNewsDetails(newsId = newsId, language = language)
+                                .getOrThrow()
+                                .toDomainDetailedArticle(
+                                    isLiked = isNewsLiked(newsId),
+                                )
+                        }.mapLeft {
+                            newsId to it
+                        }
                     }
                 }.awaitAll()
             }
 
-            if (fetchedArticles.isNotEmpty()) {
-                newsDetailsStore.store(
-                    articles = fetchedArticles.associateBy(DetailedArticle::id),
-                )
-            }
+            fetchedArticles
+                .filterIsInstance<Either.Right<DetailedArticle>>()
+                .map { it.value }
+                .let { articles ->
+                    if (articles.isNotEmpty()) {
+                        newsDetailsStore.store(
+                            articles = articles.associateBy(DetailedArticle::id),
+                        )
+                    }
+                }
+
+            val errors = fetchedArticles
+                .filterIsInstance<Either.Left<Pair<Int, Throwable>>>()
+                .associate { it.value.first to it.value.second }
+
+            if (errors.isEmpty()) Unit.right() else errors.left()
         }
+    }.mapLeft { t -> mapOf(GLOBAL_ERROR_ID to t) }.flatten()
 
     private suspend fun fetchAndStoreTrendingNews(limit: Int, language: String?) {
         return withContext(dispatchers.io) {
@@ -378,5 +401,6 @@ internal class DefaultNewsRepository(
         private const val INITIAL_BATCH_KEY = 0
         private const val FIRST_PAGE = 1
         private const val TRENDING_NEWS_KEY = "trending_news"
+        private const val GLOBAL_ERROR_ID = -1
     }
 }
