@@ -52,6 +52,7 @@ internal fun TangemButtonInternal(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: TextReference? = null,
+    descriptionText: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     enabled: Boolean = true,
@@ -89,6 +90,24 @@ internal fun TangemButtonInternal(
                 text = wrappedText.resolveReference(),
                 style = textStyle,
                 color = contentColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = 12.sp,
+                    maxFontSize = textStyle.fontSize,
+                ),
+                modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+            )
+        }
+
+        AnimatedVisibility(descriptionText != null && state != TangemButtonState.Loading) {
+            val wrappedText = remember(this) { requireNotNull(descriptionText) }
+            val textStyle = TangemTheme.typography2.captionSemibold12
+            Text(
+                text = wrappedText.resolveReference(),
+                style = textStyle,
+                color = TangemTheme.colors2.text.status.disabled,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
