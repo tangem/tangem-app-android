@@ -18,6 +18,8 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.LocalSystemBarsIconsController
 import com.tangem.core.ui.components.SystemBarsIconsController
 import com.tangem.core.ui.components.TangemShimmer
+import com.tangem.core.ui.components.powersaving.PowerSavingState
+import com.tangem.core.ui.components.powersaving.rememberPowerSavingState
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
 import com.tangem.core.ui.haptic.DefaultHapticManager
@@ -28,6 +30,7 @@ import com.tangem.core.ui.windowsize.WindowSize
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.valentinilk.shimmer.Shimmer
+import dev.chrisbanes.haze.HazeState
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -54,7 +57,13 @@ fun TangemTheme(
         overrideSystemBarColors = overrideSystemBarColors,
         typography = typography,
         dimens = dimens,
-        content = content,
+        content = {
+            if (uiDependencies.designFeatureToggles.isRedesignEnabled) {
+                TangemThemeRedesign { content() }
+            } else {
+                content()
+            }
+        },
     )
 }
 
@@ -114,6 +123,7 @@ fun TangemTheme(
             LocalWindowSize provides windowSize,
             LocalBladeAnimation provides rememberBladeAnimation(),
             LocalSystemBarsIconsController provides systemBarsIconsController,
+            LocalPowerSavingState provides rememberPowerSavingState(),
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -401,6 +411,18 @@ val LocalRootBackgroundColor = staticCompositionLocalOf<MutableState<Color>> {
 
 val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
     error("No MainBottomSheetColor provided")
+}
+
+val LocalHazeState = staticCompositionLocalOf<HazeState> {
+    error("No HazeState provided")
+}
+
+val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
+val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
+    error("No PowerSavingState provided")
 }
 
 /**
