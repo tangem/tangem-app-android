@@ -88,6 +88,8 @@ internal sealed class FeedAnalyticsEvent(
         ),
     )
 
+    class TokenSearchedClicked : FeedAnalyticsEvent(event = "Token Searched Clicked")
+
     private companion object {
         const val IS_NOT_HTTP_ERROR = "Is not http error"
     }
