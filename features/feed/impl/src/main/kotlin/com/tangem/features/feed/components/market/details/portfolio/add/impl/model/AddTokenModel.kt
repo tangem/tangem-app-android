@@ -13,8 +13,8 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedNetwork
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedPortfolio
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedNetwork
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddTokenUiBuilder.Companion.toggleProgress
 import com.tangem.features.feed.impl.R
