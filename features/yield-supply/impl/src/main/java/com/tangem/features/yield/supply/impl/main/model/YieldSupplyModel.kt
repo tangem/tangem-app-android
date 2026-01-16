@@ -2,8 +2,6 @@ package com.tangem.features.yield.supply.impl.main.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import android.os.SystemClock
-import com.tangem.common.routing.AppRoute.YieldSupplyPromo
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -25,8 +23,7 @@ import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.yield.supply.YieldSupplyRepository
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -63,7 +60,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
-    private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
 ) : Model(), YieldSupplyClickIntents {
@@ -76,11 +73,11 @@ internal class YieldSupplyModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     private var appCurrency: AppCurrency = AppCurrency.Default
     var userWallet: UserWallet by Delegates.notNull()
+    private var latestCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
     private val fetchCurrencyJobHolder = JobHolder()
     private val loadStatusJobHolder = JobHolder()
 
-    private var lastStatusCheckTimestamp = 0L
     private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
 
     init {
@@ -116,6 +113,7 @@ internal class YieldSupplyModel @Inject constructor(
                     ).onEach { maybeCryptoCurrency ->
                         maybeCryptoCurrency.fold(
                             ifRight = { cryptoCurrencyStatus ->
+                                latestCryptoCurrencyStatus = cryptoCurrencyStatus
                                 if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
                                     sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                                 }
@@ -152,96 +150,55 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onStartEarningClick() {
-        val apy = when (val yieldSupplyUM = uiState.value) {
-            is YieldSupplyUM.Available -> yieldSupplyUM.apy
-            is YieldSupplyUM.Content -> yieldSupplyUM.apy
-            else -> ""
-        }
-        appRouter.push(
-            YieldSupplyPromo(
-                userWalletId = params.userWalletId,
-                cryptoCurrency = params.cryptoCurrency,
-                apy = apy,
-            ),
-        )
+        navigateToYieldSupplyEntry()
     }
 
     override fun onActiveClick() {
+        navigateToYieldSupplyEntry()
+    }
+
+    private fun navigateToYieldSupplyEntry() {
+        val cryptoCurrencyStatus = latestCryptoCurrencyStatus ?: return
         val apy = when (val yieldSupplyUM = uiState.value) {
             is YieldSupplyUM.Available -> yieldSupplyUM.apy
             is YieldSupplyUM.Content -> yieldSupplyUM.apy
             else -> ""
         }
         appRouter.push(
-            AppRoute.YieldSupplyActive(
+            AppRoute.YieldSupplyEntry(
                 userWalletId = params.userWalletId,
-                cryptoCurrency = params.cryptoCurrency,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
                 apy = apy,
             ),
         )
     }
 
-    @Suppress("MaximumLineLength")
     private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) = modelScope.launch(
         dispatchers.default,
     ) {
-        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
-            userWallet.walletId,
-            cryptoCurrency,
-        )
-        val tokenPendingStatus = yieldSupplyRepository.getTokenPendingStatus(
-            userWallet.walletId,
-            cryptoCurrencyStatus,
-        )
-
-        val isActive = yieldSupplyStatus?.isActive == true
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
         val processing = uiState.value is YieldSupplyUM.Processing
-        Timber.d(
-            "YIELD " +
-                "yieldSupplyStatus $yieldSupplyStatus " +
-                "tokenProtocolStatus $tokenProtocolStatus " +
-                "tokenPendingStatus $tokenPendingStatus " +
-                "isActive $isActive " +
-                "processing $processing " +
-                "isCryptoCurrencyStatusFromCache $isCryptoCurrencyStatusFromCache",
-        )
         if (isCryptoCurrencyStatusFromCache && processing) {
             return@launch
         }
 
-        when {
-            tokenProtocolStatus != null && tokenPendingStatus != null -> {
-                showProcessing(tokenPendingStatus)
-                lastStatusCheckTimestamp = 0L
-            }
-            tokenProtocolStatus == YieldSupplyEnterStatus.Exit && isActive ||
-                tokenProtocolStatus == YieldSupplyEnterStatus.Enter && !isActive -> {
-                if (lastStatusCheckTimestamp != 0L) {
-                    if (SystemClock.elapsedRealtime() - lastStatusCheckTimestamp > MAX_STATUS_CHECK_LIMIT) {
-                        loadStatus(cryptoCurrencyStatus)
-                        lastStatusCheckTimestamp = 0L
-                    } else {
-                        showProcessing(tokenProtocolStatus)
-                    }
-                } else {
-                    showProcessing(tokenProtocolStatus)
-                    lastStatusCheckTimestamp = SystemClock.elapsedRealtime()
-                }
-            }
-            else -> {
-                loadStatus(cryptoCurrencyStatus)
-                lastStatusCheckTimestamp = 0L
-            }
+        val pendingStatus = yieldSupplyEnterStatusUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull()
+
+        if (pendingStatus != null) {
+            showProcessing(pendingStatus)
+        } else {
+            loadStatus(cryptoCurrencyStatus)
         }
     }.saveIn(loadStatusJobHolder)
 
-    private fun showProcessing(status: YieldSupplyEnterStatus) {
+    private fun showProcessing(status: YieldSupplyPendingStatus) {
         uiState.update {
             when (status) {
-                YieldSupplyEnterStatus.Enter -> YieldSupplyUM.Processing.Enter
-                YieldSupplyEnterStatus.Exit -> YieldSupplyUM.Processing.Exit
+                is YieldSupplyPendingStatus.Enter -> YieldSupplyUM.Processing.Enter
+                is YieldSupplyPendingStatus.Exit -> YieldSupplyUM.Processing.Exit
             }
         }
         fetchCurrencyWithDelay()
@@ -249,11 +206,6 @@ internal class YieldSupplyModel @Inject constructor(
 
     private suspend fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWalletId = userWallet.walletId,
-            cryptoCurrency = cryptoCurrency,
-            yieldSupplyEnterStatus = null,
-        )
         if (yieldSupplyStatus?.isActive == true) {
             loadActiveState(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -385,6 +337,5 @@ internal class YieldSupplyModel @Inject constructor(
 
     private companion object {
         const val PROCESSING_UPDATE_DELAY = 10_000L
-        const val MAX_STATUS_CHECK_LIMIT = 10_000L
     }
 }
