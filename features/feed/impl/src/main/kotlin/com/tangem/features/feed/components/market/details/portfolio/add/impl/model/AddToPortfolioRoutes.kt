@@ -2,7 +2,7 @@ package com.tangem.features.feed.components.market.details.portfolio.add.impl.mo
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
-import com.tangem.features.feed.components.market.details.portfolio.add.api.SelectedPortfolio
+import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
 import kotlinx.serialization.Serializable
 
 @Serializable
