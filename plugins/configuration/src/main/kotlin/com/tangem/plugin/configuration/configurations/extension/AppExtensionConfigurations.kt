@@ -96,7 +96,7 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
     versionNameSuffix = buildType.versionSuffix?.let { "-$it" }
     applicationIdSuffix = buildType.appIdSuffix?.let { ".$it" }
     isMinifyEnabled = buildType.obfuscating
-    isShrinkResources = buildType.obfuscating
+    isShrinkResources = false
     proguardFiles("proguard-rules.pro", appExtension.getDefaultProguardFile("proguard-android.txt"))
 }
 
