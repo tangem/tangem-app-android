@@ -826,7 +826,6 @@ internal class StateBuilder(
         onStatusClick: () -> Unit,
         txUrl: String,
     ): SwapStateHolder {
-        val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
@@ -846,7 +845,9 @@ internal class StateBuilder(
                 shouldShowStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
-                fee = stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})"),
+                fee = dataState.selectedFee?.let { fee ->
+                    stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})")
+                },
                 fromTitle = getFromCardAccountTitle(fromAccount = dataState.fromAccount),
                 toTitle = getToCardAccountTitle(toAccount = dataState.toAccount),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
