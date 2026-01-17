@@ -19,7 +19,7 @@ import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.impl.R
 
 @Composable
-internal fun FeeBlock(feeSelectorUM: FeeSelectorUM) {
+fun FeeBlockSuccess(feeSelectorUM: FeeSelectorUM) {
     if (feeSelectorUM !is FeeSelectorUM.Content) return
     val feeExtraInfo = feeSelectorUM.feeExtraInfo
     val feeFiatRateUM = feeSelectorUM.feeFiatRateUM
