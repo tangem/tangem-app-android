@@ -63,4 +63,6 @@ interface GaslessTransactionRepository {
     fun getBaseGasForTransaction(): BigInteger
 
     fun getChainIdForNetwork(network: Network): Int
+
+    suspend fun getGaslessFeeAddresses(): Set<String>
 }

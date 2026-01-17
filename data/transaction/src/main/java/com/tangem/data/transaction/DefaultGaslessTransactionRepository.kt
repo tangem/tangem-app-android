@@ -16,6 +16,8 @@ import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 
@@ -26,6 +28,8 @@ class DefaultGaslessTransactionRepository(
 ) : GaslessTransactionRepository {
 
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
+    private val allFeeRecipientAddress = mutableSetOf<String>()
+    private val addressesMutex = Mutex()
 
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
@@ -113,6 +117,21 @@ class DefaultGaslessTransactionRepository(
     override fun getChainIdForNetwork(network: Network): Int {
         val networkBlockchain = Blockchain.fromId(network.rawId)
         return networkBlockchain.getChainId() ?: error("ChainId not found for blockchain ${networkBlockchain.name}")
+    }
+
+    override suspend fun getGaslessFeeAddresses(): Set<String> {
+        return addressesMutex.withLock {
+            allFeeRecipientAddress.ifEmpty {
+                val allFeeAddresses = getAllFeeRecipientAddresses()
+                allFeeRecipientAddress.addAll(allFeeAddresses)
+                allFeeRecipientAddress
+            }
+        }
+    }
+
+    private suspend fun getAllFeeRecipientAddresses(): Set<String> {
+        // TODO Replace with other backend call to get all fee recipient addresses when available
+        return setOf(getTokenFeeReceiverAddress())
     }
 
     private companion object {

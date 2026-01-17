@@ -1753,7 +1753,7 @@
   <string name="wallet_import_seed_description">Importez un portefeuille existant à l\'aide de votre seedphrase.</string>
   <string name="wallet_import_seed_navtitle">Importer un wallet</string>
   <string name="wallet_import_seed_title">Entrez la seedphrase</string>
-  <string name="wallet_import_success_description">Vous avez sauvegardé votre portefeuille avec succès.</string>
+  <string name="wallet_import_success_description">Vous avez importé votre portefeuille avec succès.</string>
   <string name="wallet_import_success_navtitle">Importer un wallet</string>
   <string name="wallet_import_success_title">Importation terminée</string>
   <string name="wallet_import_title">Importer un portefeuille</string>
