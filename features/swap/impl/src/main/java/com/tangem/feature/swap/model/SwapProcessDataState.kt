@@ -22,7 +22,7 @@ data class SwapProcessDataState(
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
     val approveDataModel: RequestApproveStateData? = null,
     val swapDataModel: SwapDataModel? = null,
-    val selectedFee: TxFee? = null,
+    val selectedFee: TxFee.Legacy? = null,
     val tokensDataState: TokensDataStateExpress? = null,
     val selectedProvider: SwapProvider? = null,
     val lastLoadedSwapStates: Map<SwapProvider, SwapState> = emptyMap(),
