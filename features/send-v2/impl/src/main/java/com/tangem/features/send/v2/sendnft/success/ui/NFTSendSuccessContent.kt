@@ -21,7 +21,7 @@ import com.tangem.core.ui.utils.toPx
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
-import com.tangem.features.send.v2.common.ui.FeeBlock
+import com.tangem.features.send.v2.common.ui.FeeBlockSuccess
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
@@ -109,7 +109,7 @@ private fun SuccessContent(
         }
         nftDetailsBlockComponent.Content(modifier = Modifier)
         destinationBlockComponent.Content(modifier = Modifier)
-        FeeBlock(feeSelectorUM = nftSendUM.feeSelectorUM)
+        FeeBlockSuccess(feeSelectorUM = nftSendUM.feeSelectorUM)
         SpacerH(16.dp)
     }
 }
