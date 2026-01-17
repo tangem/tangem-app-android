@@ -1752,7 +1752,7 @@
   <string name="wallet_import_seed_description">Імпортуйте існуючий гаманець за допомогою сід-фрази.</string>
   <string name="wallet_import_seed_navtitle">Імпортувати гаманець</string>
   <string name="wallet_import_seed_title">Введіть фразу відновлення</string>
-  <string name="wallet_import_success_description">Ви успішно створили резервну копію свого гаманця.</string>
+  <string name="wallet_import_success_description">Ви успішно імпортували свій гаманець.</string>
   <string name="wallet_import_success_navtitle">Імпортувати гаманець</string>
   <string name="wallet_import_success_title">Імпорт завершено</string>
   <string name="wallet_import_title">Імпортувати гаманець</string>
