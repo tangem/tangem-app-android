@@ -15,6 +15,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.SwapFeeState
 import com.tangem.feature.swap.domain.models.ui.*
@@ -164,7 +165,7 @@ internal class SwapNotificationsFactory(
 
         addExistentialWarningNotification(
             existentialDeposit = quoteModel.currencyCheck?.existentialDeposit,
-            feeAmount = fee?.feeValue.orZero(),
+            feeAmount = fee?.fee?.amount?.value.orZero(),
             sendingAmount = amountToRequest.value,
             cryptoCurrencyStatus = fromCurrencyStatus,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
@@ -187,7 +188,7 @@ internal class SwapNotificationsFactory(
         if (!isCardano) {
             addDustWarningNotification(
                 dustValue = quoteModel.currencyCheck?.dustValue,
-                feeValue = fee?.feeValue.orZero(),
+                feeValue = fee?.fee?.amount?.value.orZero(),
                 sendingAmount = amountToRequest.value,
                 cryptoCurrencyStatus = fromCurrencyStatus,
                 feeCurrencyStatus = feeCryptoCurrencyStatus,
@@ -275,7 +276,7 @@ internal class SwapNotificationsFactory(
         }
     }
 
-    private fun selectFeeByType(feeType: FeeType, txFeeState: TxFeeState): TxFee? {
+    private fun selectFeeByType(feeType: FeeType, txFeeState: TxFeeState): TxFee.Legacy? {
         return when (txFeeState) {
             TxFeeState.Empty -> null
             is TxFeeState.SingleFeeState -> txFeeState.fee
@@ -296,7 +297,9 @@ internal class SwapNotificationsFactory(
         val shouldShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeEnoughState.feeCurrency != fromToken
-        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromToken.network)
+
+        val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromToken.network) &&
+            quoteModel.swapProvider.type == ExchangeProviderType.CEX
         if (shouldShowCoverWarning && !isGaslessAvailable) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
