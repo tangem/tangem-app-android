@@ -246,5 +246,10 @@
         "info": "P2PEthPool",
         "source": "https://docs.p2p.org/",
         "name": "pooledUnstake"
+    },
+    "0xaa03b617": {
+        "info": "GaslessTransactions",
+        "source": "https://github.com/tangem-developments/tangem-gasless-service",
+        "name": "gaslessTransaction"
     }
 }
