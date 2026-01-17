@@ -58,6 +58,8 @@ dependencies {
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.wallet.api)
     implementation(projects.features.swap.api)
+    implementation(projects.features.sendV2.api)
+    implementation(projects.features.sendV2.impl)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -87,6 +89,10 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.decompose.ext.compose)
+
+    /** Tangem libs */
+    implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
