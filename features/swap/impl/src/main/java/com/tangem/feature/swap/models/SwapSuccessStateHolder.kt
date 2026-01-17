@@ -7,7 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 data class SwapSuccessStateHolder(
     val timestamp: Long,
     val txUrl: String,
-    val fee: TextReference,
+    val fee: TextReference?,
     val rate: TextReference,
     val shouldShowStatusButton: Boolean,
     val providerName: TextReference,
