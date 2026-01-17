@@ -1767,7 +1767,7 @@
   <string name="wallet_import_seed_description">Importa una billetera existente con su frase de recuperación.</string>
   <string name="wallet_import_seed_navtitle">Importar billetera</string>
   <string name="wallet_import_seed_title">Introduzca la frase de recuperación</string>
-  <string name="wallet_import_success_description">La copia de seguridad de su billetera se realizó con éxito.</string>
+  <string name="wallet_import_success_description">Su billetera se ha importado con éxito.</string>
   <string name="wallet_import_success_navtitle">Importar billetera</string>
   <string name="wallet_import_success_title">Importación completada</string>
   <string name="wallet_import_title">Importar billetera</string>
