@@ -13,7 +13,10 @@ import com.tangem.utils.converter.Converter
 internal class SdkTransactionTypeConverter(
     private val smartContractMethods: Map<String, SmartContractMethod>,
     private val yieldSupplyAddresses: Set<String>,
+    gaslessFeeAddresses: Set<String>,
 ) : Converter<TransactionHistoryItem, TxInfo.TransactionType> {
+
+    private val gaslessFeeAddressesLowercase: Set<String> = gaslessFeeAddresses.map { it.lowercase() }.toSet()
 
     override fun convert(value: TransactionHistoryItem): TxInfo.TransactionType {
         val (type, destination) = value.type to value.destinationType
@@ -125,8 +128,23 @@ internal class SdkTransactionTypeConverter(
                 )
             }
             "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
+            "gaslessTransaction" -> getTypeForGaslessMethod(destination)
             null -> TxInfo.TransactionType.UnknownOperation
             else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         } ?: TxInfo.TransactionType.Operation(name = methodName?.replaceFirstChar { it.titlecase() }.orEmpty())
+    }
+
+    private fun getTypeForGaslessMethod(destination: TransactionHistoryItem.DestinationType): TxInfo.TransactionType {
+        return when (destination) {
+            is TransactionHistoryItem.DestinationType.Multiple -> TxInfo.TransactionType.UnknownOperation
+            is TransactionHistoryItem.DestinationType.Single -> {
+                val address = destination.addressType.address.lowercase()
+                if (gaslessFeeAddressesLowercase.contains(address)) {
+                    TxInfo.TransactionType.GaslessFee
+                } else {
+                    TxInfo.TransactionType.UnknownOperation
+                }
+            }
+        }
     }
 }
