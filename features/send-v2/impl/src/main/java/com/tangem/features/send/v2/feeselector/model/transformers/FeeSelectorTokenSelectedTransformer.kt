@@ -13,6 +13,7 @@ class FeeSelectorTokenSelectedTransformer(
     override fun transform(prevState: FeeSelectorUM): FeeSelectorUM {
         return if (prevState is FeeSelectorUM.Content) {
             prevState.copy(
+                isPrimaryButtonEnabled = false,
                 selectedFeeItem = FeeItem.Loading,
                 feeItems = persistentListOf(FeeItem.Loading),
                 feeExtraInfo = prevState.feeExtraInfo.copy(
