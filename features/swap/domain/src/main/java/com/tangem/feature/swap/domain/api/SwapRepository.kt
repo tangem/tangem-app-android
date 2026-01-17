@@ -6,7 +6,12 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.ExpressDataError
-import com.tangem.feature.swap.domain.models.domain.*
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
+import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
+import com.tangem.feature.swap.domain.models.domain.PairsWithProviders
+import com.tangem.feature.swap.domain.models.domain.QuoteModel
+import com.tangem.feature.swap.domain.models.domain.RateType
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import java.math.BigDecimal
 
 interface SwapRepository {
