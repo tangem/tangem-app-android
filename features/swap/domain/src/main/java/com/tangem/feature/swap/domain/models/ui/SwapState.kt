@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
+import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
@@ -91,11 +92,11 @@ data class RequestApproveStateData(
 
 sealed class TxFeeState {
     data class MultipleFeeState(
-        val normalFee: TxFee,
-        val priorityFee: TxFee,
+        val normalFee: TxFee.Legacy,
+        val priorityFee: TxFee.Legacy,
     ) : TxFeeState() {
 
-        fun getFeeByType(feeType: FeeType): TxFee {
+        fun getFeeByType(feeType: FeeType): TxFee.Legacy {
             return when (feeType) {
                 FeeType.NORMAL -> normalFee
                 FeeType.PRIORITY -> priorityFee
@@ -104,23 +105,33 @@ sealed class TxFeeState {
     }
 
     data class SingleFeeState(
-        val fee: TxFee,
+        val fee: TxFee.Legacy,
     ) : TxFeeState()
 
     data object Empty : TxFeeState()
 }
 
-data class TxFee(
-    val feeValue: BigDecimal,
-    val feeFiatFormatted: String,
-    val feeCryptoFormatted: String,
-    val feeIncludeOtherNativeFee: BigDecimal,
-    val feeFiatFormattedWithNative: String,
-    val feeCryptoFormattedWithNative: String,
-    val cryptoSymbol: String,
-    val feeType: FeeType,
-    val fee: Fee,
-)
+sealed class TxFee {
+    abstract val fee: Fee
+
+    data class FeeComponent(
+        override val fee: Fee,
+        val transactionFeeResult: TransactionFeeResult,
+        val selectedToken: CryptoCurrencyStatus?,
+    ) : TxFee()
+
+    data class Legacy(
+        val feeValue: BigDecimal,
+        val feeFiatFormatted: String,
+        val feeCryptoFormatted: String,
+        val feeIncludeOtherNativeFee: BigDecimal,
+        val feeFiatFormattedWithNative: String,
+        val feeCryptoFormattedWithNative: String,
+        val cryptoSymbol: String,
+        val feeType: FeeType,
+        override val fee: Fee,
+    ) : TxFee()
+}
 
 enum class FeeType {
     NORMAL, PRIORITY
