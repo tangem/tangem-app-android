@@ -65,6 +65,10 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
     )
 
     init {
+        bottomSheetSlot.subscribe {
+            params.bottomSheetShown(it.child != null)
+        }
+
         model.uiState
             .onEach { onResult(it) }
             .launchIn(componentScope)

@@ -6,10 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,10 +16,8 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
-import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
-import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
 
@@ -43,38 +38,23 @@ class EstimateFeeForTokenUseCase(
 
     suspend operator fun invoke(
         userWallet: UserWallet,
-        tokenCurrencyStatus: CryptoCurrencyStatus,
+        feeTokenCurrencyStatus: CryptoCurrencyStatus,
+        sendingTokenCurrencyStatus: CryptoCurrencyStatus,
         amount: BigDecimal,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
                 block = {
-                    val token = tokenCurrencyStatus.currency
+                    val token = feeTokenCurrencyStatus.currency
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(token.network)) {
-                        raise(GetFeeError.GaslessError.NetworkIsNotSupported)
+                        raise(GaslessError.NetworkIsNotSupported)
                     }
 
-                    val amountData = amount.convertToSdkAmount(tokenCurrencyStatus)
-                    val result = if (userWallet is UserWallet.Cold &&
-                        demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
-                    ) {
-                        demoTransactionSender(userWallet, token).estimateFee(
-                            amount = amountData,
-                            destination = "",
-                        )
-                    } else {
-                        walletManagersFacade.estimateFee(
-                            amount = amountData,
-                            userWalletId = userWallet.walletId,
-                            network = token.network,
-                        )
-                    }
-
-                    val initialTxFee = when (result) {
-                        is Result.Success -> result.data
-                        is Result.Failure -> raise(result.mapToFeeError())
-                        null -> raise(GetFeeError.UnknownError)
-                    }
+                    val initialTxFee = tokenFeeCalculator.estimateInitialFee(
+                        userWallet = userWallet,
+                        amount = amount,
+                        txTokenCurrencyStatus = sendingTokenCurrencyStatus,
+                    ).bind()
 
                     val initialFeeEth = initialTxFee.normal as? Fee.Ethereum
                         ?: raiseIllegalStateError(
@@ -101,7 +81,7 @@ class EstimateFeeForTokenUseCase(
 
                     tokenFeeCalculator.calculateTokenFee(
                         walletManager = walletManager,
-                        tokenForPayFeeStatus = tokenCurrencyStatus,
+                        tokenForPayFeeStatus = feeTokenCurrencyStatus,
                         nativeCurrencyStatus = nativeCurrencyStatus,
                         initialFee = initialFeeEth,
                     ).bind()
@@ -125,16 +105,5 @@ class EstimateFeeForTokenUseCase(
         val ethereumWalletManager = walletManager as? EthereumWalletManager
             ?: raiseIllegalStateError("WalletManager type ${walletManager?.javaClass?.name} not supported")
         return ethereumWalletManager
-    }
-
-    private suspend fun demoTransactionSender(
-        userWallet: UserWallet,
-        cryptoCurrency: CryptoCurrency,
-    ): DemoTransactionSender {
-        return DemoTransactionSender(
-            walletManagersFacade
-                .getOrCreateWalletManager(userWallet.walletId, cryptoCurrency.network)
-                ?: error("WalletManager is null"),
-        )
     }
 }
