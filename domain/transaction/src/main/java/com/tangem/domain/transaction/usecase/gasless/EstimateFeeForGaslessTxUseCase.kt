@@ -44,12 +44,12 @@ class EstimateFeeForGaslessTxUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         amount: BigDecimal,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        sendingTokenCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
             catch(
                 block = {
-                    val network = cryptoCurrencyStatus.currency.network
+                    val network = sendingTokenCurrencyStatus.currency.network
                     val nativeCurrency = currenciesRepository.getNetworkCoin(
                         userWalletId = userWallet.walletId,
                         networkId = network.id,
@@ -60,7 +60,7 @@ class EstimateFeeForGaslessTxUseCase(
                         estimateFeeUseCase.invoke(
                             userWallet = userWallet,
                             amount = amount,
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            cryptoCurrencyStatus = sendingTokenCurrencyStatus,
                         ).fold(
                             ifLeft = { raise(it) },
                             ifRight = { fee ->
@@ -77,7 +77,7 @@ class EstimateFeeForGaslessTxUseCase(
                     val initialFee = tokenFeeCalculator.estimateInitialFee(
                         userWallet = userWallet,
                         amount = amount,
-                        tokenCurrencyStatus = cryptoCurrencyStatus,
+                        txTokenCurrencyStatus = sendingTokenCurrencyStatus,
                     ).bind()
 
                     selectFeePaymentStrategy(

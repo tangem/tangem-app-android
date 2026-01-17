@@ -129,7 +129,7 @@ class TokenFeeCalculatorTest {
         val result = tokenFeeCalculator.estimateInitialFee(
             userWallet = mockUserWallet,
             amount = amount,
-            tokenCurrencyStatus = tokenStatus,
+            txTokenCurrencyStatus = tokenStatus,
         )
 
         // Then
@@ -154,7 +154,7 @@ class TokenFeeCalculatorTest {
         val result = tokenFeeCalculator.estimateInitialFee(
             userWallet = mockUserWallet,
             amount = amount,
-            tokenCurrencyStatus = tokenStatus,
+            txTokenCurrencyStatus = tokenStatus,
         )
 
         // Then
@@ -173,7 +173,7 @@ class TokenFeeCalculatorTest {
         val result = tokenFeeCalculator.estimateInitialFee(
             userWallet = mockUserWallet,
             amount = amount,
-            tokenCurrencyStatus = tokenStatus,
+            txTokenCurrencyStatus = tokenStatus,
         )
 
         // Then

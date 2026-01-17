@@ -14,6 +14,10 @@ class GetExplorerTransactionUrlUseCase(
         return either {
             catch(
                 block = {
+                    if (txHash.isEmpty()) {
+                        raise(TxStatusError.EmptyUrlError)
+                    }
+
                     repository.getTxExploreUrl(txHash, networkId).ifEmpty {
                         raise(TxStatusError.EmptyUrlError)
                     }

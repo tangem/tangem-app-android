@@ -61,11 +61,11 @@ internal class TokenFeeCalculator(
     suspend fun estimateInitialFee(
         userWallet: UserWallet,
         amount: BigDecimal,
-        tokenCurrencyStatus: CryptoCurrencyStatus,
+        txTokenCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
         return either {
-            val network = tokenCurrencyStatus.currency.network
-            val amountData = amount.convertToSdkAmount(tokenCurrencyStatus)
+            val network = txTokenCurrencyStatus.currency.network
+            val amountData = amount.convertToSdkAmount(txTokenCurrencyStatus)
             val result = if (userWallet is UserWallet.Cold &&
                 demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
             ) {

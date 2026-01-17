@@ -37,6 +37,7 @@ sealed class FeeSelectorParams {
         override val feeDisplaySource: FeeDisplaySource,
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        val bottomSheetShown: (Boolean) -> Unit = {},
     ) : FeeSelectorParams()
 
     data class FeeSelectorDetailsParams(

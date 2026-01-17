@@ -49,7 +49,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
 @Composable
-internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modifier) {
+internal fun SwapScreenContent(
+    state: SwapStateHolder,
+    modifier: Modifier = Modifier,
+    feeBlock: @Composable ((Modifier) -> Unit)? = null,
+) {
     val keyboard by keyboardAsState()
 
     Box(
@@ -74,7 +78,11 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
             ProviderItemBlock(state = state.providerState)
 
-            FeeItemBlock(state = state.fee)
+            if (feeBlock != null) {
+                feeBlock(Modifier.fillMaxWidth())
+            } else {
+                FeeItemBlock(state = state.fee)
+            }
 
             if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 

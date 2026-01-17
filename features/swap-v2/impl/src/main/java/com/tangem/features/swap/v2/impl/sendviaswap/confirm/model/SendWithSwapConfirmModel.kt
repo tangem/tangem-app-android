@@ -263,13 +263,14 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     estimateFeeForTokenUseCase(
                         amount = amountValue,
                         userWallet = params.userWallet,
-                        tokenCurrencyStatus = maybeToken,
+                        feeTokenCurrencyStatus = maybeToken,
+                        sendingTokenCurrencyStatus = primaryCurrencyStatus,
                     )
                 } else {
                     estimateFeeForGaslessTxUseCase(
                         amount = amountValue,
                         userWallet = params.userWallet,
-                        cryptoCurrencyStatus = primaryCurrencyStatus,
+                        sendingTokenCurrencyStatus = primaryCurrencyStatus,
                     )
                 }
             }
