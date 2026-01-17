@@ -317,6 +317,7 @@
   <string name="common_no">いいえ</string>
   <string name="common_no_address">アドレスがありません</string>
   <string name="common_not_added">未追加</string>
+  <string name="common_not_available">利用できません</string>
   <string name="common_not_now">今はしない</string>
   <string name="common_now">今</string>
   <string name="common_ok">わかりました</string>
@@ -531,6 +532,10 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">取引IDをコピーしました</string>
   <string name="exсhange_token_description">ポートフォリオ内のアセットをこのトークンと交換する</string>
+  <string name="fee_selector_choose_speed_description">速度を上げるほど承認は速くなりますが、\nネットワーク手数料も高くなります。%s</string>
+  <string name="fee_selector_choose_speed_title">速度を選択</string>
+  <string name="fee_selector_choose_token_description">\nネットワーク手数料の支払いに使用するトークンを選択します。%s</string>
+  <string name="fee_selector_choose_token_title">トークンを選択</string>
   <string name="feed_market_and_news">マーケット＆ニュース</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">いま話題</string>
@@ -588,7 +593,7 @@
   <string name="hw_backup_hardware_create_title">新しいウォレットを作成</string>
   <string name="hw_backup_hardware_description">Tangemの高性能ハードウェアウォレットで、セキュリティをさらに強化しましょう。</string>
   <string name="hw_backup_hardware_title">ハードウェアウォレット</string>
-  <string name="hw_backup_hardware_upgrade_description">現在のウォレットをTangemに移します。</string>
+  <string name="hw_backup_hardware_upgrade_description">現在のモバイルウォレットをTangemのコールドウォレットに変換します。</string>
   <string name="hw_backup_hardware_upgrade_title">現在のウォレットをアップグレードする</string>
   <string name="hw_backup_need_action">バックアップへ移動</string>
   <string name="hw_backup_need_description">アクセスコードを作成する前にウォレットをバックアップしてください。</string>
@@ -613,7 +618,7 @@
   <string name="hw_remove_wallet_confirmation_title">本当にこれを実行しますか？</string>
   <string name="hw_remove_wallet_nav_title">ウォレット削除</string>
   <string name="hw_remove_wallet_notification_action_backup_go">バックアップへ移動</string>
-  <string name="hw_remove_wallet_notification_action_backup_view">バックアップを表示</string>
+  <string name="hw_remove_wallet_notification_action_backup_view">リカバリーフレーズを表示</string>
   <string name="hw_remove_wallet_notification_action_forget">ウォレット削除</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">とにかく削除する</string>
   <string name="hw_remove_wallet_notification_description_has_backup">このウォレットにはバックアップがあります。ウォレットを削除する前に、復元できることを確認してください。</string>
@@ -804,7 +809,7 @@
   <string name="news_quick_recap">クイックまとめ</string>
   <string name="news_related_news">関連ニュース</string>
   <string name="news_related_tokens">関連トークン</string>
-  <string name="news_sources">情報源</string>
+  <string name="news_sources">関連ニュース</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="nft_about_title">NFTについて</string>
@@ -1239,6 +1244,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
+  <string name="staking_details_autocompound_rewards_earned">報酬はステーキング残高に自動的に複利で加算されます。獲得した資金：%s</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
   <string name="staking_details_banner_text">ステーキングの仕組み</string>
@@ -1491,10 +1497,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">KYC手続きを中止しますか？いつでも再開できます。</string>
   <string name="tangempay_kyc_failed_description">プロフィールを確認できませんでした。ご不明な点があればサポートまでお問い合わせください。</string>
   <string name="tangempay_kyc_failed_title">申し訳ございませんが、本人確認を行うことができませんでした</string>
+  <string name="tangempay_kyc_has_failed">KYCの認証に失敗しました</string>
   <string name="tangempay_kyc_in_progress">KYC進行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">以下のボタンから、現在のKYCステータスを確認するか、KYCをキャンセルできます。</string>
+  <string name="tangempay_kyc_rejected">KYCが承認されませんでした</string>
+  <string name="tangempay_kyc_rejected_button_text">KYCブロックを非表示</string>
+  <string name="tangempay_kyc_rejected_description">申し訳ありません、確認できませんでした</string>
+  <string name="tangempay_kyc_rejected_description_span">あなたのプロフィール。</string>
   <string name="tangempay_onboarding_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_onboarding_banner_title">日常の支払いにUSDCを利用</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
@@ -1698,7 +1709,7 @@
   <string name="wallet_import_seed_description">リカバリーフレーズを使って既存のウォレットをインポートします。</string>
   <string name="wallet_import_seed_navtitle">ウォレットをインポート</string>
   <string name="wallet_import_seed_title">リカバリーフレーズを入力</string>
-  <string name="wallet_import_success_description">ウォレットのバックアップが正常に完了しました。</string>
+  <string name="wallet_import_success_description">ウォレットのインポートに成功しました。</string>
   <string name="wallet_import_success_navtitle">ウォレットをインポート</string>
   <string name="wallet_import_success_title">インポート完了</string>
   <string name="wallet_import_title">ウォレットをインポート</string>
@@ -1713,7 +1724,7 @@
   <string name="wallet_settings_access_code_description">このアクセスコードはウォレットを保護し、ログインや取引の署名に使用されます。</string>
   <string name="wallet_settings_access_code_title">アクセスコードの設定・変更</string>
   <string name="wallet_settings_change_access_code_title">アクセスコードを変更する</string>
-  <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
+  <string name="wallet_settings_push_notifications_description">ウォレットへの入金取引をプッシュ通知で受け取る。</string>
   <string name="wallet_settings_push_notifications_huawei_warning">現在、Huaweiデバイスではプッシュ通知が機能しない可能性があります。現在、解決策の検討に取り組んでおり、今後のアップデートで修正をリリースする予定です。ご理解のほどよろしくお願いいたします。</string>
   <string name="wallet_settings_push_notifications_title">取引通知</string>
   <string name="wallet_settings_set_access_code_title">アクセスコードを設定する</string>
