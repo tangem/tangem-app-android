@@ -323,6 +323,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
   <string name="common_not_added">Not Added</string>
+  <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
@@ -559,6 +560,7 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="gasless_transaction_fee">Gasless transaction fee</string>
   <string name="generic_error">An error occurred</string>
   <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Requires memo</string>
@@ -821,7 +823,7 @@
   <string name="news_quick_recap">Quick recap</string>
   <string name="news_related_news">Related News</string>
   <string name="news_related_tokens">Related tokens</string>
-  <string name="news_sources">Sources</string>
+  <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
@@ -989,6 +991,7 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="only_one_mobile_wallet_explanation">You can have either a mobile wallet or a hardware wallet at one time. Upgrade your wallet or delete it from the app to start using a Tangem cold wallet.</string>
   <string name="onramp_all_offers_button_title">All offers</string>
   <string name="onramp_avaiable_with_payment_methods">Available with %s</string>
   <string name="onramp_choose_provider_title_hint">Providers facilitate transactions</string>
@@ -1774,7 +1777,7 @@
   <string name="wallet_import_seed_description">Import an existing wallet with your recovery phrase.</string>
   <string name="wallet_import_seed_navtitle">Import wallet</string>
   <string name="wallet_import_seed_title">Enter recovery phrase</string>
-  <string name="wallet_import_success_description">You successfully backed up your wallet.</string>
+  <string name="wallet_import_success_description">You successfully import up your wallet.</string>
   <string name="wallet_import_success_navtitle">Import wallet</string>
   <string name="wallet_import_success_title">Import completed</string>
   <string name="wallet_import_title">Import wallet</string>
