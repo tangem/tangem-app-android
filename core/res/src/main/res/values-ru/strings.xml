@@ -39,10 +39,12 @@
   <string name="account_edit_failure_dialog_title">Невозможно отредактировать аккаунт</string>
   <string name="account_edit_success_message">Аккаунт сохранен</string>
   <string name="account_for_rewards">Аккаунт для наград</string>
+  <string name="account_form_account_index">Аккаунт #%s — используется для генерации адреса.</string>
   <string name="account_form_create_button">Добавить аккаунт</string>
   <string name="account_form_edit_button">Сохранить</string>
   <string name="account_form_name">Название аккаунта</string>
-  <string name="account_form_name_already_exist_error_description">Имя аккаунта уже существует</string>
+  <string name="account_form_name_already_exist_error_description">Аккаунт с таким названием уже существует. Пожалуйста, выберите другое название.</string>
+  <string name="account_form_name_already_exist_error_title">Название аккаунта уже используется</string>
   <string name="account_form_placeholder_edit_account">Аккаунт</string>
   <string name="account_form_placeholder_new_account">Новый аккаунт</string>
   <string name="account_form_title_create">Добавить аккаунт</string>
@@ -254,6 +256,7 @@
   <string name="common_confirm">Подтвердить</string>
   <string name="common_connecting">Подключение</string>
   <string name="common_contact_support">Обратиться в поддержку</string>
+  <string name="common_contact_tangem_support">Связаться с поддержкой</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_convert">Конвертировать</string>
   <string name="common_copy">Копировать</string>
@@ -379,6 +382,7 @@
   <string name="common_supported_networks">Поддерживаемые сети</string>
   <string name="common_swap">Обменять</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Кошелек</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_to">На</string>
@@ -546,6 +550,9 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
   <string name="exсhange_token_description">Обменяйте любой актив в вашем портфеле на этот токен</string>
+  <string name="fee_selector_choose_speed_description">Более высокая скорость означает более быстрое подтверждение, но и более высокую сетевую комиссию. %s</string>
+  <string name="fee_selector_choose_speed_title">Выбрать скорость</string>
+  <string name="fee_selector_choose_token_description">Выберите какой токен будет использоваться для оплаты комиссии сети. %s</string>
   <string name="fee_selector_choose_token_title">Выбрать токен</string>
   <string name="feed_market_and_news">Рынок и Новости</string>
   <string name="feed_trending_now">В тренде</string>
@@ -834,7 +841,7 @@
   <string name="news_quick_recap">Резюме</string>
   <string name="news_related_news">Связанные новости</string>
   <string name="news_related_tokens">Связанные токены</string>
-  <string name="news_sources">Источники</string>
+  <string name="news_sources">Связанные новости</string>
   <string name="news_stay_in_the_loop">Будьте в курсе</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="nft_about_title">О NFT</string>
@@ -1121,6 +1128,7 @@
   <string name="reset_card_to_factory_button_title">Сбросить карту</string>
   <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
   <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу использовать эту карту для восстановления кода доступа на других картах текущего кошелька</string>
+  <string name="reset_card_to_factory_condition_3">Я понимаю, что полностью потеряю доступ к своей карте Tangem Pay и всем средствам на ней без возможности восстановления.</string>
   <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="reset_cards_dialog_complete_description">Все Tangem девайсы были сброшены.</string>
@@ -1467,6 +1475,7 @@
   <string name="tangem_pay_freeze_card_success">Карта заморожена</string>
   <string name="tangem_pay_get_help">Обратиться в поддержку</string>
   <string name="tangem_pay_other">Другое</string>
+  <string name="tangem_pay_rooted_device_subtitle">Невозможно использовать на устройствах с root-доступом.</string>
   <string name="tangem_pay_status_completed">Успешно завершено</string>
   <string name="tangem_pay_status_declined">Отклонено</string>
   <string name="tangem_pay_status_pending">В процессе</string>
@@ -1544,6 +1553,7 @@
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Вы можете посмотреть текущий статус KYC или отменить его</string>
+  <string name="tangempay_kyc_rejected">KYC отклонено</string>
   <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
@@ -1732,7 +1742,7 @@
   <string name="wallet_import_seed_description">Импортируйте существующий кошелек через вашу фразу восстановления.</string>
   <string name="wallet_import_seed_navtitle">Имрортировать кошелек</string>
   <string name="wallet_import_seed_title">Ввести фразу восстановления</string>
-  <string name="wallet_import_success_description">Вы успешно сделали бэкап вашего кошелька.</string>
+  <string name="wallet_import_success_description">Вы успешно импортировали свой кошелек.</string>
   <string name="wallet_import_success_navtitle">Импортировать кошелек</string>
   <string name="wallet_import_success_title">Импорт завершен</string>
   <string name="wallet_import_title">Импортировать кошелек</string>
