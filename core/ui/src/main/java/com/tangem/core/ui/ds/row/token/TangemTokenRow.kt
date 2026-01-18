@@ -101,8 +101,7 @@ fun TangemTokenRow(
                     .testTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
             )
         },
-        modifier = modifier
-            .tokenClickable(tokenRowUM = tokenRowUM),
+        modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
     )
 }
 
