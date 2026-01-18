@@ -187,7 +187,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
                     numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
-                    onCopy = {},
+                    onCopy = { _, _ -> },
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
                     cardFrozenState = TangemPayCardFrozenState.Unfrozen,
