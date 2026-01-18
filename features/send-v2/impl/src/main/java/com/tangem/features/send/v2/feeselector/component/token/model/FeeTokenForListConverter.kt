@@ -8,29 +8,36 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.v2.feeselector.component.token.entity.FeeTokenItemState
 import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isZero
 
 internal class FeeTokenForListConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val onTokenClick: () -> Unit,
-) : Converter<CryptoCurrencyStatus, TokenItemState> {
+) : Converter<CryptoCurrencyStatus, FeeTokenItemState> {
 
-    override fun convert(value: CryptoCurrencyStatus): TokenItemState {
+    override fun convert(value: CryptoCurrencyStatus): FeeTokenItemState {
         if (value.value !is CryptoCurrencyStatus.Loaded) {
-            return TokenItemState.Loading(id = value.currency.id.value)
+            return FeeTokenItemState(TokenItemState.Loading(id = value.currency.id.value))
         }
 
         val appCurrency = appCurrencyProvider()
+        val isBalanceZero = value.value.amount?.isZero() == true
         val tokenItemConverter = TokenItemStateConverter(
             appCurrency = appCurrencyProvider(),
-            onItemClick = { _, _ -> onTokenClick() },
+            onItemClick = if (isBalanceZero.not()) {
+                { _, _ -> onTokenClick() }
+            } else {
+                null
+            },
         )
 
         val state = tokenItemConverter.convert(value)
 
-        return when (state) {
+        val updatedState = when (state) {
             is TokenItemState.Content -> {
                 val balance = value.value.fiatAmount.format {
                     fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
@@ -46,10 +53,14 @@ internal class FeeTokenForListConverter(
                         isAvailable = false,
                     ),
                     subtitle2State = null,
-
                 )
             }
             else -> state
         }
+
+        return FeeTokenItemState(
+            state = updatedState,
+            isAvailable = isBalanceZero.not(),
+        )
     }
 }
