@@ -27,7 +27,10 @@ sealed class FeeSelectorUM {
         override val isPrimaryButtonEnabled = false
     }
 
-    data class Error(val error: GetFeeError) : FeeSelectorUM() {
+    data class Error(
+        val error: GetFeeError,
+        val isHidden: Boolean = false,
+    ) : FeeSelectorUM() {
         override val isPrimaryButtonEnabled = false
     }
 
