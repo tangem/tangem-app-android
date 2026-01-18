@@ -9,8 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -37,10 +39,12 @@ import com.tangem.domain.models.network.Network
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.feeselector.component.token.FeeTokenSelectorIntents
 import com.tangem.features.send.v2.feeselector.component.token.StubFeeTokenSelectorIntents
+import com.tangem.features.send.v2.feeselector.component.token.entity.FeeTokenItemState
 import com.tangem.features.send.v2.feeselector.component.token.entity.FeeTokenSelectorUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 @Composable
@@ -55,6 +59,7 @@ internal fun FeeTokenSelectorContent(
             start = 16.dp,
             end = 16.dp,
         ),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Title(onLearnMoreClick = intents::onLearnMoreClick)
         SpacerH8()
@@ -101,22 +106,54 @@ private fun Title(modifier: Modifier = Modifier, onLearnMoreClick: () -> Unit) {
     )
 }
 
+@Suppress("MagicNumber")
 @Composable
 internal fun TokenListContent(state: FeeTokenSelectorUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        state.tokens.fastForEach { item ->
+        val (availableTokens, notAvailableTokens) = remember(state.tokens) {
+            state.tokens.partition { it.isAvailable }.let { pair ->
+                Pair(
+                    first = pair.first.map { it.state }.toImmutableList(),
+                    second = pair.second.map { it.state }.toImmutableList(),
+                )
+            }
+        }
+
+        availableTokens.fastForEach { item ->
             key(item.id) {
                 TokenItem(
                     modifier = Modifier
-                        .selectedBorder(isSelected = state.selectedToken.id == item.id)
+                        .selectedBorder(isSelected = state.selectedToken.state.id == item.id)
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
                         .background(color = TangemTheme.colors.background.action),
                     state = item,
                     isBalanceHidden = false,
                 )
+            }
+        }
+
+        if (notAvailableTokens.isNotEmpty()) {
+            Text(
+                modifier = Modifier.padding(start = 12.dp, top = 8.dp),
+                text = stringResourceSafe(R.string.common_not_available),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+
+            notAvailableTokens.fastForEach { item ->
+                key(item.id) {
+                    TokenItem(
+                        modifier = Modifier
+                            .graphicsLayer { alpha = 0.5f }
+                            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                            .background(color = TangemTheme.colors.background.action),
+                        state = item,
+                        isBalanceHidden = false,
+                    )
+                }
             }
         }
     }
@@ -209,10 +246,17 @@ private fun Preview() {
         onItemLongClick = {},
     )
 
+    val feeTokenItemState = FeeTokenItemState(tokenItemState)
+
     val state = FeeTokenSelectorUM(
         parent = parentUM,
-        selectedToken = tokenItemState,
-        tokens = persistentListOf(tokenItemState, tokenItemState.copy(id = "2")),
+        selectedToken = feeTokenItemState,
+        tokens = persistentListOf(
+            feeTokenItemState,
+            feeTokenItemState.copy(state = tokenItemState.copy(id = "2")),
+            feeTokenItemState.copy(state = tokenItemState.copy(id = "3"), isAvailable = false),
+            feeTokenItemState.copy(state = tokenItemState.copy(id = "4"), isAvailable = false),
+        ),
     )
 
     TangemThemePreview {
