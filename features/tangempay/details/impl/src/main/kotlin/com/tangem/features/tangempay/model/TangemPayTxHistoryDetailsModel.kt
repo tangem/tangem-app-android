@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryDetailsConverter
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayTxHistoryDetailsModel @Inject constructor(
@@ -25,6 +28,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
     private val balanceHidingSettings: GetBalanceHidingSettingsUseCase,
+    private val analytics: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -61,6 +65,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
     }
 
     private fun dispute() {
+        analytics.send(TangemPayAnalyticsEvents.SupportOnTransactionPopupClicked())
         modelScope.launch {
             val walletMetaInfo = getWalletMetaInfoUseCase.invoke(params.userWalletId).getOrNull() ?: return@launch
 
