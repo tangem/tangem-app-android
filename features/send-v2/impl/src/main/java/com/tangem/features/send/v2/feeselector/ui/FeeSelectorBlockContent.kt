@@ -61,6 +61,10 @@ internal fun FeeSelectorBlockContent(
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (state is FeeSelectorUM.Error && state.isHidden) {
+        return
+    }
+
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
