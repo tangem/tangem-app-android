@@ -75,6 +75,7 @@ internal fun FeeSpeedSelectorContent(
             start = 16.dp,
             end = 16.dp,
         ),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Title(onLearnMoreClick = intents::onLearnMoreClick)
         SpacerH8()

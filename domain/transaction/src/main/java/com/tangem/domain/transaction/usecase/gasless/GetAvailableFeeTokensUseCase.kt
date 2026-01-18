@@ -14,7 +14,6 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.raiseIllegalStateError
-import java.math.BigDecimal
 
 class GetAvailableFeeTokensUseCase(
     private val gaslessTransactionRepository: GaslessTransactionRepository,
@@ -88,9 +87,7 @@ class GetAvailableFeeTokensUseCase(
             .filter { it.currency.network.id == network.id }
             .filter { currencyStatus ->
                 val token = currencyStatus.currency
-                token is CryptoCurrency.Token &&
-                    currencyStatus.value.amount?.let { amount -> amount > BigDecimal.ZERO } == true &&
-                    supportedGaslessTokens.contains(token.contractAddress.lowercase())
+                token is CryptoCurrency.Token && supportedGaslessTokens.contains(token.contractAddress.lowercase())
             }
             .toList()
     }
