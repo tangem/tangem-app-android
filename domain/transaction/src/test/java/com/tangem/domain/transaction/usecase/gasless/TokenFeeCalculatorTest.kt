@@ -298,7 +298,7 @@ class TokenFeeCalculatorTest {
         // Then
         assertTrue(result.isLeft())
         result.onLeft { error ->
-            assertTrue(error is GetFeeError.DataError)
+            assertTrue(error is GetFeeError.GaslessError.DataError)
         }
     }
 
