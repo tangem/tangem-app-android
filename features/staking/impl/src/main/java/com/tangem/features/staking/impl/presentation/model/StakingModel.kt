@@ -852,12 +852,13 @@ internal class StakingModel @Inject constructor(
 
             val amount = amountState?.amountTextField?.cryptoAmount?.value
             val fee = feeState?.fee?.amount?.value
-            val currencyWarning = if (feeCryptoCurrencyStatus != null && fee != null) {
+            val feeStatus = feeCryptoCurrencyStatus
+            val currencyWarning = if (feeStatus != null && fee != null) {
                 getBalanceNotEnoughForFeeWarningUseCase(
                     fee = fee,
                     userWalletId = userWalletId,
                     tokenStatus = cryptoCurrencyStatus,
-                    coinStatus = feeCryptoCurrencyStatus ?: cryptoCurrencyStatus,
+                    feeStatus = feeStatus,
                 ).getOrNull()
             } else {
                 null
