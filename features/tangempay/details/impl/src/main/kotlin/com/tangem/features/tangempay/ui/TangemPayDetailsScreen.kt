@@ -254,7 +254,12 @@ private fun TangemPayDetailsTopAppBar(config: TangemPayDetailsTopBarConfig, modi
         title = {},
         actions = {
             AnimatedVisibility(visible = config.items != null && config.items.isNotEmpty()) {
-                IconButton(onClick = { showDropdownMenu = true }) {
+                IconButton(
+                    onClick = {
+                        config.onOpenMenu()
+                        showDropdownMenu = true
+                    },
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_more_vertical_24),
                         tint = TangemTheme.colors.icon.primary1,
@@ -305,7 +310,7 @@ private fun TangemPayDetailsScreenPreview(
                     numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
-                    onCopy = {},
+                    onCopy = { _, _ -> },
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
                     cardFrozenState = TangemPayCardFrozenState.Unfrozen,
@@ -319,7 +324,7 @@ private fun TangemPayDetailsScreenPreview(
 private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<TangemPayDetailsUM>(
     collection = listOf(
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
+            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = null),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Content(
                 actionButtons = persistentListOf(
@@ -348,7 +353,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
         ),
         TangemPayDetailsUM(
-            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
+            topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, onOpenMenu = {}, items = null),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(actionButtons = persistentListOf()),
             addToWalletBlockState = AddToWalletBlockState({}, {}),
@@ -384,7 +389,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
                     numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
-                    onCopy = {},
+                    onCopy = { _, _ -> },
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
                     cardFrozenState = TangemPayCardFrozenState.Unfrozen,

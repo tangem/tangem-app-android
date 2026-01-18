@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.toPersistentList
 @Suppress("LongParameterList")
 internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
+    private val onOpenMenu: () -> Unit,
     private val intents: TangemPayDetailIntents,
     private val cardFrozenState: TangemPayCardFrozenState,
     private val converter: TangemPayCardFrozenStateConverter,
@@ -47,6 +48,7 @@ internal class TangemPayDetailsStateFactory(
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
+                onOpenMenu = onOpenMenu,
                 items = listOfNotNull(
                     TangemPayDetailsTopBarMenuItem(
                         type = TangemPayDetailsTopBarMenuItemType.ChangePin,
