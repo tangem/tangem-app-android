@@ -11,7 +11,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.formatHex
-import com.tangem.blockchain.extensions.removeLeadingZero
+import com.tangem.blockchain.extensions.normalizeByteArray
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toDecompressedPublicKey
@@ -172,8 +172,8 @@ class CreateAndSendGaslessTransactionUseCase(
             address = eip7702Data.executorAddress,
             nonce = eip7702Data.nonce,
             yParity = extendedEip7702Data.recId,
-            r = extendedEip7702Data.r.toFormattedHex(),
-            s = extendedEip7702Data.s.toFormattedHex(),
+            r = extendedEip7702Data.r.toFormattedHex(bytes = 32),
+            s = extendedEip7702Data.s.toFormattedHex(bytes = 32),
         )
 
         return SignedGaslessData(
@@ -361,8 +361,8 @@ class CreateAndSendGaslessTransactionUseCase(
     }
 
     private companion object {
-        fun BigInteger.toFormattedHex(): String {
-            return toByteArray().removeLeadingZero().toHexString().formatHex()
+        fun BigInteger.toFormattedHex(bytes: Int): String {
+            return toByteArray().normalizeByteArray(bytes).toHexString().formatHex()
         }
     }
 }
