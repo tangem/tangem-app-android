@@ -552,6 +552,7 @@
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
+  <string name="gasless_transaction_fee">ガス代不要の取引手数料</string>
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
@@ -973,6 +974,7 @@
   <string name="onboarding_wallet_info_title_fourth">アクセスコードの復元</string>
   <string name="onboarding_wallet_info_title_second">同一のカード</string>
   <string name="onboarding_wallet_info_title_third">アクセスコード</string>
+  <string name="only_one_mobile_wallet_explanation">同時に利用できるのは、モバイルウォレットまたはハードウェアウォレットのいずれか一方のみです。Tangemのコールドウォレットを使用するには、ウォレットをアップグレードするか、アプリから削除してください。</string>
   <string name="onramp_all_offers_button_title">すべてのオファー</string>
   <string name="onramp_avaiable_with_payment_methods">%sで利用可能</string>
   <string name="onramp_choose_provider_title_hint">プロバイダーが取引を促進します</string>
