@@ -560,6 +560,7 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
   <string name="gasless_transaction_fee">Gasless transaction fee</string>
   <string name="generic_error">An error occurred</string>
   <string name="generic_error_code">An error occurred. Code: %s.</string>
