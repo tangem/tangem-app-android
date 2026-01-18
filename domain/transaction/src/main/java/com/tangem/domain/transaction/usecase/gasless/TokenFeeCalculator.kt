@@ -20,11 +20,11 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.GetFeeError.GaslessError
-import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.raiseIllegalStateError
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -83,7 +83,7 @@ internal class TokenFeeCalculator(
 
             when (result) {
                 is Result.Success -> result.data
-                is Result.Failure -> raise(result.mapToFeeError())
+                is Result.Failure -> raise(GaslessError.DataError(result.error))
                 null -> raise(GetFeeError.UnknownError)
             }
         }
@@ -96,6 +96,11 @@ internal class TokenFeeCalculator(
         initialFee: Fee.Ethereum,
     ): Either<GetFeeError, TransactionFeeExtended> {
         return either {
+            // fast finish to skip calculations if no funds in token
+            if (tokenForPayFeeStatus.value.amount?.isZero() == true) {
+                raise(GaslessError.NotEnoughFunds)
+            }
+
             val tokenForPayFee = tokenForPayFeeStatus.currency as? CryptoCurrency.Token
                 ?: raiseIllegalStateError("only tokens are supported")
 
@@ -114,7 +119,7 @@ internal class TokenFeeCalculator(
             )
 
             val feeTransferGasLimit = when (feeTransferGasLimitResult) {
-                is Result.Failure -> raise(GetFeeError.DataError(feeTransferGasLimitResult.error))
+                is Result.Failure -> raise(GaslessError.DataError(feeTransferGasLimitResult.error))
                 is Result.Success -> feeTransferGasLimitResult.data
             }.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
 

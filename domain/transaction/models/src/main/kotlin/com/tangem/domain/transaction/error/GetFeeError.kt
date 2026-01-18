@@ -10,6 +10,9 @@ sealed class GetFeeError {
         data object SuiOneCoinRequired : BlockchainErrors()
     }
 
+    /**
+     * Gasless transaction related errors, model logic uses this errors types, don't remove or change them
+     */
     sealed class GaslessError : GetFeeError() {
         data object NetworkIsNotSupported : GaslessError()
         data object NoSupportedTokensFound : GaslessError()
