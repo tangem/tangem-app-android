@@ -75,9 +75,14 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     }
 
     private fun loadFee() {
+        if (uiState.value is FeeSelectorUM.Error) {
+            return
+        }
+
         if (uiState.value !is FeeSelectorUM.Content) {
             uiState.update(FeeSelectorLoadingTransformer)
         }
+
         modelScope.launch {
             callLoadFee()
                 .fold(
