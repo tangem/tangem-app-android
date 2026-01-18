@@ -98,6 +98,7 @@ fun FeeExtendedSelectorContent(state: FeeExtendedSelectorUM, modifier: Modifier 
             },
             ellipsizeOffset = fee.amount.currencySymbol.length,
             showSelectorIcon = isChooseSpeedAvailable,
+            isNotEnoughFunds = state.parent.feeExtraInfo.isNotEnoughFunds,
             isLoading = state.fee.isLoading(),
         )
     }
@@ -168,6 +169,7 @@ private fun Preview() {
                         isFeeConvertibleToFiat = true,
                         isTronToken = false,
                         feeCryptoCurrencyStatus = cryptoCurrencyStatus,
+                        isNotEnoughFunds = true,
                     ),
                     feeNonce = FeeNonce.None,
                     feeFiatRateUM = FeeFiatRateUM(
