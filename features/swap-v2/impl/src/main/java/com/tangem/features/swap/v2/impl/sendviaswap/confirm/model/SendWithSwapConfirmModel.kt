@@ -426,9 +426,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             val hasError = hasSendError || hasSwapError
             uiState.update { state ->
                 val feeUM = state.feeSelectorUM as? FeeSelectorUM.Content
+                val isTransactionInProcess = (state.confirmUM as? ConfirmUM.Content)?.isTransactionInProcess == true
                 state.copy(
                     confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
-                        isPrimaryButtonEnabled = !hasError && feeUM != null,
+                        isPrimaryButtonEnabled = !hasError && feeUM != null && !isTransactionInProcess,
                     ) ?: state.confirmUM,
                 )
             }
