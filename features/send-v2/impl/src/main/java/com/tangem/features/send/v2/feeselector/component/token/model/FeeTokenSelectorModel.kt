@@ -7,13 +7,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.feeselector.component.FeeSelectorComponentParams
 import com.tangem.features.send.v2.feeselector.component.token.FeeTokenSelectorIntents
+import com.tangem.features.send.v2.feeselector.component.token.entity.FeeTokenItemState
 import com.tangem.features.send.v2.feeselector.component.token.entity.FeeTokenSelectorUM
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
 import com.tangem.utils.Provider
@@ -78,7 +78,7 @@ internal class FeeTokenSelectorModel @Inject constructor(
         )
     }
 
-    private fun convertToken(status: CryptoCurrencyStatus): TokenItemState {
+    private fun convertToken(status: CryptoCurrencyStatus): FeeTokenItemState {
         return FeeTokenForListConverter(
             appCurrencyProvider = Provider { appCurrency },
             onTokenClick = { onTokenSelected(status) },
