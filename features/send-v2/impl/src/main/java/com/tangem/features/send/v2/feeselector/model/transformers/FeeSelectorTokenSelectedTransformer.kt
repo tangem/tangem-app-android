@@ -18,6 +18,7 @@ class FeeSelectorTokenSelectedTransformer(
                 feeItems = persistentListOf(FeeItem.Loading),
                 feeExtraInfo = prevState.feeExtraInfo.copy(
                     feeCryptoCurrencyStatus = selectedToken,
+                    isNotEnoughFunds = false,
                 ),
             )
         } else {
