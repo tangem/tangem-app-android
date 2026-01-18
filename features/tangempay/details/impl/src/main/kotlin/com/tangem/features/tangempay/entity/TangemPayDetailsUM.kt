@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.features.tangempay.model.CardDataType
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
@@ -25,7 +26,7 @@ internal data class TangemPayCardDetailsUM(
     val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,
     val onClick: () -> Unit = {},
-    val onCopy: (String) -> Unit = {},
+    val onCopy: (String, CardDataType) -> Unit,
     val isHidden: Boolean = true,
     val isLoading: Boolean = false,
     val cardFrozenState: TangemPayCardFrozenState,
