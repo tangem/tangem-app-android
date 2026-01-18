@@ -68,6 +68,7 @@ data class FeeExtraInfo(
     val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
     val availableFeeCurrencies: ImmutableList<CryptoCurrencyStatus>? = null,
     val transactionFeeExtended: TransactionFeeExtended? = null,
+    val isNotEnoughFunds: Boolean = false,
 )
 
 sealed class FeeNonce {
