@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.feeselector.model
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
+import arrow.core.left
 import arrow.core.raise.either
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.TransactionFee
@@ -228,10 +229,13 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
         return extended(selectedTokenOrNull).fold(
             ifLeft = { error ->
-                if (error is GetFeeError.GaslessError) {
-                    params.onLoadFee().map { LoadedFeeResult.Basic(it) }
-                } else {
-                    Either.Left(error)
+                when (error) {
+                    is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
+                    is GetFeeError.GaslessError -> {
+                        // Something wrong with gasless fee, fallback to basic fee
+                        params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+                    }
+                    else -> error.left()
                 }
             },
             ifRight = { fee ->
@@ -243,32 +247,38 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun populateExtendedFee(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
-        val selectedToken = if (params.feeCryptoCurrencyStatus.currency.id != fee.feeTokenId) {
-            getSingleCryptoCurrencyStatusUseCase
-                .invokeMultiWalletSync(
-                    userWalletId = params.userWalletId,
-                    cryptoCurrencyId = fee.feeTokenId,
-                ).getOrElse {
-                    raise(GetFeeError.DataError(IllegalStateException("No token found for id: ${fee.feeTokenId}")))
-                }
-        } else {
-            params.feeCryptoCurrencyStatus
+        LoadedFeeResult.Extended(
+            fee = fee,
+            selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind(),
+            availableTokens = getAvailableFeeTokens().bind(),
+        )
+    }
+
+    private suspend fun getSelectedTokenStatus(tokenId: CryptoCurrency.ID): Either<GetFeeError, CryptoCurrencyStatus> =
+        either {
+            val feeTokenId = tokenId
+            if (params.feeCryptoCurrencyStatus.currency.id != feeTokenId) {
+                getSingleCryptoCurrencyStatusUseCase
+                    .invokeMultiWalletSync(
+                        userWalletId = params.userWalletId,
+                        cryptoCurrencyId = feeTokenId,
+                    ).getOrElse {
+                        raise(GetFeeError.DataError(IllegalStateException("No token found for id: $tokenId")))
+                    }
+            } else {
+                params.feeCryptoCurrencyStatus
+            }
         }
 
+    private suspend fun getAvailableFeeTokens(): Either<GetFeeError, List<CryptoCurrencyStatus>> = either {
         val userWallet = getUserWalletUseCase(params.userWalletId).mapLeft {
             GetFeeError.DataError(IllegalStateException("No wallet found for id: ${params.userWalletId}"))
         }.bind()
 
-        val availableTokens = getAvailableFeeTokensUseCase.invoke(
+        getAvailableFeeTokensUseCase.invoke(
             userWallet = userWallet,
             network = params.cryptoCurrencyStatus.currency.network,
         ).bind()
-
-        LoadedFeeResult.Extended(
-            fee = fee,
-            selectedToken = selectedToken,
-            availableTokens = availableTokens,
-        )
     }
 
     sealed class LoadedFeeResult {
