@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.feeselector.model
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.raise.either
 import com.tangem.blockchain.common.AmountType
@@ -209,25 +210,34 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     @Suppress("UnreachableCode")
     private suspend fun callLoadFee(): Either<GetFeeError, LoadedFeeResult> {
         val extended = params.onLoadFeeExtended
-        return if (extended != null && sendFeatureToggles.isGaslessTransactionsEnabled) {
-            val selectedToken = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.feeCryptoCurrencyStatus
-                ?.takeIf { it.currency is CryptoCurrency.Token }
-
-            extended(selectedToken).fold(
-                ifLeft = { error ->
-                    if (error is GetFeeError.GaslessError) {
-                        params.onLoadFee().map { LoadedFeeResult.Basic(it) }
-                    } else {
-                        Either.Left(error)
-                    }
-                },
-                ifRight = { fee ->
-                    populateExtendedFee(fee)
-                },
-            )
-        } else {
-            params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+        if (extended == null || !sendFeatureToggles.isGaslessTransactionsEnabled) {
+            return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
         }
+
+        val selectedTokenOrNull = (uiState.value as? FeeSelectorUM.Content)?.feeExtraInfo?.feeCryptoCurrencyStatus
+
+        if (selectedTokenOrNull?.currency is CryptoCurrency.Coin) {
+            return params.onLoadFee().flatMap { loadedFee ->
+                val feeExtended = TransactionFeeExtended(
+                    transactionFee = loadedFee,
+                    feeTokenId = selectedTokenOrNull.currency.id,
+                )
+                populateExtendedFee(feeExtended)
+            }
+        }
+
+        return extended(selectedTokenOrNull).fold(
+            ifLeft = { error ->
+                if (error is GetFeeError.GaslessError) {
+                    params.onLoadFee().map { LoadedFeeResult.Basic(it) }
+                } else {
+                    Either.Left(error)
+                }
+            },
+            ifRight = { fee ->
+                populateExtendedFee(fee)
+            },
+        )
     }
 
     private suspend fun populateExtendedFee(
