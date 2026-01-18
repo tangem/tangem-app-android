@@ -328,6 +328,7 @@ internal fun RegularFeeItemContent(
     ellipsizeOffset: Int? = null,
     showSelectorIcon: Boolean = false,
     isLoading: Boolean = false,
+    isNotEnoughFunds: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Row(
@@ -353,6 +354,7 @@ internal fun RegularFeeItemContent(
                 postDot = postDot,
                 ellipsizeOffset = ellipsizeOffset,
                 isLoading = isLoading,
+                isNotEnoughFunds = isNotEnoughFunds,
             )
 
             if (showSelectorIcon) {
@@ -376,6 +378,7 @@ private fun FeeDescription(
     postDot: TextReference? = null,
     ellipsizeOffset: Int? = null,
     isLoading: Boolean = false,
+    isNotEnoughFunds: Boolean = false,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
@@ -385,6 +388,11 @@ private fun FeeDescription(
             modifier = Modifier.testTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE),
         )
         when {
+            isNotEnoughFunds -> Text(
+                text = stringResourceSafe(R.string.gasless_not_enough_funds_to_cover_token_fee),
+                color = TangemTheme.colors.text.warning,
+                style = TangemTheme.typography.caption1,
+            )
             isLoading -> TextShimmer(
                 modifier = Modifier.width(122.dp),
                 style = TangemTheme.typography.caption1,
