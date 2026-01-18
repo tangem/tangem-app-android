@@ -651,13 +651,13 @@ internal class SwapModel @Inject constructor(
                         modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
                     }
                 } else {
-                    feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError)
+                    feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                     Timber.e("Accidentally empty quotes list")
                 }
             },
             onError = { error ->
                 Timber.e("Error when loading quotes: $error")
-                feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError)
+                feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                 uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
             },
         )
@@ -2016,6 +2016,10 @@ internal class SwapModel @Inject constructor(
                 return Either.Left(GetFeeError.UnknownError)
             }
 
+            if (isPermissionNotificationShown()) {
+                return Either.Left(GetFeeError.UnknownError)
+            }
+
             return swapInteractor.loadFeeForSwapTransaction(
                 fromToken = fromToken,
                 fromAccount = dataState.fromAccount,
@@ -2029,6 +2033,11 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onResult(newState: FeeSelectorUM) {
+            if (isPermissionNotificationShown()) {
+                state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
+                return
+            }
+
             state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
@@ -2050,6 +2059,11 @@ internal class SwapModel @Inject constructor(
             }
         }
 
+        private fun isPermissionNotificationShown(): Boolean {
+            val permissionState = dataState.getCurrentLoadedSwapState()?.permissionState
+            return permissionState != null && permissionState !is PermissionDataState.Empty
+        }
+
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
             val sendCardData =
                 uiState.sendCardData as? SwapCardState.SwapCardData ?: return Either.Left(GetFeeError.UnknownError)
@@ -2060,6 +2074,10 @@ internal class SwapModel @Inject constructor(
             val selectedProvider = dataState.selectedProvider ?: return Either.Left(GetFeeError.UnknownError)
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
+                return Either.Left(GetFeeError.UnknownError)
+            }
+
+            if (isPermissionNotificationShown()) {
                 return Either.Left(GetFeeError.UnknownError)
             }
 
