@@ -449,20 +449,21 @@ private inline fun BaseScaffoldWithMarkets(
                     }
 
                     Column(
-                        modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
+                        modifier = Modifier
+                            // expand bottom sheet when clicked on the header
+                            .clickable(
+                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                indication = null,
+                                interactionSource = null,
+                            ) {
+                                coroutineScope.launch { bottomSheetState.expand() }
+                            }
+                            .sizeIn(maxHeight = maxHeight - statusBarHeight),
                     ) {
                         Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
 
                         Box(
                             modifier = Modifier
-                                // expand bottom sheet when clicked on the header
-                                .clickable(
-                                    enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                                    indication = null,
-                                    interactionSource = null,
-                                ) {
-                                    coroutineScope.launch { bottomSheetState.expand() }
-                                }
                                 .onFocusChanged {
                                     isSearchFieldFocused = it.isFocused
                                 },
