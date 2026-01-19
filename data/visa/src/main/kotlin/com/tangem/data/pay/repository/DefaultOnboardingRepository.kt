@@ -185,11 +185,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
             return Either.Right(hasTangemPay)
         }
 
-        return requestHelper.performWithStaticToken { staticToken ->
-            tangemPayApi.checkCustomerWalletId(
-                authHeader = staticToken,
-                customerWalletId = userWalletId.stringValue,
-            )
+        return requestHelper.performWithStaticToken {
+            tangemPayApi.checkCustomerWalletId(customerWalletId = userWalletId.stringValue)
         }.map { response ->
             val id = response.result?.id
             val isTangemPayEnabled = response.result?.isTangemPayEnabled == true
@@ -205,7 +202,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     override suspend fun checkCustomerEligibility(): Boolean {
-        val response = requestHelper.performWithoutToken {
+        val response = requestHelper.performWithStaticToken {
             tangemPayApi.checkCustomerEligibility()
         }.getOrNull()
 
