@@ -46,6 +46,7 @@ import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
@@ -56,9 +57,14 @@ import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.crea
 import com.tangem.features.feed.ui.feed.state.*
 
 @Composable
-internal fun FeedListHeader(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
+internal fun FeedListHeader(
+    isSearchBarClickable: Boolean,
+    feedListSearchBar: FeedListSearchBar,
+    modifier: Modifier = Modifier,
+) {
     val background = LocalMainBottomSheetColor.current.value
     FeedSearchBar(
+        isSearchBarClickable = isSearchBarClickable,
         feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
@@ -102,13 +108,19 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FeedSearchBar(feedListSearchBar: FeedListSearchBar, modifier: Modifier = Modifier) {
+private fun FeedSearchBar(
+    isSearchBarClickable: Boolean,
+    feedListSearchBar: FeedListSearchBar,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(36.dp))
             .background(color = TangemTheme.colors.field.focused)
-            .clickable(onClick = feedListSearchBar.onBarClick)
+            .conditional(condition = isSearchBarClickable) {
+                clickable(onClick = feedListSearchBar.onBarClick)
+            }
             .padding(14.dp),
     ) {
         Icon(
