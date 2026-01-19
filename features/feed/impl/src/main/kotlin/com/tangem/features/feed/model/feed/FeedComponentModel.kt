@@ -203,7 +203,7 @@ internal class FeedComponentModel @Inject constructor(
                         put(it, MarketChartUM.Loading)
                     }
                 }.toPersistentHashMap(),
-                currentSortByType = SortByTypeUM.Trending,
+                currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
         )

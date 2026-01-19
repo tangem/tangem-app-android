@@ -52,10 +52,10 @@ internal data class MarketChartConfig(
     val currentSortByType: SortByTypeUM = SortByTypeUM.TopGainers,
 ) {
     fun getFilterPreset() = persistentListOf(
-        SortByTypeUM.Trending,
-        SortByTypeUM.ExperiencedBuyers,
         SortByTypeUM.TopGainers,
         SortByTypeUM.TopLosers,
+        SortByTypeUM.ExperiencedBuyers,
+        SortByTypeUM.Trending,
     )
 }
 
