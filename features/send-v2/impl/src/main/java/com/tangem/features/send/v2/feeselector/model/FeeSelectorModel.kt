@@ -8,8 +8,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.utils.stack
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
@@ -25,8 +23,6 @@ internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
     feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val sendFeatureToggles: SendFeatureToggles,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) : Model(), FeeSelectorIntents {
 
     private val params = paramsContainer.require<FeeSelectorParams.FeeSelectorDetailsParams>()
@@ -90,9 +86,7 @@ internal class FeeSelectorModel @Inject constructor(
 
     fun getInitialRoute(): FeeSelectorRoute {
         return when {
-            sendFeatureToggles.isGaslessTransactionsEnabled && params.onLoadFeeExtended != null &&
-                isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) ->
-                FeeSelectorRoute.NetworkFee
+            feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.NetworkFee
             else -> FeeSelectorRoute.ChooseSpeed
         }
     }
