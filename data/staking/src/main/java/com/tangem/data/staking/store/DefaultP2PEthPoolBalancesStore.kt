@@ -8,7 +8,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
@@ -151,13 +150,13 @@ internal class DefaultP2PEthPoolBalancesStore(
     }
 
     private suspend fun clearInPersistence(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
-        val integrationIds = stakingIds.map { it.integrationId }.toSet()
+        val addressesToClear = stakingIds.map { it.address }.toSet()
 
         persistenceStore.updateData { current ->
             current.toMutableMap().apply {
                 this[userWalletId.stringValue] = this[userWalletId.stringValue].orEmpty()
                     .filterNot { response ->
-                        StakingIntegrationID.P2PEthPool.value in integrationIds
+                        response.delegatorAddress in addressesToClear
                     }
                     .toSet()
             }
