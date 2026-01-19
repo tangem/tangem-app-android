@@ -5,7 +5,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.staking.*
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.P2PEthPoolBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
@@ -56,7 +57,7 @@ internal object StakingDataModule {
     fun provideStakingRepository(
         stakeKitRepository: StakeKitRepository,
         p2pEthPoolRepository: P2PEthPoolRepository,
-        stakingBalancesStore: StakingBalancesStore,
+        stakeKitBalancesStore: StakeKitBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
@@ -65,7 +66,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
             p2pEthPoolRepository = p2pEthPoolRepository,
-            stakingBalanceStoreV2 = stakingBalancesStore,
+            stakingBalanceStoreV2 = stakeKitBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
             walletManagersFacade = walletManagersFacade,
@@ -138,12 +139,14 @@ internal object StakingDataModule {
     @Singleton
     fun provideStakingCleaner(
         stakingIdFactory: StakingIdFactory,
-        stakingBalancesStore: StakingBalancesStore,
+        stakeKitBalancesStore: StakeKitBalancesStore,
+        p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): StakingCleaner {
         return DefaultStakingCleaner(
             stakingIdFactory = stakingIdFactory,
-            stakingBalancesStore = stakingBalancesStore,
+            stakeKitBalancesStore = stakeKitBalancesStore,
+            p2pEthPoolBalancesStore = p2pEthPoolBalancesStore,
             dispatchers = dispatchers,
         )
     }
