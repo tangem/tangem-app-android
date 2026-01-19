@@ -25,7 +25,10 @@ internal class DefaultFeedComponent(
     @Composable
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by feedComponentModel.state.collectAsStateWithLifecycle()
-        FeedListHeader(state.feedListSearchBar)
+        FeedListHeader(
+            isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
+            feedListSearchBar = state.feedListSearchBar,
+        )
     }
 
     @Composable
