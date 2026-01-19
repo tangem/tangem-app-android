@@ -13,6 +13,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_GASLESS_API_KEY
+import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_PAY_BFF_KEY_DEV
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
@@ -115,7 +116,14 @@ internal class ProdApiConfigsManagerTest {
                     )
                 }
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
-                ApiConfig.ID.TangemPay -> TangemPay(appVersionProvider = appVersionProvider)
+                ApiConfig.ID.TangemPay -> TangemPay.Bff(
+                    appVersionProvider = appVersionProvider,
+                    environmentConfigStorage = environmentConfigStorage,
+                )
+                ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
+                    appVersionProvider = appVersionProvider,
+                    environmentConfigStorage = environmentConfigStorage,
+                )
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
@@ -124,7 +132,6 @@ internal class ProdApiConfigsManagerTest {
                     authProvider = appAuthProvider,
                     appInfoProvider = appInfoProvider,
                 )
-                ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = appVersionProvider)
                 ApiConfig.ID.GaslessTxService -> GaslessTxService(
                     authProvider = appAuthProvider,
                     appVersionProvider = appVersionProvider,
@@ -141,11 +148,11 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.TangemTech -> createTangemTechModel()
             ApiConfig.ID.StakeKit -> createStakeKitModel()
             ApiConfig.ID.TangemPay -> createTangemPayModel()
+            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
             ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
             ApiConfig.ID.MoonPay -> createMoonPayModel()
             ApiConfig.ID.P2PEthPool -> createP2PModel()
             ApiConfig.ID.News -> createNewsModel()
-            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
             ApiConfig.ID.GaslessTxService -> createGaslessTxServiceModel()
         }
     }
@@ -269,6 +276,7 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
+                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
                 ),
             ),
         )
@@ -283,6 +291,7 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
+                    "X-API-KEY" to ProviderSuspend { TANGEM_PAY_BFF_KEY_DEV },
                 ),
             ),
         )
