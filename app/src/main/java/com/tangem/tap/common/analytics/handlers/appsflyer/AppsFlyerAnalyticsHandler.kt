@@ -55,13 +55,7 @@ class AppsFlyerAnalyticsHandler(
         }
 
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler = AppsFlyerAnalyticsHandler(
-            client = if (data.logConfig.isAppsflyerLogEnabled) {
-                Timber.tag("AppsFlyer").i("AppsFlyer log enabled, mock client created")
-                AppsFlyerLogClient(data.jsonConverter)
-            } else {
-                Timber.tag("AppsFlyer").i("AppsFlyer log disabled, real client created")
-                appsFlyerClientFactory.create(apiKey = data.config.appsFlyerApiKey)
-            },
+            client = appsFlyerClientFactory.create(apiKey = data.config.appsFlyerApiKey), // TODO(!!!)
         )
     }
 }

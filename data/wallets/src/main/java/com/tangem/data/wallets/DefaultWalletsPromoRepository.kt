@@ -67,9 +67,9 @@ internal class DefaultWalletsPromoRepository(
         )
 
         if (bindingData == null) {
-            val exception = IllegalStateException("No saved referral wallets binding data found")
-            Timber.e(exception)
-            throw exception
+            val message = "No saved referral wallets binding data found"
+            Timber.e(message)
+            error(message)
         }
 
         val conversionData = AppsFlyerConversionData(
