@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  *
  * Extends [BaseStakingBalancesStore] with StakeKit-specific storage operations.
  */
-interface StakingBalancesStore : BaseStakingBalancesStore {
+interface StakeKitBalancesStore : BaseStakingBalancesStore {
 
     /** Store actual StakeKit yield balances */
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>)
