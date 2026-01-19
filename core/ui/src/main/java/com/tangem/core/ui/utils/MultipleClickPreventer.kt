@@ -15,6 +15,18 @@ interface MultipleClickPreventer {
     }
 }
 
+/**
+ * A global instance of [MultipleClickPreventer]
+ * Use for preventing multiple clicks in the entire app.
+ * For example, when we must ensure correct data is passed while editing values and navigating to next screen.
+ *
+ * @example
+ * GlobalMultipleClickPreventer.processEvent {
+ *     // Handle click event
+ * }
+ */
+val GlobalMultipleClickPreventer = MultipleClickPreventer.get()
+
 private class DefaultMultipleClickPreventer : MultipleClickPreventer {
     private val now: Long get() = SystemClock.elapsedRealtime()
     private var lastEventTimeMs: Long = 0

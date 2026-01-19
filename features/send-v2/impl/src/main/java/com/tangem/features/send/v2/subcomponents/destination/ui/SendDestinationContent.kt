@@ -29,6 +29,7 @@ import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.SendAddressScreenTestTags
+import com.tangem.core.ui.utils.GlobalMultipleClickPreventer
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -135,7 +136,11 @@ private fun LazyListScope.addressItem(
                 title = address.label,
                 placeholder = address.placeholder,
                 onValueChange = { onAddressChange(it, EnterAddressSource.InputField) },
-                onPasteClick = { onAddressChange(it, EnterAddressSource.PasteButton) },
+                onPasteClick = {
+                    GlobalMultipleClickPreventer.processEvent {
+                        onAddressChange(it, EnterAddressSource.PasteButton)
+                    }
+                },
                 onQrCodeClick = onQrCodeClick,
                 isError = isError,
                 isLoading = isValidating,
