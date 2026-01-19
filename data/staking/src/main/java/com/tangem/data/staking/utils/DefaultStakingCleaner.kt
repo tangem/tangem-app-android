@@ -1,7 +1,8 @@
 package com.tangem.data.staking.utils
 
+import com.tangem.data.staking.store.P2PEthPoolBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.StakingIdFactory
@@ -16,14 +17,16 @@ import timber.log.Timber
 /**
  * Default implementation of [StakingCleaner].
  *
- * @property stakingBalancesStore Store to manage staking balances.
+ * @property stakeKitBalancesStore Store to manage StakeKit staking balances.
+ * @property p2pEthPoolBalancesStore Store to manage P2PEthPool staking balances.
  * @property dispatchers Coroutine dispatchers provider.
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultStakingCleaner(
     private val stakingIdFactory: StakingIdFactory,
-    private val stakingBalancesStore: StakingBalancesStore,
+    private val stakeKitBalancesStore: StakeKitBalancesStore,
+    private val p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : StakingCleaner {
 
@@ -53,15 +56,23 @@ internal class DefaultStakingCleaner(
 
         withContext(dispatchers.default) {
             awaitAll(
-                async { clearStatusesStore(userWalletId = userWalletId, stakingIds = stakingIds) },
+                async { clearStakeKitBalancesStore(userWalletId = userWalletId, stakingIds = stakingIds) },
+                async { clearP2PEthPoolBalancesStore(userWalletId = userWalletId, stakingIds = stakingIds) },
             )
         }
     }
 
-    private suspend fun clearStatusesStore(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+    private suspend fun clearStakeKitBalancesStore(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
         runSuspendCatching {
-            stakingBalancesStore.clear(userWalletId, stakingIds)
+            stakeKitBalancesStore.clear(userWalletId, stakingIds)
         }
-            .onFailure { Timber.e(it, "Failed to clear yield balance statuses for wallet: $userWalletId") }
+            .onFailure { Timber.e(it, "Failed to clear StakeKit balance statuses for wallet: $userWalletId") }
+    }
+
+    private suspend fun clearP2PEthPoolBalancesStore(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        runSuspendCatching {
+            p2pEthPoolBalancesStore.clear(userWalletId, stakingIds)
+        }
+            .onFailure { Timber.e(it, "Failed to clear P2PEthPool balance statuses for wallet: $userWalletId") }
     }
 }
