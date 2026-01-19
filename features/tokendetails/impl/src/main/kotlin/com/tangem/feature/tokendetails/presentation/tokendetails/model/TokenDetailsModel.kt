@@ -827,9 +827,11 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
             networkId = cryptoCurrency.network.id,
+            contractAddress = contractAddress,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
             ifRight = { router.openUrl(url = it) },

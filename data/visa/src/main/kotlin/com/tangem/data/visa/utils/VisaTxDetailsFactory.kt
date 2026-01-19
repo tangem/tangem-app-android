@@ -43,7 +43,7 @@ internal class VisaTxDetailsFactory {
             txStatus = request.txStatus,
             fiatCurrency = findCurrencyByNumericCode(request.transactionCurrencyCode),
             exploreUrl = request.txHash?.let {
-                when (val txUrl = walletBlockchain.getExploreTxUrl(it)) {
+                when (val txUrl = walletBlockchain.getExploreTxUrl(it, tokenContractAddress = null)) {
                     is TxExploreState.Url -> txUrl.url
                     is TxExploreState.Unsupported -> ""
                 }

@@ -76,9 +76,9 @@ class DefaultTxHistoryRepository(
     }
 
     @Deprecated("Replace with getTxExploreUrl [UserWalletId, Network] instead")
-    override fun getTxExploreUrl(txHash: String, networkId: Network.ID): String {
+    override fun getTxExploreUrl(txHash: String, networkId: Network.ID, contractAddress: String?): String {
         val blockchain = networkId.toBlockchain()
-        return when (val txExploreState = blockchain.getExploreTxUrl(txHash)) {
+        return when (val txExploreState = blockchain.getExploreTxUrl(txHash, contractAddress)) {
             is TxExploreState.Url -> txExploreState.url
             is TxExploreState.Unsupported -> ""
         }

@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.models.staking.PendingAction
@@ -250,9 +251,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     transactionHashes = transactionHashes,
                 )
 
+                val contractAddress = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)?.contractAddress
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
                     networkId = cryptoCurrencyStatus.currency.network.id,
+                    contractAddress = contractAddress,
                 ).getOrNull() ?: ""
 
                 balanceUpdater.updateAfterTransaction()

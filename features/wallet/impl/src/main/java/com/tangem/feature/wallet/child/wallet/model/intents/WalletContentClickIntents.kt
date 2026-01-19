@@ -322,7 +322,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 ?.currency
                 ?: return@launch
 
-            getExplorerTransactionUrlUseCase(txHash = txHash, networkId = currency.network.id)
+            val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
+            getExplorerTransactionUrlUseCase(
+                txHash = txHash,
+                networkId = currency.network.id,
+                contractAddress = contractAddress,
+            )
                 .fold(
                     ifLeft = { Timber.e(it.toString()) },
                     ifRight = { router.openUrl(url = it) },

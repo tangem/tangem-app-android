@@ -457,9 +457,11 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
             networkId = cryptoCurrency.network.id,
+            contractAddress = contractAddress,
         ).getOrNull().orEmpty()
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
     }
