@@ -2,9 +2,9 @@ package com.tangem.data.staking.di
 
 import androidx.datastore.core.DataStore
 import com.tangem.data.staking.store.DefaultP2PEthPoolBalancesStore
-import com.tangem.data.staking.store.DefaultStakingBalancesStore
+import com.tangem.data.staking.store.DefaultStakeKitBalancesStore
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
@@ -28,8 +28,8 @@ internal object StakingBalanceSupplierModule {
     fun provideStakingBalancesStore(
         persistenceStore: DataStore<Map<String, Set<YieldBalanceWrapperDTO>>>,
         dispatchers: CoroutineDispatcherProvider,
-    ): StakingBalancesStore {
-        return DefaultStakingBalancesStore(
+    ): StakeKitBalancesStore {
+        return DefaultStakeKitBalancesStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceStore = persistenceStore,
             dispatchers = dispatchers,
