@@ -72,7 +72,7 @@ private fun AppExtension.configureBuildTypes() {
 private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, buildType: BuildType) {
     when (buildType) {
         BuildType.Release -> {
-            isDebuggable = false
+            isDebuggable = true // TODO(!!!)
         }
         BuildType.Debug -> {
             isDebuggable = true
