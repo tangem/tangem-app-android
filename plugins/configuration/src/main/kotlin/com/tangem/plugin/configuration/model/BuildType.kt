@@ -111,7 +111,7 @@ internal enum class BuildType(
         id = "release",
         configFields = listOf(
             BuildConfigField.Environment(value = "prod"),
-            BuildConfigField.LogEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = true), // TODO(!!!)
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = false),
             BuildConfigField.ABTestsEnabled(isEnabled = true),
