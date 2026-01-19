@@ -6,7 +6,7 @@ import arrow.core.right
 import arrow.core.toOption
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
@@ -43,7 +43,7 @@ import javax.inject.Inject
  *
  * @property userWalletsStore        user wallets store
  * @property stakingYieldsStore      staking yields store
- * @property stakingBalancesStore    staking balances store (StakeKit)
+ * @property stakeKitBalancesStore    staking balances store (StakeKit)
  * @property p2PEthPoolBalancesStore        P2PEthPool balances store
  * @property stakeKitApi             stake kit API
  * @property p2pEthPoolApi           P2PEthPool API
@@ -56,7 +56,7 @@ import javax.inject.Inject
 internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val stakingYieldsStore: StakingYieldsStore,
-    private val stakingBalancesStore: StakingBalancesStore,
+    private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val stakeKitApi: StakeKitApi,
     private val p2pEthPoolApi: P2PEthPoolApi,
@@ -106,7 +106,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                 Timber.e(throwable, "Unable to fetch staking balances $params")
 
                 if (stakeKitIds.isNotEmpty()) {
-                    stakingBalancesStore.storeError(
+                    stakeKitBalancesStore.storeError(
                         userWalletId = params.userWalletId,
                         stakingIds = stakeKitIds.toSet(),
                     )
@@ -121,7 +121,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
     }
 
     private suspend fun fetchStakeKitBalances(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
-        stakingBalancesStore.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
+        stakeKitBalancesStore.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
 
         val availableStakingIds = getAvailableStakingIds(
             userWalletId = userWalletId,
@@ -270,7 +270,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
         )
 
         if (unavailableStakingIds.isNotEmpty()) {
-            stakingBalancesStore.storeError(userWalletId = userWalletId, stakingIds = unavailableStakingIds.toSet())
+            stakeKitBalancesStore.storeError(userWalletId = userWalletId, stakingIds = unavailableStakingIds.toSet())
         }
 
         return availableStakingIds.toSet().ifEmpty {
@@ -322,7 +322,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                 Timber.i(
                     "Successfully fetched staking balances for $userWalletId:\n${yieldBalances.joinToString("\n")}",
                 )
-                stakingBalancesStore.storeActual(userWalletId = userWalletId, values = yieldBalances)
+                stakeKitBalancesStore.storeActual(userWalletId = userWalletId, values = yieldBalances)
 
                 if (!allResponsesReceived(requests, yieldBalances)) {
                     val values = stakingIds.filter { stakingId ->
@@ -332,13 +332,13 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                         }
                     }
 
-                    stakingBalancesStore.storeError(userWalletId = userWalletId, stakingIds = values.toSet())
+                    stakeKitBalancesStore.storeError(userWalletId = userWalletId, stakingIds = values.toSet())
                 }
             },
             onError = { throwable ->
                 Timber.e(throwable, "Unable to fetch staking balances $userWalletId")
 
-                stakingBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
+                stakeKitBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
 
                 throw throwable
             },
