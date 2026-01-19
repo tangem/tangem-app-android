@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
@@ -55,10 +56,16 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
+    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
     val uiState = MutableStateFlow<FeeSelectorUM>(params.state)
+
+    val isGaslessEnabled = sendFeatureToggles.isGaslessTransactionsEnabled &&
+        params.onLoadFeeExtended != null &&
+        isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) &&
+        params.cryptoCurrencyStatus.currency is CryptoCurrency.Token
 
     init {
         initAppCurrency()
@@ -216,7 +223,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     @Suppress("UnreachableCode")
     private suspend fun callLoadFee(): Either<GetFeeError, LoadedFeeResult> {
         val extended = params.onLoadFeeExtended
-        if (extended == null || !sendFeatureToggles.isGaslessTransactionsEnabled) {
+        if (extended == null || !isGaslessEnabled) {
             return params.onLoadFee().map { LoadedFeeResult.Basic(it) }
         }
 
