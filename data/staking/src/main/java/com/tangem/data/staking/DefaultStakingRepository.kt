@@ -3,7 +3,7 @@ package com.tangem.data.staking
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.StakingBalance
@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultStakingRepository(
     private val stakeKitRepository: StakeKitRepository,
     private val p2pEthPoolRepository: P2PEthPoolRepository,
-    private val stakingBalanceStoreV2: StakingBalancesStore,
+    private val stakingBalanceStoreV2: StakeKitBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
