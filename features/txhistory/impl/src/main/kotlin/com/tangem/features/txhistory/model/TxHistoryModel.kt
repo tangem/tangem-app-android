@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
@@ -219,9 +220,11 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     override fun openTxInExplorer(txHash: String) {
+        val contractAddress = (params.currency as? CryptoCurrency.Token)?.contractAddress
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
             networkId = params.currency.network.id,
+            contractAddress = contractAddress,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
             ifRight = { urlOpener.openUrl(url = it) },

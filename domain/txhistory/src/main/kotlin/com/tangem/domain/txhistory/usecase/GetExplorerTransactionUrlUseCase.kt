@@ -10,11 +10,15 @@ import com.tangem.domain.txhistory.repository.TxHistoryRepository
 class GetExplorerTransactionUrlUseCase(
     private val repository: TxHistoryRepository,
 ) {
-    operator fun invoke(txHash: String, networkId: Network.ID): Either<TxStatusError, String> {
+    operator fun invoke(
+        txHash: String,
+        networkId: Network.ID,
+        contractAddress: String? = null,
+    ): Either<TxStatusError, String> {
         return either {
             catch(
                 block = {
-                    repository.getTxExploreUrl(txHash, networkId).ifEmpty {
+                    repository.getTxExploreUrl(txHash, networkId, contractAddress).ifEmpty {
                         raise(TxStatusError.EmptyUrlError)
                     }
                 },

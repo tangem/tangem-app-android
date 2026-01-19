@@ -778,9 +778,11 @@ internal class SwapModel @Inject constructor(
                             return@onSuccess
                         }
                         sendSuccessSwapEvent(fromCurrency.currency, fee.feeType)
+                        val contractAddress = (fromCurrency.currency as? CryptoCurrency.Token)?.contractAddress
                         val url = getExplorerTransactionUrlUseCase(
                             txHash = swapTransactionState.txHash,
                             networkId = fromCurrency.currency.network.id,
+                            contractAddress = contractAddress,
                         ).getOrElse {
                             Timber.i("tx hash explore not supported")
                             ""

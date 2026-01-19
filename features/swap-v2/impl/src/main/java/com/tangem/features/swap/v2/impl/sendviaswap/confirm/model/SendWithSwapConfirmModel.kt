@@ -285,9 +285,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     )
                 },
                 onSendSuccess = { txHash, timestamp, data ->
+                    val contractAddress = (primaryCurrencyStatus.currency as? CryptoCurrency.Token)?.contractAddress
                     val txUrl = getExplorerTransactionUrlUseCase(
                         txHash = txHash,
                         networkId = primaryCurrencyStatus.currency.network.id,
+                        contractAddress = contractAddress,
                     ).getOrNull().orEmpty()
                     sendSuccessAnalytics()
                     uiState.transformerUpdate(

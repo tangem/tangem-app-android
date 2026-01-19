@@ -22,7 +22,7 @@ interface TxHistoryRepository {
         refresh: Boolean,
     ): Flow<PagingData<TxInfo>>
 
-    fun getTxExploreUrl(txHash: String, networkId: Network.ID): String
+    fun getTxExploreUrl(txHash: String, networkId: Network.ID, contractAddress: String? = null): String
 
     /** Get transaction url in explorer via last transaction from wallet's recentTransactions list */
     suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String

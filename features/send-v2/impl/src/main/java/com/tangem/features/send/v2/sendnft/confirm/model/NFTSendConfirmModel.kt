@@ -17,6 +17,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -332,9 +333,11 @@ internal class NFTSendConfirmModel @Inject constructor(
     }
 
     private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+        val contractAddress = (cryptoCurrency as? CryptoCurrency.Token)?.contractAddress
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
             networkId = cryptoCurrency.network.id,
+            contractAddress = contractAddress,
         ).getOrElse { "" }
         _uiState.update(NFTSendConfirmSentStateTransformer(txData, txUrl))
     }
