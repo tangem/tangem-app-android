@@ -3,7 +3,7 @@ package com.tangem.data.staking.multi
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.onEmpty
  * Combines staking balances from both StakeKit and P2PEthPool providers.
  *
  * @property params params
- * @property stakingBalancesStore StakeKit staking balances store
+ * @property stakeKitBalancesStore StakeKit staking balances store
  * @property p2PEthPoolBalancesStore P2PEthPool balances store
  * @property dispatchers dispatchers
  *
@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.onEmpty
  */
 internal class DefaultMultiStakingBalanceProducer @AssistedInject constructor(
     @Assisted val params: MultiStakingBalanceProducer.Params,
-    private val stakingBalancesStore: StakingBalancesStore,
+    private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiStakingBalanceProducer {
@@ -38,7 +38,7 @@ internal class DefaultMultiStakingBalanceProducer @AssistedInject constructor(
     override val fallback: Option<Set<StakingBalance>> = emptySet<StakingBalance>().some()
 
     override fun produce(): Flow<Set<StakingBalance>> {
-        val stakeKitFlow = stakingBalancesStore.get(userWalletId = params.userWalletId)
+        val stakeKitFlow = stakeKitBalancesStore.get(userWalletId = params.userWalletId)
         val p2pEthPoolFlow = p2PEthPoolBalancesStore.get(userWalletId = params.userWalletId)
 
         return combine(stakeKitFlow, p2pEthPoolFlow) { stakeKitBalances, p2pEthPoolBalances ->

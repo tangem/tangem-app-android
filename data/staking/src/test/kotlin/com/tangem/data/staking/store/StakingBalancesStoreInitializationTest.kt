@@ -27,7 +27,7 @@ internal class StakingBalancesStoreInitializationTest {
 
         every { persistenceStore.data } returns emptyFlow()
 
-        DefaultStakingBalancesStore(
+        DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -41,7 +41,7 @@ internal class StakingBalancesStoreInitializationTest {
         val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
-        DefaultStakingBalancesStore(
+        DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -63,7 +63,7 @@ internal class StakingBalancesStoreInitializationTest {
             }
         }
 
-        DefaultStakingBalancesStore(
+        DefaultStakeKitBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),

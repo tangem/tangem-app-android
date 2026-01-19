@@ -267,11 +267,12 @@ internal class StakingModel @Inject constructor(
 
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
-    private var actionsJobHolder: JobHolder = JobHolder()
-    private var approvalJobHolder: JobHolder = JobHolder()
-    private var feeJobHolder: JobHolder = JobHolder()
-    private var sendTransactionJobHolder = JobHolder()
-    private var stepChangesJobHolder = JobHolder()
+    private val actionsJobHolder: JobHolder = JobHolder()
+    private val approvalJobHolder: JobHolder = JobHolder()
+    private val feeJobHolder: JobHolder = JobHolder()
+    private val sendTransactionJobHolder = JobHolder()
+    private val stepChangesJobHolder = JobHolder()
+    private val balanceHidingJobHolder = JobHolder()
 
     init {
         subscribeOnSelectedAppCurrency()
@@ -286,6 +287,7 @@ internal class StakingModel @Inject constructor(
         feeJobHolder.cancel()
         sendTransactionJobHolder.cancel()
         stepChangesJobHolder.cancel()
+        balanceHidingJobHolder.cancel()
     }
 
     override fun onBackClick() {
@@ -1284,6 +1286,7 @@ internal class StakingModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
+            .saveIn(balanceHidingJobHolder)
     }
 
     private fun subscribeOnSelectedAppCurrency() {

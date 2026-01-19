@@ -22,7 +22,7 @@ internal typealias WalletIdWithWrappers = Map<String, Set<YieldBalanceWrapperDTO
 internal typealias WalletIdWithStakingBalances = Map<UserWalletId, Set<StakingBalance>>
 
 /**
- * Default implementation of [StakingBalancesStore]
+ * Default implementation of [StakeKitBalancesStore]
  *
  * @property runtimeStore     runtime store
  * @property persistenceStore persistence store
@@ -30,11 +30,11 @@ internal typealias WalletIdWithStakingBalances = Map<UserWalletId, Set<StakingBa
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultStakingBalancesStore(
+internal class DefaultStakeKitBalancesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithStakingBalances>,
     private val persistenceStore: DataStore<WalletIdWithWrappers>,
     dispatchers: CoroutineDispatcherProvider,
-) : StakingBalancesStore {
+) : StakeKitBalancesStore {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
@@ -97,6 +97,23 @@ internal class DefaultStakingBalancesStore(
     }
 
     override suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        coroutineScope {
+            launch { clearInRuntime(userWalletId = userWalletId, stakingIds = stakingIds) }
+            launch { clearInPersistence(userWalletId = userWalletId, stakingIds = stakingIds) }
+        }
+    }
+
+    private suspend fun clearInRuntime(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        runtimeStore.update(default = emptyMap()) { stored ->
+            stored.toMutableMap().apply {
+                this[userWalletId] = this[userWalletId].orEmpty()
+                    .filterNot { it.stakingId in stakingIds }
+                    .toSet()
+            }
+        }
+    }
+
+    private suspend fun clearInPersistence(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
         persistenceStore.updateData { current ->
             current.toMutableMap().apply {
                 this[userWalletId.stringValue] = this[userWalletId.stringValue].orEmpty()

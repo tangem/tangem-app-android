@@ -2,7 +2,8 @@ package com.tangem.data.staking.utils
 
 import arrow.core.right
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.P2PEthPoolBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.StakingIdFactory
@@ -10,7 +11,7 @@ import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
-import io.mockk.coVerifyOrder
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -22,10 +23,12 @@ import org.junit.jupiter.api.TestInstance
 class DefaultStakingCleanerTest {
 
     private val stakingIdFactory = mockk<StakingIdFactory>(relaxed = true)
-    private val stakingBalancesStore = mockk<StakingBalancesStore>(relaxed = true)
+    private val stakeKitBalancesStore = mockk<StakeKitBalancesStore>(relaxed = true)
+    private val p2pEthPoolBalancesStore = mockk<P2PEthPoolBalancesStore>(relaxed = true)
     private val cleaner = DefaultStakingCleaner(
         stakingIdFactory = stakingIdFactory,
-        stakingBalancesStore = stakingBalancesStore,
+        stakeKitBalancesStore = stakeKitBalancesStore,
+        p2pEthPoolBalancesStore = p2pEthPoolBalancesStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -33,7 +36,7 @@ class DefaultStakingCleanerTest {
 
     @BeforeEach
     fun setUp() {
-        clearMocks(stakingIdFactory, stakingBalancesStore)
+        clearMocks(stakingIdFactory, stakeKitBalancesStore, p2pEthPoolBalancesStore)
     }
 
     @Nested
@@ -50,8 +53,9 @@ class DefaultStakingCleanerTest {
             cleaner(userWalletId = userWalletId, stakingIds = stakingIds)
 
             // Assert
-            coVerifyOrder {
-                stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+            coVerify {
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+                p2pEthPoolBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
             }
         }
 
@@ -61,22 +65,39 @@ class DefaultStakingCleanerTest {
             cleaner(userWalletId = userWalletId, stakingIds = emptySet())
 
             // Assert
-            coVerifyOrder(inverse = true) {
-                stakingBalancesStore.clear(userWalletId = any(), stakingIds = any())
+            coVerify(inverse = true) {
+                stakeKitBalancesStore.clear(userWalletId = any(), stakingIds = any())
+                p2pEthPoolBalancesStore.clear(userWalletId = any(), stakingIds = any())
             }
         }
 
         @Test
         fun `should catch exception from stakingBalancesStore and not throw`() = runTest {
             // Arrange
-            coEvery { stakingBalancesStore.clear(userWalletId, stakingIds) } throws Exception()
+            coEvery { stakeKitBalancesStore.clear(userWalletId, stakingIds) } throws Exception()
 
             // Act
             cleaner(userWalletId = userWalletId, stakingIds = stakingIds)
 
             // Assert
-            coVerifyOrder {
-                stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+            coVerify {
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+                p2pEthPoolBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+            }
+        }
+
+        @Test
+        fun `should catch exception from p2pEthPoolBalancesStore and not throw`() = runTest {
+            // Arrange
+            coEvery { p2pEthPoolBalancesStore.clear(userWalletId, stakingIds) } throws Exception()
+
+            // Act
+            cleaner(userWalletId = userWalletId, stakingIds = stakingIds)
+
+            // Assert
+            coVerify {
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
+                p2pEthPoolBalancesStore.clear(userWalletId = userWalletId, stakingIds = stakingIds)
             }
         }
     }
@@ -102,9 +123,10 @@ class DefaultStakingCleanerTest {
             cleaner(userWalletId = userWalletId, currency = coin)
 
             // Assert
-            coVerifyOrder {
+            coVerify {
                 stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = coin)
-                stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
+                p2pEthPoolBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
             }
         }
 
@@ -114,9 +136,10 @@ class DefaultStakingCleanerTest {
             cleaner(userWalletId = userWalletId, currencies = emptyList())
 
             // Assert
-            coVerifyOrder(inverse = true) {
+            coVerify(inverse = true) {
                 stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-                stakingBalancesStore.clear(userWalletId = any(), stakingIds = any())
+                stakeKitBalancesStore.clear(userWalletId = any(), stakingIds = any())
+                p2pEthPoolBalancesStore.clear(userWalletId = any(), stakingIds = any())
             }
         }
 
@@ -130,16 +153,17 @@ class DefaultStakingCleanerTest {
 
             coEvery { stakingIdFactory.create(userWalletId, coin) } returns stakingId.right()
             coEvery {
-                stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
             } throws Exception()
 
             // Act
             cleaner(userWalletId = userWalletId, currency = coin)
 
             // Assert
-            coVerifyOrder {
+            coVerify {
                 stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = coin)
-                stakingBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
+                stakeKitBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
+                p2pEthPoolBalancesStore.clear(userWalletId = userWalletId, stakingIds = setOf(stakingId))
             }
         }
     }
