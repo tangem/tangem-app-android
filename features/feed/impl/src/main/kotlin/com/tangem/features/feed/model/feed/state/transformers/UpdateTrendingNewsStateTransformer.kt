@@ -12,6 +12,7 @@ import com.tangem.features.feed.ui.feed.state.NewsUMState
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import org.joda.time.DateTime
 
 internal class UpdateTrendingNewsStateTransformer(
     private val result: TrendingNews,
@@ -77,11 +78,14 @@ internal class UpdateTrendingNewsStateTransformer(
     private fun separateTrendingAndCommonArticles(
         articles: List<ShortArticle>,
     ): Pair<ShortArticle?, List<ShortArticle>> {
-        val trendingArticleIndex = articles.indexOfFirst { it.isTrending }
-        return if (trendingArticleIndex != -1) {
-            val trendingArticle = articles[trendingArticleIndex]
-            val commonArticles = articles.toMutableList().apply { removeAt(trendingArticleIndex) }
-            trendingArticle to commonArticles
+        val trendingArticles = articles.filter { it.isTrending }
+        return if (trendingArticles.isNotEmpty()) {
+            val newestTrendingArticle = trendingArticles.maxByOrNull { article ->
+                runCatching { DateTime.parse(article.createdAt).millis }.getOrElse { 0L }
+            }
+            val commonArticles = articles.filterNot { it.isTrending || it == newestTrendingArticle } +
+                trendingArticles.filter { it != newestTrendingArticle }
+            newestTrendingArticle to commonArticles
         } else {
             null to articles
         }
