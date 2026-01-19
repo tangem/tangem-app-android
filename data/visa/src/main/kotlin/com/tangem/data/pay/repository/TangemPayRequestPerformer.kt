@@ -11,7 +11,6 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.error.VisaApiError
@@ -31,7 +30,6 @@ private const val TAG = "TangemPayRequestPerformer"
 @Singleton
 internal class TangemPayRequestPerformer @Inject constructor(
     private val errorConverter: TangemPayErrorConverter,
-    private val environmentConfigStorage: EnvironmentConfigStorage,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayAuthApi: TangemPayAuthApi,
     private val tangemPayStorage: TangemPayStorage,
@@ -40,23 +38,10 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
     private val tokensMutex = Mutex()
 
-    suspend fun <T : Any> performWithStaticToken(
-        requestBlock: suspend (header: String) -> ApiResponse<T>,
-    ): Either<VisaApiError, T> = withContext(dispatchers.io) {
-        catch(
-            block = {
-                val staticToken =
-                    environmentConfigStorage.getConfigSync().bffStaticToken ?: error("BFF static token is null")
-                when (val apiResponse = requestBlock(staticToken)) {
-                    is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
-                    is ApiResponse.Success<T> -> apiResponse.data.right()
-                }
-            },
-            catch = { errorConverter.convert(it).left() },
-        )
-    }
-
-    suspend fun <T : Any> performWithoutToken(requestBlock: suspend () -> ApiResponse<T>): Either<VisaApiError, T> =
+    /**
+     * Static token added in headers [com.tangem.datasource.api.common.config.TangemPay]
+     */
+    suspend fun <T : Any> performWithStaticToken(requestBlock: suspend () -> ApiResponse<T>): Either<VisaApiError, T> =
         withContext(dispatchers.io) {
             catch(
                 block = {

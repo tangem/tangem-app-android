@@ -86,13 +86,17 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPay(appVersionProvider)
+    fun provideTangemPayBffConfig(
+        appVersionProvider: AppVersionProvider,
+        environmentConfigStorage: EnvironmentConfigStorage,
+    ): ApiConfig = TangemPay.Bff(appVersionProvider, environmentConfigStorage)
 
     @Provides
     @IntoSet
-    fun provideTangemPayAuthConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPayAuth(
-        appVersionProvider,
-    )
+    fun provideTangemPayAuthConfig(
+        appVersionProvider: AppVersionProvider,
+        environmentConfigStorage: EnvironmentConfigStorage,
+    ): ApiConfig = TangemPay.Auth(appVersionProvider, environmentConfigStorage)
 
     @Provides
     @IntoSet

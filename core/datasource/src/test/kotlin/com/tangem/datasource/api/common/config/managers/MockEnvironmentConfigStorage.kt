@@ -18,6 +18,8 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         blockAidApiKey = BLOCK_AID_API_KEY,
         tangemApiKey = TANGEM_API_KEY,
         tangemApiKeyDev = TANGEM_API_KEY_DEV,
+        bffStaticToken = TANGEM_PAY_BFF_KEY,
+        bffStaticTokenDev = TANGEM_PAY_BFF_KEY_DEV,
         tangemApiKeyStage = TANGEM_API_KEY_STAGE,
         yieldModuleApiKey = YIELD_MODULE_KEY,
         yieldModuleApiKeyDev = YIELD_MODULE_KEY_DEV,
@@ -33,6 +35,8 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         const val BLOCK_AID_API_KEY = "block_aid_api_key"
         const val TANGEM_API_KEY = "tangem_api_key"
         const val TANGEM_API_KEY_DEV = "tangem_api_key_dev"
+        const val TANGEM_PAY_BFF_KEY = "tangem_pay_bff_key"
+        const val TANGEM_PAY_BFF_KEY_DEV = "tangem_pay_bff_key_dev"
         const val TANGEM_GASLESS_API_KEY = "tangem_gasless_api_key"
         const val TANGEM_API_KEY_STAGE = "tangem_api_key_stage"
         const val YIELD_MODULE_KEY = "yield_module_api_key"
