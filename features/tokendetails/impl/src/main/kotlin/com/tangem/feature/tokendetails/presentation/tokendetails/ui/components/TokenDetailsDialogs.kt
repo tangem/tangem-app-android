@@ -1,16 +1,14 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
 import androidx.compose.runtime.Composable
+import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 
 @Composable
-internal fun TokenDetailsDialogs(state: TokenDetailsState) {
-    val dialogConfig = state.dialogConfig
-    if (dialogConfig != null && dialogConfig.isShow) {
+internal fun TokenDetailsDialogs(dialogConfig: TokenDetailsDialogConfig) {
+    if (dialogConfig.isShow) {
         TokenDetailsDialog(config = dialogConfig)
     }
 }
@@ -21,7 +19,7 @@ private fun TokenDetailsDialog(config: TokenDetailsDialogConfig) {
         message = config.content.message.resolveReference(),
         confirmButton = DialogButtonUM(
             title = config.content.confirmButtonConfig.text.resolveReference(),
-            isWarning = config.content.confirmButtonConfig.warning,
+            isWarning = config.content.confirmButtonConfig.hasWarning,
             onClick = config.content.confirmButtonConfig.onClick,
         ),
         onDismissDialog = config.onDismissRequest,
@@ -29,7 +27,7 @@ private fun TokenDetailsDialog(config: TokenDetailsDialogConfig) {
         dismissButton = config.content.cancelButtonConfig?.let { cancelButtonConfig ->
             DialogButtonUM(
                 title = cancelButtonConfig.text.resolveReference(),
-                isWarning = cancelButtonConfig.warning,
+                isWarning = cancelButtonConfig.hasWarning,
                 onClick = cancelButtonConfig.onClick,
             )
         },
