@@ -47,6 +47,7 @@ compose-lifecycle-runtime = "2.7.0"
 
 # region Other libraries
 appsflyer = "6.17.3"
+appsflyer-oaid = "6.12.3"
 amplitude = "2.36.1"
 amplitude-experiment = "1.13.1"
 armadillo = "0.9.0"
@@ -237,6 +238,7 @@ test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orch
 
 # region Other
 appsflyer = { module = "com.appsflyer:af-android-sdk", version.ref = "appsflyer" }
+appsflyer-oaid = { module = "com.appsflyer:oaid", version.ref = "appsflyer-oaid" }
 amplitude = { module = "com.amplitude:android-sdk", version.ref = "amplitude" }
 amplitude-experiment = { module = "com.amplitude:experiment-android-client", version.ref = "amplitude-experiment" }
 armadillo = { module = "at.favre.lib:armadillo", version.ref = "armadillo" }
