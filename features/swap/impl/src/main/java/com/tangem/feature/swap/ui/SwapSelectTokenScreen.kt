@@ -23,8 +23,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -73,6 +76,11 @@ internal fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: ()
             when {
                 state.isNotFoundState -> TokensNotFound(modifier)
                 state.isEmptyState -> EmptyTokensList(modifier)
+                state.marketsState != null -> ListOfTokensWithMarkets(
+                    state = state,
+                    marketsState = state.marketsState,
+                    modifier = modifier,
+                )
                 else -> ListOfTokens(state = state, modifier = modifier)
             }
         },
@@ -142,6 +150,34 @@ private fun TokensNotFound(modifier: Modifier = Modifier) {
 @Composable
 private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier = Modifier) {
     val screenBackgroundColor = TangemTheme.colors.background.secondary
+
+    LazyColumn(
+        modifier = modifier
+            .background(color = screenBackgroundColor)
+            .fillMaxSize()
+            .imePadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        tokensListItems(
+            tokensListData = state.tokensListData,
+            isBalanceHidden = state.isBalanceHidden,
+        )
+
+        tokensToSelectItems(state.availableTokens, state.onTokenSelected)
+
+        item { SpacerH12() }
+
+        tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
+    }
+}
+
+@Composable
+private fun ListOfTokensWithMarkets(
+    state: SwapSelectTokenStateHolder,
+    marketsState: SwapMarketState,
+    modifier: Modifier = Modifier,
+) {
+    val screenBackgroundColor = TangemTheme.colors.background.secondary
     val lazyListState = rememberLazyListState()
 
     LazyColumn(
@@ -152,54 +188,37 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         horizontalAlignment = Alignment.CenterHorizontally,
         state = lazyListState,
     ) {
-        when (val list = state.tokensListData) {
-            is TokenListUMData.AccountList -> {
-                list.tokensList.forEach { item ->
-                    portfolioTokensList(
-                        portfolio = item,
-                        isBalanceHidden = state.isBalanceHidden,
-                    )
-                }
-            }
-            is TokenListUMData.TokenList -> {
-                tokensList(
-                    items = list.tokensList,
-                    isBalanceHidden = state.isBalanceHidden,
-                )
-            }
-            TokenListUMData.EmptyList -> Unit
+        if (state.tokensListData !is TokenListUMData.EmptyList) {
+            assetsTitle(count = state.tokensListData.totalTokensCount)
         }
 
-        if (state.availableTokens.isNotEmpty()) {
-            tokensToSelectItems(state.availableTokens, state.onTokenSelected)
-        }
-        if (state.unavailableTokens.isNotEmpty()) {
+        tokensListItems(
+            tokensListData = state.tokensListData,
+            isBalanceHidden = state.isBalanceHidden,
+        )
+
+        if (state.tokensListData is TokenListUMData.EmptyList) {
             item { SpacerH12() }
-            tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
-        }
-
-        if (state.availableTokens.isNotEmpty() || state.unavailableTokens.isNotEmpty()) {
-            item { SpacerH32() }
         } else {
-            item { SpacerH12() }
+            item { SpacerH32() }
         }
 
-        state.marketsState?.let(::swapMarketsListItems)
+        swapMarketsListItems(marketsState)
     }
 
-    (state.marketsState as? SwapMarketState.Content)?.let { marketState ->
+    (marketsState as? SwapMarketState.Content)?.let { content ->
         VisibleItemsTracker(
             lazyListState = lazyListState,
-            marketState = marketState,
+            marketState = content,
         )
 
         InfiniteListHandler(
             listState = lazyListState,
             buffer = LOAD_MORE_BUFFER,
             triggerLoadMoreCheckOnItemsCountChange = true,
-            onLoadMore = remember(state) {
+            onLoadMore = remember(content) {
                 {
-                    state.marketsState.loadMore()
+                    content.loadMore()
                     true
                 }
             },
@@ -220,6 +239,48 @@ private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapM
 
     LaunchedEffect(visibleItems) {
         marketState.visibleIdsChanged(visibleItems)
+    }
+}
+
+private fun LazyListScope.assetsTitle(count: Int) {
+    item(key = "assets_title") {
+        Text(
+            text = buildAnnotatedString {
+                append(stringResourceSafe(R.string.swap_your_assets_title))
+                withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                    append(" $count")
+                }
+            },
+            style = TangemTheme.typography.h3,
+            color = TangemTheme.colors.text.primary1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing16,
+                    top = TangemTheme.dimens.spacing12,
+                ),
+        )
+    }
+}
+
+private fun LazyListScope.tokensListItems(tokensListData: TokenListUMData, isBalanceHidden: Boolean) {
+    when (tokensListData) {
+        is TokenListUMData.AccountList -> {
+            tokensListData.tokensList.forEach { item ->
+                portfolioTokensList(
+                    portfolio = item,
+                    isBalanceHidden = isBalanceHidden,
+                )
+            }
+        }
+        is TokenListUMData.TokenList -> {
+            tokensList(
+                items = tokensListData.tokensList,
+                isBalanceHidden = isBalanceHidden,
+            )
+        }
+        TokenListUMData.EmptyList -> Unit
     }
 }
 
