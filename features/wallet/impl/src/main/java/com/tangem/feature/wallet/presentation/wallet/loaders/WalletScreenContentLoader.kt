@@ -6,8 +6,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import timber.log.Timber
+import java.util.concurrent.Executors
 import javax.inject.Inject
 
 /**
@@ -24,7 +27,14 @@ internal class WalletScreenContentLoader @Inject constructor(
     private val factory: WalletContentLoaderFactory,
     private val storage: WalletLoaderStorage,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val backgroundThreadOnMainFeatureToggle: BackgroundThreadOnMainFeatureToggle,
 ) {
+
+    private val singleBackgroundDispatcher: CoroutineDispatcher by lazy {
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "Background Main").apply { isDaemon = true }
+        }.asCoroutineDispatcher()
+    }
 
     /**
      * Load content by [UserWallet]
@@ -85,8 +95,14 @@ internal class WalletScreenContentLoader @Inject constructor(
 
         Timber.d("${userWallet.walletId} content loading is ${if (isRefresh) "re" else ""}started")
 
+        val dispatcher = if (backgroundThreadOnMainFeatureToggle.isEnabled) {
+            singleBackgroundDispatcher
+        } else {
+            dispatchers.main
+        }
+
         loader.subscribers
-            .map { it.subscribe(coroutineScope, dispatchers) }
+            .map { it.subscribe(coroutineScope, dispatcher) }
             .let { storage.set(userWallet.walletId, it) }
     }
 }

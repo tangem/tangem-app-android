@@ -1,21 +1,25 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.utils.coroutines.combine6
+import com.tangem.utils.coroutines.combine7
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
 /**
@@ -35,27 +39,52 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : BasicAccountListSubscriber() {
 
-    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine6(
+    override fun create(coroutineScope: CoroutineScope): Flow<*> = combine7(
         flow1 = getAccountStatusListFlow(),
         flow2 = getAppCurrencyFlow(),
         flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
         flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
         flow5 = yieldSupplyApyFlow(),
         flow6 = yieldSupplyGetShouldShowMainPromoFlow(),
-    ) { accountList, appCurrency, expandedAccounts, isAccountMode, yieldSupplyApyMap, shouldShowMainPromo ->
-        updateState(
+        flow7 = stakingAvailabilityFlow(),
+    ) {
+            accountList, appCurrency, expandedAccounts, isAccountMode,
+            yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
+        ->
+        HelperBox(
             accountList = accountList,
             appCurrency = appCurrency,
             expandedAccounts = expandedAccounts,
             isAccountMode = isAccountMode,
             yieldSupplyApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityListUseCase.invokeSync(
-                userWalletId = userWallet.walletId,
-                cryptoCurrencyList = accountList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
-            ),
+            stakingAvailabilityMap = stakingAvailabilityMap,
             shouldShowMainPromo = shouldShowMainPromo,
         )
     }
+        .distinctUntilChanged()
+        .conflate()
+        .onEach { box ->
+            updateState(
+                accountList = box.accountList,
+                appCurrency = box.appCurrency,
+                expandedAccounts = box.expandedAccounts,
+                isAccountMode = box.isAccountMode,
+                yieldSupplyApyMap = box.yieldSupplyApyMap,
+                stakingAvailabilityMap = box.stakingAvailabilityMap,
+                shouldShowMainPromo = box.shouldShowMainPromo,
+            )
+        }
+
+    private fun stakingAvailabilityFlow(): Flow<Map<CryptoCurrency, StakingAvailability>> = getAccountStatusListFlow()
+        .map { accountList -> accountList.flattenCurrencies().map(CryptoCurrencyStatus::currency) }
+        .distinctUntilChanged()
+        .mapLatest { flattenCurrencies ->
+            stakingAvailabilityListUseCase.invokeSync(
+                userWalletId = userWallet.walletId,
+                cryptoCurrencyList = flattenCurrencies,
+            )
+        }
+        .distinctUntilChanged()
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, BigDecimal>> {
         return yieldSupplyApyFlowUseCase().distinctUntilChanged()
@@ -69,4 +98,14 @@ internal class AccountListSubscriber @AssistedInject constructor(
     interface Factory {
         fun create(userWallet: UserWallet): AccountListSubscriber
     }
+
+    private data class HelperBox(
+        val accountList: AccountStatusList,
+        val appCurrency: AppCurrency,
+        val expandedAccounts: Set<AccountId>,
+        val isAccountMode: Boolean,
+        val yieldSupplyApyMap: Map<String, BigDecimal>,
+        val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+        val shouldShowMainPromo: Boolean,
+    )
 }
