@@ -198,6 +198,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             if (isEligible) {
                 router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
             } else {
+                stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
                 tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
             }
         }
