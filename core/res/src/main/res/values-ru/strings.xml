@@ -325,7 +325,7 @@
     <item quantity="one">%d сеть</item>
     <item quantity="few">%d сети</item>
     <item quantity="many">%d сетей</item>
-    <item quantity="other">%d сети</item>
+    <item quantity="other">%d сетях</item>
   </plurals>
   <string name="common_new_address">Новый адрес</string>
   <string name="common_news">Новости</string>
@@ -1543,7 +1543,7 @@
   <string name="tangempay_issue_card_notification_description">Обычно это занимает до 15 минут</string>
   <string name="tangempay_issue_card_notification_title">Готовим вашу Tangem Card</string>
   <string name="tangempay_issuing_your_card">Выпускаем карту</string>
-  <string name="tangempay_issuing_your_card_description">Выпускаем карту, это займет немного времени.</string>
+  <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Подтвердите отмену</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените KYC сейчас, вы сможете потом начать его заново</string>
@@ -1552,7 +1552,7 @@
   <string name="tangempay_kyc_in_progress">KYC в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Вы можете посмотреть текущий статус KYC или отменить его</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_rejected">KYC отклонено</string>
   <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
