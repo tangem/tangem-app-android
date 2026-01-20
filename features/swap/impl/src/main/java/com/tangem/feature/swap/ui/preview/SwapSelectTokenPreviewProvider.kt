@@ -34,6 +34,7 @@ internal class SwapSelectTokenPreviewProvider {
         loadMore = { },
         onItemClick = { },
         visibleIdsChanged = { },
+        total = TOTAL_ITEMS,
     )
 
     private fun createPreviewMarketItems() = listOf(
@@ -114,6 +115,7 @@ internal class SwapSelectTokenPreviewProvider {
         private const val CHART_VALUE_4 = 2.0
         private const val CHART_VALUE_5 = 5.0
         private const val CHART_VALUE_6 = 3.0
+        private const val TOTAL_ITEMS = 322
 
         private val PREVIEW_CHART_DATA = MarketChartRawData(
             y = persistentListOf(
