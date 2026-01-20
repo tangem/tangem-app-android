@@ -438,6 +438,7 @@
   <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card or ring. It will enforce a delay between reception and execution of a command.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
+  <string name="details_mobile_wallet_upgrade_action_title">Upgrade to hardware wallet</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Referral program</string>
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
@@ -451,6 +452,7 @@
   <string name="details_row_title_signed_hashes">Signed</string>
   <string name="details_send_feedback">Send feedback</string>
   <string name="details_title">Details</string>
+  <string name="details_wallets_section_description">You can have either one mobile wallet or hardware wallet at the same time. Upgrade you wallet or delete it from the app to start using a Tangem cold wallet.</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
   <string name="domain_receive_assets_default_address">Default Address</string>
@@ -1247,6 +1249,11 @@
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">Simple to use</string>
+  <string name="settings_upgrade_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">No seed phrase</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">Best in class hardware wallet</string>
+  <string name="settings_upgrade_banner_title">Tangem Cold Wallet</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="stake_token_description">Put your token to work</string>
   <string name="staking_account_initialization_footer">A network fee is a small payment required to process and confirm your transaction on the blockchain.</string>
@@ -1413,6 +1420,7 @@
   <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
   <string name="swap_story_third_title">Simply Convenient</string>
   <string name="swap_via_provider">Swap via provider</string>
+  <string name="swap_your_assets_title">Your assets</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
   <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
@@ -1427,6 +1435,7 @@
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_swap_action">Swap</string>
+  <string name="swapping_swap_action_in_progress">Swapping...</string>
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
@@ -1515,7 +1524,7 @@
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
-  <string name="tangempay_issuing_your_card_description">We’re getting your card ready. This may take a little time.</string>
+  <string name="tangempay_issuing_your_card_description">The card is usually issued automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirm Cancellation</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
@@ -1525,7 +1534,7 @@
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_rejected">KYC rejected</string>
   <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
@@ -1624,6 +1633,7 @@
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
+  <string name="upgrade_to_hardware_wallet_button_title">Upgrade to a hardware wallet</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
   <string name="user_push_notification_agreement_argument_one_title">Transaction Alerts</string>
