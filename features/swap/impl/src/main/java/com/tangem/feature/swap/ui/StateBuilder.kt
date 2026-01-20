@@ -608,6 +608,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
+                isInProgress = true,
             ),
         )
     }
@@ -811,6 +812,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
+                isInProgress = false,
             ),
             permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
