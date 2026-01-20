@@ -10,6 +10,7 @@ internal sealed class SwapMarketState {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
+        val total: Int,
         val loadMore: () -> Unit,
         val onItemClick: (MarketsListItemUM) -> Unit,
         val visibleIdsChanged: (List<CryptoCurrency.RawID>) -> Unit,
