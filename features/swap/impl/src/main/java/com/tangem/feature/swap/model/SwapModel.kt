@@ -2048,6 +2048,7 @@ internal class SwapModel @Inject constructor(
                 uiState = uiState.copy(
                     swapButton = uiState.swapButton.copy(
                         isEnabled = false,
+                        isInProgress = false,
                     ),
                 )
                 modelScope.launch {
