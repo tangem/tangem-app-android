@@ -34,17 +34,22 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.express.PreviewEmptyExpressTransactionsComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.*
+import com.tangem.features.tokendetails.ExpressTransactionsComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
@@ -54,6 +59,7 @@ internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
     cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
+    expressTransactionsComponent: ExpressTransactionsComponent,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -66,6 +72,9 @@ internal fun TangemPayDetailsScreen(
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
         val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
         val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
+        val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
+        val expressTransactionsBottomSheetState = expressState.bottomSheetSlot
+        val expressTransactionsDialogState = expressState.dialogSlot
 
         TangemPullToRefreshContainer(
             config = state.pullToRefreshConfig,
@@ -138,9 +147,19 @@ internal fun TangemPayDetailsScreen(
                         )
                     },
                 )
+                with(expressTransactionsComponent) {
+                    expressTransactionsContent(
+                        state = expressState.transactions,
+                        modifier = modifier
+                            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                            .fillMaxWidth(),
+                    )
+                }
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
+        expressTransactionsDialogState?.content()
+        expressTransactionsBottomSheetState?.content()
     }
 }
 
@@ -292,6 +311,7 @@ private fun TangemPayDetailsScreenPreview(
                     cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 ),
             ),
+            expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
         )
     }
 }
@@ -370,6 +390,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
                     cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 ),
             ),
+            expressTransactionsComponent = PreviewEmptyExpressTransactionsComponent(),
         )
     }
 }
