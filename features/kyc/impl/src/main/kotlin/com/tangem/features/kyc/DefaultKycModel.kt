@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.KycStartInfo
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,6 +23,7 @@ class DefaultKycModel @Inject constructor(
     analytics: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
     private val kycRepository: KycRepository,
+    private val tangemPayEligibilityManager: TangemPayEligibilityManager,
 ) : Model() {
 
     private val params: KycComponent.Params = paramsContainer.require()
@@ -33,7 +35,10 @@ class DefaultKycModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.KycFlowOpened())
         modelScope.launch {
             try {
-                kycRepository.getKycStartInfo(params.userWalletId).getOrNull()?.let { _uiState.emit(it) }
+                kycRepository.getKycStartInfo(params.userWalletId).getOrNull()?.let { state ->
+                    _uiState.emit(state)
+                    tangemPayEligibilityManager.reset()
+                }
             } catch (e: Exception) {
                 Timber.e(e)
             }
