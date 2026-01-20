@@ -1509,7 +1509,7 @@
   <string name="tangempay_issue_card_notification_description">Es dauert in der Regel bis zu 15 Minuten.</string>
   <string name="tangempay_issue_card_notification_title">Einrichtung Ihrer Tangem-Karte</string>
   <string name="tangempay_issuing_your_card">Ausstellung Deiner Karte</string>
-  <string name="tangempay_issuing_your_card_description">Wir bereiten Ihre Karte vor. Dies kann etwas dauern.</string>
+  <string name="tangempay_issuing_your_card_description">Die Karte wird in der Regel innerhalb von 5 Minuten automatisch ausgestellt. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann die Ausstellung bis zu 48 Stunden dauern.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Konvertierung bestätigen</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Möchtest Du den KYC wirklich abbrechen? Du kannst später jederzeit weiter machen.</string>
@@ -1518,7 +1518,7 @@
   <string name="tangempay_kyc_in_progress">KYC in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Über die Schaltflächen unten kannst Du Deinen aktuellen KYC-Status einsehen oder ihn abbrechen.</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Dokumente werden in der Regel innerhalb von 5 Minuten automatisch überprüft. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann es bis zu 48 Stunden dauern.</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
@@ -1767,7 +1767,7 @@
   <string name="wallet_import_seed_description">Importiere eine bestehende Wallet mit Deiner Wiederherstellungsphrase.</string>
   <string name="wallet_import_seed_navtitle">Wallet importieren</string>
   <string name="wallet_import_seed_title">Wiederherstellungsphrase eingeben</string>
-  <string name="wallet_import_success_description">Du hast Deine Wallet erfolgreich gesichert.</string>
+  <string name="wallet_import_success_description">Du hast Deine Wallet erfolgreich importiert.</string>
   <string name="wallet_import_success_navtitle">Wallet importieren</string>
   <string name="wallet_import_success_title">Import abgeschlossen</string>
   <string name="wallet_import_title">Wallet importieren</string>
