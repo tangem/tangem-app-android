@@ -5,7 +5,6 @@ import com.tangem.domain.models.staking.P2PEthPoolStakingAccount
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolReward
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
@@ -111,22 +110,6 @@ interface P2PEthPoolRepository {
         delegatorAddress: String,
         vaultAddress: String,
     ): Either<StakingError, P2PEthPoolStakingAccount>
-
-    /**
-     * Get rewards history for account and vault
-     *
-     * @param network P2PEthPool network (MAINNET or TESTNET)
-     * @param delegatorAddress User's wallet address
-     * @param vaultAddress Vault contract address
-     * @param period Optional period filter in days (30, 60, or 90)
-     * @return Either error or list of reward entries
-     */
-    suspend fun getRewards(
-        network: P2PEthPoolNetwork,
-        delegatorAddress: String,
-        vaultAddress: String,
-        period: Int? = null,
-    ): Either<StakingError, List<P2PEthPoolReward>>
 
     /**
      * Get flow of cached vaults.
