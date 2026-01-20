@@ -29,10 +29,11 @@ class AppsFlyerClient @AssistedInject constructor(
         with(appsFlyerLib) {
             setAppId(context.packageName)
             setDebugLog(true)
-
-            init(apiKey, ConversionListener, context)
+            setAppInviteOneLink("MsTz")
 
             subscribeForDeepLink(appsFlyerDeepLinkListener)
+
+            init(apiKey, ConversionListener, context)
 
             Timber.i("Starting AppsFlyer SDK")
             start(context, apiKey, InitializationListener)
