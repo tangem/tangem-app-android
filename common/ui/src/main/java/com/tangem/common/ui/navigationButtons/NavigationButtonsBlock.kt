@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SendScreenTestTags
+import com.tangem.core.ui.utils.GlobalMultipleClickPreventer
 import com.tangem.core.ui.utils.singleEvent
 
 @Composable
@@ -112,10 +113,12 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
                 text = button.textReference.resolveReference(),
                 enabled = button.isEnabled,
                 onClick = {
-                    if (button.isHapticClick) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    GlobalMultipleClickPreventer.processEvent {
+                        if (button.isHapticClick) {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        button.onClick()
                     }
-                    button.onClick()
                 },
                 showProgress = button.shouldShowProgress,
                 colors = color,
