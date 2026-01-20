@@ -323,6 +323,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
   <string name="common_not_added">Not Added</string>
+  <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
@@ -437,6 +438,8 @@
   <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card or ring. It will enforce a delay between reception and execution of a command.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
+  <string name="details_mobile_section_description">You can have either one mobile wallet or hardware wallet at the same time. Upgrade you wallet or delete it from the app to start using a Tangem cold wallet.</string>
+  <string name="details_mobile_wallet_upgrade_action_title">Upgrade to hardware wallet</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Referral program</string>
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
@@ -539,6 +542,10 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
   <string name="exсhange_token_description">Swap any asset in your portfolio for this token</string>
+  <string name="fee_selector_choose_speed_description">Higher speed means faster confirmation\nand a higher network fee. %s</string>
+  <string name="fee_selector_choose_speed_title">Choose speed</string>
+  <string name="fee_selector_choose_token_description">Choose which token to use to pay\nthe network fee. %s</string>
+  <string name="fee_selector_choose_token_title">Choose token</string>
   <string name="feed_market_and_news">Market &amp; News</string>
   <string name="feed_tangem_ai">Tangem AI</string>
   <string name="feed_trending_now">Trending Now</string>
@@ -555,6 +562,8 @@
   <string name="feedback_subject_support_tangem">Tangem feedback</string>
   <string name="feedback_subject_tx_failed">Can\'t send a transaction</string>
   <string name="feedback_token_description_error">Coin description error</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">Not enough funds</string>
+  <string name="gasless_transaction_fee">Gasless transaction fee</string>
   <string name="generic_error">An error occurred</string>
   <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Requires memo</string>
@@ -596,7 +605,7 @@
   <string name="hw_backup_hardware_create_title">Create new wallet</string>
   <string name="hw_backup_hardware_description">Level up your security with the superior Tangem hardware wallet.</string>
   <string name="hw_backup_hardware_title">Hardware wallet</string>
-  <string name="hw_backup_hardware_upgrade_description">Move your current wallet into Tangem.</string>
+  <string name="hw_backup_hardware_upgrade_description">Convert your current mobile wallet into a Tangem cold wallet.</string>
   <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
@@ -621,7 +630,7 @@
   <string name="hw_remove_wallet_confirmation_title">Are you sure you want to do this?</string>
   <string name="hw_remove_wallet_nav_title">Forget wallet</string>
   <string name="hw_remove_wallet_notification_action_backup_go">Go to backup</string>
-  <string name="hw_remove_wallet_notification_action_backup_view">View backup</string>
+  <string name="hw_remove_wallet_notification_action_backup_view">View recovery phrase</string>
   <string name="hw_remove_wallet_notification_action_forget">Forget wallet</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Forget anyway</string>
   <string name="hw_remove_wallet_notification_description_has_backup">This wallet has a backup. Ensure you can recover it before forgetting the wallet.</string>
@@ -817,7 +826,7 @@
   <string name="news_quick_recap">Quick recap</string>
   <string name="news_related_news">Related News</string>
   <string name="news_related_tokens">Related tokens</string>
-  <string name="news_sources">Sources</string>
+  <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
@@ -985,6 +994,7 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="only_one_mobile_wallet_explanation">You can have either a mobile wallet or a hardware wallet at one time. Upgrade your wallet or delete it from the app to start using a Tangem cold wallet.</string>
   <string name="onramp_all_offers_button_title">All offers</string>
   <string name="onramp_avaiable_with_payment_methods">Available with %s</string>
   <string name="onramp_choose_provider_title_hint">Providers facilitate transactions</string>
@@ -1239,6 +1249,11 @@
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
   <string name="settings_forget_wallet">Forget wallet</string>
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">Simple to use</string>
+  <string name="settings_upgrade_banner_description">Keeps your crypto safe and offline. Slim as a credit card, safer than a bank vault.</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">No seed phrase</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">Best in class hardware wallet</string>
+  <string name="settings_upgrade_banner_title">Tangem Cold Wallet</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="stake_token_description">Put your token to work</string>
   <string name="staking_account_initialization_footer">A network fee is a small payment required to process and confirm your transaction on the blockchain.</string>
@@ -1260,6 +1275,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
+  <string name="staking_details_autocompound_rewards_earned">Rewards are compounded to your staking balance. Funds earned: %s</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
   <string name="staking_details_banner_text">How Staking Works?</string>
@@ -1506,16 +1522,21 @@
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
-  <string name="tangempay_issuing_your_card_description">We’re getting your card ready. This may take a little time.</string>
+  <string name="tangempay_issuing_your_card_description">The card is usually issued automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirm Cancellation</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
   <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
+  <string name="tangempay_kyc_has_failed">KYC has failed</string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Use the buttons below to view your current KYC status or cancel it.</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
+  <string name="tangempay_kyc_rejected">KYC rejected</string>
+  <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
+  <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
+  <string name="tangempay_kyc_rejected_description_span">your profile.</string>
   <string name="tangempay_onboarding_banner_description">Get your free Tangem Visa virtual card</string>
   <string name="tangempay_onboarding_banner_title">Use USDC for everyday payments</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
@@ -1610,6 +1631,7 @@
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
+  <string name="upgrade_to_hardware_wallet_button_title">Upgrade to a hardware wallet</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
   <string name="user_push_notification_agreement_argument_one_title">Transaction Alerts</string>
@@ -1764,7 +1786,7 @@
   <string name="wallet_import_seed_description">Import an existing wallet with your recovery phrase.</string>
   <string name="wallet_import_seed_navtitle">Import wallet</string>
   <string name="wallet_import_seed_title">Enter recovery phrase</string>
-  <string name="wallet_import_success_description">You successfully backed up your wallet.</string>
+  <string name="wallet_import_success_description">You successfully import up your wallet.</string>
   <string name="wallet_import_success_navtitle">Import wallet</string>
   <string name="wallet_import_success_title">Import completed</string>
   <string name="wallet_import_title">Import wallet</string>
@@ -1779,7 +1801,7 @@
   <string name="wallet_settings_access_code_description">This access code protects your wallet and is used to log in and sign transactions.</string>
   <string name="wallet_settings_access_code_title">Set/Change access code</string>
   <string name="wallet_settings_change_access_code_title">Change access code</string>
-  <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
+  <string name="wallet_settings_push_notifications_description">Get push notifications for incoming wallet transactions.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">Push notifications may currently not work on Huawei devices. We\'re actively working on a solution and will release a fix in an upcoming update. Thank you for your understanding!</string>
   <string name="wallet_settings_push_notifications_title">Transaction notifications</string>
   <string name="wallet_settings_set_access_code_title">Set access code</string>
