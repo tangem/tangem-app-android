@@ -48,7 +48,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 
 private const val SHOW_MORE_KEY = "privacyPolicy"
-private const val DELAY_FOR_FOCUS_REQUEST = 200L
+private const val DELAY_FOR_FOCUS_REQUEST = 500L
 
 @Composable
 internal fun TopBarWithSearch(
