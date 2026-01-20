@@ -1536,7 +1536,7 @@
   <string name="tangempay_issue_card_notification_description">Зазвичай це займає до 15 хвилин</string>
   <string name="tangempay_issue_card_notification_title">Готуємо вашу картку Tangem</string>
   <string name="tangempay_issuing_your_card">Випускаємо картку</string>
-  <string name="tangempay_issuing_your_card_description">Випускаємо картку, це займе деякий час.</string>
+  <string name="tangempay_issuing_your_card_description">Карту зазвичай випускають автоматично протягом 5 хвилин. У рідкісних випадках, коли потрібна ручна перевірка, процес може тривати до 48 годин.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Підтвердити скасування</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Ви впевнені, що хочете зупинити процес KYC? Ви можете повернутися до нього в будь-який момент.</string>
@@ -1545,7 +1545,7 @@
   <string name="tangempay_kyc_in_progress">KYC в процесі</string>
   <string name="tangempay_kyc_in_progress_notification_button">Переглянути статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">Перевірка KYC для Tangem Pay в процесі</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Ви можете переглянути поточний статус KYC або відмінити його</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Документи зазвичай перевіряються автоматично протягом 5 хвилин. У рідкісних випадках, коли потрібна ручна перевірка, це може зайняти до 48 годин.</string>
   <string name="tangempay_onboarding_banner_description">Отримайте безкоштовну віртуальну картку Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_onboarding_get_card_button_text">Отримати картку</string>

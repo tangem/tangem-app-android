@@ -430,6 +430,7 @@
   <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
+  <string name="details_mobile_wallet_upgrade_action_title">ハードウェアウォレットにアップグレード</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">紹介プログラム</string>
   <string name="details_row_description_flip_to_hide">デバイスの画面を下に向けると、残高をすばやく非表示にしたり表示したりできます。</string>
@@ -443,6 +444,7 @@
   <string name="details_row_title_signed_hashes">署名済み</string>
   <string name="details_send_feedback">フィードバックを送信</string>
   <string name="details_title">詳細</string>
+  <string name="details_wallets_section_description">同時に利用できるのは、モバイルウォレットまたはハードウェアウォレットのいずれか一方のみです。Tangemのコールドウォレットを利用するには、現在のウォレットをアップグレードするか、アプリから削除してください。</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
   <string name="disclaimer_title">利用規約</string>
   <string name="domain_receive_assets_default_address">デフォルトアドレス</string>
@@ -552,6 +554,7 @@
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">残高不足</string>
   <string name="gasless_transaction_fee">ガス代不要の取引手数料</string>
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
@@ -1225,6 +1228,11 @@
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">シンプルな操作</string>
+  <string name="settings_upgrade_banner_description">暗号資産をオフラインで厳重保管。カードサイズで、金庫以上の安心を。</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">シードフレーズ不要</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">業界最高水準のハードウェアウォレット</string>
+  <string name="settings_upgrade_banner_title">Tangemコールドウォレット</string>
   <string name="settings_wallet_name_title">名前</string>
   <string name="stake_token_description">トークンを活用しよう</string>
   <string name="staking_account_initialization_footer">ネットワーク手数料とは、ブロックチェーン上で取引を処理し、承認するために支払う少額の料金です。</string>
@@ -1391,6 +1399,7 @@
   <string name="swap_story_third_subtitle">手間がかからず直感的に操作でき、数回タップするだけでトークンを交換できます。</string>
   <string name="swap_story_third_title">とにかく便利</string>
   <string name="swap_via_provider">プロバイダー経由のスワップ</string>
+  <string name="swap_your_assets_title">資産</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
   <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
@@ -1493,7 +1502,7 @@
   <string name="tangempay_issue_card_notification_description">通常は最大で15分ほどかかります</string>
   <string name="tangempay_issue_card_notification_title">Tangemカードのセットアップ</string>
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
-  <string name="tangempay_issuing_your_card_description">カードを準備しています。少し時間がかかる場合があります。</string>
+  <string name="tangempay_issuing_your_card_description">カードは通常、5分以内に自動で発行されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">中止を確定する</string>
   <string name="tangempay_kyc_confirm_cancellation_description">KYC手続きを中止しますか？いつでも再開できます。</string>
@@ -1503,7 +1512,7 @@
   <string name="tangempay_kyc_in_progress">KYC進行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
-  <string name="tangempay_kyc_in_progress_popup_description">以下のボタンから、現在のKYCステータスを確認するか、KYCをキャンセルできます。</string>
+  <string name="tangempay_kyc_in_progress_popup_description">書類は通常、5分以内に自動で確認されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
   <string name="tangempay_kyc_rejected">KYCが承認されませんでした</string>
   <string name="tangempay_kyc_rejected_button_text">KYCブロックを非表示</string>
   <string name="tangempay_kyc_rejected_description">申し訳ありません、確認できませんでした</string>
@@ -1602,6 +1611,7 @@
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
+  <string name="upgrade_to_hardware_wallet_button_title">ハードウェアウォレットにアップグレード</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">取引・スワップ・重要な更新に関するリアルタイム通知。</string>
   <string name="user_push_notification_agreement_argument_one_title">取引アラート</string>
