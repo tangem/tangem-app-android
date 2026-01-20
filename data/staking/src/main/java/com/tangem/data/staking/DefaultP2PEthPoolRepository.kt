@@ -7,7 +7,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolBroadcastResultConverter
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolErrorConverter
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolRewardConverter
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingAccountConverter
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolUnsignedTxConverter
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolVaultConverter
@@ -23,7 +22,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolBroadcastResult
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolReward
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolUnsignedTx
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -48,7 +46,6 @@ internal class DefaultP2PEthPoolRepository(
 
     private val vaultConverter = P2PEthPoolVaultConverter
     private val accountConverter = P2PEthPoolStakingAccountConverter
-    private val rewardConverter = P2PEthPoolRewardConverter
     private val broadcastResultConverter = P2PEthPoolBroadcastResultConverter
     private val errorConverter = P2PEthPoolErrorConverter
 
@@ -177,26 +174,6 @@ internal class DefaultP2PEthPoolRepository(
                 p2pEthPoolApi.getAccountInfo(network.value, delegatorAddress, vaultAddress),
             ) { result ->
                 accountConverter.convert(result)
-            }
-        }
-    }
-
-    override suspend fun getRewards(
-        network: P2PEthPoolNetwork,
-        delegatorAddress: String,
-        vaultAddress: String,
-        period: Int?,
-    ): Either<StakingError, List<P2PEthPoolReward>> = either {
-        withContext(dispatchers.io) {
-            handleApiResponse(
-                p2pEthPoolApi.getRewards(
-                    network = network.value,
-                    delegatorAddress = delegatorAddress,
-                    vaultAddress = vaultAddress,
-                    period = period,
-                ),
-            ) { result ->
-                result.rewards.map { rewardConverter.convert(it) }
             }
         }
     }
