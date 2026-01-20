@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -110,7 +111,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
             if (accessExpiresAt.isAfter(now)) {
                 tokens.right()
             } else if (accessExpiresAt.isBefore(now) && refreshExpiresAt.isAfter(now)) {
-                refreshAuthTokens(userWalletId = userWalletId, refreshToken = tokens.refreshToken)
+                refreshAuthTokens(userWalletId = userWalletId, authTokens = tokens)
             } else {
                 VisaApiError.RefreshTokenExpired.left()
             }
@@ -119,13 +120,15 @@ internal class TangemPayRequestPerformer @Inject constructor(
 
     private suspend fun refreshAuthTokens(
         userWalletId: UserWalletId,
-        refreshToken: String,
+        authTokens: TangemPayAuthTokens,
     ): Either<VisaApiError, TangemPayAuthTokens> {
         val customerWalletAddress = getCustomerWalletAddress(userWalletId)
+        val idempotencyKey = requireNotNull(authTokens.idempotencyKey) { "Idempotency key is null" }
         val apiResponse = tangemPayAuthApi.refreshCustomerWalletAccessToken(
+            idempotencyKey = idempotencyKey,
             request = RefreshCustomerWalletAccessTokenRequest(
                 authType = "customer_wallet",
-                refreshToken = refreshToken,
+                refreshToken = authTokens.refreshToken,
             ),
         )
         val responseEither = when (apiResponse) {
@@ -138,6 +141,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 expiresAt = response.expiresAt,
                 refreshToken = response.refreshToken,
                 refreshExpiresAt = response.refreshExpiresAt,
+                idempotencyKey = UUID.randomUUID().toString(),
             )
         }.mapLeft { error ->
             Timber.tag(TAG).e("Can not refresh auth tokens: $error")
