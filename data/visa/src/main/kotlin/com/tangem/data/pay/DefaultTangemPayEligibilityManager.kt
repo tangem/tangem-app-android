@@ -44,6 +44,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
 
     override suspend fun getTangemPayAvailability(): Boolean {
         return onboardingRepository.checkCustomerEligibility()
+            .also { isEligible -> if (!isEligible) reset() }
     }
 
     private suspend fun getUserWalletsData(): List<UserWalletData> {
@@ -120,7 +121,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
-    private fun reset() {
+    override fun reset() {
         cachedEligibleWallets = null
         eligibleWalletsDeferred?.cancel()
         eligibleWalletsDeferred = null
