@@ -153,7 +153,10 @@ internal class TokenDetailsModel @Inject constructor(
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
-) : Model(), TokenDetailsClickIntents, YieldSupplyDepositedWarningComponent.ModelCallback {
+) : Model(),
+    TokenDetailsClickIntents,
+    ExpressTransactionsClickIntents,
+    YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
     private val userWalletId: UserWalletId = params.userWalletId
@@ -184,7 +187,8 @@ internal class TokenDetailsModel @Inject constructor(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        clickIntents = this,
+        tokenDetailsClickIntents = this,
+        expressTransactionsClickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
