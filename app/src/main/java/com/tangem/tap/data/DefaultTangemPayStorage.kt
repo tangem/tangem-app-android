@@ -16,6 +16,7 @@ import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,12 +72,21 @@ internal class DefaultTangemPayStorage @Inject constructor(
             )
         }
 
-    override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? =
-        withContext(dispatcherProvider.io) {
-            secureStorage.get(createAuthTokensKey(customerWalletAddress))
-                ?.decodeToString(throwOnInvalidSequence = true)
-                ?.let(tokensAdapter::fromJson)
+    override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? {
+        val authTokens = secureStorage.get(createAuthTokensKey(customerWalletAddress))
+            ?.decodeToString(throwOnInvalidSequence = true)
+            ?.let(tokensAdapter::fromJson)
+
+        return authTokens?.let { tokens ->
+            if (tokens.idempotencyKey == null) {
+                val newAuthTokens = tokens.copy(idempotencyKey = UUID.randomUUID().toString())
+                storeAuthTokens(customerWalletAddress, newAuthTokens)
+                newAuthTokens
+            } else {
+                tokens
+            }
         }
+    }
 
     override suspend fun clearAuthTokens(customerWalletAddress: String) {
         secureStorage.delete(createAuthTokensKey(customerWalletAddress))
