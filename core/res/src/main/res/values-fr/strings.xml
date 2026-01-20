@@ -1502,7 +1502,7 @@
   <string name="tangempay_issue_card_notification_description">Cela prend généralement jusqu\'à 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Configuration de votre carte Tangem</string>
   <string name="tangempay_issuing_your_card">Émission de votre carte</string>
-  <string name="tangempay_issuing_your_card_description">Nous préparons votre carte. Cela peut prendre un peu de temps.</string>
+  <string name="tangempay_issuing_your_card_description">La carte est généralement émise automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, l’émission peut prendre jusqu’à 48 heures.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_confirm_cancellation_alert_title">Confirmer l\'annulation</string>
   <string name="tangempay_kyc_confirm_cancellation_description">Êtes-vous sûr de vouloir interrompre le processus KYC ? Vous pouvez y revenir à tout moment.</string>
@@ -1511,7 +1511,7 @@
   <string name="tangempay_kyc_in_progress">KYC en cours</string>
   <string name="tangempay_kyc_in_progress_notification_button">Voir le statut</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en cours pour Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Utilisez les boutons ci-dessous pour consulter votre statut KYC actuel ou l\'annuler.</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Les documents sont généralement vérifiés automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, le processus peut prendre jusqu’à 48 heures.</string>
   <string name="tangempay_onboarding_banner_description">Obtenez votre carte virtuelle Tangem Visa gratuite</string>
   <string name="tangempay_onboarding_banner_title">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtenir la carte</string>
