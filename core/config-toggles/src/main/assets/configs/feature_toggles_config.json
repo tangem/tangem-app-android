@@ -78,5 +78,9 @@
     {
         "name": "SWAP_MARKET_LIST_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "BACKGROUND_THREAD_ON_MAIN_ENABLED",
+        "version": "5.33.0"
     }
 ]
