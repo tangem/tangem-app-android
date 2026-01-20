@@ -78,6 +78,15 @@ internal class SwapMarketsListBatchFlowManager(
             initialValue = false,
         )
 
+    val totalCount: StateFlow<Int?> = batchFlow.state
+        .map { it.totalCount }
+        .distinctUntilChanged()
+        .stateIn(
+            scope = modelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
+
     init {
         batchFlow.state
             .map { it.data }

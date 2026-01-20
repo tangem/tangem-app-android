@@ -7,6 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.core.ui.components.UnableToLoadData
@@ -18,8 +21,16 @@ import com.tangem.feature.swap.presentation.R
 
 internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
     item {
+        val totalCount = (state as? SwapMarketState.Content)?.total
         Text(
-            text = stringResourceSafe(R.string.markets_common_title),
+            text = buildAnnotatedString {
+                append(stringResourceSafe(R.string.markets_common_title))
+                if (totalCount != null) {
+                    withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                        append(" $totalCount")
+                    }
+                }
+            },
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier.fillMaxWidth().padding(horizontal = TangemTheme.dimens.spacing16),
