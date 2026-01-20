@@ -380,7 +380,11 @@ private fun MainButton(state: SwapStateHolder) {
     } else {
         PrimaryButtonIconEnd(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(id = R.string.swapping_swap_action),
+            text = if (state.swapButton.isInProgress) {
+                stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
+            } else {
+                stringResourceSafe(id = R.string.swapping_swap_action)
+            },
             iconResId = state.swapButton.walletInteractionIcon,
             enabled = state.swapButton.isEnabled,
             onClick = state.swapButton.onClick,
