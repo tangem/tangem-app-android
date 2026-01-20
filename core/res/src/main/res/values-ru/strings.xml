@@ -9,6 +9,8 @@
   <string name="access_code_alert_validation_title">Код доступа может быть легко угадан</string>
   <string name="access_code_check_title">Введите код доступа</string>
   <string name="access_code_check_warining_delete">Неверный код доступа. Ваш мобильный кошелёк будет удалён после ещё %s неверных попыток.</string>
+  <string name="access_code_check_warining_lock">Неверный код доступа. Приложение будет заблокировано после ещё %s неудачных попыток.</string>
+  <string name="access_code_check_warining_wait">Неверный код доступа.\nПожалуйста, подождите %s секунд и попробуйте снова.</string>
   <string name="access_code_confirm_description">Подтвердите ваш код доступа, чтобы продолжить.</string>
   <string name="access_code_confirm_title">Повторите код доступа</string>
   <string name="access_code_create_description">Установите %s-значный код доступа для разблокировки кошелька.</string>
@@ -37,10 +39,12 @@
   <string name="account_edit_failure_dialog_title">Невозможно отредактировать аккаунт</string>
   <string name="account_edit_success_message">Аккаунт сохранен</string>
   <string name="account_for_rewards">Аккаунт для наград</string>
+  <string name="account_form_account_index">Аккаунт #%s — используется для генерации адреса.</string>
   <string name="account_form_create_button">Добавить аккаунт</string>
   <string name="account_form_edit_button">Сохранить</string>
   <string name="account_form_name">Название аккаунта</string>
-  <string name="account_form_name_already_exist_error_description">Имя аккаунта уже существует</string>
+  <string name="account_form_name_already_exist_error_description">Аккаунт с таким названием уже существует. Пожалуйста, выберите другое название.</string>
+  <string name="account_form_name_already_exist_error_title">Название аккаунта уже используется</string>
   <string name="account_form_placeholder_edit_account">Аккаунт</string>
   <string name="account_form_placeholder_new_account">Новый аккаунт</string>
   <string name="account_form_title_create">Добавить аккаунт</string>
@@ -252,6 +256,7 @@
   <string name="common_confirm">Подтвердить</string>
   <string name="common_connecting">Подключение</string>
   <string name="common_contact_support">Обратиться в поддержку</string>
+  <string name="common_contact_tangem_support">Связаться с поддержкой</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_convert">Конвертировать</string>
   <string name="common_copy">Копировать</string>
@@ -377,6 +382,7 @@
   <string name="common_supported_networks">Поддерживаемые сети</string>
   <string name="common_swap">Обменять</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Кошелек</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_to">На</string>
@@ -544,6 +550,10 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
   <string name="exсhange_token_description">Обменяйте любой актив в вашем портфеле на этот токен</string>
+  <string name="fee_selector_choose_speed_description">Более высокая скорость означает более быстрое подтверждение, но и более высокую сетевую комиссию. %s</string>
+  <string name="fee_selector_choose_speed_title">Выбрать скорость</string>
+  <string name="fee_selector_choose_token_description">Выберите какой токен будет использоваться для оплаты комиссии сети. %s</string>
+  <string name="fee_selector_choose_token_title">Выбрать токен</string>
   <string name="feed_market_and_news">Рынок и Новости</string>
   <string name="feed_trending_now">В тренде</string>
   <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
@@ -600,7 +610,7 @@
   <string name="hw_backup_hardware_create_title">Создать новый кошелек</string>
   <string name="hw_backup_hardware_description">Повысьте уровень безопасности с помощью продвинутого аппаратного кошелька Tangem.</string>
   <string name="hw_backup_hardware_title">Аппаратный кошелёк</string>
-  <string name="hw_backup_hardware_upgrade_description">Перенести текущий кошелёк в Tangem Wallet.</string>
+  <string name="hw_backup_hardware_upgrade_description">Перенесите свой текущий кошелек в холодный кошелек Tangem.</string>
   <string name="hw_backup_hardware_upgrade_title">Улучшить текущий кошелёк</string>
   <string name="hw_backup_need_action">Перейти к бэкапу</string>
   <string name="hw_backup_need_description">Пожалуйста, создайте резервную копию вашего кошелька перед установкой кода доступа.</string>
@@ -625,7 +635,7 @@
   <string name="hw_remove_wallet_confirmation_title">Вы уверены, что хотите выполнить эту операцию?</string>
   <string name="hw_remove_wallet_nav_title">Забыть кошелек</string>
   <string name="hw_remove_wallet_notification_action_backup_go">Перейти к резервному копированию</string>
-  <string name="hw_remove_wallet_notification_action_backup_view">Посмотреть резервное копирование</string>
+  <string name="hw_remove_wallet_notification_action_backup_view">Показать фразу восстановления</string>
   <string name="hw_remove_wallet_notification_action_forget">Забыть кошелек</string>
   <string name="hw_remove_wallet_notification_action_forget_anyway">Забыть всё равно</string>
   <string name="hw_remove_wallet_notification_description_has_backup">Резервная копия этого кошелька существует. Проверьте её перед удалением, чтобы убедиться, что сможете восстановить кошелёк позже.</string>
@@ -633,6 +643,7 @@
   <string name="hw_remove_wallet_notification_title">Забыть этот кошелек?</string>
   <string name="hw_remove_wallet_warning_access">Я понимаю, что если я не создал резервную копию кошелька перед его удалением, я могу потерять к нему доступ.</string>
   <string name="hw_remove_wallet_warning_device">Я понимаю, что удаление моего кошелька не стирает его — оно просто удаляет его с моего устройства.</string>
+  <string name="hw_upgrade">Апгрейд</string>
   <string name="hw_upgrade_backup_description">Фраза восстановления больше не нужна — ваша карта или кольцо Tangem становятся вашей надёжной резервной копией.</string>
   <string name="hw_upgrade_backup_title">Резервное копирование</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Это устройство не может быть использовано для апгрейда, оно уже содержит другой кошелек.</string>
@@ -814,6 +825,23 @@
   <string name="mobile_wallet_requires_min_os_warning_body">Обновитесь до версии %1$s, чтобы создать мобильный кошелёк</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобильный кошелек требует %1$s или новее.</string>
   <string name="news_all_news">Все новости</string>
+  <string name="news_like">Нравится</string>
+  <plurals name="news_published_hours_ago">
+    <item quantity="one">%dч назад</item>
+    <item quantity="few">%dч назад</item>
+    <item quantity="many">%dч назад</item>
+    <item quantity="other">%dч назад</item>
+  </plurals>
+  <plurals name="news_published_minutes_ago">
+    <item quantity="one">%dмин назад</item>
+    <item quantity="few">%dмин назад</item>
+    <item quantity="many">%dмин назад</item>
+    <item quantity="other">%dмин назад</item>
+  </plurals>
+  <string name="news_quick_recap">Резюме</string>
+  <string name="news_related_news">Связанные новости</string>
+  <string name="news_related_tokens">Связанные токены</string>
+  <string name="news_sources">Связанные новости</string>
   <string name="news_stay_in_the_loop">Будьте в курсе</string>
   <string name="nfc_error_unavailable">Функция NFC недоступна на вашем устройстве</string>
   <string name="nft_about_title">О NFT</string>
@@ -1100,6 +1128,7 @@
   <string name="reset_card_to_factory_button_title">Сбросить карту</string>
   <string name="reset_card_to_factory_condition_1">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
   <string name="reset_card_to_factory_condition_2">Я понимаю, что не смогу использовать эту карту для восстановления кода доступа на других картах текущего кошелька</string>
+  <string name="reset_card_to_factory_condition_3">Я понимаю, что полностью потеряю доступ к своей карте Tangem Pay и всем средствам на ней без возможности восстановления.</string>
   <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="reset_cards_dialog_complete_description">Все Tangem девайсы были сброшены.</string>
@@ -1446,6 +1475,7 @@
   <string name="tangem_pay_freeze_card_success">Карта заморожена</string>
   <string name="tangem_pay_get_help">Обратиться в поддержку</string>
   <string name="tangem_pay_other">Другое</string>
+  <string name="tangem_pay_rooted_device_subtitle">Невозможно использовать на устройствах с root-доступом.</string>
   <string name="tangem_pay_status_completed">Успешно завершено</string>
   <string name="tangem_pay_status_declined">Отклонено</string>
   <string name="tangem_pay_status_pending">В процессе</string>
@@ -1459,6 +1489,7 @@
   <string name="tangem_pay_unfreeze_card_success">Карта разморожена</string>
   <string name="tangem_pay_withdrawal">Вывести</string>
   <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
+  <string name="tangempay_cancel_kyc">Отменить KYC</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
   <string name="tangempay_card_details_card_number">Номер</string>
@@ -1512,14 +1543,17 @@
   <string name="tangempay_issue_card_notification_description">Обычно это занимает до 15 минут</string>
   <string name="tangempay_issue_card_notification_title">Готовим вашу Tangem Card</string>
   <string name="tangempay_issuing_your_card">Выпускаем карту</string>
-  <string name="tangempay_issuing_your_card_description">Выпускаем карту, это займет немного времени.</string>
+  <string name="tangempay_issuing_your_card_description">Обычно это занимает не больше 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_confirm_cancellation_alert_title">Подтвердите отмену</string>
+  <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените KYC сейчас, вы сможете потом начать его заново</string>
   <string name="tangempay_kyc_failed_description">Не удалось подтвердить ваш профиль. Если у вас есть вопросы, обратитесь в службу поддержки.</string>
   <string name="tangempay_kyc_failed_title">К сожалению, нам не удалось подтвердить вашу личность</string>
   <string name="tangempay_kyc_in_progress">KYC в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
-  <string name="tangempay_kyc_in_progress_popup_description">Вы можете посмотреть текущий статус KYC или отменить его</string>
+  <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
+  <string name="tangempay_kyc_rejected">KYC отклонено</string>
   <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
@@ -1639,7 +1673,9 @@
   <string name="visa_onboarding_pin_code_title">Установить ПИН-код</string>
   <string name="visa_onboarding_pin_not_accepted">ПИН не принят. Попробуйте ещё раз или введите другой код.</string>
   <string name="visa_onboarding_pin_validation_error_message">Слабый ПИН: не используйте повторы или последовательности.</string>
+  <string name="visa_transaction_details_currency_code">Код валюты</string>
   <string name="visa_unlock_notification_button">Разблокировать</string>
+  <string name="visa_unlock_notification_subtitle">Отсканируйте свою карту, чтобы разблокировать доступ</string>
   <string name="wallet_add_common_title">Выберите тип кошелька</string>
   <string name="wallet_add_hardware_description">Отсканируйте вашу карту или кольцо Tangem, чтобы восстановить её или импортировать из другого кошелька.</string>
   <string name="wallet_add_hardware_info_create">Создать аппаратный кошелёк</string>
@@ -1706,7 +1742,7 @@
   <string name="wallet_import_seed_description">Импортируйте существующий кошелек через вашу фразу восстановления.</string>
   <string name="wallet_import_seed_navtitle">Имрортировать кошелек</string>
   <string name="wallet_import_seed_title">Ввести фразу восстановления</string>
-  <string name="wallet_import_success_description">Вы успешно сделали бэкап вашего кошелька.</string>
+  <string name="wallet_import_success_description">Вы успешно импортировали свой кошелек.</string>
   <string name="wallet_import_success_navtitle">Импортировать кошелек</string>
   <string name="wallet_import_success_title">Импорт завершен</string>
   <string name="wallet_import_title">Импортировать кошелек</string>
@@ -1720,8 +1756,8 @@
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_access_code_description">Код доступа защищает кошелёк и нужен для входа и подписания транзакций.</string>
   <string name="wallet_settings_access_code_title">Установить/изменить код доступа</string>
-  <string name="wallet_settings_change_access_code_title">Изменить Код Доступа</string>
-  <string name="wallet_settings_push_notifications_description">Получайте уведомления о входящих транзакциях в кошельке и обновлениях Tangem.</string>
+  <string name="wallet_settings_change_access_code_title">Изменить код доступа</string>
+  <string name="wallet_settings_push_notifications_description">Получайте push-уведомления о входящих транзакциях в кошелек.</string>
   <string name="wallet_settings_push_notifications_huawei_warning">В настоящий момент push-уведомления могут не работать на устройствах Huawei. Мы уже работаем над решением этой проблемы и планируем исправление в ближайших обновлениях. Спасибо за понимание!</string>
   <string name="wallet_settings_push_notifications_title">Уведомления о транзакциях</string>
   <string name="wallet_settings_set_access_code_title">Установить Код Доступа</string>
@@ -1761,6 +1797,7 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Сумма получения не может быть менее %s</string>
   <string name="warning_express_pair_unavailable_message">Это может произойти из-за того, что провайдер временно не предоставляет обмен выбранной вами пары. Пожалуйста, подождите некоторое время и попробуйте снова. (Код %s)</string>
   <string name="warning_express_pair_unavailable_title">Выбранная пара временно недоступна</string>
+  <string name="warning_express_providers_fca_warning_title">Предупреждающий список FCA</string>
   <string name="warning_express_refresh_required_title">Сервис временно недоступен</string>
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
   <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
