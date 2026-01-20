@@ -94,23 +94,4 @@ interface P2PEthPoolApi {
         @Path("delegatorAddress") delegatorAddress: String,
         @Path("vaultAddress") vaultAddress: String,
     ): ApiResponse<P2PEthPoolResponse<P2PEthPoolAccountResponse>>
-
-    /**
-     * Get rewards history
-     *
-     * Retrieve historical rewards data for a specific account and vault.
-     *
-     * @param network Ethereum pool network: "mainnet" or "hoodi"
-     * @param delegatorAddress Account address that initiated staking
-     * @param vaultAddress Ethereum address of the vault
-     * @param period Optional period filter (30, 60, or 90 days)
-     */
-    // TODO p2p not used, consider removing this method
-    @GET("api/v1/staking/pool/{network}/account/{delegatorAddress}/vault/{vaultAddress}/rewards")
-    suspend fun getRewards(
-        @Path("network") network: String,
-        @Path("delegatorAddress") delegatorAddress: String,
-        @Path("vaultAddress") vaultAddress: String,
-        @Query("period") period: Int? = null,
-    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolRewardsResponse>>
 }
