@@ -203,17 +203,19 @@ internal class StakingModel @Inject constructor(
     private val balancesToShow: List<StakingBalanceEntry>
         get() {
             val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
-            return when (stakingBalance) {
-                is StakingBalance.Data.StakeKit -> {
-                    val invalidatedItems = invalidatePendingTransactionsUseCase(
-                        balanceItems = stakingBalance.balance.items,
+            return when (integration) {
+                is StakeKitIntegration -> {
+                    val balanceItems = (stakingBalance as? StakingBalance.Data.StakeKit)
+                        ?.balance?.items.orEmpty()
+                    invalidatePendingTransactionsUseCase(
+                        balanceItems = balanceItems,
                         stakingActions = stakingActions,
                         token = integration.token,
-                    ).getOrElse { emptyList() }
-                    invalidatedItems.toStakingBalanceEntries()
+                    ).getOrElse { emptyList() }.toStakingBalanceEntries()
                 }
-                is StakingBalance.Data.P2PEthPool -> stakingBalance.entries
-                else -> emptyList()
+                is P2PEthPoolIntegration -> {
+                    (stakingBalance as? StakingBalance.Data.P2PEthPool)?.entries.orEmpty()
+                }
             }
         }
 
