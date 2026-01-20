@@ -371,6 +371,8 @@ dependencies {
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
     implementation(deps.appsflyer)
+    implementation(deps.appsflyer.oaid)
+    implementation("com.android.installreferrer:installreferrer:2.2")
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
