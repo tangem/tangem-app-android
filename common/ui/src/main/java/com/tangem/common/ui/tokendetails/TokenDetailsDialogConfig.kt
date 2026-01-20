@@ -1,9 +1,9 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
+package com.tangem.common.ui.tokendetails
 
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.features.tokendetails.impl.R
 
 /**
  * Wallet bottom sheet config
@@ -12,7 +12,7 @@ import com.tangem.features.tokendetails.impl.R
  * @property onDismissRequest lambda be invoked when bottom sheet is dismissed
  * @property content          content config
  */
-internal data class TokenDetailsDialogConfig(
+data class TokenDetailsDialogConfig(
     val isShow: Boolean,
     val onDismissRequest: () -> Unit,
     val content: DialogContentConfig,
@@ -28,7 +28,7 @@ internal data class TokenDetailsDialogConfig(
         data class ButtonConfig(
             val text: TextReference,
             val onClick: () -> Unit,
-            val warning: Boolean = false,
+            val hasWarning: Boolean = false,
         )
 
         data class ConfirmHideConfig(
@@ -51,7 +51,7 @@ internal data class TokenDetailsDialogConfig(
             override val confirmButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.token_details_hide_alert_hide),
                 onClick = onConfirmClick,
-                warning = true,
+                hasWarning = true,
             )
         }
 
