@@ -41,17 +41,25 @@ internal data class TokenBalanceData(
 internal sealed interface TokenListUMData {
 
     val tokensList: ImmutableList<TokensListItemUM>
+    val totalTokensCount: Int
 
     data class AccountList(
         override val tokensList: ImmutableList<TokensListItemUM.Portfolio>,
+        override val totalTokensCount: Int,
     ) : TokenListUMData
 
     data class TokenList(
         override val tokensList: ImmutableList<TokensListItemUM>,
+        override val totalTokensCount: Int,
     ) : TokenListUMData
 
     data object EmptyList : TokenListUMData {
         override val tokensList: ImmutableList<TokensListItemUM> = persistentListOf()
+        override val totalTokensCount: Int = EMPTY_TOKENS_COUNT
+    }
+
+    private companion object {
+        const val EMPTY_TOKENS_COUNT = 0
     }
 }
 

@@ -261,6 +261,13 @@ internal class SwapModel @Inject constructor(
         override fun onSuccess(addedToken: CryptoCurrency) {
             modelScope.launch {
                 bottomSheetNavigation.dismiss()
+                uiState.selectTokenState?.let { currentSelectState ->
+                    uiState = uiState.copy(
+                        selectTokenState = currentSelectState.copy(
+                            marketsState = null,
+                        ),
+                    )
+                }
                 getAccountCurrencyStatusUseCase.invoke(userWalletId, addedToken)
                     .firstOrNull {
                         it.status.value is CryptoCurrencyStatus.Loaded
@@ -341,7 +348,8 @@ internal class SwapModel @Inject constructor(
                 flow2 = searchMarketsListManager.uiItems,
                 flow3 = searchMarketsListManager.isInInitialLoadingErrorState,
                 flow4 = searchMarketsListManager.isSearchNotFoundState,
-            ) { searchQuery, uiItems, isError, isSearchNotFound ->
+                flow5 = searchMarketsListManager.totalCount.filterNotNull(),
+            ) { searchQuery, uiItems, isError, isSearchNotFound, total ->
                 when {
                     searchQuery.isEmpty() -> {
                         visibleMarketItemIds.value = emptyList()
@@ -359,6 +367,7 @@ internal class SwapModel @Inject constructor(
                             addToPortfolioItem(item)
                         },
                         visibleIdsChanged = { visibleMarketItemIds.value = it },
+                        total = total,
                     )
                 }
             }

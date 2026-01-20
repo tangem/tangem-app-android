@@ -98,6 +98,7 @@ internal class DefaultMarketsTokenRepository(
                     data = tokenMarketListWithMaxApy.tokens,
                     last = isLast,
                     empty = res.tokens.isEmpty(),
+                    total = res.total,
                 )
             }
         },
