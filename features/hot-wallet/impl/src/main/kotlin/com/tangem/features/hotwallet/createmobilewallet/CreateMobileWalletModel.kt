@@ -61,7 +61,6 @@ internal class CreateMobileWalletModel @Inject constructor(
     init {
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.Started(source = params.source))
-        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.AppsFlyerOnlyEntryScreenView())
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = params.source),
         )
