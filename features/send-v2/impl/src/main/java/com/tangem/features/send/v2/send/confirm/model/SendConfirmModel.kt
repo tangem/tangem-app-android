@@ -425,8 +425,8 @@ internal class SendConfirmModel @Inject constructor(
                     ),
                 )
             },
-            ifRight = {
-                updateTransactionStatus(txData)
+            ifRight = { txHash ->
+                updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
                 sendAnalyticHelper.sendSuccessAnalytics(
@@ -479,9 +479,9 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
-    private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+    private fun updateTransactionStatus(txData: TransactionData.Uncompiled, txHash: String) {
         val txUrl = getExplorerTransactionUrlUseCase(
-            txHash = txData.hash.orEmpty(),
+            txHash = txHash.ifEmpty { txData.hash.orEmpty() },
             networkId = cryptoCurrency.network.id,
         ).getOrNull().orEmpty()
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
