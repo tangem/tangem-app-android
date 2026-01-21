@@ -5,6 +5,7 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
 import javax.inject.Inject
@@ -20,6 +21,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
     private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
     private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
     private val visaWalletContentLoaderFactory: VisaWalletContentLoaderFactory,
+    private val modelScopeDependencies: ModelScopeDependencies,
 ) {
 
     fun create(
@@ -30,14 +32,14 @@ internal class WalletContentLoaderFactory @Inject constructor(
         return when {
             userWallet.isMultiCurrency -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {
-                    multiWalletContentLoaderV2Factory.create(userWallet)
+                    multiWalletContentLoaderV2Factory.create(userWallet, modelScopeDependencies)
                 } else {
                     multiWalletContentLoaderFactory.create(userWallet, clickIntents)
                 }
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {
-                    singleWalletWithTokenContentLoaderV2Factory.create(userWallet)
+                    singleWalletWithTokenContentLoaderV2Factory.create(userWallet, modelScopeDependencies)
                 } else {
                     singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
                 }
@@ -47,7 +49,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
             }
             userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {
-                    singleWalletContentLoaderV2Factory.create(userWallet, isRefresh)
+                    singleWalletContentLoaderV2Factory.create(userWallet, isRefresh, modelScopeDependencies)
                 } else {
                     singleWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
                 }

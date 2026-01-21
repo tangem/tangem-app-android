@@ -1,7 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -22,7 +23,8 @@ import kotlinx.coroutines.flow.*
  */
 internal class CheckWalletWithFundsSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
-    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    @Assisted val modelScopeDependencies: ModelScopeDependencies,
+    override val accountsSharedFlowHolder: AccountsSharedFlowHolder = modelScopeDependencies.accountsSharedFlowHolder,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BasicWalletSubscriber() {
@@ -37,6 +39,9 @@ internal class CheckWalletWithFundsSubscriber @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet): CheckWalletWithFundsSubscriber
+        fun create(
+            userWallet: UserWallet,
+            modelScopeDependencies: ModelScopeDependencies,
+        ): CheckWalletWithFundsSubscriber
     }
 }

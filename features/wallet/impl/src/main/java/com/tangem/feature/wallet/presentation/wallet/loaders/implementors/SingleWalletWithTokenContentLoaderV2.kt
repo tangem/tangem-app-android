@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -16,6 +17,7 @@ import dagger.assisted.AssistedInject
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoaderV2 @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet.Cold,
+    @Assisted private val modelScopeDependencies: ModelScopeDependencies,
     private val singleWalletWithTokenSubscriberFactory: SingleWalletWithTokenSubscriber.Factory,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
     private val clickIntents: WalletClickIntents,
@@ -43,11 +45,14 @@ internal class SingleWalletWithTokenContentLoaderV2 @AssistedInject constructor(
             clickIntents = clickIntents,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
         ),
-        checkWalletWithFundsSubscriberFactory.create(userWallet),
+        checkWalletWithFundsSubscriberFactory.create(userWallet, modelScopeDependencies),
     )
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet.Cold): SingleWalletWithTokenContentLoaderV2
+        fun create(
+            userWallet: UserWallet.Cold,
+            modelScopeDependencies: ModelScopeDependencies,
+        ): SingleWalletWithTokenContentLoaderV2
     }
 }

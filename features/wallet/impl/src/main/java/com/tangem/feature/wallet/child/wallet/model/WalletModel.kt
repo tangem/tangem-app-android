@@ -10,9 +10,6 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -27,6 +24,7 @@ import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
@@ -96,12 +94,11 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val accountDependencies: AccountDependencies,
+    private val modelScopeDependencies: ModelScopeDependencies,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
-    private val singleAccountListSupplier: SingleAccountListSupplier,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val feedFeatureToggle: FeedFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -120,6 +117,7 @@ internal class WalletModel @Inject constructor(
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
+        modelScopeDependencies.accountsSharedFlowHolder.init(modelScope)
         trackScreenOpened()
 
         updateMarketToggle()
@@ -212,8 +210,8 @@ internal class WalletModel @Inject constructor(
                         val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                             .any { it is UserWallet.Hot }
 
-                        val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                            singleAccountListSupplier(selectedWallet.walletId)
+                        val accountsCount = if (accountDependencies.isAccountsModeEnabledUseCase.invokeSync()) {
+                            accountDependencies.singleAccountListSupplier(selectedWallet.walletId)
                                 .first()
                                 .accounts
                                 .size
@@ -589,7 +587,7 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        if (accountsFeatureToggles.isFeatureEnabled) {
+        if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
             fetchWalletContent(userWallet = action.selectedWallet)
 
             stateHolder.update(

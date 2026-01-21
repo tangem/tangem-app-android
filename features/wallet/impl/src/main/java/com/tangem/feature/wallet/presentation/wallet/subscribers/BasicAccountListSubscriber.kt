@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
@@ -34,9 +33,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
     abstract val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase
     abstract val stateController: WalletStateController
     abstract val clickIntents: WalletClickIntents
-
-    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier
-        get() = accountDependencies.singleAccountStatusListSupplier
 
     protected fun getAppCurrencyFlow(): Flow<AppCurrency> {
         return getSelectedAppCurrencyUseCase.invokeOrDefault()

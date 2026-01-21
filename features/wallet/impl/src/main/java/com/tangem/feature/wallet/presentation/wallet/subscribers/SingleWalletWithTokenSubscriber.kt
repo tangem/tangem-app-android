@@ -2,8 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -15,6 +17,8 @@ import kotlinx.coroutines.flow.combine
 internal class SingleWalletWithTokenSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet.Cold,
     override val accountDependencies: AccountDependencies,
+    val modelScopeDependencies: ModelScopeDependencies,
+    override val accountsSharedFlowHolder: AccountsSharedFlowHolder = modelScopeDependencies.accountsSharedFlowHolder,
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
     override val clickIntents: WalletClickIntents,

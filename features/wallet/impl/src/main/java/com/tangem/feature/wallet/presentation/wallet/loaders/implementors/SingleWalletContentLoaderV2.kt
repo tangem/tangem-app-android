@@ -9,8 +9,8 @@ import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
@@ -26,6 +26,7 @@ import dagger.assisted.AssistedInject
 internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet.Cold,
     @Assisted private val isRefresh: Boolean,
+    @Assisted val modelScopeDependencies: ModelScopeDependencies,
     private val clickIntents: WalletClickIntents,
     private val stateHolder: WalletStateController,
     private val getCryptoCurrencyActionsUseCaseV2: GetCryptoCurrencyActionsUseCaseV2,
@@ -38,7 +39,6 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
-    private val accountDependencies: AccountDependencies,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val dispatchers: CoroutineDispatcherProvider,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -47,14 +47,14 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     override fun create(): List<WalletSubscriber> = listOf(
         PrimaryCurrencySubscriberV2(
             userWallet = userWallet,
-            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            modelScopeDependencies = modelScopeDependencies,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             stateController = stateHolder,
             analyticsEventHandler = analyticsEventHandler,
         ),
         SingleWalletButtonsSubscriberV2(
             userWallet = userWallet,
-            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            modelScopeDependencies = modelScopeDependencies,
             stateController = stateHolder,
             clickIntents = clickIntents,
             getCryptoCurrencyActionsUseCaseV2 = getCryptoCurrencyActionsUseCaseV2,
@@ -74,7 +74,7 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
         ),
         SingleWalletExpressStatusesSubscriberV2(
             userWallet = userWallet,
-            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            modelScopeDependencies = modelScopeDependencies,
             getOnrampTransactionsUseCase = getOnrampTransactionsUseCase,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             onrampRemoveTransactionUseCase = onrampRemoveTransactionUseCase,
@@ -84,7 +84,7 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
         ),
         TxHistorySubscriberV2(
             userWallet = userWallet,
-            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            modelScopeDependencies = modelScopeDependencies,
             txHistoryItemsCountUseCase = txHistoryItemsCountUseCase,
             txHistoryItemsUseCase = txHistoryItemsUseCase,
             isRefresh = isRefresh,
@@ -93,7 +93,7 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
         ),
         CheckWalletWithFundsSubscriber(
             userWallet = userWallet,
-            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            modelScopeDependencies = modelScopeDependencies,
             walletWithFundsChecker = walletWithFundsChecker,
             dispatchers = dispatchers,
         ),
@@ -101,6 +101,10 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet.Cold, isRefresh: Boolean): SingleWalletContentLoaderV2
+        fun create(
+            userWallet: UserWallet.Cold,
+            isRefresh: Boolean,
+            modelScopeDependencies: ModelScopeDependencies,
+        ): SingleWalletContentLoaderV2
     }
 }
