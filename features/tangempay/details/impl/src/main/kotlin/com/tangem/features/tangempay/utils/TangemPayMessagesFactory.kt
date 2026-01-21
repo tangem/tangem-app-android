@@ -94,4 +94,23 @@ internal object TangemPayMessagesFactory {
             }
         }
     }
+
+    fun createWithdrawWarning(onGotItClick: () -> Unit): BottomSheetMessageV2 {
+        return bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.img_attention_20) {
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                }
+                title = TextReference.Res(R.string.tangempay_withdrawal_note_title)
+                body = TextReference.Res(R.string.tangempay_withdrawal_note_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick {
+                    onGotItClick()
+                    closeBs()
+                }
+            }
+        }
+    }
 }
