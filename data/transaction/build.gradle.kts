@@ -37,6 +37,9 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.demo)
 
+    /** Api */
+    implementation(projects.features.sendV2.api)
+
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
