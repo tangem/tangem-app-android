@@ -266,7 +266,6 @@ private fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallb
     }
 }
 
-@Suppress("CanBeNonNullable")
 @Composable
 private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
     AnimatedContent(news.newsUMState) { newsUMState ->
