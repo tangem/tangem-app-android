@@ -39,57 +39,57 @@ class AppsFlyerDeepLinkListenerTest {
     fun onDeepLinking(model: OnDeepLinkingModel) = runTest {
         listener.onDeepLinking(p0 = model.deepLinkResult)
 
-            if (model.shouldStore) {
-                val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
-                coVerify { appsFlyerConversionStore.store(value = value) }
-            } else {
-                coVerify(inverse = true) { appsFlyerConversionStore.store(value = any()) }
-            }
+        if (model.shouldStore) {
+            val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
+            coVerify { appsFlyerConversionStore.storeIfAbsent(value = value) }
+        } else {
+            coVerify(inverse = true) { appsFlyerConversionStore.storeIfAbsent(value = any()) }
         }
+    }
 
     private fun provideTestModels(): List<OnDeepLinkingModel> {
-            return listOf(
-                // DeepLinkResult.Status.NOT_FOUND
-                OnDeepLinkingModel(
-                    deepLinkResult = DeepLinkResult(null, null),
-                    shouldStore = false,
+        return listOf(
+            // DeepLinkResult.Status.NOT_FOUND
+            OnDeepLinkingModel(
+                deepLinkResult = DeepLinkResult(null, null),
+                shouldStore = false,
+            ),
+            // DeepLinkResult.Status.ERROR
+            OnDeepLinkingModel(
+                deepLinkResult = DeepLinkResult(null, DeepLinkResult.Error.NETWORK),
+                shouldStore = false,
+            ),
+            // DeepLinkResult.Status.FOUND
+            OnDeepLinkingModel(
+                deepLinkResult = createFoundDeepLink(
+                    deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
+                    refcode = SUCCESS_REFCODE,
+                    campaign = SUCCESS_CAMPAIGN,
                 ),
-                // DeepLinkResult.Status.ERROR
-                OnDeepLinkingModel(
-                    deepLinkResult = DeepLinkResult(null, DeepLinkResult.Error.NETWORK),
-                    shouldStore = false,
+                shouldStore = true,
+            ),
+            OnDeepLinkingModel(
+                deepLinkResult = createFoundDeepLink(
+                    deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
+                    refcode = "",
+                    campaign = SUCCESS_CAMPAIGN,
                 ),
-                // DeepLinkResult.Status.FOUND
-                OnDeepLinkingModel(
-                    deepLinkResult = createFoundDeepLink(
-                        deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
-                        refcode = SUCCESS_REFCODE,
-                        campaign = SUCCESS_CAMPAIGN,
-                    ),
-                    shouldStore = true,
+                shouldStore = false,
+            ),
+            OnDeepLinkingModel(
+                deepLinkResult = createFoundDeepLink(
+                    deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
+                    refcode = null,
+                    campaign = SUCCESS_CAMPAIGN,
                 ),
-                OnDeepLinkingModel(
-                    deepLinkResult = createFoundDeepLink(
-                        deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
-                        refcode = "",
-                        campaign = SUCCESS_CAMPAIGN,
-                    ),
-                    shouldStore = false,
-                ),
-                OnDeepLinkingModel(
-                    deepLinkResult = createFoundDeepLink(
-                        deepLinkValue = AppsFlyerDeepLinkListener.REFERRAL_DEEP_LINK_VALUE,
-                        refcode = null,
-                        campaign = SUCCESS_CAMPAIGN,
-                    ),
-                    shouldStore = false,
-                ),
-                OnDeepLinkingModel(
-                    deepLinkResult = createFoundDeepLink(deepLinkValue = "some_other_deep_link_value"),
-                    shouldStore = false,
-                ),
-            )
-        }
+                shouldStore = false,
+            ),
+            OnDeepLinkingModel(
+                deepLinkResult = createFoundDeepLink(deepLinkValue = "some_other_deep_link_value"),
+                shouldStore = false,
+            ),
+        )
+    }
 
     data class OnDeepLinkingModel(
         val deepLinkResult: DeepLinkResult,
