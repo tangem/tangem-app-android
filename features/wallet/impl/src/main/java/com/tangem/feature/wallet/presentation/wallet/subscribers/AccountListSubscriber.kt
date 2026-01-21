@@ -11,8 +11,10 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.utils.coroutines.combine7
 import dagger.assisted.Assisted
@@ -30,6 +32,8 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 internal class AccountListSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
+    @Assisted val modelScopeDependencies: ModelScopeDependencies,
+    override val accountsSharedFlowHolder: AccountsSharedFlowHolder = modelScopeDependencies.accountsSharedFlowHolder,
     override val accountDependencies: AccountDependencies,
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     override val stateController: WalletStateController,
@@ -96,7 +100,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet): AccountListSubscriber
+        fun create(userWallet: UserWallet, modelScopeDependencies: ModelScopeDependencies): AccountListSubscriber
     }
 
     private data class HelperBox(

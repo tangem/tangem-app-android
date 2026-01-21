@@ -5,12 +5,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.newSingleThreadContext
 import timber.log.Timber
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 /**
@@ -28,13 +28,15 @@ internal class WalletScreenContentLoader @Inject constructor(
     private val storage: WalletLoaderStorage,
     private val dispatchers: CoroutineDispatcherProvider,
     private val backgroundThreadOnMainFeatureToggle: BackgroundThreadOnMainFeatureToggle,
+    private val accountsSharedFlowHolder: AccountsSharedFlowHolder,
 ) {
 
-    private val singleBackgroundDispatcher: CoroutineDispatcher by lazy {
-        Executors.newSingleThreadExecutor { runnable ->
-            Thread(runnable, "Background Main").apply { isDaemon = true }
-        }.asCoroutineDispatcher()
-    }
+    private val singleBackgroundDispatcher: CloseableCoroutineDispatcher? =
+        if (backgroundThreadOnMainFeatureToggle.isEnabled) {
+            newSingleThreadContext(name = "Background Main")
+        } else {
+            null
+        }
 
     /**
      * Load content by [UserWallet]
@@ -58,6 +60,7 @@ internal class WalletScreenContentLoader @Inject constructor(
         } else {
             if (isRefresh) {
                 storage.remove(id)
+                accountsSharedFlowHolder.remove(id)
                 loadInternal(userWallet, clickIntents, coroutineScope, isRefresh = true)
             } else {
                 Timber.d("$id content loading has already started")
@@ -69,11 +72,14 @@ internal class WalletScreenContentLoader @Inject constructor(
     fun cancel(id: UserWalletId) {
         Timber.d("$id content loading is canceled")
         storage.remove(id)
+        accountsSharedFlowHolder.remove(id)
     }
 
     fun cancelAll() {
         Timber.d("All content loading is canceled")
         storage.clear()
+        accountsSharedFlowHolder.clear()
+        singleBackgroundDispatcher?.close()
     }
 
     private fun loadInternal(
@@ -96,7 +102,7 @@ internal class WalletScreenContentLoader @Inject constructor(
         Timber.d("${userWallet.walletId} content loading is ${if (isRefresh) "re" else ""}started")
 
         val dispatcher = if (backgroundThreadOnMainFeatureToggle.isEnabled) {
-            singleBackgroundDispatcher
+            requireNotNull(singleBackgroundDispatcher)
         } else {
             dispatchers.main
         }

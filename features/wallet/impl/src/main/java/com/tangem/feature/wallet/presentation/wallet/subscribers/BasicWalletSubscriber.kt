@@ -1,11 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -21,8 +20,7 @@ internal abstract class BasicWalletSubscriber : WalletSubscriber() {
     /** User wallet associated with this subscriber */
     abstract val userWallet: UserWallet
 
-    /** Supplier to get the account status for the wallet */
-    abstract val singleAccountStatusListSupplier: SingleAccountStatusListSupplier
+    abstract val accountsSharedFlowHolder: AccountsSharedFlowHolder
 
     /**
      * Provides a flow of [AccountStatusList] for the associated user wallet.
@@ -30,11 +28,7 @@ internal abstract class BasicWalletSubscriber : WalletSubscriber() {
      * @return A [Flow] emitting the [AccountStatusList] of the wallet, distinct and conflated.
      */
     protected fun getAccountStatusListFlow(): Flow<AccountStatusList> {
-        return singleAccountStatusListSupplier(
-            params = SingleAccountStatusListProducer.Params(userWallet.walletId),
-        )
-            .distinctUntilChanged()
-            .conflate()
+        return accountsSharedFlowHolder.getAccountStatusListFlow(userWallet.walletId)
     }
 
     /**

@@ -1,13 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetExpressStatusesTransformer
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +18,8 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList")
 internal class SingleWalletExpressStatusesSubscriberV2(
     override val userWallet: UserWallet,
-    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    val modelScopeDependencies: ModelScopeDependencies,
+    override val accountsSharedFlowHolder: AccountsSharedFlowHolder = modelScopeDependencies.accountsSharedFlowHolder,
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,

@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -11,7 +10,9 @@ import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.account.AccountsSharedFlowHolder
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
@@ -27,7 +28,8 @@ import kotlinx.coroutines.flow.map
 @Suppress("LongParameterList")
 internal class TxHistorySubscriberV2(
     override val userWallet: UserWallet.Cold,
-    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    val modelScopeDependencies: ModelScopeDependencies,
+    override val accountsSharedFlowHolder: AccountsSharedFlowHolder = modelScopeDependencies.accountsSharedFlowHolder,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val isRefresh: Boolean,

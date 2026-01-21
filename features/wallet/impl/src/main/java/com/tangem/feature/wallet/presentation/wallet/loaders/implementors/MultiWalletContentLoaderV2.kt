@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.ModelScopeDependencies
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -18,6 +19,7 @@ import dagger.assisted.AssistedInject
 @Suppress("LongParameterList")
 internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
+    @Assisted private val modelScopeDependencies: ModelScopeDependencies,
     private val accountListSubscriberFactory: AccountListSubscriber.Factory,
     private val walletNFTListSubscriberV2Factory: WalletNFTListSubscriberV2.Factory,
     private val stateController: WalletStateController,
@@ -34,9 +36,9 @@ internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOfNotNull(
-        accountListSubscriberFactory.create(userWallet = userWallet),
-        walletNFTListSubscriberV2Factory.create(userWallet = userWallet),
-        checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet),
+        accountListSubscriberFactory.create(userWallet = userWallet, modelScopeDependencies),
+        walletNFTListSubscriberV2Factory.create(userWallet = userWallet, modelScopeDependencies),
+        checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet, modelScopeDependencies),
         MultiWalletWarningsSubscriber(
             userWallet = userWallet,
             stateHolder = stateController,
@@ -66,6 +68,6 @@ internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet): MultiWalletContentLoaderV2
+        fun create(userWallet: UserWallet, modelScopeDependencies: ModelScopeDependencies): MultiWalletContentLoaderV2
     }
 }
