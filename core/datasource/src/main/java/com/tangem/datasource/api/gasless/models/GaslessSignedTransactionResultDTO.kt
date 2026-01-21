@@ -9,15 +9,6 @@ import com.squareup.moshi.JsonClass
  */
 @JsonClass(generateAdapter = true)
 data class GaslessSignedTransactionResultDTO(
-    @Json(name = "signedTransaction")
-    val signedTransaction: String,
-
-    @Json(name = "gasLimit")
-    val gasLimit: String,
-
-    @Json(name = "maxFeePerGas")
-    val maxFeePerGas: String,
-
-    @Json(name = "maxPriorityFeePerGas")
-    val maxPriorityFeePerGas: String,
+    @Json(name = "txHash")
+    val txHash: String,
 )
