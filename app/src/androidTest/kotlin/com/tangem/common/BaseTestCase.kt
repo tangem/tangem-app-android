@@ -142,7 +142,8 @@ abstract class BaseTestCase : TestCase(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "NEW_ONRAMP_MAIN_ENABLED" to true,
                 "HOT_WALLET_ENABLED" to true,
-                "YIELD_SUPPLY_FEATURE_ENABLED" to true
+                "YIELD_SUPPLY_FEATURE_ENABLED" to true,
+                "ACCOUNTS_FEATURE_ENABLED" to true
             )
         )
     }
