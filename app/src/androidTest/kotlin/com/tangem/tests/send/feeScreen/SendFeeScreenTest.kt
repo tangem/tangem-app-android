@@ -392,7 +392,7 @@ class SendFeeScreenTest : BaseTestCase() {
         val tokenName = "VeThor"
         val mockState = "Vechain"
         val tokenAmount = "0.1"
-        val feeAmount = "~$0.01"
+        val feeAmount = "<$0.01"
         val marketSelectorItem = getResourceString(R.string.common_fee_selector_option_market)
         val fastSelectorItem = getResourceString(R.string.common_fee_selector_option_fast)
         val slowSelectorItem = getResourceString(R.string.common_fee_selector_option_slow)
