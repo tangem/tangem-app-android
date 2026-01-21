@@ -327,6 +327,7 @@
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Abrir en el navegador</string>
+  <string name="common_or">o</string>
   <string name="common_origin_card">Tarjeta principal</string>
   <string name="common_origin_ring">Anillo primario</string>
   <string name="common_passphrase">Frase de contraseña</string>
@@ -437,6 +438,7 @@
   <string name="details_manage_security_long_tap_description">Este mecanismo protege contra los ataques de proximidad a una tarjeta o anillo. Aplicará un retardo entre la recepción y la ejecución de un comando.</string>
   <string name="details_manage_security_passcode">Contraseña</string>
   <string name="details_manage_security_passcode_description">Antes de ejecutar un comando que cambie el estado de la tarjeta, deberá ingresar una contraseña.</string>
+  <string name="details_mobile_wallet_upgrade_action_title">Actualizar a billetera de hardware</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Programa de referidos</string>
   <string name="details_row_description_flip_to_hide">Gire la pantalla de su dispositivo hacia abajo para ocultar y mostrar rápidamente los saldos</string>
@@ -450,6 +452,7 @@
   <string name="details_row_title_signed_hashes">Firmado</string>
   <string name="details_send_feedback">Enviar comentarios</string>
   <string name="details_title">Detalles</string>
+  <string name="details_wallets_section_description">Puedes tener solo una billetera móvil a la vez. Puede actualizarse a una billetera fría Tangem o usarse junto con una nueva billetera fría.</string>
   <string name="disclaimer_error_loading">Compruebe su conexión a internet o cambia a una red diferente</string>
   <string name="disclaimer_title">Condiciones de uso</string>
   <string name="domain_receive_assets_default_address">Dirección por defecto</string>
@@ -569,8 +572,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Para continuar, conceda a los contratos inteligentes de %1s permiso para utilizar su %2s</string>
   <string name="give_permission_title">Dar autorización</string>
   <string name="give_permission_unlimited">Ilimitado</string>
-  <string name="hardware_wallet_backup_feature_description">Su copia de seguridad se crea utilizando 2 o 3 tarjetas Tangem. Guárdalas en lugares seguros y separados para protegerlas de pérdidas o daños.</string>
-  <string name="hardware_wallet_backup_feature_title">Copia de seguridad con varias tarjetas</string>
+  <string name="hardware_wallet_backup_feature_description">Se generarán nuevas direcciones dentro de su billetera física, listas para su uso y totalmente seguras.</string>
+  <string name="hardware_wallet_backup_feature_title">Nuevas direcciones</string>
   <string name="hardware_wallet_create_title">Agregar billetera Tangem</string>
   <string name="hardware_wallet_key_feature_description">Su clave privada se genera directamente dentro de la tarjeta Tangem y nunca sale de ella.</string>
   <string name="hardware_wallet_key_feature_title">Generación de claves</string>
@@ -611,11 +614,15 @@
   <string name="hw_backup_seed_title">Frase de recuperación</string>
   <string name="hw_backup_to_secure_description">Para proteger su billetera con un código de acceso, complete el proceso de copia de seguridad.</string>
   <string name="hw_backup_to_upgrade_description">Para actualizar a una billetera de hardware, complete el proceso de copia de seguridad.</string>
+  <string name="hw_backup_upgrade_description">Actualice su billetera móvil a una billetera de hardware Tangem para obtener la máxima seguridad. Importe su billetera o transfiera fondos a una nueva.</string>
+  <string name="hw_backup_upgrade_title">Actualizar a billetera fría</string>
   <string name="hw_create_keys_description">Sus claves privadas están encriptadas de forma segura y almacenadas en su teléfono</string>
   <string name="hw_create_keys_title">Las claves privadas permanecen en su dispositivo</string>
   <string name="hw_create_seed_description">Cree o restaure su billetera con una frase de recuperación.</string>
   <string name="hw_create_seed_title">Copia de seguridad de la frase semilla</string>
   <string name="hw_create_title">Crear una billetera móvil</string>
+  <string name="hw_create_upgrade_description">Transfiera su billetera móvil a una tarjeta o anillo Tangem en cualquier momento, de forma segura.</string>
+  <string name="hw_create_upgrade_title">Actualización a billetera de hardware</string>
   <string name="hw_import_existing_wallet">Importar billetera existente</string>
   <string name="hw_import_seed_phrase_already_imported">Esta frase de recuperación ya ha sido importada</string>
   <string name="hw_mobile_wallet">Billetera móvil</string>
@@ -633,14 +640,14 @@
   <string name="hw_remove_wallet_warning_access">Entiendo que si no he hecho una copia de seguridad de mi billetera antes de eliminarla, perderé el acceso a ella.</string>
   <string name="hw_remove_wallet_warning_device">Entiendo que quitar mi billetera no la borra, solo la elimina de mi dispositivo.</string>
   <string name="hw_upgrade">Actualizar</string>
-  <string name="hw_upgrade_backup_description">No se requiere frase semilla. Su tarjeta o anillo Tangem se convierte en su copia de seguridad.</string>
-  <string name="hw_upgrade_backup_title">Copia de seguridad con Tangem</string>
+  <string name="hw_upgrade_backup_description">Todas sus direcciones y saldos permanecen completamente accesibles al actualizar su billetera móvil a una tarjeta o anillo Tangem.</string>
+  <string name="hw_upgrade_backup_title">Mismas direcciones</string>
   <string name="hw_upgrade_error_card_already_has_wallet">No se puede actualizar. Ya existe una billetera en este dispositivo.</string>
   <string name="hw_upgrade_error_card_key_import">Elija otro dispositivo. Este no se puede usar para la actualización.</string>
   <string name="hw_upgrade_error_wallet2_card_required">Se produjo un error durante la operación.</string>
   <string name="hw_upgrade_funds_access_description">Sus fondos permanecen seguros y totalmente accesibles durante el proceso</string>
   <string name="hw_upgrade_funds_access_title">Acceso a los fondos</string>
-  <string name="hw_upgrade_general_security_description">Los datos de su billetera se borrarán de la aplicación y se almacenarán en su billetera de hardware.</string>
+  <string name="hw_upgrade_general_security_description">Después de la actualización, su billetera móvil se eliminará de la aplicación y se almacenará en su billetera de hardware; su frase de recuperación permanecerá bajo su control.</string>
   <string name="hw_upgrade_general_security_title">Seguridad general</string>
   <string name="hw_upgrade_key_migration_description">Las claves privadas se transferirán de la aplicación a su billetera de hardware Tangem</string>
   <string name="hw_upgrade_key_migration_title">Migración de claves</string>
@@ -1242,6 +1249,11 @@
   <string name="settings_card_settings_footer">Escanee la tarjeta/anillo que quiere configurar</string>
   <string name="settings_forget_wallet">Olvidar la billetera</string>
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">Fácil de usar</string>
+  <string name="settings_upgrade_banner_description">Mantenga sus criptos seguras y sin conexión. Tan delgadas como una tarjeta de crédito, más seguras que una bóveda bancaria.</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">Sin seed phrase</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">La mejor billetera de hardware de su clase</string>
+  <string name="settings_upgrade_banner_title">Billetera Fría Tangem</string>
   <string name="settings_wallet_name_title">Nombre</string>
   <string name="stake_token_description">Haga que su token trabaje para Ud.</string>
   <string name="staking_account_initialization_footer">Una tarifa de red es un pequeño pago necesario para procesar y confirmar su transacción en la blockchain.</string>
@@ -1542,6 +1554,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay temporalmente no disponible</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Haga clic en el botón de abajo para restaurar el acceso</string>
+  <string name="tangempay_withdrawal_note_description">Solo puedes retirar USDC Polygon disponibles en tu dirección on-chain. El saldo on-chain difiere del saldo de tu tarjeta y se actualiza en 2 días hábiles después de una compra (para reembolsos o transacciones canceladas puede tomar hasta 14 días hábiles).</string>
+  <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>
   <string name="this_is_my_wallet_title">Esta es mi billetera</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
@@ -1613,6 +1627,7 @@
   <string name="universal_error">Hemos encontrado un error. Código de error: %s. Póngase en contacto con nuestro servicio de soporte.</string>
   <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>
   <string name="unsupported_wc_version">Error de conexión: Esta dApp utiliza la versión 1.0 de Wallet Connect, que no es compatible. Asegúrese de que la dApp sea compatible con la versión 2.0 de Wallet Connect para conectarse correctamente.</string>
+  <string name="upgrade_to_hardware_wallet_button_title">Actualización a billetera de hardware</string>
   <string name="user_push_notification_agreement_argument_one">Manténgase actualizado con las últimas funciones y noticias</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">Alertas en tiempo real de transacciones, intercambios y actualizaciones críticas.</string>
   <string name="user_push_notification_agreement_argument_one_title">Alertas de transacciones</string>
@@ -1982,6 +1997,7 @@
   <string name="welcome_create_wallet_feature_delivery">Entrega rápida</string>
   <string name="welcome_create_wallet_feature_one_tap">Empiece con un solo toque</string>
   <string name="welcome_create_wallet_feature_seamless">Fácil y seguro</string>
+  <string name="welcome_create_wallet_feature_seedphrase">Sin seed phrase</string>
   <string name="welcome_create_wallet_feature_use">Fácil de usar</string>
   <string name="welcome_create_wallet_hardware_description">Cree una billetera de hardware con Tangem. Delgada como una tarjeta bancaria, segura como una bóveda.</string>
   <string name="welcome_create_wallet_mobile_description">Crear o importar una billetera de software</string>
