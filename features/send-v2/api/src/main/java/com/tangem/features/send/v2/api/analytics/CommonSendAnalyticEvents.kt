@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 /**
  * Send analytics
@@ -25,7 +26,7 @@ sealed class CommonSendAnalyticEvents(
         params = mapOf(
             SOURCE to source.analyticsName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     /** Amount screen opened */
     data class AmountScreenOpened(
@@ -37,7 +38,7 @@ sealed class CommonSendAnalyticEvents(
         params = mapOf(
             SOURCE to source.analyticsName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     /** Fee screen opened */
     data class FeeScreenOpened(
@@ -74,7 +75,7 @@ sealed class CommonSendAnalyticEvents(
                 )
             }
         },
-    )
+    ), AppsFlyerIncludedEvent
 
     /** If transaction delays notification is present */
     data class NoticeTransactionDelays(
