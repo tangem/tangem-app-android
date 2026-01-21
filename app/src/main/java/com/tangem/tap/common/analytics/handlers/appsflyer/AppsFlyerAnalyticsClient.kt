@@ -29,7 +29,6 @@ class AppsFlyerClient @AssistedInject constructor(
         with(appsFlyerLib) {
             setAppId(context.packageName)
             setDebugLog(true)
-            setAppInviteOneLink("MsTz")
 
             subscribeForDeepLink(appsFlyerDeepLinkListener)
 
