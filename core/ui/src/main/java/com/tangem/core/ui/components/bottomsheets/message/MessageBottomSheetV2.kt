@@ -125,7 +125,6 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
     }
 }
 
-@Suppress("CanBeNonNullable")
 @Composable
 private fun BottomSheetIconContainer(
     icon: MessageBottomSheetUMV2.Icon?,
