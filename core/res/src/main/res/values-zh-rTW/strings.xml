@@ -416,6 +416,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">點擊下方按鈕以恢復存取權限</string>
+  <string name="tangempay_withdrawal_note_description">您僅能提領鏈上地址中的 USDC Polygon。鏈上餘額與卡片餘額不同，購買後將在 2 個工作日內更新（若有退款或取消交易，最多需 14 個工作日）。</string>
+  <string name="tangempay_withdrawal_note_title">請注意</string>
   <string name="tangempay_your_pin_code">您的PIN码</string>
   <string name="token_details_hide_alert_hide">隱藏</string>
   <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>
