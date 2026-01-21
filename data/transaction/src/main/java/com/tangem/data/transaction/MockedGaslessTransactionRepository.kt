@@ -49,10 +49,7 @@ class MockedGaslessTransactionRepository(
         network: Network,
         eip7702Auth: Eip7702Authorization?,
     ): GaslessSignedTransactionResult = GaslessSignedTransactionResult(
-        signedTransaction = "0x000",
-        gasLimit = 100000.toBigInteger(),
-        maxFeePerGas = 21000.toBigInteger(),
-        maxPriorityFeePerGas = 21000.toBigInteger(),
+        txHash = "0x000",
     )
 
     override fun getBaseGasForTransaction(): BigInteger {

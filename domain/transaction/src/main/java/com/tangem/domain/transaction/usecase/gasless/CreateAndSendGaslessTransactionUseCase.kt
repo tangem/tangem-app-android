@@ -26,7 +26,6 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.models.Eip7702Authorization
-import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -50,8 +49,7 @@ class CreateAndSendGaslessTransactionUseCase(
                 val uncompiledTxData = validateTransactionData(transactionData)
                 val context = prepareGaslessContext(userWallet, uncompiledTxData, fee)
                 val signedData = signGaslessTransactionByUser(userWallet, context, uncompiledTxData)
-                val remoteSignedData = signTransactionOnBackend(context, signedData, uncompiledTxData)
-                broadcastSignedTransaction(context, remoteSignedData)
+                signAndSendTransactionOnBackend(context, signedData, uncompiledTxData)
             },
             catch = {
                 raise(SendTransactionError.DataError(it.message))
@@ -185,32 +183,18 @@ class CreateAndSendGaslessTransactionUseCase(
     /**
      * Sends gasless transaction to the service.
      */
-    private suspend fun signTransactionOnBackend(
+    private suspend fun signAndSendTransactionOnBackend(
         context: GaslessContext,
         signedData: SignedGaslessData,
         transactionData: TransactionData.Uncompiled,
-    ): GaslessSignedTransactionResult {
+    ): String {
         return gaslessTransactionRepository.signGaslessTransaction(
             network = context.tokenForFeeStatus.currency.network,
             gaslessTransactionData = context.gaslessTransactionData,
             signature = signedData.eip712Signature,
             userAddress = transactionData.sourceAddress,
             eip7702Auth = signedData.eip7702Auth,
-        )
-    }
-
-    private suspend fun broadcastSignedTransaction(
-        context: GaslessContext,
-        remoteSignedData: GaslessSignedTransactionResult,
-    ): String {
-        val transactionSender = context.walletManager as? TransactionSender ?: error(
-            "WalletManager for network ${context.tokenForFeeStatus.currency.network.id} " +
-                "does not support transaction sending",
-        )
-        return when (val result = transactionSender.broadcastTransaction(remoteSignedData.signedTransaction)) {
-            is Result.Failure -> throw result.error
-            is Result.Success -> result.data.hash
-        }
+        ).txHash
     }
 
     private suspend fun signHashes(

@@ -16,6 +16,7 @@ import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -76,11 +77,13 @@ internal object TransactionDataModule {
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         gaslessTxServiceApi: GaslessTxServiceApi,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        sendFeatureToggles: SendFeatureToggles,
     ): GaslessTransactionRepository {
         return DefaultGaslessTransactionRepository(
-            gaslessTxServiceApi,
-            coroutineDispatcherProvider,
-            responseCryptoCurrenciesFactory,
+            gaslessTxServiceApi = gaslessTxServiceApi,
+            coroutineDispatcherProvider = coroutineDispatcherProvider,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            sendFeatureToggles = sendFeatureToggles,
         )
     }
 }
