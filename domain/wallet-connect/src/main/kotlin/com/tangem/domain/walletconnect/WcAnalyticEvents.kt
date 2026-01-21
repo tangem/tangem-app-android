@@ -4,6 +4,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.dapp.CheckDAppResult.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.WcAnalyticEvents.DAppVerificationStatus
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -19,7 +20,8 @@ sealed class WcAnalyticEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = WC_CATEGORY_NAME, event = event, params = params) {
 
-    class ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
+    class ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened"), AppsFlyerIncludedEvent
+
     class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
         event = "Session Initiated",
         params = mapOf(
@@ -74,7 +76,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.BLOCKCHAIN to sessionForApprove.network.joinToString(",") { it.name },
             DOMAIN_VERIFICATION to securityStatus.toAnalyticVerificationStatus(),
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class DAppConnectionFailed(
         errorCode: String,
@@ -85,7 +87,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.ERROR_CODE to errorCode,
             AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class SessionDisconnected(dAppMetaData: WcAppMetaData) : WcAnalyticEvents(
         event = "dApp Disconnected",
