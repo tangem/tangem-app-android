@@ -367,6 +367,7 @@
   <string name="common_supported_networks">対応ネットワーク</string>
   <string name="common_swap">スワップ</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
   <string name="common_to">宛先</string>
@@ -1547,7 +1548,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
-  <string name="tangempay_withdrawal_note_description">現在引き出せるのは、保留中の取引分を差し引いたオンチェーンアドレス上のUSDC（Polygon）のみです。以前に返金や購入のキャンセルを行った場合、暗号資産アカウントの残高は2営業日以内に更新されます。</string>
+  <string name="tangempay_withdrawal_note_description">オンチェーンアドレスにある USDC Polygon のみ出金可能です。オンチェーン残高はカード残高とは異なり、購入後 2 営業日以内に更新されます（返金またはキャンセルされた取引の場合、最大 14 営業日かかることがあります）。</string>
   <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
