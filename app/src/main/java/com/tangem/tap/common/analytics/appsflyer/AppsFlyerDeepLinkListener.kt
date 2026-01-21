@@ -73,7 +73,7 @@ class AppsFlyerDeepLinkListener @Inject constructor(
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
             mutex.withLock {
-                appsFlyerConversionStore.store(
+                appsFlyerConversionStore.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
                 )
             }
