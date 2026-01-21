@@ -11,5 +11,6 @@ interface AppsFlyerOnlyEvent
  * Events implementing this interface will be sent to AppsFlyer along with other analytics handlers
  */
 interface AppsFlyerIncludedEvent {
-    val appsFlyerReplacedEvent: String
+    val appsFlyerReplacedEvent: String?
+        get() = null
 }
