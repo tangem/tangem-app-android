@@ -29,6 +29,17 @@ internal class DefaultAppsFlyerConversionStore(
         appPreferencesStore.storeObject(KEY, dto)
     }
 
+    override suspend fun storeIfAbsent(value: AppsFlyerConversionData) {
+        Timber.i("Storing conversion data to store if absent: $value")
+
+        val dto = appPreferencesStore.getObjectSyncOrNull<ConversionDataDTO>(KEY)
+
+        if (dto == null) {
+            Timber.i("Conversion data is absent, storing $value")
+            appPreferencesStore.storeObject(KEY, ConversionDataConverter.convert(value))
+        }
+    }
+
     private companion object {
 
         val KEY = stringPreferencesKey("APPS_FLYER_CONVERSION_DATA")
