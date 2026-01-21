@@ -326,6 +326,7 @@
   <string name="common_now">Maintenant</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Ouvrir dans le navigateur</string>
+  <string name="common_or">ou</string>
   <string name="common_origin_card">Carte principale</string>
   <string name="common_origin_ring">Bague principale</string>
   <string name="common_passphrase">Passphrase</string>
@@ -434,6 +435,7 @@
   <string name="details_manage_security_long_tap_description">Ce mécanisme protège contre les attaques sans contact sur la carte. Il y a un délai entre la réception et l\'exécution de la commande. Après la première transaction signée, ce téléphone sera associé à la carte et les transactions seront signées immédiatement.</string>
   <string name="details_manage_security_passcode">Mot de passe</string>
   <string name="details_manage_security_passcode_description">Avant d\'exécuter une commande qui modifie l\'état de la carte, vous devrez entrer un mot de passe.</string>
+  <string name="details_mobile_wallet_upgrade_action_title">Passez au hardware wallet</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Programme de parrainage</string>
   <string name="details_row_description_flip_to_hide">Retournez l\'écran de votre appareil vers le bas pour masquer et afficher rapidement les soldes</string>
@@ -447,6 +449,7 @@
   <string name="details_row_title_signed_hashes">Signé</string>
   <string name="details_send_feedback">Envoyer un commentaire</string>
   <string name="details_title">Détails</string>
+  <string name="details_wallets_section_description">Vous ne pouvez avoir qu\'un seul portefeuille mobile à la fois. Il peut être mis à niveau vers un hardware wallet Tangem ou utilisé avec un nouveau hardware wallet.</string>
   <string name="disclaimer_error_loading">Vérifiez votre connexion Internet ou passez à un réseau différent</string>
   <string name="disclaimer_title">Conditions d\'utilisation</string>
   <string name="domain_receive_assets_default_address">Adresse par défaut</string>
@@ -566,8 +569,8 @@
   <string name="give_permission_swap_subtitle" formatted="false">Pour continuer, accordez aux smart contracts de %1s l\'autorisation d\'utiliser votre %2s</string>
   <string name="give_permission_title">Donner l\'autorisation</string>
   <string name="give_permission_unlimited">Illimité</string>
-  <string name="hardware_wallet_backup_feature_description">Votre sauvegarde est créée à l\'aide de 2 ou 3 cartes Tangem. Conservez-les dans des endroits sûrs distincts afin de les protéger contre toute perte ou tout dommage. Aucune seed phrase n\'est nécessaire.</string>
-  <string name="hardware_wallet_backup_feature_title">Sauvegarde avec plusieurs cartes</string>
+  <string name="hardware_wallet_backup_feature_description">De nouvelles adresses seront générées pour vous dans votre hardware wallet, prêtes à l\'emploi et entièrement sécurisées.</string>
+  <string name="hardware_wallet_backup_feature_title">Nouvelles adresses</string>
   <string name="hardware_wallet_create_title">Ajouter le wallet Tangem</string>
   <string name="hardware_wallet_key_feature_description">Votre clé privée est générée directement dans la carte Tangem et ne la quitte jamais.</string>
   <string name="hardware_wallet_key_feature_title">Génération de clés</string>
@@ -608,11 +611,15 @@
   <string name="hw_backup_seed_title">Seed phrase</string>
   <string name="hw_backup_to_secure_description">Pour sécuriser votre wallet avec un code d\'accès, effectuez la procédure de sauvegarde.</string>
   <string name="hw_backup_to_upgrade_description">Pour passer à un portefeuille matériel, terminez le processus de sauvegarde.</string>
+  <string name="hw_backup_upgrade_description">Mettez à niveau votre portefeuille mobile vers un portefeuille matériel Tangem pour bénéficier d\'une sécurité maximale. Importez votre portefeuille ou transférez vos fonds vers un nouveau portefeuille.</string>
+  <string name="hw_backup_upgrade_title">Passez à un hardware wallet</string>
   <string name="hw_create_keys_description">Vos clés privées sont cryptées et stockées en toute sécurité sur votre téléphone.</string>
   <string name="hw_create_keys_title">Les clés privées restent sur votre appareil</string>
   <string name="hw_create_seed_description">Créez ou restaurez votre portefeuille à l\'aide d\'une seed phrase.</string>
   <string name="hw_create_seed_title">Sauvegarde de la seed phrase</string>
   <string name="hw_create_title">Créer un wallet mobile</string>
+  <string name="hw_create_upgrade_description">Transférez votre portefeuille mobile vers une carte ou une bague Tangem à tout moment, en toute sécurité.</string>
+  <string name="hw_create_upgrade_title">Passez à un hardware wallet</string>
   <string name="hw_import_existing_wallet">Importer un portefeuille existant</string>
   <string name="hw_import_seed_phrase_already_imported">Cette seed phrase a déjà été importée.</string>
   <string name="hw_mobile_wallet">Wallet mobile</string>
@@ -630,14 +637,14 @@
   <string name="hw_remove_wallet_warning_access">Je comprends que si je n\'ai pas sauvegardé mon portefeuille avant de le supprimer, je perdrai l\'accès à celui-ci.</string>
   <string name="hw_remove_wallet_warning_device">Je comprends que le fait de supprimer mon portefeuille ne l\'efface pas, mais le supprime uniquement de mon appareil.</string>
   <string name="hw_upgrade">Améliorer</string>
-  <string name="hw_upgrade_backup_description">Aucune seed phrase n\'est requise. Votre carte ou bague Tangem devient votre sauvegarde sécurisée.</string>
-  <string name="hw_upgrade_backup_title">Sauvegarde avec Tangem</string>
+  <string name="hw_upgrade_backup_description">Toutes vos adresses et tous vos soldes restent entièrement accessibles lorsque vous passez d\'un portefeuille mobile à une carte ou une bague Tangem.</string>
+  <string name="hw_upgrade_backup_title">Mêmes adresses</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Impossible de mettre à niveau. Un portefeuille existe déjà sur cet appareil.</string>
   <string name="hw_upgrade_error_card_key_import">Choisissez un autre appareil. Celui-ci ne peut pas être utilisé pour la mise à niveau.</string>
   <string name="hw_upgrade_error_wallet2_card_required">Une erreur s\'est produite pendant l\'opération.</string>
   <string name="hw_upgrade_funds_access_description">Vos fonds restent en sécurité et entièrement accessibles pendant toute la durée du processus.</string>
   <string name="hw_upgrade_funds_access_title">Accès aux fonds</string>
-  <string name="hw_upgrade_general_security_description">Les données de votre wallet seront effacées de l\'application et stockées sur votre hardware wallet.</string>
+  <string name="hw_upgrade_general_security_description">Après la mise à niveau, votre portefeuille mobile sera supprimé de l\'application et stocké sur votre hardware wallet; votre seedphrase restera en votre possession.</string>
   <string name="hw_upgrade_general_security_title">Sécurité générale</string>
   <string name="hw_upgrade_key_migration_description">Les clés privées seront transférées de l\'application vers votre hardware wallet Tangem.</string>
   <string name="hw_upgrade_key_migration_title">Migration des clés</string>
@@ -1238,6 +1245,11 @@
   <string name="settings_card_settings_footer">Scannez la carte/ bague que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">Facile à utiliser</string>
+  <string name="settings_upgrade_banner_description">Gardez vos cryptomonnaies en sécurité et hors ligne. Aussi fin qu\'une carte de crédit, plus sûr qu\'un coffre-fort bancaire.</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">Pas de seedphrase</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">Le meilleur hardware wallet</string>
+  <string name="settings_upgrade_banner_title">Tangem Hardware Wallet</string>
   <string name="settings_wallet_name_title">Nom</string>
   <string name="stake_token_description">Faites travailler votre jeton pour vous</string>
   <string name="staking_account_initialization_message">Pour commencer à staker, votre compte TON doit être activé avec une transaction de 1 TON. Les fonds restent sur votre compte, car cette étape sert uniquement à l\'activer pour le staking.</string>
@@ -1535,6 +1547,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Cliquez sur le bouton ci-dessous pour restaurer l\'accès</string>
+  <string name="tangempay_withdrawal_note_description">Vous ne pouvez retirer que les USDC Polygon disponibles sur votre adresse on-chain. Le solde on-chain diffère du solde de votre carte et se met à jour dans les 2 jours ouvrables après un achat (pour les remboursements ou transactions annulées, cela peut prendre jusqu\'à 14 jours ouvrables).</string>
+  <string name="tangempay_withdrawal_note_title">Veuillez noter</string>
   <string name="tangempay_your_pin_code">Votre code PIN</string>
   <string name="this_is_my_wallet_title">C\'est mon portefeuille</string>
   <string name="toast_balances_hidden">Soldes masqués</string>
@@ -1605,6 +1619,7 @@
   <string name="universal_error">Nous avons rencontré une erreur. Code d\'erreur : %s. Veuillez contacter notre équipe de support.</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
+  <string name="upgrade_to_hardware_wallet_button_title">Passez à un hardware wallet</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">Alertes en temps réel pour les transactions, les échanges et les mises à jour importantes.</string>
   <string name="user_push_notification_agreement_argument_one_title">Alertes de transaction</string>
@@ -1968,6 +1983,7 @@
   <string name="welcome_create_wallet_feature_delivery">Livraison rapide</string>
   <string name="welcome_create_wallet_feature_one_tap">Commencez en un seul clic</string>
   <string name="welcome_create_wallet_feature_seamless">Sans faille et sécurisé</string>
+  <string name="welcome_create_wallet_feature_seedphrase">Pas de seedphrase</string>
   <string name="welcome_create_wallet_feature_use">Facile à utiliser</string>
   <string name="welcome_create_wallet_hardware_description">Créez un harware wallet avec Tangem. Aussi fin qu\'une carte bancaire, aussi sûr qu\'un coffre-fort.</string>
   <string name="welcome_create_wallet_mobile_description">Créer ou importer un portefeuille logiciel</string>
