@@ -208,7 +208,6 @@ internal class TokenListAnalyticsSender @Inject constructor(
             }
 
             analyticsEventHandler.send(Basic.WalletToppedUp(userWallet.walletId, walletType))
-            analyticsEventHandler.send(Basic.AppsFlyerWalletFunded(userWallet.walletId))
         }
     }
 
