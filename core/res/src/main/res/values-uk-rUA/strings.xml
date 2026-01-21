@@ -382,6 +382,7 @@
   <string name="common_supported_networks">Підтримувані мережі</string>
   <string name="common_swap">Обмін</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">умови участі</string>
   <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_to">До</string>
@@ -623,7 +624,7 @@
   <string name="hw_create_keys_title">Ключі зберігаються у застосунку</string>
   <string name="hw_create_seed_description">Створіть або відновіть свій гаманець за допомогою вашої фрази відновлення.</string>
   <string name="hw_create_seed_title">Резервна копія</string>
-  <string name="hw_create_title">Створити мобільний гаманець</string>
+  <string name="hw_create_title">Мобільний гаманець</string>
   <string name="hw_import_existing_wallet">Імпортувати існуючий гаманець</string>
   <string name="hw_import_seed_phrase_already_imported">Ця фраза відновлення вже була імпортована</string>
   <string name="hw_mobile_wallet">Мобільний гаманець</string>
@@ -1569,6 +1570,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay тимчасово недоступний</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Натисніть кнопку нижче, щоб відновити доступ</string>
+  <string name="tangempay_withdrawal_note_description">Виведення доступне лише для USDC Polygon на вашій ончейн-адресі. Баланс ончейн-адреси відрізняється від балансу картки та оновлюється протягом 2 робочих днів після покупки (у разі повернень або скасувань транзакцій — до 14 робочих днів).</string>
+  <string name="tangempay_withdrawal_note_title">Зверніть увагу</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Це мій гаманець</string>
   <string name="toast_balances_hidden">Баланси приховано</string>
@@ -1650,7 +1653,7 @@
   <string name="user_push_notification_agreement_header">Бажаєте використовувати Push-повідомлення?</string>
   <string name="user_push_notification_banner_subtitle">Увімкніть push-сповіщення, щоб отримувати повідомлення, коли кошти надходять на ваш гаманець.</string>
   <string name="user_push_notification_banner_title">Не пропустіть транзакцію</string>
-  <string name="user_wallet_list_add_button">Додати новий гаманець</string>
+  <string name="user_wallet_list_add_button">Додати гаманець</string>
   <string name="user_wallet_list_delete_hw_prompt">Якщо ви видалите цей гаманець без резервної копії, ви назавжди втратите доступ до своїх коштів.</string>
   <string name="user_wallet_list_delete_prompt">Ви впевнені, що хочете видалити цей гаманець?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Сталася помилка, будь ласка, відскануйте свою картку або кільце, для входу</string>
