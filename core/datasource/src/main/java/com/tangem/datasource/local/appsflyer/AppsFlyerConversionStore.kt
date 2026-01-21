@@ -7,4 +7,6 @@ interface AppsFlyerConversionStore {
     suspend fun get(): AppsFlyerConversionData?
 
     suspend fun store(value: AppsFlyerConversionData)
+
+    suspend fun storeIfAbsent(value: AppsFlyerConversionData)
 }
