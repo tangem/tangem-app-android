@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NONCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 
@@ -41,7 +42,7 @@ internal sealed class SendAnalyticEvents(
             }
             put(ENS_ADDRESS, ensAddress)
         },
-    )
+    ), AppsFlyerIncludedEvent
 
     data class ConvertTokenButtonClicked(
         val token: String,

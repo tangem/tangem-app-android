@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RESIDENCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.onramp.model.OnrampSource
 
 sealed class OnrampAnalyticsEvent(
@@ -28,7 +29,7 @@ sealed class OnrampAnalyticsEvent(
             SOURCE to source.analyticsName,
             TOKEN_PARAM to tokenSymbol,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class SelectCurrencyScreenOpened : OnrampAnalyticsEvent(event = "Currency Screen Opened")
 
@@ -133,7 +134,7 @@ sealed class OnrampAnalyticsEvent(
             "Currency Type" to currency,
             PAYMENT_METHOD to paymentMethod,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
     class MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")
