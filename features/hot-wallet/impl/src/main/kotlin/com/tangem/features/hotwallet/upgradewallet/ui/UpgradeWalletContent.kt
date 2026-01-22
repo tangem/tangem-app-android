@@ -83,9 +83,9 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
-                title = stringResourceSafe(R.string.hw_upgrade_funds_access_title),
-                description = stringResourceSafe(R.string.hw_upgrade_funds_access_description),
-                iconRes = R.drawable.ic_knight_shield_24,
+                title = stringResourceSafe(R.string.hw_upgrade_backup_title),
+                description = stringResourceSafe(R.string.hw_upgrade_backup_description),
+                iconRes = R.drawable.ic_smartphone_24,
             )
             FeatureBlock(
                 modifier = Modifier
