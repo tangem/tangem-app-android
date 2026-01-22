@@ -42,7 +42,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -153,10 +152,6 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     modifier = itemModifier,
                     model = item,
                 )
-                is WalletSettingsItemUM.UpgradeWallet -> UpgradeWalletBlock(
-                    modifier = itemModifier,
-                    model = item,
-                )
                 is WalletSettingsAccountsUM.Header -> AccountsHeader(item, itemModifier)
                 is WalletSettingsAccountsUM.Account -> AccountItem(
                     model = item,
@@ -211,35 +206,54 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
         enabled = model.isEnabled,
         onClick = model.onClick,
     ) {
-        Row(
-            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CardImage(model.imageState)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = model.title.resolveReference(),
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.caption2,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = model.text.resolveReference(),
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.subtitle1,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
+        Column {
+            Row(
+                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CardImage(model.imageState)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = model.title.resolveReference(),
+                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.caption2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = model.text.resolveReference(),
+                        color = TangemTheme.colors.text.primary1,
+                        style = TangemTheme.typography.subtitle1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                    )
+                }
+                SecondarySmallButton(
+                    config = SmallButtonConfig(
+                        isEnabled = model.isEnabled,
+                        text = resourceReference(R.string.common_rename),
+                        onClick = model.onClick,
+                    ),
                 )
             }
-            SecondarySmallButton(
-                config = SmallButtonConfig(
-                    isEnabled = model.isEnabled,
-                    text = resourceReference(R.string.common_rename),
-                    onClick = model.onClick,
-                ),
-            )
+
+            if (model.additionalBlock != null) {
+                Column {
+                    HorizontalDivider(
+                        thickness = TangemTheme.dimens.size0_5,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                        color = TangemTheme.colors.stroke.primary,
+                    )
+
+                    BlockItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        model = model.additionalBlock,
+                    )
+                }
+            }
         }
     }
 }
@@ -270,21 +284,6 @@ private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifi
             )
         }
     }
-}
-
-@Composable
-private fun UpgradeWalletBlock(model: WalletSettingsItemUM.UpgradeWallet, modifier: Modifier = Modifier) {
-    Notification(
-        config = NotificationConfig(
-            title = model.title,
-            subtitle = model.description,
-            iconResId = R.drawable.ic_hardware_backup_36,
-            iconSize = 36.dp,
-            onClick = model.onClick,
-            shouldShowArrowIcon = false,
-        ),
-        modifier = modifier,
-    )
 }
 
 @Composable
@@ -478,22 +477,6 @@ private val DESCRIPTION_OFFSET = -8.dp
 private fun Preview_WalletSettingsScreen() {
     TangemThemePreview {
         PreviewWalletSettingsComponent().Content(modifier = Modifier.fillMaxSize())
-    }
-}
-
-@Composable
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun Preview_WalletSettingsScreen1() {
-    TangemThemePreview {
-        UpgradeWalletBlock(
-            model = WalletSettingsItemUM.UpgradeWallet(
-                id = "upgrade_wallet",
-                title = stringReference("Upgrade wallet with a hardware backup"),
-                description = stringReference("Keep your crypto safe with Tangem’s best-in-class hardware wallet."),
-                onClick = {},
-            ),
-        )
     }
 }
 // endregion Preview
