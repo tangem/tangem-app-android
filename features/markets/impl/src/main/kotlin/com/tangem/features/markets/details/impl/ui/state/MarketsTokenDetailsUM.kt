@@ -17,7 +17,7 @@ internal data class MarketsTokenDetailsUM(
     val priceChangePercentText: String?,
     val priceChangeType: PriceChangeType,
     val selectedInterval: PriceChangeInterval,
-    val markerSet: Boolean,
+    val isMarkerSet: Boolean,
     val chartState: ChartState,
     val onSelectedIntervalChange: (PriceChangeInterval) -> Unit,
     val bottomSheetConfig: TangemBottomSheetConfig,
