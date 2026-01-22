@@ -26,8 +26,9 @@ class AppsFlyerAnalyticsHandler(
             }
             is AppsFlyerIncludedEvent -> {
                 Timber.tag("AppsFlyer").i("Sending event to AppsFlyer: ${event.id} with params: ${event.params}")
+                val replacedEvent = event.appsFlyerReplacedEvent ?: event.event
                 client.logEvent(
-                    event = AnalyticsEvent(category = event.category, event = event.appsFlyerReplacedEvent).id,
+                    event = AnalyticsEvent(category = event.category, event = replacedEvent).id,
                     params = event.params,
                 )
             }
