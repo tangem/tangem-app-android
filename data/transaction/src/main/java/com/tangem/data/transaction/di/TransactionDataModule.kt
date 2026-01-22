@@ -1,17 +1,22 @@
 package com.tangem.data.transaction.di
 
+import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.transaction.DefaultFeeRepository
+import com.tangem.data.transaction.DefaultGaslessTransactionRepository
 import com.tangem.data.transaction.DefaultTransactionRepository
 import com.tangem.data.transaction.DefaultWalletAddressServiceRepository
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
+import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.transaction.FeeRepository
+import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -64,5 +69,21 @@ internal object TransactionDataModule {
     @Singleton
     fun providerFeeErrorResolver(): FeeErrorResolver {
         return DefaultFeeErrorResolver()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGaslessTransactionRepository(
+        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        gaslessTxServiceApi: GaslessTxServiceApi,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
+        sendFeatureToggles: SendFeatureToggles,
+    ): GaslessTransactionRepository {
+        return DefaultGaslessTransactionRepository(
+            gaslessTxServiceApi = gaslessTxServiceApi,
+            coroutineDispatcherProvider = coroutineDispatcherProvider,
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            sendFeatureToggles = sendFeatureToggles,
+        )
     }
 }
