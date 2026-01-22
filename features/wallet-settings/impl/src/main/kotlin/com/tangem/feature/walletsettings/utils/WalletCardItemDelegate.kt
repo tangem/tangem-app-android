@@ -2,6 +2,7 @@ package com.tangem.feature.walletsettings.utils
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
@@ -24,6 +25,7 @@ internal class WalletCardItemDelegate @AssistedInject constructor(
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val walletImageFetcher: UserWalletImageFetcher,
     @Assisted private val dialogNavigation: SlotNavigation<DialogConfig>,
+    @Assisted private val onUpgradeHotWalletClick: () -> Unit,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -43,9 +45,19 @@ internal class WalletCardItemDelegate @AssistedInject constructor(
                 isEnabled = isRenameAvailable,
                 onClick = { openRenameWalletDialog(wallet) },
                 imageState = imageState,
+                additionalBlock = buildUpgradeToHardwareWalletBlockOrNull(wallet),
             )
         },
     )
+
+    private fun buildUpgradeToHardwareWalletBlockOrNull(wallet: UserWallet): BlockUM? {
+        return BlockUM(
+            text = resourceReference(R.string.upgrade_to_hardware_wallet_button_title),
+            iconRes = null,
+            onClick = onUpgradeHotWalletClick,
+            accentType = BlockUM.AccentType.ACCENT,
+        ).takeIf { wallet is UserWallet.Hot }
+    }
 
     private fun openRenameWalletDialog(userWallet: UserWallet) {
         val config = DialogConfig.RenameWallet(
@@ -57,6 +69,9 @@ internal class WalletCardItemDelegate @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(dialogNavigation: SlotNavigation<DialogConfig>): WalletCardItemDelegate
+        fun create(
+            dialogNavigation: SlotNavigation<DialogConfig>,
+            onUpgradeHotWalletClick: () -> Unit,
+        ): WalletCardItemDelegate
     }
 }

@@ -17,6 +17,7 @@ import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSession
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 
 internal class DefaultTangemPayRemoteDataSource @Inject constructor(
@@ -66,6 +67,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
                 expiresAt = response.expiresAt,
                 refreshToken = response.refreshToken,
                 refreshExpiresAt = response.refreshExpiresAt,
+                idempotencyKey = UUID.randomUUID().toString(),
             )
         }
     }

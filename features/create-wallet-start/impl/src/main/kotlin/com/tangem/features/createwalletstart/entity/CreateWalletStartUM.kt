@@ -12,7 +12,7 @@ internal data class CreateWalletStartUM(
     val shouldShowScanSecondaryButton: Boolean,
     val primaryButtonText: TextReference,
     val onPrimaryButtonClick: () -> Unit,
-    val otherMethodDescription: TextReference,
+    val otherMethodDescription: TextReference?,
     val otherMethodTitle: TextReference,
     val otherMethodClick: () -> Unit,
     val onScanClick: () -> Unit,

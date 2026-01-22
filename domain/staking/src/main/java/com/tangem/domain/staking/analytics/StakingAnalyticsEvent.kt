@@ -2,6 +2,7 @@ package com.tangem.domain.staking.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.models.staking.action.StakingActionType
 
@@ -21,7 +22,7 @@ sealed class StakingAnalyticsEvent(
         params = mapOf(
             "Validators Count" to validatorsCount.toString(),
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class WhatIsStaking : StakingAnalyticsEvent(
         event = "Link - What Is Staking",
@@ -40,7 +41,7 @@ sealed class StakingAnalyticsEvent(
             "Validator" to validator,
             "Action" to action.asAnalyticName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class StakeInProgressScreenOpened(
         val validator: String,
@@ -51,7 +52,7 @@ sealed class StakingAnalyticsEvent(
             "Validator" to validator,
             "Action" to action.asAnalyticName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class RewardScreenOpened : StakingAnalyticsEvent(
         event = "Reward Screen Opened",

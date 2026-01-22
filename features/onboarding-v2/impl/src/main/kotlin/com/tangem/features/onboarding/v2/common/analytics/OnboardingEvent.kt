@@ -34,12 +34,7 @@ sealed class OnboardingEvent(
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
             },
-        ), AppsFlyerIncludedEvent {
-            override val appsFlyerReplacedEvent = when (creationType) {
-                WalletCreationType.NewSeed, WalletCreationType.PrivateKey -> "wallet_created_successfully"
-                WalletCreationType.SeedImport -> "wallet_imported"
-            }
-        }
+        ), AppsFlyerIncludedEvent
 
         sealed class WalletCreationType(val value: String) {
             data object PrivateKey : WalletCreationType(value = "Private Key")
@@ -92,7 +87,6 @@ sealed class OnboardingEvent(
     ) : OnboardingEvent("Onboarding / Twins", event, params) {
 
         class ScreenOpened : Twins("Twinning Screen Opened")
-        class SetupStarted : Twins("Twin Setup Started")
         class SetupFinished : Twins("Twin Setup Finished")
     }
 

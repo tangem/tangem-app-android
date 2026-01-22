@@ -93,7 +93,7 @@ sealed class Basic(
                 }
                 this["Memo"] = memoType.name
             },
-        ) {
+        ), AppsFlyerIncludedEvent {
         enum class MemoType {
             Empty, Full, Null
         }
