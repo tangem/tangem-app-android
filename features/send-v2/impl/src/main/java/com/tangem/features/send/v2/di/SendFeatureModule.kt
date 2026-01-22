@@ -8,24 +8,19 @@ import com.tangem.features.send.v2.sendnft.DefaultNFTSendComponent
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@InstallIn(SingletonComponent::class)
-@Module
-internal object SendFeatureModule {
-
-    @Provides
-    fun provideSendFeatureToggles(): SendFeatureToggles {
-        return DefaultSendFeatureToggles()
-    }
-}
+internal object SendFeatureModule
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface SendFeatureModuleBinds {
+
+    @Binds
+    @Singleton
+    fun bindSendFeatureToggles(impl: DefaultSendFeatureToggles): SendFeatureToggles
 
     @Binds
     @Singleton

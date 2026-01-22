@@ -105,6 +105,9 @@ internal class WcSendTransactionModel @Inject constructor(
     private val securityStatusState =
         MutableStateFlow<Lce<Throwable, BlockAidTransactionCheck.Result>>(Lce.Loading(partialContent = null))
 
+    val userWallet
+        get() = useCase.wallet
+
     init {
         @Suppress("UnusedPrivateMember")
         modelScope.launch {
