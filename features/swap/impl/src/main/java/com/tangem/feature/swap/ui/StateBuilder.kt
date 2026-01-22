@@ -25,6 +25,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.models.StoryContent
+import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.converters.TokensDataConverterV2
@@ -64,6 +65,7 @@ internal class StateBuilder(
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
+    private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -76,7 +78,7 @@ internal class StateBuilder(
     )
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SwapNotificationsFactory(actions)
+        SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
     }
 
     fun createInitialLoadingState(
@@ -606,6 +608,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
+                isInProgress = true,
             ),
         )
     }
@@ -615,13 +618,14 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         tokensDataState: CurrenciesGroup,
     ): SwapStateHolder {
+        val currentMarketsState = uiState.selectTokenState?.marketsState
         return uiState.copy(
             selectTokenState = tokensDataConverter.convert(
                 value = CurrenciesGroupWithFromCurrency(
                     fromCurrency = fromToken,
                     group = tokensDataState,
                 ),
-            ),
+            ).copy(marketsState = currentMarketsState),
         )
     }
 
@@ -808,6 +812,7 @@ internal class StateBuilder(
         return uiState.copy(
             swapButton = uiState.swapButton.copy(
                 isEnabled = false,
+                isInProgress = false,
             ),
             permissionState = GiveTxPermissionState.InProgress,
             notifications = notificationsFactory.getApprovalInProgressStateNotification(uiState.notifications),
@@ -823,7 +828,6 @@ internal class StateBuilder(
         onStatusClick: () -> Unit,
         txUrl: String,
     ): SwapStateHolder {
-        val fee = requireNotNull(dataState.selectedFee)
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
         val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
@@ -843,7 +847,9 @@ internal class StateBuilder(
                 shouldShowStatusButton = shouldShowStatus,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
-                fee = stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})"),
+                fee = dataState.selectedFee?.let { fee ->
+                    stringReference("${fee.feeCryptoFormattedWithNative} (${fee.feeFiatFormattedWithNative})")
+                },
                 fromTitle = getFromCardAccountTitle(fromAccount = dataState.fromAccount),
                 toTitle = getToCardAccountTitle(toAccount = dataState.toAccount),
                 fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
