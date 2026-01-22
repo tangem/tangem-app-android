@@ -316,13 +316,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return UpdateWalletManagerResult.Unreachable()
         }
 
-        updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
+        val isUpdated = updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
 
         return try {
             if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
                 updateDemoWalletManager(walletManager)
             } else {
-                updateWalletManager(walletManager)
+                updateWalletManager(walletManager = walletManager, forceUpdate = isUpdated)
             }
         } finally {
             walletManagersStore.store(userWallet.walletId, walletManager)
@@ -336,9 +336,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return resultFactory.getDemoResult(walletManager, amount)
     }
 
-    private suspend fun updateWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
+    private suspend fun updateWalletManager(
+        walletManager: WalletManager,
+        forceUpdate: Boolean,
+    ): UpdateWalletManagerResult {
         return try {
-            walletManager.update()
+            walletManager.update(forceUpdate)
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
@@ -768,14 +771,19 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             .joinToString(separator = "|")
     }
 
-    private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
-        if (tokens.isEmpty()) return
+    private fun updateWalletManagerTokensIfNeeded(
+        walletManager: WalletManager,
+        tokens: Set<CryptoCurrency.Token>,
+    ): Boolean {
+        if (tokens.isEmpty()) return false
 
         val tokensToAdd = sdkTokenConverter
             .convertList(tokens)
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
+
+        return tokensToAdd.isNotEmpty()
     }
 
     private suspend fun readSmartContractMethods(): Map<String, SmartContractMethod> {
