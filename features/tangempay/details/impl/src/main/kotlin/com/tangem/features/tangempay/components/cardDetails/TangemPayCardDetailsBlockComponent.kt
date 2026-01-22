@@ -12,7 +12,7 @@ internal interface TangemPayCardDetailsBlockComponent {
     val state: StateFlow<TangemPayCardDetailsUM>
 
     @Composable
-    fun CardDetailsBlockContent(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier)
+    fun CardDetailsBlockContent(state: TangemPayCardDetailsUM, modifier: Modifier)
 
     data class Params(val params: TangemPayDetailsContainerComponent.Params)
 }
