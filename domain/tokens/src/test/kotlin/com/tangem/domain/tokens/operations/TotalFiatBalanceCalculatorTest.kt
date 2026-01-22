@@ -589,11 +589,11 @@ class TotalFiatBalanceCalculatorTest {
 
     private fun createStakeKitBalance(amount: BigDecimal, balanceType: BalanceType): StakingBalance.Data.StakeKit {
         return StakingBalance.Data.StakeKit(
-            stakingId = mockk(),
+            stakingId = mockk(relaxed = true),
             source = StatusSource.ACTUAL,
             balance = YieldBalanceItem(
                 items = listOf(
-                    mockk<BalanceItem> {
+                    mockk<BalanceItem>(relaxed = true) {
                         every { this@mockk.amount } returns amount
                         every { this@mockk.type } returns balanceType
                     },
