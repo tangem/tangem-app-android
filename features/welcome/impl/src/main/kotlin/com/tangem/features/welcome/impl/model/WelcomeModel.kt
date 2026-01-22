@@ -12,14 +12,22 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -40,10 +48,15 @@ internal class WelcomeModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val saveWalletUseCase: SaveWalletUseCase,
     private val walletsRepository: WalletsRepository,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val scanCardProcessor: ScanCardProcessor,
+    private val messageSender: UiMessageSender,
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
@@ -168,7 +181,50 @@ internal class WelcomeModel @Inject constructor(
 
     private fun addWalletClick() {
         analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
-        router.push(AppRoute.CreateWalletSelection)
+        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+            scanCard()
+        } else {
+            router.push(AppRoute.CreateWalletSelection)
+        }
+    }
+
+    private fun scanCard() {
+        modelScope.launch {
+            scanCardProcessor.scan(
+                analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                onWalletNotCreated = {},
+                disclaimerWillShow = { router.pop() },
+                onSuccess = { scanResponse ->
+                    val userWallet =
+                        coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return@scan
+                    saveWalletUseCase.invoke(userWallet)
+                        .onLeft { error ->
+                            if (error is SaveWalletError.WalletAlreadySaved) {
+                                userWalletsListRepository.unlock(
+                                    userWallet.walletId,
+                                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                                ).onRight {
+                                    userWalletsListRepository.select(userWallet.walletId)
+                                    router.replaceAll(AppRoute.Wallet)
+                                }
+                            }
+                        }
+                        .onRight {
+                            router.replaceAll(AppRoute.Wallet)
+                        }
+                },
+                onCancel = {},
+                onFailure = { tangemError ->
+                    if (!tangemError.silent) {
+                        val message = tangemError.messageResId
+                            ?.let(::resourceReference)
+                            ?: stringReference(tangemError.customMessage)
+
+                        messageSender.send(SnackbarMessage(message))
+                    }
+                },
+            )
+        }
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
