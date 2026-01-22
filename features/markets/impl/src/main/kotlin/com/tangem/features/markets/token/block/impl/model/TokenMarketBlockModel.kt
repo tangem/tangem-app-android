@@ -79,8 +79,8 @@ internal class TokenMarketBlockModel @Inject constructor(
                 currencyID = params.cryptoCurrency.id,
                 interval = PriceChangeInterval.H24,
                 refresh = true,
-            ).collect {
-                it.onSome { res ->
+            ).collect { quotesOption ->
+                quotesOption.onSome { res ->
                     quotesState = QuotesState(
                         currentPrice = res.fiatRate,
                         h24Percent = res.priceChange,

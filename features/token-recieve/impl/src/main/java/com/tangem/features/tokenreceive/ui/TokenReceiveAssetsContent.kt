@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -510,9 +511,6 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ActionButtonWithResizableText(config: ActionButtonConfig, modifier: Modifier = Modifier) {
-    val fontSizeRange = FontSizeRange(min = 10.sp, max = 14.sp)
-    var fontSizeValue by remember { mutableFloatStateOf(fontSizeRange.max.value) }
-
     ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
@@ -520,11 +518,12 @@ private fun ActionButtonWithResizableText(config: ActionButtonConfig, modifier: 
             ActionButtonContent(
                 config = config,
                 text = { color ->
-                    ResizableText(
+                    Text(
                         text = config.text.resolveReference(),
-                        fontSizeValue = fontSizeValue.sp,
-                        fontSizeRange = fontSizeRange,
-                        onFontSizeChange = { fontSizeValue = it },
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 10.sp,
+                            maxFontSize = TangemTheme.typography.button.fontSize,
+                        ),
                         color = color,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
