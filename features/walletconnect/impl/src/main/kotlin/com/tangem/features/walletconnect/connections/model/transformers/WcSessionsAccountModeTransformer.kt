@@ -64,6 +64,7 @@ internal class WcSessionsAccountModeTransformer(
                 }
                 val accountIcon = when (account) {
                     is Account.CryptoPortfolio -> account.icon
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val accountTitle = AccountTitleUM.Account(
