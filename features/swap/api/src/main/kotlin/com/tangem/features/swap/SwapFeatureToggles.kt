@@ -1,3 +1,5 @@
 package com.tangem.features.swap
 
-interface SwapFeatureToggles
+interface SwapFeatureToggles {
+    val isMarketListFeatureEnabled: Boolean
+}

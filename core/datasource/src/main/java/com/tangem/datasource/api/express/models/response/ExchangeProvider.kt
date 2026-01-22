@@ -32,6 +32,9 @@ data class ExchangeProvider(
 
     @Json(name = "slippage")
     val slippage: BigDecimal?,
+
+    @Json(name = "exchangeOnlyWithinSingleAddress")
+    val isExchangeOnlyWithinSingleAddress: Boolean = false,
 )
 
 @JsonClass(generateAdapter = false)
