@@ -19,7 +19,6 @@ import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -137,13 +136,10 @@ internal class DefaultYieldSupplyRepository(
         }
     }
 
-    override suspend fun getPendingTxHashes(
-        userWalletId: UserWalletId,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): List<String> {
+    override suspend fun getPendingTxHashes(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): List<String> {
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
-            network = cryptoCurrencyStatus.currency.network,
+            network = cryptoCurrency.network,
         ) ?: return emptyList()
 
         return walletManager.wallet.recentTransactions
