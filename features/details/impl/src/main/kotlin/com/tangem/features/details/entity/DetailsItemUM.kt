@@ -2,6 +2,7 @@ package com.tangem.features.details.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.block.model.BlockUM
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -27,4 +28,9 @@ internal sealed class DetailsItemUM {
     data object UserWalletList : DetailsItemUM() {
         override val id: String = "user_wallet_list"
     }
+
+    data class UnderSectionText(
+        override val id: String,
+        val text: TextReference,
+    ) : DetailsItemUM()
 }
