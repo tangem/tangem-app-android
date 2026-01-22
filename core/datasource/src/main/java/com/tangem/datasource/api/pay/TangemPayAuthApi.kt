@@ -7,6 +7,7 @@ import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessT
 import com.tangem.datasource.api.pay.models.response.TangemPayGenerateNonceResponse
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface TangemPayAuthApi {
@@ -23,6 +24,7 @@ interface TangemPayAuthApi {
 
     @POST("auth/token/refresh")
     suspend fun refreshCustomerWalletAccessToken(
+        @Header("Idempotency-Key") idempotencyKey: String,
         @Body request: RefreshCustomerWalletAccessTokenRequest,
     ): ApiResponse<TangemPayGetTokensResponse>
 }
