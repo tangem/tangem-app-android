@@ -153,6 +153,7 @@ internal class AccountDetailsModel @Inject constructor(
                     isLoading = false,
                 )
             }
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
             ?.isMultiCurrency == true
