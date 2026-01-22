@@ -8,6 +8,7 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.managetokens.ValidateDerivationPathUseCase
+import com.tangem.features.managetokens.utils.CardanoDerivationPathValidator
 import com.tangem.domain.managetokens.model.exceptoin.DerivationPathValidationException
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.CustomTokenDerivationInputComponent
@@ -26,6 +27,8 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
     @Assisted private val params: CustomTokenDerivationInputComponent.Params,
     private val validateDerivationPathUseCase: ValidateDerivationPathUseCase,
 ) : CustomTokenDerivationInputComponent, AppComponentContext by context {
+
+    private val cardanoDerivationPathValidator = CardanoDerivationPathValidator()
 
     private val state: MutableStateFlow<CustomDerivationInputUM> = MutableStateFlow(
         value = getInitialState(),
@@ -70,6 +73,20 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
     private fun validateValue(value: String) {
         validateDerivationPathUseCase(value).getOrElse { e ->
             updateWithValidationError(e)
+            return
+        }
+
+        val isInvalidForCardano = cardanoDerivationPathValidator.isInvalidForCardano(
+            networkId = params.selectedNetwork.id,
+            path = value,
+        )
+        if (isInvalidForCardano) {
+            state.update { state ->
+                state.copy(
+                    error = resourceReference(R.string.custom_token_invalid_derivation_path),
+                    isConfirmEnabled = false,
+                )
+            }
             return
         }
 
