@@ -2,10 +2,12 @@ package com.tangem.features.feed.model.feed
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -17,11 +19,16 @@ import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
+import com.tangem.features.feed.model.feed.state.FeedMarketsBatchFlowManager
+import com.tangem.features.feed.model.feed.state.FeedStateController
+import com.tangem.features.feed.model.feed.state.transformers.UpdateGlobalFeedStateTransformer
+import com.tangem.features.feed.model.feed.state.transformers.UpdateMarketChartsTransformer
+import com.tangem.features.feed.model.feed.state.transformers.UpdateTrendingNewsStateTransformer
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentHashMap
 import kotlinx.coroutines.Job
@@ -34,13 +41,16 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class FeedComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val fetchTrendingNewsUseCase: FetchTrendingNewsUseCase,
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
+    private val stateController: FeedStateController,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultFeedComponent.FeedParams>()
@@ -63,25 +73,12 @@ internal class FeedComponentModel @Inject constructor(
     )
 
     internal val state: StateFlow<FeedListUM>
-        field = MutableStateFlow<FeedListUM>(initialState())
-
-    private val searchBarStateFactory by lazy(LazyThreadSafetyMode.NONE) {
-        SearchBarStateFactory(
-            currentStateProvider = Provider { state.value },
-            onStateUpdate = { newState -> state.update { newState } },
-        )
-    }
-
-    private val trendingNewsStateFactory by lazy(LazyThreadSafetyMode.NONE) {
-        TrendingNewsStateFactory(
-            currentStateProvider = Provider { state.value },
-            onStateUpdate = { newState -> state.update { newState } },
-        )
-    }
+        get() = stateController.uiState
 
     val isVisibleOnScreen = MutableStateFlow(false)
 
     init {
+        initializeState()
         updateCallbacks()
 
         modelScope.launch(dispatchers.default) {
@@ -95,17 +92,50 @@ internal class FeedComponentModel @Inject constructor(
                 flow3 = marketsBatchFlowManager.errorStatesByOrder,
                 flow4 = manageTrendingNewsUseCase.observeTrendingNews(),
             ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult ->
-                updateMarketCharts(itemsByOrder, loadingStatesByOrder, errorStatesByOrder)
-                trendingNewsStateFactory.updateTrendingNewsState(
-                    result = trendingNewsResult,
+                val globalStateTransformer = UpdateGlobalFeedStateTransformer(
+                    loadingStatesByOrder = loadingStatesByOrder,
+                    errorStatesByOrder = errorStatesByOrder,
+                    trendingNewsResult = trendingNewsResult,
                     onRetryClicked = {
                         modelScope.launch(dispatchers.default) {
+                            stateController.update { currentState ->
+                                currentState.copy(globalState = GlobalFeedState.Loading)
+                            }
                             fetchTrendingNewsUseCase.invoke()
+                            marketsBatchFlowManager.reloadAll()
                         }
                     },
+                    analyticsEventHandler = analyticsEventHandler,
                 )
-                updateGlobalState()
-                val currentSortType = state.value.marketChartConfig.currentSortByType
+
+                val currentState = stateController.value
+                val newGlobalState = globalStateTransformer.transform(currentState)
+                val shouldSkipIndividualStates = newGlobalState.globalState !is GlobalFeedState.Content
+
+                stateController.update(globalStateTransformer)
+
+                if (!shouldSkipIndividualStates) {
+                    stateController.updateAll(
+                        UpdateMarketChartsTransformer(
+                            itemsByOrder = itemsByOrder,
+                            loadingStatesByOrder = loadingStatesByOrder,
+                            errorStatesByOrder = errorStatesByOrder,
+                            onReloadAll = { marketsBatchFlowManager.reloadAll() },
+                            analyticsEventHandler = analyticsEventHandler,
+                        ),
+                        UpdateTrendingNewsStateTransformer(
+                            result = trendingNewsResult,
+                            onRetryClicked = {
+                                modelScope.launch(dispatchers.default) {
+                                    fetchTrendingNewsUseCase.invoke()
+                                }
+                            },
+                            analyticsEventHandler = analyticsEventHandler,
+                        ),
+                    )
+                }
+
+                val currentSortType = stateController.value.marketChartConfig.currentSortByType
                 val items = itemsByOrder[currentSortType]
                 val isLoading = loadingStatesByOrder[currentSortType] == true
                 if (items != null && items.isNotEmpty() && !isLoading) {
@@ -133,15 +163,19 @@ internal class FeedComponentModel @Inject constructor(
         }
     }
 
+    private fun initializeState() {
+        stateController.update { initialState() }
+    }
+
     private fun initialState(): FeedListUM {
         return FeedListUM(
             currentDate = getCurrentDate(),
-            searchBar = SearchBarUM(
+            feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(R.string.markets_search_header_title),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = { },
+                onBarClick = {
+                    analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
+                    params.feedClickIntents.onMarketOpenClick(null)
+                },
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
@@ -150,8 +184,18 @@ internal class FeedComponentModel @Inject constructor(
                 onOpenAllNews = {},
                 onMarketItemClick = {},
                 onSortTypeClick = {},
+                onSliderScroll = {
+                    analyticsEventHandler.send(FeedAnalyticsEvent.NewsCarouselScrolled())
+                },
+                onSliderEndReached = {
+                    analyticsEventHandler.send(FeedAnalyticsEvent.NewsCarouselEndReached())
+                },
             ),
-            news = NewsUM.Loading,
+            news = NewsUM(
+                content = persistentListOf(),
+                onRetryClicked = {},
+                newsUMState = NewsUMState.LOADING,
+            ),
             trendingArticle = null,
             marketChartConfig = MarketChartConfig(
                 marketCharts = buildMap {
@@ -159,7 +203,7 @@ internal class FeedComponentModel @Inject constructor(
                         put(it, MarketChartUM.Loading)
                     }
                 }.toPersistentHashMap(),
-                currentSortByType = SortByTypeUM.Trending,
+                currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
         )
@@ -170,101 +214,8 @@ internal class FeedComponentModel @Inject constructor(
         return DateTimeFormatters.formatDate(formatter = DateTimeFormatters.dateDMMM, date = localDate)
     }
 
-    private fun updateMarketCharts(
-        itemsByOrder: Map<SortByTypeUM, ImmutableList<com.tangem.common.ui.markets.models.MarketsListItemUM>>,
-        loadingStatesByOrder: Map<SortByTypeUM, Boolean>,
-        errorStatesByOrder: Map<SortByTypeUM, Boolean>,
-    ) {
-        state.update { currentState ->
-            val newMarketCharts = buildMap {
-                SortByTypeUM.entries.forEach { sortByType ->
-                    val items = itemsByOrder[sortByType] ?: persistentListOf()
-                    val isLoading = loadingStatesByOrder[sortByType] == true
-                    val hasError = errorStatesByOrder[sortByType] == true
-
-                    when {
-                        hasError -> {
-                            put(
-                                sortByType,
-                                MarketChartUM.LoadingError(
-                                    onRetryClicked = {
-                                        marketsBatchFlowManager.reloadAll()
-                                    },
-                                ),
-                            )
-                        }
-                        isLoading -> {
-                            put(sortByType, MarketChartUM.Loading)
-                        }
-                        items.isEmpty() -> {
-                            put(
-                                sortByType,
-                                MarketChartUM.LoadingError(
-                                    onRetryClicked = {
-                                        marketsBatchFlowManager.reloadAll()
-                                    },
-                                ),
-                            )
-                        }
-                        else -> {
-                            put(
-                                sortByType,
-                                MarketChartUM.Content(
-                                    items = items,
-                                    sortChartConfig = SortChartConfigUM(
-                                        sortByType = sortByType,
-                                        isSelected = sortByType == currentState.marketChartConfig.currentSortByType,
-                                    ),
-                                ),
-                            )
-                        }
-                    }
-                }
-            }.toPersistentHashMap()
-
-            currentState.copy(
-                marketChartConfig = currentState.marketChartConfig.copy(
-                    marketCharts = newMarketCharts,
-                ),
-            )
-        }
-    }
-
-    private fun updateGlobalState() {
-        state.update { currentState ->
-            val newsState = currentState.news
-            val marketCharts = currentState.marketChartConfig.marketCharts
-
-            val isNewsLoading = newsState is NewsUM.Loading
-            val areAllChartsLoading = marketCharts.values.all { it is MarketChartUM.Loading }
-
-            val isNewsError = newsState is NewsUM.Error
-            val areAllChartsError = marketCharts.values.all { it is MarketChartUM.LoadingError }
-
-            val newGlobalState = when {
-                isNewsLoading && areAllChartsLoading -> GlobalFeedState.Loading
-                isNewsError && areAllChartsError -> GlobalFeedState.Error(
-                    onRetryClicked = {
-                        modelScope.launch(dispatchers.default) {
-                            fetchTrendingNewsUseCase.invoke()
-                            marketsBatchFlowManager.reloadAll()
-                        }
-                    },
-                )
-                else -> GlobalFeedState.Content
-            }
-
-            val currentGlobalState = currentState.globalState
-            if (currentGlobalState::class != newGlobalState::class) {
-                currentState.copy(globalState = newGlobalState)
-            } else {
-                currentState
-            }
-        }
-    }
-
-    private fun onSortTypeClick(sortByType: SortByTypeUM) {
-        state.update { currentState ->
+    private fun handleSortTypeClicked(sortByType: SortByTypeUM) {
+        stateController.update { currentState ->
             val updatedCharts = currentState.marketChartConfig.marketCharts.mapValues { (chartSortType, chart) ->
                 when (chart) {
                     is MarketChartUM.Content -> {
@@ -302,32 +253,85 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun updateCallbacks() {
-        state.update { feedListUM ->
+        stateController.update { feedListUM ->
             feedListUM.copy(
-                searchBar = state.value.searchBar.copy(onQueryChange = searchBarStateFactory::onSearchQueryChange),
                 feedListCallbacks = feedListUM.feedListCallbacks.copy(
-                    onSortTypeClick = ::onSortTypeClick,
-                    onMarketItemClick = { item ->
-                        val tokenMarket = marketsBatchFlowManager.getTokenMarketById(item.id)
-                        if (tokenMarket != null) {
-                            params.feedClickIntents.onMarketItemClick(
-                                token = tokenMarket.toSerializableParam(),
-                                appCurrency = currentAppCurrency.value,
-                            )
-                        }
-                    },
-                    onMarketOpenClick = { sortBy ->
-                        params.feedClickIntents.onMarketOpenClick(sortBy)
-                    },
-                    onArticleClick = { articleId ->
-                        params.feedClickIntents.onArticleClick(articleId)
-                    },
-                    onOpenAllNews = {
-                        params.feedClickIntents.onOpenAllNews()
-                    },
+                    onSortTypeClick = ::handleSortTypeClicked,
+                    onMarketItemClick = ::handleMarketItemClicked,
+                    onMarketOpenClick = ::handleMarketOpenClicked,
+                    onArticleClick = ::handleArticleClicked,
+                    onOpenAllNews = ::handleOpenAllNews,
                 ),
             )
         }
+    }
+
+    private fun handleMarketItemClicked(item: MarketsListItemUM) {
+        val tokenMarket = marketsBatchFlowManager.getTokenMarketById(item.id)
+        if (tokenMarket != null) {
+            params.feedClickIntents.onMarketItemClick(
+                token = tokenMarket.toSerializableParam(),
+                appCurrency = currentAppCurrency.value,
+                source = AnalyticsParam.ScreensSources.Market.value,
+            )
+        }
+    }
+
+    private fun handleMarketOpenClicked(sortBy: SortByTypeUM) {
+        when (sortBy) {
+            SortByTypeUM.Rating -> {
+                analyticsEventHandler.send(
+                    FeedAnalyticsEvent.TokenListOpened(
+                        AnalyticsParam.ScreensSources.Markets,
+                    ),
+                )
+            }
+            SortByTypeUM.Trending,
+            SortByTypeUM.ExperiencedBuyers,
+            SortByTypeUM.TopGainers,
+            SortByTypeUM.TopLosers,
+            SortByTypeUM.Staking,
+            SortByTypeUM.YieldSupply,
+            -> {
+                analyticsEventHandler.send(
+                    FeedAnalyticsEvent.TokenListOpened(
+                        AnalyticsParam.ScreensSources.MarketPulse,
+                    ),
+                )
+            }
+        }
+        params.feedClickIntents.onMarketOpenClick(sortBy)
+    }
+
+    private fun handleArticleClicked(articleId: Int) {
+        val currentState = stateController.value
+        val trendingArticleId = currentState.trendingArticle?.id
+        if (articleId == trendingArticleId) {
+            analyticsEventHandler.send(
+                event = FeedAnalyticsEvent.NewsCarouselTrendingClicked(newsId = articleId),
+            )
+        }
+        params.feedClickIntents.onArticleClick(
+            articleId = articleId,
+            preselectedArticlesId = listOfNotNull(trendingArticleId) +
+                when (currentState.news.newsUMState) {
+                    NewsUMState.CONTENT -> currentState.news.content.map { it.id }
+                    NewsUMState.LOADING,
+                    NewsUMState.ERROR,
+                    -> emptyList()
+                },
+            paginationConfig = null,
+            screenSource = AnalyticsParam.ScreensSources.Markets,
+        )
+    }
+
+    private fun handleOpenAllNews(isFromCarouselButton: Boolean) {
+        if (isFromCarouselButton) {
+            analyticsEventHandler.send(FeedAnalyticsEvent.NewsCarouselAllNewsButton())
+        } else {
+            analyticsEventHandler.send(FeedAnalyticsEvent.NewsListOpened())
+        }
+        params.feedClickIntents.onOpenAllNews()
     }
 
     private fun SortByTypeUM.toOrder(): TokenMarketListConfig.Order {
