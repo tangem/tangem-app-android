@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -13,6 +14,7 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
@@ -21,6 +23,7 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
@@ -37,6 +40,14 @@ internal interface TangemPayIntents {
     fun openDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
 
     fun onKycProgressClicked(userWalletId: UserWalletId)
+
+    fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String)
+
+    fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId)
+
+    fun onKycRejectedGoToSupportClicked(customerId: String)
+
+    fun onKycRejectedHideKycClicked(userWalletId: UserWalletId)
 
     fun onIssuingCardClicked()
 
@@ -137,6 +148,42 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(kycInfoBottomSheet)
     }
 
+    override fun onKycRejectedOpenProfileClicked(userWalletId: UserWalletId) {
+        router.openTangemPayOnboarding(
+            mode = AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(userWalletId),
+        )
+    }
+
+    override fun onKycRejectedGoToSupportClicked(customerId: String) {
+        goToSupportForRejectKyc(customerId)
+    }
+
+    override fun onKycRejectedHideKycClicked(userWalletId: UserWalletId) {
+        disableTangemPay(userWalletId)
+    }
+
+    override fun onKycRejectedClicked(userWalletId: UserWalletId, customerId: String) {
+        router.dialogNavigation.activate(
+            configuration = WalletDialogConfig.KycRejected(
+                walletId = userWalletId,
+                customerId = customerId,
+            ),
+        )
+    }
+
+    private fun goToSupportForRejectKyc(customerId: String) {
+        modelScope.launch {
+            sendFeedbackEmailUseCase(
+                type = FeedbackEmailType.Visa.KycRejected(
+                    walletMetaInfo = WalletMetaInfo(
+                        userWalletId = stateHolder.getSelectedWalletId(),
+                    ),
+                    customerId = customerId,
+                ),
+            )
+        }
+    }
+
     override fun onIssuingCardClicked() {
         val issuingBottomSheet = bottomSheetMessage {
             infoBlock {
@@ -198,6 +245,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             if (isEligible) {
                 router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
             } else {
+                stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
                 tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
             }
         }
