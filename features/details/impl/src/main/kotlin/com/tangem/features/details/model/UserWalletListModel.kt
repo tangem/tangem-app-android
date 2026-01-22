@@ -57,6 +57,7 @@ internal class UserWalletListModel @Inject constructor(
             isWalletSavingInProgress = false,
             addNewWalletText = TextReference.EMPTY,
             onAddNewWalletClick = ::onAddNewWalletClick,
+            addNewWalletIconRes = R.drawable.ic_plus_24,
         ),
     )
 
@@ -83,10 +84,11 @@ internal class UserWalletListModel @Inject constructor(
         value.copy(
             userWallets = userWallets,
             isWalletSavingInProgress = isWalletSavingInProgress,
-            addNewWalletText = if (shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled) {
-                resourceReference(R.string.user_wallet_list_add_button)
-            } else {
-                resourceReference(R.string.scan_card_settings_button)
+            addNewWalletText = when {
+                shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled -> {
+                    resourceReference(R.string.user_wallet_list_add_button)
+                }
+                else -> resourceReference(R.string.scan_card_settings_button)
             },
         )
     }
@@ -94,7 +96,14 @@ internal class UserWalletListModel @Inject constructor(
     private fun onAddNewWalletClick() {
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
-            router.push(AppRoute.CreateWalletSelection)
+
+            if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+                withProgress(isWalletSavingInProgress) {
+                    userWalletSaver.scanAndSaveUserWallet(modelScope)
+                }
+            } else {
+                router.push(AppRoute.CreateWalletSelection)
+            }
         } else {
             withProgress(isWalletSavingInProgress) {
                 userWalletSaver.scanAndSaveUserWallet(modelScope)
