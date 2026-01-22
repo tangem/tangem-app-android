@@ -4,7 +4,7 @@ import com.tangem.domain.models.serialization.SerializedBigDecimal
 import org.joda.time.Instant
 
 /**
- * P2P.org staking balance information (similar to StakeKit's YieldBalanceItem)
+ * Staking balance information (similar to StakeKit's YieldBalanceItem)
  * Contains staked amounts, rewards, and pending actions
  */
 data class P2PEthPoolStakingBalance(
@@ -15,7 +15,7 @@ data class P2PEthPoolStakingBalance(
 )
 
 /**
- * Individual balance item for P2P staking
+ * Individual balance item for P2PEthPool staking
  */
 data class P2PEthPoolBalanceItem(
     val type: P2PEthPoolBalanceType,
@@ -26,7 +26,7 @@ data class P2PEthPoolBalanceItem(
 )
 
 /**
- * Types of balances in P2P staking
+ * Types of balances in P2PEthPool staking
  */
 enum class P2PEthPoolBalanceType {
     STAKED,
