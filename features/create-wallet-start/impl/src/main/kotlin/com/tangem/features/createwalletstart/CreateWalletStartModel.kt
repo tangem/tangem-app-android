@@ -92,7 +92,7 @@ internal class CreateWalletStartModel @Inject constructor(
                     onPrimaryButtonClick = ::onBuyClick,
                     primaryButtonText = resourceReference(R.string.details_buy_wallet),
                     otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
-                    otherMethodDescription = resourceReference(R.string.welcome_create_wallet_mobile_description),
+                    otherMethodDescription = null,
                     otherMethodClick = ::onStartWithMobileWalletClick,
                     onBackClick = { router.pop() },
                     onScanClick = ::onScanClick,

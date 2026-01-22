@@ -181,7 +181,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                                 .height(16.dp),
                         )
                         Text(
-                            text = stringResourceSafe(R.string.welcome_create_wallet_other_method),
+                            text = stringResourceSafe(R.string.common_or),
                             style = TangemTheme.typography.caption1,
                             color = TangemTheme.colors.text.secondary,
                             textAlign = TextAlign.Center,
@@ -193,19 +193,21 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                                 .scale(scaleX = -1f, scaleY = 1f),
                         )
                     }
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 16.dp,
-                                top = 16.dp,
-                                end = 16.dp,
-                            ),
-                        text = state.otherMethodDescription.resolveReference(),
-                        style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
+                    if (state.otherMethodDescription != null) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = 16.dp,
+                                    top = 16.dp,
+                                    end = 16.dp,
+                                ),
+                            text = state.otherMethodDescription.resolveReference(),
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .wrapContentWidth()
@@ -429,9 +431,7 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.details_buy_wallet),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
-            otherMethodDescription = resourceReference(
-                R.string.welcome_create_wallet_mobile_description,
-            ),
+            otherMethodDescription = null,
             otherMethodClick = { },
             onBackClick = { },
             onScanClick = { },
