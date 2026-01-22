@@ -271,6 +271,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             name = this.accountName.toUM().value,
             icon = when (this) {
                 is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
     )
