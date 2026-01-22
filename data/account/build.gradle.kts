@@ -70,5 +70,6 @@ dependencies {
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(deps.test.turbine)
     // endregion
 }
