@@ -409,7 +409,7 @@ private inline fun BaseScaffoldWithMarkets(
     }
 
     CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
     ) {
         val backgroundColor = LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
@@ -449,20 +449,21 @@ private inline fun BaseScaffoldWithMarkets(
                     }
 
                     Column(
-                        modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
+                        modifier = Modifier
+                            // expand bottom sheet when clicked on the header
+                            .clickable(
+                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                indication = null,
+                                interactionSource = null,
+                            ) {
+                                coroutineScope.launch { bottomSheetState.expand() }
+                            }
+                            .sizeIn(maxHeight = maxHeight - statusBarHeight),
                     ) {
                         Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
 
                         Box(
                             modifier = Modifier
-                                // expand bottom sheet when clicked on the header
-                                .clickable(
-                                    enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                                    indication = null,
-                                    interactionSource = null,
-                                ) {
-                                    coroutineScope.launch { bottomSheetState.expand() }
-                                }
                                 .onFocusChanged {
                                     isSearchFieldFocused = it.isFocused
                                 },
@@ -492,7 +493,7 @@ private inline fun BaseScaffoldWithMarkets(
                             color = if (state.showMarketsOnboarding) {
                                 Color.Black.copy(alpha = .65f)
                             } else {
-                                BottomSheetDefaults.ScrimColor
+                                Color.Black.copy(alpha = .40f)
                             },
                             visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                                 state.showMarketsOnboarding,
