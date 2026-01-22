@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.common.routing)
 
     /* Project - Domain */
     implementation(projects.domain.models)

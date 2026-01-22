@@ -32,10 +32,8 @@ import com.tangem.features.hotwallet.wallethardwarebackup.entity.WalletHardwareB
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -119,19 +117,11 @@ internal class WalletHardwareBackupModel @Inject constructor(
     init {
         trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
-        showPurchaseBlockWithDelay()
     }
 
     override fun onDestroy() {
         trackingContextProxy.removeContext()
         super.onDestroy()
-    }
-
-    private fun showPurchaseBlockWithDelay() {
-        modelScope.launch {
-            delay(SHOW_PURCHASE_BLOCK_DELAY)
-            uiState.update { it.copy(showPurchaseBlock = true) }
-        }
     }
 
     private fun onCreateNewWalletClick() {
@@ -174,9 +164,5 @@ internal class WalletHardwareBackupModel @Inject constructor(
             generateBuyTangemCardLinkUseCase
                 .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
-    }
-
-    companion object {
-        private const val SHOW_PURCHASE_BLOCK_DELAY = 3000L
     }
 }

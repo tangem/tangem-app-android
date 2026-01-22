@@ -75,14 +75,21 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                     .padding(top = 32.dp),
                 title = stringResourceSafe(R.string.hw_create_keys_title),
                 description = stringResourceSafe(R.string.hw_create_keys_description),
-                iconRes = R.drawable.ic_lock_24,
+                iconRes = R.drawable.ic_protect_24,
             )
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
                 title = stringResourceSafe(R.string.hw_create_seed_title),
                 description = stringResourceSafe(R.string.hw_create_seed_description),
-                iconRes = R.drawable.ic_settings_24,
+                iconRes = R.drawable.ic_seed_phrase_24,
+            )
+            FeatureBlock(
+                modifier = Modifier
+                    .padding(top = 24.dp),
+                title = stringResourceSafe(R.string.hw_create_upgrade_title),
+                description = stringResourceSafe(R.string.hw_create_upgrade_description),
+                iconRes = R.drawable.ic_tangem_card_24,
             )
         }
         SecondaryButton(

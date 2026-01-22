@@ -1,6 +1,7 @@
 package com.tangem.features.details.ui
 
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,7 +24,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.component.preview.PreviewUserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
-import com.tangem.features.details.impl.R
 
 @Composable
 internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = Modifier) {
@@ -42,6 +42,7 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
             text = state.addNewWalletText,
             isInProgress = state.isWalletSavingInProgress,
             onClick = state.onAddNewWalletClick,
+            icon = state.addNewWalletIconRes,
         )
     }
 }
@@ -49,6 +50,7 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
 @Composable
 private fun AddWalletButton(
     text: TextReference,
+    @DrawableRes icon: Int?,
     isInProgress: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -65,23 +67,25 @@ private fun AddWalletButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            AnimatedContent(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                targetState = isInProgress,
-                label = "Add wallet progress",
-            ) { isInProgress ->
-                if (isInProgress) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(TangemTheme.dimens.size24),
-                        color = TangemTheme.colors.icon.accent,
-                    )
-                } else {
-                    Icon(
-                        modifier = Modifier.size(TangemTheme.dimens.size24),
-                        painter = painterResource(id = R.drawable.ic_plus_24),
-                        tint = TangemTheme.colors.icon.accent,
-                        contentDescription = null,
-                    )
+            if (icon != null) {
+                AnimatedContent(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    targetState = isInProgress,
+                    label = "Add wallet progress",
+                ) { isInProgress ->
+                    if (isInProgress) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(TangemTheme.dimens.size24),
+                            color = TangemTheme.colors.icon.accent,
+                        )
+                    } else {
+                        Icon(
+                            modifier = Modifier.size(TangemTheme.dimens.size24),
+                            painter = painterResource(id = icon),
+                            tint = TangemTheme.colors.icon.accent,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
 
