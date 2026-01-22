@@ -17,9 +17,12 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.StakingBalanceEntry
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.StakingTarget
+import com.tangem.domain.staking.model.common.RewardClaiming
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
@@ -30,6 +33,7 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
+import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.isNullOrZero
@@ -41,12 +45,12 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
     private val isAnyTokenStaked: Boolean,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val balancesToShowProvider: Provider<List<BalanceItem>>,
+    private val balancesToShowProvider: Provider<List<StakingBalanceEntry>>,
     private val isAccountsModeEnabled: Boolean,
     private val account: Account.CryptoPortfolio?,
     private val isBalanceHidden: Boolean,
@@ -55,7 +59,7 @@ internal class SetInitialDataStateTransformer(
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val rewardsValidatorStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        RewardsValidatorStateConverter(cryptoCurrencyStatus, appCurrencyProvider, yield)
+        RewardsValidatorStateConverter(cryptoCurrencyStatus, appCurrencyProvider, integration)
     }
 
     private val yieldBalancesConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -63,7 +67,7 @@ internal class SetInitialDataStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             appCurrencyProvider = appCurrencyProvider,
             balancesToShowProvider = balancesToShowProvider,
-            yield = yield,
+            integration = integration,
         )
     }
 
@@ -100,6 +104,10 @@ internal class SetInitialDataStateTransformer(
                 onRefresh = { clickIntents.onRefreshSwipe(it.value) },
                 isRefreshing = false,
             ),
+            legalUrls = StakingStates.InitialInfoState.LegalUrls(
+                termsOfServiceUrl = integration.legalUrls.termsOfServiceUrl,
+                privacyPolicyUrl = integration.legalUrls.privacyPolicyUrl,
+            ),
         )
     }
 
@@ -116,27 +124,27 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createAnnualPercentageItem(): RoundedListWithDividersItemData {
-        val validators = yield.preferredValidators
-        val rateRangeInfo = getPercentageRange(validators)
+        val targets = integration.preferredTargets
+        val rateRangeInfo = getPercentageRange(targets)
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_annual_percentage_rate,
             startText = getRateStartText(rateRangeInfo.first),
             endText = rateRangeInfo.second,
             iconClick = {
                 when (rateRangeInfo.first) {
-                    Yield.RewardType.APR -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE)
-                    Yield.RewardType.APY -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_YIELD)
-                    Yield.RewardType.UNKNOWN -> {}
+                    RewardType.APR -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE)
+                    RewardType.APY -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_YIELD)
+                    RewardType.UNKNOWN -> {}
                 }
             },
             isEndTextHighlighted = false,
         )
     }
 
-    private fun getRateStartText(rewardType: Yield.RewardType): TextReference {
+    private fun getRateStartText(rewardType: RewardType): TextReference {
         return when (rewardType) {
-            Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
-            Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
+            RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
+            RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
             else -> TextReference.EMPTY
         }
     }
@@ -153,15 +161,11 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createUnbondingPeriodItem(): RoundedListWithDividersItemData? {
-        val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days ?: return null
+        val cooldownPeriod = integration.cooldownPeriod ?: return null
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_unbonding_period,
             startText = TextReference.Res(R.string.staking_details_unbonding_period),
-            endText = pluralReference(
-                id = R.plurals.common_days,
-                count = cooldownPeriodDays,
-                formatArgs = wrappedList(cooldownPeriodDays),
-            ),
+            endText = cooldownPeriod.toTextReference(),
             iconClick = { clickIntents.onInfoClick(InfoType.UNBONDING_PERIOD) },
         )
     }
@@ -169,7 +173,7 @@ internal class SetInitialDataStateTransformer(
     private fun createMinimumRequirementItem(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): RoundedListWithDividersItemData? {
-        val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
+        val minimumCryptoAmount = integration.enterMinimumAmount ?: return null
         val blockchainId = cryptoCurrencyStatus.currency.network.rawId
         if (!showMinimumRequirementInfo(blockchainId)) return null
 
@@ -183,7 +187,7 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createRewardClaimingItem(): RoundedListWithDividersItemData? {
-        val rewardClaiming = yield.metadata.rewardClaiming
+        val rewardClaiming = integration.rewardClaiming
         val endTextId = rewardClaimingResources[rewardClaiming] ?: return null
 
         return RoundedListWithDividersItemData(
@@ -195,7 +199,7 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createWarmupPeriodItem(): RoundedListWithDividersItemData? {
-        val warmupPeriodDays = yield.metadata.warmupPeriod.days
+        val warmupPeriodDays = integration.warmupPeriodDays
         if (warmupPeriodDays == 0) return null
 
         return RoundedListWithDividersItemData(
@@ -212,7 +216,7 @@ internal class SetInitialDataStateTransformer(
 
     private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
         val endTextReference = getRewardScheduleText(
-            rewardSchedule = yield.metadata.rewardSchedule,
+            rewardSchedule = integration.rewardSchedule,
             networkId = cryptoCurrencyStatus.currency.network.rawId,
             decapitalize = false,
         ) ?: return null
@@ -252,15 +256,19 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun getPercentageRange(validators: List<Yield.Validator>): Pair<Yield.RewardType, TextReference> {
-        if (validators.isEmpty()) {
-            return Yield.RewardType.APR to stringReference(DASH_SIGN)
+    private fun getPercentageRange(targets: List<StakingTarget>): Pair<RewardType, TextReference> {
+        if (targets.isEmpty()) {
+            return RewardType.APR to stringReference(DASH_SIGN)
         }
-        val rewardInfos = validators
-            .filter { it.preferred }
+        val rewardInfos = targets
+            .filter { it.isPreferred }
             .takeIf { it.isNotEmpty() }
             ?.mapNotNull { it.rewardInfo }
-            ?: validators.mapNotNull { it.rewardInfo }
+            ?: targets.mapNotNull { it.rewardInfo }
+
+        if (rewardInfos.isEmpty()) {
+            return RewardType.APR to stringReference(DASH_SIGN)
+        }
 
         val infoWithMinRate = rewardInfos.minBy { it.rate }
         val infoWithMaxRate = rewardInfos.maxBy { it.rate }
@@ -286,9 +294,9 @@ internal class SetInitialDataStateTransformer(
         val EQUALITY_THRESHOLD = BigDecimal(1E-10)
 
         val rewardClaimingResources = mapOf(
-            Yield.Metadata.RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
-            Yield.Metadata.RewardClaiming.AUTO to R.string.staking_reward_claiming_auto,
-            Yield.Metadata.RewardSchedule.UNKNOWN to null,
+            RewardClaiming.MANUAL to R.string.staking_reward_claiming_manual,
+            RewardClaiming.AUTO to R.string.staking_reward_claiming_auto,
+            RewardClaiming.UNKNOWN to null,
         )
     }
 }
