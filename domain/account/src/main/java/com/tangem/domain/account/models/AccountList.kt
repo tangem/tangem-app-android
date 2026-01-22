@@ -103,6 +103,10 @@ data class AccountList private constructor(
         }
     }
 
+    fun flattenMapCurrencies(): Map<CryptoCurrency.ID, CryptoCurrency> {
+        return flattenCurrencies().associateBy(CryptoCurrency::id)
+    }
+
     /**
      * Represents possible errors that can occur when creating an `AccountList`
      */

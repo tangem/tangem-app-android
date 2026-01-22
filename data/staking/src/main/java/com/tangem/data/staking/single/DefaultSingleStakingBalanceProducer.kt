@@ -3,13 +3,12 @@ package com.tangem.data.staking.single
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer.Companion.selectStakingBalance
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -49,35 +48,11 @@ internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
 
                 val currentBalances = balances.filter { it.stakingId == currentStakingId }
 
-                if (currentBalances.size > 1) {
-                    analyticsExceptionHandler.sendException(
-                        event = ExceptionAnalyticsEvent(
-                            exception = IllegalStateException("Multiple balances found for staking ID"),
-                            params = mapOf(
-                                "stakingId" to currentStakingId.toString(),
-                                "balances" to currentBalances.joinToString(",") { it.toString() },
-                            ),
-                        ),
-                    )
-
-                    Timber.e(
-                        "Multiple balances found for staking ID $currentStakingId:\n%s",
-                        currentBalances.joinToString("\n"),
-                    )
-
-                    val dataIndex = currentBalances.indexOfFirstOrNull { it is StakingBalance.Data }
-
-                    if (dataIndex != null) {
-                        currentBalances[dataIndex]
-                    } else {
-                        currentBalances.first()
-                    }
-                } else {
-                    val balance = currentBalances.firstOrNull() ?: return@mapNotNull null
-
-                    Timber.i("Staking balance found for $currentStakingId:\n$balance")
-                    balance
-                }
+                selectStakingBalance(
+                    currentStakingId = currentStakingId,
+                    currentBalances = currentBalances,
+                    analyticsExceptionHandler = analyticsExceptionHandler,
+                )
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.default)
