@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 
@@ -31,7 +32,7 @@ internal sealed class SendWithSwapAnalyticEvents(
             SEND_BLOCKCHAIN to fromToken.network.name,
             RECEIVE_BLOCKCHAIN to toToken.network.name,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class NoticeCanNotSwapToken(
         val fromToken: CryptoCurrency,
