@@ -1767,7 +1767,7 @@
   <string name="wallet_import_seed_description">Importiere eine bestehende Wallet mit Deiner Wiederherstellungsphrase.</string>
   <string name="wallet_import_seed_navtitle">Wallet importieren</string>
   <string name="wallet_import_seed_title">Wiederherstellungsphrase eingeben</string>
-  <string name="wallet_import_success_description">Du hast Deine Wallet erfolgreich gesichert.</string>
+  <string name="wallet_import_success_description">Du hast Deine Wallet erfolgreich importiert.</string>
   <string name="wallet_import_success_navtitle">Wallet importieren</string>
   <string name="wallet_import_success_title">Import abgeschlossen</string>
   <string name="wallet_import_title">Wallet importieren</string>
