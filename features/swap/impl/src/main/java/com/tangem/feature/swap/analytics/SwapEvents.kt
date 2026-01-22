@@ -7,6 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -21,7 +22,7 @@ sealed class SwapEvents(
     data class SwapScreenOpened(val token: String) : SwapEvents(
         event = "Swap Screen Opened",
         params = mapOf("Token" to token),
-    )
+    ), AppsFlyerIncludedEvent
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
@@ -96,7 +97,7 @@ sealed class SwapEvents(
             "Receive Blockchain" to receiveBlockchain,
             "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class ProviderClicked : SwapEvents("Provider Clicked")
 
