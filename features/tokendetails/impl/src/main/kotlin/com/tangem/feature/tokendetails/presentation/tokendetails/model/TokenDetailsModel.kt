@@ -54,7 +54,6 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
@@ -124,7 +123,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
-    private val getYieldUseCase: GetYieldUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
@@ -155,7 +153,10 @@ internal class TokenDetailsModel @Inject constructor(
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
-) : Model(), TokenDetailsClickIntents, YieldSupplyDepositedWarningComponent.ModelCallback {
+) : Model(),
+    TokenDetailsClickIntents,
+    ExpressTransactionsClickIntents,
+    YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
     private val userWalletId: UserWalletId = params.userWalletId
@@ -186,7 +187,8 @@ internal class TokenDetailsModel @Inject constructor(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        clickIntents = this,
+        tokenDetailsClickIntents = this,
+        expressTransactionsClickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
@@ -1119,16 +1121,26 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun openStaking() {
         modelScope.launch {
-            getYieldUseCase.invoke(
-                cryptoCurrencyId = cryptoCurrency.id,
-                symbol = cryptoCurrency.symbol,
-            ).onRight { yield ->
-                router.openStaking(userWalletId, cryptoCurrency, yield.id)
-            }.onLeft {
-                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
-                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-            }
+            getStakingAvailabilityUseCase.invokeSync(userWalletId, cryptoCurrency)
+                .onRight { availability ->
+                    val option = (availability as? StakingAvailability.Available)?.option
+                    if (option != null) {
+                        router.openStaking(
+                            userWalletId = userWalletId,
+                            cryptoCurrency = cryptoCurrency,
+                            integrationId = option.integrationId,
+                        )
+                    } else {
+                        showStakingUnavailable()
+                    }
+                }
+                .onLeft { showStakingUnavailable() }
         }
+    }
+
+    private fun showStakingUnavailable() {
+        Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+        uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
     }
 
     private fun checkForActionUpdates() {
