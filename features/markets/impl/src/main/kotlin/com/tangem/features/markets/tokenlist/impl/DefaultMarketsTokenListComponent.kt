@@ -107,12 +107,12 @@ internal class DefaultMarketsTokenListComponent @AssistedInject constructor(
         Scaffold(
             contentWindowInsets = WindowInsetsZero,
             containerColor = TangemTheme.colors.background.primary,
-        ) {
+        ) { paddingValues ->
             MarketsListWithBack(
                 modifier = Modifier
                     .statusBarsPadding()
                     .imePadding()
-                    .padding(it),
+                    .padding(paddingValues),
                 state = state,
                 bottomSheetState = BottomSheetState.EXPANDED,
                 onBackClick = router::pop,
