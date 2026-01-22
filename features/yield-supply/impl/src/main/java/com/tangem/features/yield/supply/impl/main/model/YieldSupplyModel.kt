@@ -31,12 +31,9 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.DelayedWork
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -55,7 +52,6 @@ internal class YieldSupplyModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    @DelayedWork private val coroutineScope: CoroutineScope,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
@@ -75,7 +71,6 @@ internal class YieldSupplyModel @Inject constructor(
     var userWallet: UserWallet by Delegates.notNull()
     private var latestCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
-    private val fetchCurrencyJobHolder = JobHolder()
     private val loadStatusJobHolder = JobHolder()
 
     private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
@@ -201,7 +196,6 @@ internal class YieldSupplyModel @Inject constructor(
                 is YieldSupplyPendingStatus.Exit -> YieldSupplyUM.Processing.Exit
             }
         }
-        fetchCurrencyWithDelay()
     }
 
     private suspend fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -214,20 +208,6 @@ internal class YieldSupplyModel @Inject constructor(
         } else {
             loadTokenStatus()
         }
-    }
-
-    private fun fetchCurrencyWithDelay() {
-        coroutineScope.launch(dispatchers.io) {
-            delay(PROCESSING_UPDATE_DELAY)
-            singleNetworkStatusFetcher(
-                params = SingleNetworkStatusFetcher.Params(
-                    userWalletId = userWallet.walletId,
-                    network = cryptoCurrency.network,
-                ),
-            ).onLeft {
-                fetchCurrencyWithDelay()
-            }
-        }.saveIn(fetchCurrencyJobHolder)
     }
 
     private suspend fun loadActiveState(
@@ -333,9 +313,5 @@ internal class YieldSupplyModel @Inject constructor(
                 yieldSupplyDeactivateUseCase(token, address)
             }
         }
-    }
-
-    private companion object {
-        const val PROCESSING_UPDATE_DELAY = 10_000L
     }
 }

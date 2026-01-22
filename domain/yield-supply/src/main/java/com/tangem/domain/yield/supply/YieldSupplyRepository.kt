@@ -1,7 +1,6 @@
 package com.tangem.domain.yield.supply
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
@@ -84,13 +83,10 @@ interface YieldSupplyRepository {
      * Retrieve the hashes of pending (unconfirmed) transactions for the given wallet and currency.
      *
      * @param userWalletId the wallet to query
-     * @param cryptoCurrencyStatus the currency status containing network information
+     * @param cryptoCurrency the currency containing network information
      * @return list of transaction hashes that are still unconfirmed, or an empty list if none exist
      */
-    suspend fun getPendingTxHashes(
-        userWalletId: UserWalletId,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): List<String>
+    suspend fun getPendingTxHashes(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): List<String>
 
     /**
      * Get the last saved user‑initiated yield protocol action for the given wallet and currency, if any.

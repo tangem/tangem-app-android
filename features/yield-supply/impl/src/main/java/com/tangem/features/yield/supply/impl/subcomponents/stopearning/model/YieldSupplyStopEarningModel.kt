@@ -23,6 +23,7 @@ import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -61,6 +62,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -203,6 +205,11 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
 
         modelScope.launch {
+            yieldSupplyPendingTracker.addPending(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+                txIds = listOf(txId),
+            )
             params.callback.onStopEarningTransactionSent()
         }
     }
