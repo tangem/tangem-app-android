@@ -7,6 +7,8 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusesFlowFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.core.flow.FlowProducerTools
+import com.tangem.domain.core.flow.FlowProducerTools.Companion.shareInProducer
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -44,6 +46,7 @@ import kotlin.time.Duration.Companion.milliseconds
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultSingleAccountStatusListProducer @AssistedInject constructor(
     @Assisted private val params: SingleAccountStatusListProducer.Params,
@@ -52,6 +55,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val networksRepository: NetworksRepository,
     private val cryptoCurrencyStatusesFlowFactory: CryptoCurrencyStatusesFlowFactory,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val flowProducerTools: FlowProducerTools,
 ) : SingleAccountStatusListProducer {
 
     override val fallback: Option<AccountStatusList> = none()
@@ -75,8 +79,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             }
                 .onStartCheckCachedNetworks(accountList)
         }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
+            .shareInProducer(flowProducerTools, this)
     }
 
     private fun createAccountStatusFlows(accountList: AccountList): List<Flow<AccountStatus>> {
