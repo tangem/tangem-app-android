@@ -65,6 +65,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -291,6 +292,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
 
         modelScope.launch {
+            yieldSupplyPendingTracker.addPending(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                txIds = txsData,
+            )
             params.callback.onTransactionSent()
         }
     }
