@@ -206,7 +206,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         store(userWalletId = userWalletId, response = response)
 
-        push(userWalletId = userWalletId, accounts = response.accounts)
+        val isFailed = push(userWalletId = userWalletId, accounts = response.accounts) == null
+        if (isFailed) {
+            // Clear ETags if push failed to avoid different state in the cache and API
+            eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+        }
+
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
 
         return response
