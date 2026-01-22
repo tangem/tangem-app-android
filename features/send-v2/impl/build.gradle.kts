@@ -41,6 +41,7 @@ dependencies {
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
+    implementation(projects.common)
 
     /** Domain */
     implementation(projects.domain.models)
@@ -70,6 +71,7 @@ dependencies {
     implementation(projects.domain.swap.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.transaction)
 
 
     /** Compose libraries */

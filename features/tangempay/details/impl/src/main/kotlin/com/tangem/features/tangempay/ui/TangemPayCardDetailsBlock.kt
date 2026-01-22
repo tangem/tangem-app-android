@@ -33,6 +33,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
+import com.tangem.features.tangempay.model.CardDataType
 
 private val CustomCardBlockColor = Color(0x1F828282)
 
@@ -79,9 +80,9 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 cardNumber = state.number,
                 expiry = state.expiry,
                 cvv = state.cvv,
-                onCopyCardNumber = { state.onCopy(state.number) },
-                onCopyCvv = { state.onCopy(state.cvv) },
-                onCopyExpiry = { state.onCopy(state.expiry) },
+                onCopyCardNumber = { state.onCopy(state.number, CardDataType.Number) },
+                onCopyCvv = { state.onCopy(state.cvv, CardDataType.CVV) },
+                onCopyExpiry = { state.onCopy(state.expiry, CardDataType.Expiry) },
                 onHideDetails = state.onClick,
                 modifier = Modifier.graphicsLayer { rotationY = 180f },
             )
@@ -309,7 +310,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
-            onCopy = {},
+            onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Frozen,
         ),
@@ -321,7 +322,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
-            onCopy = {},
+            onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,
         ),
@@ -333,7 +334,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
-            onCopy = {},
+            onCopy = { _, _ -> },
             isHidden = true,
             cardFrozenState = TangemPayCardFrozenState.Pending,
         ),
@@ -341,7 +342,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             isLoading = false,
             onClick = {},
             buttonText = resourceReference(R.string.tangempay_card_details_hide_details),
-            onCopy = {},
+            onCopy = { _, _ -> },
             isHidden = false,
             number = "1234 5678 9012 3456",
             numberShort = "*3456",

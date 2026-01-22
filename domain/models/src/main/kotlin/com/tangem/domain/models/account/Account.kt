@@ -174,4 +174,15 @@ sealed interface Account {
             }
         }
     }
+
+    class Payment : Account {
+        override val accountId: AccountId
+            get() = TODO("Not yet implemented")
+        override val accountName: AccountName
+            get() = TODO("Not yet implemented")
+
+        init {
+            error("Not yet implemented")
+        }
+    }
 }
