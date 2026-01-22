@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Stable
@@ -48,19 +49,19 @@ internal class ViewPhraseModel @Inject constructor(
     private fun loadSeedPhrase() {
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
-        if (userWallet is UserWallet.Hot) {
-            modelScope.launch {
-                val words = exportSeedPhraseUseCase.invoke(userWallet.hotWalletId)
-                    .getOrElse { error("Unable to export seed phrase for wallet with id ${params.userWalletId}") }
-                    .mnemonic
-                    .mnemonicComponents
-                uiState.update {
-                    it.copy(
-                        words = words.mapIndexed { index, s ->
-                            EnumeratedTwoColumnGridItem(index + 1, s)
-                        }.toImmutableList(),
-                    )
-                }
+            as? UserWallet.Hot ?: return
+
+        modelScope.launch {
+            val words = exportSeedPhraseUseCase.invoke(userWallet.hotWalletId)
+                .getOrElse { error -> Timber.e(error); throw error }
+                .mnemonic.mnemonicComponents
+
+            uiState.update {
+                it.copy(
+                    words = words.mapIndexed { index, s ->
+                        EnumeratedTwoColumnGridItem(index + 1, s)
+                    }.toImmutableList(),
+                )
             }
         }
     }

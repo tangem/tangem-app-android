@@ -96,7 +96,10 @@ internal class WalletSettingsModel @Inject constructor(
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
-    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(dialogNavigation)
+    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
+        dialogNavigation = dialogNavigation,
+        onUpgradeHotWalletClick = ::onUpgradeWalletClick,
+    )
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
@@ -249,7 +252,6 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
             onAccessCodeClick = { onAccessCodeClick(userWallet) },
-            onUpgradeWalletClick = { onUpgradeWalletClick() },
             onBackupClick = ::onBackupClick,
             onCardSettingsClick = ::onCardSettingsClick,
             accountsUM = accountList,
@@ -374,10 +376,7 @@ internal class WalletSettingsModel @Inject constructor(
             val isCodeSet = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAccessCode(isCodeSet))
             if (!state.value.isWalletBackedUp) {
-                showMakeBackupAtFirstAlertBS(
-                    isUpgradeFlow = false,
-                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
-                )
+                showMakeBackupAtFirstAlertBS()
             } else {
                 unlockWalletIfNeedAndProceed { authorizationRequired ->
                     router.push(
@@ -392,35 +391,28 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        if (!state.value.isWalletBackedUp) {
-            showMakeBackupAtFirstAlertBS(
-                isUpgradeFlow = true,
-                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
-            )
-        } else {
-            unlockWalletIfNeedAndProceed {
-                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-            }
-        }
+        router.push(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
     }
 
     private fun onBackupClick() {
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup())
-        router.push(AppRoute.WalletBackup(params.userWalletId))
+        router.push(
+            AppRoute.WalletBackup(
+                userWalletId = params.userWalletId,
+                isColdWalletOptionShown = false,
+            ),
+        )
     }
 
     private fun onCardSettingsClick() {
         router.push(AppRoute.CardSettings(params.userWalletId))
     }
 
-    private fun showMakeBackupAtFirstAlertBS(
-        action: WalletSettingsAnalyticEvents.NoticeBackupFirst.Action,
-        isUpgradeFlow: Boolean,
-    ) {
+    private fun showMakeBackupAtFirstAlertBS() {
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                action = action,
+                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
             ),
         )
         val message = bottomSheetMessage {
@@ -438,14 +430,10 @@ internal class WalletSettingsModel @Inject constructor(
                     router.push(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
-                            isUpgradeFlow = isUpgradeFlow,
+                            isUpgradeFlow = false,
                             shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
-                            analyticsAction = if (isUpgradeFlow) {
-                                RecoveryPhraseScreenAction.Upgrade.value
-                            } else {
-                                RecoveryPhraseScreenAction.AccessCode.value
-                            },
+                            analyticsAction = RecoveryPhraseScreenAction.AccessCode.value,
                         ),
                     )
                     closeBs()
