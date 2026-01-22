@@ -65,7 +65,6 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,
             onAccessCodeClick = {},
-            onUpgradeWalletClick = {},
             onBackupClick = {},
             onCardSettingsClick = {},
             accountsUM = previewAccounts(),

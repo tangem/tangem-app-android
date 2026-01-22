@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
-import com.tangem.common.routing.AppRoute.WalletActivation
+import com.tangem.common.routing.AppRoute.WalletBackup
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -93,7 +93,12 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
             primaryButton {
                 text = resourceReference(R.string.hw_activation_need_backup)
                 onClick {
-                    router.push(WalletActivation(userWallet.walletId, userWallet.backedUp))
+                    router.push(
+                        WalletBackup(
+                            userWalletId = userWalletId,
+                            isColdWalletOptionShown = true,
+                        ),
+                    )
                     closeBs()
                 }
             }

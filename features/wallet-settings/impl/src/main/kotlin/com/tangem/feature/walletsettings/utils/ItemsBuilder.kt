@@ -38,17 +38,10 @@ internal class ItemsBuilder @Inject constructor() {
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
         onAccessCodeClick: () -> Unit,
-        onUpgradeWalletClick: () -> Unit,
         onBackupClick: () -> Unit,
         onCardSettingsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(cardItem)
-        .addAll(
-            buildUpgradeWalletItem(
-                userWallet = userWallet,
-                onUpgradeWalletClick = onUpgradeWalletClick,
-            ),
-        )
         .addAll(buildAccessCodeItem(userWallet, onAccessCodeClick))
         .addAll(accountsUM)
         .add(
@@ -115,21 +108,6 @@ internal class ItemsBuilder @Inject constructor() {
             isChecked = isNFTEnabled,
             onCheckedChange = onCheckedNFTChange,
         )
-
-    private fun buildUpgradeWalletItem(
-        userWallet: UserWallet,
-        onUpgradeWalletClick: () -> Unit,
-    ): List<WalletSettingsItemUM> = when (userWallet) {
-        is UserWallet.Cold -> emptyList()
-        is UserWallet.Hot -> listOf(
-            WalletSettingsItemUM.UpgradeWallet(
-                id = "upgrade_wallet",
-                title = resourceReference(id = R.string.hw_upgrade_to_cold_banner_title),
-                description = resourceReference(id = R.string.hw_upgrade_to_cold_banner_description),
-                onClick = onUpgradeWalletClick,
-            ),
-        )
-    }
 
     private fun buildNotificationsPermissionItem() = WalletSettingsItemUM.NotificationPermission(
         id = "notifications_permission",

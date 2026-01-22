@@ -27,16 +27,18 @@ fun BlockItem(model: BlockUM, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.Start),
         ) {
-            Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                painter = painterResource(id = model.iconRes),
-                tint = when (model.accentType) {
-                    BlockUM.AccentType.NONE -> TangemTheme.colors.icon.secondary
-                    BlockUM.AccentType.ACCENT -> TangemTheme.colors.text.accent
-                    BlockUM.AccentType.WARNING -> TangemTheme.colors.text.warning
-                },
-                contentDescription = null,
-            )
+            if (model.iconRes != null) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = model.iconRes),
+                    tint = when (model.accentType) {
+                        BlockUM.AccentType.NONE -> TangemTheme.colors.icon.secondary
+                        BlockUM.AccentType.ACCENT -> TangemTheme.colors.text.accent
+                        BlockUM.AccentType.WARNING -> TangemTheme.colors.text.warning
+                    },
+                    contentDescription = null,
+                )
+            }
 
             Text(
                 modifier = Modifier.weight(1f),

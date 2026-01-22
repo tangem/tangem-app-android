@@ -97,6 +97,7 @@ internal class DetailsModel @Inject constructor(
             itemsBuilder.buildAll(
                 isWalletConnectAvailable = isWalletConnectAvailable,
                 isSupportChatAvailable = feedbackFeatureToggles.isUsedeskEnabled,
+                hasAnyMobileWallet = getWalletsUseCase.invokeSync().any { it is UserWallet.Hot },
                 userWalletId = params.userWalletId,
                 onSupportEmailClick = ::sendFeedback,
                 onSupportChatClick = ::openUseDesk,
