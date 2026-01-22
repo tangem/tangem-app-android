@@ -76,6 +76,7 @@ internal class WcSendTransactionComponent(
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
                     analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.WalletConnect,
+                    userWalletId = model.userWallet.walletId,
                 ),
                 onResult = model::updateFee,
             )
