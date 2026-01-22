@@ -35,6 +35,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -61,6 +62,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val gaslessTransactionRepository: GaslessTransactionRepository,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -284,6 +286,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 items = SdkTransactionHistoryItemConverter(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
+                    gaslessFeeAddresses = gaslessTransactionRepository.getGaslessFeeAddresses(),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
