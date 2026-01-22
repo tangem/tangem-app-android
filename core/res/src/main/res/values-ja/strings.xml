@@ -322,6 +322,7 @@
   <string name="common_now">今</string>
   <string name="common_ok">わかりました</string>
   <string name="common_open_in_browser">ブラウザで開く</string>
+  <string name="common_or">または</string>
   <string name="common_origin_card">プライマリーカード</string>
   <string name="common_origin_ring">プライマリーリング</string>
   <string name="common_passphrase">パスフレーズ</string>
@@ -430,6 +431,7 @@
   <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
+  <string name="details_mobile_wallet_upgrade_action_title">ハードウェアウォレットにアップグレード</string>
   <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">紹介プログラム</string>
   <string name="details_row_description_flip_to_hide">デバイスの画面を下に向けると、残高をすばやく非表示にしたり表示したりできます。</string>
@@ -443,6 +445,7 @@
   <string name="details_row_title_signed_hashes">署名済み</string>
   <string name="details_send_feedback">フィードバックを送信</string>
   <string name="details_title">詳細</string>
+  <string name="details_wallets_section_description">モバイルウォレットは同時に1つのみ利用できます。Tangemコールドウォレットにアップグレードすることも、新しいコールドウォレットと併用することも可能です。</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
   <string name="disclaimer_title">利用規約</string>
   <string name="domain_receive_assets_default_address">デフォルトアドレス</string>
@@ -552,7 +555,8 @@
   <string name="feedback_subject_support_tangem">Tangemへのフィードバック</string>
   <string name="feedback_subject_tx_failed">取引を送信できません</string>
   <string name="feedback_token_description_error">コインの説明エラー</string>
-  <string name="gasless_transaction_fee">ガス代不要の取引手数料</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">残高不足</string>
+  <string name="gasless_transaction_fee">取引手数料</string>
   <string name="generic_error">エラーが発生しました</string>
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
@@ -564,10 +568,10 @@
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
-  <string name="hardware_wallet_backup_feature_description">バックアップは2〜3枚のTangemカードを使用して作成されます。紛失や破損に備え、カードはそれぞれ安全な別の場所に保管してください。シードフレーズは不要です。</string>
-  <string name="hardware_wallet_backup_feature_title">複数のカードでバックアップ</string>
+  <string name="hardware_wallet_backup_feature_description">ハードウェアウォレット内に新しいアドレスが自動生成され、安全にすぐ利用できる状態になります。</string>
+  <string name="hardware_wallet_backup_feature_title">新しいアドレス</string>
   <string name="hardware_wallet_create_title">Tangemウォレットを追加</string>
-  <string name="hardware_wallet_key_feature_description">あなたの秘密鍵はTangemカード内部で直接生成され、決してカードの外に出ることはありません。</string>
+  <string name="hardware_wallet_key_feature_description">秘密鍵はTangemカード内部で直接生成され、外部に出ることは一切ありません。</string>
   <string name="hardware_wallet_key_feature_title">鍵生成</string>
   <string name="hardware_wallet_security_feature_description">すべての暗号処理は、複製や物理的な改ざんに対する認証を受けたセキュアチップ内で行われます。</string>
   <string name="hardware_wallet_security_feature_title">ハードウェアレベルのセキュリティ</string>
@@ -602,15 +606,20 @@
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
   <string name="hw_backup_no_backup">未完了</string>
   <string name="hw_backup_section_other_title">その他の方法</string>
+  <string name="hw_backup_seed_code_description">リカバリーフレーズは安全な場所に保管し、他人に知られないようにしてください。あわせて、資産をさらに強力に保護するためにアクセスコードを設定してください。</string>
   <string name="hw_backup_seed_description">資金を保護するため、リカバリーフレーズは安全な場所に保管し、他人に知られないようにしてください。</string>
   <string name="hw_backup_seed_title">リカバリーフレーズ</string>
   <string name="hw_backup_to_secure_description">アクセスコードでウォレットを保護するには、バックアップの手続きを完了してください。</string>
   <string name="hw_backup_to_upgrade_description">ハードウェアウォレットにアップグレードするには、バックアップの手続きを完了してください。</string>
+  <string name="hw_backup_upgrade_description">業界最高レベルのセキュリティを実現するため、モバイルウォレットをTangemハードウェアウォレットにアップグレードしましょう。既存のウォレットをインポートするか、新しいウォレットへ資産を移行できます。</string>
+  <string name="hw_backup_upgrade_title">コールドウォレットにアップグレード</string>
   <string name="hw_create_keys_description">秘密鍵は安全に暗号化され、スマートフォン上に保存されています</string>
   <string name="hw_create_keys_title">秘密鍵はデバイス上に保持されます</string>
   <string name="hw_create_seed_description">リカバリーフレーズを使ってウォレットを作成または復元してください。</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
+  <string name="hw_create_upgrade_description">モバイルウォレットは、いつでも安全にTangemカードまたはリングへ移行できます。</string>
+  <string name="hw_create_upgrade_title">ハードウェアウォレットにアップグレード</string>
   <string name="hw_import_existing_wallet">既存のウォレットをインポートする</string>
   <string name="hw_import_seed_phrase_already_imported">このリカバリーフレーズはすでにインポートされています。</string>
   <string name="hw_mobile_wallet">モバイルウォレット</string>
@@ -628,14 +637,14 @@
   <string name="hw_remove_wallet_warning_access">ウォレットを削除する前にバックアップを行っていない場合、ウォレットへのアクセスを失うことを理解しています。</string>
   <string name="hw_remove_wallet_warning_device">ウォレットを削除しても中身自体が消えるわけではなく、このデバイスから表示が消えるだけであることを理解しています。</string>
   <string name="hw_upgrade">アップグレード</string>
-  <string name="hw_upgrade_backup_description">シードフレーズは不要です。Tangemカードまたはリングが安全なバックアップとなります。</string>
-  <string name="hw_upgrade_backup_title">Tangemでバックアップ</string>
+  <string name="hw_upgrade_backup_description">モバイルウォレットをTangemカードまたはリングにアップグレードしても、すべてのアドレスと残高は引き続き完全に利用できます。</string>
+  <string name="hw_upgrade_backup_title">同じアドレス</string>
   <string name="hw_upgrade_error_card_already_has_wallet">アップグレードできません。このデバイスにはすでにウォレットが存在します。</string>
   <string name="hw_upgrade_error_card_key_import">別のデバイスを選択してください。このデバイスはアップグレードに使用できません。</string>
   <string name="hw_upgrade_error_wallet2_card_required">操作中にエラーが発生しました。</string>
   <string name="hw_upgrade_funds_access_description">処理中も、資金は安全に保たれ、常にアクセス可能です。</string>
   <string name="hw_upgrade_funds_access_title">資金へのアクセス</string>
-  <string name="hw_upgrade_general_security_description">ウォレット情報はアプリから削除され、ハードウェアウォレットに保存されます</string>
+  <string name="hw_upgrade_general_security_description">アップグレード後、モバイルウォレットはアプリから削除され、ハードウェアウォレットに保存されます。リカバリーフレーズは引き続きご自身で管理してください。</string>
   <string name="hw_upgrade_general_security_title">セキュリティ全般</string>
   <string name="hw_upgrade_key_migration_description">秘密鍵はアプリからTangemハードウェアウォレットへ移行されます</string>
   <string name="hw_upgrade_key_migration_title">キーの移行</string>
@@ -1225,6 +1234,11 @@
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
+  <string name="settings_upgrade_banner_advantage_feature_title">シンプルな操作</string>
+  <string name="settings_upgrade_banner_description">暗号資産をオフラインで厳重保管。カードサイズで、金庫以上の安心を。</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">シードフレーズ不要</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">業界最高水準のハードウェアウォレット</string>
+  <string name="settings_upgrade_banner_title">Tangemコールドウォレット</string>
   <string name="settings_wallet_name_title">名前</string>
   <string name="stake_token_description">トークンを活用しよう</string>
   <string name="staking_account_initialization_footer">ネットワーク手数料とは、ブロックチェーン上で取引を処理し、承認するために支払う少額の料金です。</string>
@@ -1391,6 +1405,7 @@
   <string name="swap_story_third_subtitle">手間がかからず直感的に操作でき、数回タップするだけでトークンを交換できます。</string>
   <string name="swap_story_third_title">とにかく便利</string>
   <string name="swap_via_provider">プロバイダー経由のスワップ</string>
+  <string name="swap_your_assets_title">資産</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
   <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
@@ -1405,6 +1420,7 @@
   <string name="swapping_insufficient_funds">残高不足</string>
   <string name="swapping_permission_header">許可を与える</string>
   <string name="swapping_swap_action">スワップ</string>
+  <string name="swapping_swap_action_in_progress">スワップ中…</string>
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
@@ -1531,6 +1547,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
+  <string name="tangempay_withdrawal_note_description">現在引き出せるのは、保留中の取引分を差し引いたオンチェーンアドレス上のUSDC（Polygon）のみです。以前に返金や購入のキャンセルを行った場合、暗号資産アカウントの残高は2営業日以内に更新されます。</string>
+  <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
@@ -1602,6 +1620,7 @@
   <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
+  <string name="upgrade_to_hardware_wallet_button_title">ハードウェアウォレットにアップグレード</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">取引・スワップ・重要な更新に関するリアルタイム通知。</string>
   <string name="user_push_notification_agreement_argument_one_title">取引アラート</string>
@@ -1925,6 +1944,7 @@
   <string name="welcome_create_wallet_feature_delivery">迅速な配送</string>
   <string name="welcome_create_wallet_feature_one_tap">ワンタップで開始</string>
   <string name="welcome_create_wallet_feature_seamless">シームレスで安全</string>
+  <string name="welcome_create_wallet_feature_seedphrase">シードフレーズ不要</string>
   <string name="welcome_create_wallet_feature_use">シンプルな操作</string>
   <string name="welcome_create_wallet_hardware_description">Tangemでハードウェアウォレットを作成しよう。キャッシュカードのようにスリムで、金庫のように安全。</string>
   <string name="welcome_create_wallet_mobile_description">ソフトウェアウォレットを作成またはインポート</string>
