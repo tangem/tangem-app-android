@@ -45,7 +45,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns status
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns listOf(pendingTxHash)
 
         val result = useCase(userWalletId, cryptoStatus)
@@ -65,7 +65,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns status
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns listOf("0xdifferent")
         coEvery {
             yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
@@ -88,7 +88,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns null
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns emptyList()
         coEvery {
             yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
@@ -111,7 +111,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns status
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns emptyList()
         coEvery {
             yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
@@ -153,7 +153,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns status
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns listOf(pendingTxHash)
 
         val result = useCase(userWalletId, cryptoStatus)
@@ -174,7 +174,7 @@ class YieldSupplyEnterStatusUseCaseTest {
             yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
         } returns status
         coEvery {
-            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus)
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns listOf(matchingTxHash)
 
         val result = useCase(userWalletId, cryptoStatus)
