@@ -102,11 +102,11 @@ class TangemSheetState(
 
     /** Whether the sheet has an expanded state defined. */
     val hasExpandedState: Boolean
-        get() = anchoredDraggableState.anchors.hasAnchorFor(Expanded)
+        get() = anchoredDraggableState.anchors.hasPositionFor(Expanded)
 
     /** Whether the modal bottom sheet has a partially expanded state defined. */
     val hasPartiallyExpandedState: Boolean
-        get() = anchoredDraggableState.anchors.hasAnchorFor(PartiallyExpanded)
+        get() = anchoredDraggableState.anchors.hasPositionFor(PartiallyExpanded)
 
     /**
      * Fully expand the bottom sheet with animation and suspend until it is fully expanded or
@@ -274,8 +274,8 @@ internal fun consumeSwipeWithinBottomSheetBoundsNestedScrollConnection(
     override suspend fun onPreFling(available: Velocity): Velocity {
         val toFling = available.toFloat()
         val currentOffset = sheetState.requireOffset()
-        val minAnchor = sheetState.anchoredDraggableState.anchors.minAnchor()
-        return if (toFling < 0 && currentOffset > minAnchor) {
+        val minPosition = sheetState.anchoredDraggableState.anchors.minPosition()
+        return if (toFling < 0 && currentOffset > minPosition) {
             onFling(toFling)
             // since we go to the anchor with tween settling, consume all for the best UX
             available
