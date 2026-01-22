@@ -96,11 +96,11 @@ private fun SubBlock(
                 horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
             ) {
-                links.fastForEach {
+                links.fastForEach { link ->
                     Chip(
-                        text = stringReference(it.title),
-                        iconResId = it.iconRes,
-                        onClick = { onLinkClick(it) },
+                        text = stringReference(link.title),
+                        iconResId = link.iconRes,
+                        onClick = { onLinkClick(link) },
                     )
                 }
             }

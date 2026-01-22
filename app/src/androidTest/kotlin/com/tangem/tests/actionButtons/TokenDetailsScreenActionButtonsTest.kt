@@ -12,10 +12,6 @@ import com.tangem.scenarios.goToQrCodeBottomSheet
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onSwapStoriesScreen
-import com.tangem.screens.onSwapTokenScreen
-import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -84,8 +80,8 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
             step("Assert 'Buy' button is not dimmed") {
                 onTokenDetailsScreen { buyButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
             }
-            step("Assert 'Send' button is dimmed") {
-                onTokenDetailsScreen { sendButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+            step("Assert 'Send' button is not dimmed") {
+                onTokenDetailsScreen { sendButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
             }
             step("Assert 'Swap' button is dimmed") {
                 onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
@@ -239,7 +235,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 waitForIdle()
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).performClick() }
             }
-            step("Assert 'Receive' button is displayed") {
+            step("Click on 'Receive' button") {
                 onTokenDetailsScreen { receiveButton().performClick() }
             }
             step("Go to QR code bottom sheet") {
