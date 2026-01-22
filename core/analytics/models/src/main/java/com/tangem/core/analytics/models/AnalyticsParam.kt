@@ -1,5 +1,7 @@
 package com.tangem.core.analytics.models
 
+const val IS_NOT_HTTP_ERROR = "Is not http error"
+
 sealed class AnalyticsParam {
 
     sealed class CardBalanceState(val value: String) {
@@ -77,7 +79,9 @@ sealed class AnalyticsParam {
         data object Backup : ScreensSources("Backup")
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
+        data object Market : ScreensSources("Market")
         data object Markets : ScreensSources("Markets")
+        data object MarketPulse : ScreensSources("Market Pulse")
         data object TangemPay : ScreensSources("Tangem Pay")
         data object WalletSettings : ScreensSources("Wallet Settings")
         data object Upgrade : ScreensSources("Upgrade")
@@ -86,6 +90,9 @@ sealed class AnalyticsParam {
         data object CreateWalletIntro : ScreensSources("Create Wallet Intro")
         data object AddNewWallet : ScreensSources("Add New Wallet")
         data object CreateWallet : ScreensSources("Create Wallet")
+        data object NewsList : ScreensSources("News List")
+        data object NewsLink : ScreensSources("News Link")
+        data object NewsPage : ScreensSources("News Page")
     }
 
     sealed class TxSentFrom(val value: String) {
