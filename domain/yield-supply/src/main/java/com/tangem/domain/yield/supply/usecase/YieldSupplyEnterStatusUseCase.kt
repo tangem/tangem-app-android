@@ -20,7 +20,7 @@ class YieldSupplyEnterStatusUseCase(
                 cryptoCurrencyStatus.currency,
             )
             val pendingTxHashes = yieldSupplyRepository
-                .getPendingTxHashes(userWalletId, cryptoCurrencyStatus)
+                .getPendingTxHashes(userWalletId, cryptoCurrencyStatus.currency)
                 .toSet()
             val hasPendingTx = status?.txIds?.any { it in pendingTxHashes } == true
 
