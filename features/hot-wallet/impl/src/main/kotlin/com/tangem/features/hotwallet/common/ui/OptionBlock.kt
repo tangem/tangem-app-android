@@ -26,11 +26,11 @@ private const val DISABLED_COLORS_ALPHA = 0.5f
 internal fun OptionBlock(
     title: String,
     description: String,
-    badge: (@Composable () -> Unit)?,
     onClick: (() -> Unit)?,
-    enabled: Boolean,
-    backgroundColor: Color,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = TangemTheme.colors.background.primary,
+    badge: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true,
 ) {
     Column(
         modifier = modifier
