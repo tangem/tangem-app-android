@@ -48,22 +48,28 @@ internal class UpdateAccountTokenListTransformer(
                     tokensList = accountListItemConverter.convertList(accountList).toPersistentList(),
                 )
             } else {
-                TokenListUMData.TokenList(
-                    tokensList = persistentListOf(
-                        TokensListItemUM.GroupTitle(
-                            id = "available_tokens_title",
-                            text = resourceReference(R.string.exchange_tokens_available_tokens_header),
-                        ),
-                    ) + accountList.flatMap { (_, currencyList) ->
-                        currencyList.asSequence().map { (isAvailable, status) ->
-                            if (isAvailable) {
-                                availableConverter.convert(status)
-                            } else {
-                                unavailableConverter.convert(status)
-                            }
-                        }.map(TokensListItemUM::Token).toPersistentList()
-                    }.toPersistentList(),
-                )
+                val tokensList = accountList.flatMap { (_, currencyList) ->
+                    currencyList.asSequence().map { (isAvailable, status) ->
+                        if (isAvailable) {
+                            availableConverter.convert(status)
+                        } else {
+                            unavailableConverter.convert(status)
+                        }
+                    }.map(TokensListItemUM::Token).toPersistentList()
+                }.toPersistentList()
+
+                if (tokensList.isNotEmpty()) {
+                    TokenListUMData.TokenList(
+                        tokensList = persistentListOf(
+                            TokensListItemUM.GroupTitle(
+                                id = "available_tokens_title",
+                                text = resourceReference(R.string.exchange_tokens_available_tokens_header),
+                            ),
+                        ) + tokensList,
+                    )
+                } else {
+                    TokenListUMData.EmptyList
+                }
             },
             isBalanceHidden = isBalanceHidden,
             warning = warning,
