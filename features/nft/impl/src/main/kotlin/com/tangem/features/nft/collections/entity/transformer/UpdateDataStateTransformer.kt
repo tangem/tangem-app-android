@@ -101,6 +101,7 @@ internal class UpdateDataStateTransformer(
             name = this.accountName.toUM().value,
             icon = when (this) {
                 is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
     )

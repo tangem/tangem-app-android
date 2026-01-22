@@ -215,6 +215,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
 
             val accountName = when (account) {
                 is Account.CryptoPortfolio -> account.accountName
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
                 null -> null
             }
 
