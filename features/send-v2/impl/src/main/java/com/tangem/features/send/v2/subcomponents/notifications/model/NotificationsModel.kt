@@ -79,7 +79,7 @@ internal class NotificationsModel @Inject constructor(
     private val analyticsCategoryName = params.analyticsCategoryName
     private val userWalletId = params.userWalletId
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
-    private val feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus
+    private val feeCryptoCurrencyStatus = params.notificationData.feeCryptoCurrencyStatus
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
 
@@ -92,7 +92,10 @@ internal class NotificationsModel @Inject constructor(
 
     init {
         subscribeToNotificationUpdateTrigger()
-        checkIfSubtractAvailable()
+        modelScope.launch {
+            checkIfSubtractAvailable()
+            buildNotifications()
+        }
         incrementNotificationsShowCount()
     }
 
@@ -102,11 +105,14 @@ internal class NotificationsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun checkIfSubtractAvailable() {
-        modelScope.launch {
-            isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, currency).getOrElse { false }
-            buildNotifications()
-        }
+    private suspend fun checkIfSubtractAvailable() {
+        val feeCurrencyId = notificationData.feeCryptoCurrencyStatus.currency.id
+        val fee = notificationData.fee
+        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
+            userWalletId = userWalletId,
+            currency = currency,
+            maybeGaslessFee = fee?.let { feeCurrencyId to fee },
+        ).getOrElse { false }
     }
 
     private fun incrementNotificationsShowCount() {
@@ -115,16 +121,19 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
-    private suspend fun updateState(data: NotificationData) {
+    private fun updateState(data: NotificationData) {
         notificationData = data
-        buildNotifications()
+        modelScope.launch {
+            checkIfSubtractAvailable()
+            buildNotifications()
+        }
     }
 
     private suspend fun buildNotifications() = with(notificationData) {
         val feeValue = fee?.amount?.value
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy,
@@ -226,7 +235,7 @@ internal class NotificationsModel @Inject constructor(
             fee = feeValue,
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
-            coinStatus = feeCryptoCurrencyStatus,
+            feeStatus = notificationData.feeCryptoCurrencyStatus,
         ).getOrNull()
 
         addExceedBalanceNotification(
@@ -366,6 +375,15 @@ internal class NotificationsModel @Inject constructor(
                     subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
                 ),
             )
+        }
+    }
+
+    private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
+        val isFeeInTokenCurrency = notificationData.fee is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            notificationData.feeCryptoCurrencyStatus
+        } else {
+            cryptoCurrencyStatus
         }
     }
 

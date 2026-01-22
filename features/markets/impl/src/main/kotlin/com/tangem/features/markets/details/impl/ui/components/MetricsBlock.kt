@@ -29,7 +29,7 @@ const val MAX_METRICS_COUNT = 6
 
 @Composable
 internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
 
     InformationBlock(
         modifier = modifier,
@@ -44,11 +44,11 @@ internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
         },
         action = {
             if (state.metrics.size > MAX_METRICS_COUNT) {
-                ShowLessMoreButton(expanded = expanded, onClick = { expanded = !expanded })
+                ShowLessMoreButton(expanded = isExpanded, onClick = { isExpanded = !isExpanded })
             }
         },
         content = {
-            val metrics = if (expanded) {
+            val metrics = if (isExpanded) {
                 state.metrics
             } else {
                 state.metrics.take(MAX_METRICS_COUNT).toImmutableList()

@@ -14,8 +14,8 @@ sealed class ReferralEvents(event: String) : AnalyticsEvent(REFERRAL_PROGRAM_CAT
 
 sealed class ReferralEventsAccounts(event: String) : AnalyticsEvent(REFERRAL_PROGRAM_ACCOUNT_CATEGORY, event) {
 
-    class ListChooseAccount : ReferralEventsAccounts(event = "List - choose account")
+    class ListChooseAccount : ReferralEventsAccounts(event = "List - Choose Account")
 }
 
 private const val REFERRAL_PROGRAM_CATEGORY = "Referral Program"
-private const val REFERRAL_PROGRAM_ACCOUNT_CATEGORY = "Referral program - Account"
+private const val REFERRAL_PROGRAM_ACCOUNT_CATEGORY = "Referral program / Account"

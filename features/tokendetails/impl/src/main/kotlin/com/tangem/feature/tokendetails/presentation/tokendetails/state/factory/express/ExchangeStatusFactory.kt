@@ -18,7 +18,7 @@ import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
@@ -44,7 +44,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    @Assisted private val clickIntents: TokenDetailsClickIntents,
+    @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val userWallet: UserWallet,
@@ -257,7 +257,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            clickIntents: TokenDetailsClickIntents,
+            clickIntents: ExpressTransactionsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
             currentStateProvider: Provider<TokenDetailsState>,
             userWallet: UserWallet,

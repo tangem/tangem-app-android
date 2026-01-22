@@ -25,4 +25,7 @@ data class EnvironmentConfig(
     val yieldModuleApiKey: String? = null,
     val yieldModuleApiKeyDev: String? = null,
     val bffStaticToken: String? = null,
+    val bffStaticTokenDev: String? = null,
+    val gaslessTxApiKeyDev: String? = null,
+    val gaslessTxApiKey: String? = null,
 )

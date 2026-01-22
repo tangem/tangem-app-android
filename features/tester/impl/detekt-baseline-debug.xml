@@ -3,7 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>BooleanPropertyNaming:ExcludedBlockchainsScreenUM.kt$ExcludedBlockchainsScreenUM$val showRecoverWarning: Boolean</ID>
-    <ID>CanBeNonNullable:TestPushDeepLinkBottomSheet.kt$config: TangemBottomSheetConfig?</ID>
     <ID>CastNullableToNonNullableType:TestPushMarketTokenSearchBottomSheetTransformer.kt$TestPushMarketTokenSearchBottomSheetTransformer$as</ID>
     <ID>CastNullableToNonNullableType:TestPushViewModel.kt$TestPushViewModel$as</ID>
     <ID>ExplicitCollectionElementAccessMethod:TestPushAddKeyDataTransformer.kt$TestPushAddKeyDataTransformer$mutableData.set(index = index, updated)</ID>

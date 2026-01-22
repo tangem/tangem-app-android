@@ -21,7 +21,7 @@ import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "CanBeNonNullable")
 object NotificationsFactory {
 
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(

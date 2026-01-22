@@ -97,6 +97,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     }
                         .distinctUntilChanged()
                 }
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
         }
     }
@@ -192,6 +193,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                             priceChangeLce = lceLoading(),
                         )
                     }
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
             },
             totalAccounts = accountList.totalAccounts,

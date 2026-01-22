@@ -15,6 +15,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun AppBarWithBackButtonAndIcon(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    backButtonEnabled: Boolean = true,
+    endButtonEnabled: Boolean = true,
     text: String? = null,
     subtitle: String? = null,
     @DrawableRes backIconRes: Int? = null,
@@ -30,11 +32,13 @@ fun AppBarWithBackButtonAndIcon(
         startButton = TopAppBarButtonUM.Icon(
             iconRes = backIconRes ?: R.drawable.ic_back_24,
             onClicked = onBackClick,
+            isEnabled = backButtonEnabled,
         ),
         endButton = if (iconRes != null && onIconClick != null) {
             TopAppBarButtonUM.Icon(
                 iconRes = iconRes,
                 onClicked = onIconClick,
+                isEnabled = endButtonEnabled,
             )
         } else {
             null

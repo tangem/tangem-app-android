@@ -23,6 +23,11 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.core.decompose) // For Route supertype
     implementation(projects.core.error)
+    implementation(projects.common.uiMarkets)
+    implementation(projects.common.uiCharts)
+
+    /** Data modules */
+    implementation(projects.data.common)
 
     /** Domain modules **/
     implementation(projects.domain.models)
@@ -48,6 +53,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
     implementation(projects.domain.visa)
+    implementation(projects.domain.markets)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
@@ -55,6 +61,9 @@ dependencies {
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.wallet.api)
     implementation(projects.features.swap.api)
+    implementation(projects.features.sendV2.api)
+    implementation(projects.features.sendV2.impl)
+    implementation(projects.features.feed.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -84,6 +93,10 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.decompose.ext.compose)
+
+    /** Tangem libs */
+    implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)

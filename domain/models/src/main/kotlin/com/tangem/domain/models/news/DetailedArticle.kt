@@ -18,6 +18,7 @@ import kotlinx.serialization.Serializable
  * @param shortContent - short description
  * @param content - main text of the article
  * @param originalArticles - original articles, which were base to build detailed article.
+ * @param isLiked - flag indicating whether the news is liked or not
  */
 @Serializable
 data class DetailedArticle(
@@ -33,4 +34,5 @@ data class DetailedArticle(
     val shortContent: String,
     val content: String,
     val originalArticles: List<OriginalArticle>,
+    val isLiked: Boolean,
 )

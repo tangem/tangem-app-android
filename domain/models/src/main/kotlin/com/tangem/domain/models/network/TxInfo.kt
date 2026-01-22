@@ -108,6 +108,9 @@ data class TxInfo(
         data class Operation(val name: String) : TransactionType
 
         @Serializable
+        data object GaslessFee : TransactionType
+
+        @Serializable
         sealed interface YieldSupply : TransactionType {
 
             val address: String?

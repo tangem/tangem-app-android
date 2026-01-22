@@ -21,6 +21,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -47,6 +49,8 @@ import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
+import com.tangem.features.tokendetails.ExpressTransactionsEvent
+import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -78,6 +82,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val orderRepository: CustomerOrderRepository,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener, ViewPinListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -85,6 +90,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val cardFrozenStateConverter = TangemPayCardFrozenStateConverter(onUnfreezeClick = ::onClickUnfreezeCard)
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
+        onOpenMenu = ::onOpenMenu,
         intents = this,
         cardFrozenState = params.config.cardFrozenState,
         converter = cardFrozenStateConverter,
@@ -99,6 +105,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var balance: TangemPayCardBalance? = null
 
+    private val userWallet: UserWallet? = getUserWalletUseCase(params.userWalletId).getOrNull()
+    val cryptoCurrency: CryptoCurrency? = userWallet?.let { wallet ->
+        tangemPayCryptoCurrencyFactory.create(userWallet = wallet, chainId = params.config.chainId).getOrNull()
+    }
+
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
@@ -107,6 +118,18 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchAddToWalletBanner()
         fetchBalance()
         subscribeToCardFrozenState()
+    }
+
+    fun onResume() {
+        modelScope.launch {
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
+        }
+    }
+
+    fun onPause() {
+        modelScope.launch {
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
+        }
     }
 
     private fun subscribeToCardFrozenState() {
@@ -126,6 +149,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickPinCode() {
+        analytics.send(TangemPayAnalyticsEvents.PinCodeClicked())
         if (!params.config.isPinSet) {
             router.push(TangemPayDetailsInnerRoute.ChangePIN)
         } else {
@@ -139,14 +163,19 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickFreezeCard() {
+        analytics.send(TangemPayAnalyticsEvents.FreezeCardClicked())
         uiMessageSender.send(TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard))
+        analytics.send(TangemPayAnalyticsEvents.FreezeCardConfirmShown())
     }
 
     override fun onClickUnfreezeCard() {
+        analytics.send(TangemPayAnalyticsEvents.UnfreezeCardClicked())
         uiMessageSender.send(TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard))
+        analytics.send(TangemPayAnalyticsEvents.UnfreezeCardConfirmShown())
     }
 
     private fun freezeCard() {
+        analytics.send(TangemPayAnalyticsEvents.FreezeCardConfirmClicked())
         modelScope.launch {
             val result = try {
                 cardDetailsRepository.freezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
@@ -185,6 +214,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun unfreezeCard() {
+        analytics.send(TangemPayAnalyticsEvents.UnfreezeCardConfirmClicked())
         modelScope.launch {
             val result = try {
                 cardDetailsRepository.unfreezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
@@ -242,6 +272,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickWithdraw() {
+        analytics.send(TangemPayAnalyticsEvents.WithdrawClicked())
         val currentBalance = balance
         val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
@@ -252,8 +283,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                 if (hasActiveWithdrawal) {
                     showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
                 } else {
-                    val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
-                    val currency = userWallet?.let {
+                    val userWallet = userWallet ?: getUserWalletUseCase(params.userWalletId).getOrNull()
+                    val currency = cryptoCurrency ?: userWallet?.let {
                         tangemPayCryptoCurrencyFactory.create(userWallet = userWallet, chainId = params.config.chainId)
                             .getOrNull()
                     }
@@ -323,6 +354,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onContactSupportClicked() {
+        analytics.send(TangemPayAnalyticsEvents.GoToSupportOnBetaBannerClicked())
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
                 type = FeedbackEmailType.Visa.FeatureIsBeta(
@@ -336,6 +368,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             cardDetailsEventListener.send(CardDetailsEvent.Hide)
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
             txHistoryUpdateListener.triggerUpdate()
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
@@ -343,6 +376,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun onClickAddToWalletBlock() {
+        analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
         router.push(TangemPayDetailsInnerRoute.AddToWallet)
     }
 
@@ -361,6 +395,10 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             )
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    private fun onOpenMenu() {
+        analytics.send(TangemPayAnalyticsEvents.CardSettingsClicked())
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
@@ -401,6 +439,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickChangePin() {
         bottomSheetNavigation.dismiss()
+        analytics.send(TangemPayAnalyticsEvents.ChangePinOnCurrentPinClicked())
         router.push(TangemPayDetailsInnerRoute.ChangePIN)
     }
 
@@ -409,6 +448,13 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
+        val (type, status) = when (item) {
+            is TangemPayTxHistoryItem.Collateral -> "collateral" to "unknown"
+            is TangemPayTxHistoryItem.Fee -> "fee" to "unknown"
+            is TangemPayTxHistoryItem.Payment -> "payment" to "unknown"
+            is TangemPayTxHistoryItem.Spend -> "spend" to item.status.name.lowercase()
+        }
+        analytics.send(TangemPayAnalyticsEvents.TransactionInListClicked(type = type, status = status))
         bottomSheetNavigation.activate(
             configuration = TangemPayDetailsNavigation.TransactionDetails(
                 transaction = item,
@@ -418,6 +464,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickTermsAndLimits() {
+        analytics.send(TangemPayAnalyticsEvents.TermsAndLimitsClicked())
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 

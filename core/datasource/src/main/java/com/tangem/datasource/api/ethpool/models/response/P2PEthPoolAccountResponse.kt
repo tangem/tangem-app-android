@@ -34,7 +34,7 @@ data class P2PEthPoolStakeDTO(
 @JsonClass(generateAdapter = true)
 data class P2PEthPoolExitQueueDTO(
     @Json(name = "total")
-    val total: Double,
+    val total: BigDecimal,
     @Json(name = "requests")
     val requests: List<P2PEthPoolExitRequestDTO>,
 )
@@ -44,11 +44,11 @@ data class P2PEthPoolExitRequestDTO(
     @Json(name = "ticket")
     val ticket: String,
     @Json(name = "totalAssets")
-    val totalAssets: Double,
+    val totalAssets: BigDecimal,
     @Json(name = "timestamp")
     val timestamp: Long,
     @Json(name = "withdrawalTimestamp")
-    val withdrawalTimestamp: Long,
+    val withdrawalTimestamp: Long?,
     @Json(name = "isClaimable")
     val isClaimable: Boolean,
 )

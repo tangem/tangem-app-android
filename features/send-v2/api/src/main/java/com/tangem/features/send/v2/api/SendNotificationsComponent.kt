@@ -28,7 +28,6 @@ interface SendNotificationsComponent {
         val analyticsCategoryName: String,
         val userWalletId: UserWalletId,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val notificationData: NotificationData,
         val callback: ModelCallback,
@@ -41,6 +40,7 @@ interface SendNotificationsComponent {
             val isIgnoreReduce: Boolean,
             val fee: Fee?,
             val feeError: GetFeeError?,
+            val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         )
     }
 

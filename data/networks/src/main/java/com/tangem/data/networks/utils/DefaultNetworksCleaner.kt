@@ -7,9 +7,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
  * Default implementation of [NetworksCleaner].
@@ -27,33 +29,51 @@ internal class DefaultNetworksCleaner(
 ) : NetworksCleaner {
 
     override suspend fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) {
+            Timber.d("No currencies to clear for wallet: $userWalletId")
+            return
+        }
+
         withContext(dispatchers.default) {
             val (networks, tokens) = currencies.partitionByType()
 
-            coroutineScope {
-                launch { cleanStore(userWalletId = userWalletId, networks = networks) }
-                launch { cleanWalletManager(userWalletId = userWalletId, networks = networks, tokens = tokens) }
-            }
+            awaitAll(
+                async { clearStatusesStore(userWalletId = userWalletId, networks = networks) },
+                async { clearBlockchainSDK(userWalletId = userWalletId, networks = networks, tokens = tokens) },
+            )
         }
     }
 
-    private suspend fun cleanStore(userWalletId: UserWalletId, networks: Set<Network>) {
+    private suspend fun clearStatusesStore(userWalletId: UserWalletId, networks: Set<Network>) {
         if (networks.isNotEmpty()) {
-            networksStatusesStore.clear(userWalletId = userWalletId, networks = networks)
+            runSuspendCatching {
+                networksStatusesStore.clear(userWalletId = userWalletId, networks = networks)
+            }
+                .onFailure { Timber.e(it, "Failed to clear network statuses for wallet: $userWalletId") }
         }
     }
 
-    private suspend fun cleanWalletManager(
+    private suspend fun clearBlockchainSDK(
         userWalletId: UserWalletId,
         networks: Set<Network>,
         tokens: Set<CryptoCurrency.Token>,
     ) {
         if (networks.isNotEmpty()) {
-            walletManagersFacade.remove(userWalletId = userWalletId, networks = networks)
+            runSuspendCatching {
+                walletManagersFacade.remove(userWalletId = userWalletId, networks = networks)
+            }
+                .onFailure {
+                    Timber.e(it, "Failed to remove networks from Blockchain SDK for wallet: $userWalletId")
+                }
         }
 
         if (tokens.isNotEmpty()) {
-            walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = tokens)
+            runSuspendCatching {
+                walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = tokens)
+            }
+                .onFailure {
+                    Timber.e(it, "Failed to remove tokens from Blockchain SDK for wallet: $userWalletId")
+                }
         }
     }
 

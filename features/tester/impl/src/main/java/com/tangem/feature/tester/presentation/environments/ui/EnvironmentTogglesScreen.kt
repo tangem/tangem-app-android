@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -67,6 +68,7 @@ internal fun EnvironmentTogglesScreen(uiModel: EnvironmentTogglesScreenUM) {
             )
         }
     }
+    SpacerH24()
 }
 
 @Composable
@@ -140,7 +142,7 @@ private fun EnvironmentButtons(uiModel: EnvironmentTogglesScreenUM.ApiInfoUM, on
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = TangemTheme.colors.control.checked,
                         activeContentColor = TangemTheme.colors.text.primary2,
-                        inactiveContainerColor = TangemTheme.colors.control.unchecked,
+                        inactiveContainerColor = TangemTheme.colors.control.default,
                         inactiveContentColor = TangemTheme.colors.text.primary1,
                     ),
                     border = BorderStroke(0.dp, TangemTheme.colors.background.tertiary),

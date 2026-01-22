@@ -20,29 +20,26 @@ internal class DescriptionConverter(
 
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.Description? {
         if (needApplyFCARestrictions()) return null
-        return value.shortDescription?.let { desc ->
-            MarketsTokenDetailsUM.Description(
-                shortDescription = stringReference(desc),
-                fullDescription = value.fullDescription?.let { fullDescription ->
-                    stringReference(fullDescription)
-                },
-                onReadMoreClick = {
-                    onReadModeClicked(
-                        InfoBottomSheetContent(
-                            title = resourceReference(
-                                R.string.markets_token_details_about_token_title,
-                                wrappedList(
-                                    value.name,
-                                ),
-                            ),
-                            body = stringReference(value.fullDescription ?: ""),
-                            generatedAINotificationUM = InfoBottomSheetContent.GeneratedAINotificationUM(
-                                onClick = onGeneratedAINotificationClick,
+        val shortDesc = value.shortDescription ?: return null
+        return MarketsTokenDetailsUM.Description(
+            shortDescription = stringReference(shortDesc),
+            fullDescription = value.fullDescription?.let(::stringReference),
+            onReadMoreClick = {
+                onReadModeClicked(
+                    InfoBottomSheetContent(
+                        title = resourceReference(
+                            R.string.markets_token_details_about_token_title,
+                            wrappedList(
+                                value.name,
                             ),
                         ),
-                    )
-                },
-            )
-        }
+                        body = stringReference(value.fullDescription.orEmpty()),
+                        generatedAINotificationUM = InfoBottomSheetContent.GeneratedAINotificationUM(
+                            onClick = onGeneratedAINotificationClick,
+                        ),
+                    ),
+                )
+            },
+        )
     }
 }

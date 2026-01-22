@@ -18,3 +18,20 @@ data class NewsDetailsResponse(
     @Json(name = "content") val content: String,
     @Json(name = "originalArticles") val originalArticles: List<NewsOriginalArticleDto>,
 )
+
+@JsonClass(generateAdapter = true)
+data class NewsOriginalArticleDto(
+    @Json(name = "id") val id: Int,
+    @Json(name = "title") val title: String,
+    @Json(name = "source") val source: Source,
+    @Json(name = "language") val language: String,
+    @Json(name = "publishedAt") val publishedAt: String,
+    @Json(name = "url") val url: String,
+    @Json(name = "imageUrl") val imageUrl: String? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class Source(
+    @Json(name = "id") val id: Int,
+    @Json(name = "name") val name: String,
+)
