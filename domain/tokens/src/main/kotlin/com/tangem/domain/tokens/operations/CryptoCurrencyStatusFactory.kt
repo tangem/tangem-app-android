@@ -267,8 +267,7 @@ object CryptoCurrencyStatusFactory {
                     null
                 }
             }
-            is StakingBalance.Data.P2P -> {
-                // TODO p2p
+            is StakingBalance.Data.P2PEthPool -> {
                 val isCurrentAddressStaking = stakingBalance.stakingId.address == address.defaultAddress.value
                 if (isCurrentAddressStaking) stakingBalance else null
             }
