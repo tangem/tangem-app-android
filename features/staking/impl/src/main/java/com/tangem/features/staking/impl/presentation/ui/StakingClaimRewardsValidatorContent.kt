@@ -15,11 +15,13 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
+import com.tangem.features.staking.impl.presentation.ui.utils.toDrawableRes
+import com.tangem.features.staking.impl.presentation.ui.utils.toImageUrl
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -30,7 +32,7 @@ internal fun StakingClaimRewardsValidatorContent(
 ) {
     if (state !is StakingStates.RewardsValidatorsState.Data) return
     Column(
-        modifier = Modifier // Do not put fillMaxSize() in here
+        modifier = modifier // This function shouldn't itself apply fillMaxSize(); callers should avoid passing it here
             .background(TangemTheme.colors.background.secondary)
             .padding(horizontal = TangemTheme.dimens.spacing12)
             .verticalScroll(rememberScrollState()),
@@ -42,9 +44,10 @@ internal fun StakingClaimRewardsValidatorContent(
                     caption = item.getAprTextNeutral(),
                     infoTitle = item.formattedFiatAmount,
                     infoSubtitle = item.formattedCryptoAmount,
-                    imageUrl = item.validator?.image.orEmpty(),
+                    imageUrl = item.target?.image.toImageUrl(),
+                    iconRes = item.target?.image.toDrawableRes(),
                     onImageError = { ValidatorImagePlaceholder() },
-                    modifier = modifier
+                    modifier = Modifier
                         .roundedShapeItemDecoration(index, state.rewards.lastIndex, false)
                         .background(TangemTheme.colors.background.action)
                         .clickable(
@@ -65,11 +68,11 @@ internal fun StakingClaimRewardsValidatorContent(
 @Suppress("UnusedPrivateMember")
 @Composable
 private fun BalanceState.getAprTextColored() = combinedReference(
-    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    getRewardTypeShortText(target?.rewardInfo?.type ?: RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = validator?.rewardInfo?.rate?.orZero().format { percent() },
+            text = target?.rewardInfo?.rate?.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
@@ -77,6 +80,6 @@ private fun BalanceState.getAprTextColored() = combinedReference(
 
 @Composable
 private fun BalanceState.getAprTextNeutral() = combinedReference(
-    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
-    stringReference(" " + validator?.rewardInfo?.rate?.orZero().format { percent() }),
+    getRewardTypeShortText(target?.rewardInfo?.type ?: RewardType.UNKNOWN),
+    stringReference(" " + target?.rewardInfo?.rate?.orZero().format { percent() }),
 )
