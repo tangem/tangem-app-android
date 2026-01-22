@@ -366,6 +366,8 @@ dependencies {
     implementation(deps.googlePlay.review)
     implementation(deps.googlePlay.review.ktx)
     implementation(deps.googlePlay.services.wallet)
+    implementation(deps.googlePlay.services)
+    implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
     implementation(deps.timber)
     implementation(deps.reKotlin)
