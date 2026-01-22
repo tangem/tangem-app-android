@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -17,12 +18,16 @@ import javax.inject.Inject
 private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
 
 @ModelScoped
-internal class ItemsBuilder @Inject constructor(private val router: Router) {
+internal class ItemsBuilder @Inject constructor(
+    private val router: Router,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+) {
 
     @Suppress("LongParameterList")
     fun buildAll(
         isWalletConnectAvailable: Boolean,
         isSupportChatAvailable: Boolean,
+        hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
         onSupportEmailClick: () -> Unit,
         onSupportChatClick: () -> Unit,
@@ -30,6 +35,14 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
     ): ImmutableList<DetailsItemUM> = buildList {
         buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         buildUserWalletListBlock().let(::add)
+
+        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled && hasAnyMobileWallet) {
+            DetailsItemUM.UnderSectionText(
+                id = "only_one_mobile_wallet_explanation",
+                text = resourceReference(R.string.only_one_mobile_wallet_explanation),
+            ).let(::add)
+        }
+
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
         buildSupportBlock(
