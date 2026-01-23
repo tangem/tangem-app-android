@@ -3,6 +3,7 @@ package com.tangem.features.feed.components.market.details.portfolio.impl.model
 import arrow.core.getOrElse
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
@@ -285,7 +286,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
             icon = when (this) {
-                is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
