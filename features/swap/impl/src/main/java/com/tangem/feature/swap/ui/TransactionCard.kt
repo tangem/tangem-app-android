@@ -38,7 +38,7 @@ import coil.request.ImageRequest
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resourceReference
@@ -604,7 +604,7 @@ private fun TransactionCardPreviewWithPriceImpact() {
             accountTitleUM = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = AccountNameUM.DefaultMain.value,
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
         amountEquivalent = "1 000 000",
@@ -626,7 +626,7 @@ private fun TransactionCardPreviewWithoutPriceImpact() {
             accountTitleUM = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = AccountNameUM.DefaultMain.value,
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
         amountEquivalent = "1 000 000",
