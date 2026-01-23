@@ -87,7 +87,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.ERROR_CODE to errorCode,
             AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
-    ), AppsFlyerIncludedEvent
+    )
 
     class SessionDisconnected(dAppMetaData: WcAppMetaData) : WcAnalyticEvents(
         event = "dApp Disconnected",
@@ -146,7 +146,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.BLOCKCHAIN to network.name,
             AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     class SignatureRequestFailed(
         rawRequest: WcSdkSessionRequest,
