@@ -3,6 +3,7 @@ package com.tangem.features.nft.details.block
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.extensions.getActiveIconRes
@@ -32,7 +33,7 @@ class DefaultNFTDetailsBlockComponent @AssistedInject constructor(
                 AccountTitleUM.Account(
                     prefixText = resourceReference(R.string.common_from),
                     name = account.accountName.toUM().value,
-                    icon = account.icon.toUM(),
+                    icon = CryptoPortfolioIconConverter.convert(account.icon),
                 )
             } else {
                 AccountTitleUM.Text(params.walletTitle)

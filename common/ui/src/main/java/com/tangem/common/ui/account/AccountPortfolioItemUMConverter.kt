@@ -53,7 +53,7 @@ class AccountPortfolioItemUMConverter(
     private fun getImageState(account: Account.CryptoPortfolio) = when (account) {
         is Account.CryptoPortfolio -> UserWalletItemUM.ImageState.Account(
             name = account.accountName.toUM().value,
-            icon = account.icon.toUM(),
+            icon = CryptoPortfolioIconConverter.convert(account.icon),
         )
     }
 
