@@ -1594,7 +1594,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay временно недоступен</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Нажмите на кнопку ниже, чтобы восстановить доступ</string>
-  <string name="tangempay_withdrawal_note_description">Вывод доступен только для USDC Polygon на вашем ончейн-адресе. Баланс ончейн-адреса отличается от баланса карты и обновляется в течение 2 рабочих дней после покупки (при возвратах или отменах транзакций — до 14 рабочих дней).</string>
+  <string name="tangempay_withdrawal_note_description">Баланс ончейн-адреса (USDC Polygon) обновляется в течение 2 рабочих дней после покупки. При возвратах покупок средства не возвращаются на ончейн-баланс и недоступны для вывода, но отображаются на карте и могут быть использованы для покупок.</string>
   <string name="tangempay_withdrawal_note_title">Обратите внимание</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Это мой кошелек</string>
