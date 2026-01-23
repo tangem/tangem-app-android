@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
@@ -1421,7 +1422,7 @@ internal class StateBuilder(
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = fromAccount.accountName.toUM().value,
-                icon = fromAccount.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(fromAccount.icon),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_from_title))
@@ -1433,7 +1434,7 @@ internal class StateBuilder(
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_to),
                 name = toAccount.accountName.toUM().value,
-                icon = toAccount.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))

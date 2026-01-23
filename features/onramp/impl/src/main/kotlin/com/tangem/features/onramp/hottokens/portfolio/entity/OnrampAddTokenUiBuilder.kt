@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.hottokens.portfolio.entity
 
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.addtoken.AddTokenUM
@@ -36,7 +37,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
     }
 
     private suspend fun createPortfolio(tokenToAdd: AddHotCryptoData): PortfolioSelectUM {
-        val accountIcon: CryptoPortfolioIconUM?
+        val accountIcon: AccountIconUM.CryptoPortfolio?
         val portfolioName: TextReference
         val isAccountMode = isAccountsModeEnabledUseCase.invokeSync()
         when (isAccountMode) {
@@ -48,7 +49,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
                 val accountStatus = tokenToAdd.account
                 portfolioName = accountStatus.account.accountName.toUM().value
                 accountIcon = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.account.icon.toUM()
+                    is AccountStatus.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
                 }
             }
         }
