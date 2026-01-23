@@ -121,6 +121,10 @@ internal class FeedMarketsBatchFlowManager(
         }
     }
 
+    fun reloadManager(order: TokenMarketListConfig.Order) {
+        managersByOrder[order]?.reload(currentAppCurrency().code)
+    }
+
     fun updateQuotes() {
         managersByOrder.values.forEach { manager ->
             manager.updateQuotes(currentAppCurrency().code)

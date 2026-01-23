@@ -16,7 +16,7 @@ internal class UpdateMarketChartsTransformer(
     private val itemsByOrder: Map<SortByTypeUM, ImmutableList<MarketsListItemUM>>,
     private val loadingStatesByOrder: Map<SortByTypeUM, Boolean>,
     private val errorStatesByOrder: Map<SortByTypeUM, Throwable?>,
-    private val onReloadAll: () -> Unit,
+    private val onReload: (SortByTypeUM) -> Unit,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedListUMTransformer {
 
@@ -30,27 +30,27 @@ internal class UpdateMarketChartsTransformer(
                 when {
                     hasError -> {
                         put(
-                            sortByType,
-                            MarketChartUM.LoadingError(
-                                onRetryClicked = onReloadAll,
+                            key = sortByType,
+                            value = MarketChartUM.LoadingError(
+                                onRetryClicked = { onReload(sortByType) },
                             ),
                         )
                     }
                     isLoading -> {
-                        put(sortByType, MarketChartUM.Loading)
+                        put(key = sortByType, value = MarketChartUM.Loading)
                     }
                     items.isEmpty() -> {
                         put(
-                            sortByType,
-                            MarketChartUM.LoadingError(
-                                onRetryClicked = onReloadAll,
+                            key = sortByType,
+                            value = MarketChartUM.LoadingError(
+                                onRetryClicked = { onReload(sortByType) },
                             ),
                         )
                     }
                     else -> {
                         put(
-                            sortByType,
-                            MarketChartUM.Content(
+                            key = sortByType,
+                            value = MarketChartUM.Content(
                                 items = items,
                                 sortChartConfig = SortChartConfigUM(
                                     sortByType = sortByType,
