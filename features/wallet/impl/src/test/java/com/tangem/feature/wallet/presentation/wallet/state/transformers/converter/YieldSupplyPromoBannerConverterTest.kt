@@ -5,7 +5,6 @@ import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.tokenlist.TokenList
@@ -15,7 +14,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenCon
 import org.junit.Test
 import java.math.BigDecimal
 
-class YieldSupplyPromoBannerKeyConverterTest {
+class YieldSupplyPromoBannerConverterTest {
 
     @Test
     fun `GIVEN promo disabled WHEN convert THEN return null`() {
@@ -26,8 +25,8 @@ class YieldSupplyPromoBannerKeyConverterTest {
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = tokenList,
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
-            yieldModuleApyMap = mapOf(token.yieldSupplyKey() to BigDecimal("0.10")),
+        val converter = YieldSupplyPromoBannerConverter(
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = false,
         )
 
@@ -44,7 +43,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(status),
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
+        val converter = YieldSupplyPromoBannerConverter(
             yieldModuleApyMap = emptyMap(),
             shouldShowMainPromo = true,
         )
@@ -62,8 +61,8 @@ class YieldSupplyPromoBannerKeyConverterTest {
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(statusActive),
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
-            yieldModuleApyMap = mapOf(token.yieldSupplyKey() to BigDecimal("0.12")),
+        val converter = YieldSupplyPromoBannerConverter(
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.12")),
             shouldShowMainPromo = true,
         )
 
@@ -73,7 +72,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
     }
 
     @Test
-    fun `GIVEN multiple candidates EVM case insensitive WHEN convert THEN return key of max amount`() {
+    fun `GIVEN multiple candidates EVM case insensitive WHEN convert THEN return status of max amount`() {
         val evmNetworkId = "ETH"
         val tokenSmall = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xAbCd")
         val tokenBig = createToken(networkId = evmNetworkId, backendId = evmNetworkId, contract = "0xBEEF")
@@ -82,23 +81,22 @@ class YieldSupplyPromoBannerKeyConverterTest {
         val statusBig = createLoadedStatus(token = tokenBig, amount = BigDecimal("10.00"), isYieldActive = false)
 
         val apyMap = mapOf(
-            "${tokenSmall.network.backendId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
-            "${tokenBig.network.backendId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
+            "${tokenSmall.network.rawId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
+            "${tokenBig.network.rawId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
         )
 
         val params = TokenConverterParams.Wallet(
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(statusSmall, statusBig),
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
+        val converter = YieldSupplyPromoBannerConverter(
             yieldModuleApyMap = apyMap,
             shouldShowMainPromo = true,
         )
 
         val result = converter.convert(params)
 
-        val expectedKey = "${tokenBig.network.backendId}_${tokenBig.contractAddress.uppercase()}"
-        assertThat(result).isEqualTo(expectedKey)
+        assertThat(result).isEqualTo(statusBig)
     }
 
     @Test
@@ -107,14 +105,14 @@ class YieldSupplyPromoBannerKeyConverterTest {
         val token = createToken(networkId = nonEvmId, backendId = nonEvmId, contract = "rAbC123")
         val status = createLoadedStatus(token = token, amount = BigDecimal("3"), isYieldActive = false)
 
-        val mismatchedKey = "${token.network.backendId}_${token.contractAddress.lowercase()}"
+        val mismatchedKey = "${token.network.rawId}_${token.contractAddress.lowercase()}"
         val apyMap = mapOf(mismatchedKey to BigDecimal("0.07"))
 
         val params = TokenConverterParams.Wallet(
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(status),
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
+        val converter = YieldSupplyPromoBannerConverter(
             yieldModuleApyMap = apyMap,
             shouldShowMainPromo = true,
         )
@@ -132,8 +130,8 @@ class YieldSupplyPromoBannerKeyConverterTest {
             portfolioId = PortfolioId.Wallet(UserWalletId("00")),
             tokenList = ungroupedTokenList(status),
         )
-        val converter = YieldSupplyPromoBannerKeyConverter(
-            yieldModuleApyMap = mapOf(token.yieldSupplyKey() to BigDecimal("0.10")),
+        val converter = YieldSupplyPromoBannerConverter(
+            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = true,
         )
 
