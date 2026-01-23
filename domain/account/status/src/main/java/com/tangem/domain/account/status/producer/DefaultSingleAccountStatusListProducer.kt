@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.none
 import arrow.core.toOption
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -92,7 +93,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         val walletId = params.userWalletId
         val userWallet = accountsCRUDRepository.getUserWallet(userWalletId = params.userWalletId)
 
-        val flattenCurrency: MutableSharedFlow<Map<CryptoCurrency.ID, CryptoCurrency>> = MutableSharedFlow(
+        val flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>> = MutableSharedFlow(
             replay = 1,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
         )
@@ -106,7 +107,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             send(createLoadingAccountStatusList(accountListFlow.value))
         }
 
-        val cryptoCurrencyStatusFlow: Flow<Map<CryptoCurrency.ID, CryptoCurrencyStatus>> = flattenCurrencyStatusFlow(
+        val cryptoCurrencyStatusFlow: Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>> = flattenCurrencyStatusFlow(
             userWallet = userWallet,
             flattenCurrency = flattenCurrency,
         )
@@ -123,7 +124,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                         account.toEmptyAccountStatus()
                     } else {
                         val statuses: List<CryptoCurrencyStatus> = account.cryptoCurrencies.map { currency ->
-                            currencyStatusMap[currency.id] ?: currency.toLoadingCurrencyStatus()
+                            val acId = account.accountId to currency.id
+                            currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
                         }
                         AccountStatus.CryptoPortfolio(
                             account = account,
@@ -154,8 +156,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
     private fun ProducerScope<AccountStatusList>.flattenCurrencyStatusFlow(
         userWallet: UserWallet,
-        flattenCurrency: MutableSharedFlow<Map<CryptoCurrency.ID, CryptoCurrency>>,
-    ): Flow<Map<CryptoCurrency.ID, CryptoCurrencyStatus>> {
+        flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>>,
+    ): Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>> {
         val walletId = userWallet.walletId
         val networkStatusFlow: SharedFlow<Map<Network.ID, NetworkStatus>> = networkStatusFlow(walletId, flattenCurrency)
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
@@ -181,12 +183,13 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             }
             .distinctUntilChanged()
             .map { box ->
-                val flattenCurrencyMap: Map<CryptoCurrency.ID, CryptoCurrency> = box.flattenCurrencyMap
+                val flattenCurrencyMap: Map<AccountCurrencyId, CryptoCurrency> = box.flattenCurrencyMap
                 val networkStatusMap: Map<Network.ID, NetworkStatus> = box.networkStatusMap
                 val stakingBalanceMap: Map<StakingID, Set<StakingBalance>> = box.stakingBalanceMap
                 val quoteStatusMap: Map<CryptoCurrency.RawID, QuoteStatus> = box.quoteStatusMap
 
-                flattenCurrencyMap.mapValues { (id: CryptoCurrency.ID, currency) ->
+                flattenCurrencyMap.mapValues { (acId: AccountCurrencyId, currency) ->
+                    val (_, id) = acId
                     val networkStatus: NetworkStatus? = networkStatusMap[currency.network.id]
                     val quoteStatus: QuoteStatus? = id.rawCurrencyId?.let { rawID -> quoteStatusMap[rawID] }
                     val stakingBalance: StakingBalance? = findStakingBalance(
@@ -207,7 +210,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
     private fun networkStatusFlow(
         walletId: UserWalletId,
-        flattenCurrency: MutableSharedFlow<Map<CryptoCurrency.ID, CryptoCurrency>>,
+        flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>>,
     ): Flow<Map<Network.ID, NetworkStatus>> = channelFlow {
         val currencyCount = flattenCurrency
             .map { map -> map.size }
@@ -322,7 +325,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     }
 
     private data class Box(
-        val flattenCurrencyMap: Map<CryptoCurrency.ID, CryptoCurrency>,
+        val flattenCurrencyMap: Map<AccountCurrencyId, CryptoCurrency>,
         val networkStatusMap: Map<Network.ID, NetworkStatus>,
         val stakingBalanceMap: Map<StakingID, Set<StakingBalance>>,
         val quoteStatusMap: Map<CryptoCurrency.RawID, QuoteStatus>,
