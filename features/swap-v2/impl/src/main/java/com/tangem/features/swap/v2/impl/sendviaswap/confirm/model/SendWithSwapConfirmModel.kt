@@ -288,6 +288,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     val txUrl = getExplorerTransactionUrlUseCase(
                         txHash = txHash,
                         networkId = primaryCurrencyStatus.currency.network.id,
+                        currency = primaryCurrencyStatus.currency,
                     ).getOrNull().orEmpty()
                     sendSuccessAnalytics()
                     uiState.transformerUpdate(
