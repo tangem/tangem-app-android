@@ -188,13 +188,21 @@ class CreateAndSendGaslessTransactionUseCase(
         signedData: SignedGaslessData,
         transactionData: TransactionData.Uncompiled,
     ): String {
-        return gaslessTransactionRepository.signGaslessTransaction(
+        val txHash = gaslessTransactionRepository.signGaslessTransaction(
             network = context.tokenForFeeStatus.currency.network,
             gaslessTransactionData = context.gaslessTransactionData,
             signature = signedData.eip712Signature,
             userAddress = transactionData.sourceAddress,
             eip7702Auth = signedData.eip7702Auth,
         ).txHash
+
+        (context.walletManager as? PendingTransactionHandler)?.addPendingGaslessTransaction(
+            transactionData = transactionData,
+            txHash = txHash,
+            contractAddress = transactionData.contractAddress,
+        )
+
+        return txHash
     }
 
     private suspend fun signHashes(
