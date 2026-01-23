@@ -23,6 +23,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.lib.crypto.BlockchainUtils
 import timber.log.Timber
 
 internal class ManagedCryptoCurrencyFactory(
@@ -183,6 +184,7 @@ internal class ManagedCryptoCurrencyFactory(
 
         val availableNetworks = coinResponse.networks
             .applyL2Compatibility(coinResponse.id)
+            .filterTerraTokens(coinResponse.id)
             .mapNotNull { network ->
                 createSource(
                     networkId = network.networkId,
@@ -299,6 +301,14 @@ internal class ManagedCryptoCurrencyFactory(
         blockchain: Blockchain,
         derivationStyleProvider: DerivationStyleProvider,
     ): Boolean = derivationPath != blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+
+    /**
+     * Filter tokens for TerraV1 (Terra Classic) network.
+     * Only native coin (LUNC) and TerraClassicUSD (USTC) are allowed.
+     */
+    private fun List<CoinsResponse.Coin.Network>.filterTerraTokens(coinId: String): List<CoinsResponse.Coin.Network> {
+        return filter { network -> BlockchainUtils.isNotBlockedByTerraV1Filter(network.networkId, coinId) }
+    }
 
     private companion object {
         const val DEFAULT_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
