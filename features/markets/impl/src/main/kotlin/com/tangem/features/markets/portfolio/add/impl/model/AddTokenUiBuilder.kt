@@ -1,8 +1,10 @@
 package com.tangem.features.markets.portfolio.add.impl.model
 
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.addtoken.AddTokenUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -16,7 +18,6 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.AddTokenComponent
-import com.tangem.common.ui.addtoken.AddTokenUM
 import javax.inject.Inject
 
 @ModelScoped
@@ -35,7 +36,7 @@ internal class AddTokenUiBuilder @Inject constructor(
     }
 
     private fun createPortfolio(selectedPortfolio: SelectedPortfolio): PortfolioSelectUM {
-        val accountIcon: CryptoPortfolioIconUM?
+        val accountIcon: AccountIconUM.CryptoPortfolio?
         val portfolioName: TextReference
         when (selectedPortfolio.isAccountMode) {
             false -> {
@@ -46,7 +47,7 @@ internal class AddTokenUiBuilder @Inject constructor(
                 val accountStatus = selectedPortfolio.account.account
                 portfolioName = accountStatus.account.accountName.toUM().value
                 accountIcon = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.account.icon.toUM()
+                    is AccountStatus.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
                 }
             }
         }
