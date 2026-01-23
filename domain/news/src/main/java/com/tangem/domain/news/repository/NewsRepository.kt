@@ -28,7 +28,7 @@ interface NewsRepository {
      *
      * @param config config for getting news list
      */
-    fun getNews(config: NewsListConfig, limit: Int): Flow<List<ShortArticle>>
+    fun getNews(config: NewsListConfig, limit: Int): Flow<Either<Throwable, List<ShortArticle>>>
 
     /**
      * Observes cached detailed articles.
