@@ -1548,7 +1548,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">下のボタンをクリックしてアクセスを復元してください</string>
-  <string name="tangempay_withdrawal_note_description">オンチェーンアドレスにある USDC Polygon のみ出金可能です。オンチェーン残高はカード残高とは異なり、購入後 2 営業日以内に更新されます（返金またはキャンセルされた取引の場合、最大 14 営業日かかることがあります）。</string>
+  <string name="tangempay_withdrawal_note_description">USDC Polygonのオンチェーン残高はカード残高とは異なり、購入後2営業日以内に更新されます。返金された購入資金はオンチェーン残高に戻らず、出金もできませんが、カード残高に残り、購入に使用できます。</string>
   <string name="tangempay_withdrawal_note_title">ご注意ください</string>
   <string name="tangempay_your_pin_code">PINコード</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
