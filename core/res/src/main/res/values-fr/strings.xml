@@ -1547,7 +1547,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay est temporairement indisponible</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Cliquez sur le bouton ci-dessous pour restaurer l\'accès</string>
-  <string name="tangempay_withdrawal_note_description">Vous ne pouvez retirer que les USDC Polygon disponibles sur votre adresse on-chain. Le solde on-chain diffère du solde de votre carte et se met à jour dans les 2 jours ouvrables après un achat (pour les remboursements ou transactions annulées, cela peut prendre jusqu\'à 14 jours ouvrables).</string>
+  <string name="tangempay_withdrawal_note_description">Votre solde USDC Polygon on-chain diffère de votre solde de carte et se met à jour dans les 2 jours ouvrables suivant un achat. Les fonds des achats remboursés ne seront pas retournés à votre solde on-chain ni disponibles pour un retrait, mais resteront sur votre solde de carte pour vos achats.</string>
   <string name="tangempay_withdrawal_note_title">Veuillez noter</string>
   <string name="tangempay_your_pin_code">Votre code PIN</string>
   <string name="this_is_my_wallet_title">C\'est mon portefeuille</string>
