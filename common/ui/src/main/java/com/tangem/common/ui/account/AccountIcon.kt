@@ -6,6 +6,7 @@ import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
+import com.tangem.core.ui.components.account.PaymentAccountIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -16,7 +17,7 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
  * - a single character (derived from the [name]) using [AccountCharIcon], or
  * - a predefined vector resource (from [icon]) using [AccountResIcon].
  *
- * The background color is taken from [CryptoPortfolioIconUM.color],
+ * The background color is taken from [AccountIconUM.CryptoPortfolio.color],
  * and the icon size, text style, and container shape are adapted based on the given [size].
  *
  * @param name A [TextReference] used to resolve and display the first letter
@@ -31,29 +32,43 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
 @Composable
 fun AccountIcon(
     name: TextReference,
-    icon: CryptoPortfolioIconUM,
+    icon: AccountIconUM.CryptoPortfolio,
     size: AccountIconSize,
     modifier: Modifier = Modifier,
 ) {
     val letter = name.resolveReference().firstOrNull()
+    val iconColor = icon.color.getUiColor()
     when {
         icon.value == CryptoPortfolioIcon.Icon.Letter && letter == null -> {
             AccountResIcon(
                 resId = R.drawable.ic_tangem_24,
-                color = icon.color.getUiColor(),
+                color = iconColor,
                 size = size,
                 modifier = modifier,
             )
         }
         icon.value == CryptoPortfolioIcon.Icon.Letter -> AccountCharIcon(
             char = letter ?: 'N',
-            color = icon.color.getUiColor(),
+            color = iconColor,
             size = size,
             modifier = modifier,
         )
         else -> AccountResIcon(
             resId = icon.value.getResId(),
-            color = icon.color.getUiColor(),
+            color = iconColor,
+            size = size,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+fun AccountIcon(name: TextReference, icon: AccountIconUM, size: AccountIconSize, modifier: Modifier = Modifier) {
+    when (icon) {
+        is AccountIconUM.Payment -> PaymentAccountIcon(size = size, modifier = modifier)
+        is AccountIconUM.CryptoPortfolio -> AccountIcon(
+            name = name,
+            icon = icon,
             size = size,
             modifier = modifier,
         )
@@ -62,7 +77,7 @@ fun AccountIcon(
 
 object AccountIconPreviewData {
 
-    fun randomAccountIcon(letter: Boolean = false) = CryptoPortfolioIconUM(
+    fun randomAccountIcon(letter: Boolean = false) = AccountIconUM.CryptoPortfolio(
         value = if (letter) CryptoPortfolioIcon.Icon.Letter else CryptoPortfolioIcon.Icon.entries.random(),
         color = Color.entries.random(),
     )
