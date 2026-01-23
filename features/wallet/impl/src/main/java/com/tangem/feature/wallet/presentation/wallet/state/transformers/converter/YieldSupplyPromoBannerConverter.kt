@@ -2,18 +2,17 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class YieldSupplyPromoBannerKeyConverter(
+internal class YieldSupplyPromoBannerConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val shouldShowMainPromo: Boolean,
-) : Converter<TokenConverterParams, String?> {
+) : Converter<TokenConverterParams, CryptoCurrencyStatus?> {
 
-    override fun convert(value: TokenConverterParams): String? {
+    override fun convert(value: TokenConverterParams): CryptoCurrencyStatus? {
         if (!shouldShowMainPromo) return null
 
         val currencies = when (value) {
@@ -31,8 +30,8 @@ internal class YieldSupplyPromoBannerKeyConverter(
         val max = cryptoCurrencyStatuses.asSequence()
             .mapNotNull { status ->
                 val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
-                val tokenKey = token.yieldSupplyKey()
                 val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
+                val tokenKey = "${token.network.rawId}_${token.contractAddress}"
 
                 val matchedKey = yieldModuleApyMap.keys.firstOrNull { mapKey ->
                     mapKey.equals(tokenKey, shouldIgnoreCase)
@@ -42,6 +41,6 @@ internal class YieldSupplyPromoBannerKeyConverter(
             }
             .maxByOrNull { (status, _) -> status.value.amount ?: BigDecimal.ZERO }
 
-        return max?.second
+        return max?.first
     }
 }
