@@ -116,7 +116,7 @@ class AccountCryptoPortfolioItemStateConverter(
         )
     }
 
-    private fun AccountId.toItemId() = this.userWalletId.stringValue + this.value
+    private fun AccountId.toItemId() = this.value
 
     private fun BigDecimal.getPriceChangeType(): PriceChangeType = PriceChangeConverter.fromBigDecimal(value = this)
 
