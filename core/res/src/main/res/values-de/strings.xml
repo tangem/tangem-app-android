@@ -1554,7 +1554,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay ist vorübergehend nicht erreichbar.</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Klicken Sie auf die Schaltfläche unten, um den Zugriff wiederherzustellen</string>
-  <string name="tangempay_withdrawal_note_description">Sie können nur USDC Polygon von Ihrer On-Chain-Adresse abheben. Ihr On-Chain-Guthaben unterscheidet sich von Ihrem Kartenguthaben und wird innerhalb von 2 Werktagen nach einem Kauf aktualisiert (bei Rückerstattungen oder stornierten Transaktionen kann es bis zu 14 Werktage dauern).</string>
+  <string name="tangempay_withdrawal_note_description">Ihr USDC Polygon On-Chain-Guthaben unterscheidet sich von Ihrem Kartenguthaben und wird innerhalb von 2 Werktagen nach einem Kauf aktualisiert. Gelder aus erstatteten Käufen werden nicht auf Ihr On-Chain-Guthaben zurückerstattet und stehen nicht für Abhebungen zur Verfügung, bleiben aber auf Ihrem Kartenguthaben für Einkäufe verfügbar.</string>
   <string name="tangempay_withdrawal_note_title">Bitte beachten Sie</string>
   <string name="tangempay_your_pin_code">Ihr PIN-Code</string>
   <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
