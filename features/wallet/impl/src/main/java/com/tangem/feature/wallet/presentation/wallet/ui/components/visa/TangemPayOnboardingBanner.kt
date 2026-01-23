@@ -51,15 +51,28 @@ internal fun TangemPayOnboardingBanner(state: TangemPayState.OnboardingBanner, m
         ) {
             val (image, text, close) = createRefs()
 
+            Image(
+                painter = painterResource(R.drawable.ic_close_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(16.dp)
+                    .clickable(onClick = state.closeOnClick)
+                    .constrainAs(close) {
+                        top.linkTo(parent.top, margin = 16.dp)
+                        end.linkTo(parent.end, margin = 16.dp)
+                    },
+                colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
+            )
+
             Column(
                 modifier = Modifier
                     .constrainAs(text) {
                         top.linkTo(parent.top)
                         start.linkTo(image.end, margin = 12.dp)
-                        end.linkTo(parent.end)
+                        end.linkTo(close.start, margin = 12.dp)
                         width = Dimension.fillToConstraints
                     }
-                    .padding(top = 16.dp, end = 16.dp, bottom = 16.dp),
+                    .padding(top = 16.dp, bottom = 16.dp),
             ) {
                 Text(
                     text = stringResourceSafe(R.string.tangempay_onboarding_banner_title),
@@ -80,26 +93,13 @@ internal fun TangemPayOnboardingBanner(state: TangemPayState.OnboardingBanner, m
                 painter = painterResource(R.drawable.img_tangem_pay_onboarding_banner),
                 contentDescription = null,
                 modifier = Modifier
+                    .padding(top = 8.dp, start = 24.dp)
                     .constrainAs(image) {
                         start.linkTo(parent.start)
                         top.linkTo(text.top)
                         bottom.linkTo(text.bottom)
                         height = Dimension.fillToConstraints
-                    }
-                    .padding(top = 8.dp, start = 24.dp),
-            )
-
-            Image(
-                painter = painterResource(R.drawable.ic_close_24),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable(onClick = state.closeOnClick)
-                    .constrainAs(close) {
-                        top.linkTo(parent.top, margin = 16.dp)
-                        end.linkTo(parent.end, margin = 16.dp)
                     },
-                colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
             )
         }
     }
