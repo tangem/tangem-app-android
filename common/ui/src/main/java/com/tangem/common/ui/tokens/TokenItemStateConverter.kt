@@ -46,7 +46,7 @@ class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
     private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
     private val stakingApyMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
-    private val yieldSupplyPromoBannerKey: String? = null,
+    private val promoCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
@@ -75,7 +75,7 @@ class TokenItemStateConverter(
         createPromoBannerState(
             status = status,
             yieldModuleApyMap = yieldModuleApyMap,
-            yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKey,
+            promoCryptoCurrencyStatus = promoCryptoCurrencyStatus,
             onApyLabelClick = onApyLabelClick,
             onYieldPromoCloseClick = onYieldPromoCloseClick,
             onYieldPromoShown = onYieldPromoShown,
@@ -404,7 +404,7 @@ class TokenItemStateConverter(
         private fun createPromoBannerState(
             status: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            yieldSupplyPromoBannerKey: String?,
+            promoCryptoCurrencyStatus: CryptoCurrencyStatus?,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
             onYieldPromoCloseClick: (() -> Unit)?,
             onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
@@ -414,13 +414,14 @@ class TokenItemStateConverter(
             if (status.value !is CryptoCurrencyStatus.Loaded) {
                 return TokenItemState.PromoBannerState.Empty
             }
-            if (yieldSupplyPromoBannerKey == null || yieldSupplyPromoBannerKey != token.yieldSupplyKey() ||
-                yieldModuleApyMap[token.yieldSupplyKey()] == null
-            ) {
+            if (promoCryptoCurrencyStatus == null || status.currency.id != promoCryptoCurrencyStatus.currency.id) {
                 return TokenItemState.PromoBannerState.Empty
             }
-            val yieldSupplyApy =
-                yieldModuleApyMap[token.yieldSupplyKey()] ?: return TokenItemState.PromoBannerState.Empty
+            val tokenKey = "${token.network.rawId}_${token.contractAddress}"
+            val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
+            val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull { (key, _) ->
+                key.equals(tokenKey, shouldIgnoreCase)
+            }?.value ?: return TokenItemState.PromoBannerState.Empty
 
             return TokenItemState.PromoBannerState.Content(
                 title = resourceReference(
