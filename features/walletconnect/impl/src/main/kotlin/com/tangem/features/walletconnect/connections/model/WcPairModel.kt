@@ -5,7 +5,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.domain.blockaid.models.dapp.CheckDAppResult
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountIconUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -276,10 +277,10 @@ internal class WcPairModel @Inject constructor(
             is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         val isAccountMode = selectorController.isAccountMode.first()
-        val icon: CryptoPortfolioIconUM?
+        val icon: AccountIconUM.CryptoPortfolio?
         val name: TextReference
         if (isAccountMode) {
-            icon = account.icon.toUM()
+            icon = CryptoPortfolioIconConverter.convert(account.icon)
             name = account.accountName.toUM().value
         } else {
             icon = null
