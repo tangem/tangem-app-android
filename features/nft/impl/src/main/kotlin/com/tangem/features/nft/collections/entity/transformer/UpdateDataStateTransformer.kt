@@ -1,6 +1,7 @@
 package com.tangem.features.nft.collections.entity.transformer
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
@@ -100,7 +101,7 @@ internal class UpdateDataStateTransformer(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
             icon = when (this) {
-                is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
