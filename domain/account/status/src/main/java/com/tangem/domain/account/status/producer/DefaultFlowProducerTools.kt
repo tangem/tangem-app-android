@@ -7,6 +7,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -39,13 +40,19 @@ class DefaultFlowProducerTools @Inject constructor(
         withRetryWhen: Boolean,
     ): SharedFlow<T> {
         var upstream = flow
+
         if (withRetryWhen) {
             val flowProducerName = flowProducer.javaClass.simpleName
-            upstream = upstream.retryWhen { cause: Throwable, attempt: Long ->
-                Timber.tag("FlowProducerRetryWhen")
-                    .e(cause, "flowProducerName $flowProducerName attempt $attempt")
-                flowProducer.retryWhen(this)
-            }
+            upstream = upstream
+                .retryWhen { cause: Throwable, attempt: Long ->
+                    Timber.tag("FlowProducerRetryWhen")
+                        .e(cause, "flowProducerName $flowProducerName attempt $attempt")
+
+                    flowProducer.fallback.onSome { this.emit(value = it) }
+                    delay(timeMillis = 2000)
+
+                    true
+                }
         }
 
         return upstream
@@ -53,6 +60,7 @@ class DefaultFlowProducerTools @Inject constructor(
             .shareIn(
                 scope = scope,
                 replay = 1,
+                // params control flow cleanup
                 started = SharingStarted.WhileSubscribed(
                     stopTimeoutMillis = 5_000,
                     replayExpirationMillis = 30_000,
