@@ -58,7 +58,7 @@ internal class DefaultNewsRepository(
         return updateViewedStatusForNewsBatch(newsBatchFlow, context.coroutineScope)
     }
 
-    override fun getNews(config: NewsListConfig, limit: Int): Flow<List<ShortArticle>> {
+    override fun getNews(config: NewsListConfig, limit: Int): Flow<Either<Throwable, List<ShortArticle>>> {
         return flow {
             val items = newsApi.getNews(
                 page = FIRST_PAGE,
@@ -73,7 +73,7 @@ internal class DefaultNewsRepository(
                 },
                 onError = { error ->
                     Timber.e(error, "Failed to get list of news")
-                    emptyList()
+                    throw error
                 },
             )
 
@@ -85,8 +85,9 @@ internal class DefaultNewsRepository(
                 articlesToUpdate.map { article ->
                     val isViewed = viewedFlags[article.id] == true
                     article.copy(viewed = isViewed)
-                }.sortedBy { it.viewed }
+                }.sortedBy { it.viewed }.right()
             }
+            .catch { it.left() }
     }
 
     override fun observeDetailedArticles(): Flow<Map<Int, DetailedArticle>> {
