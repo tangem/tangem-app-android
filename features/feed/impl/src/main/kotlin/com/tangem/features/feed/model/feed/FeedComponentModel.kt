@@ -120,7 +120,7 @@ internal class FeedComponentModel @Inject constructor(
                             itemsByOrder = itemsByOrder,
                             loadingStatesByOrder = loadingStatesByOrder,
                             errorStatesByOrder = errorStatesByOrder,
-                            onReloadAll = { marketsBatchFlowManager.reloadAll() },
+                            onReload = { marketsBatchFlowManager.reloadManager(it.toOrder()) },
                             analyticsEventHandler = analyticsEventHandler,
                         ),
                         UpdateTrendingNewsStateTransformer(
