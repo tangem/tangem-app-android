@@ -1554,7 +1554,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay temporalmente no disponible</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Haga clic en el botón de abajo para restaurar el acceso</string>
-  <string name="tangempay_withdrawal_note_description">Solo puedes retirar USDC Polygon disponibles en tu dirección on-chain. El saldo on-chain difiere del saldo de tu tarjeta y se actualiza en 2 días hábiles después de una compra (para reembolsos o transacciones canceladas puede tomar hasta 14 días hábiles).</string>
+  <string name="tangempay_withdrawal_note_description">Tu saldo USDC Polygon on-chain difiere de tu saldo de tarjeta y se actualiza dentro de 2 días hábiles después de una compra. Los fondos de compras reembolsadas no se devolverán a tu saldo on-chain ni estarán disponibles para retiro, pero permanecerán en tu saldo de tarjeta para compras.</string>
   <string name="tangempay_withdrawal_note_title">Tenga en cuenta</string>
   <string name="tangempay_your_pin_code">Tu código PIN</string>
   <string name="this_is_my_wallet_title">Esta es mi billetera</string>
