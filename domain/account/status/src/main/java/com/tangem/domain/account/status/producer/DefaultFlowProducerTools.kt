@@ -1,5 +1,7 @@
 package com.tangem.domain.account.status.producer
 
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.core.flow.FlowProducerScope
 import com.tangem.domain.core.flow.FlowProducerTools
@@ -15,23 +17,39 @@ import kotlin.coroutines.CoroutineContext
 
 class DefaultFlowProducerAppScope @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : FlowProducerScope {
+
+    private val tag = "FlowProducerScope"
 
     override val coroutineContext: CoroutineContext = SupervisorJob() +
         dispatchers.default +
-        CoroutineName("FlowProducerScope") +
+        CoroutineName(tag) +
         CoroutineExceptionHandler { context, throwable ->
             @Suppress("NullableToStringCall")
             val coroutineName = context[CoroutineName]?.name.toString()
-            Timber.tag("FlowProducerExceptionHandler").e(
-                throwable,
-                "CoroutineName $coroutineName",
-            )
+            logError(throwable, coroutineName)
         }
+
+    private fun logError(throwable: Throwable, coroutineName: String) {
+        Timber.tag("FlowProducerExceptionHandler").e(
+            throwable,
+            "CoroutineName $coroutineName",
+        )
+        val event = ExceptionAnalyticsEvent(
+            exception = throwable,
+            params = mapOf(
+                "source" to tag,
+                "coroutineName" to coroutineName,
+            ),
+        )
+        analyticsExceptionHandler.sendException(event)
+    }
 }
 
 class DefaultFlowProducerTools @Inject constructor(
     private val scope: FlowProducerScope,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : FlowProducerTools {
 
     override fun <T> shareInProducer(
@@ -45,9 +63,7 @@ class DefaultFlowProducerTools @Inject constructor(
             val flowProducerName = flowProducer.javaClass.simpleName
             upstream = upstream
                 .retryWhen { cause: Throwable, attempt: Long ->
-                    Timber.tag("FlowProducerRetryWhen")
-                        .e(cause, "flowProducerName $flowProducerName attempt $attempt")
-
+                    logError(cause, flowProducerName, attempt)
                     flowProducer.fallback.onSome { this.emit(value = it) }
                     delay(timeMillis = 2000)
 
@@ -66,5 +82,20 @@ class DefaultFlowProducerTools @Inject constructor(
                     replayExpirationMillis = 30_000,
                 ),
             )
+    }
+
+    private fun logError(cause: Throwable, flowProducerName: String, attempt: Long) {
+        val tag = "FlowProducerRetryWhen"
+        Timber.tag(tag)
+            .e(cause, "flowProducerName $flowProducerName attempt $attempt")
+
+        val event = ExceptionAnalyticsEvent(
+            exception = cause,
+            params = mapOf(
+                "source" to tag,
+                "flowProducerName" to flowProducerName,
+            ),
+        )
+        analyticsExceptionHandler.sendException(event)
     }
 }
