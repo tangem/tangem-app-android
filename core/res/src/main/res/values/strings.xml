@@ -1568,7 +1568,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
-  <string name="tangempay_withdrawal_note_description">You can only withdraw USDC Polygon currently available on your on-chain address. Your on-chain balance differs from your card balance and updates within 2 business days after a purchase (for refunds or canceled transactions it may take up to 14 business days).</string>
+  <string name="tangempay_withdrawal_note_description">Your on-chain USDC Polygon balance differs from your card balance and updates within 2 business days after a purchase. Funds from refunded purchases won’t be returned your on-chain balance or be available for withdrawal, but will stay on your card balance for purchases.</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
