@@ -8,6 +8,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
@@ -22,7 +23,7 @@ internal class TokenMarketInfoConverter(
                 name = name,
                 symbol = symbol,
                 quotes = getQuotes(),
-                networks = networks?.convert(),
+                networks = networks?.convert(coinId = id),
                 shortDescription = shortDescription,
                 fullDescription = fullDescription,
                 insights = insights?.convert(),
@@ -55,7 +56,7 @@ internal class TokenMarketInfoConverter(
     }
 
     @JvmName("convertNetwork")
-    private fun List<TokenMarketInfoResponse.Network>.convert(): List<TokenMarketInfo.Network> {
+    private fun List<TokenMarketInfoResponse.Network>.convert(coinId: String): List<TokenMarketInfo.Network> {
         return mapNotNull { network ->
             val blockchain = Blockchain.fromNetworkId(network.networkId)
             when {
@@ -68,7 +69,8 @@ internal class TokenMarketInfoConverter(
                     )
                 }
                 blockchain != null && blockchain !in excludedBlockchains &&
-                    blockchain.canHandleTokens() -> {
+                    blockchain.canHandleTokens() &&
+                    BlockchainUtils.isNotBlockedByTerraV1Filter(network.networkId, coinId) -> {
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
                         isExchangeable = network.exchangeable,
@@ -195,7 +197,6 @@ internal class TokenMarketInfoConverter(
     }
 
     private companion object {
-
         const val PROD_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/security_provider/"
         const val DEV_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api.dev/security_provider/"
     }
