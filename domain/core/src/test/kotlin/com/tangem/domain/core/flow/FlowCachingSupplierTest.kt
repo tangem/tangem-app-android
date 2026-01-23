@@ -107,6 +107,7 @@ internal class FlowCachingSupplierTest {
 
     private class MockFlowProducer(private val params: Int) : FlowProducer<String> {
 
+        override val flowProducerTools: FlowProducerTools = MockFlowProducerTools()
         override val fallback: Option<String>
             get() = "fallback".some()
 
@@ -115,6 +116,14 @@ internal class FlowCachingSupplierTest {
         class Factory : FlowProducer.Factory<Int, MockFlowProducer> {
             override fun create(params: Int): MockFlowProducer = MockFlowProducer(params = params)
         }
+    }
+
+    private class MockFlowProducerTools : FlowProducerTools {
+        override fun <T> shareInProducer(
+            flow: Flow<T>,
+            flowProducer: FlowProducer<T>,
+            withRetryWhen: Boolean,
+        ): SharedFlow<T> = MutableSharedFlow()
     }
 
     private class MockErrorFlowCachingSupplier(
@@ -127,6 +136,7 @@ internal class FlowCachingSupplierTest {
 
     private class MockErrorFlowProducer : FlowProducer<String> {
 
+        override val flowProducerTools: FlowProducerTools = MockFlowProducerTools()
         override val fallback: Option<String>
             get() = "fallback".some()
 

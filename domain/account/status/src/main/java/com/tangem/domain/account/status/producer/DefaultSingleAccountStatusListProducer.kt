@@ -10,7 +10,6 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.core.flow.FlowProducerTools
-import com.tangem.domain.core.flow.FlowProducerTools.Companion.shareInProducer
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -71,7 +70,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val flowProducerTools: FlowProducerTools,
+    override val flowProducerTools: FlowProducerTools,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
     private val quoteStatusSupplier: MultiQuoteStatusSupplier,
     private val stakingBalanceSupplier: MultiStakingBalanceSupplier,
@@ -83,9 +82,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
 
     override fun produce(): Flow<AccountStatusList> {
         return flattenFlow()
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
-            .shareInProducer(flowProducerTools, this)
     }
 
     @Suppress("LongMethod")

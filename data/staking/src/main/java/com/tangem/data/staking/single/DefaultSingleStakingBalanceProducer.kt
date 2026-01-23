@@ -3,6 +3,7 @@ package com.tangem.data.staking.single
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
@@ -13,7 +14,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
@@ -31,6 +31,7 @@ import timber.log.Timber
 internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
     @Assisted private val params: SingleStakingBalanceProducer.Params,
     private val multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
+    override val flowProducerTools: FlowProducerTools,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleStakingBalanceProducer {
@@ -54,7 +55,6 @@ internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
                     analyticsExceptionHandler = analyticsExceptionHandler,
                 )
             }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
