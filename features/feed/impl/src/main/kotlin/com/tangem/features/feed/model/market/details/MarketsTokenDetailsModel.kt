@@ -39,6 +39,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.analytics.MarketTokenAnalyticsEvent
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMConverter
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.converter.DescriptionConverter
 import com.tangem.features.feed.model.market.details.converter.ExchangeItemStateConverter
@@ -46,7 +47,6 @@ import com.tangem.features.feed.model.market.details.converter.TokenMarketInfoCo
 import com.tangem.features.feed.model.market.details.formatter.*
 import com.tangem.features.feed.model.market.details.state.QuotesStateUpdater
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
-import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMConverter
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.lib.crypto.BlockchainUtils
@@ -313,8 +313,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     snapshot = null,
                     tokenIds = listOf(params.token.id.value),
                 ),
-            ).onRight { listOfArticles ->
-                listOfArticles.collect { articles ->
+            ).collect { result ->
+                result.onRight { articles ->
                     state.update { marketsTokenDetailsUM ->
                         val relatedNews = shortArticleToArticleConfigUMConverter.convert(articles)
                         marketsTokenDetailsUM.copy(
@@ -343,19 +343,19 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                             ),
                         )
                     }
+                }.onLeft { throwable ->
+                    val (code, message) = if (throwable is ApiResponseError.HttpException) {
+                        throwable.code.numericCode to throwable.message.orEmpty()
+                    } else {
+                        null to ""
+                    }
+                    analyticsEventHandler.send(
+                        MarketTokenAnalyticsEvent.TokenNewsLoadError(
+                            code = code,
+                            message = message,
+                        ),
+                    )
                 }
-            }.onLeft { throwable ->
-                val (code, message) = if (throwable is ApiResponseError.HttpException) {
-                    throwable.code.numericCode to throwable.message.orEmpty()
-                } else {
-                    null to ""
-                }
-                analyticsEventHandler.send(
-                    MarketTokenAnalyticsEvent.TokenNewsLoadError(
-                        code = code,
-                        message = message,
-                    ),
-                )
             }
         }
     }

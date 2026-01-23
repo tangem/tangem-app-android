@@ -8,11 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 class GetNewsUseCase(private val repository: NewsRepository) {
 
-    fun getNews(limit: Int, newsListConfig: NewsListConfig): Either<Throwable, Flow<List<ShortArticle>>> =
-        Either.catch {
-            repository.getNews(
-                config = newsListConfig,
-                limit = limit,
-            )
-        }
+    fun getNews(limit: Int, newsListConfig: NewsListConfig): Flow<Either<Throwable, List<ShortArticle>>> =
+        repository.getNews(
+            config = newsListConfig,
+            limit = limit,
+        )
 }
