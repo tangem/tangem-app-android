@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.createWalletStart.api)
+    implementation(projects.features.hotWallet.api)
 
     /** Project - Domain */
     implementation(projects.domain.card)
