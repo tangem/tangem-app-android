@@ -40,6 +40,10 @@
         "version": "5.32.0"
     },
     {
+        "name": "HOT_WALLET_VISIBLE",
+        "version": "undefined"
+    },
+    {
         "name": "TANGEM_PAY_ENABLED",
         "version": "5.31.0"
     },
