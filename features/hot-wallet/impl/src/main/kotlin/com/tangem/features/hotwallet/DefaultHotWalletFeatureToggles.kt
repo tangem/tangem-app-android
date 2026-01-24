@@ -10,4 +10,6 @@ internal class DefaultHotWalletFeatureToggles(
     override val isWalletCreationRestrictionEnabled: Boolean
         get() = isHotWalletEnabled &&
             featureTogglesManager.isFeatureEnabled(name = "HOT_WALLET_CREATION_RESTRICTION_ENABLED")
+    override val isHotWalletVisible: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "HOT_WALLET_VISIBLE")
 }
