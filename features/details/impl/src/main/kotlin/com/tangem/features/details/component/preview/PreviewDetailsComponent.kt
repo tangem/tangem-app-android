@@ -23,6 +23,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
             hotWalletFeatureToggles = object : HotWalletFeatureToggles {
                 override val isHotWalletEnabled: Boolean = true
                 override val isWalletCreationRestrictionEnabled: Boolean = true
+                override val isHotWalletVisible: Boolean = true
             },
         ).buildAll(
             isWalletConnectAvailable = true,
