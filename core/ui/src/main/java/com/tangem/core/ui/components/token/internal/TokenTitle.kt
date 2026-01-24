@@ -21,7 +21,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as TokenTitleState
 
 @Composable
-internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
+fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
     when (state) {
         is TokenTitleState.Content -> {
             ContentTitle(state = state, modifier = modifier)
