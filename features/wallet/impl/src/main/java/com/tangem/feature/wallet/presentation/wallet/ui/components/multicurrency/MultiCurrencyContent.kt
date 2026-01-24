@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -41,14 +40,12 @@ internal fun LazyListScope.tokensListItems(
     state: WalletTokensListState,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
-    portfolioVisibleState: (portfolio: TokensListItemUM.Portfolio) -> MutableTransitionState<Boolean>,
 ) {
     when (state) {
         is WalletTokensListState.ContentState.PortfolioContent -> portfolioContentItems(
             items = state.items,
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
-            portfolioVisibleState = portfolioVisibleState,
         )
         is WalletTokensListState.ContentState.Content,
         is WalletTokensListState.ContentState.Loading,
