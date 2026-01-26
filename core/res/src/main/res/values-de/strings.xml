@@ -323,6 +323,7 @@
   <string name="common_no">Nein</string>
   <string name="common_no_address">Keine Adresse</string>
   <string name="common_not_added">Nicht hinzugefügt</string>
+  <string name="common_not_available">Nicht verfügbar</string>
   <string name="common_not_now">Nicht jetzt</string>
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
@@ -561,6 +562,8 @@
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">Nicht genügend Mittel</string>
+  <string name="gasless_transaction_fee">Transaktionsgebühr</string>
   <string name="generic_error">Es ist ein Fehler aufgetreten</string>
   <string name="generic_error_code">Es ist ein Fehler aufgetreten. Code: %s.</string>
   <string name="generic_requires_memo_error">Memo erforderlich</string>
@@ -602,7 +605,7 @@
   <string name="hw_backup_hardware_create_title">Neue Wallet erstellen</string>
   <string name="hw_backup_hardware_description">Erhöhe Deine Sicherheit mit der überlegenen Hardware-Wallet von Tangem.</string>
   <string name="hw_backup_hardware_title">Hardware-Wallet</string>
-  <string name="hw_backup_hardware_upgrade_description">Übertrage Deine aktuelle Wallet in die Tangem Wallet.</string>
+  <string name="hw_backup_hardware_upgrade_description">Übertrage Deine aktuelle Wallet in die Tangem Hardware-Wallet.</string>
   <string name="hw_backup_hardware_upgrade_title">Aktualisiere Deine aktuelle Wallet</string>
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Bitte sicher Deine Wallet, bevor Du einen Zugangscode erstellst.</string>
@@ -827,7 +830,7 @@
   <string name="news_quick_recap">Kurze Zusammenfassung</string>
   <string name="news_related_news">Verwandte Nachrichten</string>
   <string name="news_related_tokens">Verwandte Token</string>
-  <string name="news_sources">Quellen</string>
+  <string name="news_sources">Verwandte Nachrichten</string>
   <string name="news_stay_in_the_loop">Auf dem Laufenden bleiben</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
   <string name="nft_about_title">Über NFT</string>
@@ -995,6 +998,7 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="only_one_mobile_wallet_explanation">Du kannst nur eine mobile Wallet verwenden. Aktualisiere diese auf einer Tangem-Hardware-Wallet oder füge eine neue Hardware-Wallet hinzu.</string>
   <string name="onramp_all_offers_button_title">Alle Angebote</string>
   <string name="onramp_avaiable_with_payment_methods">Verfügbar mit %s</string>
   <string name="onramp_choose_provider_title_hint">Anbieter erleichtern Transaktionen</string>
@@ -1265,6 +1269,7 @@
   <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Der Betrag der unstaked wird, wird aufgrund der Netzwerkregeln auf %1$s TRX gerundet.</string>
   <string name="staking_apr_earn_badge">Effektiver Jahreszins %1$s%%</string>
+  <string name="staking_cardano_details_rewards_info_text">Deine Staking-Belohnungen beginnen nach 5 Epochen (~25 Tage), während Deine Delegation vom Netzwerk registriert und gezählt wird.</string>
   <string name="staking_claim_unstaked">Nicht gestakte beanspruche</string>
   <string name="staking_details_account_fee">Gebühr für das Staking-Konto</string>
   <string name="staking_details_account_fee_info">Ein Staking-Konto ist ein spezielles Konto, auf dem eingesetzte SOL-Token gespeichert werden. Es wird erstellt, indem Sie Ihre Token an einen Validator delegieren, um an der Transaktionsvalidierung teilzunehmen und Belohnungen zu erhalten. Für die Einrichtung des Staking-Kontos wird eine geringe Gebühr erhoben, die nach Abschluss des Stakings zurückerstattet wird.</string>
@@ -1275,6 +1280,7 @@
   <string name="staking_details_apr">Effektiver Jahreszins</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
+  <string name="staking_details_autocompound_rewards_earned">Die Belohnungen werden auf Dein Stakingguthaben aufgezinst. Verdiente Gelder: %s</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
   <string name="staking_details_banner_text">Wie funktioniert Staking?</string>
@@ -1419,6 +1425,7 @@
   <string name="swap_story_third_subtitle">Problemlos und intuitiv, sodass Deine Token mit nur wenigen Handgriffen getauscht werden können</string>
   <string name="swap_story_third_title">Einfach bequem</string>
   <string name="swap_via_provider">Tausch über Anbieter</string>
+  <string name="swap_your_assets_title">Dein Vermögen</string>
   <string name="swapping_alert_cex_description">Der Betrag umfasst:\n- Gebühr des Dienstanbieters\n- Netzgebühr für die Rücksendung von %s von der Vermittlungsstelle an die Adresse des Nutzers.</string>
   <string name="swapping_alert_cex_description_with_slippage">Der Betrag beinhaltet:\n• Honorar des Dienstleisters\n• Netzwerkgebühr für das Senden %1$s von der Börse zurück an die Adresse des Benutzers. \n\n Provider-Slippage kann bis zu %2$s</string>
   <string name="swapping_alert_dex_description">Der Betrag enthält die Gebühren des Dienstleisters.</string>
@@ -1433,6 +1440,7 @@
   <string name="swapping_insufficient_funds">Unzureichende Mittel</string>
   <string name="swapping_permission_header">Erlaubnis erteilen</string>
   <string name="swapping_swap_action">Tauschen</string>
+  <string name="swapping_swap_action_in_progress">Tauschen...</string>
   <string name="swapping_to_title">Du erhältst</string>
   <string name="swapping_token_list_title">Token auswählen</string>
   <string name="swapping_token_not_available">Nicht verfügbar</string>
@@ -1527,10 +1535,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Möchtest Du den KYC wirklich abbrechen? Du kannst später jederzeit weiter machen.</string>
   <string name="tangempay_kyc_failed_description">Wir konnten Ihr Profil nicht verifizieren. Bei Fragen wenden Sie sich bitte an den Support.</string>
   <string name="tangempay_kyc_failed_title">Leider konnten wir Ihre Identität nicht verifizieren</string>
+  <string name="tangempay_kyc_has_failed">KYC ist gescheitert</string>
   <string name="tangempay_kyc_in_progress">KYC in Bearbeitung</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
   <string name="tangempay_kyc_in_progress_popup_description">Dokumente werden in der Regel innerhalb von 5 Minuten automatisch überprüft. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann es bis zu 48 Stunden dauern.</string>
+  <string name="tangempay_kyc_rejected">KYC abgelehnt</string>
+  <string name="tangempay_kyc_rejected_button_text">KYC-Sperre ausblenden</string>
+  <string name="tangempay_kyc_rejected_description">Entschuldigung, wir konnten dies nicht überprüfen.</string>
+  <string name="tangempay_kyc_rejected_description_span">Dein Profil.</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
