@@ -2,7 +2,7 @@ package com.tangem.data.news.repository
 
 import com.tangem.datasource.api.news.models.response.NewsArticleDto
 import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
-import com.tangem.datasource.api.news.models.response.NewsOriginalArticleDto
+import com.tangem.datasource.api.news.models.response.NewsRelatedArticleDto
 import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
 import com.tangem.domain.models.news.*
 
@@ -19,7 +19,7 @@ internal fun NewsDetailsResponse.toDomainDetailedArticle(isLiked: Boolean): Deta
         newsUrl = newsUrl,
         shortContent = shortContent,
         content = content,
-        originalArticles = originalArticles.map { it.toDomainOriginalArticle() },
+        relatedArticles = relatedArticles.map { it.toDomainRelatedArticle() },
         isLiked = isLiked,
     )
 }
@@ -47,13 +47,13 @@ internal fun NewsRelatedTokenDto.toDomainRelatedToken(): RelatedToken {
     )
 }
 
-internal fun NewsOriginalArticleDto.toDomainOriginalArticle(): OriginalArticle {
-    return OriginalArticle(
+internal fun NewsRelatedArticleDto.toDomainRelatedArticle(): RelatedArticle {
+    return RelatedArticle(
         id = id,
         title = title,
-        source = Source(
-            id = source.id,
-            name = source.name,
+        media = Media(
+            id = media.id,
+            name = media.name,
         ),
         locale = language,
         publishedAt = publishedAt,
