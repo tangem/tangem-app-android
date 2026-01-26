@@ -30,7 +30,11 @@ class WalletIdBodyConverterTest {
         )
 
         // WHEN
-        val result = WalletIdBodyConverter.convert(userWallet, publicKeys)
+        val result = WalletIdBodyConverter.convert(
+            userWallet = userWallet,
+            conversionData = null,
+            publicKeys = publicKeys,
+        )
 
         // THEN
         assertThat(result).isEqualTo(
@@ -68,7 +72,11 @@ class WalletIdBodyConverterTest {
         val publicKeys = emptyMap<String, String>()
 
         // WHEN
-        val result = WalletIdBodyConverter.convert(userWallet, publicKeys)
+        val result = WalletIdBodyConverter.convert(
+            userWallet = userWallet,
+            conversionData = null,
+            publicKeys = publicKeys,
+        )
 
         // THEN
         assertThat(result).isEqualTo(
