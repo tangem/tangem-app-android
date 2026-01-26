@@ -68,17 +68,17 @@ internal class MarketsListBatchFlowManager(
 
     val onLastBatchLoadedSuccess = batchFlow.state
         .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
-        .mapNotNull {
-            when (val status = it.status) {
+        .mapNotNull { state ->
+            when (val status = state.status) {
                 is PaginationStatus.Paginating -> {
                     if (status.lastResult is BatchFetchResult.Success) {
-                        it.data.lastOrNull()?.key
+                        state.data.lastOrNull()?.key
                     } else {
                         null
                     }
                 }
                 is PaginationStatus.EndOfPagination -> {
-                    it.data.lastOrNull()?.key
+                    state.data.lastOrNull()?.key
                 }
                 else -> null
             }
@@ -86,22 +86,22 @@ internal class MarketsListBatchFlowManager(
 
     val onFirstBatchLoadedSuccess = batchFlow.state
         .distinctUntilChanged { old, new -> old.status == new.status && old.data.size == new.data.size }
-        .mapNotNull {
-            when (val status = it.status) {
+        .mapNotNull { state ->
+            when (val status = state.status) {
                 is PaginationStatus.Paginating -> {
                     if (status.lastResult is BatchFetchResult.Success) {
-                        it.data.size == 1
+                        state.data.size == 1
                     } else {
                         null
                     }
                 }
                 is PaginationStatus.EndOfPagination -> {
-                    it.data.size == 1
+                    state.data.size == 1
                 }
                 else -> null
             }
         }
-        .filter { it }
+        .filter { isFirstBatch -> isFirstBatch }
 
     val isInInitialLoadingErrorState = batchFlow.state
         .map { it.status is PaginationStatus.InitialLoadingError }
@@ -113,10 +113,10 @@ internal class MarketsListBatchFlowManager(
         )
 
     val isSearchNotFoundState = batchFlow.state
-        .map {
+        .map { state ->
             currentSearchText().isNullOrEmpty().not() &&
-                it.status is PaginationStatus.EndOfPagination &&
-                it.data.isEmpty()
+                state.status is PaginationStatus.EndOfPagination &&
+                state.data.isEmpty()
         }
         .distinctUntilChanged()
         .stateIn(
@@ -175,22 +175,21 @@ internal class MarketsListBatchFlowManager(
                     forceUpdate || previousList.isNullOrEmpty() || newList.first().key != previousList.first().key
 
                 val outItems = if (isInitialLoading) {
-                    newList.map {
+                    newList.map { batch ->
                         Batch(
-                            key = it.key,
-                            data = converter.convertList(it.data),
+                            key = batch.key,
+                            data = converter.convertList(batch.data),
                         )
                     }
                 } else {
-                    previousList!!
                     if (previousList.size != newList.size) {
                         val keysToAdd = newList.map { it.key }.subtract(previousList.map { it.key }.toSet())
                         val newBatches = newList.filter { keysToAdd.contains(it.key) }
 
-                        items + newBatches.map {
+                        items + newBatches.map { batch ->
                             Batch(
-                                key = it.key,
-                                data = converter.convertList(it.data),
+                                key = batch.key,
+                                data = converter.convertList(batch.data),
                             )
                         }
                     } else {
@@ -264,8 +263,8 @@ internal class MarketsListBatchFlowManager(
         modelScope.launch {
             val currentData = batchFlow.state.value.data
             val alreadyLoadedChartsBatchKeys = currentData
-                .filter {
-                    val first = it.data.firstOrNull() ?: return@filter false
+                .filter { batch ->
+                    val first = batch.data.firstOrNull() ?: return@filter false
                     val chartByInterval = when (interval) {
                         TrendInterval.H24 -> first.tokenCharts.h24
                         TrendInterval.D7 -> first.tokenCharts.week
@@ -273,7 +272,7 @@ internal class MarketsListBatchFlowManager(
                     }
                     chartByInterval != null
                 }
-                .map { it.key }
+                .map { batch -> batch.key }
                 .toSet()
 
             val batchesKeysToLoad = batchKeys.minus(alreadyLoadedChartsBatchKeys)
@@ -302,9 +301,12 @@ internal class MarketsListBatchFlowManager(
                 },
             )
 
+            val batchKeys = batchFlow.state.value.data
+                .map { it.key }
+                .toSet()
             actionsFlow.emit(
                 BatchAction.UpdateBatches(
-                    keys = batchFlow.state.value.data.map { it.key }.toSet(),
+                    keys = batchKeys,
                     updateRequest = TokenMarketUpdateRequest.UpdateQuotes(
                         currencyId = currentAppCurrency().code,
                     ),
@@ -332,7 +334,10 @@ internal class MarketsListBatchFlowManager(
     }
 
     fun getTokenById(id: CryptoCurrency.RawID): TokenMarket? {
-        return batchFlow.state.value.data.map { it.data }.flatten().find { it.id == id }
+        val allTokens = batchFlow.state.value.data
+            .map { it.data }
+            .flatten()
+        return allTokens.find { it.id == id }
     }
 
     private fun SortByTypeUM.toRequestOrder(): TokenMarketListConfig.Order {
