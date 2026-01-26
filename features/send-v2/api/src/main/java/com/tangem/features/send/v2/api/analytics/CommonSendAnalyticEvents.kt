@@ -187,6 +187,7 @@ sealed class CommonSendAnalyticEvents(
 
     enum class CommonSendSource(val analyticsName: String) {
         Send("Send"),
+        Swap("Swap"),
         SendWithSwap("Send&Swap"),
         WalletConnect("WalletConnect"),
         NFT("NFT"),
