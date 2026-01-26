@@ -257,6 +257,10 @@ private fun StakingRewardBlock(
             resourceReference(R.string.staking_solana_details_auto_claiming_rewards_daily_text) to
                 TangemTheme.colors.text.tertiary
         }
+        RewardBlockType.CardanoNoRewards -> {
+            resourceReference(R.string.staking_cardano_details_rewards_info_text) to
+                TangemTheme.colors.text.tertiary
+        }
         RewardBlockType.NoRewards -> {
             resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
         }
