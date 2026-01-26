@@ -7,7 +7,10 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.*
 import com.tangem.data.common.quote.DefaultQuotesFetcher
 import com.tangem.data.common.quote.QuotesFetcher
+import com.tangem.data.common.wallet.DefaultWalletServerBinder
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -72,6 +75,8 @@ internal object DataCommonModule {
         userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
+        walletServerBinder: WalletServerBinder,
+        appsFlyerConversionStore: AppsFlyerConversionStore,
         accountsFeatureToggles: AccountsFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
@@ -84,6 +89,8 @@ internal object DataCommonModule {
             pushTokensRetryerPool = RetryerPool(
                 coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             ),
+            walletServerBinder = walletServerBinder,
+            appsFlyerConversionStore = appsFlyerConversionStore,
         )
     }
 
@@ -97,5 +104,21 @@ internal object DataCommonModule {
     @Singleton
     fun provideETagsStore(appPreferencesStore: AppPreferencesStore): ETagsStore {
         return DefaultETagsStore(appPreferencesStore = appPreferencesStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWalletServerBinder(
+        userWalletsStore: UserWalletsStore,
+        appsFlyerConversionStore: AppsFlyerConversionStore,
+        tangemTechApi: TangemTechApi,
+        dispatchers: CoroutineDispatcherProvider,
+    ): WalletServerBinder {
+        return DefaultWalletServerBinder(
+            userWalletsStore = userWalletsStore,
+            appsFlyerConversionStore = appsFlyerConversionStore,
+            tangemTechApi = tangemTechApi,
+            dispatchers = dispatchers,
+        )
     }
 }
