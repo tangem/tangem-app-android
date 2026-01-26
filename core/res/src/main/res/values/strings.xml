@@ -131,9 +131,9 @@
   <string name="backup_complete_seed_description">These words cannot be recovered if lost. Store them securely.</string>
   <string name="backup_complete_title">Backup completed</string>
   <string name="backup_info_description">Your secret recovery phrase is a set of %s random words for accessing and recovering your wallet.</string>
-  <string name="backup_info_keep_description">These words cannot be recovered if lost. Keep them safe.</string>
+  <string name="backup_info_keep_description">If you lose this phrase, it cannot be recovered. Keep it completely secure.</string>
   <string name="backup_info_keep_title">Keep it safe</string>
-  <string name="backup_info_save_description">Save these %s words in a secure location and never share them with anyone.</string>
+  <string name="backup_info_save_description">Save these %s words in a secure place that only you can access, and never share them with anyone.</string>
   <string name="backup_info_save_title">No recovery possible</string>
   <string name="backup_info_title">Recovery phrase</string>
   <string name="backup_seed_caution">The %s words below are your wallet\'s recovery phrase. Never share these words with anyone. Tangem will never ask you for them. Use them to restore your wallet if you lose your device.</string>
@@ -453,7 +453,7 @@
   <string name="details_row_title_signed_hashes">Signed</string>
   <string name="details_send_feedback">Send feedback</string>
   <string name="details_title">Details</string>
-  <string name="details_wallets_section_description">You can have only one mobile wallet at a time. It can be upgraded to a Tangem cold wallet or used alongside a new cold wallet.</string>
+  <string name="details_wallets_section_description">You can only have one mobile wallet. Upgrade it to Tangem hardware wallet, or add a new hardware wallet.</string>
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
   <string name="domain_receive_assets_default_address">Default Address</string>
@@ -576,7 +576,7 @@
   <string name="give_permission_swap_subtitle" formatted="false">To continue, grant %1s smart contracts permission to use your %2s</string>
   <string name="give_permission_title">Give Permission</string>
   <string name="give_permission_unlimited">Unlimited</string>
-  <string name="hardware_wallet_backup_feature_description">New addresses will be generated for you inside your hardware wallet, ready for use and fully secure.</string>
+  <string name="hardware_wallet_backup_feature_description">Addresses are generated directly on your Tangem hardware wallet — ready to use and fully protected.</string>
   <string name="hardware_wallet_backup_feature_title">New Addresses</string>
   <string name="hardware_wallet_create_title">Add Tangem Wallet</string>
   <string name="hardware_wallet_key_feature_description">Your private key will be generated directly inside the Tangem card and will never leave it.</string>
@@ -652,7 +652,7 @@
   <string name="hw_upgrade_error_wallet2_card_required">An error occurred during the operation.</string>
   <string name="hw_upgrade_funds_access_description">Your funds remain safe and fully accessible during the process</string>
   <string name="hw_upgrade_funds_access_title">Access to funds</string>
-  <string name="hw_upgrade_general_security_description">After upgrading, your mobile wallet will be removed from the app and stored on your hardware wallet; your recovery phrase stays with you.</string>
+  <string name="hw_upgrade_general_security_description">After upgrading, your mobile wallet is removed from the app and stored on your Tangem hardware wallet. Your recovery phrase stays with you.</string>
   <string name="hw_upgrade_general_security_title">General security</string>
   <string name="hw_upgrade_key_migration_description">Private keys will be moved from the app to your Tangem hardware wallet</string>
   <string name="hw_upgrade_key_migration_title">Key migration</string>
@@ -1000,7 +1000,7 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
-  <string name="only_one_mobile_wallet_explanation">You can have either a mobile wallet or a hardware wallet at one time. Upgrade your wallet or delete it from the app to start using a Tangem cold wallet.</string>
+  <string name="only_one_mobile_wallet_explanation">You can only have one mobile wallet. Upgrade it to Tangem hardware wallet, or add a new hardware wallet.</string>
   <string name="onramp_all_offers_button_title">All offers</string>
   <string name="onramp_avaiable_with_payment_methods">Available with %s</string>
   <string name="onramp_choose_provider_title_hint">Providers facilitate transactions</string>
@@ -1568,7 +1568,7 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Click the button below to restore access</string>
-  <string name="tangempay_withdrawal_note_description">You can only withdraw USDC (Polygon) currently available on your on‑chain address balance, taking into account pending transactions. If you previously made a refund or cancelled a purchase, your crypto account balance will update within 2 business days.</string>
+  <string name="tangempay_withdrawal_note_description">Your on-chain USDC Polygon balance differs from your card balance and updates within 2 business days after a purchase. Funds from refunded purchases won’t be returned your on-chain balance or be available for withdrawal, but will stay on your card balance for purchases.</string>
   <string name="tangempay_withdrawal_note_title">Please note</string>
   <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
