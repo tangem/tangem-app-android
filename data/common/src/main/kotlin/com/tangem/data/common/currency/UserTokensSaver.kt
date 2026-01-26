@@ -9,7 +9,7 @@ import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -29,7 +29,7 @@ class UserTokensSaver(
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
     private val walletServerBinder: WalletServerBinder,
-    private val appsFlyerConversionStore: AppsFlyerConversionStore,
+    private val appsFlyerStore: AppsFlyerStore,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val pushTokensRetryerPool: RetryerPool,
 ) {
@@ -72,7 +72,7 @@ class UserTokensSaver(
 
             pushNew(userWallet = userWallet, response = enrichedResponse, onFailSend = onFailSend)
         } else {
-            val conversionData = appsFlyerConversionStore.get()
+            val conversionData = appsFlyerStore.get()
 
             val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
                 walletName = userWallet.name,
