@@ -1276,6 +1276,7 @@
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_apr_earn_badge">APR %1$s%%</string>
+  <string name="staking_cardano_details_rewards_info_text">Your staking rewards will start after 5 epochs (~25 days) while your delegation is registered and counted by the network.</string>
   <string name="staking_claim_unstaked">Claim unstaked</string>
   <string name="staking_details_account_fee">Stake account fee</string>
   <string name="staking_details_account_fee_info">A staking account is a special account where staked SOL tokens are stored. It is created when you delegate your tokens to a validator to participate in transaction validation and receive rewards. A small fee is charged for creating the staking account, which is returned after the staking is completed.</string>
