@@ -114,7 +114,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.collections.filter
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
@@ -1098,6 +1097,7 @@ internal class SwapModel @Inject constructor(
                 receiveBlockchain = toCurrency.network.name,
                 sendToken = fromCurrency.symbol,
                 receiveToken = toCurrency.symbol,
+                feeToken = getFeeToken().symbol,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
             ),
@@ -1713,6 +1713,7 @@ internal class SwapModel @Inject constructor(
             blockchain = fromToken.network.name,
             token = fromToken.symbol,
             feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
+            feeToken = getFeeToken().symbol,
         )
         analyticsEventHandler.send(
             Basic.TransactionSent(
@@ -1722,12 +1723,26 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    private fun getFeeToken(): CryptoCurrency {
+        val fromToken = requireNotNull(dataState.fromCryptoCurrency) {
+            "fromCryptoCurrency should not be null"
+        }
+        return when (val fee = getSelectedFee()) {
+            is TxFee.FeeComponent -> fee.selectedToken?.currency ?: fromToken.currency
+            is TxFee.Legacy,
+            null,
+            -> fromToken.currency
+        }
+    }
+
     private fun sendApproveSuccessEvent(fromToken: CryptoCurrency, feeType: FeeType, approveType: SwapApproveType) {
+        val feeToken = getFeeToken().symbol
         val event = AnalyticsParam.TxSentFrom.Approve(
             blockchain = fromToken.network.name,
             token = fromToken.symbol,
             feeType = AnalyticsParam.FeeType.fromString(feeType.getNameForAnalytics()),
             permissionType = approveType.getNameForAnalytics(),
+            feeToken = feeToken,
         )
         analyticsEventHandler.send(
             Basic.TransactionSent(
