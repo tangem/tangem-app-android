@@ -12,5 +12,7 @@ object DeeplinkConst {
     const val DERIVATION_PATH_KEY = "derivation_path"
     const val TRANSACTION_ID_KEY = "transaction_id"
     const val PROMO_CODE_KEY = "promo_code"
+    const val REF_KEY = "ref"
+    const val CAMPAIGN_KEY = "campaign"
     const val NAME_KEY = "name"
 }
