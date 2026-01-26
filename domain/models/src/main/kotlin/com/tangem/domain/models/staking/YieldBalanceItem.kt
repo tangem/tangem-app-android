@@ -111,6 +111,8 @@ sealed interface RewardBlockType {
     data object NoRewards : RewardBlockType
     data object Rewards : RewardBlockType
     data object RewardsRequirementsError : RewardBlockType
+    data object EthereumEarnedRewards : RewardBlockType
+
     sealed interface RewardUnavailable : RewardBlockType {
         data object DefaultRewardUnavailable : RewardUnavailable
         data object SolanaRewardUnavailable : RewardUnavailable
@@ -124,6 +126,7 @@ sealed interface RewardBlockType {
         get() = when (this) {
             is NoRewards,
             is RewardUnavailable,
+            is EthereumEarnedRewards,
             -> false
             is RewardsRequirementsError,
             is Rewards,

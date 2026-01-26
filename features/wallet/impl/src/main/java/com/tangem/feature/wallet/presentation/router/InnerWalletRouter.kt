@@ -75,9 +75,6 @@ internal interface InnerWalletRouter {
         onWarningAcknowledged: (TokenAction) -> Unit,
     )
 
-    /** Open yield supply active screen */
-    fun openYieldSupplyActiveScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
-
-    /** Open yield supply promo screen */
-    fun openYieldSupplyPromoScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
+    /** Open yield supply entry screen */
+    fun openYieldSupplyEntryScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
 }
