@@ -831,7 +831,7 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onTransactionClick(txHash: String) {
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
-            networkId = cryptoCurrency.network.id,
+            currency = cryptoCurrency,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
             ifRight = { router.openUrl(url = it) },
