@@ -53,12 +53,12 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
                     PriceChangeInterval.ALL_TIME,
                 ),
                 initialSelectedItem = PriceChangeInterval.H24,
-                onClick = {
-                    currentInterval = it
-                    state.onIntervalChanged(it)
+                onClick = { interval ->
+                    currentInterval = interval
+                    state.onIntervalChanged(interval)
                 },
                 modifier = Modifier.width(IntrinsicSize.Min),
-            ) {
+            ) { interval ->
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -70,7 +70,7 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = it.getText().resolveReference(),
+                        text = interval.getText().resolveReference(),
                         style = TangemTheme.typography.caption1,
                         color = TangemTheme.colors.text.primary1,
                     )

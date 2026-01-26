@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun FeeListLoading(modifier: Modifier = Modifier) {
+internal fun FeedListLoading(modifier: Modifier = Modifier) {
     Column(modifier) {
         Column(
             modifier = Modifier

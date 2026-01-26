@@ -73,6 +73,7 @@ internal class TxHistoryItemStateConverter(
             is TransactionType.UnknownOperation,
             is TransactionType.YieldSupply.Send,
             TransactionType.YieldSupply.Topup,
+            TransactionType.GaslessFee,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
     }
@@ -114,6 +115,7 @@ internal class TxHistoryItemStateConverter(
             )
         }
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        TransactionType.GaslessFee -> resourceReference(R.string.gasless_transaction_fee)
     }
 
     private fun TxInfo.extractSubtitle(): TextReference {
