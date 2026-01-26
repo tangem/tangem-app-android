@@ -1,7 +1,7 @@
 package com.tangem.datasource.di
 
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
-import com.tangem.datasource.local.appsflyer.DefaultAppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.datasource.local.appsflyer.DefaultAppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides
@@ -15,7 +15,7 @@ internal object AppsFlyerConversionStoreModule {
 
     @Provides
     @Singleton
-    fun provideAppFlyerConversionStore(appPreferencesStore: AppPreferencesStore): AppsFlyerConversionStore {
-        return DefaultAppsFlyerConversionStore(appPreferencesStore = appPreferencesStore)
+    fun provideAppFlyerStore(appPreferencesStore: AppPreferencesStore): AppsFlyerStore {
+        return DefaultAppsFlyerStore(appPreferencesStore = appPreferencesStore)
     }
 }
