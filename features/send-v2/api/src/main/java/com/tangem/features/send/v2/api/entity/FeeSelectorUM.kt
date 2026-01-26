@@ -1,13 +1,17 @@
 package com.tangem.features.send.v2.api.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.v2.api.R
 import com.tangem.features.send.v2.api.entity.FeeItem.*
 import kotlinx.collections.immutable.ImmutableList
@@ -23,7 +27,10 @@ sealed class FeeSelectorUM {
         override val isPrimaryButtonEnabled = false
     }
 
-    data class Error(val error: GetFeeError) : FeeSelectorUM() {
+    data class Error(
+        val error: GetFeeError,
+        val isHidden: Boolean = false,
+    ) : FeeSelectorUM() {
         override val isPrimaryButtonEnabled = false
     }
 
@@ -43,7 +50,7 @@ sealed class FeeSelectorUM {
                 is Custom,
                 -> AnalyticsParam.FeeType.Custom
                 is Fast -> AnalyticsParam.FeeType.Max
-                is Market -> AnalyticsParam.FeeType.Normal
+                is Market, is FeeItem.Loading -> AnalyticsParam.FeeType.Normal
                 is Slow -> AnalyticsParam.FeeType.Min
             }
         }
@@ -61,6 +68,10 @@ data class FeeExtraInfo(
     val isFeeApproximate: Boolean,
     val isFeeConvertibleToFiat: Boolean,
     val isTronToken: Boolean,
+    val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+    val availableFeeCurrencies: ImmutableList<CryptoCurrencyStatus>? = null,
+    val transactionFeeExtended: TransactionFeeExtended? = null,
+    val isNotEnoughFunds: Boolean = false,
 )
 
 sealed class FeeNonce {
@@ -79,6 +90,16 @@ sealed class FeeItem {
 
     fun isSameClass(other: FeeItem): Boolean {
         return this::class == other::class
+    }
+
+    fun isLoading(): Boolean {
+        return this is Loading
+    }
+
+    object Loading : FeeItem() {
+        override val title: TextReference = resourceReference(R.string.common_fee_selector_option_market)
+        override val iconRes: Int = R.drawable.ic_bird_24
+        override val fee: Fee = Fee.Common(Amount(BigDecimal.ZERO, Blockchain.Unknown))
     }
 
     data class Suggested(

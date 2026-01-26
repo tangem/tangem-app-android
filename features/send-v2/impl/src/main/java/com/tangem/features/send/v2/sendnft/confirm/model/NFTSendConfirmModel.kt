@@ -351,6 +351,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     isIgnoreReduce = false,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
+                    feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus, // TODO change when gasless implement
                 ),
             )
         }
