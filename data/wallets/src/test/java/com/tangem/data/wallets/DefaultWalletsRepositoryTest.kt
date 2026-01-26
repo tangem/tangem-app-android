@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
@@ -11,6 +12,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -38,12 +40,16 @@ class DefaultWalletsRepositoryTest {
     )
     private lateinit var tangemTechApi: TangemTechApi
     private lateinit var dispatchers: CoroutineDispatcherProvider
+    private lateinit var walletServerBinder: WalletServerBinder
+    private lateinit var appsFlyerConversionStore: AppsFlyerConversionStore
 
     private val testWalletId = UserWalletId("1234567890abcdef")
 
     @Before
     fun setup() {
         tangemTechApi = mockk()
+        walletServerBinder = mockk()
+        appsFlyerConversionStore = mockk()
         dispatchers = TestingCoroutineDispatcherProvider()
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
@@ -52,6 +58,8 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = mockk(),
+            walletServerBinder = walletServerBinder,
+            appsFlyerConversionStore = appsFlyerConversionStore,
             accountsFeatureToggles = mockk(),
             moshi = mockk(),
         )
@@ -218,9 +226,13 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = authProvider,
+            walletServerBinder = walletServerBinder,
+            appsFlyerConversionStore = appsFlyerConversionStore,
             accountsFeatureToggles = accountsFeatureToggles,
             moshi = mockk(),
         )
+
+        coEvery { appsFlyerConversionStore.get() } returns null
 
         coEvery {
             tangemTechApi.associateApplicationIdWithWallets(
