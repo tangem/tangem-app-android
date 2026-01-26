@@ -130,9 +130,9 @@
   <string name="backup_complete_seed_description">これらの単語は、紛失すると復元できません。安全に保管してください。</string>
   <string name="backup_complete_title">バックアップが完了しました</string>
   <string name="backup_info_description">シークレットリカバリーフレーズは、ウォレットへのアクセスおよび復元に使用する、%s個のランダムな単語のセットです。</string>
-  <string name="backup_info_keep_description">これらの単語は紛失した場合、復元できません。大切に保管してください。</string>
+  <string name="backup_info_keep_description">このフレーズを紛失すると、復元することはできません。厳重に保管してください。</string>
   <string name="backup_info_keep_title">安全に保管してください</string>
-  <string name="backup_info_save_description">これらの%s個の単語を安全な場所に保存し、決して誰とも共有しないでください。</string>
+  <string name="backup_info_save_description">これらの%sの単語は、あなただけがアクセスできる安全な場所に保管し、決して他人と共有しないでください。</string>
   <string name="backup_info_save_title">復元は不可能です</string>
   <string name="backup_info_title">リカバリーフレーズ</string>
   <string name="backup_seed_caution">以下の%s個の単語が、あなたのウォレットのリカバリーフレーズです。これらの単語は絶対に他人と共有しないでください。Tangemがこれらを尋ねることは決してありません。デバイスを紛失した場合、このフレーズを使ってウォレットを復元できます。</string>
@@ -446,7 +446,7 @@
   <string name="details_row_title_signed_hashes">署名済み</string>
   <string name="details_send_feedback">フィードバックを送信</string>
   <string name="details_title">詳細</string>
-  <string name="details_wallets_section_description">モバイルウォレットは同時に1つのみ利用できます。Tangemコールドウォレットにアップグレードすることも、新しいコールドウォレットと併用することも可能です。</string>
+  <string name="details_wallets_section_description">モバイルウォレットは1つしか作成できません。Tangemハードウェアウォレットにアップグレードするか、新しいハードウェアウォレットを追加してください。</string>
   <string name="disclaimer_error_loading">インターネット接続を確認するか、別のネットワークに切り替えてください。</string>
   <string name="disclaimer_title">利用規約</string>
   <string name="domain_receive_assets_default_address">デフォルトアドレス</string>
@@ -569,7 +569,7 @@
   <string name="give_permission_swap_subtitle" formatted="false">続行するには、%1sスマートコントラクトに%2sを使用する権限を付与してください</string>
   <string name="give_permission_title">許可を与える</string>
   <string name="give_permission_unlimited">無制限</string>
-  <string name="hardware_wallet_backup_feature_description">ハードウェアウォレット内に新しいアドレスが自動生成され、安全にすぐ利用できる状態になります。</string>
+  <string name="hardware_wallet_backup_feature_description">アドレスはTangemハードウェアウォレット上で直接生成され、そのまま安全に使用できます。</string>
   <string name="hardware_wallet_backup_feature_title">新しいアドレス</string>
   <string name="hardware_wallet_create_title">Tangemウォレットを追加</string>
   <string name="hardware_wallet_key_feature_description">秘密鍵はTangemカード内部で直接生成され、外部に出ることは一切ありません。</string>
@@ -645,7 +645,7 @@
   <string name="hw_upgrade_error_wallet2_card_required">操作中にエラーが発生しました。</string>
   <string name="hw_upgrade_funds_access_description">処理中も、資金は安全に保たれ、常にアクセス可能です。</string>
   <string name="hw_upgrade_funds_access_title">資金へのアクセス</string>
-  <string name="hw_upgrade_general_security_description">アップグレード後、モバイルウォレットはアプリから削除され、ハードウェアウォレットに保存されます。リカバリーフレーズは引き続きご自身で管理してください。</string>
+  <string name="hw_upgrade_general_security_description">アップグレード後、モバイルウォレットはアプリから削除され、Tangemハードウェアウォレットに保存されます。リカバリーフレーズは引き続きお手元に保持されます。</string>
   <string name="hw_upgrade_general_security_title">セキュリティ全般</string>
   <string name="hw_upgrade_key_migration_description">秘密鍵はアプリからTangemハードウェアウォレットへ移行されます</string>
   <string name="hw_upgrade_key_migration_title">キーの移行</string>
@@ -984,7 +984,7 @@
   <string name="onboarding_wallet_info_title_fourth">アクセスコードの復元</string>
   <string name="onboarding_wallet_info_title_second">同一のカード</string>
   <string name="onboarding_wallet_info_title_third">アクセスコード</string>
-  <string name="only_one_mobile_wallet_explanation">同時に利用できるのは、モバイルウォレットまたはハードウェアウォレットのいずれか一方のみです。Tangemのコールドウォレットを使用するには、ウォレットをアップグレードするか、アプリから削除してください。</string>
+  <string name="only_one_mobile_wallet_explanation">モバイルウォレットは1つまでしか作成できません。Tangemハードウェアウォレットにアップグレードするか、新しいハードウェアウォレットを追加してください。</string>
   <string name="onramp_all_offers_button_title">すべてのオファー</string>
   <string name="onramp_avaiable_with_payment_methods">%sで利用可能</string>
   <string name="onramp_choose_provider_title_hint">プロバイダーが取引を促進します</string>
