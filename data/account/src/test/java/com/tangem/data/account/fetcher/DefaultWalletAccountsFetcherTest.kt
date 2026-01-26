@@ -1,11 +1,13 @@
 package com.tangem.data.account.fetcher
 
+import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
@@ -16,6 +18,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -35,9 +38,10 @@ class DefaultWalletAccountsFetcherTest {
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory = mockk()
     private val accountsResponseStore: AccountsResponseStore = mockk()
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
+    private val tokensMigration: DefaultMainAccountTokensMigration = mockk()
 
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
-    private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk(relaxUnitFun = true)
+    private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk()
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
 
@@ -49,16 +53,19 @@ class DefaultWalletAccountsFetcherTest {
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
         eTagsStore = eTagsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        mainAccountTokensMigration = tokensMigration,
     )
 
     private val userWalletId = UserWalletId("011")
     private val eTag = "etag"
+    private val migratedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
 
     @BeforeAll
     fun setUp() {
         every { accountsResponseStoreFactory.create(userWalletId) } returns accountsResponseStore
         every { accountsResponseStore.data } returns accountsResponseStoreFlow
 
+        coEvery { tokensMigration.migrate(userWalletId) } returns migratedAccountsResponse.right()
         coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
     }
 
@@ -134,6 +141,7 @@ class DefaultWalletAccountsFetcherTest {
                 accountsResponseStore.updateData(any())
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.updateData(any())
+                tokensMigration.migrate(userWalletId)
             }
 
             coVerify(inverse = true) {
@@ -181,6 +189,7 @@ class DefaultWalletAccountsFetcherTest {
                 eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = newETag)
                 accountsResponseStoreFactory.create(userWalletId = userWalletId)
                 accountsResponseStore.updateData(any())
+                tokensMigration.migrate(userWalletId)
             }
 
             coVerify(inverse = true) {
@@ -236,12 +245,97 @@ class DefaultWalletAccountsFetcherTest {
                     pushWalletAccounts = any(),
                     storeWalletAccounts = any(),
                 )
+                tokensMigration.migrate(userWalletId)
             }
 
             coVerify(inverse = true) {
                 eTagsStore.store(userWalletId = any(), key = any(), value = any())
                 tangemTechApi.saveWalletAccounts(walletId = any(), eTag = any(), body = any())
                 userTokensSaver.push(userWalletId = any(), response = any())
+            }
+        }
+
+        @Test
+        fun `GIVEN response with empty accounts and push request is failed THEN eTag will be cleared`() = runTest {
+            // Arrange
+            val savedAccountsResponse = GetWalletAccountsResponse(
+                wallet = GetWalletAccountsResponse.Wallet(
+                    group = null,
+                    sort = null,
+                    totalAccounts = 0,
+                    totalArchivedAccounts = 0,
+                ),
+                accounts = emptyList(),
+                unassignedTokens = emptyList(),
+            )
+            val getResponse = ApiResponse.Error(
+                cause = ApiResponseError.HttpException(
+                    code = ApiResponseError.HttpException.Code.NOT_MODIFIED,
+                    message = null,
+                    errorBody = null,
+                ),
+                headers = mapOf(ETAG_HEADER to listOf(eTag)),
+            )
+
+            accountsResponseStoreFlow.value = savedAccountsResponse
+
+            coEvery {
+                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+            } returns getResponse as ApiResponse<GetWalletAccountsResponse>
+
+            coEvery {
+                fetchWalletAccountsErrorHandler.handle(
+                    error = getResponse.cause,
+                    userWalletId = userWalletId,
+                    savedAccountsResponse = savedAccountsResponse,
+                    pushWalletAccounts = any(),
+                    storeWalletAccounts = any(),
+                )
+            } returns FetchResult(savedAccountsResponse)
+
+            coEvery {
+                defaultWalletAccountsResponseFactory.create(userWalletId = userWalletId, userTokensResponse = null)
+            } returns savedAccountsResponse
+
+            coEvery { accountsResponseStore.updateData(any()) } returns savedAccountsResponse
+
+            val saveResponse = ApiResponse.Error(ApiResponseError.TimeoutException())
+            coEvery {
+                tangemTechApi.saveWalletAccounts(
+                    walletId = userWalletId.stringValue,
+                    eTag = eTag,
+                    body = SaveWalletAccountsResponse(savedAccountsResponse.accounts),
+                )
+            } returns saveResponse as ApiResponse<GetWalletAccountsResponse>
+
+            // Act
+            fetcher.fetch(userWalletId)
+
+            // Assert
+            coVerify {
+                accountsResponseStoreFactory.create(userWalletId = userWalletId)
+                accountsResponseStore.data
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+                tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
+                eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
+                accountsResponseStore.updateData(any())
+                fetchWalletAccountsErrorHandler.handle(
+                    error = getResponse.cause,
+                    userWalletId = userWalletId,
+                    savedAccountsResponse = savedAccountsResponse,
+                    pushWalletAccounts = any(),
+                    storeWalletAccounts = any(),
+                )
+                defaultWalletAccountsResponseFactory.create(userWalletId = userWalletId, userTokensResponse = null)
+                eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+                tangemTechApi.saveWalletAccounts(
+                    walletId = userWalletId.stringValue,
+                    eTag = eTag,
+                    body = SaveWalletAccountsResponse(savedAccountsResponse.accounts),
+                )
+                eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+                userTokensSaver.push(userWalletId = userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+                tokensMigration.migrate(userWalletId)
             }
         }
     }

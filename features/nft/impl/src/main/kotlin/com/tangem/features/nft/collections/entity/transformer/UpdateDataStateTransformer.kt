@@ -84,7 +84,7 @@ internal class UpdateDataStateTransformer(
         if (isAccountMode) {
             val result = mutableListOf<NFTCollectionItem>()
             walletNFTCollections.collections.forEach { (account, nfts) ->
-                if (nfts.isEmpty()) return@forEach
+                if (nfts.hasNoContentCollections()) return@forEach
                 result.add(account.toAccountPortfolioUM())
                 result.addAll(createNFTsUM(nfts))
             }
@@ -101,9 +101,16 @@ internal class UpdateDataStateTransformer(
             name = this.accountName.toUM().value,
             icon = when (this) {
                 is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
     )
+
+    private fun List<NFTCollections>.hasNoContentCollections() = this
+        .all { it.contentCollections().isEmpty() }
+
+    private fun NFTCollections.contentCollections() = (this.content as? NFTCollections.Content.Collections)
+        ?.collections.orEmpty()
 
     private fun NFTCollectionsStateUM.createNFTsUM(nftCollections: List<NFTCollections>): Sequence<NFTCollectionUM> =
         nftCollections
