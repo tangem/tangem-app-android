@@ -23,6 +23,27 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
 /**
  * [Primary Inverse Tangem button](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=7545-78314)
  *
+ * @param buttonUM     TangemButtonUM data model containing button properties.
+ * @param modifier     Modifier to be applied to the button.
+ */
+@Composable
+fun PrimaryInverseTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
+    PrimaryInverseTangemButton(
+        onClick = buttonUM.onClick,
+        modifier = modifier,
+        text = buttonUM.text,
+        iconRes = buttonUM.iconRes,
+        iconPosition = buttonUM.iconPosition,
+        enabled = buttonUM.isEnabled,
+        size = buttonUM.size,
+        state = buttonUM.state,
+        shape = buttonUM.shape,
+    )
+}
+
+/**
+ * [Primary Inverse Tangem button](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=7545-78314)
+ *
  * @param onClick       Lambda to be invoked when the button is clicked.
  * @param modifier      Modifier to be applied to the button.
  * @param text          TextReference for the button label.
