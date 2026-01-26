@@ -10,7 +10,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.wallet.DefaultWalletServerBinder
 import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -76,7 +76,7 @@ internal object DataCommonModule {
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
-        appsFlyerConversionStore: AppsFlyerConversionStore,
+        appsFlyerStore: AppsFlyerStore,
         accountsFeatureToggles: AccountsFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
@@ -90,7 +90,7 @@ internal object DataCommonModule {
                 coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             ),
             walletServerBinder = walletServerBinder,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
         )
     }
 
@@ -110,13 +110,13 @@ internal object DataCommonModule {
     @Singleton
     fun provideWalletServerBinder(
         userWalletsStore: UserWalletsStore,
-        appsFlyerConversionStore: AppsFlyerConversionStore,
+        appsFlyerStore: AppsFlyerStore,
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletServerBinder {
         return DefaultWalletServerBinder(
             userWalletsStore = userWalletsStore,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,
         )
