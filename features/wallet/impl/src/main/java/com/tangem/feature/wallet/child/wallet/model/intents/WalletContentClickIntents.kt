@@ -299,7 +299,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
             getExplorerTransactionUrlUseCase(
                 txHash = txHash,
-                networkId = currency.network.id,
                 currency = currency,
             ).fold(
                 ifLeft = { Timber.e(it.toString()) },

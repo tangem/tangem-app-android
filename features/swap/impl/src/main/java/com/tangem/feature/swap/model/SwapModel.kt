@@ -975,7 +975,6 @@ internal class SwapModel @Inject constructor(
                         )
                         val url = getExplorerTransactionUrlUseCase(
                             txHash = swapTransactionState.txHash,
-                            networkId = fromCurrency.currency.network.id,
                             currency = fromCurrency.currency,
                         ).getOrElse {
                             Timber.i("tx hash explore not supported")

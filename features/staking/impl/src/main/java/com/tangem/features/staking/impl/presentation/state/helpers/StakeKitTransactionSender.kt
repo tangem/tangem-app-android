@@ -261,7 +261,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
 
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
-                    networkId = cryptoCurrencyStatus.currency.network.id,
+                    currency = cryptoCurrencyStatus.currency,
                 ).getOrNull().orEmpty()
 
                 balanceUpdater.updateAfterTransaction()
