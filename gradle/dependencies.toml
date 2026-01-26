@@ -5,6 +5,8 @@
 androidGradlePlugin = "8.10.1"
 firebaseCrashlytics = "3.0.1"
 googleServices = "4.4.1"
+playServices = "18.10.0"
+playServicesAds = "18.2.0"
 kotlin = "2.1.10"
 ksp = "2.1.10-1.0.30"
 firebasePerf = "1.4.2"
@@ -255,6 +257,8 @@ desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desuga
 googlePlay-review = { module = "com.google.android.play:review", version.ref = "googlePlayReview" }
 googlePlay-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "googlePlayReviewKtx" }
 googlePlay-services-wallet = { module = "com.google.android.gms:play-services-wallet", version.ref = "googlePlayServicesWallet" }
+googlePlay-services = { module = "com.google.android.gms:play-services-base", version.ref = "playServices" }
+googlePlay-advertising = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playServicesAds" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-kapt = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
