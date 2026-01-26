@@ -78,16 +78,7 @@ internal sealed class FeedAnalyticsEvent(
         ),
     )
 
-    data class AllWidgetsLoadError(
-        private val code: Int?,
-        private val message: String,
-    ) : FeedAnalyticsEvent(
-        event = "All Widgets Load Error",
-        params = mapOf(
-            ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
-            ERROR_MESSAGE to message,
-        ),
-    )
+    class AllWidgetsLoadError : FeedAnalyticsEvent(event = "All Widgets Load Error")
 
     class TokenSearchedClicked : FeedAnalyticsEvent(event = "Token Searched Clicked")
 }
