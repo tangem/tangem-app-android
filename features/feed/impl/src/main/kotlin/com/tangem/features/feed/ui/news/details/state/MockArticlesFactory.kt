@@ -20,11 +20,11 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Bitwise has updated its Solana ETF, adding staking and setting a low management fee of 0.20%.",
             content = "Bitwise Asset Management has revised its filing to launch a Solana ETF, renaming it \"Bitwise Solana Staking ETF\" and setting an exceptionally low management fee of just 0.20%.\n\nThe update comes as the SEC prepares to review several Solana ETF applications.",
-            sources = listOf(
-                SourceUM(
+            relatedArticles = listOf(
+                RelatedArticleUM(
                     id = 1,
                     title = "Deeper liquidity could drive crypto market beyond \$6T",
-                    source = Source(
+                    media = Media(
                         id = 11,
                         name = "Coin-telegraph",
                     ),
@@ -33,10 +33,10 @@ internal object MockArticlesFactory {
                     onClick = {},
                     imageUrl = null,
                 ),
-                SourceUM(
+                RelatedArticleUM(
                     id = 2,
                     title = "Top gainers and losers in crypto this week",
-                    source = Source(
+                    media = Media(
                         id = 10,
                         name = "Investing",
                     ),
@@ -61,11 +61,11 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Bitcoin spot ETFs recorded fourth consecutive day of positive inflows.",
             content = "Bitcoin spot ETFs continue their impressive streak with \$550 million in net positive inflows.\n\nBlackRock's IBIT led with \$250M.",
-            sources = listOf(
-                SourceUM(
+            relatedArticles = listOf(
+                RelatedArticleUM(
                     id = 3,
                     title = "Bitcoin ETFs see massive inflows",
-                    source = Source(
+                    media = Media(
                         id = 12,
                         name = "Bloomberg",
                     ),
@@ -90,11 +90,11 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Ethereum developers announced major network upgrade.",
             content = "The Ethereum Foundation announced a significant upgrade for Q2 2025.\n\nKey improvements include EVM enhancements.",
-            sources = listOf(
-                SourceUM(
+            relatedArticles = listOf(
+                RelatedArticleUM(
                     id = 4,
                     title = "Ethereum core devs announce upgrade",
-                    source = Source(
+                    media = Media(
                         id = 15,
                         name = "CoinDesk",
                     ),
@@ -119,11 +119,11 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Solana achieved new milestone processing more daily transactions than Ethereum.",
             content = "Solana processed over 50 million transactions in a single day.\n\nDriven by DeFi and NFT activity.",
-            sources = listOf(
-                SourceUM(
+            relatedArticles = listOf(
+                RelatedArticleUM(
                     id = 5,
                     title = "Solana transactions hit record",
-                    source = Source(
+                    media = Media(
                         id = 18,
                         name = "Times",
                     ),
@@ -147,7 +147,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "New DeFi protocol introduced innovative yield farming approach.",
             content = "A newly launched protocol unveiled innovative yield farming mechanism.\n\nAPY rates range from 15% to 30%.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
@@ -163,7 +163,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Comprehensive cryptocurrency regulation bill passed Senate Banking Committee.",
             content = "The US Senate Banking Committee advanced landmark crypto regulation bill.\n\nKey provisions include asset definitions.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
@@ -178,7 +178,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "World's largest bank announced cryptocurrency custody services.",
             content = "Major financial institution announced comprehensive crypto custody services.\n\nSupporting Bitcoin and Ethereum initially.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
@@ -193,7 +193,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Leading NFT marketplace experienced dramatic surge in trading activity.",
             content = "Prominent NFT marketplace reported 300% increase in trading volume.\n\nNew features include lower fees.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
@@ -209,7 +209,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "New Layer 2 scaling solution achieved 100,000 TPS in testing.",
             content = "Layer 2 solution processed 100,000 transactions per second.\n\nUsing zero-knowledge proof technology.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
@@ -225,7 +225,7 @@ internal object MockArticlesFactory {
             ).toPersistentList(),
             shortContent = "Total stablecoin market capitalization surpassed \$180 billion.",
             content = "Stablecoin market cap reached \$180 billion all-time high.\n\nDriven by DeFi activity and institutional adoption.",
-            sources = persistentListOf(),
+            relatedArticles = persistentListOf(),
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,

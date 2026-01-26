@@ -1,7 +1,6 @@
 package com.tangem.features.feed.model.feed.state.transformers
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.models.news.TrendingNews
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
@@ -38,7 +37,7 @@ internal class UpdateGlobalFeedStateTransformer(
             isNewsError && areAllChartsLoading -> GlobalFeedState.Loading
             isNewsError && areAllChartsError -> {
                 if (previousGlobalState !is GlobalFeedState.Error) {
-                    sendErrorAnalytics(errorStatesByOrder)
+                    sendErrorAnalytics()
                 }
                 GlobalFeedState.Error(
                     onRetryClicked = onRetryClicked,
@@ -58,19 +57,9 @@ internal class UpdateGlobalFeedStateTransformer(
         )
     }
 
-    private fun sendErrorAnalytics(errorStatesByOrder: Map<SortByTypeUM, Throwable?>) {
-        val firstError: Throwable? = errorStatesByOrder.values.firstNotNullOfOrNull { it }
-        firstError?.let { error ->
-            val (code, message) = when (error) {
-                is ApiResponseError.HttpException -> error.code.numericCode to error.message
-                else -> null to ""
-            }
-            analyticsEventHandler.send(
-                FeedAnalyticsEvent.AllWidgetsLoadError(
-                    code = code,
-                    message = message.orEmpty(),
-                ),
-            )
-        }
+    private fun sendErrorAnalytics() {
+        analyticsEventHandler.send(
+            FeedAnalyticsEvent.AllWidgetsLoadError(),
+        )
     }
 }
