@@ -80,10 +80,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPayMainScreenBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -203,9 +200,7 @@ private fun WalletContent(
             }
 
             when (selectedWallet) {
-                is WalletState.MultiCurrency,
-                is WalletState.Visa,
-                -> {
+                is WalletState.MultiCurrency -> {
                     actions(
                         actions = selectedWallet.buttons,
                         selectedWalletIndex = selectedWalletIndex,
@@ -246,13 +241,6 @@ private fun WalletContent(
                         modifier = itemModifier,
                     )
                 }
-            }
-
-            (selectedWallet as? WalletState.Visa.Content)?.let {
-                balancesAndLimitsBlock(
-                    modifier = itemModifier,
-                    state = it.balancesAndLimitBlockState,
-                )
             }
 
             contentItems(
@@ -721,8 +709,6 @@ private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
             is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
             is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
             is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
-            is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
-            is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
             is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)
         }
     }
