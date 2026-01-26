@@ -334,7 +334,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
-            networkId = cryptoCurrency.network.id,
+            currency = cryptoCurrency,
         ).getOrElse { "" }
         _uiState.update(NFTSendConfirmSentStateTransformer(txData, txUrl))
     }
