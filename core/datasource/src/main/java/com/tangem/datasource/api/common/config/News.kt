@@ -4,12 +4,16 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.utils.Provider
+import com.tangem.utils.info.AppInfoProvider
+import com.tangem.utils.version.AppVersionProvider
 
 /**
  * News [ApiConfig]
 [REDACTED_AUTHOR]
  */
 internal class News(
+    private val appVersionProvider: AppVersionProvider,
+    private val appInfoProvider: AppInfoProvider,
     private val authProvider: AuthProvider,
 ) : ApiConfig() {
 
@@ -52,6 +56,7 @@ internal class News(
                 apiEnvironment = Provider { environment },
             ).values,
         )
+        putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
     }
 
     private companion object {
