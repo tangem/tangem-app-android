@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
@@ -21,10 +22,14 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as TokenTitleState
 
 @Composable
-fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
+fun TokenTitle(
+    state: TokenTitleState?,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = TangemTheme.typography.subtitle2,
+) {
     when (state) {
         is TokenTitleState.Content -> {
-            ContentTitle(state = state, modifier = modifier)
+            ContentTitle(state = state, modifier = modifier, textStyle = textStyle)
         }
         is TokenTitleState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -37,7 +42,7 @@ fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Modifier) {
+private fun ContentTitle(state: TokenTitleState.Content, textStyle: TextStyle, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
@@ -50,6 +55,7 @@ private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Mo
         CurrencyNameText(
             name = state.text.resolveReference(),
             isAvailable = state.isAvailable,
+            textStyle = textStyle,
             modifier = Modifier.weight(weight = 1f, fill = false),
         )
 
@@ -71,14 +77,14 @@ private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Mo
 }
 
 @Composable
-private fun CurrencyNameText(name: String, isAvailable: Boolean, modifier: Modifier = Modifier) {
+private fun CurrencyNameText(name: String, isAvailable: Boolean, textStyle: TextStyle, modifier: Modifier = Modifier) {
     Text(
         text = name,
         modifier = modifier,
         color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
-        style = TangemTheme.typography.subtitle2,
+        style = textStyle,
     )
 }
 
