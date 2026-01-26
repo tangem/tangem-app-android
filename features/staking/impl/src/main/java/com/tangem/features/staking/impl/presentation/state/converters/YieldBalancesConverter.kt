@@ -16,6 +16,7 @@ import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -110,6 +111,7 @@ internal class YieldBalancesConverter(
             }
             isRewardsClaimable && isActionable -> RewardBlockType.Rewards
             isRewardsClaimable && !isActionable -> RewardBlockType.RewardsRequirementsError
+            isCardano(blockchainId) -> RewardBlockType.CardanoNoRewards
             else -> RewardBlockType.NoRewards
         }
     }

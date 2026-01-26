@@ -194,6 +194,7 @@ internal class TokenDetailsStakingInfoConverter(
 
         return when (rewardBlockType) {
             RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
+            RewardBlockType.CardanoNoRewards -> resourceReference(R.string.staking_cardano_details_rewards_info_text)
             RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
             RewardBlockType.RewardUnavailable.SolanaRewardUnavailable,
             -> TextReference.EMPTY
