@@ -38,18 +38,9 @@ app/src/external/google-services.json
 # LayoutInspector files
 /captures
 
-# bundler
-/vendor
-
 # OS-specific files
 .DS_Store
 .DS_Store?
-
-# fastlane files
-**/fastlane/report.xml
-**/fastlane/Preview.html
-**/fastlane/screenshots
-**/fastlane/test_output
 
 # Kotlin Plugin
 .kotlin/
