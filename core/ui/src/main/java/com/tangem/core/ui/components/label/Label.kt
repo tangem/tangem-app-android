@@ -50,7 +50,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
         targetValue = when (state.style) {
             LabelStyle.ACCENT -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
-            LabelStyle.REGULAR -> TangemTheme.colors.control.unchecked
+            LabelStyle.REGULAR -> TangemTheme.colors.control.default
             LabelStyle.WARNING -> TangemTheme.colors.text.warning.copy(alpha = 0.1f)
         },
     )
@@ -168,7 +168,9 @@ private fun LabelPreview() {
     TangemThemePreview {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(16.dp),
         ) {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
