@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +17,7 @@ import kotlin.contracts.contract
 
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
-    private val appsFlyerConversionStore: AppsFlyerConversionStore,
+    private val appsFlyerStore: AppsFlyerStore,
     dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -69,7 +69,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
             mutex.withLock {
-                appsFlyerConversionStore.storeIfAbsent(
+                appsFlyerStore.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
                 )
             }
