@@ -113,6 +113,7 @@ internal fun LazyListScope.portfolioTokensList(
     )
 }
 
+@Suppress("MagicNumber")
 private fun LazyListScope.portfolioItem(
     portfolio: TokensListItemUM.Portfolio,
     modifier: Modifier,
@@ -140,7 +141,7 @@ private fun LazyListScope.portfolioItem(
                 lastIndexProxy = lastIndex
                 return@LaunchedEffect
             }
-            delay(timeMillis = (50 * tokens.size).toLong())
+            delay(timeMillis = minOf(50 * tokens.size, 350).toLong())
             lastIndexProxy = 0
         }
 
@@ -168,19 +169,23 @@ private fun SlideInItemVisibility(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val maxDelay = 250
+    val delayEnter = minOf(50 * currentIndex, maxDelay)
+    val delayExit = minOf(50 * (lastIndex - currentIndex - 1), maxDelay)
+
     AnimatedVisibility(
         modifier = modifier,
         visible = visible,
         enter = fadeIn(
-            tween(100, delayMillis = 50 * currentIndex),
+            tween(100, delayMillis = delayEnter),
         ) + expandVertically(
-            tween(100, delayMillis = 50 * currentIndex),
+            tween(100, delayMillis = delayEnter),
             expandFrom = Alignment.Top,
         ),
         exit = fadeOut(
-            tween(100, delayMillis = 50 * (lastIndex - currentIndex - 1)),
+            tween(100, delayMillis = delayExit),
         ) + shrinkVertically(
-            tween(100, delayMillis = 50 * (lastIndex - currentIndex - 1)),
+            tween(100, delayMillis = delayExit),
             shrinkTowards = Alignment.Top,
         ),
     ) {
