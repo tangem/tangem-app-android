@@ -287,6 +287,27 @@ fun SelectorButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
 }
 // endregion Other
 
+// region Other HoldToConfirmButton
+@Composable
+fun HoldToConfirmButton(
+    text: String,
+    hintText: String,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+) {
+    TangemHoldToConfirmButton(
+        text = text,
+        hintText = hintText,
+        onConfirm = onConfirm,
+        modifier = modifier,
+        enabled = enabled,
+        isLoading = isLoading,
+    )
+}
+// endregion Other
+
 // region Preview
 @Composable
 private fun PrimaryButtonSample() {
