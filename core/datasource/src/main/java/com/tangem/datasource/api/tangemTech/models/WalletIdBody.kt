@@ -9,4 +9,6 @@ data class WalletIdBody(
     @Json(name = "name") val name: String,
     @Json(name = "type") val walletType: WalletType? = null,
     @Json(name = "cards") val cards: List<CardInfoBody>? = null,
+    @Json(name = "ref") val refcode: String? = null,
+    @Json(name = "campaign") val campaign: String? = null,
 )
