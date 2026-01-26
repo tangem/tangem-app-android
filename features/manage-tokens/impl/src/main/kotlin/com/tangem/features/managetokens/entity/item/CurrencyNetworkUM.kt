@@ -6,6 +6,7 @@ internal data class CurrencyNetworkUM(
     val network: Network,
     val name: String,
     val type: String,
+    val currencySymbol: String,
     val iconResId: Int,
     val isMainNetwork: Boolean,
     val onLongClick: () -> Unit,

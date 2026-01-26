@@ -25,6 +25,5 @@ data class TesterMenuUM(
         TESTER_ACTIONS(R.string.tester_actions),
         TEST_PUSHES(R.string.test_push),
         ACCOUNTS(R.string.accounts),
-        NEWS(R.string.news),
     }
 }

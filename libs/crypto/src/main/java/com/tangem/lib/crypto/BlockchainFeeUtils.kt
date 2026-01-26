@@ -41,6 +41,7 @@ object BlockchainFeeUtils {
 
     private fun Fee.increaseEthGasLimitInNeeded(increaseBy: Int): Fee {
         return when (this) {
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
             is Fee.Ethereum.EIP1559,
             is Fee.Ethereum.Legacy,
             -> this.increaseGasLimitBy(increaseBy)
@@ -76,6 +77,7 @@ object BlockchainFeeUtils {
         return when (this) {
             is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
             is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
         }
     }
 }

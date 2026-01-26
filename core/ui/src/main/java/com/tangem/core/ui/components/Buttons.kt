@@ -170,6 +170,8 @@ fun PrimaryButtonIconStart(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -180,6 +182,8 @@ fun PrimaryButtonIconStart(
         enabled = enabled,
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
+        size = size,
+        shape = shape,
     )
 }
 // endregion PrimaryButton
