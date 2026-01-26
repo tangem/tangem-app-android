@@ -99,6 +99,7 @@ data class AccountList private constructor(
         return accounts.flatMap { account ->
             when (account) {
                 is Account.CryptoPortfolio -> account.cryptoCurrencies
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
         }
     }

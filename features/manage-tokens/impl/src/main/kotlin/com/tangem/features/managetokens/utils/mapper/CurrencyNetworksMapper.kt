@@ -48,6 +48,7 @@ internal fun Network.toCurrencyNetworkModel(
         iconResId = id.getIconRes(isColored = true),
         isSelected = isSelected,
         type = standardType.name,
+        currencySymbol = currencySymbol,
         onLongClick = {},
         isMainNetwork = false,
         onSelectedStateChange = onSelectedStateChange,
@@ -66,6 +67,7 @@ internal fun SourceNetwork.toCurrencyNetworkModel(
         iconResId = id.getIconRes(isColored = isSelected || !isEditable),
         isSelected = isSelected || !isEditable,
         type = typeName,
+        currencySymbol = network.currencySymbol,
         onLongClick = { onLongTap(this) },
         isMainNetwork = this is SourceNetwork.Main,
         onSelectedStateChange = { selected ->
