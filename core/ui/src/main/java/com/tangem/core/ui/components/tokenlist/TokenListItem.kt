@@ -1,25 +1,23 @@
 package com.tangem.core.ui.components.tokenlist
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.BoundsTransform
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.*
+import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.account.AccountCharIcon
@@ -67,7 +65,7 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
     }
 }
 
-@Suppress("MagicNumber", "ReusedModifierInstance")
+@Suppress("MagicNumber", "ReusedModifierInstance", "LongMethod")
 @Composable
 fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     // Box is not needed here, but due to a bug in compose
@@ -86,7 +84,7 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                 val titleSharedContentState = rememberSharedContentState(key = "title")
                 val boundsTransform = BoundsTransform { _, _ -> tween(350) }
 
-                val composables =
+                val composables = remember {
                     TokenItemComposables(
                         icon = { modifier: Modifier ->
                             val iconState = when (val icon = state.tokenItemUM.iconState) {
@@ -113,24 +111,51 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                             )
                         },
                         title = { modifier: Modifier ->
+                            val textStyle = if (isExpanded) {
+                                TangemTheme.typography.caption1
+                            } else {
+                                TangemTheme.typography.subtitle2
+                            }
+
+                            val textSize by animateFloatAsState(
+                                targetValue = textStyle.fontSize.value,
+                                animationSpec = tween(350),
+                            )
+
                             TokenTitle(
                                 state = state.tokenItemUM.titleState,
+                                textStyle = textStyle.copy(fontSize = textSize.sp),
                                 modifier = modifier
-                                    .sharedElement(
+                                    .sharedBounds(
                                         sharedContentState = titleSharedContentState,
                                         animatedVisibilityScope = animatedContentScope,
                                         boundsTransform = boundsTransform,
-                                        placeholderSize = SharedTransitionScope.PlaceholderSize.AnimatedSize,
+                                        resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
                                     ),
                             )
                         },
                     )
+                }
 
                 if (isExpanded) {
                     ExpandedPortfolioHeader(
                         state = state.tokenItemUM,
                         isCollapsable = state.isCollapsable,
                         composables = composables,
+                        balanceTextModifier = Modifier
+                            .animateEnterExit(
+                                enter = fadeIn(tween(350)) +
+                                    slideInHorizontally(
+                                        tween(350),
+                                        initialOffsetX = { fullWidth -> fullWidth * 2 },
+                                    ),
+                                exit = fadeOut(
+                                    tween(350),
+                                ) + slideOutHorizontally(
+                                    tween(350),
+                                    targetOffsetX = { fullWidth -> fullWidth * 2 },
+                                ),
+                            ),
                     )
                 } else {
                     TokenItem(
@@ -163,6 +188,7 @@ fun ExpandedPortfolioHeader(
     isCollapsable: Boolean,
     composables: TokenItemComposables?,
     modifier: Modifier = Modifier,
+    balanceTextModifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -227,18 +253,16 @@ fun ExpandedPortfolioHeader(
                 else -> null
             }
 
-            AnimatedVisibility(text != null) {
-                Text(
-                    text = text.orEmpty(),
-                    modifier = Modifier
-                        .alignByBaseline()
-                        .padding(horizontal = 8.dp),
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.caption1,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                )
-            }
+            Text(
+                text = text.orEmpty(),
+                modifier = balanceTextModifier
+                    .alignByBaseline()
+                    .padding(horizontal = 8.dp),
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.caption1,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
         }
 
         if (isCollapsable) {
