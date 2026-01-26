@@ -5,7 +5,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 
 /**
  * Represents a staking integration identifier.
@@ -97,16 +97,14 @@ sealed interface StakingIntegrationID {
     }
 
     /**
-     * Represents P2P staking integrations
+     * Represents P2PEthPool staking integration
      */
-    enum class P2P : StakingIntegrationID {
-        EthereumPooled {
-            override val value: String = "p2p-ethereum-pooled"
-            override val blockchain: Blockchain
-                get() = if (P2PStakingConfig.USE_TESTNET) Blockchain.EthereumTestnet else Blockchain.Ethereum
-            override val networkId: String
-                get() = P2PStakingConfig.activeNetwork.stakingNetworkId
-        },
+    object P2PEthPool : StakingIntegrationID {
+        override val value: String = "p2p-ethereum-pooled"
+        override val blockchain: Blockchain
+            get() = if (P2PEthPoolStakingConfig.USE_TESTNET) Blockchain.EthereumTestnet else Blockchain.Ethereum
+        override val networkId: String
+            get() = P2PEthPoolStakingConfig.activeNetwork.stakingNetworkId
     }
 
     // Polkadot {
@@ -138,7 +136,7 @@ sealed interface StakingIntegrationID {
 
         /** List of all native staking integration IDs */
         val entries: List<StakingIntegrationID> by lazy {
-            StakeKit.Coin.entries + StakeKit.EthereumToken.entries + P2P.entries
+            StakeKit.Coin.entries + StakeKit.EthereumToken.entries + listOf(P2PEthPool)
         }
 
         /**
@@ -152,9 +150,12 @@ sealed interface StakingIntegrationID {
             val blockchain = Blockchain.fromId(id = currencyId.rawNetworkId)
 
             return if (currencyId.contractAddress.isNullOrBlank()) {
-                // Order is not important — either P2P or Stakekit.Coin can be in any order
-                P2P.entries.firstOrNull { it.blockchain == blockchain }
-                    ?: StakeKit.Coin.entries.firstOrNull { it.blockchain == blockchain }
+                // Order is not important — either P2PEthPool or Stakekit.Coin can be in any order
+                if (P2PEthPool.blockchain == blockchain) {
+                    P2PEthPool
+                } else {
+                    StakeKit.Coin.entries.firstOrNull { it.blockchain == blockchain }
+                }
             } else {
                 StakeKit.EthereumToken.entries.firstOrNull { token ->
                     token.blockchain == blockchain &&
