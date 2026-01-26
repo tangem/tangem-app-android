@@ -1,6 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.validator
 
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -9,8 +10,8 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.utils.transformer.Transformer
 
 internal class ValidatorSelectChangeTransformer(
-    private val yield: Yield,
-    private val selectedValidator: Yield.Validator?,
+    private val integration: StakingIntegration,
+    private val selectedTarget: StakingTarget?,
 ) : Transformer<StakingUiState> {
 
     override fun transform(prevState: StakingUiState): StakingUiState {
@@ -23,27 +24,27 @@ internal class ValidatorSelectChangeTransformer(
         val isFromInfoScreen = prevState.currentStep == StakingStep.InitialInfo
         val isVoteLocked = confirmationState?.pendingAction?.type == StakingActionType.VOTE_LOCKED
 
-        val activeValidator = selectedValidator.takeIf { isFromInfoScreen && isRestake }
-            ?: validatorState?.activeValidator
-        val filteredValidators = yield.preferredValidators.filterNot { it == activeValidator }
+        val activeTarget = selectedTarget.takeIf { isFromInfoScreen && isRestake }
+            ?: validatorState?.activeTarget
+        val filteredTargets = integration.preferredTargets.filterNot { it == activeTarget }
 
-        val selectedValidator = if (isRestake && isFromInfoScreen) {
-            filteredValidators.firstOrNull()
+        val selectedTarget = if (isRestake && isFromInfoScreen) {
+            filteredTargets.firstOrNull()
         } else {
-            selectedValidator
+            selectedTarget
         }
 
-        if (selectedValidator == null && yield.preferredValidators.isEmpty()) {
+        if (selectedTarget == null && integration.preferredTargets.isEmpty()) {
             return prevState
         }
 
         return prevState.copy(
             validatorState = StakingStates.ValidatorState.Data(
-                chosenValidator = selectedValidator ?: yield.preferredValidators.first(),
-                availableValidators = filteredValidators,
+                chosenTarget = selectedTarget ?: integration.preferredTargets.first(),
+                availableTargets = filteredTargets,
                 isPrimaryButtonEnabled = true,
-                isClickable = yield.preferredValidators.size > 1,
-                activeValidator = activeValidator,
+                isClickable = integration.preferredTargets.size > 1,
+                activeTarget = activeTarget,
                 isVisibleOnConfirmation = isEnter || isRestake || isVoteLocked,
             ),
         )

@@ -8,6 +8,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
@@ -24,9 +25,17 @@ interface StakeKitRepository {
 
     fun getEnabledYields(): Flow<List<Yield>>
 
-    fun getStakingAvailability(rawCurrencyId: CryptoCurrency.RawID, symbol: String): Flow<StakingAvailability>
+    fun getStakingAvailability(
+        integrationId: StakingIntegrationID.StakeKit,
+        rawCurrencyId: CryptoCurrency.RawID,
+        symbol: String,
+    ): Flow<StakingAvailability>
 
-    suspend fun getStakingAvailabilitySync(rawCurrencyId: CryptoCurrency.RawID, symbol: String): StakingAvailability
+    suspend fun getStakingAvailabilitySync(
+        integrationId: StakingIntegrationID.StakeKit,
+        rawCurrencyId: CryptoCurrency.RawID,
+        symbol: String,
+    ): StakingAvailability
 
     suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo
 
