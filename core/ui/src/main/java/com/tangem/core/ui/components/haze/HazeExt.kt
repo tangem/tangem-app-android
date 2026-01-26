@@ -50,6 +50,31 @@ fun Modifier.hazeEffectTangem(
 }
 
 /**
+ * Applies a haze foreground effect to the [Modifier] with consideration of power saving mode.
+ *
+ * @param style The [HazeStyle] to apply. Defaults to [HazeStyle.Unspecified].
+ * @param isBlurEnabled A Boolean indicating whether blur is enabled. Defaults to true.
+ * @param configure A lambda to configure the [HazeEffectScope].
+ * @return A [Modifier] with the configured haze foreground effect applied.
+ */
+@Composable
+fun Modifier.hazeForegroundEffectTangem(
+    style: HazeStyle = HazeStyle.Unspecified,
+    isBlurEnabled: Boolean = true,
+    configure: HazeEffectScope.() -> Unit = {},
+): Modifier {
+    val powerSavingEnabled = LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
+    val isGlobalBlurEnabled = isBlurEnabled && !powerSavingEnabled.value
+
+    return hazeEffect(
+        style = style,
+    ) {
+        blurEnabled = isGlobalBlurEnabled
+        configure()
+    }
+}
+
+/**
  * Applies a haze source to the [Modifier] using the current global haze state.
  */
 @Composable
