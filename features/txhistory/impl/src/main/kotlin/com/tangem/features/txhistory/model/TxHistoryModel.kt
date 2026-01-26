@@ -221,7 +221,6 @@ internal class TxHistoryModel @Inject constructor(
     override fun openTxInExplorer(txHash: String) {
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
-            networkId = params.currency.network.id,
             currency = params.currency,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
