@@ -211,7 +211,7 @@ private fun ArticleDetail(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
 
-                if (article.sources.isNotEmpty()) {
+                if (article.relatedArticles.isNotEmpty()) {
                     SpacerH(24.dp)
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -223,7 +223,7 @@ private fun ArticleDetail(
                             color = TangemTheme.colors.text.primary1,
                         )
                         Text(
-                            text = "${article.sources.size}",
+                            text = "${article.relatedArticles.size}",
                             style = TangemTheme.typography.h3,
                             color = TangemTheme.colors.text.tertiary,
                         )
@@ -231,8 +231,8 @@ private fun ArticleDetail(
                 }
             }
 
-            if (article.sources.isNotEmpty()) {
-                item("sources") {
+            if (article.relatedArticles.isNotEmpty()) {
+                item("relatedArticles") {
                     LazyRow(
                         modifier = Modifier.padding(vertical = 12.dp),
                         state = rememberLazyListState(),
@@ -240,11 +240,11 @@ private fun ArticleDetail(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(
-                            items = article.sources,
-                            key = SourceUM::id,
-                        ) { source ->
-                            SourceItem(
-                                source = source,
+                            items = article.relatedArticles,
+                            key = RelatedArticleUM::id,
+                        ) { article ->
+                            RelatedNewsItem(
+                                relatedArticle = article,
                                 modifier = Modifier.fillParentMaxHeight(),
                             )
                         }
@@ -301,12 +301,12 @@ private fun QuickRecap(content: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SourceItem(source: SourceUM, modifier: Modifier = Modifier) {
+private fun RelatedNewsItem(relatedArticle: RelatedArticleUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .sizeIn(maxWidth = 256.dp, minHeight = 132.dp)
             .background(color = TangemTheme.colors.background.action, shape = RoundedCornerShape(12.dp))
-            .clickable(onClick = source.onClick)
+            .clickable(onClick = relatedArticle.onClick)
             .padding(12.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -320,17 +320,17 @@ private fun SourceItem(source: SourceUM, modifier: Modifier = Modifier) {
                     )
                     SpacerW(4.dp)
                     Text(
-                        text = source.source.name,
+                        text = relatedArticle.media.name,
                         style = TangemTheme.typography.caption1,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = TangemTheme.colors.text.tertiary,
                     )
                 }
-                if (source.title.isNotEmpty()) {
+                if (relatedArticle.title.isNotEmpty()) {
                     SpacerH(4.dp)
                     Text(
-                        text = source.title,
+                        text = relatedArticle.title,
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.primary1,
                         maxLines = 3,
@@ -338,14 +338,14 @@ private fun SourceItem(source: SourceUM, modifier: Modifier = Modifier) {
                     )
                 }
             }
-            if (source.imageUrl != null) {
+            if (relatedArticle.imageUrl != null) {
                 SubcomposeAsyncImage(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(4.dp)),
                     contentScale = ContentScale.Crop,
                     model = ImageRequest.Builder(context = LocalContext.current)
-                        .data(source.imageUrl)
+                        .data(relatedArticle.imageUrl)
                         .crossfade(enable = false)
                         .allowHardware(true)
                         .memoryCachePolicy(CachePolicy.DISABLED)
@@ -357,13 +357,13 @@ private fun SourceItem(source: SourceUM, modifier: Modifier = Modifier) {
                         )
                     },
                     error = {},
-                    contentDescription = source.source.name,
+                    contentDescription = relatedArticle.media.name,
                 )
             }
         }
         SpacerHMax()
         Text(
-            text = source.publishedAt.resolveReference(),
+            text = relatedArticle.publishedAt.resolveReference(),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )

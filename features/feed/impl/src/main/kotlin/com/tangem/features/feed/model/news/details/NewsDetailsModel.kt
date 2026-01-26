@@ -14,7 +14,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
-import com.tangem.domain.models.news.OriginalArticle
+import com.tangem.domain.models.news.RelatedArticle
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.domain.news.usecase.MarkArticleAsViewedUseCase
 import com.tangem.domain.news.usecase.ObserveNewsDetailsUseCase
@@ -60,7 +60,7 @@ internal class NewsDetailsModel @Inject constructor(
     private val params = paramsContainer.require<DefaultNewsDetailsComponent.Params>()
     private val currentLanguage = Locale.getDefault().language
 
-    private val newsDetailsConverter = NewsDetailsConverter(onSourceClick = ::onOriginalArticleClick)
+    private val newsDetailsConverter = NewsDetailsConverter(onRelatedArticleClick = ::onRelatedArticleClick)
 
     private val paginationManager: NewsDetailsPaginationManager? = params.paginationConfig?.let { config ->
         NewsDetailsPaginationManager(
@@ -139,14 +139,14 @@ internal class NewsDetailsModel @Inject constructor(
         }
     }
 
-    private fun onOriginalArticleClick(originalArticle: OriginalArticle) {
+    private fun onRelatedArticleClick(relatedArticle: RelatedArticle) {
         analyticsEventHandler.send(
             NewsDetailsAnalyticsEvent.RelatedNewsClicked(
                 newsId = params.articleId,
-                relatedNewsId = originalArticle.id,
+                relatedNewsId = relatedArticle.id,
             ),
         )
-        urlOpener.openUrl(originalArticle.url)
+        urlOpener.openUrl(relatedArticle.url)
     }
 
     private fun onArticleIndexChanged(newIndex: Int) {

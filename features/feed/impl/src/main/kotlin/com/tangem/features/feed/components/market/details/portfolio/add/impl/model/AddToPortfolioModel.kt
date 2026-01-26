@@ -179,7 +179,6 @@ internal class AddToPortfolioModel @Inject constructor(
             callbackDelegate.onChangePortfolioClick.receiveAsFlow()
                 .onEach {
                     middleNavigationJob?.cancel()
-                    setSelectedAccountToSelectorController()
                     middleNavigationJob = changePortfolioNavigationFlow(data).launchIn(this)
                     logAccountSelector(isAccountMode)
                     navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
@@ -229,24 +228,15 @@ internal class AddToPortfolioModel @Inject constructor(
             }
     }
 
-    private fun setSelectedAccountToSelectorController() {
-        modelScope.launch(dispatchers.default) {
-            val selectedAccount = selectedPortfolio
-                .first()
-                .account
-                .account
-                .account
-                .accountId
-            portfolioSelectorController.selectAccount(selectedAccount)
-        }
-    }
-
-    private fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> {
+    private fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> = flow {
+        val selectedPortfolioValue = selectedPortfolio.first()
+        val selectedAccount = selectedPortfolioValue.account.account.account.accountId
+        portfolioSelectorController.selectAccount(selectedAccount)
         val changedPortfolio = setupPortfolioFlow(data)
             .drop(1)
             .onEach { portfolio -> navigation.pushNew(routeToNetworkSelector(portfolio)) }
         val changedNetwork = setupNetworkFlow(changedPortfolio)
-        return combine(
+        combine(
             flow = changedPortfolio,
             flow2 = changedNetwork,
             transform = { newPortfolio, newNetwork ->
@@ -254,7 +244,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 selectedNetwork.tryEmit(newNetwork)
                 navigation.popToFirst()
             },
-        )
+        ).collect { emit(it) }
     }
 
     private fun setupTokenActionsFlow(

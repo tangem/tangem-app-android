@@ -33,16 +33,16 @@ internal data class ArticleUM(
     val tags: ImmutableList<LabelUM>,
     val shortContent: String,
     val content: String,
-    val sources: ImmutableList<SourceUM>,
+    val relatedArticles: ImmutableList<RelatedArticleUM>,
     val newsUrl: String,
     val relatedTokens: ImmutableList<RelatedToken>,
     val isLiked: Boolean,
 )
 
-internal data class SourceUM(
+internal data class RelatedArticleUM(
     val id: Int,
     val title: String,
-    val source: Source,
+    val media: Media,
     val publishedAt: TextReference,
     val url: String,
     val onClick: () -> Unit,
@@ -62,7 +62,7 @@ internal sealed interface RelatedTokensUM {
     data object LoadingError : RelatedTokensUM
 }
 
-internal data class Source(
+internal data class Media(
     val id: Int,
     val name: String,
 )

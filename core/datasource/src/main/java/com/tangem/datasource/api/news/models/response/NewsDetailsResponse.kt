@@ -16,14 +16,14 @@ data class NewsDetailsResponse(
     @Json(name = "newsUrl") val newsUrl: String,
     @Json(name = "shortContent") val shortContent: String,
     @Json(name = "content") val content: String,
-    @Json(name = "originalArticles") val originalArticles: List<NewsOriginalArticleDto>,
+    @Json(name = "relatedArticles") val relatedArticles: List<NewsRelatedArticleDto>,
 )
 
 @JsonClass(generateAdapter = true)
-data class NewsOriginalArticleDto(
+data class NewsRelatedArticleDto(
     @Json(name = "id") val id: Int,
     @Json(name = "title") val title: String,
-    @Json(name = "source") val source: Source,
+    @Json(name = "media") val media: Media,
     @Json(name = "language") val language: String,
     @Json(name = "publishedAt") val publishedAt: String,
     @Json(name = "url") val url: String,
@@ -31,7 +31,7 @@ data class NewsOriginalArticleDto(
 )
 
 @JsonClass(generateAdapter = true)
-data class Source(
+data class Media(
     @Json(name = "id") val id: Int,
     @Json(name = "name") val name: String,
 )

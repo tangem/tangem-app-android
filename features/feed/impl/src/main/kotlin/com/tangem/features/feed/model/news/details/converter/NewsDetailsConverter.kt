@@ -11,11 +11,11 @@ import com.tangem.core.ui.utils.getFormattedDate
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.news.DetailedArticle
-import com.tangem.domain.models.news.OriginalArticle
+import com.tangem.domain.models.news.RelatedArticle
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
-import com.tangem.features.feed.ui.news.details.state.Source
-import com.tangem.features.feed.ui.news.details.state.SourceUM
+import com.tangem.features.feed.ui.news.details.state.Media
+import com.tangem.features.feed.ui.news.details.state.RelatedArticleUM
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
@@ -24,7 +24,7 @@ import org.joda.time.DateTime
 
 @Stable
 internal class NewsDetailsConverter(
-    private val onSourceClick: (OriginalArticle) -> Unit,
+    private val onRelatedArticleClick: (RelatedArticle) -> Unit,
 ) : Converter<DetailedArticle, ArticleUM> {
 
     override fun convert(value: DetailedArticle): ArticleUM {
@@ -36,7 +36,7 @@ internal class NewsDetailsConverter(
             tags = buildTags(value),
             shortContent = value.shortContent,
             content = value.content,
-            sources = buildSources(value),
+            relatedArticles = buildRelatedArticles(value),
             newsUrl = value.newsUrl,
             relatedTokens = value.relatedTokens.toImmutableList(),
             isLiked = value.isLiked,
@@ -60,16 +60,16 @@ internal class NewsDetailsConverter(
         return (categoryLabels + tokenLabels).toImmutableList()
     }
 
-    private fun buildSources(article: DetailedArticle): ImmutableList<SourceUM> {
-        return article.originalArticles.map { originalArticle ->
-            SourceUM(
-                id = originalArticle.id,
-                title = originalArticle.title,
-                source = Source(id = originalArticle.source.id, name = originalArticle.source.name),
-                publishedAt = mapFormattedDate(originalArticle.publishedAt),
-                url = originalArticle.url,
-                onClick = { onSourceClick(originalArticle) },
-                imageUrl = originalArticle.imageUrl,
+    private fun buildRelatedArticles(article: DetailedArticle): ImmutableList<RelatedArticleUM> {
+        return article.relatedArticles.map { relatedArticle ->
+            RelatedArticleUM(
+                id = relatedArticle.id,
+                title = relatedArticle.title,
+                media = Media(id = relatedArticle.media.id, name = relatedArticle.media.name),
+                publishedAt = mapFormattedDate(relatedArticle.publishedAt),
+                url = relatedArticle.url,
+                onClick = { onRelatedArticleClick(relatedArticle) },
+                imageUrl = relatedArticle.imageUrl,
             )
         }.toImmutableList()
     }
