@@ -15,7 +15,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -49,7 +49,7 @@ internal class DefaultWalletsRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
     private val walletServerBinder: WalletServerBinder,
-    private val appsFlyerConversionStore: AppsFlyerConversionStore,
+    private val appsFlyerStore: AppsFlyerStore,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
@@ -411,7 +411,7 @@ internal class DefaultWalletsRepository(
                     associateApplicationIdWithWallets().getOrThrow()
                 }
             } else {
-                val conversionData = appsFlyerConversionStore.get()
+                val conversionData = appsFlyerStore.get()
                 val publicKeys = authProvider.getCardsPublicKeys()
                 val walletsBody = wallets.map { userWallet ->
                     WalletIdBodyConverter.convert(
