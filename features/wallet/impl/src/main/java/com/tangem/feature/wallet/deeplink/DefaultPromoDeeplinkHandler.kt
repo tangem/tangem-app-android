@@ -10,7 +10,7 @@ import com.tangem.core.ui.extensions.mask
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.GlobalLoadingMessage
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -48,7 +48,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    private val appsFlyerConversionStore: AppsFlyerConversionStore,
+    private val appsFlyerStore: AppsFlyerStore,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -194,7 +194,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
             if (!refcode.isNullOrBlank()) {
                 val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
 
-                appsFlyerConversionStore.storeIfAbsent(value = conversionData)
+                appsFlyerStore.storeIfAbsent(value = conversionData)
 
                 bindRefcodeWithWalletUseCase(conversionData)
                     .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
