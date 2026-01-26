@@ -17,6 +17,7 @@ internal data class CreateWalletStartUM(
     val otherMethodClick: () -> Unit,
     val onScanClick: () -> Unit,
     val onBackClick: () -> Unit,
+    val isHotWalletOptionVisible: Boolean = true,
 ) {
     data class FeatureItem(
         val iconResId: Int,

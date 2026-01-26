@@ -133,9 +133,9 @@
   <string name="backup_complete_seed_description">Эти слова невозможно восстановить, если они будут потеряны. Храните их в надёжном месте.</string>
   <string name="backup_complete_title">Бэкап завершен</string>
   <string name="backup_info_description">Ваша фраза восстановления — фиксированный набор из %s случайных слов для доступа и восстановления кошелька.</string>
-  <string name="backup_info_keep_description">Эти слова невозможно восстановить, если они будут потеряны. Храните их в безопасности.</string>
+  <string name="backup_info_keep_description">Если вы потеряете эту фразу, восстановить её будет невозможно. Храните её в полной безопасности.</string>
   <string name="backup_info_keep_title">Храните в безопасности</string>
-  <string name="backup_info_save_description">Сохраните эти %s слов в безопасном месте и никому их не сообщайте.</string>
+  <string name="backup_info_save_description">Сохраните эти %s слов в надежном месте, к которому только вы имеете доступ, и никому их не показывайте.</string>
   <string name="backup_info_save_title">Восстановление невозможно</string>
   <string name="backup_info_title">Фраза восстановления</string>
   <string name="backup_seed_caution">Никому не сообщайте эти слова. Tangem никогда не будет их спрашивать. Ниже приведены %s слов вашей фразы восстановления кошелька. Используйте их, чтобы восстановить кошелёк в случае потери устройства.</string>
@@ -384,7 +384,7 @@
   <string name="common_supported_networks">Поддерживаемые сети</string>
   <string name="common_swap">Обменять</string>
   <string name="common_tangem">Tangem</string>
-  <string name="common_tangem_wallet">Tangem Кошелек</string>
+  <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_to">На</string>
@@ -466,7 +466,7 @@
   <string name="details_row_title_signed_hashes">Подписано</string>
   <string name="details_send_feedback">Отправить отзыв</string>
   <string name="details_title">Подробности</string>
-  <string name="details_wallets_section_description">Одновременно у вас может быть только один мобильный кошелек. Его можно апгрейдить до Tangem cold wallet или использовать вместе с новым холодным кошельком.</string>
+  <string name="details_wallets_section_description">У вас может быть только один мобильный кошелек. Вы можете апгрейдить его до аппаратного кошелька Tangem или добавить новый аппаратный кошелек.</string>
   <string name="disclaimer_error_loading">Проверьте подключение с интернетом или переключитесь на другую сеть</string>
   <string name="disclaimer_title">Условия использования</string>
   <string name="domain_receive_assets_default_address">Основной адрес</string>
@@ -586,7 +586,7 @@
   <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
   <string name="give_permission_title">Дать разрешение</string>
   <string name="give_permission_unlimited">Безлимитно</string>
-  <string name="hardware_wallet_backup_feature_description">Новые адреса будут сгенерированы прямо в вашем аппаратном кошельке, готовы к использованию и полностью защищены.</string>
+  <string name="hardware_wallet_backup_feature_description">Адреса будут сгенерированы прямо в аппаратном кошельке Tangem — готовы к использованию и полностью защищены</string>
   <string name="hardware_wallet_backup_feature_title">Новые адреса</string>
   <string name="hardware_wallet_create_title">Добавить кошелек Tangem</string>
   <string name="hardware_wallet_key_feature_description">Ваш приватный ключ будет сгенерирован на карте Tangem и никогда не покинет её.</string>
@@ -629,13 +629,13 @@
   <string name="hw_backup_seed_title">Фраза восстановления</string>
   <string name="hw_backup_to_secure_description">Чтобы защитить ваш кошелёк с помощью кода доступа, сначала завершите резервное копирование.</string>
   <string name="hw_backup_to_upgrade_description">Чтобы улучшить кошелёк до аппаратного, сначала создайте резервную копию.</string>
-  <string name="hw_backup_upgrade_description">Перенесите свой мобильный кошелек на аппаратный кошелек Tangem для максимальной безопасности. Импортируйте существующий кошелек или переведите средства на новый.</string>
+  <string name="hw_backup_upgrade_description">Сделайте апгрейд до аппаратного кошелька Tangem для максимальной безопасности.\nИмпортируйте существующий кошелек или создайте новый.</string>
   <string name="hw_backup_upgrade_title">Апгрейд до холодного кошелька</string>
-  <string name="hw_create_keys_description">Ваши приватные ключи надёжно зашифрованы и хранятся на вашем телефоне</string>
+  <string name="hw_create_keys_description">Ваши приватные ключи надёжно зашифрованы и хранятся на вашем телефоне.</string>
   <string name="hw_create_keys_title">Ключи хранятся в приложении</string>
   <string name="hw_create_seed_description">Создайте или импортируйте кошелёк с помощью вашей фразы восстановления.</string>
   <string name="hw_create_seed_title">Резервная копия</string>
-  <string name="hw_create_title">Создать мобильный кошелек</string>
+  <string name="hw_create_title">Мобильный кошелек</string>
   <string name="hw_create_upgrade_description">Перенесите свой мобильный кошелек на Tangem-карту или кольцо в любое время.</string>
   <string name="hw_create_upgrade_title">Апгрейд до аппаратного кошелька</string>
   <string name="hw_import_existing_wallet">Импортировать существующий</string>
@@ -662,15 +662,15 @@
   <string name="hw_upgrade_error_wallet2_card_required">Во время операции произошла ошибка.</string>
   <string name="hw_upgrade_funds_access_description">Ваши средства остаются в безопасности и полностью доступны в процессе.</string>
   <string name="hw_upgrade_funds_access_title">Доступ к средствам</string>
-  <string name="hw_upgrade_general_security_description">После апгрейда ваш мобильный кошелек будет удалён из приложения и сохранён на аппаратном кошельке; фраза восстановления остаётся у вас.</string>
+  <string name="hw_upgrade_general_security_description">После апгрейда мобильный кошелек удаляется из приложения, ключи сохраняются в вашем аппаратном кошельке Tangem. Seed-фраза остаётся у вас.</string>
   <string name="hw_upgrade_general_security_title">Общая безопасность</string>
-  <string name="hw_upgrade_key_migration_description">Приватные ключи будут перемещены из приложения в вашу Tangem карту или кольцо</string>
+  <string name="hw_upgrade_key_migration_description">Приватные ключи будут перемещены на вашу Tangem-карту или кольцо.</string>
   <string name="hw_upgrade_key_migration_title">Миграция ключей</string>
   <string name="hw_upgrade_scan_device">Сканировать устройство</string>
   <string name="hw_upgrade_start_action">Начать апгрейд</string>
   <string name="hw_upgrade_start_description">Вы собираетесь перейти на устройство Tangem, где ваши активы будут в безопасности в холодном хранилище.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
-  <string name="hw_upgrade_title">Обновиться до аппаратного кошелька</string>
+  <string name="hw_upgrade_title">Апгрейд до аппаратного кошелька</string>
   <string name="hw_upgrade_to_cold_banner_description">Храните свою криптовалюту в безопасности с помощью первоклассного аппаратного кошелька Tangem.</string>
   <string name="hw_upgrade_to_cold_banner_title">Сделать апгрейд кошелька до аппаратной версии.</string>
   <string name="information_generated_with_ai">Эта информация была сгенерирована ИИ.\nНажмите здесь, если обнаружили ошибку.</string>
@@ -1028,6 +1028,7 @@
   <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
   <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
+  <string name="only_one_mobile_wallet_explanation">У вас может быть только один мобильный кошелек. Вы можете апгрейдить его до аппаратного кошелька Tangem или добавить новый аппаратный кошелек.</string>
   <string name="onramp_all_offers_button_title">Все предложения</string>
   <string name="onramp_avaiable_with_payment_methods">Доступно с %s</string>
   <string name="onramp_choose_provider_title_hint">Tangem предоставляет доступ к покупке через сторонних провайдеров в соответствии с их правилами</string>
@@ -1291,7 +1292,7 @@
   <string name="settings_upgrade_banner_advantage_feature_title">Прост в использовании</string>
   <string name="settings_upgrade_banner_description">Хранит вашу криптовалюту в безопасности и офлайн. Тонкий, как кредитная карта, надежнее банковского сейфа.</string>
   <string name="settings_upgrade_banner_seed_phrase_feature_title">Без seed-фразы</string>
-  <string name="settings_upgrade_banner_superiority_feature_title">Лучший в своём классе аппаратный кошелек</string>
+  <string name="settings_upgrade_banner_superiority_feature_title">Лучший в своём классе</string>
   <string name="settings_upgrade_banner_title">Холодный кошелек Tangem</string>
   <string name="settings_wallet_name_title">Имя</string>
   <string name="stake_token_description">Заставьте ваш токен работать</string>
@@ -1593,6 +1594,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay временно недоступен</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Нажмите на кнопку ниже, чтобы восстановить доступ</string>
+  <string name="tangempay_withdrawal_note_description">Баланс ончейн-адреса (USDC Polygon) обновляется в течение 2 рабочих дней после покупки. При возвратах покупок средства не возвращаются на ончейн-баланс и недоступны для вывода, но отображаются на карте и могут быть использованы для покупок.</string>
+  <string name="tangempay_withdrawal_note_title">Обратите внимание</string>
   <string name="tangempay_your_pin_code">Ваш PIN-код</string>
   <string name="this_is_my_wallet_title">Это мой кошелек</string>
   <string name="toast_balances_hidden">Балансы скрыты</string>
@@ -1675,7 +1678,7 @@
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_push_notification_banner_subtitle">Включите push-уведомления, и мы мгновенно сообщим вам, когда поступят средства.</string>
   <string name="user_push_notification_banner_title">Не пропустите транзакцию</string>
-  <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
+  <string name="user_wallet_list_add_button">Добавить кошелек</string>
   <string name="user_wallet_list_delete_hw_prompt">Если вы удалите этот кошелёк без резервной копии, вы навсегда потеряете доступ к своим средствам.</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту или кольцо для входа</string>
@@ -1970,9 +1973,9 @@
   <string name="wc_uri_already_used_title">URI уже используется</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Подозрительная транзакция</string>
-  <string name="welcome_create_wallet_already_have">Уже есть Tangem кошелек?</string>
+  <string name="welcome_create_wallet_already_have">Уже есть кошелек Tangem?</string>
   <string name="welcome_create_wallet_feature_assets">Тысячи активов</string>
-  <string name="welcome_create_wallet_feature_class">Лучший в своём классе аппаратный кошелёк</string>
+  <string name="welcome_create_wallet_feature_class">Лучший в своём классе</string>
   <string name="welcome_create_wallet_feature_delivery">Быстрая доставка</string>
   <string name="welcome_create_wallet_feature_one_tap">Начните в один клик</string>
   <string name="welcome_create_wallet_feature_seamless">Просто и надёжно</string>

@@ -305,7 +305,7 @@ internal enum class Wallet2CobrandImage(
     USA(
         cards2ResId = R.drawable.ill_usa_card2_120_106,
         cards3ResId = R.drawable.ill_usa_card3_120_106,
-        batchIds = setOf("AF91", "AF990017"),
+        batchIds = setOf("AF91", "AF990017", "AF990056"),
     ),
 
     VeChain(
@@ -384,6 +384,12 @@ internal enum class Wallet2CobrandImage(
     HyperBlue(
         cards2ResId = R.drawable.ill_hyperblue_card2_120_106,
         cards3ResId = R.drawable.ill_hyperblue_card3_120_106,
-        batchIds = setOf("AF990026", "AF990027", "AF990028"),
+        batchIds = setOf("AF990026", "AF990027", "AF990028", "AF990050", "AF990051", "AF990052"),
+    ),
+
+    Lunar(
+        cards2ResId = R.drawable.ill_lunar_card2_120_106,
+        cards3ResId = R.drawable.ill_lunar_card3_120_106,
+        batchIds = setOf("AF990057", "AF990058", "AF990059"),
     ),
 }

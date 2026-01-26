@@ -3,14 +3,13 @@ package com.tangem.domain.txhistory.usecase
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxStatusError
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 
-class GetExplorerTransactionUrlUseCase(
-    private val repository: TxHistoryRepository,
-) {
-    operator fun invoke(txHash: String, networkId: Network.ID): Either<TxStatusError, String> {
+class GetExplorerTransactionUrlUseCase(private val repository: TxHistoryRepository) {
+
+    operator fun invoke(txHash: String, currency: CryptoCurrency): Either<TxStatusError, String> {
         return either {
             catch(
                 block = {
@@ -18,7 +17,7 @@ class GetExplorerTransactionUrlUseCase(
                         raise(TxStatusError.EmptyUrlError)
                     }
 
-                    repository.getTxExploreUrl(txHash, networkId).ifEmpty {
+                    repository.getTxExploreUrl(txHash, currency).ifEmpty {
                         raise(TxStatusError.EmptyUrlError)
                     }
                 },
