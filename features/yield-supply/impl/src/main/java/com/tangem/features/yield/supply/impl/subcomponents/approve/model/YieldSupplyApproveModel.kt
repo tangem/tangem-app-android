@@ -162,6 +162,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                         blockchain = cryptoCurrency.network.name,
                         token = cryptoCurrency.symbol,
                         feeType = AnalyticsParam.FeeType.Normal,
+                        feeToken = feeCryptoCurrencyStatus.currency.symbol,
                     )
                     analyticsEventHandler.send(
                         Basic.TransactionSent(
