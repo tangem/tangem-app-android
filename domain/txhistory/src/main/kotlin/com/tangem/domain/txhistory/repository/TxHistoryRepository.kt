@@ -2,7 +2,6 @@ package com.tangem.domain.txhistory.repository
 
 import androidx.paging.PagingData
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
@@ -22,10 +21,7 @@ interface TxHistoryRepository {
         refresh: Boolean,
     ): Flow<PagingData<TxInfo>>
 
-    fun getTxExploreUrl(txHash: String, networkId: Network.ID): String
-
-    /** Get transaction url in explorer via last transaction from wallet's recentTransactions list */
-    suspend fun getTxExploreUrl(userWalletId: UserWalletId, network: Network): String
+    fun getTxExploreUrl(txHash: String, currency: CryptoCurrency): String
 
     @Throws(TxHistoryListError::class)
     suspend fun getFixedSizeTxHistoryItems(
