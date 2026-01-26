@@ -289,18 +289,9 @@ internal class TangemPayDetailsModel @Inject constructor(
                             .getOrNull()
                     }
                     if (currency != null) {
-                        router.push(
-                            AppRoute.Swap(
-                                currencyFrom = currency,
-                                userWalletId = params.userWalletId,
-                                isInitialReverseOrder = false,
-                                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
-                                tangemPayInput = AppRoute.Swap.TangemPayInput(
-                                    cryptoAmount = currentBalance.availableForWithdrawal,
-                                    fiatAmount = currentBalance.availableForWithdrawal,
-                                    depositAddress = depositAddress,
-                                    isWithdrawal = true,
-                                ),
+                        uiMessageSender.send(
+                            message = TangemPayMessagesFactory.createWithdrawWarning(
+                                onGotItClick = { onConfirmWithdrawal(currency, currentBalance, depositAddress) },
                             ),
                         )
                     } else {
@@ -309,6 +300,27 @@ internal class TangemPayDetailsModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onConfirmWithdrawal(
+        currency: CryptoCurrency,
+        currentBalance: TangemPayCardBalance,
+        depositAddress: String,
+    ) {
+        router.push(
+            AppRoute.Swap(
+                currencyFrom = currency,
+                userWalletId = params.userWalletId,
+                isInitialReverseOrder = false,
+                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                tangemPayInput = AppRoute.Swap.TangemPayInput(
+                    cryptoAmount = currentBalance.availableForWithdrawal,
+                    fiatAmount = currentBalance.availableForWithdrawal,
+                    depositAddress = depositAddress,
+                    isWithdrawal = true,
+                ),
+            ),
+        )
     }
 
     private fun fetchBalance(): Job {
