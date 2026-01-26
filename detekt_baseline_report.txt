@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-13 00:34:09
+Date: 2026-01-04 19:04:51
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1271
-  Modules with Issues: 69
-  Average Issues per Module: 18
+  Total Issues: 1065
+  Modules with Issues: 65
+  Average Issues per Module: 16
 
 Progress:
-  Fixed: 662 out of 1933 (34%)
-  Remaining: 1271
+  Fixed: 868 out of 1933 (44%)
+  Remaining: 1065
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -31,54 +31,51 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/markets/impl                                               147
-features/wallet/impl                                                144
+features/wallet/impl                                                138
 features/onboarding-v2/impl                                         128
-data/wallet-connect                                                  54
-features/hot-wallet/impl                                             51
+data/wallet-connect                                                  53
+features/hot-wallet/impl                                             50
 features/walletconnect/impl                                          47
-features/staking/impl                                                46
 features/tokendetails/impl                                           45
 features/manage-tokens/impl                                          44
-domain/wallets                                                       37
-features/nft/impl                                                    34
-features/tester/impl                                                 28
-core/ui                                                              26
-domain/tokens                                                        25
-common/ui                                                            24
+domain/wallets                                                       36
+features/staking/impl                                                35
+features/nft/impl                                                    33
+features/tester/impl                                                 27
+domain/tokens                                                        23
 features/yield-supply/impl                                           21
 features/tangempay/details/impl                                      21
 domain/models                                                        21
 data/visa                                                            21
 data/nft                                                             19
+core/ui                                                              19
 core/pagination                                                      16
+common/ui                                                            15
 domain/staking/models                                                13
 data/wallets                                                         13
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
 data/onramp                                                          11
-core/datasource                                                      11
 core/analytics/models                                                11
-data/markets                                                         10
+core/datasource                                                      10
 features/details/impl                                                 9
 domain/account/status                                                 9
 data/yield-supply                                                     9
 data/networks                                                         9
 domain/visa/models                                                    8
 domain/transaction                                                    8
-domain/staking                                                        8
 core/utils                                                            8
 libs/tangem-sdk-api                                                   7
 features/referral/impl                                                7
 domain/tokens/models                                                  7
+domain/staking                                                        7
 data/txhistory                                                        7
-features/welcome/impl                                                 6
 domain/wallet-connect/models                                          6
 domain/onramp                                                         6
 domain/account                                                        6
 libs/visa                                                             5
+features/welcome/impl                                                 5
 features/home/impl                                                    5
-domain/markets                                                        5
 domain/core                                                           5
 data/account                                                          5
 domain/onramp/models                                                  4
@@ -97,7 +94,6 @@ domain/transaction/models                                             1
 domain/quotes                                                         1
 domain/promo                                                          1
 domain/onboarding                                                     1
-domain/markets/models                                                 1
 domain/feedback/models                                                1
 domain/express/models                                                 1
 ────────────────────────────────────────────────────────────────
