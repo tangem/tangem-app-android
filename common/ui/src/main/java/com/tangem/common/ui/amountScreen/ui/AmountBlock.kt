@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
-import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -66,11 +66,14 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             state = amountState.tokenIconState,
             iconSize = 40.dp,
         )
-        ResizableText(
+        Text(
             text = firstAmount,
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
+            autoSize = TextAutoSize.StepBased(
+                maxFontSize = TangemTheme.typography.h2.fontSize,
+            ),
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()

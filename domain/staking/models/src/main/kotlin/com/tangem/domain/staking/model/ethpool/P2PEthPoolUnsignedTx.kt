@@ -3,7 +3,7 @@ package com.tangem.domain.staking.model.ethpool
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 
 /**
- * P2P.org unsigned transaction ready for signing
+ * Unsigned transaction ready for signing
  * Contains all necessary data for transaction signing
  */
 data class P2PEthPoolUnsignedTx(
