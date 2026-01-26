@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.deeplink
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.routing.deeplink.DeeplinkConst
 import com.tangem.common.routing.deeplink.DeeplinkConst.PROMO_CODE_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -9,6 +10,7 @@ import com.tangem.core.ui.extensions.mask
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.GlobalLoadingMessage
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -17,8 +19,10 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.wallets.PromoCodeActivationResult
 import com.tangem.domain.wallets.PromoCodeActivationResult.*
+import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
 import com.tangem.domain.wallets.usecase.ActivateBitcoinPromocodeUseCase
+import com.tangem.domain.wallets.usecase.BindRefcodeWithWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.deeplink.analytics.PromoActivationAnalytics
 import com.tangem.feature.wallet.impl.R
@@ -44,9 +48,14 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val activateBitcoinPromocodeUseCase: ActivateBitcoinPromocodeUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
+    private val appsFlyerConversionStore: AppsFlyerConversionStore,
+    private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PromoDeeplinkHandler {
+
+    private val refcode: String? = queryParams[DeeplinkConst.REF_KEY]
+    private val campaign: String? = queryParams[DeeplinkConst.CAMPAIGN_KEY]
 
     init {
         analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart())
@@ -56,6 +65,8 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
         } else {
             findSelectedWallet(promoCode)
         }
+
+        saveAndBindRefcode()
     }
 
     private fun findSelectedWallet(promoCode: String) {
@@ -86,13 +97,9 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
             Timber.tag(LOG_TAG).d("All user network statuses ${networkStatuses?.size}")
 
-            val cryptoCurrencies = multiWalletCryptoCurrenciesSupplier
-                .getSyncOrNull(
-                    MultiWalletCryptoCurrenciesProducer.Params(
-                        userWallet
-                            .walletId,
-                    ),
-                )
+            val cryptoCurrencies = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
+            )
 
             Timber.tag(LOG_TAG).d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
 
@@ -100,8 +107,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
             Timber.tag(LOG_TAG).d("BitcoinCurrency $bitcoinCurrency")
 
             val bitcoinStatus = networkStatuses?.firstOrNull { status ->
-                status.network.id == bitcoinCurrency
-                    ?.network?.id
+                status.network.id == bitcoinCurrency?.network?.id
             }
             Timber.tag(LOG_TAG).d("BitcoinStatus $bitcoinStatus")
 
@@ -122,6 +128,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                     Timber.tag(LOG_TAG).d(
                         "Start activation promoCode ${promoCode.mask()} address ${bitcoinAddress.mask()}",
                     )
+
                     activatePromoCode(bitcoinAddress = bitcoinAddress, promoCode = promoCode)
                 } else {
                     uiMessageSender.send(GlobalLoadingMessage(false))
@@ -180,6 +187,19 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 },
             ),
         )
+    }
+
+    private fun saveAndBindRefcode() {
+        scope.launch(dispatchers.default) {
+            if (!refcode.isNullOrBlank()) {
+                val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
+
+                appsFlyerConversionStore.storeIfAbsent(value = conversionData)
+
+                bindRefcodeWithWalletUseCase(conversionData)
+                    .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
+            }
+        }
     }
 
     @AssistedFactory

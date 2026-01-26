@@ -56,6 +56,7 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
+    // region Referral
     /** Returns referral status by [walletId] */
     @GET("v1/referral/{walletId}")
     suspend fun getReferralStatus(@Path("walletId") walletId: String): ApiResponse<ReferralResponse>
@@ -63,6 +64,10 @@ interface TangemTechApi {
     /** Make user referral, requires [StartReferralBody] */
     @POST("v1/referral")
     suspend fun startReferral(@Body startReferralBody: StartReferralBody): ApiResponse<ReferralResponse>
+
+    @POST("v1/referral/bind-wallets-by-code")
+    suspend fun bindWalletsByReferralCode(@Body body: BindWalletsByReferralCodeBody): ApiResponse<Unit>
+    // endregion
 
     @GET("v1/quotes")
     suspend fun getQuotes(

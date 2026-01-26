@@ -2,13 +2,14 @@ package com.tangem.data.common.currency
 
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -27,6 +28,8 @@ class UserTokensSaver(
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
+    private val walletServerBinder: WalletServerBinder,
+    private val appsFlyerConversionStore: AppsFlyerConversionStore,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val pushTokensRetryerPool: RetryerPool,
 ) {
@@ -69,9 +72,13 @@ class UserTokensSaver(
 
             pushNew(userWallet = userWallet, response = enrichedResponse, onFailSend = onFailSend)
         } else {
+            val conversionData = appsFlyerConversionStore.get()
+
             val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
                 walletName = userWallet.name,
                 walletType = WalletType.from(userWallet),
+                refcode = conversionData?.refcode,
+                campaign = conversionData?.campaign,
             )
 
             pushLegacy(userWalletId = userWalletId, response = enrichedResponse, onFailSend = onFailSend)
@@ -114,7 +121,7 @@ class UserTokensSaver(
                     apiResponse.cause.isNetworkError(ApiResponseError.HttpException.Code.NOT_FOUND)
 
                 if (isWalletNotFound) {
-                    tangemTechApi.createWallet(body = WalletIdBodyConverter.convert(userWallet)).bind()
+                    walletServerBinder.bind(userWallet).bind()
 
                     tangemTechApi.saveTokens(
                         userId = userWallet.walletId.stringValue,
