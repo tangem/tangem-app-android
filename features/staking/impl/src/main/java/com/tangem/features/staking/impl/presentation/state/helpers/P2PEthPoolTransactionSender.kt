@@ -76,7 +76,7 @@ internal class P2PEthPoolTransactionSender @AssistedInject constructor(
             ifRight = { broadcastResult ->
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = broadcastResult.hash,
-                    networkId = cryptoCurrencyStatus.currency.network.id,
+                    currency = cryptoCurrencyStatus.currency,
                 ).getOrNull().orEmpty()
 
                 balanceUpdater.updateAfterTransaction()
