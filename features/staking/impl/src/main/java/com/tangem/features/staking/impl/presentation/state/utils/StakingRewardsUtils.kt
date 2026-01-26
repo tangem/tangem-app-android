@@ -4,9 +4,11 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.domain.staking.model.common.RewardSchedule
 import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.CARDANO_SCHEDULE
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.COSMOS_SCHEDULE
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.SOLANA_SCHEDULE
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.TON_SCHEDULE
+import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTon
@@ -15,6 +17,7 @@ import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 
 private data object StakingRewardScheduleConstants {
+    const val CARDANO_SCHEDULE = 5
     val COSMOS_SCHEDULE = 5 to 12
     val SOLANA_SCHEDULE = 2 to 3
     val TON_SCHEDULE = 1 to 2
@@ -98,6 +101,15 @@ private fun getCustomRewardSchedule(networkId: String, decapitalize: Boolean = f
             pluralReference(
                 id = R.plurals.common_days_no_param,
                 count = TON_SCHEDULE.second,
+            ),
+        )
+        isCardano(networkId) -> combinedReference(
+            resourceReference(id = R.string.staking_reward_schedule_each_plural, decapitalize = decapitalize),
+            stringReference(NON_BREAKING_SPACE.toString()),
+            stringReference("$CARDANO_SCHEDULE$NON_BREAKING_SPACE"),
+            pluralReference(
+                id = R.plurals.common_days_no_param,
+                count = CARDANO_SCHEDULE,
             ),
         )
         else -> null
