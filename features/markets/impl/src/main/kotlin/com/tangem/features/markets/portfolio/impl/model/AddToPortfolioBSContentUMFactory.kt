@@ -58,7 +58,7 @@ internal class AddToPortfolioBSContentUMFactory(
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): TangemBottomSheetConfig {
         return (currentState ?: TangemBottomSheetConfig.Empty).copy(
-            isShown = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
+            isShown = portfolioUIData.portfolioBSVisibilityModel.isAddToPortfolioBSVisible,
             onDismissRequest = { onAddToPortfolioVisibilityChange(false) },
             content = if (selectedWallet != null && alreadyAddedNetworks != null) {
                 AddToPortfolioBSContentUM(
@@ -76,8 +76,8 @@ internal class AddToPortfolioBSContentUMFactory(
                         alreadyAddedNetworks = alreadyAddedNetworks,
                         onNetworkSwitchClick = onNetworkSwitchClick,
                     ).convert(value = token),
-                    isScanCardNotificationVisible = portfolioUIData.needColdWalletInteraction,
-                    continueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
+                    isScanCardNotificationVisible = portfolioUIData.shouldRequireColdWalletInteraction,
+                    isContinueButtonEnabled = portfolioUIData.addToPortfolioData.isUserAddedNetworks(
                         userWalletId = selectedWallet.walletId,
                     ),
                     onContinueButtonClick = {
@@ -90,7 +90,7 @@ internal class AddToPortfolioBSContentUMFactory(
                         )
                     },
                     walletSelectorConfig = createWalletSelectorBSConfig(
-                        isShow = portfolioUIData.portfolioBSVisibilityModel.walletSelectorBSVisibility,
+                        isShow = portfolioUIData.portfolioBSVisibilityModel.isWalletSelectorBSVisible,
                         portfolioData = portfolioData,
                         selectedWalletId = selectedWallet.walletId,
                         artworks = artworks,
@@ -136,9 +136,9 @@ internal class AddToPortfolioBSContentUMFactory(
                         val balance = portfolioData.walletsWithBalance[userWallet.walletId]
 
                         UserWalletItemUMConverter(
-                            onClick = {
-                                if (it != selectedWalletId) {
-                                    onAnotherWalletSelect(it)
+                            onClick = { walletId ->
+                                if (walletId != selectedWalletId) {
+                                    onAnotherWalletSelect(walletId)
                                     onWalletSelectorVisibilityChange(false)
                                 }
                             },

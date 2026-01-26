@@ -1,7 +1,11 @@
 package com.tangem.features.staking.impl.presentation.state.previewdata
 
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
+import com.tangem.domain.staking.model.toStakingTarget
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import java.math.BigDecimal
 
@@ -13,9 +17,9 @@ internal object ValidatorStatePreviewData {
             status = ValidatorStatus.ACTIVE,
             name = "Luganodes",
             image = "https://assets.stakek.it/validators/luganodes.png",
-            rewardInfo = Yield.RewardInfo(
+            rewardInfo = RewardInfo(
                 rate = BigDecimal("0.054823398040640445"),
-                type = Yield.RewardType.APR,
+                type = RewardType.APR,
             ),
             commission = 0.1,
             stakedBalance = "355544384.45009977",
@@ -29,9 +33,9 @@ internal object ValidatorStatePreviewData {
             status = ValidatorStatus.ACTIVE,
             name = "InfStones",
             image = "https://assets.stakek.it/validators/infstones.png",
-            rewardInfo = Yield.RewardInfo(
+            rewardInfo = RewardInfo(
                 rate = BigDecimal("0.057786472172836965"),
-                type = Yield.RewardType.APR,
+                type = RewardType.APR,
             ),
             commission = 0.05,
             stakedBalance = "12495684.05643019",
@@ -45,9 +49,9 @@ internal object ValidatorStatePreviewData {
             status = ValidatorStatus.ACTIVE,
             name = "Kiln",
             image = "https://assets.stakek.it/validators/kiln.png",
-            rewardInfo = Yield.RewardInfo(
+            rewardInfo = RewardInfo(
                 rate = BigDecimal("0.057786472172836965"),
-                type = Yield.RewardType.APR,
+                type = RewardType.APR,
             ),
             commission = 0.05,
             stakedBalance = "85400369.96393165",
@@ -58,11 +62,13 @@ internal object ValidatorStatePreviewData {
         ),
     )
 
+    private val targetList: List<StakingTarget> = validatorList.map { it.toStakingTarget() }
+
     val validatorState = StakingStates.ValidatorState.Data(
-        availableValidators = validatorList,
-        chosenValidator = validatorList.first(),
+        availableTargets = targetList,
+        chosenTarget = targetList.first(),
         isPrimaryButtonEnabled = true,
-        activeValidator = null,
+        activeTarget = null,
         isClickable = true,
         isVisibleOnConfirmation = true,
     )

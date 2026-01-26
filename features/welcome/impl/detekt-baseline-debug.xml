@@ -5,7 +5,6 @@
     <ID>BooleanPropertyNaming:WelcomeModel.kt$WelcomeModel$private var routedOut = false</ID>
     <ID>BooleanPropertyNaming:WelcomeUM.kt$WelcomeUM.SelectWallet$val showUnlockWithBiometricButton: Boolean = false</ID>
     <ID>MultilineLambdaItParameter:WelcomeModel.kt$WelcomeModel${ if (it.isEmpty()) { router.replaceAll(AppRoute.Home()) } wallets.value = it }</ID>
-    <ID>MultilineLambdaItParameter:WelcomeModel.kt$WelcomeModel${ it.handle( specificWalletId = null, onUserCancelled = { tryToUnlockWithAccessCodeRightAway() }, ) setSelectWalletState() }</ID>
     <ID>ReusedModifierInstance:Welcome.kt$WelcomePlain(modifier = modifier)</ID>
     <ID>ReusedModifierInstance:Welcome.kt$WelcomeSelectWallet( state = st, modifier = modifier, )</ID>
   </CurrentIssues>

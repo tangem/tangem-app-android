@@ -28,7 +28,6 @@
     <ID>MultilineLambdaItParameter:UpdateWalletUseCase.kt$UpdateWalletUseCase${ when (it) { is SaveWalletError.DataError -&gt; DataError( IllegalStateException("Failed to update wallet: ${it.messageId}"), ) is SaveWalletError.WalletAlreadySaved -&gt; UpdateWalletError.NameAlreadyExists } }</ID>
     <ID>NestedScopeFunctions:ColdUserWalletBuilder.kt$ColdUserWalletBuilder$let { UserWallet.Cold( walletId = it, name = generateWalletNameUseCase( card = card, productType = productType, isStartToCoin = cardTypesResolver.isStart2Coin(), ), cardsInWallet = backupCardsIds.plus(card.cardId), scanResponse = this, isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(), hasBackupError = hasBackupError, ) }</ID>
     <ID>NoNameShadowing:SaveWalletUseCase.kt$SaveWalletUseCase$userWallet</ID>
-    <ID>NullableToStringCall:GenerateBuyTangemCardLinkUseCase.kt$GenerateBuyTangemCardLinkUseCase$$id</ID>
     <ID>NullableToStringCall:UpdateWalletUseCase.kt$UpdateWalletUseCase$${it.messageId}</ID>
     <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$AllKeysInvalidated : UserWalletsListError</ID>
     <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$BiometricsAuthenticationDisabled : UserWalletsListError</ID>

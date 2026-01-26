@@ -20,6 +20,10 @@ class GetExplorerTransactionUrlUseCase @Inject constructor(
         return either {
             catch(
                 block = {
+                    if (txHash.isEmpty()) {
+                        raise(TxStatusError.EmptyUrlError)
+                    }
+
                     repository.getTxExploreUrl(txHash, networkId, currency).ifEmpty {
                         raise(TxStatusError.EmptyUrlError)
                     }

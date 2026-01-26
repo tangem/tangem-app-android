@@ -9,6 +9,7 @@ import androidx.compose.runtime.Immutable
  * It necessary to use [Immutable] annotation because all sealed interface has runtime stability.
  * All subclasses are stable.
  */
+@Immutable
 sealed class ImageReference {
 
     data class Url(val url: String) : ImageReference()

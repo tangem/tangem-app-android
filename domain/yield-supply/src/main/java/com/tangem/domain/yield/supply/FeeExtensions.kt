@@ -41,6 +41,7 @@ fun Fee.increaseGasLimitBy(percent: BigInteger): Fee {
         value = increasedGasLimit.toBigDecimal().multiply(increasedGasPrice).movePointLeft(this.amount.decimals),
     )
     return when (this) {
+        is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
         is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
         is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
     }

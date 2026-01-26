@@ -20,14 +20,14 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
 internal class TokenDetailsOnrampTransactionStateConverter(
-    private val clickIntents: TokenDetailsClickIntents,
+    private val clickIntents: ExpressTransactionsClickIntents,
     private val cryptoCurrency: CryptoCurrency,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val appCurrencyProvider: Provider<AppCurrency>,

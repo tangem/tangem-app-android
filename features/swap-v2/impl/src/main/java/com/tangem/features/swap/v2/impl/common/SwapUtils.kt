@@ -14,7 +14,10 @@ internal object SwapUtils {
     const val INCREASE_GAS_LIMIT_FOR_CEX = 105 // 5%
 
     /** List of supported provider types in Send with Swap */
-    internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(ExpressProviderType.CEX)
+    internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(
+        ExpressProviderType.CEX,
+        ExpressProviderType.DEX,
+    )
 
     fun getExpressErrorMessage(expressError: ExpressError): TextReference {
         return when (expressError) {

@@ -1,0 +1,49 @@
+package com.tangem.features.feed.model.market.details.converter
+
+import androidx.compose.runtime.Stable
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
+import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
+import com.tangem.utils.Provider
+import com.tangem.utils.converter.Converter
+
+@Suppress("NestedScopeFunctions")
+@Stable
+internal class DescriptionConverter(
+    private val onReadModeClicked: (InfoBottomSheetContent) -> Unit,
+    private val onGeneratedAINotificationClick: () -> Unit,
+    private val needApplyFCARestrictions: Provider<Boolean>,
+) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.Description?> {
+
+    override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.Description? {
+        if (needApplyFCARestrictions()) return null
+        return value.shortDescription?.let { desc ->
+            MarketsTokenDetailsUM.Description(
+                shortDescription = stringReference(desc),
+                fullDescription = value.fullDescription?.let { fullDescription ->
+                    stringReference(fullDescription)
+                },
+                onReadMoreClick = {
+                    onReadModeClicked(
+                        InfoBottomSheetContent(
+                            title = resourceReference(
+                                R.string.markets_token_details_about_token_title,
+                                wrappedList(
+                                    value.name,
+                                ),
+                            ),
+                            body = stringReference(value.fullDescription.orEmpty()),
+                            generatedAINotificationUM = InfoBottomSheetContent.GeneratedAINotificationUM(
+                                onClick = onGeneratedAINotificationClick,
+                            ),
+                        ),
+                    )
+                },
+            )
+        }
+    }
+}

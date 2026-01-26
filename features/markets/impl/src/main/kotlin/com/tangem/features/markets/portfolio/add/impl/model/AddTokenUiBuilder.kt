@@ -29,7 +29,7 @@ internal class AddTokenUiBuilder @Inject constructor(
         return AddTokenUM.Network(
             icon = selectedNetwork.cryptoCurrency.network.iconResId,
             name = stringReference(selectedNetwork.cryptoCurrency.network.name),
-            editable = selectedNetwork.availableMoreNetwork,
+            editable = selectedNetwork.hasMoreNetworksAvailable,
             onClick = { params.callbacks.onChangeNetworkClick() },
         )
     }
@@ -54,7 +54,7 @@ internal class AddTokenUiBuilder @Inject constructor(
             icon = accountIcon,
             name = portfolioName,
             isAccountMode = selectedPortfolio.isAccountMode,
-            isMultiChoice = selectedPortfolio.availableMorePortfolio,
+            isMultiChoice = selectedPortfolio.hasMorePortfoliosAvailable,
             onClick = { params.callbacks.onChangePortfolioClick() },
         )
     }

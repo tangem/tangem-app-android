@@ -21,6 +21,9 @@ dependencies {
     /** Common */
     implementation(projects.common.ui)
 
+    /** Domain */
+    implementation(projects.domain.transaction)
+
     /** Domain models */
     api(projects.domain.models)
     implementation(projects.domain.appCurrency.models)

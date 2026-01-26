@@ -1,19 +1,21 @@
 package com.tangem.features.feed.ui.feed
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +23,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -33,6 +36,7 @@ import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleCard
 import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.common.ui.news.ShowMoreArticlesCard
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -41,46 +45,45 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
 
 @Composable
-internal fun FeedListHeader(searchBarUM: SearchBarUM, modifier: Modifier = Modifier) {
+internal fun FeedListHeader(
+    isSearchBarClickable: Boolean,
+    feedListSearchBar: FeedListSearchBar,
+    modifier: Modifier = Modifier,
+) {
     val background = LocalMainBottomSheetColor.current.value
-    SearchBar(
+    FeedSearchBar(
+        isSearchBarClickable = isSearchBarClickable,
+        feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
             .padding(horizontal = 16.dp)
-            .padding(bottom = 12.dp),
-        state = searchBarUM,
-        colors = TangemSearchBarDefaults.defaultTextFieldColors.copy(
-            focusedContainerColor = TangemTheme.colors.field.focused,
-            unfocusedContainerColor = TangemTheme.colors.field.focused,
-        ),
+            .padding(bottom = 8.dp),
     )
 }
 
 @Composable
 internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-
     AnimatedContent(
         modifier = modifier,
         targetState = state.globalState,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
     ) { animatedState ->
         when (animatedState) {
             is GlobalFeedState.Loading -> {
-                FeeListLoading(
+                FeedListLoading(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
@@ -91,10 +94,11 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
                 FeedListGlobalError(
                     onRetryClick = animatedState.onRetryClicked,
                     modifier = Modifier.drawBehind { drawRect(background) },
+                    currentDate = state.currentDate,
                 )
             }
             is GlobalFeedState.Content -> {
-                FeeListContent(
+                FeedListContent(
                     modifier = Modifier,
                     state = state,
                 )
@@ -104,89 +108,106 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FeeListContent(state: FeedListUM, modifier: Modifier = Modifier) {
+private fun FeedSearchBar(
+    isSearchBarClickable: Boolean,
+    feedListSearchBar: FeedListSearchBar,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(36.dp))
+            .background(color = TangemTheme.colors.field.focused)
+            .conditional(condition = isSearchBarClickable) {
+                clickable(onClick = feedListSearchBar.onBarClick)
+            }
+            .padding(14.dp),
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size20),
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_search_24),
+            tint = TangemTheme.colors.icon.informative,
+            contentDescription = null,
+        )
+
+        SpacerW(14.dp)
+
+        Text(
+            text = feedListSearchBar.placeholderText.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+    }
+}
+
+@Composable
+private fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
             .drawBehind { drawRect(background) },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(WindowInsets.navigationBars.asPaddingValues()),
-        ) {
-            SpacerH(20.dp)
+        DateBlock(state.currentDate)
+        SpacerH(32.dp)
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                text = stringResourceSafe(R.string.feed_market_and_news),
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                text = state.currentDate,
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+        MarketBlock(
+            marketChart = state.marketChartConfig.marketCharts[SortByTypeUM.Rating],
+            feedListCallbacks = state.feedListCallbacks,
+        )
 
-            SpacerH(32.dp)
+        NewsBlock(
+            news = state.news,
+            feedListCallbacks = state.feedListCallbacks,
+            trendingArticle = state.trendingArticle,
+        )
 
-            AnimatedVisibility(state.marketChartConfig.marketCharts[SortByTypeUM.Rating] != null) {
-                val marketChart = remember(state.marketChartConfig.marketCharts[SortByTypeUM.Rating]) {
-                    state.marketChartConfig.marketCharts[SortByTypeUM.Rating]
-                }
-                if (marketChart != null) {
-                    MarketBlock(
-                        marketChart = marketChart,
-                        feedListCallbacks = state.feedListCallbacks,
-                    )
-                }
-            }
-
-            NewsBlock(
-                news = state.news,
-                feedListCallbacks = state.feedListCallbacks,
-                trendingArticle = state.trendingArticle,
-            )
-
-            MarketPulseBlock(
-                marketChartConfig = state.marketChartConfig,
-                feedListCallbacks = state.feedListCallbacks,
-            )
-        }
+        MarketPulseBlock(
+            marketChartConfig = state.marketChartConfig,
+            feedListCallbacks = state.feedListCallbacks,
+        )
     }
 }
 
 @Composable
-private fun MarketBlock(marketChart: MarketChartUM, feedListCallbacks: FeedListCallbacks) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Header(
-            title = {
-                Text(
-                    text = stringResourceSafe(R.string.markets_common_title),
-                    style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            },
-            onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
-        )
+private fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedListCallbacks) {
+    AnimatedContent(
+        targetState = marketChart,
+        label = "MarketBlockChartAnimation",
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+    ) { currentChart ->
+        when (currentChart) {
+            is MarketChartUM.Content,
+            MarketChartUM.Loading,
+            is MarketChartUM.LoadingError,
+            -> {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Header(
+                        title = {
+                            Text(
+                                text = stringResourceSafe(R.string.markets_common_title),
+                                style = TangemTheme.typography.h3,
+                                color = TangemTheme.colors.text.primary1,
+                            )
+                        },
+                        onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
+                    )
 
-        SpacerH(12.dp)
+                    SpacerH(12.dp)
 
-        Charts(
-            onItemClick = feedListCallbacks.onMarketItemClick,
-            modifier = Modifier.padding(horizontal = 16.dp),
-            marketChart = marketChart,
-        )
+                    Charts(
+                        onItemClick = feedListCallbacks.onMarketItemClick,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        marketChart = currentChart,
+                    )
 
-        SpacerH(32.dp)
+                    SpacerH(32.dp)
+                }
+            }
+            null -> Unit
+        }
     }
 }
 
@@ -245,36 +266,35 @@ private fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallb
     }
 }
 
-@Suppress("CanBeNonNullable")
 @Composable
 private fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
-    AnimatedContent(news) { newsUM ->
-        when (newsUM) {
-            is NewsUM.Content -> {
-                if (newsUM.content.isNotEmpty()) {
+    AnimatedContent(news.newsUMState) { newsUMState ->
+        when (newsUMState) {
+            NewsUMState.LOADING -> NewsLoadingBlock()
+            NewsUMState.CONTENT -> {
+                if (news.content.isNotEmpty()) {
                     NewsContentBlock(
                         feedListCallbacks = feedListCallbacks,
-                        news = newsUM,
+                        news = news,
                         trendingArticle = trendingArticle,
                     )
                 }
             }
-            NewsUM.Loading -> {
-                NewsLoadingBlock()
-            }
-            is NewsUM.Error -> {
-                NewsErrorBlock(onRetryClick = newsUM.onRetryClicked)
-            }
+            NewsUMState.ERROR -> NewsErrorBlock(onRetryClick = news.onRetryClicked)
         }
     }
 }
 
+@Suppress("LongMethod")
 @Composable
-private fun NewsContentBlock(
-    feedListCallbacks: FeedListCallbacks,
-    news: NewsUM.Content,
-    trendingArticle: ArticleConfigUM?,
-) {
+private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
+    val listState = rememberLazyListState()
+    val articlesReadStatus = remember(news.content) {
+        news.content.map { it.isViewed }
+    }
+    LaunchedEffect(articlesReadStatus) {
+        listState.requestScrollToItem(0)
+    }
     Column {
         Header(
             title = {
@@ -307,46 +327,71 @@ private fun NewsContentBlock(
                                 append(stringResourceSafe(R.string.feed_tangem_ai))
                             }
                         },
-                        style = TangemTheme.typography.h3,
+                        style = TangemTheme.typography.subtitle1,
                     )
                 }
             },
-            onSeeAllClick = feedListCallbacks.onOpenAllNews,
+            onSeeAllClick = { feedListCallbacks.onOpenAllNews(false) },
         )
         SpacerH(12.dp)
 
-        trendingArticle?.let { article ->
-            ArticleCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                articleConfigUM = article,
-                onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
-                colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
-            )
-            SpacerH(12.dp)
+        if (trendingArticle != null) {
+            Column {
+                ArticleCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    articleConfigUM = trendingArticle,
+                    onArticleClick = { feedListCallbacks.onArticleClick(trendingArticle.id) },
+                    colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+                )
+                SpacerH(12.dp)
+            }
         }
 
         LazyRow(
             verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            state = rememberLazyListState(),
+            state = listState,
         ) {
-            items(
+            itemsIndexed(
                 items = news.content,
-                key = ArticleConfigUM::id,
-            ) { article ->
+                key = { _, article -> article.id },
+                contentType = { _, _ -> "article" },
+            ) { index, article ->
+                val articleModifier = if (index == FOURTH_ITEM_INDEX) {
+                    Modifier.onFirstVisible(
+                        minFractionVisible = 0.5f,
+                        callback = feedListCallbacks.onSliderScroll,
+                    )
+                } else {
+                    Modifier
+                }
                 ArticleCard(
                     articleConfigUM = article,
                     onArticleClick = { feedListCallbacks.onArticleClick(article.id) },
-                    modifier = Modifier
-                        .height(164.dp)
-                        .widthIn(max = 216.dp),
+                    modifier = articleModifier
+                        .heightIn(min = 164.dp)
+                        .width(216.dp),
                     colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 )
             }
+
+            item(contentType = "show_more") {
+                ShowMoreArticlesCard(
+                    modifier = Modifier
+                        .width(216.dp)
+                        .heightIn(min = 164.dp)
+                        .onFirstVisible(
+                            minFractionVisible = 0.5f,
+                            callback = feedListCallbacks.onSliderEndReached,
+                        ),
+                    onClick = { feedListCallbacks.onOpenAllNews(true) },
+                )
+            }
         }
+        SpacerH(32.dp)
     }
 }
 
@@ -388,10 +433,16 @@ private fun Charts(
                     }
                 }
                 is MarketChartUM.LoadingError -> {
-                    UnableToLoadData(
-                        onRetryClick = marketChart.onRetryClicked,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 35.dp, horizontal = 10.dp),
+                    ) {
+                        UnableToLoadData(
+                            onRetryClick = marketChart.onRetryClicked,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
                 is MarketChartUM.Content -> {
                     marketChart.items.fastForEach { chart ->
@@ -439,16 +490,19 @@ private fun FilterChip(sortByTypeUM: SortByTypeUM, isSelected: Boolean, onClick:
 }
 
 @Composable
-private fun FeedListGlobalError(onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun FeedListGlobalError(onRetryClick: () -> Unit, currentDate: String, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .drawBehind { drawRect(background) }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        UnableToLoadData(onRetryClick = onRetryClick)
+    Column(modifier) {
+        DateBlock(currentDate)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawBehind { drawRect(background) }
+                .padding(16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            UnableToLoadData(onRetryClick = onRetryClick)
+        }
     }
 }
 
@@ -468,20 +522,50 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
             onSeeAllClick = {},
         )
         SpacerH(12.dp)
-        UnableToLoadData(
-            onRetryClick = onRetryClick,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        BlockCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+        ) {
+            UnableToLoadData(
+                onRetryClick = onRetryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 35.dp, horizontal = 10.dp),
+            )
+        }
+        SpacerH(32.dp)
     }
 }
 
+@Composable
+private fun ColumnScope.DateBlock(currentDate: String) {
+    SpacerH(20.dp)
+    Text(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        text = stringResourceSafe(R.string.feed_market_and_news),
+        style = TangemTheme.typography.h2,
+        color = TangemTheme.colors.text.primary1,
+    )
+    Text(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        text = currentDate,
+        style = TangemTheme.typography.h2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
 private const val DEFAULT_CHART_SIZE_IN_MARKET = 5
+private const val FOURTH_ITEM_INDEX = 3
 private const val GRADIENT_START = 0f
 private const val GRADIENT_END = 0.5f
 private val LinearGradientFirstPart = Color(0xFF635EEC)
 private val LinearGradientSecondPart = Color(0xFFE05AED)
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 1500)
 @Composable
 private fun FeedListPreview() {
     TangemThemePreview {

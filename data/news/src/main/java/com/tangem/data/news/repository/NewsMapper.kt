@@ -4,13 +4,9 @@ import com.tangem.datasource.api.news.models.response.NewsArticleDto
 import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
 import com.tangem.datasource.api.news.models.response.NewsOriginalArticleDto
 import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
-import com.tangem.domain.models.news.ArticleCategory
-import com.tangem.domain.models.news.DetailedArticle
-import com.tangem.domain.models.news.OriginalArticle
-import com.tangem.domain.models.news.RelatedToken
-import com.tangem.domain.models.news.ShortArticle
+import com.tangem.domain.models.news.*
 
-internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
+internal fun NewsDetailsResponse.toDomainDetailedArticle(isLiked: Boolean): DetailedArticle {
     return DetailedArticle(
         id = id,
         createdAt = createdAt,
@@ -24,6 +20,7 @@ internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
         shortContent = shortContent,
         content = content,
         originalArticles = originalArticles.map { it.toDomainOriginalArticle() },
+        isLiked = isLiked,
     )
 }
 
@@ -54,7 +51,10 @@ internal fun NewsOriginalArticleDto.toDomainOriginalArticle(): OriginalArticle {
     return OriginalArticle(
         id = id,
         title = title,
-        sourceName = sourceName,
+        source = Source(
+            id = source.id,
+            name = source.name,
+        ),
         locale = language,
         publishedAt = publishedAt,
         url = url,

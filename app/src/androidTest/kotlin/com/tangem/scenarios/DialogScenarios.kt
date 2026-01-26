@@ -9,6 +9,7 @@ import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.title
 import com.tangem.screens.ScanWarningDialogPageObject
 import com.tangem.screens.onActionIsUnavailableDialog
+import com.tangem.screens.onDataNotLoadedDialog
 import com.tangem.screens.onFailedTransactionDialog
 import io.qameta.allure.kotlin.Allure.step
 
@@ -75,5 +76,17 @@ fun BaseTestCase.checkActionIsUnavailableDialog() {
     }
     step("Assert 'Action is unavailable' dialog 'Ok' button is displayed") {
         onActionIsUnavailableDialog { okButton.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkDataNotLoadedDialog() {
+    step("Assert 'The data has not loaded yet' dialog title is displayed") {
+        onDataNotLoadedDialog { title.assertIsDisplayed() }
+    }
+    step("Assert 'The data has not loaded yet' dialog text is displayed") {
+        onDataNotLoadedDialog { text.assertIsDisplayed() }
+    }
+    step("Assert 'The data has not loaded yet' dialog 'Ok' button is displayed") {
+        onDataNotLoadedDialog { okButton.assertIsDisplayed() }
     }
 }

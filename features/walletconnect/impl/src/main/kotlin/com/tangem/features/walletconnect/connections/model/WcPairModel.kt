@@ -273,6 +273,7 @@ internal class WcPairModel @Inject constructor(
         val (wallet, portfolioAccount) = selectedPortfolio
         val account = when (val account = portfolioAccount.account) {
             is Account.CryptoPortfolio -> account
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         val isAccountMode = selectorController.isAccountMode.first()
         val icon: CryptoPortfolioIconUM?
@@ -325,6 +326,7 @@ internal class WcPairModel @Inject constructor(
             if (selectorController.isAccountModeSync() && account != null) {
                 val derivationIndex = when (account) {
                     is Account.CryptoPortfolio -> account.derivationIndex.value
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
                 analytics.send(WcAnalyticAccountEvents.PairButtonConnect(derivationIndex))
             } else {
