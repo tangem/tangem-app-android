@@ -88,18 +88,27 @@ internal class DefaultFeeSelectorComponent @AssistedInject constructor(
         )
 
         return when (config) {
-            FeeSelectorRoute.NetworkFee -> feeExtendedSelectorComponentFactory.create(
-                appComponentContext = appComponentContext,
-                params = componentParams,
-            )
-            FeeSelectorRoute.ChooseSpeed -> feeSpeedSelectorComponentFactory.create(
-                appComponentContext = appComponentContext,
-                params = componentParams,
-            )
-            FeeSelectorRoute.ChooseToken -> feeTokenSelectorComponentFactory.create(
-                appComponentContext = appComponentContext,
-                params = componentParams,
-            )
+            FeeSelectorRoute.NetworkFee -> {
+                model.onFeeScreenOpened()
+                feeExtendedSelectorComponentFactory.create(
+                    appComponentContext = appComponentContext,
+                    params = componentParams,
+                )
+            }
+            FeeSelectorRoute.ChooseSpeed -> {
+                model.onChooseSpeedScreenOpened()
+                feeSpeedSelectorComponentFactory.create(
+                    appComponentContext = appComponentContext,
+                    params = componentParams,
+                )
+            }
+            FeeSelectorRoute.ChooseToken -> {
+                model.onChooseTokenScreenOpened()
+                feeTokenSelectorComponentFactory.create(
+                    appComponentContext = appComponentContext,
+                    params = componentParams,
+                )
+            }
         }
     }
 
