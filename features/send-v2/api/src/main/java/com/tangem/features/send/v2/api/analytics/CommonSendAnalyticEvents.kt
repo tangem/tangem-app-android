@@ -52,6 +52,30 @@ sealed class CommonSendAnalyticEvents(
         ),
     )
 
+    data class FeeSummaryScreenOpened(
+        val categoryName: String,
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Fee Summary Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
+
+    data class FeeTokenScreenOpened(
+        val categoryName: String,
+        val source: CommonSendSource,
+        val availableTokens: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Fee Token Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+            "Available Fee" to availableTokens,
+        ),
+    )
+
     @Suppress("NullableToStringCall")
     /** Confirmation screen opened */
     data class ConfirmationScreenOpened(
@@ -175,6 +199,7 @@ sealed class CommonSendAnalyticEvents(
 
     companion object {
         const val SEND_CATEGORY = "Token / Send"
+        const val SWAP_CATEGORY = "Swap"
         const val NFT_SEND_CATEGORY = "NFT"
     }
 

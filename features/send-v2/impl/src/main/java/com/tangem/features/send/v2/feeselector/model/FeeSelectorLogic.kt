@@ -153,13 +153,15 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 categoryName = params.analyticsCategoryName,
                 feeType = feeSelectorUM.toAnalyticType(),
                 source = params.analyticsSendSource,
+                feeToken = feeSelectorUM.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol,
             ),
         )
         val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
         if (feeSelectorUM.selectedFeeItem is FeeItem.Custom && isCustomFeeEdited) {
             analyticsEventHandler.send(GasPriceInserter(categoryName = params.analyticsCategoryName))
         }
-        if (feeSelectorUM.feeNonce is FeeNonce.Nonce) {
+        val nonceField = feeSelectorUM.feeNonce as? FeeNonce.Nonce
+        if (nonceField != null && nonceField.nonce != null) {
             analyticsEventHandler.send(
                 NonceInserted(
                     categoryName = params.analyticsCategoryName,
@@ -268,12 +270,11 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 
     private suspend fun getSelectedTokenStatus(tokenId: CryptoCurrency.ID): Either<GetFeeError, CryptoCurrencyStatus> =
         either {
-            val feeTokenId = tokenId
-            if (params.feeCryptoCurrencyStatus.currency.id != feeTokenId) {
+            if (params.feeCryptoCurrencyStatus.currency.id != tokenId) {
                 getSingleCryptoCurrencyStatusUseCase
                     .invokeMultiWalletSync(
                         userWalletId = params.userWalletId,
-                        cryptoCurrencyId = feeTokenId,
+                        cryptoCurrencyId = tokenId,
                     ).getOrElse {
                         raise(GetFeeError.DataError(IllegalStateException("No token found for id: $tokenId")))
                     }
