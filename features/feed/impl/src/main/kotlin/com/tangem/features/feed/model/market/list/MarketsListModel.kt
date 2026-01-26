@@ -1,6 +1,7 @@
 package com.tangem.features.feed.model.market.list
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -16,6 +17,10 @@ import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
+import com.tangem.domain.settings.usercountry.models.UserCountryError
+import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.model.market.list.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.ListUM
@@ -48,6 +53,7 @@ internal class MarketsListModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val promoRepository: PromoRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
 ) : Model() {
 
     private val updateQuotesJob = JobHolder()
@@ -124,12 +130,14 @@ internal class MarketsListModel @Inject constructor(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
                         ).conflate(),
-                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo ->
+                        flow5 = getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo, userCountry ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = isSearchNotFoundState,
                             shouldShowYieldModePromo = isYieldModePromo,
+                            userCountry = userCountry,
                         )
                     }
                 } else {
@@ -140,17 +148,20 @@ internal class MarketsListModel @Inject constructor(
                             appCurrency = currentAppCurrency.value,
                             interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
                         ).conflate(),
-                    ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo ->
+                        flow4 = getUserCountryUseCase.invoke(),
+                    ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo, userCountry ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = false,
                             shouldShowYieldModePromo = shouldShowYieldModePromo,
+                            userCountry = userCountry,
                         )
                     }
                 }
             }.collect { marketsItemsData ->
-                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo
+                val isApplyFCARestrictions = marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
+                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo && !isApplyFCARestrictions
                 if (marketsListUMStateManager.state.value.marketsNotificationUM == null && shouldShowYieldModePromo) {
                     analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoShown())
                 }
@@ -332,5 +343,6 @@ internal class MarketsListModel @Inject constructor(
         val isInErrorState: Boolean,
         val isSearchNotFound: Boolean,
         val shouldShowYieldModePromo: Boolean,
+        val userCountry: Either<UserCountryError, UserCountry>,
     )
 }
