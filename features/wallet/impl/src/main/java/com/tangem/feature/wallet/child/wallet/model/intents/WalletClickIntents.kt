@@ -29,7 +29,6 @@ internal class WalletClickIntents @Inject constructor(
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementor,
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
-    private val visaWalletIntentsImplementor: VisaWalletIntentsImplementor,
     private val pushPermissionClickIntentsImplementor: WalletPushPermissionClickIntentsImplementor,
     private val stateHolder: WalletStateController,
     private val walletScreenContentLoader: WalletScreenContentLoader,
@@ -47,7 +46,6 @@ internal class WalletClickIntents @Inject constructor(
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
     WalletContentClickIntents by contentClickIntentsImplementor,
-    VisaWalletIntents by visaWalletIntentsImplementor,
     WalletPushPermissionClickIntents by pushPermissionClickIntentsImplementor,
     TangemPayIntents by tangemPayIntents {
 
@@ -58,7 +56,6 @@ internal class WalletClickIntents @Inject constructor(
         warningsClickIntentsImplementer.initialize(router, coroutineScope)
         currencyActionsClickIntentsImplementor.initialize(router, coroutineScope)
         contentClickIntentsImplementor.initialize(router, coroutineScope)
-        visaWalletIntentsImplementor.initialize(router, coroutineScope)
         pushPermissionClickIntentsImplementor.initialize(router, coroutineScope)
         tangemPayIntents.initialize(router, coroutineScope)
     }
@@ -98,14 +95,11 @@ internal class WalletClickIntents @Inject constructor(
                 refreshMultiCurrencyContent(showRefreshState)
             }
             is WalletState.SingleCurrency.Content,
-            is WalletState.Visa.Content,
             -> {
                 refreshSingleCurrencyContent(showRefreshState)
             }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
-            is WalletState.Visa.Locked,
-            is WalletState.Visa.AccessTokenLocked,
             -> Unit
         }
     }
