@@ -1,10 +1,12 @@
 package com.tangem.data.common.currency
 
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
+import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -27,6 +29,8 @@ class UserTokensSaverTest {
     private val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
         every { this@mockk.isFeatureEnabled } returns true
     }
+    private val walletServerBinder: WalletServerBinder = mockk()
+    private val appsFlyerConversionStore: AppsFlyerConversionStore = mockk()
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -34,13 +38,21 @@ class UserTokensSaverTest {
         userTokensResponseStore = userTokensResponseStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
+        walletServerBinder = walletServerBinder,
+        appsFlyerConversionStore = appsFlyerConversionStore,
         accountsFeatureToggles = accountsFeatureToggles,
         pushTokensRetryerPool = mockk(),
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemTechApi, userWalletsStore, userTokensResponseStore, enricher)
+        clearMocks(
+            tangemTechApi,
+            userWalletsStore,
+            userTokensResponseStore,
+            enricher,
+            walletServerBinder,
+        )
     }
 
     @Test
@@ -109,7 +121,6 @@ class UserTokensSaverTest {
             coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
             coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
-            coEvery { tangemTechApi.createWallet(body = any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
 
             // WHEN
             userTokensSaver.push(
