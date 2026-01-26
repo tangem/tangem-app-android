@@ -62,7 +62,7 @@ internal class TokenMarketInfoConverter(
                 network.contractAddress.isNullOrEmpty() -> {
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
-                        exchangeable = network.exchangeable,
+                        isExchangeable = network.exchangeable,
                         contractAddress = network.contractAddress,
                         decimalCount = network.decimalCount,
                     )
@@ -71,7 +71,7 @@ internal class TokenMarketInfoConverter(
                     blockchain.canHandleTokens() -> {
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
-                        exchangeable = network.exchangeable,
+                        isExchangeable = network.exchangeable,
                         contractAddress = blockchain.reformatContractAddress(network.contractAddress),
                         decimalCount = network.decimalCount,
                     )
@@ -147,11 +147,11 @@ internal class TokenMarketInfoConverter(
 
     @JvmName("convertLink")
     private fun List<TokenMarketInfoResponse.Link>.convert(): List<TokenMarketInfo.Link> {
-        return map {
+        return map { link ->
             TokenMarketInfo.Link(
-                title = it.title,
-                id = it.id,
-                link = it.link,
+                title = link.title,
+                id = link.id,
+                link = link.link,
             )
         }
     }

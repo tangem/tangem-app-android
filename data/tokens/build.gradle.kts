@@ -46,6 +46,10 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     // endregion
 
+    // region Project - Features API
+    implementation(projects.features.sendV2.api)
+    // endregion
+
     // region Tangem SDKs
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
