@@ -482,7 +482,7 @@ internal class SendConfirmModel @Inject constructor(
     private fun updateTransactionStatus(txData: TransactionData.Uncompiled, txHash: String) {
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txHash.ifEmpty { txData.hash.orEmpty() },
-            networkId = cryptoCurrency.network.id,
+            currency = cryptoCurrency,
         ).getOrNull().orEmpty()
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
     }
