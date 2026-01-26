@@ -3,11 +3,13 @@ package com.tangem.features.send.v2.feeselector.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.utils.stack
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
@@ -23,6 +25,7 @@ internal class FeeSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
     feeSelectorLogicFactory: FeeSelectorLogic.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), FeeSelectorIntents {
 
     private val params = paramsContainer.require<FeeSelectorParams.FeeSelectorDetailsParams>()
@@ -76,6 +79,42 @@ internal class FeeSelectorModel @Inject constructor(
                 stackNavigation.pop()
             }
         }
+    }
+
+    fun onFeeScreenOpened() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.FeeSummaryScreenOpened(
+                categoryName = params.analyticsCategoryName,
+                source = params.analyticsSendSource,
+            ),
+        )
+    }
+
+    fun onChooseSpeedScreenOpened() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.FeeScreenOpened(
+                categoryName = params.analyticsCategoryName,
+                source = params.analyticsSendSource,
+            ),
+        )
+    }
+
+    fun onChooseTokenScreenOpened() {
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.FeeTokenScreenOpened(
+                categoryName = params.analyticsCategoryName,
+                source = params.analyticsSendSource,
+                availableTokens = getAvailableTokensString(),
+            ),
+        )
+    }
+
+    private fun getAvailableTokensString(): String {
+        return (uiState.value as? FeeSelectorUM.Content)
+            ?.feeExtraInfo
+            ?.availableFeeCurrencies
+            ?.joinToString(", ") { it.currency.symbol }
+            .orEmpty()
     }
 
     private fun contentState(): FeeSelectorUM.Content {

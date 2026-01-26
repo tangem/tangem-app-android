@@ -65,7 +65,7 @@ internal fun FeeSelectorModalBottomSheet(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         enabled = state.isPrimaryButtonEnabled,
-                        text = stringResourceSafe(R.string.common_confirm),
+                        text = stringResourceSafe(R.string.common_apply),
                         onClick = feeSelectorIntents::onDoneClick,
                     )
                 }

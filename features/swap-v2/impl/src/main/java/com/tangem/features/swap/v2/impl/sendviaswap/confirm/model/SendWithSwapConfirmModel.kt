@@ -3,6 +3,7 @@ package com.tangem.features.swap.v2.impl.sendviaswap.confirm.model
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
@@ -457,10 +458,22 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     blockchain = fromCurrency.network.name,
                     token = fromCurrency.symbol,
                     feeType = feeType,
+                    feeToken = getSelectedFeeToken().symbol,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
         )
+    }
+
+    private fun getSelectedFeeToken(): CryptoCurrency {
+        val feeUMV2 = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            feeUMV2.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        } else {
+            primaryCurrencyStatus.currency
+        }
     }
 
     private fun configConfirmNavigation() {

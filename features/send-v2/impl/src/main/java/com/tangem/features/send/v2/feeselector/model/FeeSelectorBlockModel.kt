@@ -59,12 +59,6 @@ internal class FeeSelectorBlockModel @Inject constructor(
 
     fun showFeeSelector() {
         analyticsEventHandler.send(
-            CommonSendAnalyticEvents.FeeScreenOpened(
-                categoryName = params.analyticsCategoryName,
-                source = params.analyticsSendSource,
-            ),
-        )
-        analyticsEventHandler.send(
             CommonSendAnalyticEvents.ScreenReopened(
                 categoryName = params.analyticsCategoryName,
                 source = SendScreenSource.Fee,

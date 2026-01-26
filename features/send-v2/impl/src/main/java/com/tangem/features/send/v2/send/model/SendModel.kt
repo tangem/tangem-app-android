@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -28,6 +29,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -72,6 +74,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 
 internal interface SendComponentCallback :
     SendAmountComponent.ModelCallback,
@@ -449,6 +452,17 @@ internal class SendModel @Inject constructor(
                 isSingleWalletWithTokens = false,
             )
             else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = params.userWalletId)
+        }
+    }
+
+    fun getSelectedFeeToken(): CryptoCurrency {
+        val feeUMV2 = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            feeUMV2.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        } else {
+            feeCryptoCurrencyStatusFlow.value.currency
         }
     }
 

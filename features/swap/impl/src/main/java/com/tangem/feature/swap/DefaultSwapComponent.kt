@@ -88,7 +88,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 sendingCryptoCurrencyStatus = config.sendingCurrencyStatus,
                 feeCryptoCurrencyStatus = config.feeCurrencyStatus,
                 analyticsParams = SwapFeeSelectorBlockComponent.AnalyticsParams(
-                    analyticsCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY,
+                    analyticsCategoryName = CommonSendAnalyticEvents.SWAP_CATEGORY,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Swap,
                 ),
             ),

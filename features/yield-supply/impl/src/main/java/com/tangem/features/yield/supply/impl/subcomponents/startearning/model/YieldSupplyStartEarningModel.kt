@@ -266,6 +266,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatusFlow.value.currency.symbol,
         )
         analytics.send(
             YieldSupplyAnalytics.FundsEarned(

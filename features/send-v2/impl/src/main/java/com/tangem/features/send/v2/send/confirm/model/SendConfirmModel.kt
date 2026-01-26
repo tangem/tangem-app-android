@@ -390,6 +390,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
         val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val feeToken = getCurrencyStatusForFeePayment().currency
 
         val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
@@ -433,6 +434,7 @@ internal class SendConfirmModel @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     sendUM = uiState.value,
                     account = params.accountFlow.value,
+                    feeToken = feeToken,
                 )
                 params.callback.onResult(uiState.value)
                 params.onSendTransaction()
