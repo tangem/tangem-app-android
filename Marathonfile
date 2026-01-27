@@ -17,11 +17,8 @@ vendorConfiguration:
   instrumentationArgs:
     wiremockBaseUrl: "http://localhost:8080"
   allureConfiguration:
-    enabled: true
-    relativeResultsDirectory: "Documents/allure-results"
-  # Capture screenshots on test failure for debugging
-  screenRecordConfiguration:
-    preferableRecorderType: "screenshot"
+    enabled: false
+  # Kaspresso handles screenshots via FailedStepScreenshotInterceptor - more granular (per step)
 
 poolingStrategy:
   type: "omni"
