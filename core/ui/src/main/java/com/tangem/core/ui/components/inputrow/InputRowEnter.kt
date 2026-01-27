@@ -32,7 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
+import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
 
 /**
  * [InputRowEnter](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-799&mode=design&t=IQ5lBJEkFGU4WSvi-4)
@@ -116,7 +116,7 @@ fun InputRowEnter(
                     keyboardOptions = keyboardOptions,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing8)
-                        .testTag(SendSelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD),
+                        .testTag(SelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD),
                 )
             }
             iconRes?.let { iconRes ->
