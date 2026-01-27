@@ -84,7 +84,7 @@ class SwapTokenTest : BaseTestCase() {
             }
             step("Assert 'Providers' block is displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                         providersBlock.assertIsDisplayed()
                     }
                 }
@@ -210,7 +210,7 @@ class SwapTokenTest : BaseTestCase() {
             step("Click on 'Network fee' block") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                        networkFeeBlock.clickWithAssertion()
+                        selectFeeIcon.clickWithAssertion()
                     }
                 }
             }
@@ -218,6 +218,7 @@ class SwapTokenTest : BaseTestCase() {
                 onSwapSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
             }
             step("Assert 'Market' item is displayed") {
+                printSemanticTree(rootIndex = 1, useUnmergedTree = true)
                 onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.assertIsDisplayed() }
             }
             step("Assert 'Fast' item is displayed") {
