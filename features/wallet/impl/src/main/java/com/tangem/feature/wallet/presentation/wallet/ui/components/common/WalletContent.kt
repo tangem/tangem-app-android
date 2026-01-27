@@ -30,8 +30,5 @@ internal fun LazyListScope.contentItems(
         is WalletState.SingleCurrency -> {
             txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
         }
-        is WalletState.Visa -> {
-            txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)
-        }
     }
 }
