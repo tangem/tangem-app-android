@@ -213,7 +213,7 @@ internal class SwapModel @Inject constructor(
     val feeSelectorRepository = FeeSelectorRepository()
 
     // shows currency order (direct - swap initial to selected, reversed = selected to initial)
-    private var isOrderReversed = false
+    var isOrderReversed by mutableStateOf(false)
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private val lastReducedBalanceBy = mutableStateOf(BigDecimal.ZERO)
     private val swapRouter: SwapRouter = SwapRouter(router = router)

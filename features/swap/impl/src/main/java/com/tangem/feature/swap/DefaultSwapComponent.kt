@@ -24,7 +24,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.model.SwapModel
 import com.tangem.feature.swap.models.AddToPortfolioRoute
-import com.tangem.feature.swap.models.SwapCardState.SwapCardData
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
@@ -100,14 +99,25 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         val feeCurrencyStatus: CryptoCurrencyStatus,
     )
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content(modifier: Modifier) {
         if (sendFeatureToggles.isGaslessTransactionsEnabled) {
-            val sendCardData = model.uiState.sendCardData as? SwapCardData
+            val fromCryptoCurrency = if (model.isOrderReversed) {
+                model.dataState.toCryptoCurrency
+            } else {
+                model.dataState.fromCryptoCurrency
+            }
             val feePaidCryptoCurrency = model.dataState.feePaidCryptoCurrency
-            LaunchedEffect(sendCardData?.token?.currency, feePaidCryptoCurrency?.currency) {
-                val sendingCryptoCurrencyStatus = sendCardData?.token ?: run {
+            val amount = model.dataState.amount
+
+            LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, amount.isNullOrBlank()) {
+                if (amount.isNullOrBlank()) {
+                    slotNavigation.dismiss()
+                    return@LaunchedEffect
+                }
+
+                val sendingCryptoCurrencyStatus = fromCryptoCurrency ?: run {
                     slotNavigation.dismiss()
                     return@LaunchedEffect
                 }
