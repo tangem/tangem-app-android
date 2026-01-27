@@ -8,6 +8,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,7 +59,7 @@ class YieldSupplyEnterStatusUseCaseTest {
     @Test
     fun `GIVEN no pending tx matches status WHEN invoke THEN clears status and returns null`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token)
+        val cryptoStatus = createStatus(token, isActive = true)
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xabc123"))
 
         coEvery {
@@ -99,12 +100,13 @@ class YieldSupplyEnterStatusUseCaseTest {
         assertThat(result.isRight()).isTrue()
         val value = (result as Either.Right).value
         assertThat(value).isNull()
+        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
     }
 
     @Test
     fun `GIVEN empty pending tx list WHEN invoke THEN clears status and returns null`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token)
+        val cryptoStatus = createStatus(token, isActive = true)
         val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xabc123"))
 
         coEvery {
@@ -184,6 +186,142 @@ class YieldSupplyEnterStatusUseCaseTest {
         assertThat(value).isEqualTo(status)
     }
 
+    @Test
+    fun `GIVEN isActive true and Exit status with no pending tx WHEN invoke THEN does not clear status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = true)
+        val status = YieldSupplyPendingStatus.Exit(txIds = listOf("0xexit"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isEqualTo(status)
+        coVerify(exactly = 0) { yieldSupplyRepository.saveTokenProtocolPendingStatus(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN isActive false and Enter status with no pending tx WHEN invoke THEN does not clear status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = false)
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isEqualTo(status)
+        coVerify(exactly = 0) { yieldSupplyRepository.saveTokenProtocolPendingStatus(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN isActive true and Enter status with no pending tx WHEN invoke THEN clears status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = true)
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+        coEvery {
+            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
+        } returns Unit
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isNull()
+        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+    }
+
+    @Test
+    fun `GIVEN isActive false and Exit status with no pending tx WHEN invoke THEN clears status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = false)
+        val status = YieldSupplyPendingStatus.Exit(txIds = listOf("0xexit"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+        coEvery {
+            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
+        } returns Unit
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isNull()
+        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+    }
+
+    @Test
+    fun `GIVEN null yieldSupplyStatus and Enter status with no pending tx WHEN invoke THEN does not clear status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, yieldSupplyStatus = null)
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"))
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isEqualTo(status)
+        coVerify(exactly = 0) { yieldSupplyRepository.saveTokenProtocolPendingStatus(any(), any(), any()) }
+    }
+
+    @Test
+    fun `GIVEN status older than 20 seconds with no pending tx WHEN invoke THEN clears status`() = runTest {
+        val token = createToken()
+        val cryptoStatus = createStatus(token, isActive = false)
+        val expiredCreatedAt = System.currentTimeMillis() - 21_000L
+        val status = YieldSupplyPendingStatus.Enter(txIds = listOf("0xenter"), createdAt = expiredCreatedAt)
+
+        coEvery {
+            yieldSupplyRepository.getTokenProtocolPendingStatus(userWalletId, token)
+        } returns status
+        coEvery {
+            yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
+        } returns emptyList()
+        coEvery {
+            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
+        } returns Unit
+
+        val result = useCase(userWalletId, cryptoStatus)
+
+        assertThat(result.isRight()).isTrue()
+        val value = (result as Either.Right).value
+        assertThat(value).isNull()
+        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+    }
+
     private fun createToken(): CryptoCurrency.Token {
         val rawNetworkId = "ethereum"
         val derivationPath = Network.DerivationPath.None
@@ -217,7 +355,18 @@ class YieldSupplyEnterStatusUseCaseTest {
         )
     }
 
-    private fun createStatus(token: CryptoCurrency.Token): CryptoCurrencyStatus {
+    private fun createStatus(
+        token: CryptoCurrency.Token,
+        isActive: Boolean? = null,
+        yieldSupplyStatus: YieldSupplyStatus? = isActive?.let {
+            YieldSupplyStatus(
+                isActive = it,
+                isInitialized = true,
+                isAllowedToSpend = true,
+                effectiveProtocolBalance = null,
+            )
+        },
+    ): CryptoCurrencyStatus {
         return CryptoCurrencyStatus(
             currency = token,
             value = CryptoCurrencyStatus.Custom(
@@ -226,7 +375,7 @@ class YieldSupplyEnterStatusUseCaseTest {
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
                 stakingBalance = null,
-                yieldSupplyStatus = null,
+                yieldSupplyStatus = yieldSupplyStatus,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
                 networkAddress = NetworkAddress.Single(
