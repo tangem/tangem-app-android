@@ -3,6 +3,7 @@ package com.tangem.domain.account.status.producer
 import arrow.core.Option
 import arrow.core.none
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.mapNotNull
  */
 internal class DefaultSingleAccountStatusProducer @AssistedInject constructor(
     @Assisted val params: SingleAccountStatusProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountStatusProducer {
