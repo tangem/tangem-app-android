@@ -10,5 +10,6 @@ interface AccountsExpandedRepository {
     val expandedAccounts: Flow<Map<UserWalletId, Set<AccountExpandedState>>>
 
     suspend fun syncStore(walletId: UserWalletId, existAccounts: Set<AccountId>)
+    suspend fun clearStore()
     suspend fun update(accountState: AccountExpandedState)
 }
