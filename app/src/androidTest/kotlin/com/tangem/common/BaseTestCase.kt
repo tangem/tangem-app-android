@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.printToLog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.kaspersky.components.alluresupport.interceptors.step.ScreenshotStepInterceptor
 import com.kaspersky.components.alluresupport.withForcedAllureSupport
@@ -19,6 +20,7 @@ import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.tap.MainActivity
@@ -86,6 +88,11 @@ abstract class BaseTestCase : TestCase(
         additionalAfterSection: () -> Unit = {},
     ) = before {
         Allure.label(ALLURE_LABEL_NAME, ALLURE_LABEL_VALUE)
+        // Setup WireMock redirect for CI with local WireMock instances
+        val wiremockUrl = InstrumentationRegistry.getArguments().getString(WIREMOCK_BASE_URL_ARG)
+        android.util.Log.d("BaseTestCase", "WireMock URL from instrumentation args: $wiremockUrl")
+        android.util.Log.d("BaseTestCase", "All instrumentation args: ${InstrumentationRegistry.getArguments()}")
+        WireMockRedirectInterceptor.overrideBaseUrl = wiremockUrl
         hiltRule.inject()
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
@@ -146,5 +153,14 @@ abstract class BaseTestCase : TestCase(
                 "ACCOUNTS_FEATURE_ENABLED" to true
             )
         )
+    }
+
+    private companion object {
+        /**
+         * Instrumentation argument key for WireMock base URL override.
+         * When provided, redirects all wiremock.tests-d.com requests to this URL.
+         * Example: "http://10.0.2.2:8080"
+         */
+        const val WIREMOCK_BASE_URL_ARG = "wiremockBaseUrl"
     }
 }

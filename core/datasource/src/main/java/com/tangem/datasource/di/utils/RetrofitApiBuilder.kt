@@ -18,6 +18,7 @@ import com.tangem.datasource.api.utils.WriteTimeout
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
+import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.datasource.utils.addHeaders
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.Interceptor
@@ -77,6 +78,7 @@ internal class RetrofitApiBuilder @Inject constructor(
             .client(
                 OkHttpClient.Builder()
                     .applyApiConfig(apiConfigId = apiConfigId, environmentConfig = environmentConfig)
+                    .applyWireMockRedirect()
                     .let {
                         if (applyTimeoutAnnotations) it.applyTimeoutAnnotations() else it
                     }
@@ -179,6 +181,18 @@ internal class RetrofitApiBuilder @Inject constructor(
         return addInterceptor(
             interceptor = NetworkLogsSaveInterceptor(appLogsStore),
         )
+    }
+
+    /**
+     * Apply WireMock redirect interceptor for mocked builds.
+     * This allows redirecting requests from wiremock.tests-d.com to a local WireMock instance on CI.
+     */
+    private fun OkHttpClient.Builder.applyWireMockRedirect(): OkHttpClient.Builder {
+        return if (BuildConfig.MOCK_DATA_SOURCE) {
+            addInterceptor(interceptor = WireMockRedirectInterceptor())
+        } else {
+            this
+        }
     }
 
     private fun OkHttpClient.Builder.addLoggers(apiConfigId: ApiConfig.ID, context: Context): OkHttpClient.Builder {

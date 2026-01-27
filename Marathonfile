@@ -1,0 +1,39 @@
+name: "Tangem Android UI Tests"
+outputDir: "build/reports/marathon"
+
+vendorConfiguration:
+  type: "Android"
+  applicationApk: "app/build/outputs/apk/google/mocked/app-google-mocked.apk"
+  testApplicationApk: "app/build/outputs/apk/androidTest/google/mocked/app-google-mocked-androidTest.apk"
+  autoGrantPermission: true
+  applicationPmClear: true
+  testApplicationPmClear: true
+  # wiremockBaseUrl redirects API calls from wiremock.tests-d.com to local WireMock
+  # This is used on CI where each emulator has its own WireMock instance via adb reverse
+  instrumentationArgs:
+    wiremockBaseUrl: "http://localhost:8080"
+  allureConfiguration:
+    enabled: true
+    relativeResultsDirectory: "Documents/allure-results"
+
+poolingStrategy:
+  type: "omni"
+
+batchingStrategy:
+  type: "isolate"
+
+sortingStrategy:
+  type: "no-sorting"
+
+retryStrategy:
+  type: "fixed-quota"
+  totalAllowedRetryQuota: 30
+  retryPerTestQuota: 3
+
+flakinessStrategy:
+  type: "ignore"
+
+analyticsConfiguration:
+  type: "disabled"
+
+debug: false

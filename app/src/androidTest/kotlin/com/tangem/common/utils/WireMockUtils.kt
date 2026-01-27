@@ -1,22 +1,33 @@
 package com.tangem.common.utils
 
+import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import java.io.IOException
 
+private const val DEFAULT_WIREMOCK_URL = "[REDACTED_ENV_URL]"
+
+/**
+ * Returns the WireMock base URL to use.
+ * If [WireMockRedirectInterceptor.overrideBaseUrl] is set (CI environment), uses that.
+ * Otherwise, falls back to the default remote WireMock URL.
+ */
+private fun getWireMockBaseUrl(): String =
+    WireMockRedirectInterceptor.overrideBaseUrl ?: DEFAULT_WIREMOCK_URL
+
 /**
  * Method uses to set WireMock scenario state
  * @param scenarioName Name of the scenario to modify
  * @param state The target state to set (must be one of the scenario's possibleStates)
- * @param baseUrl WireMock base URL
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  * @return true if state was set successfully, false otherwise
  */
 fun setWireMockScenarioState(
     scenarioName: String,
     state: String,
-    baseUrl: String = "[REDACTED_ENV_URL]"
+    baseUrl: String = getWireMockBaseUrl()
 ): Boolean {
     Timber.i("=== WireMock Scenario Set ===")
     Timber.i("Setting scenario '$scenarioName' to state: $state")
@@ -46,8 +57,9 @@ fun setWireMockScenarioState(
 
 /**
  * Method checks accessibility of WireMock
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  */
-fun checkWireMockStatus(baseUrl: String = "[REDACTED_ENV_URL]"): Boolean {
+fun checkWireMockStatus(baseUrl: String = getWireMockBaseUrl()): Boolean {
     val client = OkHttpClient()
     val request = Request.Builder()
         .url("$baseUrl/__admin/scenarios")
@@ -69,8 +81,9 @@ fun checkWireMockStatus(baseUrl: String = "[REDACTED_ENV_URL]"): Boolean {
 
 /**
  * Method to reset all WireMock scenarios
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  */
-fun resetWireMockScenarios(baseUrl: String = "[REDACTED_ENV_URL]"): Boolean {
+fun resetWireMockScenarios(baseUrl: String = getWireMockBaseUrl()): Boolean {
     Timber.i("=== WireMock Scenarios Reset ===")
     Timber.i("Base URL: $baseUrl")
 
@@ -105,13 +118,13 @@ fun resetWireMockScenarios(baseUrl: String = "[REDACTED_ENV_URL]"): Boolean {
  * Method to reset a specific WireMock scenario to its initial state
  * @param scenarioName Name of the scenario to reset
  * @param initialState The target state to reset the scenario to (must be one of the scenario's possibleStates)
- * @param baseUrl WireMock base URL
+ * @param baseUrl WireMock base URL (defaults to local override if set, otherwise remote)
  * @return true if reset was successful, false otherwise
  */
 fun resetWireMockScenarioState(
     scenarioName: String,
     initialState: String = "Started",
-    baseUrl: String = "[REDACTED_ENV_URL]"
+    baseUrl: String = getWireMockBaseUrl()
 ): Boolean {
     Timber.i("=== WireMock Scenario Reset ===")
     Timber.i("Resetting scenario '$scenarioName' to initial state: $initialState")

@@ -1,0 +1,82 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ANDROID_HOME=/opt/android-sdk
+ENV BUNDLE_PATH=vendor/bundle
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$ANDROID_HOME/emulator:$BUNDLE_PATH/bin
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+
+RUN apt-get update && apt-get install -y \
+    locales \
+    openjdk-17-jdk \
+    wget \
+    unzip \
+    curl \
+    git \
+    ruby \
+    ruby-dev \
+    build-essential \
+    jq \
+    libglu1-mesa \
+    mesa-utils \
+    libpulse0 \
+    qemu-kvm \
+    libvirt-daemon-system \
+    libvirt-clients \
+    bridge-utils \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8 \
+    && apt-get clean
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.31.14.zip" -o "/tmp/awscliv2.zip" && \
+    unzip /tmp/awscliv2.zip -d /tmp && \
+    /tmp/aws/install && \
+    rm -rf /tmp/awscliv2.zip /tmp/aws
+
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && apt-get install -y gh && apt-get clean
+
+RUN curl -L "https://github.com/allure-framework/allurectl/releases/latest/download/allurectl_linux_amd64" -o /usr/local/bin/allurectl && \
+    chmod +x /usr/local/bin/allurectl
+
+# Install Marathon test runner
+RUN curl -L "https://github.com/MarathonLabs/marathon/releases/download/0.9.1/marathon-0.9.1.zip" -o /tmp/marathon.zip && \
+    unzip /tmp/marathon.zip -d /opt && \
+    ln -s /opt/marathon-0.9.1/bin/marathon /usr/local/bin/marathon && \
+    rm /tmp/marathon.zip
+
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip && \
+    unzip /tmp/cmdline-tools.zip -d /tmp/cmdline-tools && \
+    mv /tmp/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
+    rm -rf /tmp/cmdline-tools /tmp/cmdline-tools.zip
+
+RUN set -eux; \
+    groupadd -f kvm; \
+    if ! id -u ubuntu >/dev/null 2>&1; then useradd -ms /bin/bash ubuntu; fi; \
+    usermod -aG kvm ubuntu; \
+    install -d -o ubuntu -g ubuntu /home/ubuntu "$ANDROID_HOME" "$ANDROID_HOME/.android"; \
+    echo "count=0" > "$ANDROID_HOME/.android/repositories.cfg"; \
+    chown -R ubuntu:ubuntu "$ANDROID_HOME"
+
+RUN su -s /bin/bash -c 'yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses' ubuntu && \
+    su -s /bin/bash -c '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+      --sdk_root="$ANDROID_HOME" \
+      "platform-tools" \
+      "platforms;android-31" \
+      "platforms;android-35" \
+      "build-tools;35.0.0" \
+      "emulator" \
+      "system-images;android-35;google_apis;x86_64" \
+      "ndk;27.0.12077973"' ubuntu
+
+RUN gem install bundler:2.5.23
+RUN gem install fastlane -v 2.225.0 -N -V
+RUN gem install fastlane-plugin-firebase_app_distribution -v 0.9.1 -N -V
+
+USER ubuntu
+WORKDIR /home/ubuntu
+CMD ["bash"]
