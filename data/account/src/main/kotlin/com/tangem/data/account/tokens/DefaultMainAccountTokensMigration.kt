@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.account.converter.AccountNameConverter
 import com.tangem.data.account.converter.toDerivationIndex
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
@@ -144,11 +145,9 @@ internal class DefaultMainAccountTokensMigration(
 
         store.updateData { updatedResponse }
 
-        val mainAccountName = mainAccount.name
-        val selectedAccountName = selectedAccount.name
-        if (mainAccountName != null && selectedAccountName != null) {
-            accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
-        }
+        val mainAccountName = AccountNameConverter.convertBack(mainAccount.name)
+        val selectedAccountName = AccountNameConverter.convertBack(selectedAccount.name)
+        accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
 
         val userTokensResponse = updatedResponse.toUserTokensResponse()
         userTokensSaver.pushWithRetryer(
