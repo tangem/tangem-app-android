@@ -737,7 +737,7 @@
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_pulse_common_title">Пульс рынка</string>
   <string name="markets_quick_actions">Быстрые действия</string>
-  <string name="markets_search_header_title">Поиск на рынке</string>
+  <string name="markets_search_header_title">Поиск токенов</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
@@ -1079,6 +1079,7 @@
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
   <string name="onramp_up_to_rate">До</string>
   <string name="onramp_via">Через</string>
+  <string name="onramp_via_provider">через %s</string>
   <string name="onramp_you_will_pay_title">Вы заплатите</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
