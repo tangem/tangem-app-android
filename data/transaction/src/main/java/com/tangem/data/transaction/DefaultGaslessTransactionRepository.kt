@@ -32,6 +32,7 @@ class DefaultGaslessTransactionRepository(
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
     private val allFeeRecipientAddress = mutableSetOf<String>()
     private val addressesMutex = Mutex()
+    private var feeReceiverAddress: String? = null
 
     private val gaslessTransactionRequestBuilder = GaslessTransactionRequestBuilder()
     private val signedTransactionResultConverter = GaslessSignedTransactionResultConverter()
@@ -77,11 +78,18 @@ class DefaultGaslessTransactionRepository(
 
     override suspend fun getTokenFeeReceiverAddress(): String {
         return withContext(coroutineDispatcherProvider.io) {
-            val response = gaslessTxServiceApi.getFeeRecipient().getOrThrow()
-            if (response.isSuccess) {
-                response.result.address
-            } else {
-                error("Gasless service returned unsuccessful response")
+            addressesMutex.withLock {
+                val feeReceiver = feeReceiverAddress
+                if (feeReceiver != null) {
+                    return@withContext feeReceiver
+                }
+                val response = gaslessTxServiceApi.getFeeRecipient().getOrThrow()
+                if (response.isSuccess) {
+                    feeReceiverAddress = response.result.address
+                    response.result.address
+                } else {
+                    error("Gasless service returned unsuccessful response")
+                }
             }
         }
     }
