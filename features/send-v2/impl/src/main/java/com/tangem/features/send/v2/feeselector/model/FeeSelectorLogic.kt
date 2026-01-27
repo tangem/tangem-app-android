@@ -52,15 +52,15 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
-    private val isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    sendFeatureToggles: SendFeatureToggles,
+    isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
-    val uiState = MutableStateFlow<FeeSelectorUM>(params.state)
+    val uiState = MutableStateFlow(params.state)
 
     val isGaslessEnabled = sendFeatureToggles.isGaslessTransactionsEnabled &&
         params.onLoadFeeExtended != null &&
@@ -81,8 +81,8 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         }
     }
 
-    private fun loadFee() {
-        if (uiState.value is FeeSelectorUM.Error) {
+    private fun loadFee(isReload: Boolean = false) {
+        if (uiState.value is FeeSelectorUM.Error && !isReload) {
             return
         }
 
@@ -119,7 +119,10 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     override fun onFeeItemSelected(feeItem: FeeItem) {
         if (feeItem is FeeItem.Custom) {
             analyticsEventHandler.send(
-                CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(categoryName = params.analyticsCategoryName),
+                CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(
+                    categoryName = params.analyticsCategoryName,
+                    blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                ),
             )
         }
         uiState.update(FeeItemSelectedTransformer(feeItem))
@@ -154,6 +157,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 feeType = feeSelectorUM.toAnalyticType(),
                 source = params.analyticsSendSource,
                 feeToken = feeSelectorUM.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol,
+                blockchain = params.cryptoCurrencyStatus.currency.network.name,
             ),
         )
         val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
@@ -178,7 +182,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 if (data.isRemoveSuggestedFee) {
                     uiState.update(FeeSelectorRemoveSuggestedTransformer)
                 }
-                loadFee()
+                loadFee(isReload = true)
             }
             .launchIn(modelScope)
     }
@@ -216,7 +220,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 },
                 ifLeft = { feeError ->
                     feeSelectorCheckReloadTrigger.callbackCheckResult(false)
-                    feeSelectorAlertFactory.getFeeUnreachableErrorState(::loadFee)
+                    feeSelectorAlertFactory.getFeeUnreachableErrorState { loadFee(isReload = true) }
                 },
             )
         }
