@@ -235,6 +235,7 @@ internal class AddStakingNotificationsTransformer(
             shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(network.backendId),
             onClick = prevState.clickIntents::openTokenDetails,
             onAnalyticsEvent = { prevState.clickIntents.onNotEnoughFeeNotificationShow() },
+            onResetAnalyticsEvent = { /*no-op*/ },
         )
         if (!BlockchainUtils.isCardano(network.rawId)) {
             addDustWarningNotification(
