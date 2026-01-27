@@ -96,7 +96,7 @@ class UserTokensSaverTest {
             val userWalletId = UserWalletId("1234567890abcdef")
             val userWallet = mockk<UserWallet.Cold> {
                 every { this@mockk.walletId } returns userWalletId
-                every { this@mockk.name } returns "Wallet"
+                every { this@mockk.name } returns ""
             }
 
             val response = UserTokensResponse(
@@ -104,7 +104,7 @@ class UserTokensSaverTest {
                 group = UserTokensResponse.GroupType.NETWORK,
                 sort = UserTokensResponse.SortType.BALANCE,
                 tokens = emptyList(),
-                walletName = userWallet.name,
+                walletName = null,
                 walletType = WalletType.COLD,
             )
             val enrichedResponse = UserTokensResponse(
@@ -112,12 +112,13 @@ class UserTokensSaverTest {
                 group = UserTokensResponse.GroupType.NETWORK,
                 sort = UserTokensResponse.SortType.MANUAL,
                 tokens = emptyList(),
-                walletName = userWallet.name,
+                walletName = null,
                 walletType = WalletType.COLD,
             )
             val error = ApiResponseError.UnknownException(Exception("API Error"))
             var onFailSendCalled = false
 
+            every { accountsFeatureToggles.isFeatureEnabled } returns true
             coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
             coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
