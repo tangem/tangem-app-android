@@ -170,10 +170,10 @@ class SendFeeScreenTest : BaseTestCase() {
                 onSendConfirmScreen { feeSelectorIcon.performClick() }
             }
             step("Assert 'Fee selector' bottom sheet title is displayed") {
-                onSendSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
+                onSendSelectNetworkFeeBottomSheet { chooseSpeedTitle.assertIsDisplayed() }
             }
-            step("Click on '$marketSelectorItem' selector item") {
-                onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(marketSelectorItem).performClick() }
+            step("Assert '$marketSelectorItem' selector item is displayed") {
+                onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(marketSelectorItem).assertIsDisplayed() }
             }
             step("Assert '$fastSelectorItem' selector item is displayed") {
                 onSendSelectNetworkFeeBottomSheet { regularFeeSelectorItem(fastSelectorItem).assertIsDisplayed() }
@@ -263,9 +263,6 @@ class SendFeeScreenTest : BaseTestCase() {
             }
             step("Click on 'Done' button") {
                 onSendSelectNetworkFeeBottomSheet { doneButton.performClick() }
-            }
-            step("Click on 'Confirm' button") {
-                onSendSelectNetworkFeeBottomSheet { confirmButton.performClick() }
             }
             step("Assert fee block is displayed with new fee amount: '$newFeeAmount'") {
                 checkNetworkFeeBlock(currentFeeAmount = newFeeAmount, withFeeSelector = true)
