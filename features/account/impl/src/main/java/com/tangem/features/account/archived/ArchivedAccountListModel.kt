@@ -9,7 +9,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
@@ -135,19 +134,11 @@ internal class ArchivedAccountListModel @Inject constructor(
 
         val featureError = AccountFeatureError.ArchivedAccountList.FailedToRecoverAccount(cause = error)
         logError(error = featureError)
-        val messageText = resourceReference(
-            id = R.string.universal_error,
-            formatArgs = wrappedList(featureError.errorCode),
-        )
-        val message = DialogMessage(
+        val dialogMessage = DialogMessage(
             title = resourceReference(R.string.common_something_went_wrong),
-            message = messageText,
-            firstAction = EventMessageAction(
-                title = resourceReference(R.string.common_ok),
-                onClick = {},
-            ),
+            message = resourceReference(R.string.account_generic_error_dialog_message),
         )
-        messageSender.send(message)
+        messageSender.send(dialogMessage)
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
