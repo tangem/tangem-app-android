@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.MultiAccountListProducer
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.*
  */
 internal class DefaultMultiAccountListProducer @AssistedInject constructor(
     @Assisted val params: Unit,
+    override val flowProducerTools: FlowProducerTools,
     private val userWalletsStore: UserWalletsStore,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -44,7 +46,6 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
                     transform = ::listOf,
                 )
             }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 

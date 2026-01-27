@@ -6,11 +6,14 @@ import arrow.core.raise.ensure
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.serialization.Serializable
+
+typealias AccountCurrencyId = Pair<AccountId, CryptoCurrency.ID>
 
 /**
  * Represents a list of accounts associated with a user wallet ID.
@@ -100,6 +103,19 @@ data class AccountList private constructor(
             when (account) {
                 is Account.CryptoPortfolio -> account.cryptoCurrencies
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
+            }
+        }
+    }
+
+    fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
+        accounts.forEach { acc ->
+            val account = when (acc) {
+                is Account.CryptoPortfolio -> acc
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
+            }
+            account.cryptoCurrencies.forEach { currency ->
+                val key = account.accountId to currency.id
+                put(key, currency)
             }
         }
     }
