@@ -1,6 +1,10 @@
 name: "Tangem Android UI Tests"
 outputDir: "build/reports/marathon"
 
+# Timeouts to prevent hung tests
+testOutputTimeoutMillis: 120000   # 2 minutes - no output from test
+testBatchTimeoutMillis: 600000    # 10 minutes - total batch time
+
 vendorConfiguration:
   type: "Android"
   applicationApk: "app/build/outputs/apk/google/mocked/app-google-mocked.apk"
@@ -15,6 +19,9 @@ vendorConfiguration:
   allureConfiguration:
     enabled: true
     relativeResultsDirectory: "Documents/allure-results"
+  # Capture screenshots on test failure for debugging
+  screenRecordConfiguration:
+    preferableRecorderType: "screenshot"
 
 poolingStrategy:
   type: "omni"
@@ -28,10 +35,19 @@ sortingStrategy:
 retryStrategy:
   type: "fixed-quota"
   totalAllowedRetryQuota: 30
-  retryPerTestQuota: 3
+  retryPerTestQuota: 1
 
 flakinessStrategy:
   type: "ignore"
+
+# Filtering - uncomment to run specific test subsets
+# filteringConfiguration:
+#   allowlist:
+#     - type: "annotation"
+#       values: ["com.tangem.tests.SmokeTest"]
+#   blocklist:
+#     - type: "fully-qualified-class-name"
+#       values: ["com.tangem.tests.FlakyTestClass"]
 
 analyticsConfiguration:
   type: "disabled"
