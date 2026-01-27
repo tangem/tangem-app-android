@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
@@ -21,6 +22,7 @@ sealed class CommonSendFeeAnalyticEvents(
         val feeType: AnalyticsParam.FeeType,
         val source: CommonSendSource,
         val feeToken: String,
+        val blockchain: String,
     ) : CommonSendFeeAnalyticEvents(
         category = categoryName,
         event = "Fee Selected",
@@ -28,15 +30,20 @@ sealed class CommonSendFeeAnalyticEvents(
             FEE_TYPE to feeType.value,
             SOURCE to source.analyticsName,
             FEE_TOKEN to feeToken,
+            BLOCKCHAIN to blockchain,
         ),
     )
 
     /** Custom fee selected */
     data class CustomFeeButtonClicked(
         override val categoryName: String,
+        val blockchain: String,
     ) : CommonSendFeeAnalyticEvents(
         category = categoryName,
         event = "Custom Fee Clicked",
+        params = mapOf(
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
     /** Custom fee edited */
