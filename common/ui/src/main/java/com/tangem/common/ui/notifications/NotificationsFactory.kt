@@ -314,12 +314,14 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addExceedsBalanceNotification(
         cryptoCurrencyWarning: CryptoCurrencyWarning?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         shouldMergeFeeNetworkName: Boolean,
         onClick: (CryptoCurrency) -> Unit,
         onAnalyticsEvent: (CryptoCurrency) -> Unit,
+        onResetAnalyticsEvent: (CryptoCurrency) -> Unit,
     ) {
         when (cryptoCurrencyWarning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> {
@@ -357,7 +359,7 @@ object NotificationsFactory {
                 )
                 onAnalyticsEvent(cryptoCurrencyWarning.currency)
             }
-            else -> Unit
+            else -> onResetAnalyticsEvent(cryptoCurrencyStatus.currency)
         }
     }
 
