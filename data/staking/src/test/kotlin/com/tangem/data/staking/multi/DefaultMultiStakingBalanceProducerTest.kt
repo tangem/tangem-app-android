@@ -6,6 +6,7 @@ import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toDomain
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,11 +31,13 @@ internal class DefaultMultiStakingBalanceProducerTest {
     private val stakeKitBalancesStore = mockk<StakeKitBalancesStore>()
     private val p2PEthPoolBalancesStore = mockk<P2PEthPoolBalancesStore>()
     private val dispatchers = TestingCoroutineDispatcherProvider()
+    private val flowProducerTools: FlowProducerTools = mockk()
 
     private val producer = DefaultMultiStakingBalanceProducer(
         params = params,
         stakeKitBalancesStore = stakeKitBalancesStore,
         p2PEthPoolBalancesStore = p2PEthPoolBalancesStore,
+        flowProducerTools = flowProducerTools,
         dispatchers = dispatchers,
     )
 
