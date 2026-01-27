@@ -56,6 +56,7 @@ data class GaslessTransactionData(
      * @property coinPriceInToken price of native coin in fee token units
      * @property feeTransferGasLimit gas limit for fee token transfer
      * @property baseGas base gas cost (currently constant BASE_GAS, may vary in future)
+     * @property feeReceiver address receiving the fee payment
      */
     data class Fee(
         val feeToken: String,
@@ -63,5 +64,6 @@ data class GaslessTransactionData(
         val coinPriceInToken: BigInteger,
         val feeTransferGasLimit: BigInteger,
         val baseGas: BigInteger,
+        val feeReceiver: String,
     )
 }

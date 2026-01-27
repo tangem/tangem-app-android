@@ -65,6 +65,9 @@ data class FeeData(
 
     @Json(name = "baseGas")
     val baseGas: String,
+
+    @Json(name = "feeReceiver")
+    val feeReceiver: String,
 )
 
 /**
