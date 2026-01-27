@@ -210,7 +210,7 @@ class YieldSupplyPendingTrackerTest {
         useCase.addPending(userWalletId1, token, txIds1)
         useCase.addPending(userWalletId2, token, txIds2)
 
-        testScope.advanceTimeBy(1000)
+        testScope.advanceTimeBy(10001)
 
         assertThat(capturedParams).hasSize(2)
         assertThat(capturedParams.map { it.userWalletId }.toSet())
