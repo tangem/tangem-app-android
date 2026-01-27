@@ -40,7 +40,7 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
             val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
             val feeTokenBalance = feeStatus.value.amount ?: BigDecimal.ZERO
 
-            val isFeePaidByCoin = tokenStatus.currency is CryptoCurrency.Token
+            val isSendingCurrencyToken = tokenStatus.currency is CryptoCurrency.Token
             val isFeePaidByToken =
                 feePaidCurrency is FeePaidCurrency.Token && tokenStatus.currency.id != feePaidCurrency.tokenId
 
@@ -49,10 +49,15 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
                     feeStatus.currency is CryptoCurrency.Token
 
             val warning = when {
+                isFeePaidByGaslessToken && feeTokenBalance == BigDecimal.ZERO -> {
+                    CryptoCurrencyWarning.BalanceNotEnoughForFee(
+                        tokenCurrency = tokenStatus.currency,
+                        coinCurrency = feeStatus.currency,
+                    )
+                }
                 feePaidCurrency is FeePaidCurrency.Coin &&
-                    isFeePaidByCoin &&
-                    fee > feeTokenBalance &&
-                    !isFeePaidByGaslessToken -> {
+                    isSendingCurrencyToken &&
+                    fee > feeTokenBalance -> {
                     CryptoCurrencyWarning.BalanceNotEnoughForFee(
                         tokenCurrency = tokenStatus.currency,
                         coinCurrency = feeStatus.currency,
