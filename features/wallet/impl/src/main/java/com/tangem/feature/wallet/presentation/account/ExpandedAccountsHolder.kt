@@ -58,10 +58,13 @@ internal class ExpandedAccountsHolder @Inject constructor(
             .launchIn(this)
 
         walletAccounts(walletId).onEach { accountList ->
+            if (!isAccountsModeEnabledUseCase.invokeSync()) {
+                accountsExpandedRepository.clearStore()
+                expandedAccounts.update { setOf() }
+                return@onEach
+            }
             val idsSet = accountList.accounts.mapTo(mutableSetOf()) { it.accountId }
             accountsExpandedRepository.syncStore(walletId, idsSet)
-
-            if (!isAccountsMode.value) return@onEach
 
             val isSingleAccount = accountList.accounts.size == 1
             val storedMainAccountState = storedState.value
