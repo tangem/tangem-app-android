@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -40,6 +41,7 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.feedback.models)
 
     implementation(projects.data.common)
 
@@ -68,4 +70,5 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
+    implementation(deps.kotlin.serialization)
 }

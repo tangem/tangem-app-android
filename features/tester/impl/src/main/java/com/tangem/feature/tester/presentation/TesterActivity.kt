@@ -2,6 +2,7 @@ package com.tangem.feature.tester.presentation
 
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,6 +21,8 @@ import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
 import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
+import com.tangem.feature.tester.presentation.addresses.ui.AddressesInfoScreen
+import com.tangem.feature.tester.presentation.addresses.viewmodels.AddressesInfoViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
@@ -82,6 +85,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TESTER_ACTIONS,
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
+                            ButtonUM.ADDRESSES_INFO,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -92,6 +96,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TESTER_ACTIONS -> TesterScreen.TESTER_ACTIONS
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
+                                ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
                             }
 
                             innerTesterRouter.open(route)
@@ -161,6 +166,18 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AccountsScreen(state)
+            }
+
+            composable(route = TesterScreen.ADDRESSES_INFO.name) {
+                val viewModel = hiltViewModel<AddressesInfoViewModel>()
+
+                LaunchedEffect(viewModel) {
+                    viewModel.setupNavigation(innerTesterRouter)
+                }
+
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                AddressesInfoScreen(state)
             }
         }
     }
