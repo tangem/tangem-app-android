@@ -64,7 +64,8 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                             blockchainId = cryptoCurrencyStatus.currency.network.backendId,
                         ),
                         onClick = ::openTokenDetails,
-                        onAnalyticsEvent = { },
+                        onAnalyticsEvent = { /*no-op*/ },
+                        onResetAnalyticsEvent = { /*no-op*/ },
                     )
 
                     addFeeUnreachableNotification(
