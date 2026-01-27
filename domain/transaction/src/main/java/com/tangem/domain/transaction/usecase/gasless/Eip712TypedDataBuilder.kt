@@ -69,6 +69,7 @@ object Eip712TypedDataBuilder {
                 put(typeProperty("coinPriceInToken", "uint256"))
                 put(typeProperty("feeTransferGasLimit", "uint256"))
                 put(typeProperty("baseGas", "uint256"))
+                put(typeProperty("feeReceiver", "address"))
             })
             put("GaslessTransaction", JSONArray().apply {
                 put(typeProperty("transaction", "Transaction"))
@@ -117,6 +118,7 @@ object Eip712TypedDataBuilder {
                 put("coinPriceInToken", gaslessTransaction.fee.coinPriceInToken.toString())
                 put("feeTransferGasLimit", gaslessTransaction.fee.feeTransferGasLimit.toString())
                 put("baseGas", gaslessTransaction.fee.baseGas.toString())
+                put("feeReceiver", gaslessTransaction.fee.feeReceiver)
             })
             put("nonce", gaslessTransaction.nonce.toString())
         }
