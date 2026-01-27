@@ -2,6 +2,7 @@ package com.tangem.features.feed.model.feed.state.transformers
 
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
@@ -44,12 +45,11 @@ internal class UpdateMarketChartsTransformer(
         val isLoading = loadingStatesByOrder[sortByType] == true
         val error = errorStatesByOrder[sortByType]
 
-        val shouldBeError = !isLoading && (items.isEmpty() || error != null)
         val shouldBeContent = !isLoading && items.isNotEmpty() && error == null
         val isDataChanged = isDataChanged(
             prevChart = prevChart,
             isLoading = isLoading,
-            shouldBeError = shouldBeError,
+            shouldBeError = error != null,
             shouldBeContent = shouldBeContent,
             items = items,
         )
@@ -60,7 +60,7 @@ internal class UpdateMarketChartsTransformer(
 
         return when {
             isLoading -> MarketChartUM.Loading
-            shouldBeError -> MarketChartUM.LoadingError(onRetryClicked = { onReload(sortByType) })
+            error != null -> MarketChartUM.LoadingError(onRetryClicked = { onReload(sortByType) })
             else -> createContentChart(prevChart, items, sortByType)
         }
     }
@@ -97,32 +97,57 @@ internal class UpdateMarketChartsTransformer(
     }
 
     private fun handleErrorAnalytics(prevState: FeedListUM, newMarketCharts: Map<SortByTypeUM, MarketChartUM>) {
-        val wasAnyErrorBefore = prevState.marketChartConfig.marketCharts.values.any { it is MarketChartUM.LoadingError }
-        val isAnyErrorNow = newMarketCharts.values.any { it is MarketChartUM.LoadingError }
+        checkAndSendErrorAnalytics(
+            prevState = prevState,
+            newMarketCharts = newMarketCharts,
+            source = AnalyticsParam.ScreensSources.Markets,
+            keyPredicate = { it == SortByTypeUM.Rating },
+        )
 
-        if (!wasAnyErrorBefore && isAnyErrorNow) {
-            sendErrorAnalytics(errorStatesByOrder, itemsByOrder)
-        }
+        checkAndSendErrorAnalytics(
+            prevState = prevState,
+            newMarketCharts = newMarketCharts,
+            source = AnalyticsParam.ScreensSources.MarketPulse,
+            keyPredicate = { it != SortByTypeUM.Rating },
+        )
     }
 
-    private fun sendErrorAnalytics(
-        errorStatesByOrder: Map<SortByTypeUM, Throwable?>,
-        itemsByOrder: Map<SortByTypeUM, ImmutableList<MarketsListItemUM>>,
+    private fun checkAndSendErrorAnalytics(
+        prevState: FeedListUM,
+        newMarketCharts: Map<SortByTypeUM, MarketChartUM>,
+        source: AnalyticsParam.ScreensSources,
+        keyPredicate: (SortByTypeUM) -> Boolean,
     ) {
-        val firstError = errorStatesByOrder.values.firstNotNullOfOrNull { it }
-        if (firstError == null && !itemsByOrder.values.any { it.isEmpty() }) {
-            return
+        val wasError = prevState.marketChartConfig.marketCharts.filterKeys(keyPredicate)
+            .values.any { it is MarketChartUM.LoadingError }
+
+        val isErrorNow = newMarketCharts.filterKeys(keyPredicate)
+            .values.any { it is MarketChartUM.LoadingError }
+
+        if (!wasError && isErrorNow) {
+            val relevantErrors = errorStatesByOrder.filterKeys(keyPredicate)
+            val relevantItems = itemsByOrder.filterKeys(keyPredicate)
+
+            val firstError = relevantErrors.values.firstNotNullOfOrNull { it }
+            val isAnyListEmpty = relevantItems.values.any { it.isEmpty() }
+
+            if (firstError == null && !isAnyListEmpty) {
+                return
+            }
+
+            val (code, message) = if (firstError is ApiResponseError.HttpException) {
+                firstError.code.numericCode to firstError.message.orEmpty()
+            } else {
+                null to (firstError?.message ?: "Empty response")
+            }
+
+            analyticsEventHandler.send(
+                FeedAnalyticsEvent.MarketsLoadError(
+                    code = code,
+                    message = message,
+                    source = source,
+                ),
+            )
         }
-        val (code, message) = if (firstError is ApiResponseError.HttpException) {
-            firstError.code.numericCode to firstError.message.orEmpty()
-        } else {
-            null to ""
-        }
-        analyticsEventHandler.send(
-            FeedAnalyticsEvent.MarketsLoadError(
-                code = code,
-                message = message,
-            ),
-        )
     }
 }
