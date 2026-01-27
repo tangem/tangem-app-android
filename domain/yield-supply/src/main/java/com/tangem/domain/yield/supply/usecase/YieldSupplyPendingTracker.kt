@@ -69,12 +69,12 @@ class YieldSupplyPendingTracker(
 
             checkingJob = coroutineScope.launch {
                 while (isActive) {
+                    delay(CHECK_INTERVAL_MS)
                     try {
                         checkAllTracked()
                     } catch (ex: Exception) {
                         Timber.e(ex)
                     }
-                    delay(CHECK_INTERVAL_MS)
                 }
             }
         }
