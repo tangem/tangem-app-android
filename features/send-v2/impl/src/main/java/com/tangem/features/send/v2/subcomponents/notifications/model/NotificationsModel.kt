@@ -396,6 +396,6 @@ internal class NotificationsModel @Inject constructor(
 
     companion object {
         const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
-        private const val EXCEEDS_BALANCE_EVENT = "EXCEED_BALANCE_EVENT"
+        private const val EXCEEDS_BALANCE_EVENT = "EXCEEDS_BALANCE_EVENT"
     }
 }
