@@ -27,13 +27,30 @@ class YieldSupplyEnterStatusUseCase(
             if (hasPendingTx) {
                 status
             } else {
-                yieldSupplyRepository.saveTokenProtocolPendingStatus(
-                    userWalletId,
-                    cryptoCurrencyStatus.currency,
-                    null,
-                )
-                null
+                val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+                val isExpired = status != null &&
+                    System.currentTimeMillis() - status.createdAt > STATUS_EXPIRATION_MS
+                val shouldClearStatus = when {
+                    isExpired -> true
+                    isActive && status is YieldSupplyPendingStatus.Exit -> false
+                    !isActive && status is YieldSupplyPendingStatus.Enter -> false
+                    else -> true
+                }
+                if (shouldClearStatus) {
+                    yieldSupplyRepository.saveTokenProtocolPendingStatus(
+                        userWalletId,
+                        cryptoCurrencyStatus.currency,
+                        null,
+                    )
+                    null
+                } else {
+                    status
+                }
             }
         }
+    }
+
+    private companion object {
+        const val STATUS_EXPIRATION_MS = 20_000L
     }
 }
