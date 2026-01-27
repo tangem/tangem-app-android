@@ -40,6 +40,10 @@ internal class DefaultAccountsExpandedRepository(
         }
     }
 
+    override suspend fun clearStore() {
+        store.updateData { emptyMap() }
+    }
+
     override suspend fun update(accountState: AccountExpandedState) {
         store.updateData { map ->
             val walletId = accountState.accountId.userWalletId
