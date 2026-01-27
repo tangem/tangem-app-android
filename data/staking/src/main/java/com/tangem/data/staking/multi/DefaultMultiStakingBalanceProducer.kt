@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.staking.store.P2PEthPoolBalancesStore
 import com.tangem.data.staking.store.StakeKitBalancesStore
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -12,7 +13,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEmpty
 
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.onEmpty
  */
 internal class DefaultMultiStakingBalanceProducer @AssistedInject constructor(
     @Assisted val params: MultiStakingBalanceProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -44,7 +45,6 @@ internal class DefaultMultiStakingBalanceProducer @AssistedInject constructor(
         return combine(stakeKitFlow, p2pEthPoolFlow) { stakeKitBalances, p2pEthPoolBalances ->
             stakeKitBalances + p2pEthPoolBalances
         }
-            .distinctUntilChanged()
             .onEmpty { emit(value = hashSetOf()) }
             .flowOn(dispatchers.default)
     }
