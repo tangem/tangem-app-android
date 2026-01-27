@@ -241,7 +241,7 @@ class CreateAndSendGaslessTransactionUseCase(
         }
     }
 
-    private fun createGaslessTransactionData(
+    private suspend fun createGaslessTransactionData(
         transactionData: TransactionData.Uncompiled,
         txFee: TransactionFeeExtended,
         tokenFeeStatus: CryptoCurrencyStatus,
@@ -272,7 +272,7 @@ class CreateAndSendGaslessTransactionUseCase(
         )
     }
 
-    private fun buildFee(
+    private suspend fun buildFee(
         txFee: TransactionFeeExtended,
         tokenFeeStatus: CryptoCurrencyStatus,
     ): GaslessTransactionData.Fee {
@@ -288,6 +288,7 @@ class CreateAndSendGaslessTransactionUseCase(
             coinPriceInToken = feeInTokenCurrency.coinPriceInToken,
             feeTransferGasLimit = feeInTokenCurrency.feeTransferGasLimit,
             baseGas = feeInTokenCurrency.baseGas,
+            feeReceiver = gaslessTransactionRepository.getTokenFeeReceiverAddress(),
         )
     }
 
