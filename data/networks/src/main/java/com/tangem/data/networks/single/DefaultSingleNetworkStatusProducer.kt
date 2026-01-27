@@ -2,6 +2,7 @@ package com.tangem.data.networks.single
 
 import arrow.core.Option
 import arrow.core.some
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -11,7 +12,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.mapNotNull
  */
 internal class DefaultSingleNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: SingleNetworkStatusProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleNetworkStatusProducer {
@@ -40,7 +41,6 @@ internal class DefaultSingleNetworkStatusProducer @AssistedInject constructor(
             .mapNotNull { statuses ->
                 statuses.firstOrNull { it.network == params.network }
             }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
