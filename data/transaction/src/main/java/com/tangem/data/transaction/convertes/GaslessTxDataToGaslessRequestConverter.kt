@@ -39,6 +39,7 @@ class GaslessTxDataToGaslessRequestConverter : Converter<GaslessTransactionData,
             coinPriceInToken = fee.coinPriceInToken.toString(),
             feeTransferGasLimit = fee.feeTransferGasLimit.toString(),
             baseGas = fee.baseGas.toString(),
+            feeReceiver = fee.feeReceiver,
         )
     }
 }
