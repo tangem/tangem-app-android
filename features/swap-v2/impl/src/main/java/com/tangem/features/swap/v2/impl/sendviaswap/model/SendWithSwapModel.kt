@@ -2,7 +2,6 @@ package com.tangem.features.swap.v2.impl.sendviaswap.model
 
 import arrow.core.Either
 import arrow.core.getOrElse
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -44,7 +43,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
-import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -159,17 +157,6 @@ internal class SendWithSwapModel @Inject constructor(
                 SendWithSwapRoute.Confirm -> router.push(SendWithSwapRoute.Success)
                 SendWithSwapRoute.Success -> onBackClick()
             }
-        }
-    }
-
-    fun getSelectedFeeToken(): CryptoCurrency {
-        val feeUMV2 = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
-        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
-        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
-        return if (isFeeInTokenCurrency) {
-            feeUMV2.feeExtraInfo.feeCryptoCurrencyStatus.currency
-        } else {
-            primaryFeePaidCurrencyStatusFlow.value.currency
         }
     }
 
