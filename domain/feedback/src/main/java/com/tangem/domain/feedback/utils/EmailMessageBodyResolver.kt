@@ -13,7 +13,7 @@ import com.tangem.domain.visa.model.VisaTxDetails
  *
 [REDACTED_AUTHOR]
  */
-internal class EmailMessageBodyResolver(
+class EmailMessageBodyResolver(
     private val feedbackRepository: FeedbackRepository,
 ) {
 
