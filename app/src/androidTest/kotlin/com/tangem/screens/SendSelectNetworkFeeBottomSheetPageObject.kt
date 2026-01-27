@@ -4,7 +4,7 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
+import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -16,12 +16,6 @@ import androidx.compose.ui.test.hasText as withText
 class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendSelectNetworkFeeBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
-    val title: KNode = child {
-        hasTestTag(BaseBottomSheetTestTags.TITLE)
-        hasText(getResourceString(R.string.common_network_fee_title))
-        useUnmergedTree = true
-    }
-
     val chooseSpeedTitle: KNode = child {
         hasTestTag(BaseBottomSheetTestTags.TITLE)
         hasText(getResourceString(R.string.fee_selector_choose_speed_title))
@@ -29,38 +23,38 @@ class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
     }
 
     fun regularFeeSelectorItem(title: String): KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_FEE_ITEM)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_FEE_ITEM)
         hasAnyDescendant(withText(title))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_ICON))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.TOKEN_AMOUNT))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.FIAT_AMOUNT))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.DOT_SIGN))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_ICON))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.REGULAR_ITEM_TITLE))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.TOKEN_AMOUNT))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.FIAT_AMOUNT))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.DOT_SIGN))
         useUnmergedTree = true
     }
 
     val customSelectorItem: KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_FEE_ITEM)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_FEE_ITEM)
         hasAnyDescendant(withText(getResourceString(R.string.common_custom)))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_ICON))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_TITLE))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_ICON))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_ITEM_TITLE))
         useUnmergedTree = true
     }
 
     fun customInputItem(title: String, hasFiatAmount: Boolean = false): KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM)
         hasAnyDescendant(withText(title))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TITLE))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TOOLTIP_ICON))
-        hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TITLE))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_TOOLTIP_ICON))
+        hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD))
         useUnmergedTree = true
         if (hasFiatAmount) {
-            hasAnyDescendant(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT))
+            hasAnyDescendant(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT))
         }
     }
 
     val nonceInputItem: KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_ITEM)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_ITEM)
         hasAnyDescendant(withText(getResourceString(R.string.send_nonce)))
         hasAnyDescendant(withText(getResourceString(R.string.send_nonce_hint)))
         useUnmergedTree = true
@@ -77,35 +71,29 @@ class SendSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
     }
 
     private fun inputTextField(title: String): KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD)
         hasAnySibling(withText(title))
         useUnmergedTree = true
     }
 
     fun inputTextFieldValue(title: String): KNode = inputTextField(title).child {
-        hasParent(withTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD))
+        hasParent(withTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_INPUT_TEXT_FIELD))
         useUnmergedTree = true
     }
 
     val nonceInputTextField: KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD)
         useUnmergedTree = true
     }
 
     val customInputItemFiatAmount: KNode = child {
-        hasTestTag(SendSelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT)
+        hasTestTag(SelectNetworkFeeBottomSheetTestTags.CUSTOM_INPUT_ITEM_FIAT_AMOUNT)
         useUnmergedTree = true
     }
 
     val doneButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_done))
-        useUnmergedTree = true
-    }
-
-    val confirmButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_confirm))
         useUnmergedTree = true
     }
 }
