@@ -20,6 +20,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountE
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.ResettableOneTimeEventSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -82,6 +83,7 @@ internal class NotificationsModel @Inject constructor(
     private val feeCryptoCurrencyStatus = params.notificationData.feeCryptoCurrencyStatus
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
+    private val resettableOneTimeEventSender = ResettableOneTimeEventSender(analyticsEventHandler)
 
     private var notificationData = params.notificationData
 
@@ -250,13 +252,18 @@ internal class NotificationsModel @Inject constructor(
             shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(currency.network.backendId),
             onClick = ::showTokenDetails,
             onAnalyticsEvent = {
-                analyticsEventHandler.send(
-                    NotificationsAnalyticEvents.NoticeNotEnoughFee(
-                        categoryName = analyticsCategoryName,
-                        token = cryptoCurrencyStatus.currency.symbol,
-                        blockchain = cryptoCurrencyStatus.currency.network.name,
-                    ),
+                val event = NotificationsAnalyticEvents.NoticeNotEnoughFee(
+                    categoryName = analyticsCategoryName,
+                    token = cryptoCurrencyStatus.currency.symbol,
+                    blockchain = cryptoCurrencyStatus.currency.network.name,
                 )
+                resettableOneTimeEventSender.sendEventOnce(
+                    key = EXCEEDS_BALANCE_EVENT,
+                    event = event,
+                )
+            },
+            onResetAnalyticsEvent = {
+                resettableOneTimeEventSender.reset(EXCEEDS_BALANCE_EVENT)
             },
         )
         if (!BlockchainUtils.isCardano(currency.network.rawId)) {
@@ -389,5 +396,6 @@ internal class NotificationsModel @Inject constructor(
 
     companion object {
         const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
+        private const val EXCEEDS_BALANCE_EVENT = "EXCEED_BALANCE_EVENT"
     }
 }
