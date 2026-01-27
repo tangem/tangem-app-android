@@ -59,11 +59,13 @@ internal sealed class FeedAnalyticsEvent(
     data class MarketsLoadError(
         private val code: Int?,
         private val message: String,
+        private val source: AnalyticsParam.ScreensSources,
     ) : FeedAnalyticsEvent(
         event = "Markets Load Error",
         params = mapOf(
             ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
             ERROR_MESSAGE to message,
+            SOURCE to source.value,
         ),
     )
 
