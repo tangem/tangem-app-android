@@ -37,6 +37,7 @@ internal class AddTokenModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val checkCurrencyUnsupportedDelegate: CheckCurrencyUnsupportedDelegate,
 ) : Model() {
 
     private val params = paramsContainer.require<AddTokenComponent.Params>()
@@ -69,14 +70,25 @@ internal class AddTokenModel @Inject constructor(
     private fun onAddClick(selectedNetwork: SelectedNetwork, selectedPortfolio: SelectedPortfolio) =
         modelScope.launch(dispatchers.default) {
             val um = uiState.value ?: return@launch
+
+            val cryptoCurrency = selectedNetwork.cryptoCurrency
+            val account = selectedPortfolio.account.account.account
+            val accountId = account.accountId
+            val isMainNetwork = selectedNetwork.selectedNetwork.contractAddress == null
+
+            val unsupportedCurrency = checkCurrencyUnsupportedDelegate.checkCurrencyUnsupportedState(
+                userWalletId = accountId.userWalletId,
+                rawNetworkId = selectedNetwork.selectedNetwork.networkId,
+                isMainNetwork = isMainNetwork,
+            )
+
+            if (unsupportedCurrency != null) return@launch
+
             uiState.value = um.toggleProgress(true)
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
 
-            val cryptoCurrency = selectedNetwork.cryptoCurrency
-            val account = selectedPortfolio.account.account.account
-            val accountId = account.accountId
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
                 .onLeft { throwable ->
                     processError(error = throwable)
