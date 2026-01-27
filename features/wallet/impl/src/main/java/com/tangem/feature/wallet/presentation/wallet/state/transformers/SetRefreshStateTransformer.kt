@@ -2,8 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
-import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
@@ -26,17 +27,8 @@ internal class SetRefreshStateTransformer(
                     buttons = prevState.buttons.toUpdatedState(),
                 )
             }
-            is WalletState.Visa.Content -> {
-                prevState.copy(
-                    buttons = prevState.buttons.toUpdatedState(),
-                    pullToRefreshConfig = prevState.pullToRefreshConfig.toUpdatedState(isRefreshing),
-                    balancesAndLimitBlockState = prevState.balancesAndLimitBlockState.toUpdatedState(isRefreshing),
-                )
-            }
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
-            is WalletState.Visa.Locked,
-            is WalletState.Visa.AccessTokenLocked,
             -> prevState
         }
     }
@@ -71,15 +63,6 @@ internal class SetRefreshStateTransformer(
                     is WalletManageButton.Swap -> null
                 }
             }
-        }
-    }
-
-    private fun BalancesAndLimitsBlockState.toUpdatedState(isRefreshing: Boolean): BalancesAndLimitsBlockState {
-        return when (this) {
-            is BalancesAndLimitsBlockState.Content -> copy(isEnabled = !isRefreshing)
-            is BalancesAndLimitsBlockState.Error,
-            is BalancesAndLimitsBlockState.Loading,
-            -> this
         }
     }
 }
