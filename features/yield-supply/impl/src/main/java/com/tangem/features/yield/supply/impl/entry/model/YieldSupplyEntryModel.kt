@@ -14,6 +14,7 @@ import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -43,11 +44,15 @@ internal class YieldSupplyEntryModel @Inject constructor(
                 cryptoCurrencyId = cryptoCurrency.id,
             ).onLeft { error ->
                 Timber.e("Failed to get CryptoCurrencyStatus: $error")
-                router.pop()
+                withContext(dispatchers.mainImmediate) {
+                    router.pop()
+                }
             }.onRight { cryptoCurrencyStatus ->
-                val route = getInitialRoute(cryptoCurrencyStatus)
-                if (route != null) {
-                    router.replaceCurrent(route)
+                withContext(dispatchers.mainImmediate) {
+                    val route = getInitialRoute(cryptoCurrencyStatus)
+                    if (route != null) {
+                        router.replaceCurrent(route)
+                    }
                 }
             }
         }
