@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
+    implementation(deps.timber)
 
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager) // TODO refactor to use from data module
