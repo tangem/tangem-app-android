@@ -30,9 +30,9 @@ import javax.inject.Inject
 @ModelScoped
 internal class PortfolioSelectorModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    walletImageFetcher: UserWalletImageFetcher,
+    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val walletImageFetcher: UserWalletImageFetcher,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<PortfolioSelectorComponent.Params>()
@@ -128,13 +128,9 @@ internal class PortfolioSelectorModel @Inject constructor(
                 lockedWallets.add(PortfolioSelectorItemUM.Portfolio(walletItemUM, isSelected = false))
             }
         }
+
         if (lockedWallets.isNotEmpty()) {
-            val lockedWalletsTitle = PortfolioSelectorItemUM.GroupTitle(
-                id = "lockedWalletsTitleId",
-                name = resourceReference(R.string.common_locked_wallets),
-            )
-            add(lockedWalletsTitle)
-            addAll(lockedWallets)
+            addAll(createLockedWallets(wallets = lockedWallets))
         }
     }
 
@@ -147,7 +143,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
-        portfolioData.balances.forEach { walletId, portfolio ->
+        portfolioData.balances.forEach { (_, portfolio) ->
             val balance = portfolio.walletBalance
             val wallet = portfolio.userWallet
             val walletItemUM = UserWalletItemUMConverter(
@@ -169,11 +165,14 @@ internal class PortfolioSelectorModel @Inject constructor(
                 // for Wallet mode expected single portfolioData.balances
                 is PortfolioFetcher.Mode.Wallet -> Unit
                 is PortfolioFetcher.Mode.All -> {
-                    val walletTitle = PortfolioSelectorItemUM.GroupTitle(
-                        id = "GroupTitle ${wallet.walletId.stringValue}",
-                        name = stringReference(wallet.name),
-                    )
-                    add(walletTitle)
+                    if (portfolioData.balances.size > 1) {
+                        val walletTitle = PortfolioSelectorItemUM.GroupTitle(
+                            id = "GroupTitle ${wallet.walletId.stringValue}",
+                            name = stringReference(wallet.name),
+                        )
+
+                        add(walletTitle)
+                    }
                 }
             }
 
@@ -195,13 +194,17 @@ internal class PortfolioSelectorModel @Inject constructor(
             }
         }
         if (lockedWallets.isNotEmpty()) {
-            val lockedWalletsTitle = PortfolioSelectorItemUM.GroupTitle(
-                id = "lockedWalletsTitleId",
-                name = resourceReference(R.string.common_locked_wallets),
-            )
-            add(lockedWalletsTitle)
-            addAll(lockedWallets)
+            addAll(createLockedWallets(wallets = lockedWallets))
         }
+    }
+
+    private fun createLockedWallets(wallets: List<PortfolioSelectorItemUM>): List<PortfolioSelectorItemUM> {
+        val lockedWalletsTitle = PortfolioSelectorItemUM.GroupTitle(
+            id = "lockedWalletsTitleId",
+            name = resourceReference(R.string.common_locked_wallets),
+        )
+
+        return listOf(lockedWalletsTitle) + wallets
     }
 
     private fun AccountStatus.isSelected(selectedId: AccountId?) = this.account.accountId == selectedId
