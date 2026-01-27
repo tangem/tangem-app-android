@@ -16,7 +16,7 @@ internal object SwapUtils {
     /** List of supported provider types in Send with Swap */
     internal val SEND_WITH_SWAP_PROVIDER_TYPES = listOf(
         ExpressProviderType.CEX,
-        ExpressProviderType.DEX,
+        // ExpressProviderType.DEX, // TODO disable until implemented in Send with Swap
     )
 
     fun getExpressErrorMessage(expressError: ExpressError): TextReference {
