@@ -104,7 +104,7 @@ internal class PortfolioSelectorModel @Inject constructor(
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
-        portfolioData.balances.forEach { walletId, portfolio ->
+        portfolioData.balances.forEach { (_, portfolio) ->
             val balance = portfolio.walletBalance
             val wallet = portfolio.userWallet
             val walletItemUM = UserWalletItemUMConverter(
@@ -116,6 +116,9 @@ internal class PortfolioSelectorModel @Inject constructor(
                 isBalanceHidden = isBalanceHidden,
                 artwork = artworks[wallet.walletId],
                 isAuthMode = false,
+                mode = UserWalletItemUMConverter.InfoField.Tokens(
+                    tokensCount = portfolio.accountsBalance.flattenCurrencies().size,
+                ),
             ).convert(wallet)
             if (walletItemUM.isEnabled) {
                 val mainAccount = portfolio.accountsBalance.mainAccount
