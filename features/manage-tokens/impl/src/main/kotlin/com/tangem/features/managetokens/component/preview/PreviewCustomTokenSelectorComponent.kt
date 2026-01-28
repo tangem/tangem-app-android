@@ -70,6 +70,7 @@ internal class PreviewCustomTokenSelectorComponent(
                     ),
                     name = "Network $index",
                     type = "N$index",
+                    currencySymbol = "N$index",
                     iconResId = R.drawable.ic_eth_16,
                     isMainNetwork = false,
                     isSelected = n.id == params.selectedNetwork?.id,

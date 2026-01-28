@@ -39,7 +39,7 @@ internal object MarketsTokenDetailsPreview {
             onDismissRequest = {},
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        markerSet = false,
+        isMarkerSet = false,
         triggerPriceChange = consumedEvent(),
     )
 
@@ -123,7 +123,7 @@ internal object MarketsTokenDetailsPreview {
             onDismissRequest = {},
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        markerSet = true,
+        isMarkerSet = true,
         triggerPriceChange = consumedEvent(),
     )
 }

@@ -4,6 +4,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
@@ -84,6 +85,7 @@ sealed class SwapEvents(
         val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
+        val feeToken: String,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
     ) : SwapEvents(
@@ -96,6 +98,7 @@ sealed class SwapEvents(
             "Send Blockchain" to sendBlockchain,
             "Receive Blockchain" to receiveBlockchain,
             "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
+            FEE_TOKEN to feeToken,
         ),
     ), AppsFlyerIncludedEvent
 
