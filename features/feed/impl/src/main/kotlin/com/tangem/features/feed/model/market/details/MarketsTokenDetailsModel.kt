@@ -329,14 +329,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                                 onFirstVisible = {
                                     analyticsEventHandler.send(
                                         MarketTokenAnalyticsEvent.TokenNewsViewed(
-                                            token = params.token.symbol,
+                                            tokenSymbol = params.token.symbol,
                                         ),
                                     )
                                 },
                                 onScroll = {
                                     analyticsEventHandler.send(
                                         MarketTokenAnalyticsEvent.TokenNewsCarouselScrolled(
-                                            token = params.token.symbol,
+                                            tokenSymbol = params.token.symbol,
                                         ),
                                     )
                                 },
@@ -351,6 +351,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     }
                     analyticsEventHandler.send(
                         MarketTokenAnalyticsEvent.TokenNewsLoadError(
+                            tokenSymbol = params.token.symbol,
                             code = code,
                             message = message,
                         ),
