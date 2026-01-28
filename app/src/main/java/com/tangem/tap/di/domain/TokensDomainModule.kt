@@ -12,15 +12,18 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
-import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
+import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
+import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
@@ -40,17 +43,19 @@ internal object TokensDomainModule {
     @Singleton
     fun provideAddCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
+        walletManagersFacade: WalletManagersFacade,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         stakingIdFactory: StakingIdFactory,
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
             currenciesRepository = currenciesRepository,
+            walletManagersFacade = walletManagersFacade,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
+            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             stakingIdFactory = stakingIdFactory,
         )
@@ -148,7 +153,7 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         stakingIdFactory: StakingIdFactory,
     ): FetchCurrencyStatusUseCase {
@@ -156,7 +161,7 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
+            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             stakingIdFactory = stakingIdFactory,
         )
@@ -339,8 +344,8 @@ internal object TokensDomainModule {
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
-        singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
-        multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
+        singleStakingBalanceSupplier: SingleStakingBalanceSupplier,
+        multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         stakingIdFactory: StakingIdFactory,
     ): BaseCurrencyStatusOperations {
@@ -350,8 +355,8 @@ internal object TokensDomainModule {
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-            singleYieldBalanceSupplier = singleYieldBalanceSupplier,
-            multiYieldBalanceSupplier = multiYieldBalanceSupplier,
+            singleStakingBalanceSupplier = singleStakingBalanceSupplier,
+            multiStakingBalanceSupplier = multiStakingBalanceSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             stakingIdFactory = stakingIdFactory,
         )
@@ -371,7 +376,7 @@ internal object TokensDomainModule {
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -381,7 +386,7 @@ internal object TokensDomainModule {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )

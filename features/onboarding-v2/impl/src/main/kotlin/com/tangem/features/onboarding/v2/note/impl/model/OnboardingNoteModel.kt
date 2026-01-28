@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.note.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.exitOnboardingDialog
 import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.OnboardingNoteInnerNavigationState
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class OnboardingNoteModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -30,6 +33,7 @@ internal class OnboardingNoteModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val getCardImageUseCase: GetCardImageUseCase,
     private val artworkUMConverter: ArtworkUMConverter,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -72,6 +76,7 @@ internal class OnboardingNoteModel @Inject constructor(
     }
 
     fun onWalletCreated(userWallet: UserWallet) {
+        analyticsEventHandler.send(OnboardingEvent.Finished())
         commonUiState.update {
             it.copy(userWallet = userWallet)
         }

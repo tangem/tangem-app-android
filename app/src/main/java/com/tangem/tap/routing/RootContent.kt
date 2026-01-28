@@ -47,6 +47,7 @@ internal fun RootContent(
     modifier: Modifier = Modifier,
     wcContent: @Composable (modifier: Modifier) -> Unit,
     hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
+    rootDetectedWarningContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -81,6 +82,8 @@ internal fun RootContent(
                 wcContent(Modifier.fillMaxSize())
 
                 hotAccessCodeContent(Modifier.fillMaxSize())
+
+                rootDetectedWarningContent(Modifier.fillMaxSize())
 
                 TangemSnackbarHost(
                     modifier = Modifier

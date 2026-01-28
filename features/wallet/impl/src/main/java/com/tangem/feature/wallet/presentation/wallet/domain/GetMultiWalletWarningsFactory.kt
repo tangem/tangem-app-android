@@ -6,7 +6,6 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
-import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
@@ -36,6 +35,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificat
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -59,7 +59,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
 ) {
 
-    @Suppress("UNCHECKED_CAST", "MagicNumber")
+    @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
@@ -115,7 +115,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                     addFinishWalletActivationNotification(
                         userWallet = userWallet,
-                        totalFiatBalance = totalFiatBalance,
+                        flattenCurrencies = flattenCurrencies,
                         clickIntents = clickIntents,
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
                     )
@@ -361,8 +361,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun TotalFiatBalance?.getFinishWalletActivationType(): WalletActivationBannerType {
-        return if ((this as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+    private fun List<CryptoCurrencyStatus>?.getFinishWalletActivationType(): WalletActivationBannerType {
+        return if (this?.any { it.value.amount.orZero().isPositive() } == true) {
             WalletActivationBannerType.Warning
         } else {
             WalletActivationBannerType.Attention
@@ -371,7 +371,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
-        totalFiatBalance: Lce<TokenListError, TotalFiatBalance>,
+        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
         clickIntents: WalletClickIntents,
         shouldAccessCodeSkipped: Boolean,
     ) {
@@ -382,30 +382,26 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
-        val type = totalFiatBalance.fold(
-            ifLoading = { it.getFinishWalletActivationType() },
+        val type = flattenCurrencies.fold(
+            ifLoading = { return },
             ifContent = { it.getFinishWalletActivationType() },
             ifError = { WalletActivationBannerType.Attention },
         )
 
-        val tint = when (type) {
-            WalletActivationBannerType.Attention -> IconTint.Attention
-            WalletActivationBannerType.Warning -> IconTint.Warning
-        }
-
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                iconTint = tint,
+                type = type,
                 buttonsState = when (type) {
                     WalletActivationBannerType.Warning -> ButtonsState.PrimaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                     else -> ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                 },
+                isBackupExists = isBackupExists,
             ),
             condition = shouldShowFinishActivation,
         )
