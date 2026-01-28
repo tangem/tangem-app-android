@@ -3,18 +3,31 @@ package com.tangem.features.welcome.impl.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SignIn
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,8 +48,15 @@ internal class WelcomeModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val saveWalletUseCase: SaveWalletUseCase,
     private val walletsRepository: WalletsRepository,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val scanCardProcessor: ScanCardProcessor,
+    private val messageSender: UiMessageSender,
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
@@ -51,6 +71,18 @@ internal class WelcomeModel @Inject constructor(
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
                 val userWallet = userWallets.first { it.walletId == walletId }
+                trackingContextProxy.addContext(userWallet)
+                val signInType = when {
+                    !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
+                    userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
+                    else -> SignIn.ButtonWallet.SignInType.AccessCode
+                }
+                analyticsEventHandler.send(
+                    event = SignIn.ButtonWallet(
+                        signInType = signInType,
+                        walletsCount = userWallets.size,
+                    ),
+                )
                 onUserWalletClick(userWallet)
             }
         },
@@ -63,6 +95,8 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             userWalletsListRepository.load()
             wallets.value = walletsFetcher.userWallets.first()
+
+            analyticsEventHandler.send(SignIn.ScreenOpened(wallets.value.size))
 
             launch {
                 walletsFetcher.userWallets
@@ -87,9 +121,10 @@ internal class WelcomeModel @Inject constructor(
                         routedOut = true
                         router.replaceAll(AppRoute.Wallet)
                     }
-                    .onLeft {
-                        it.handle(
+                    .onLeft { error ->
+                        error.handle(
                             specificWalletId = null,
+                            isFromUnlockAll = true,
                             onUserCancelled = { tryToUnlockWithAccessCodeRightAway() },
                         )
                         setSelectWalletState()
@@ -119,13 +154,18 @@ internal class WelcomeModel @Inject constructor(
                 showUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
+                    analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric())
                     modelScope.launch {
                         userWalletsListRepository.unlockAllWallets()
                             .onRight {
                                 router.replaceAll(AppRoute.Wallet)
                             }
-                            .onLeft {
-                                it.handle(null, onUserCancelled = { /* ignore */ })
+                            .onLeft { error ->
+                                error.handle(
+                                    specificWalletId = null,
+                                    isFromUnlockAll = true,
+                                    onUserCancelled = { /* ignore */ },
+                                )
                             }
                     }
                 },
@@ -140,7 +180,51 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private fun addWalletClick() {
-        router.push(AppRoute.CreateWalletSelection)
+        analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
+        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+            scanCard()
+        } else {
+            router.push(AppRoute.CreateWalletSelection)
+        }
+    }
+
+    private fun scanCard() {
+        modelScope.launch {
+            scanCardProcessor.scan(
+                analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                onWalletNotCreated = {},
+                disclaimerWillShow = { router.pop() },
+                onSuccess = { scanResponse ->
+                    val userWallet =
+                        coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return@scan
+                    saveWalletUseCase.invoke(userWallet)
+                        .onLeft { error ->
+                            if (error is SaveWalletError.WalletAlreadySaved) {
+                                userWalletsListRepository.unlock(
+                                    userWallet.walletId,
+                                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                                ).onRight {
+                                    userWalletsListRepository.select(userWallet.walletId)
+                                    router.replaceAll(AppRoute.Wallet)
+                                }
+                            }
+                        }
+                        .onRight {
+                            router.replaceAll(AppRoute.Wallet)
+                        }
+                },
+                onCancel = {},
+                onFailure = { tangemError ->
+                    if (!tangemError.silent) {
+                        val message = tangemError.messageResId
+                            ?.let(::resourceReference)
+                            ?: stringReference(tangemError.customMessage)
+
+                        messageSender.send(SnackbarMessage(message))
+                    }
+                },
+            )
+        }
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
@@ -154,6 +238,7 @@ internal class WelcomeModel @Inject constructor(
         if (userWallet.isLocked.not()) {
             // If the wallet is not locked, we can proceed to the wallet screen directly
             userWalletsListRepository.select(userWallet.walletId)
+            trackSignInEvent(userWallet, Basic.SignedIn.SignInType.NoSecurity)
             router.replaceAll(AppRoute.Wallet)
             return@launch
         }
@@ -178,11 +263,19 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             }
             .onLeft { error ->
-                error.handle(specificWalletId = userWalletId, onUserCancelled = { /* ignore*/ })
+                error.handle(
+                    specificWalletId = userWalletId,
+                    isFromUnlockAll = false,
+                    onUserCancelled = { /* ignore*/ },
+                )
             }
     }
 
-    suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: suspend () -> Unit = { }) {
+    suspend fun UnlockWalletError.handle(
+        specificWalletId: UserWalletId?,
+        isFromUnlockAll: Boolean,
+        onUserCancelled: suspend () -> Unit = { },
+    ) {
         handle(
             onAlreadyUnlocked = {
                 // this should not happen, as we check for locked state before this
@@ -190,6 +283,8 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             },
             onUserCancelled = { onUserCancelled() },
+            analyticsEventHandler = analyticsEventHandler,
+            isFromUnlockAll = isFromUnlockAll,
             showMessage = uiMessageSender::send,
         )
     }
@@ -202,5 +297,16 @@ internal class WelcomeModel @Inject constructor(
                 currentState
             }
         }
+    }
+
+    private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+        val walletsCount = userWalletsListRepository.userWalletsSync().size
+        trackingContextProxy.addContext(userWallet)
+        analyticsEventHandler.send(
+            event = Basic.SignedIn(
+                signInType = type,
+                walletsCount = walletsCount,
+            ),
+        )
     }
 }

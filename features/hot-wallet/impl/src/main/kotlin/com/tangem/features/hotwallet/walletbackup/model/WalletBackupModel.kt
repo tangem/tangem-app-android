@@ -2,19 +2,17 @@ package com.tangem.features.hotwallet.walletbackup.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
@@ -24,6 +22,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -33,13 +32,14 @@ internal class WalletBackupModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
-    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
-    private val urlOpener: UrlOpener,
     private val router: Router,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
+
+    private val isScreenOpenedEventSent: AtomicBoolean = AtomicBoolean(false)
 
     val uiState: StateFlow<WalletBackupUM>
         field = MutableStateFlow(
@@ -48,7 +48,7 @@ internal class WalletBackupModel @Inject constructor(
                 hardwareWalletOption = LabelUM(
                     text = resourceReference(R.string.common_recommended),
                     style = LabelStyle.ACCENT,
-                ),
+                ).takeIf { params.isColdWalletOptionShown },
                 recoveryPhraseOption = LabelUM(
                     text = resourceReference(R.string.hw_backup_no_backup),
                     style = LabelStyle.WARNING,
@@ -58,7 +58,6 @@ internal class WalletBackupModel @Inject constructor(
                     style = LabelStyle.REGULAR,
                 ),
                 googleDriveStatus = BackupStatus.ComingSoon,
-                onBuyClick = ::onBuyClick,
                 onRecoveryPhraseClick = ::onRecoveryPhraseClick,
                 onGoogleDriveClick = { },
                 onHardwareWalletClick = ::onHardwareWalletClick,
@@ -67,18 +66,31 @@ internal class WalletBackupModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened(isManualBackupEnabled = true))
+        trackingContextProxy.addHotWalletContext()
         getUserWalletUseCase.invokeFlow(params.userWalletId)
             .onEach { either ->
                 either.fold(
                     ifLeft = {
                         Timber.e("Error on getting user wallet: $it")
                     },
-                    ifRight = {
-                        updateBackupStatuses(it)
+                    ifRight = { userWallet ->
+                        if (!isScreenOpenedEventSent.get() && userWallet is UserWallet.Hot) {
+                            analyticsEventHandler.send(
+                                event = WalletSettingsAnalyticEvents.BackupScreenOpened(
+                                    isBackedUp = userWallet.backedUp,
+                                ),
+                            )
+                            isScreenOpenedEventSent.set(true)
+                        }
+                        updateBackupStatuses(userWallet)
                     },
                 )
             }.launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        trackingContextProxy.removeContext()
+        super.onDestroy()
     }
 
     private fun updateBackupStatuses(userWallet: UserWallet) {
@@ -110,14 +122,8 @@ internal class WalletBackupModel @Inject constructor(
         backedUp = userWallet.backedUp,
     )
 
-    private fun onBuyClick() {
-        modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
-        }
-    }
-
     private fun onRecoveryPhraseClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase())
         if (uiState.value.backedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
@@ -136,10 +142,9 @@ internal class WalletBackupModel @Inject constructor(
                 )
         } else {
             router.push(
-                AppRoute.CreateWalletBackup(
+                AppRoute.WalletActivation(
                     userWalletId = params.userWalletId,
-                    analyticsSource = AnalyticsParam.ScreensSources.Backup.value,
-                    analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup.value,
+                    isBackupExists = false,
                 ),
             )
         }
@@ -160,7 +165,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate())
         router.push(AppRoute.WalletHardwareBackup(params.userWalletId))
     }
 }
