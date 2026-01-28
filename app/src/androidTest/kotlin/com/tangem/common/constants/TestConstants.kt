@@ -8,6 +8,7 @@ object TestConstants {
     const val ETHEREUM_RECIPIENT_ADDRESS = "0x5aa711F440Eb6d4361148bBD89d03464628ace84"
     const val ETHEREUM_RECIPIENT_SHORTENED_ADDRESS = "0x5aa711F440Eb6d43...89d03464628ace84"
     const val BITCOIN_ADDRESS = "bc1qtg9aa6jcpqtvun0pe0uct7sxm8nq2nsxfmfxm3"
+    const val BITCOIN_RECIPIENT_ADDRESS = "bc1qt90qc0na7z05nh63kyd78tujfc8vqv6sl7e4a9"
     const val CARDANO_ADDRESS =
         "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
     const val SOLANA_RECIPIENT_ADDRESS = "5fcy9woa8Di1QHcce65CsV3XKrxdB2pD4HJx5xx82ipM"
@@ -30,6 +31,7 @@ object TestConstants {
     const val XRP_ACTIVATED_RECIPIENT_ADDRESS = "rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH"
     const val DOGECOIN_RECIPIENT_ADDRESS = "DJQR3bdhBKcFGMHX2BkMCkrMFApNWNzr6V"
     const val DOGECOIN_ADDRESS = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaqz"
+    const val TERRA_RECIPIENT_ADDRESS = "terra148dmp5ccazcwdmrcpvqz5rprnn886kemqen3tj"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
