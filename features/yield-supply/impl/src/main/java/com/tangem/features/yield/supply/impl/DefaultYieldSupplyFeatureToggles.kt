@@ -8,4 +8,7 @@ internal class DefaultYieldSupplyFeatureToggles(
 ) : YieldSupplyFeatureToggles {
     override val isYieldSupplyFeatureEnabled: Boolean
         get() = featureToggles.isFeatureEnabled("YIELD_SUPPLY_FEATURE_ENABLED")
+
+    override val isYieldSupplyPendingTransactionsEnabled: Boolean
+        get() = featureToggles.isFeatureEnabled("YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED")
 }

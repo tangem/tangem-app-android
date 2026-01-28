@@ -17,6 +17,76 @@ import java.util.UUID
 
 internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfolioUM> {
 
+    val sampleToken
+        get() = PortfolioTokenUM(
+            tokenItemState = TokenItemState.Content(
+                id = UUID.randomUUID().toString(),
+                iconState = CurrencyIconState.Locked,
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "My wallet")),
+                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
+                subtitleState = TokenItemState.SubtitleState.TextContent(
+                    value = stringReference(value = "XRP Ledger token"),
+                ),
+                onItemClick = {},
+                onItemLongClick = {},
+            ),
+            isQuickActionsShown = false,
+            quickActions = PortfolioTokenUM.QuickActions(
+                actions = persistentListOf(
+                    QuickActionUM.Buy,
+                    QuickActionUM.Exchange(shouldShowBadge = true),
+                    QuickActionUM.Receive,
+                ),
+                onQuickActionClick = {},
+                onQuickActionLongClick = {},
+            ),
+            isBalanceHidden = false,
+            walletId = UserWalletId(""),
+        )
+
+    val walletHeader
+        get() = WalletHeader(
+            id = UUID.randomUUID().toString(),
+            name = stringReference("Wallet 1"),
+        )
+
+    val walletPortfolioHeader
+        get() = PortfolioHeader(
+            state = AccountTitleUM.Text(title = stringReference("Wallet 1")),
+            id = UUID.randomUUID().toString(),
+        )
+
+    val accountHeader
+        get() = PortfolioHeader(
+            state = AccountTitleUM.Account(
+                icon = AccountIconPreviewData.randomAccountIcon(),
+                name = stringReference("Main Account"),
+                prefixText = TextReference.EMPTY,
+            ),
+            id = UUID.randomUUID().toString(),
+        )
+    val coinIconState
+        get() = CurrencyIconState.CoinIcon(
+            url = null,
+            fallbackResId = com.tangem.core.ui.R.drawable.img_polygon_22,
+            isGrayscale = false,
+            shouldShowCustomBadge = false,
+        )
+    val accountToken
+        get() = sampleToken.copy(
+            tokenItemState = TokenItemState.Content(
+                id = UUID.randomUUID().toString(),
+                iconState = coinIconState,
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
+                fiatAmountState = FiatAmountState.Content(text = "321 $"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
+                subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(value = "Token")),
+                onItemClick = {},
+                onItemLongClick = {},
+            ),
+        )
+
     override val values: Sequence<MyPortfolioUM>
         get() = sequenceOf(
             MyPortfolioUM.Tokens(
@@ -76,75 +146,5 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             MyPortfolioUM.Loading,
             MyPortfolioUM.Unavailable,
             MyPortfolioUM.UnavailableForWallet,
-        )
-
-    val walletHeader
-        get() = WalletHeader(
-            id = UUID.randomUUID().toString(),
-            name = stringReference("Wallet 1"),
-        )
-
-    val walletPortfolioHeader
-        get() = PortfolioHeader(
-            state = AccountTitleUM.Text(title = stringReference("Wallet 1")),
-            id = UUID.randomUUID().toString(),
-        )
-
-    val accountHeader
-        get() = PortfolioHeader(
-            state = AccountTitleUM.Account(
-                icon = AccountIconPreviewData.randomAccountIcon(),
-                name = stringReference("Main Account"),
-                prefixText = TextReference.EMPTY,
-            ),
-            id = UUID.randomUUID().toString(),
-        )
-    val coinIconState
-        get() = CurrencyIconState.CoinIcon(
-            url = null,
-            fallbackResId = com.tangem.core.ui.R.drawable.img_polygon_22,
-            isGrayscale = false,
-            shouldShowCustomBadge = false,
-        )
-    val accountToken
-        get() = sampleToken.copy(
-            tokenItemState = TokenItemState.Content(
-                id = UUID.randomUUID().toString(),
-                iconState = coinIconState,
-                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
-                fiatAmountState = FiatAmountState.Content(text = "321 $"),
-                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
-                subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(value = "Token")),
-                onItemClick = {},
-                onItemLongClick = {},
-            ),
-        )
-
-    val sampleToken
-        get() = PortfolioTokenUM(
-            tokenItemState = TokenItemState.Content(
-                id = UUID.randomUUID().toString(),
-                iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "My wallet")),
-                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
-                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
-                subtitleState = TokenItemState.SubtitleState.TextContent(
-                    value = stringReference(value = "XRP Ledger token"),
-                ),
-                onItemClick = {},
-                onItemLongClick = {},
-            ),
-            isQuickActionsShown = false,
-            quickActions = PortfolioTokenUM.QuickActions(
-                actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(showBadge = true),
-                    QuickActionUM.Receive,
-                ),
-                onQuickActionClick = {},
-                onQuickActionLongClick = {},
-            ),
-            isBalanceHidden = false,
-            walletId = UserWalletId(""),
         )
 }

@@ -33,6 +33,7 @@ import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 import com.tangem.features.managetokens.entity.item.DerivationPathUM
 import com.tangem.features.managetokens.entity.item.SelectableItemUM
 import com.tangem.features.managetokens.impl.R
+import com.tangem.features.managetokens.utils.CardanoDerivationPathValidator
 import com.tangem.features.managetokens.utils.mapper.toCurrencyNetworkModel
 import com.tangem.features.managetokens.utils.mapper.toDerivationPathModel
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
@@ -56,6 +57,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
 ) : Model() {
 
     private val params: CustomTokenSelectorComponent.Params = paramsContainer.require()
+    private val cardanoDerivationPathValidator = CardanoDerivationPathValidator()
 
     val dialogNavigation: SlotNavigation<CustomTokenSelectorDialogConfig> = SlotNavigation()
 
@@ -142,6 +144,14 @@ internal class CustomTokenSelectorModel @Inject constructor(
                     return@mapNotNullTo null // Skip default path
                 }
 
+                val isInvalidForCardano = cardanoDerivationPathValidator.isInvalidForCardano(
+                    networkId = selector.selectedNetwork.id,
+                    path = network.derivationPath.value,
+                )
+                if (isInvalidForCardano) {
+                    return@mapNotNullTo null
+                }
+
                 network.toDerivationPathModel(
                     isSelected = network.id == selector.selectedDerivationPath?.id,
                     onSelectedStateChange = {
@@ -215,6 +225,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
 
             val accountName = when (account) {
                 is Account.CryptoPortfolio -> account.accountName
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
                 null -> null
             }
 

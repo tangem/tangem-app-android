@@ -15,6 +15,7 @@ import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
+import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -36,7 +37,10 @@ import javax.inject.Singleton
 internal object NetworkModule {
 
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
+    private const val TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS = 60L
     private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
+
+    private const val P2P_ETH_POOL_API_TIMEOUT_SECONDS = 60L
 
     @Provides
     @Singleton
@@ -82,6 +86,12 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.P2PEthPool,
             applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                readTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = P2P_ETH_POOL_API_TIMEOUT_SECONDS,
+            ),
         )
     }
 
@@ -178,6 +188,21 @@ internal object NetworkModule {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.News,
             applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGaslessTxServiceApi(retrofitApiBuilder: RetrofitApiBuilder): GaslessTxServiceApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.GaslessTxService,
+            applyTimeoutAnnotations = false,
+            timeouts = Timeouts(
+                callTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                connectTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                readTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+                writeTimeoutSeconds = TANGEM_GASLESS_SERVICE_TIMEOUT_SECONDS,
+            ),
         )
     }
 }

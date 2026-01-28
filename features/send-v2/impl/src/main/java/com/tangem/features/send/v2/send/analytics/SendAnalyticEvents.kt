@@ -27,6 +27,7 @@ internal sealed class SendAnalyticEvents(
         val blockchain: String,
         val isNonceNotEmpty: Boolean,
         private val ensStatus: AnalyticsParam.EmptyFull,
+        private val feeToken: String,
         val derivationIndex: Int?,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",

@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.audits.AuditLabel
+import com.tangem.core.ui.components.audits.AuditLabelUM
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
@@ -52,6 +55,12 @@ internal class PreviewFeeSelectorBlockComponent : FeeSelectorBlockComponent {
                 tint = TangemTheme.colors.icon.informative,
             )
             Spacer(modifier = Modifier.weight(1f))
+            AuditLabel(
+                state = AuditLabelUM(
+                    text = stringReference("ETH"),
+                    type = AuditLabelUM.Type.General,
+                ),
+            )
             Text(
                 text = "~ 0.25 \$",
                 style = TangemTheme.typography.body1,

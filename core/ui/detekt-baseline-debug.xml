@@ -5,12 +5,6 @@
     <ID>BooleanPropertyNaming:BigDecimalPercentFormat.kt$BigDecimalPercentFormat$val withPercentSign: Boolean = true</ID>
     <ID>BooleanPropertyNaming:FullScreen.kt$FullScreenLayout$private val focusable: Boolean</ID>
     <ID>BooleanPropertyNaming:TokenItemState.kt$TokenItemState.TitleState.Content$val earnApyIsActive: Boolean = false</ID>
-    <ID>CanBeNonNullable:FooterContainer.kt$footer: TextReference? = null</ID>
-    <ID>CanBeNonNullable:InputRowImageBase.kt$iconRes: Int?</ID>
-    <ID>CanBeNonNullable:InputRowImageInfo.kt$subtitleEndIconRes: Int?</ID>
-    <ID>CanBeNonNullable:SearchBar.kt$keyboardController: SoftwareKeyboardController?</ID>
-    <ID>CanBeNonNullable:TextFields.kt$caption: String? = null</ID>
-    <ID>CanBeNonNullable:TransactionList.kt$txHistoryItems: LazyPagingItems&lt;TxHistoryState.TxHistoryItemState&gt;?</ID>
     <ID>CastNullableToNonNullableType:DialogFullScreen.kt$as</ID>
     <ID>CastNullableToNonNullableType:FullScreen.kt$FullScreenLayout$as</ID>
     <ID>MultilineLambdaItParameter:Actions.kt${ ActionButtonContent( config = config, text = { textColor -&gt; Text(text = config.text, textColor = textColor) }, modifier = it.padding( start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing24, ), ) }</ID>
@@ -27,6 +21,5 @@
     <ID>ReusedModifierInstance:TangemRadioButton.kt$AnimatedVisibility( visible = isSelected, label = "Radio button animation", modifier = modifier .size(TangemTheme.dimens.size24), ) { Icon( painter = painterResource(id = R.drawable.ic_check_circle_24), contentDescription = null, tint = TangemTheme.colors.control.checked, ) }</ID>
     <ID>ReusedModifierInstance:TokenPrice.kt$Icon( modifier = modifier, painter = painterResource( id = when (animatedType) { PriceChangeType.UP -&gt; R.drawable.ic_arrow_up_8 PriceChangeType.DOWN -&gt; R.drawable.ic_arrow_down_8 PriceChangeType.NEUTRAL -&gt; R.drawable.ic_elipse_8 }, ), tint = when (animatedType) { PriceChangeType.UP -&gt; TangemTheme.colors.icon.accent PriceChangeType.DOWN -&gt; TangemTheme.colors.icon.warning PriceChangeType.NEUTRAL -&gt; TangemTheme.colors.icon.inactive }, contentDescription = null, )</ID>
     <ID>UnnecessaryEventHandlerParameter:PinTextField.kt$onValueChange: (String) -&gt; Unit</ID>
-    <ID>UnnecessaryEventHandlerParameter:ResizableText.kt$onFontSizeChange: (Float) -&gt; Unit</ID>
   </CurrentIssues>
 </SmellBaseline>

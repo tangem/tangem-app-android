@@ -398,8 +398,6 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
             text = model.description.resolveReference(),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.caption2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }

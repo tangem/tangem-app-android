@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
@@ -31,6 +32,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State
 import com.tangem.core.ui.components.token.state.TokenItemState.PromoBannerState
+import com.tangem.core.ui.components.token.state.TokenItemState.TitleState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
@@ -65,6 +67,7 @@ fun TokenItem(
     state: TokenItemState,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
+    composables: TokenItemComposables? = null,
     itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
 ) {
     TokenItem(
@@ -73,8 +76,15 @@ fun TokenItem(
         modifier = modifier,
         reorderableTokenListState = null,
         itemPaddingValues = itemPaddingValues,
+        composables = composables,
     )
 }
+
+@Stable
+class TokenItemComposables(
+    val title: @Composable (Modifier) -> Unit,
+    val icon: @Composable (Modifier) -> Unit,
+)
 
 /**
  * Token item for reorderable list
@@ -88,6 +98,7 @@ fun TokenItem(
  * @see <a href = "https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=1051-866&t=ew8mbGp2lacuJfFm-4"
  * >Figma Component</a>
  */
+@Suppress("LongMethod")
 @Composable
 fun TokenItem(
     state: TokenItemState,
@@ -95,6 +106,7 @@ fun TokenItem(
     reorderableTokenListState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
     itemPaddingValues: PaddingValues = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
+    composables: TokenItemComposables? = null,
 ) {
     val betweenRowsMargin = TangemTheme.dimens.spacing2
 
@@ -104,13 +116,22 @@ fun TokenItem(
             .tokenClickable(state = state)
             .padding(itemPaddingValues),
     ) {
-        CurrencyIcon(
-            state = state.iconState,
-            modifier = Modifier
-                .layoutId(layoutId = LayoutId.ICON)
-                .padding(end = TangemTheme.dimens.spacing8)
-                .testTag(TokenElementsTestTags.TOKEN_ICON),
-        )
+        if (composables != null) {
+            composables.icon.invoke(
+                Modifier
+                    .layoutId(layoutId = LayoutId.ICON)
+                    .padding(end = TangemTheme.dimens.spacing8)
+                    .testTag(TokenElementsTestTags.TOKEN_ICON),
+            )
+        } else {
+            CurrencyIcon(
+                state = state.iconState,
+                modifier = Modifier
+                    .layoutId(layoutId = LayoutId.ICON)
+                    .padding(end = TangemTheme.dimens.spacing8)
+                    .testTag(TokenElementsTestTags.TOKEN_ICON),
+            )
+        }
 
         YieldSupplyPromoBanner(
             state = state.promoBannerState,
@@ -120,14 +141,24 @@ fun TokenItem(
                 .fillMaxWidth(),
         )
 
-        TokenTitle(
-            state = state.titleState,
-            modifier = Modifier
-                .layoutId(layoutId = LayoutId.TITLE)
-                .padding(end = TangemTheme.dimens.spacing8)
-                .padding(bottom = betweenRowsMargin)
-                .testTag(TokenElementsTestTags.TOKEN_TITLE),
-        )
+        if (composables != null) {
+            composables.title.invoke(
+                Modifier
+                    .layoutId(layoutId = LayoutId.TITLE)
+                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(bottom = betweenRowsMargin)
+                    .testTag(TokenElementsTestTags.TOKEN_TITLE),
+            )
+        } else {
+            TokenTitle(
+                state = state.titleState,
+                modifier = Modifier
+                    .layoutId(layoutId = LayoutId.TITLE)
+                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(bottom = betweenRowsMargin)
+                    .testTag(TokenElementsTestTags.TOKEN_TITLE),
+            )
+        }
 
         TokenFiatAmount(
             state = state.fiatAmountState,

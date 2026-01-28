@@ -1,22 +1,24 @@
 package com.tangem.common.ui.news
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.label.Label
@@ -39,23 +41,36 @@ fun ArticleCard(
     modifier: Modifier = Modifier,
     colors: CardColors = TangemBlockCardColors,
 ) {
-    BlockCard(
-        modifier = modifier,
-        onClick = onArticleClick,
-        colors = colors,
-    ) {
-        if (articleConfigUM.isTrending) {
-            TrendingArticle(articleConfigUM = articleConfigUM)
-        } else {
-            DefaultArticle(articleConfigUM = articleConfigUM)
-        }
+    if (articleConfigUM.isTrending) {
+        TrendingArticle(
+            articleConfigUM = articleConfigUM,
+            modifier = modifier,
+            onArticleClick = onArticleClick,
+            colors = colors,
+        )
+    } else {
+        DefaultArticle(
+            articleConfigUM = articleConfigUM,
+            modifier = modifier,
+            onArticleClick = onArticleClick,
+            colors = colors,
+        )
     }
 }
 
 @Composable
-private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
+private fun TrendingArticle(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    colors: CardColors,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(colors.containerColor)
+            .clickable { onArticleClick() }
+            .padding(vertical = 24.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -82,6 +97,7 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
             style = TangemTheme.typography.h3,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
 
         SpacerH(8.dp)
@@ -101,8 +117,54 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
 }
 
 @Composable
-private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
-    Column(modifier = Modifier.padding(12.dp)) {
+fun ShowMoreArticlesCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    BlockCard(
+        modifier = modifier,
+        onClick = onClick,
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 31.dp, horizontal = 12.dp),
+        ) {
+            Image(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_show_more_news_48),
+                contentDescription = stringResourceSafe(R.string.common_show_more),
+            )
+
+            SpacerH(16.dp)
+
+            Text(
+                text = stringResourceSafe(R.string.news_all_news),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+
+            Text(
+                text = stringResourceSafe(R.string.news_stay_in_the_loop),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DefaultArticle(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    colors: CardColors,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(colors.containerColor)
+            .clickable { onArticleClick() }
+            .padding(12.dp),
+    ) {
         ArticleInfo(
             score = articleConfigUM.score,
             createdAt = articleConfigUM.createdAt.resolveReference(),
@@ -122,32 +184,45 @@ private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
             overflow = TextOverflow.Ellipsis,
         )
 
-        SpacerH(16.dp)
+        SpacerHMax(modifier = Modifier.padding(bottom = 16.dp))
 
         Tags(tags = articleConfigUM.tags.toImmutableList())
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
-    val expandIndicator = remember {
-        ContextualFlowRowOverflow.expandIndicator {
-            val remainingItems = tags.size - shownItemCount
-            Label(state = LabelUM(TextReference.Str("${StringsSigns.PLUS}$remainingItems")))
-        }
-    }
-    ContextualFlowRow(
-        itemCount = tags.size,
+    FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = MAX_TAGS_COUNT_TO_SHOW + 1,
         maxLines = 1,
-        overflow = expandIndicator,
-    ) { index ->
-        Label(state = tags[index])
+        itemVerticalAlignment = Alignment.Bottom,
+    ) {
+        val displayedTags = if (tags.size > MAX_TAGS_COUNT_TO_SHOW) {
+            tags.take(MAX_TAGS_COUNT_TO_SHOW)
+        } else {
+            tags
+        }
+
+        displayedTags.forEach { tag ->
+            Label(state = tag)
+        }
+
+        if (tags.size > MAX_TAGS_COUNT_TO_SHOW) {
+            val remainingItems = tags.size - MAX_TAGS_COUNT_TO_SHOW
+            Label(
+                state = LabelUM(
+                    text = TextReference.Str("${StringsSigns.PLUS}$remainingItems"),
+                    maxLines = 1,
+                ),
+            )
+        }
     }
 }
+
+private const val MAX_TAGS_COUNT_TO_SHOW = 3
 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)

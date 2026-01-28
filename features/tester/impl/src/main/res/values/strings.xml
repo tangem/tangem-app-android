@@ -20,4 +20,6 @@
     <string name="accounts" translatable="false">Accounts</string>
     <string name="news" translatable="false">News</string>
     <string name="news_details" translatable="false">News details</string>
+    <string name="news_details_bottom_sheet" translatable="false">News details (Bottom Sheet)</string>
+    <string name="addresses_info" translatable="false">Addresses info</string>
 </resources>

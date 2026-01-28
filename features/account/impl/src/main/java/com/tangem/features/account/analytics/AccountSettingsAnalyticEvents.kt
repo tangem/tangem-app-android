@@ -84,6 +84,7 @@ sealed class AccountSettingsAnalyticEvents(
         event = "Account Error",
         params = buildMap {
             put("Error", error)
+            put("Source", source.value)
         },
     )
 

@@ -36,6 +36,9 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             accountCreator = accountCreator,
             featureToggles = BlockchainFeatureToggles(
                 isYieldSupplyEnabled = featureTogglesManager.isFeatureEnabled("YIELD_SUPPLY_FEATURE_ENABLED"),
+                isPendingTransactionsEnabled = featureTogglesManager.isFeatureEnabled(
+                    "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
+                ),
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),

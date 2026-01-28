@@ -2,6 +2,7 @@ package com.tangem.data.account.fetcher
 
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.common.account.WalletAccountsFetcher
@@ -50,6 +51,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
     private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
@@ -71,7 +73,8 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
             throw fetchResult.error
         }
 
-        return updatedResponse
+        val migratedResponse = mainAccountTokensMigration.migrate(userWalletId).getOrNull() ?: updatedResponse
+        return migratedResponse
     }
 
     override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
@@ -203,7 +206,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         store(userWalletId = userWalletId, response = response)
 
-        push(userWalletId = userWalletId, accounts = response.accounts)
+        val isFailed = push(userWalletId = userWalletId, accounts = response.accounts) == null
+        if (isFailed) {
+            // Clear ETags if push failed to avoid different state in the cache and API
+            eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+        }
+
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
 
         return response

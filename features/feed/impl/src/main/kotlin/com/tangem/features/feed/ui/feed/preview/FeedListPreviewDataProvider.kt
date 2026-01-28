@@ -3,15 +3,14 @@ package com.tangem.features.feed.ui.feed.preview
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import kotlinx.collections.immutable.*
 
 @Suppress("MagicNumber")
@@ -22,12 +21,9 @@ internal object FeedListPreviewDataProvider {
         val marketItems = createSampleMarketItems()
         return FeedListUM(
             currentDate = "20 November",
-            searchBar = SearchBarUM(
+            feedListSearchBar = FeedListSearchBar(
                 placeholderText = TextReference.Str("Search tokens & news"),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = {},
+                onBarClick = {},
             ),
             feedListCallbacks = FeedListCallbacks(
                 onSearchClick = {},
@@ -36,8 +32,14 @@ internal object FeedListPreviewDataProvider {
                 onOpenAllNews = {},
                 onMarketItemClick = {},
                 onSortTypeClick = {},
+                onSliderScroll = {},
+                onSliderEndReached = {},
             ),
-            news = NewsUM.Content(articles.filter { it.isTrending.not() }.toImmutableList()),
+            news = NewsUM(
+                content = articles.filter { it.isTrending.not() }.toImmutableList(),
+                onRetryClicked = {},
+                newsUMState = NewsUMState.CONTENT,
+            ),
             trendingArticle = articles.first { it.isTrending },
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),

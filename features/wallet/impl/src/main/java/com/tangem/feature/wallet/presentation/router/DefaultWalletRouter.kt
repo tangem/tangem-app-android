@@ -133,19 +133,9 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
-    override fun openYieldSupplyActiveScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String) {
+    override fun openYieldSupplyEntryScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String) {
         router.push(
-            AppRoute.YieldSupplyActive(
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-                apy = apy,
-            ),
-        )
-    }
-
-    override fun openYieldSupplyPromoScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String) {
-        router.push(
-            AppRoute.YieldSupplyPromo(
+            AppRoute.YieldSupplyEntry(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 apy = apy,

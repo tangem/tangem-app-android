@@ -20,8 +20,6 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -43,7 +41,6 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val shareManager: ShareManager,
-    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -73,14 +70,14 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun handleDemoMode(action: TokenActionsBSContentUM.Action, userWallet: UserWallet.Cold): Boolean {
-        val demoCard = isDemoCardUseCase.invoke(userWallet.cardId)
-        val needShowDemoWarning = demoCard && disabledActionsInDemoMode.contains(action)
+        val isDemoCard = isDemoCardUseCase.invoke(userWallet.cardId)
+        val shouldShowDemoWarning = isDemoCard && disabledActionsInDemoMode.contains(action)
 
-        if (needShowDemoWarning) {
+        if (shouldShowDemoWarning) {
             showDemoModeWarning()
         }
 
-        return needShowDemoWarning
+        return shouldShowDemoWarning
     }
 
     private fun showDemoModeWarning() {
@@ -177,7 +174,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
             AppRoute.Staking(
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 cryptoCurrency = cryptoCurrencyData.status.currency,
-                yieldId = option.integrationId,
+                integrationId = option.integrationId,
             ),
         )
     }
@@ -186,41 +183,13 @@ internal class TokenActionsHandler @AssistedInject constructor(
         val yieldSupplyApy = cryptoCurrencyData.actions.filterIsInstance<TokenActionsState.ActionState.YieldMode>()
             .firstOrNull()?.apy ?: return
 
-        val (userWalletId, cryptoCurrencyStatus) = cryptoCurrencyData.let { currencyData ->
-            currencyData.userWallet.walletId to currencyData.status
-        }
-        val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
-        val isActiveYield = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
-
-        when {
-            tokenEnterStatus != null -> router.push(
-                AppRoute.CurrencyDetails(
-                    userWalletId = userWalletId,
-                    currency = cryptoCurrencyStatus.currency,
-                    navigationAction = NavigationAction.YieldSupply(
-                        isActive = isActiveYield,
-                    ),
-                ),
-            )
-            isActiveYield -> {
-                router.push(
-                    AppRoute.YieldSupplyActive(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        apy = yieldSupplyApy,
-                    ),
-                )
-            }
-            else -> {
-                router.push(
-                    AppRoute.YieldSupplyPromo(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        apy = yieldSupplyApy,
-                    ),
-                )
-            }
-        }
+        router.push(
+            AppRoute.YieldSupplyEntry(
+                userWalletId = cryptoCurrencyData.userWallet.walletId,
+                cryptoCurrency = cryptoCurrencyData.status.currency,
+                apy = yieldSupplyApy,
+            ),
+        )
     }
 
     @AssistedFactory

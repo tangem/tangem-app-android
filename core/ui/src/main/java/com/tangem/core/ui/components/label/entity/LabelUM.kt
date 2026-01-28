@@ -12,6 +12,7 @@ data class LabelUM(
     @DrawableRes val icon: Int? = null,
     val onIconClick: (() -> Unit)? = null,
     val onClick: (() -> Unit)? = null,
+    val maxLines: Int = Int.MAX_VALUE,
 )
 
 @Immutable

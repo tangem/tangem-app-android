@@ -19,7 +19,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.appCurrency.models)

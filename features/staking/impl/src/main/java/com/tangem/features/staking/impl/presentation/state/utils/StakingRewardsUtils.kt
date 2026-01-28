@@ -1,11 +1,14 @@
 package com.tangem.features.staking.impl.presentation.state.utils
 
 import com.tangem.core.ui.extensions.*
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardSchedule
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.COSMOS_SCHEDULE
-import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.SOLANA_SCHEDULE
-import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.TON_SCHEDULE
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.CARDANO_SCHEDULE
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.COSMOS_SCHEDULE
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.SOLANA_SCHEDULE
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardScheduleConstants.TON_SCHEDULE
+import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTon
@@ -13,57 +16,58 @@ import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 
-private data object StakingRewardSchedule {
+private data object StakingRewardScheduleConstants {
+    const val CARDANO_SCHEDULE = 5
     val COSMOS_SCHEDULE = 5 to 12
     val SOLANA_SCHEDULE = 2 to 3
     val TON_SCHEDULE = 1 to 2
 }
 
 internal fun getRewardScheduleText(
-    rewardSchedule: Yield.Metadata.RewardSchedule,
+    rewardSchedule: RewardSchedule,
     networkId: String,
     decapitalize: Boolean,
 ): TextReference? {
     return when (rewardSchedule) {
-        Yield.Metadata.RewardSchedule.WEEK -> resourceReference(
+        RewardSchedule.WEEK -> resourceReference(
             id = R.string.staking_reward_schedule_week,
             decapitalize = decapitalize,
         )
-        Yield.Metadata.RewardSchedule.HOUR -> resourceReference(
+        RewardSchedule.HOUR -> resourceReference(
             id = R.string.staking_reward_schedule_hour,
             decapitalize = decapitalize,
         )
-        Yield.Metadata.RewardSchedule.DAY -> resourceReference(
+        RewardSchedule.DAY -> resourceReference(
             id = R.string.staking_reward_schedule_day,
             decapitalize = decapitalize,
         )
-        Yield.Metadata.RewardSchedule.MONTH -> resourceReference(
+        RewardSchedule.MONTH -> resourceReference(
             id = R.string.staking_reward_schedule_month,
             decapitalize = decapitalize,
         )
-        Yield.Metadata.RewardSchedule.BLOCK,
-        Yield.Metadata.RewardSchedule.EPOCH,
-        Yield.Metadata.RewardSchedule.ERA,
+        RewardSchedule.BLOCK,
+        RewardSchedule.EPOCH,
+        RewardSchedule.ERA,
         -> getCustomRewardSchedule(
             networkId = networkId,
             decapitalize = decapitalize,
         ) ?: stringReference(rewardSchedule.name.lowercase().capitalize())
-        else -> null
+        RewardSchedule.UNKNOWN -> null
     }
 }
 
-internal fun getRewardTypeShortText(rewardType: Yield.RewardType): TextReference {
+internal fun getRewardTypeShortText(rewardType: RewardType): TextReference {
     return when (rewardType) {
-        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_apr)
-        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_apy)
+        RewardType.APR -> TextReference.Res(R.string.staking_details_apr)
+        RewardType.APY -> TextReference.Res(R.string.staking_details_apy)
         else -> TextReference.EMPTY
     }
 }
 
-internal fun getRewardTypeLongText(rewardType: Yield.RewardType): TextReference {
+internal fun getRewardTypeLongText(rewardType: RewardType): TextReference {
     return when (rewardType) {
-        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
-        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
+        RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
+        RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
         else -> TextReference.EMPTY
     }
 }
@@ -97,6 +101,15 @@ private fun getCustomRewardSchedule(networkId: String, decapitalize: Boolean = f
             pluralReference(
                 id = R.plurals.common_days_no_param,
                 count = TON_SCHEDULE.second,
+            ),
+        )
+        isCardano(networkId) -> combinedReference(
+            resourceReference(id = R.string.staking_reward_schedule_each_plural, decapitalize = decapitalize),
+            stringReference(NON_BREAKING_SPACE.toString()),
+            stringReference("$CARDANO_SCHEDULE$NON_BREAKING_SPACE"),
+            pluralReference(
+                id = R.plurals.common_days_no_param,
+                count = CARDANO_SCHEDULE,
             ),
         )
         else -> null

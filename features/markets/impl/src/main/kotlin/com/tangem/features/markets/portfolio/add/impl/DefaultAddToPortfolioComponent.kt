@@ -131,7 +131,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                         end = 16.dp,
                         bottom = 16.dp,
                     )
-                    val scrollableContent = when (stack.active.configuration) {
+                    val isScrollableContent = when (stack.active.configuration) {
                         AddToPortfolioRoutes.PortfolioSelector -> false
                         AddToPortfolioRoutes.AddToken,
                         AddToPortfolioRoutes.Empty,
@@ -139,7 +139,7 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
                         AddToPortfolioRoutes.TokenActions,
                         -> true
                     }
-                    if (scrollableContent) {
+                    if (isScrollableContent) {
                         Column(
                             modifier = paddingModifier.verticalScroll(rememberScrollState()),
                         ) {

@@ -88,6 +88,7 @@ internal class AccountCreateEditUMBuilder(
         val Account.portfolioIcon: CryptoPortfolioIcon
             get() = when (this) {
                 is Account.CryptoPortfolio -> this.icon
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
 
         fun AccountCreateEditUM.updateColorSelect(color: CryptoPortfolioIcon.Color): AccountCreateEditUM {

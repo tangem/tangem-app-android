@@ -1,6 +1,7 @@
 package com.tangem.data.yield.supply
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.yieldsupply.YieldSupplyProvider
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
@@ -18,20 +19,16 @@ import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultYieldSupplyRepository(
@@ -43,7 +40,7 @@ internal class DefaultYieldSupplyRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : YieldSupplyRepository {
 
-    private val statusMap: MutableMap<String, YieldSupplyEnterStatus> = ConcurrentHashMap()
+    private val statusMap: MutableMap<String, YieldSupplyPendingStatus> = ConcurrentHashMap()
 
     override suspend fun getCachedMarkets(): List<YieldMarketToken>? = withContext(dispatchers.io) {
         val cache = store.getSyncOrNull().orEmpty()
@@ -126,23 +123,36 @@ internal class DefaultYieldSupplyRepository(
             ).getOrThrow().isActive
         }
 
-    override suspend fun saveTokenProtocolStatus(
+    override suspend fun saveTokenProtocolPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-        yieldSupplyEnterStatus: YieldSupplyEnterStatus?,
+        yieldSupplyPendingStatus: YieldSupplyPendingStatus?,
     ) {
         val key = getTokenProtocolStatusKey(userWalletId, cryptoCurrency)
-        if (yieldSupplyEnterStatus != null) {
-            statusMap[key] = yieldSupplyEnterStatus
+        if (yieldSupplyPendingStatus != null) {
+            statusMap[key] = yieldSupplyPendingStatus
         } else {
             statusMap.remove(key)
         }
     }
 
-    override fun getTokenProtocolStatus(
+    override suspend fun getPendingTxHashes(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): List<String> {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+        ) ?: return emptyList()
+
+        return walletManager.wallet.recentTransactions
+            .filter { it.status == TransactionStatus.Unconfirmed }
+            .map {
+                it.hash.orEmpty()
+            }
+    }
+
+    override fun getTokenProtocolPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): YieldSupplyEnterStatus? {
+    ): YieldSupplyPendingStatus? {
         return statusMap[getTokenProtocolStatusKey(userWalletId, cryptoCurrency)]
     }
 
@@ -153,48 +163,12 @@ internal class DefaultYieldSupplyRepository(
         }
     }
 
-    override suspend fun getTokenPendingStatus(
-        userWalletId: UserWalletId,
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): YieldSupplyEnterStatus? = runSuspendCatching {
-        val cryptoCurrency = cryptoCurrencyStatus.currency
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = cryptoCurrency.network.toBlockchain(),
-            derivationPath = cryptoCurrency.network.derivationPath.value,
-        ) ?: error("Wallet manager not found")
-
-        val pendingTxs = cryptoCurrencyStatus.value.pendingTransactions
-
-        val yieldAddress = walletManager.calculateYieldModuleAddress()
-        val hasRecentYieldEnterTxs = pendingTxs.hasYieldEnterTransactions(yieldAddress)
-        val hasRecentYieldExitTxs = pendingTxs.hasYieldExitTransactions()
-
-        when {
-            hasRecentYieldEnterTxs -> YieldSupplyEnterStatus.Enter
-            hasRecentYieldExitTxs -> YieldSupplyEnterStatus.Exit
-            else -> null
-        }
-    }.onFailure { exception ->
-        Timber.w(exception, "Failed to get pending yield supply status")
-    }.getOrNull()
-
     override fun getShouldShowYieldPromoBanner(): Flow<Boolean> {
         return appPreferencesStore.get(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, true)
     }
 
     override suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean) {
         appPreferencesStore.store(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, shouldShow)
-    }
-
-    private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any {
-        it.type == TxInfo.TransactionType.YieldSupply.Enter ||
-            it.type == TxInfo.TransactionType.Approve &&
-            (it.interactionAddressType as? TxInfo.InteractionAddressType.Contract)?.address == yieldAddress
-    }
-
-    private fun Set<TxInfo>.hasYieldExitTransactions() = any {
-        it.type == TxInfo.TransactionType.YieldSupply.Exit
     }
 
     private fun getTokenProtocolStatusKey(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String =
