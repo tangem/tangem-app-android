@@ -9,7 +9,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -24,9 +24,9 @@ internal class RewardsValidatorStateConverter(
     private val yield: Yield,
 ) : Converter<Unit, StakingStates.RewardsValidatorsState> {
     override fun convert(value: Unit): StakingStates.RewardsValidatorsState {
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
-        return if (yieldBalance is YieldBalance.Data) {
-            val balances = yieldBalance.balance.items
+        val stakingBalance = cryptoCurrencyStatus.value.stakingBalance
+        return if (stakingBalance is StakingBalance.Data.StakeKit) {
+            val balances = stakingBalance.balance.items
             StakingStates.RewardsValidatorsState.Data(
                 isPrimaryButtonEnabled = true,
                 rewards = balances
@@ -35,6 +35,7 @@ internal class RewardsValidatorStateConverter(
                     .toPersistentList(),
             )
         } else {
+            // TODO p2p
             StakingStates.RewardsValidatorsState.Empty()
         }
     }

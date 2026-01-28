@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NullableToStringCall:SendTransactionError.kt$SendTransactionError$$code</ID>
+  </CurrentIssues>
+</SmellBaseline>

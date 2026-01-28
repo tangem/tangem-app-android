@@ -28,7 +28,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             // region Ethereum-like blockchains
             blockchain == Blockchain.Tezos -> ACCOUNT_NODE_INDEX
             blockchain == Blockchain.Quai -> ACCOUNT_NODE_INDEX
-            blockchain.isEvm() -> ADDRESS_INDEX_NODE_INDEX
+            blockchain.isEvm() && derivationPath.isEthDerivation() -> ADDRESS_INDEX_NODE_INDEX
             // endregion
             blockchain.isUTXO -> ACCOUNT_NODE_INDEX
             else -> ACCOUNT_NODE_INDEX
@@ -73,6 +73,13 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             accountNode?.getIndex(includeHardened = false)
         }
             .getOrNull()
+    }
+
+    private fun DerivationPath.isEthDerivation(): Boolean {
+        fun getIndex(nodeIndex: Int) = nodes.getOrNull(nodeIndex)?.getIndex(false)
+
+        return getIndex(FIRST_NODE_INDEX) == ETH_FIRST_NODE_VALUE &&
+            getIndex(SECOND_NODE_INDEX) == ETH_SECOND_NODE_VALUE
     }
 
     @Suppress("LongMethod")
@@ -253,5 +260,9 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
     private companion object {
         const val ACCOUNT_NODE_INDEX = 2
         const val ADDRESS_INDEX_NODE_INDEX = 4
+        const val FIRST_NODE_INDEX = 0
+        const val ETH_FIRST_NODE_VALUE = 44L
+        const val SECOND_NODE_INDEX = 1
+        const val ETH_SECOND_NODE_VALUE = 60L
     }
 }

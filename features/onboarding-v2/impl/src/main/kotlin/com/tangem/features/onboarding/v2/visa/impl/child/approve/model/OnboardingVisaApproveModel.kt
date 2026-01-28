@@ -55,7 +55,7 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     val onDone = MutableSharedFlow<Unit>()
 
     init {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.WalletPrepare)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.WalletPrepare())
     }
 
     private fun getInitialState(): OnboardingVisaApproveUM {
@@ -67,7 +67,7 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     private fun onApproveClick() {
         loading(true)
 
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonApprove)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonApprove())
 
         modelScope.launch {
             val dataToSign =

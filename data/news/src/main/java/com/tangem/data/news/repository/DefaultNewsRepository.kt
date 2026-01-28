@@ -1,15 +1,16 @@
 package com.tangem.data.news.repository
 
+import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.news.NewsApi
+import com.tangem.datasource.api.news.models.response.NewsTrendingResponse
 import com.tangem.datasource.local.news.details.NewsDetailsStore
 import com.tangem.datasource.local.news.trending.TrendingNewsStore
+import com.tangem.domain.models.news.*
 import com.tangem.domain.news.model.NewsListBatchFlow
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
-import com.tangem.domain.models.news.ArticleCategory
-import com.tangem.domain.models.news.DetailedArticle
-import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.news.repository.NewsRepository
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.BatchListSource
@@ -18,20 +19,19 @@ import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import kotlin.collections.orEmpty
+import timber.log.Timber
 
 /**
  * Implementation of [NewsRepository].
 [REDACTED_AUTHOR]
  */
-internal class DefaultNewsRepository @Inject constructor(
+internal class DefaultNewsRepository(
     private val newsApi: NewsApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val newsDetailsStore: NewsDetailsStore,
@@ -68,26 +68,26 @@ internal class DefaultNewsRepository @Inject constructor(
         fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
     }
 
-    override suspend fun getTrendingNews(limit: Int, language: String?): List<ShortArticle> {
-        return fetchAndStoreTrendingNews(limit = limit, language = language)
-    }
-
-    override fun observeTrendingNews(): Flow<List<ShortArticle>> {
-        return trendingNewsStore.get(TRENDING_NEWS_KEY)
-    }
-
-    override suspend fun refreshTrendingNews(limit: Int, language: String?) {
+    override suspend fun fetchTrendingNews(limit: Int, language: String?) {
         fetchAndStoreTrendingNews(limit = limit, language = language)
+    }
+
+    override fun observeTrendingNews(): Flow<TrendingNews> {
+        return trendingNewsStore.get(TRENDING_NEWS_KEY)
     }
 
     override suspend fun updateTrendingNewsViewed(articleIds: Collection<Int>, viewed: Boolean) {
         if (articleIds.isEmpty()) return
 
-        val current = trendingNewsStore.getSyncOrNull(TRENDING_NEWS_KEY).orEmpty()
-        if (current.isEmpty()) return
+        val currentResult = trendingNewsStore.getSyncOrNull(TRENDING_NEWS_KEY) ?: return
+        val currentArticles = when (currentResult) {
+            is TrendingNews.Data -> currentResult.articles
+            is TrendingNews.Error -> return
+        }
+        if (currentArticles.isEmpty()) return
 
         val ids = articleIds.toSet()
-        val updated = current.map { article ->
+        val updated = currentArticles.map { article ->
             if (article.id in ids) {
                 article.copy(viewed = viewed)
             } else {
@@ -95,7 +95,7 @@ internal class DefaultNewsRepository @Inject constructor(
             }
         }
 
-        trendingNewsStore.store(TRENDING_NEWS_KEY, updated)
+        trendingNewsStore.store(TRENDING_NEWS_KEY, TrendingNews.Data(updated))
     }
 
     override suspend fun getCategories(): List<ArticleCategory> {
@@ -138,16 +138,46 @@ internal class DefaultNewsRepository @Inject constructor(
             }
         }
 
-    private suspend fun fetchAndStoreTrendingNews(limit: Int, language: String?): List<ShortArticle> {
+    private suspend fun fetchAndStoreTrendingNews(limit: Int, language: String?) {
         return withContext(dispatchers.io) {
-            val response = newsApi.getTrendingNews(limit = limit, language = language).getOrThrow()
-            val freshArticles = response.items.map { it.toDomainShortArticle() }
-            val currentArticles = trendingNewsStore.getSyncOrNull(TRENDING_NEWS_KEY).orEmpty()
-            val merged = mergeTrendingArticles(current = currentArticles, fresh = freshArticles).take(limit)
-
-            trendingNewsStore.store(TRENDING_NEWS_KEY, merged)
-
-            merged
+            val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)
+            when (val result = apiResponse) {
+                is ApiResponse.Error -> {
+                    Timber.e(
+                        result.cause.cause,
+                        "Trending news fetch failed cause: ${
+                            when (val error = result.cause) {
+                                is ApiResponseError.HttpException -> error.code
+                                is ApiResponseError.NetworkException -> "NetworkException"
+                                is ApiResponseError.TimeoutException -> "TimeoutException"
+                                is ApiResponseError.UnknownException -> "UnknownException"
+                            }
+                        }",
+                    )
+                    trendingNewsStore.clear()
+                    trendingNewsStore.store(
+                        key = TRENDING_NEWS_KEY,
+                        value = TrendingNews.Error(
+                            NewsError.Unknown(
+                                message = result.cause.message,
+                                code = null,
+                            ),
+                        ),
+                    )
+                }
+                is ApiResponse.Success<NewsTrendingResponse> -> {
+                    val freshArticles = result.data.items.map { it.toDomainShortArticle() }
+                    val cachedArticles = trendingNewsStore.getSyncOrNull(TRENDING_NEWS_KEY)
+                    val currentArticles = when (cachedArticles) {
+                        is TrendingNews.Data -> cachedArticles.articles
+                        is TrendingNews.Error -> emptyList()
+                        null -> emptyList()
+                    }
+                    val merged = mergeTrendingArticles(current = currentArticles, fresh = freshArticles).take(limit)
+                    trendingNewsStore.store(TRENDING_NEWS_KEY, TrendingNews.Data(merged))
+                    TrendingNews.Data(merged)
+                }
+            }
         }
     }
 

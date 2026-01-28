@@ -68,10 +68,13 @@ internal fun SendDestinationContent(
             onAddressChange = clickIntents::onRecipientAddressValueChange,
             onQrCodeClick = clickIntents::onQrCodeScanClick,
         )
-        memoField(
-            memoField = state.memoTextField,
-            onMemoChange = clickIntents::onRecipientMemoValueChange,
-        )
+        val memoTextField = state.memoTextField
+        if (memoTextField != null) {
+            memoField(
+                memoField = memoTextField,
+                onMemoChange = clickIntents::onRecipientMemoValueChange,
+            )
+        }
         listHeaderItem(
             titleRes = if (state.isAccountsMode == true) {
                 R.string.common_accounts
@@ -158,40 +161,38 @@ private fun LazyListScope.addressItem(
 }
 
 private fun LazyListScope.memoField(
-    memoField: DestinationTextFieldUM.RecipientMemo?,
+    memoField: DestinationTextFieldUM.RecipientMemo,
     onMemoChange: (String, Boolean) -> Unit,
 ) {
-    if (memoField != null) {
-        item(key = MEMO_FIELD_KEY) {
-            val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
-            TextFieldWithPaste(
-                value = memoField.value,
-                label = memoField.label,
-                placeholder = placeholder,
-                footer = annotatedReference(
-                    buildAnnotatedString {
-                        append(stringResourceSafe(R.string.send_recipient_memo_footer_v2))
-                        append("\n")
-                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                            appendColored(
-                                text = stringResourceSafe(
-                                    R.string.send_recipient_memo_footer_v2_highlighted,
-                                ),
-                                color = TangemTheme.colors.text.secondary,
-                            )
-                        }
-                    },
-                ),
-                onValueChange = { onMemoChange(it, false) },
-                onPasteClick = { onMemoChange(it, true) },
-                modifier = Modifier.padding(top = 20.dp),
-                labelStyle = TangemTheme.typography.subtitle2,
-                isError = memoField.isError,
-                error = memoField.error,
-                isReadOnly = !memoField.isEnabled,
-                isValuePasted = memoField.isValuePasted,
-            )
-        }
+    item(key = MEMO_FIELD_KEY) {
+        val placeholder = if (memoField.isEnabled) memoField.placeholder else memoField.disabledText
+        TextFieldWithPaste(
+            value = memoField.value,
+            label = memoField.label,
+            placeholder = placeholder,
+            footer = annotatedReference(
+                buildAnnotatedString {
+                    append(stringResourceSafe(R.string.send_recipient_memo_footer_v2))
+                    append("\n")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                        appendColored(
+                            text = stringResourceSafe(
+                                R.string.send_recipient_memo_footer_v2_highlighted,
+                            ),
+                            color = TangemTheme.colors.text.secondary,
+                        )
+                    }
+                },
+            ),
+            onValueChange = { onMemoChange(it, false) },
+            onPasteClick = { onMemoChange(it, true) },
+            modifier = Modifier.padding(top = 20.dp),
+            labelStyle = TangemTheme.typography.subtitle2,
+            isError = memoField.isError,
+            error = memoField.error,
+            isReadOnly = !memoField.isEnabled,
+            isValuePasted = memoField.isValuePasted,
+        )
     }
 }
 
@@ -302,8 +303,8 @@ private fun AnimateRecentAppearance(isVisible: Boolean, content: @Composable () 
             (slideInHorizontally() + fadeIn())
                 .togetherWith(slideOutVertically() + fadeOut())
         },
-    ) {
-        if (it) {
+    ) { currentVisibility ->
+        if (currentVisibility) {
             content()
         } else {
             Box(modifier = Modifier.fillMaxWidth())

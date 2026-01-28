@@ -15,11 +15,13 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -41,6 +43,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val shareManager: ShareManager,
+    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -65,6 +68,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
             TokenActionsBSContentUM.Action.Sell -> onSellClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Send -> onSendClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Stake -> onStakeClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.YieldMode -> onYieldModeClick(cryptoCurrencyData)
         }
     }
 
@@ -176,6 +180,47 @@ internal class TokenActionsHandler @AssistedInject constructor(
                 yieldId = option.integrationId,
             ),
         )
+    }
+
+    private fun onYieldModeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
+        val yieldSupplyApy = cryptoCurrencyData.actions.filterIsInstance<TokenActionsState.ActionState.YieldMode>()
+            .firstOrNull()?.apy ?: return
+
+        val (userWalletId, cryptoCurrencyStatus) = cryptoCurrencyData.let { currencyData ->
+            currencyData.userWallet.walletId to currencyData.status
+        }
+        val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+        val isActiveYield = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true
+
+        when {
+            tokenEnterStatus != null -> router.push(
+                AppRoute.CurrencyDetails(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrencyStatus.currency,
+                    navigationAction = NavigationAction.YieldSupply(
+                        isActive = isActiveYield,
+                    ),
+                ),
+            )
+            isActiveYield -> {
+                router.push(
+                    AppRoute.YieldSupplyActive(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        apy = yieldSupplyApy,
+                    ),
+                )
+            }
+            else -> {
+                router.push(
+                    AppRoute.YieldSupplyPromo(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        apy = yieldSupplyApy,
+                    ),
+                )
+            }
+        }
     }
 
     @AssistedFactory

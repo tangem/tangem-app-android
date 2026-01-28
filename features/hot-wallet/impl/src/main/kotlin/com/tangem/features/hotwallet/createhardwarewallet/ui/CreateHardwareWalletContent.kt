@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.createhardwarewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -42,6 +44,7 @@ internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 24.dp,
@@ -63,7 +66,7 @@ internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier
                         top = 20.dp,
                         end = 16.dp,
                     ),
-                text = stringResourceSafe(R.string.wallet_create_common_title),
+                text = stringResourceSafe(R.string.hardware_wallet_create_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -71,22 +74,22 @@ internal fun CreateHardwareWalletContent(state: CreateHardwareWalletUM, modifier
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 32.dp),
-                title = stringResourceSafe(R.string.hw_upgrade_key_migration_title),
-                description = stringResourceSafe(R.string.hw_upgrade_key_migration_description),
-                iconRes = R.drawable.ic_mobile_security_24,
+                title = stringResourceSafe(R.string.hardware_wallet_key_feature_title),
+                description = stringResourceSafe(R.string.hardware_wallet_key_feature_description),
+                iconRes = R.drawable.ic_mobile_security_2_24,
             )
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
-                title = stringResourceSafe(R.string.hw_upgrade_funds_access_title),
-                description = stringResourceSafe(R.string.hw_upgrade_funds_access_description),
-                iconRes = R.drawable.ic_knight_shield_24,
+                title = stringResourceSafe(R.string.hardware_wallet_backup_feature_title),
+                description = stringResourceSafe(R.string.hardware_wallet_backup_feature_description),
+                iconRes = R.drawable.ic_double_star_24,
             )
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
-                title = stringResourceSafe(R.string.hw_upgrade_general_security_title),
-                description = stringResourceSafe(R.string.hw_upgrade_general_security_description),
+                title = stringResourceSafe(R.string.hardware_wallet_security_feature_title),
+                description = stringResourceSafe(R.string.hardware_wallet_security_feature_description),
                 iconRes = R.drawable.ic_protect_24,
             )
         }

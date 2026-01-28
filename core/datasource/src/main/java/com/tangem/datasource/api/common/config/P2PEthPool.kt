@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
+import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.utils.ProviderSuspend
 
@@ -22,12 +23,7 @@ internal class P2PEthPool(
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
-            DEBUG_BUILD_TYPE,
-            INTERNAL_BUILD_TYPE,
-            EXTERNAL_BUILD_TYPE,
-            RELEASE_BUILD_TYPE,
-            -> ApiEnvironment.PROD
-            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+            else -> if (P2PStakingConfig.USE_TESTNET) ApiEnvironment.DEV else ApiEnvironment.PROD
         }
     }
 

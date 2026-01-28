@@ -158,9 +158,9 @@ internal class TokenListAnalyticsSender @Inject constructor(
             -> {
                 if (balanceWasSentMap[blockchain.currency] != true) {
                     val tokenBalance = if (balanceStatus.amount.isZero()) {
-                        AnalyticsParam.TokenBalanceState.Empty
+                        AnalyticsParam.EmptyFull.Empty
                     } else {
-                        AnalyticsParam.TokenBalanceState.Full
+                        AnalyticsParam.EmptyFull.Full
                     }
                     analyticsEventHandler.send(
                         Basic.TokenBalance(

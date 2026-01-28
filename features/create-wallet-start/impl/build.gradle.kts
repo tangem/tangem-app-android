@@ -14,12 +14,14 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.createWalletStart.api)
+    implementation(projects.features.hotWallet.api)
 
     /** Project - Domain */
     implementation(projects.domain.card)
     implementation(projects.domain.settings)
     implementation(projects.domain.wallets)
     implementation(projects.domain.models)
+    implementation(projects.domain.hotWallet)
 
     /** Core modules */
     implementation(projects.core.configToggles)

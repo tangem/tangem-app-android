@@ -120,10 +120,10 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         horizontalArrangement = Arrangement.Center,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        state.featureItems.forEach {
+                        state.featureItems.forEach { item ->
                             FeatureItem(
-                                iconResId = it.iconResId,
-                                text = it.text,
+                                iconResId = item.iconResId,
+                                text = item.text,
                             )
                         }
                     }
@@ -143,7 +143,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                     )
                 },
                 bottomContent = {
-                    if (state.showScanSecondaryButton) {
+                    if (state.shouldShowScanSecondaryButton) {
                         SecondaryButtonIconEnd(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -165,74 +165,80 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         text = state.primaryButtonText.resolveReference(),
                         onClick = state.onPrimaryButtonClick,
                     )
-                    Row(
-                        modifier = Modifier
-                            .padding(
-                                start = 16.dp,
-                                top = 24.dp,
-                                end = 16.dp,
-                            ),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        DashedGradientLine(
+                    if (state.isHotWalletOptionVisible) {
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(16.dp),
-                        )
-                        Text(
-                            text = stringResourceSafe(R.string.welcome_create_wallet_other_method),
-                            style = TangemTheme.typography.caption1,
-                            color = TangemTheme.colors.text.secondary,
-                            textAlign = TextAlign.Center,
-                        )
-                        DashedGradientLine(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(16.dp)
-                                .scale(scaleX = -1f, scaleY = 1f),
-                        )
+                                .padding(
+                                    start = 16.dp,
+                                    top = 24.dp,
+                                    end = 16.dp,
+                                ),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            DashedGradientLine(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp),
+                            )
+                            Text(
+                                text = stringResourceSafe(R.string.common_or),
+                                style = TangemTheme.typography.caption1,
+                                color = TangemTheme.colors.text.secondary,
+                                textAlign = TextAlign.Center,
+                            )
+                            DashedGradientLine(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp)
+                                    .scale(scaleX = -1f, scaleY = 1f),
+                            )
+                        }
                     }
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 16.dp,
-                                top = 16.dp,
-                                end = 16.dp,
-                            ),
-                        text = state.otherMethodDescription.resolveReference(),
-                        style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                    Row(
-                        modifier = Modifier
-                            .wrapContentWidth()
-                            .clickable { state.otherMethodClick() }
-                            .padding(
-                                horizontal = 16.dp,
-                                vertical = 12.dp,
-                            ),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = state.otherMethodTitle.resolveReference(),
-                            style = TangemTheme.typography.subtitle1,
-                            color = TangemTheme.colors.text.primary1,
-                            textAlign = TextAlign.Center,
-                        )
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_chevron_right_18x24),
-                            tint = TangemTheme.colors.icon.primary1,
-                            contentDescription = null,
-                        )
+                    if (state.isHotWalletOptionVisible) {
+                        if (state.otherMethodDescription != null) {
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        start = 16.dp,
+                                        top = 16.dp,
+                                        end = 16.dp,
+                                    ),
+                                text = state.otherMethodDescription.resolveReference(),
+                                style = TangemTheme.typography.subtitle2,
+                                color = TangemTheme.colors.text.tertiary,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .wrapContentWidth()
+                                .clickable { state.otherMethodClick() }
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp,
+                                ),
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = state.otherMethodTitle.resolveReference(),
+                                style = TangemTheme.typography.subtitle1,
+                                color = TangemTheme.colors.text.primary1,
+                                textAlign = TextAlign.Center,
+                            )
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_chevron_right_18x24),
+                                tint = TangemTheme.colors.icon.primary1,
+                                contentDescription = null,
+                            )
+                        }
                     }
                 },
                 minImageHeight = 160.dp,
             )
         }
-        if (!state.showScanSecondaryButton) {
+        if (!state.shouldShowScanSecondaryButton) {
             FlowRow(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -425,13 +431,11 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
                 ),
             ),
             imageResId = R.drawable.img_hardware_wallet,
-            showScanSecondaryButton = true,
+            shouldShowScanSecondaryButton = true,
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.details_buy_wallet),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
-            otherMethodDescription = resourceReference(
-                R.string.welcome_create_wallet_mobile_description,
-            ),
+            otherMethodDescription = null,
             otherMethodClick = { },
             onBackClick = { },
             onScanClick = { },
@@ -455,7 +459,7 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
                 ),
             ),
             imageResId = R.drawable.img_mobile_wallet,
-            showScanSecondaryButton = false,
+            shouldShowScanSecondaryButton = false,
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),

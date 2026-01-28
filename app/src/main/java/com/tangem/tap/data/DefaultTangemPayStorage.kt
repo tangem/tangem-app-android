@@ -6,6 +6,7 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -15,12 +16,14 @@ import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val AUTH_TOKENS_DEFAULT_KEY = "tangem_pay_default_key"
 private const val WITHDRAW_ORDER_ID_KEY = "tangem_pay_withdraw_order_id_key"
 
+@Suppress("TooManyFunctions")
 @Singleton
 internal class DefaultTangemPayStorage @Inject constructor(
     @ApplicationContext applicationContext: Context,
@@ -53,6 +56,12 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
+    override suspend fun clearCustomerWalletAddress(userWalletId: UserWalletId) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
+        }
+    }
+
     override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) =
         withContext(dispatcherProvider.io) {
             val json = tokensAdapter.toJson(tokens)
@@ -63,12 +72,25 @@ internal class DefaultTangemPayStorage @Inject constructor(
             )
         }
 
-    override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? =
-        withContext(dispatcherProvider.io) {
-            secureStorage.get(createAuthTokensKey(customerWalletAddress))
-                ?.decodeToString(throwOnInvalidSequence = true)
-                ?.let(tokensAdapter::fromJson)
+    override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? {
+        val authTokens = secureStorage.get(createAuthTokensKey(customerWalletAddress))
+            ?.decodeToString(throwOnInvalidSequence = true)
+            ?.let(tokensAdapter::fromJson)
+
+        return authTokens?.let { tokens ->
+            if (tokens.idempotencyKey == null) {
+                val newAuthTokens = tokens.copy(idempotencyKey = UUID.randomUUID().toString())
+                storeAuthTokens(customerWalletAddress, newAuthTokens)
+                newAuthTokens
+            } else {
+                tokens
+            }
         }
+    }
+
+    override suspend fun clearAuthTokens(customerWalletAddress: String) {
+        secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+    }
 
     override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) {
         withContext(dispatcherProvider.io) {
@@ -109,14 +131,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
         return appPreferencesStore.getSyncOrNull(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId))
     }
 
-    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
-        withContext(dispatcherProvider.io) {
-            secureStorage.delete(createAuthTokensKey(customerWalletAddress))
-            appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
-            appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
-            appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
-        }
-
     override suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String) {
         appPreferencesStore.editData { mutablePreferences ->
             val orders = mutablePreferences.getObjectMap<String>(PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY)
@@ -143,6 +157,42 @@ internal class DefaultTangemPayStorage @Inject constructor(
             )
         }
     }
+
+    override suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), hide)
+        }
+    }
+
+    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
+        return withContext(dispatcherProvider.io) {
+            appPreferencesStore.getSyncOrNull(
+                key = PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId),
+            ) == true
+        }
+    }
+
+    override suspend fun storeTangemPayEligibility(eligibility: Boolean) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY, value = eligibility)
+        }
+    }
+
+    override suspend fun getTangemPayEligibility(): Boolean {
+        return withContext(dispatcherProvider.io) {
+            appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY, default = false)
+        }
+    }
+
+    override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
+        withContext(dispatcherProvider.io) {
+            secureStorage.delete(createAuthTokensKey(customerWalletAddress))
+            appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), false)
+            appPreferencesStore.store(PreferencesKeys.getTangemPayCustomerWalletAddressKey(userWalletId), "")
+            appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
+            appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
+            appPreferencesStore.store(PreferencesKeys.getTangemPayHideOnboardingKey(userWalletId), false)
+        }
 
     private fun createAuthTokensKey(address: String): String = "${AUTH_TOKENS_DEFAULT_KEY}_$address"
 

@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.createmobilewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -41,6 +43,7 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 24.dp,
@@ -72,14 +75,21 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                     .padding(top = 32.dp),
                 title = stringResourceSafe(R.string.hw_create_keys_title),
                 description = stringResourceSafe(R.string.hw_create_keys_description),
-                iconRes = R.drawable.ic_lock_24,
+                iconRes = R.drawable.ic_protect_24,
             )
             FeatureBlock(
                 modifier = Modifier
                     .padding(top = 24.dp),
                 title = stringResourceSafe(R.string.hw_create_seed_title),
                 description = stringResourceSafe(R.string.hw_create_seed_description),
-                iconRes = R.drawable.ic_settings_24,
+                iconRes = R.drawable.ic_seed_phrase_24,
+            )
+            FeatureBlock(
+                modifier = Modifier
+                    .padding(top = 24.dp),
+                title = stringResourceSafe(R.string.hw_create_upgrade_title),
+                description = stringResourceSafe(R.string.hw_create_upgrade_description),
+                iconRes = R.drawable.ic_tangem_card_24,
             )
         }
         SecondaryButton(

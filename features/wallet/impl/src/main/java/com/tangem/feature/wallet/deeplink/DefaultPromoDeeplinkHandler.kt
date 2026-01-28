@@ -49,7 +49,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 ) : PromoDeeplinkHandler {
 
     init {
-        analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart)
+        analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart())
         val promoCode = queryParams[PROMO_CODE_KEY].orEmpty()
         if (promoCode.isEmpty()) {
             showAlert(InvalidPromoCode)

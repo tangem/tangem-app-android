@@ -1,92 +1,68 @@
 package com.tangem.data.common.currency
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.network.NetworkAddress
-import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.clearAllMocks
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserTokensResponseAddressesEnricherTest {
 
-    private lateinit var walletsRepository: WalletsRepository
-    private val dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider()
-    private lateinit var multiNetworkStatusSupplier: MultiNetworkStatusSupplier
-    private lateinit var enricher: UserTokensResponseAddressesEnricher
+    private val walletsRepository: WalletsRepository = mockk()
+    private val walletManagersFacade: WalletManagersFacade = mockk()
+    private val enricher: UserTokensResponseAddressesEnricher = UserTokensResponseAddressesEnricher(
+        walletsRepository = walletsRepository,
+        walletManagersFacade = walletManagersFacade,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
-    @Before
-    fun setup() {
-        walletsRepository = mockk()
-        multiNetworkStatusSupplier = mockk()
+    private val userWalletId = UserWalletId("1234567890abcdef")
 
-        enricher = UserTokensResponseAddressesEnricher(
-            walletsRepository = walletsRepository,
-            dispatchers = dispatchers,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
-        )
-    }
-
-    @After
+    @AfterEach
     fun tearDown() {
-        clearAllMocks()
-    }
-
-    @Test
-    fun `GIVEN notifications are disabled globally WHEN invoke THEN return original response`() = runTest {
-        // GIVEN
-        val userWalletId = UserWalletId("1234567890abcdef")
-        val token = createToken()
-        val response = createUserTokensResponse(tokens = listOf(token))
-
-        // WHEN
-        val result = enricher(userWalletId, response)
-
-        // THEN
-        assertThat(result).isEqualTo(response)
+        clearMocks(walletsRepository, walletManagersFacade)
     }
 
     @Test
     fun `GIVEN notifications are disabled for wallet WHEN invoke THEN return response with empty addresses`() =
         runTest {
             // GIVEN
-            val userWalletId = UserWalletId("1234567890abcdef")
             val token = createToken()
             val response = createUserTokensResponse(tokens = listOf(token))
+            val walletManager = mockk<WalletManager> {
+                val wallet = mockk<Wallet> {
+                    every { addresses } returns setOf(
+                        Address(value = "0x12345", type = AddressType.Default),
+                    )
+                }
+
+                every { this@mockk.wallet } returns wallet
+            }
+
             coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns false
+
             coEvery {
-                multiNetworkStatusSupplier.invoke(any())
-            } returns flowOf(
-                setOf(
-                    NetworkStatus(
-                        network = mockk {
-                            every { backendId } returns "ethereum"
-                            every { derivationPath.value } returns "m/44'/60'/0'/0/0"
-                        },
-                        value = NetworkStatus.Verified(
-                            address = mockk {
-                                every { availableAddresses } returns emptySet()
-                            },
-                            amounts = emptyMap(),
-                            pendingTransactions = emptyMap(),
-                            yieldSupplyStatuses = emptyMap(),
-                            source = StatusSource.ACTUAL,
-                        ),
-                    ),
-                ),
-            )
+                walletManagersFacade.getOrCreateWalletManager(
+                    userWalletId = userWalletId,
+                    blockchain = Blockchain.Ethereum,
+                    derivationPath = token.derivationPath,
+                )
+            } returns walletManager
 
             // WHEN
             val result = enricher(userWalletId, response)
@@ -100,75 +76,52 @@ class UserTokensResponseAddressesEnricherTest {
     fun `GIVEN notifications are enabled and addresses available WHEN invoke THEN return enriched response`() =
         runTest {
             // GIVEN
-            val userWalletId = UserWalletId("1234567890abcdef")
             val token = createToken()
             val response = createUserTokensResponse(tokens = listOf(token))
-            val addresses = listOf("0x123", "0x456")
+            val addresses = setOf(
+                Address(value = "0x123", type = AddressType.Default),
+                Address(value = "0x456", type = AddressType.Legacy),
+            )
+
+            val walletManager = mockk<WalletManager> {
+                val wallet = mockk<Wallet> {
+                    every { this@mockk.addresses } returns addresses
+                }
+
+                every { this@mockk.wallet } returns wallet
+            }
 
             coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
             coEvery {
-                multiNetworkStatusSupplier.invoke(any())
-            } returns flowOf(
-                setOf(
-                    NetworkStatus(
-                        network = mockk {
-                            every { backendId } returns "ethereum"
-                            every { derivationPath.value } returns "m/44'/60'/0'/0/0"
-                        },
-                        value = NetworkStatus.Verified(
-                            address = mockk {
-                                every { availableAddresses } returns addresses.map { address ->
-                                    mockk<NetworkAddress.Address> {
-                                        every { value } returns address
-                                    }
-                                }.toSet()
-                            },
-                            amounts = emptyMap(),
-                            pendingTransactions = emptyMap(),
-                            yieldSupplyStatuses = emptyMap(),
-                            source = StatusSource.ACTUAL,
-                        ),
-                    ),
-                ),
-            )
+                walletManagersFacade.getOrCreateWalletManager(
+                    userWalletId = userWalletId,
+                    blockchain = Blockchain.Ethereum,
+                    derivationPath = token.derivationPath,
+                )
+            } returns walletManager
 
             // WHEN
             val result = enricher(userWalletId, response)
 
             // THEN
             assertThat(result.tokens).hasSize(1)
-            assertThat(result.tokens[0].addresses).containsExactlyElementsIn(addresses)
+            assertThat(result.tokens[0].addresses).containsExactlyElementsIn(addresses.map { it.value })
         }
 
     @Test
     fun `GIVEN notifications are enabled but no matching network WHEN invoke THEN return original token`() = runTest {
         // GIVEN
-        val userWalletId = UserWalletId("1234567890abcdef")
         val token = createToken()
         val response = createUserTokensResponse(tokens = listOf(token))
 
         coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
         coEvery {
-            multiNetworkStatusSupplier.invoke(any())
-        } returns flowOf(
-            setOf(
-                NetworkStatus(
-                    network = mockk {
-                        every { backendId } returns "bitcoin"
-                        every { derivationPath.value } returns "m/44'/0'/0'/0/0"
-                    },
-                    value = NetworkStatus.Verified(
-                        address = mockk {
-                            every { availableAddresses } returns emptySet()
-                        },
-                        amounts = emptyMap(),
-                        pendingTransactions = emptyMap(),
-                        yieldSupplyStatuses = emptyMap(),
-                        source = StatusSource.ACTUAL,
-                    ),
-                ),
-            ),
-        )
+            walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = Blockchain.Ethereum,
+                derivationPath = token.derivationPath,
+            )
+        } returns null
 
         // WHEN
         val result = enricher(userWalletId, response)

@@ -115,7 +115,9 @@ class DefaultPromoDeeplinkHandlerTest {
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
@@ -143,7 +145,9 @@ class DefaultPromoDeeplinkHandlerTest {
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_invalid_code))
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.InvalidPromoCode),
@@ -172,7 +176,9 @@ class DefaultPromoDeeplinkHandlerTest {
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_error))
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
@@ -209,7 +215,9 @@ class DefaultPromoDeeplinkHandlerTest {
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -248,7 +256,9 @@ class DefaultPromoDeeplinkHandlerTest {
         Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
         Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
@@ -264,7 +274,9 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedMessage = resourceReference(R.string.bitcoin_promo_invalid_code),
         )
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.InvalidPromoCode),
@@ -280,7 +292,9 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedMessage = resourceReference(R.string.bitcoin_promo_activation_error),
         )
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Failed),
@@ -296,7 +310,9 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedMessage = resourceReference(R.string.bitcoin_promo_no_address),
         )
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -312,7 +328,9 @@ class DefaultPromoDeeplinkHandlerTest {
             expectedMessage = resourceReference(R.string.bitcoin_promo_already_activated),
         )
 
-        verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+        verify(
+            exactly = 1,
+        ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
         verify(exactly = 1) {
             analyticsEventHandler.send(
                 PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.PromoCodeAlreadyUsed),
@@ -425,7 +443,9 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -539,7 +559,9 @@ class DefaultPromoDeeplinkHandlerTest {
             coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) }
             coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) }
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.Activated),
@@ -594,7 +616,9 @@ class DefaultPromoDeeplinkHandlerTest {
 
             coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -649,7 +673,9 @@ class DefaultPromoDeeplinkHandlerTest {
 
             coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -700,7 +726,9 @@ class DefaultPromoDeeplinkHandlerTest {
 
             coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),
@@ -751,7 +779,9 @@ class DefaultPromoDeeplinkHandlerTest {
 
             coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
 
-            verify(exactly = 1) { analyticsEventHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart) }
+            verify(
+                exactly = 1,
+            ) { analyticsEventHandler.send(ofType<PromoActivationAnalytics.PromoDeepLinkActivationStart>()) }
             verify(exactly = 1) {
                 analyticsEventHandler.send(
                     PromoActivationAnalytics.PromoActivation(PromoCodeActivationResult.NoBitcoinAddress),

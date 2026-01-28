@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.market.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -40,6 +41,7 @@ enum class SortByTypeUM(val text: TextReference) {
     TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
     TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
     Staking(resourceReference(R.string.common_staking)),
+    YieldSupply(resourceReference(R.string.markets_sort_by_yield_mode_title)),
 }
 
 @Immutable

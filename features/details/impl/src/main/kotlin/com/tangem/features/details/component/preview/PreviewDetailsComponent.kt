@@ -12,6 +12,7 @@ import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.ui.DetailsScreen
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.coroutines.runBlocking
 
 internal class PreviewDetailsComponent : DetailsComponent {
@@ -19,9 +20,15 @@ internal class PreviewDetailsComponent : DetailsComponent {
     private val previewBlocks = runBlocking {
         ItemsBuilder(
             router = DummyRouter(),
+            hotWalletFeatureToggles = object : HotWalletFeatureToggles {
+                override val isHotWalletEnabled: Boolean = true
+                override val isWalletCreationRestrictionEnabled: Boolean = true
+                override val isHotWalletVisible: Boolean = true
+            },
         ).buildAll(
             isWalletConnectAvailable = true,
             isSupportChatAvailable = true,
+            hasAnyMobileWallet = true,
             userWalletId = UserWalletId(""),
             onSupportEmailClick = {},
             onSupportChatClick = {},
