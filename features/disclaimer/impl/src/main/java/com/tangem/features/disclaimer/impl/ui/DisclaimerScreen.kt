@@ -97,9 +97,12 @@ private fun DisclaimerContent(url: String) {
     val webViewNavigator = rememberWebViewNavigator()
     val webViewClient = remember {
         DisclaimerWebViewClient(
-            onLoadingFinished = {
+            onLoadingFinished = { isWithError ->
                 loadingTimeoutJobHolder.cancel()
                 isLoading = false
+                if (isWithError) {
+                    webViewNavigator.loadLocalToS()
+                }
             },
         )
     }
