@@ -7,6 +7,8 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.account.converter.AccountNameConverter
+import com.tangem.data.account.converter.toDerivationIndex
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.common.currency.UserTokensSaver
@@ -36,6 +38,67 @@ internal class DefaultMainAccountTokensMigration(
     private val accountTokenMigrationStore: AccountTokenMigrationStore,
     private val userTokensSaver: UserTokensSaver,
 ) : MainAccountTokensMigration {
+
+    internal suspend fun migrate(userWalletId: UserWalletId): Either<Throwable, GetWalletAccountsResponse> = either {
+        val store = accountsResponseStoreFactory.create(userWalletId)
+        val response = store.getSyncOrNull()
+        ensureNotNull(response) {
+            val exception = IllegalStateException("No cached accounts response found")
+            Timber.e(exception)
+            exception
+        }
+        val mainAccount = findAccount(response = response, derivationIndex = DerivationIndex.Main)
+        val notMainAccounts = response.accounts
+            .filterNot { accountDTO -> accountDTO.derivationIndex.toDerivationIndex().isMain }
+
+        if (notMainAccounts.isEmpty()) {
+            Timber.i("There is only the Main account. Nothing to migrate")
+            return@either response
+        }
+
+        val unassignedTokens = mainAccount.groupUnassignedTokens()
+
+        if (unassignedTokens.isEmpty()) {
+            Timber.i("No unassigned tokens found for migration")
+            return@either response
+        }
+
+        var updatedMainAccount = mainAccount
+        val assignedTokensAccounts = notMainAccounts.mapNotNull { accountDTO ->
+            val derivationIndex = accountDTO.derivationIndex.toDerivationIndex()
+            val tokensForAccount = unassignedTokens[derivationIndex]
+            if (tokensForAccount.isNullOrEmpty()) return@mapNotNull null
+            updatedMainAccount = updatedMainAccount.copy(
+                tokens = updatedMainAccount.tokens.orEmpty() - tokensForAccount,
+            )
+            accountDTO.assignTokens(userWalletId, tokensForAccount)
+        }
+
+        val updatedResponse = response.copy(
+            accounts = response.accounts.map { account ->
+                val assignAccount = assignedTokensAccounts.find { it.id == account.id }
+                when {
+                    account.id == mainAccount.id -> updatedMainAccount
+                    assignAccount != null -> assignAccount
+                    else -> account
+                }
+            },
+        )
+
+        store.updateData { updatedResponse }
+
+        val userTokensResponse = updatedResponse.toUserTokensResponse()
+        userTokensSaver.pushWithRetryer(
+            userWalletId = userWalletId,
+            response = userTokensResponse,
+            onFailSend = {
+                val exception = IllegalStateException("Failed to push updated tokens after migration")
+                Timber.e(exception)
+                raise(exception)
+            },
+        )
+        return@either updatedResponse
+    }
 
     override suspend fun migrate(
         userWalletId: UserWalletId,
@@ -82,11 +145,9 @@ internal class DefaultMainAccountTokensMigration(
 
         store.updateData { updatedResponse }
 
-        val mainAccountName = mainAccount.name
-        val selectedAccountName = selectedAccount.name
-        if (mainAccountName != null && selectedAccountName != null) {
-            accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
-        }
+        val mainAccountName = AccountNameConverter.convertBack(mainAccount.name)
+        val selectedAccountName = AccountNameConverter.convertBack(selectedAccount.name)
+        accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
 
         val userTokensResponse = updatedResponse.toUserTokensResponse()
         userTokensSaver.pushWithRetryer(
@@ -112,6 +173,22 @@ internal class DefaultMainAccountTokensMigration(
             exception
         }
     }
+
+    private fun WalletAccountDTO.groupUnassignedTokens(): Map<DerivationIndex, List<UserTokensResponse.Token>> =
+        this.tokens
+            .orEmpty()
+            .mapNotNull { token ->
+                val blockchain = Blockchain.fromNetworkId(token.networkId) ?: return@mapNotNull null
+                val derivationPath = token.derivationPath ?: return@mapNotNull null
+                val accountNode = AccountNodeRecognizer(blockchain)
+                    .recognize(derivationPath)
+                    ?: return@mapNotNull null
+
+                if (accountNode == DerivationIndex.Main.value.toLong()) return@mapNotNull null
+                val derivationIndex = DerivationIndex(accountNode.toInt()).getOrNull() ?: return@mapNotNull null
+                derivationIndex to token.copy(accountId = null)
+            }
+            .groupBy({ it.first }, { it.second })
 
     private fun WalletAccountDTO.findUnassignedTokens(
         derivationIndex: DerivationIndex,
