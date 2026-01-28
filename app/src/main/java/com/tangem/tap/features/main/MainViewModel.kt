@@ -21,9 +21,11 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.notifications.ClearApplicationIdUseCase
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
 import com.tangem.domain.notifications.models.ApplicationId
+import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -72,6 +74,7 @@ internal class MainViewModel @Inject constructor(
     private val getApplicationIdUseCase: GetApplicationIdUseCase,
     private val subscribeOnWalletsUseCase: GetSavedWalletsCountUseCase,
     private val associateWalletsWithApplicationIdUseCase: AssociateWalletsWithApplicationIdUseCase,
+    private val clearApplicationIdUseCase: ClearApplicationIdUseCase,
     private val updateRemoteWalletsInfoUseCase: UpdateRemoteWalletsInfoUseCase,
     private val sendPushTokenUseCase: SendPushTokenUseCase,
     private val apiConfigsManager: ApiConfigsManager,
@@ -104,7 +107,7 @@ internal class MainViewModel @Inject constructor(
 
             launch { fetchStakingOptions() }
 
-            launch { initPushNotifications() }
+            launch(dispatchers.default) { initPushNotifications() }
         }
 
         viewModelScope.launch { incrementAppLaunchCounterUseCase() }
@@ -398,11 +401,25 @@ internal class MainViewModel @Inject constructor(
     private suspend fun initPushNotifications() {
         getApplicationIdUseCase()
             .onRight { applicationId ->
-                sendPushTokenUseCase(applicationId = applicationId)
-                associateWalletsWithApplicationId(applicationId = applicationId)
-                updateRemoteWalletsInfoUseCase(applicationId = applicationId)
+                sendPushTokenUseCase(applicationId = applicationId).onLeft { error ->
+                    if (error is NotificationsError.ApplicationIdNotFound) {
+                        clearApplicationIdUseCase()
+                        getApplicationIdUseCase().onRight { newApplicationId ->
+                            associateAndUpdateWallets(applicationId = newApplicationId)
+                        }
+                    } else {
+                        associateAndUpdateWallets(applicationId = applicationId)
+                    }
+                }.onRight {
+                    associateAndUpdateWallets(applicationId = applicationId)
+                }
             }
             .onLeft(Timber::e)
+    }
+
+    private suspend fun associateAndUpdateWallets(applicationId: ApplicationId) {
+        associateWalletsWithApplicationId(applicationId = applicationId)
+        updateRemoteWalletsInfoUseCase(applicationId = applicationId)
     }
 
     private fun associateWalletsWithApplicationId(applicationId: ApplicationId) {
