@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class NewsListConfig(
     val language: String,
-    val snapshot: String,
+    val snapshot: String?,
     val tokenIds: List<String> = emptyList(),
     val categoryIds: List<Int> = emptyList(),
 )
