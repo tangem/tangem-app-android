@@ -18,6 +18,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -54,6 +55,7 @@ internal class CardSettingsModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -218,15 +220,19 @@ internal class CardSettingsModel @Inject constructor(
         } else {
             val card = scanResponse.card
 
-            store.dispatchNavigationAction {
-                push(
-                    route = AppRoute.ResetToFactory(
-                        userWalletId = userWalletId,
-                        cardId = card.cardId,
-                        isActiveBackupStatus = card.backupStatus?.isActive == true,
-                        backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
-                    ),
-                )
+            modelScope.launch {
+                val hasTangemPay = onboardingRepository.checkCustomerWallet(userWalletId).getOrNull() == true
+                store.dispatchNavigationAction {
+                    push(
+                        route = AppRoute.ResetToFactory(
+                            userWalletId = userWalletId,
+                            cardId = card.cardId,
+                            isActiveBackupStatus = card.backupStatus?.isActive == true,
+                            backupCardsCount = scanResponse.getBackupCardsCount() ?: 0,
+                            hasTangemPay = hasTangemPay,
+                        ),
+                    )
+                }
             }
         }
     }
