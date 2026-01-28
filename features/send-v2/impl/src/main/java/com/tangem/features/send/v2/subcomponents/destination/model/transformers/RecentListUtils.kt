@@ -9,10 +9,10 @@ internal const val WALLET_KEY_TAG = "wallet"
 internal const val RECENT_KEY_TAG = "recent"
 
 internal fun loadingListState(tag: String, count: Int) = buildList {
-    repeat(count) {
+    repeat(count) { i ->
         add(
             DestinationRecipientListUM(
-                id = "$tag$it",
+                id = "$tag$i",
                 isLoading = true,
             ),
         )
@@ -20,10 +20,10 @@ internal fun loadingListState(tag: String, count: Int) = buildList {
 }.toPersistentList()
 
 internal fun emptyListState(tag: String, count: Int) = buildList {
-    repeat(count) {
+    repeat(count) { i ->
         add(
             DestinationRecipientListUM(
-                id = "$tag$it",
+                id = "$tag$i",
                 isLoading = false,
                 isVisible = false,
             ),

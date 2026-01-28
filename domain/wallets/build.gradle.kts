@@ -32,7 +32,10 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.demo.models)
+    implementation(projects.domain.hotWallet)
     // endregion
+
+    implementation(projects.common)
 
     // region Tangem libraries
     implementation(tangemDeps.blockchain) // android-library
