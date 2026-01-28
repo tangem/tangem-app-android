@@ -90,6 +90,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     blockchain = network.name,
                     token = network.currencySymbol,
                     feeType = null,
+                    feeToken = network.currencySymbol,
                 ),
                 memoType = MemoType.Null,
             ),
