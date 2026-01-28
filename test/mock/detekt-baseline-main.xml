@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:MockAccounts.kt$MockAccounts${ val account = createAccount(derivationIndex = it + 1, userWalletId = userWalletId) add(account) }</ID>
+  </CurrentIssues>
+</SmellBaseline>

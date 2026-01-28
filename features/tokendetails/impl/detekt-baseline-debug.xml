@@ -24,20 +24,17 @@
     <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ internalUiState.value = stateFactory.getStateWithUpdatedHidden( isBalanceHidden = it.isBalanceHidden, ) }</ID>
     <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ sendButtonsEvents(it.states) internalUiState.value = stateFactory.getManageButtonsState(actions = it.states) }</ID>
     <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ val updatedState = stateFactory.getStateWithNotifications(it) notificationsAnalyticsSender.send(internalUiState.value, updatedState.notifications) internalUiState.value = updatedState }</ID>
-    <ID>MultilineLambdaItParameter:TokenDetailsOnrampTransactionStateConverter.kt$TokenDetailsOnrampTransactionStateConverter${ analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider) clickIntents.onGoToProviderClick(it) }</ID>
     <ID>MultilineLambdaItParameter:TokenDetailsScreen.kt${ Notification( modifier = itemModifier.animateItem(), config = it.config, iconTint = when (it) { is TokenDetailsNotification.Informational -&gt; TangemTheme.colors.icon.accent is TokenDetailsNotification.UsedOutdatedData -&gt; TangemTheme.colors.text.attention else -&gt; null }, ) }</ID>
     <ID>MultilineLambdaItParameter:TokenDetailsTopAppBar.kt${ TangemDropdownItem( item = it, dismissParent = { showDropdownMenu = false }, ) }</ID>
     <ID>MultilineLambdaItParameter:TokenStakingBlock.kt${ when (it) { is StakingBlockUM.TemporaryUnavailable -&gt; StakingTemporaryUnavailableBlock() is StakingBlockUM.Loading -&gt; StakingLoading() is StakingBlockUM.Staked -&gt; StakingBalanceBlock( state = it, isBalanceHidden = isBalanceHidden, ) is StakingBlockUM.StakeAvailable -&gt; StakingAvailableContent( state = it, ) } }</ID>
     <ID>NamedArguments:TokenDetailsLoadedBalanceConverter.kt$TokenDetailsLoadedBalanceConverter$formatFiatAmount( status.value, stakingFiatAmount, currentState.selectedBalanceType, appCurrencyProvider(), )</ID>
     <ID>NamedArguments:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$createStateInfo( transaction, toCryptoCurrency, fromCryptoCurrency, toFiatAmount, fromFiatAmount, )</ID>
     <ID>NestedScopeFunctions:TokenDetailsBalanceSelectStateConverter.kt$TokenDetailsBalanceSelectStateConverter$let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:TokenDetailsModel.kt$TokenDetailsModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>NullableBooleanCheck:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$transaction.status?.hasLongTime ?: false</ID>
     <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$networkId</ID>
     <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$tokenId</ID>
     <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingCryptoAmount</ID>
     <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingEntryInfo</ID>
-    <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$yieldBalance</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$network</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$token</ID>
     <ID>PropertyUsedBeforeDeclaration:TokenDetailsModel.kt$TokenDetailsModel$uiState</ID>
@@ -49,7 +46,6 @@
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent.Notice$mapOf()</ID>
     <ID>UseOrEmpty:ExchangeStatusFactory.kt$ExchangeStatusFactory$savedTransactions ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) } ?.toSet() ?.getQuotesOrEmpty() ?: emptySet()</ID>
-    <ID>UseOrEmpty:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$yieldBalance?.balance?.items ?: emptyList()</ID>
     <ID>VarCouldBeVal:TokenDetailsModel.kt$TokenDetailsModel$private var expressTxStatusTaskScheduler = SingleTaskScheduler&lt;PersistentList&lt;ExpressTransactionStateUM&gt;&gt;()</ID>
   </CurrentIssues>
 </SmellBaseline>

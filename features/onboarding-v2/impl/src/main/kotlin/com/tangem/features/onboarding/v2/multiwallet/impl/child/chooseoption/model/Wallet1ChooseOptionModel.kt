@@ -35,7 +35,7 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     val returnToParentFlow = MutableSharedFlow<Unit>()
 
     init {
-        analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened)
+        analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened())
     }
 
     val canSkipBackup = params.multiWalletState.value.currentScanResponse.card.canSkipBackup
@@ -44,7 +44,7 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
         if (skipClicked) return
         skipClicked = true
 
-        analyticsHandler.send(OnboardingEvent.Backup.Skipped)
+        analyticsHandler.send(OnboardingEvent.Backup.Skipped())
 
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse

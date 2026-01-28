@@ -4,6 +4,8 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -30,10 +32,8 @@ import com.tangem.features.hotwallet.wallethardwarebackup.entity.WalletHardwareB
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -49,6 +49,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val messageSender: UiMessageSender,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -114,19 +115,17 @@ internal class WalletHardwareBackupModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened)
-        showPurchaseBlockWithDelay()
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
     }
 
-    private fun showPurchaseBlockWithDelay() {
-        modelScope.launch {
-            delay(SHOW_PURCHASE_BLOCK_DELAY)
-            uiState.update { it.copy(showPurchaseBlock = true) }
-        }
+    override fun onDestroy() {
+        trackingContextProxy.removeContext()
+        super.onDestroy()
     }
 
     private fun onCreateNewWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet())
         router.push(AppRoute.CreateHardwareWallet)
     }
 
@@ -134,7 +133,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
         val userWallet = getUserWalletUseCase.invoke(params.userWalletId)
             .getOrElse { error("Cannot find user wallet with id: ${params.userWalletId.stringValue}") }
         if (userWallet is UserWallet.Hot) {
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent)
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             if (!userWallet.backedUp) {
                 messageSender.send(makeBackupAtFirstAlertBS)
             } else {
@@ -160,12 +159,10 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 
     private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.HardwareWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Backup).let { urlOpener.openUrl(it) }
         }
-    }
-
-    companion object {
-        private const val SHOW_PURCHASE_BLOCK_DELAY = 3000L
     }
 }

@@ -68,7 +68,7 @@ internal class WcConnectionsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetConfig> = SlotNavigation()
 
     init {
-        analytics.send(WcAnalyticEvents.ScreenOpened)
+        analytics.send(WcAnalyticEvents.ScreenOpened())
         listenQrUpdates()
         if (accountsFeatureToggles.isFeatureEnabled) {
             listenWcSessions()

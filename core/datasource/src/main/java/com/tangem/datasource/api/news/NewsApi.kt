@@ -38,6 +38,6 @@ interface NewsApi {
 
     private companion object {
 
-        private const val NEWS_PATH = "api/v1/news"
+        private const val NEWS_PATH = "v1/news"
     }
 }

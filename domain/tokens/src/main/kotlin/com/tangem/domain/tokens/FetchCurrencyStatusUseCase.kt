@@ -12,7 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import kotlinx.coroutines.async
@@ -32,7 +32,7 @@ class FetchCurrencyStatusUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
 ) {
@@ -149,8 +149,8 @@ class FetchCurrencyStatusUseCase(
                 return@either
             }
 
-        singleYieldBalanceFetcher(
-            params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
+        singleStakingBalanceFetcher(
+            params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
         )
             .bind()
     }

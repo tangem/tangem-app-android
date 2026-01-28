@@ -64,7 +64,7 @@ class TangemHotWalletSigner @AssistedInject constructor(
                 hotWalletId = userWallet.hotWalletId,
                 dataToSign = dataToSign.map { signData ->
                     val wallet =
-                        userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(signData.publicKey) }
+                        userWallet.wallets.orEmpty().firstOrNull { it.publicKey.contentEquals(publicKey.seedKey) }
                             ?: return CompletionResult.Failure(
                                 TangemSdkError.ExceptionError(IllegalStateException("wallet is locked")),
                             )

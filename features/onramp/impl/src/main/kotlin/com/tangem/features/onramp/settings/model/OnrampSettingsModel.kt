@@ -37,7 +37,7 @@ internal class OnrampSettingsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<OnrampSettingsConfig> = SlotNavigation()
 
     init {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened())
         subscribeOnUpdateState()
     }
 

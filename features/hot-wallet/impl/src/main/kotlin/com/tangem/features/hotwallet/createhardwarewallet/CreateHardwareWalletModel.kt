@@ -5,8 +5,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedIn
-import com.tangem.core.analytics.models.Basic.SignedIn.SignInType
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -16,12 +16,12 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
-import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -53,6 +53,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -66,20 +67,27 @@ internal class CreateHardwareWalletModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CreateWalletScreenOpened)
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CreateWalletScreenOpened())
     }
 
     override fun onDestroy() {
+        trackingContextProxy.removeContext()
         super.onDestroy()
     }
 
     private fun onBuyTangemWalletClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateWallet))
         modelScope.launch {
-            generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            generateBuyTangemCardLinkUseCase
+                .invoke(GenerateBuyTangemCardLinkUseCase.Source.Upgrade).let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onScanDeviceClick() {
+        analyticsEventHandler.send(
+            event = IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.CreateWallet),
+        )
         scanCard()
     }
 
@@ -126,43 +134,23 @@ internal class CreateHardwareWalletModel @Inject constructor(
         }
 
         saveWalletUseCase(userWallet = userWallet).fold(
-            ifLeft = {
+            ifLeft = { saveWalletError ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> {
-                        userWalletsListRepository.unlock(
-                            userWalletId = userWallet.walletId,
-                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
-                        ).onRight {
-                            router.replaceAll(AppRoute.Wallet)
-                        }
-                    }
+                when (saveWalletError) {
+                    is SaveWalletError.DataError -> Timber.e(saveWalletError.toString(), "Unable to save user wallet")
+                    is SaveWalletError.WalletAlreadySaved -> handleAlreadySavedCard(
+                        saveWalletError.messageId,
+                        walletId = userWallet.walletId,
+                        scanResponse = scanResponse,
+                    )
                 }
             },
             ifRight = {
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse = scanResponse, isImported = userWallet.isImported)
                 router.replaceAll(AppRoute.Wallet)
             },
         )
-    }
-
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
-        val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
-        if (currency != null) {
-            analyticsEventHandler.send(
-                SignedIn(
-                    currency = currency,
-                    batch = scanResponse.card.batchId,
-                    signInType = SignInType.Card,
-                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
-                    isImported = isImported,
-                    hasBackup = scanResponse.card.backupStatus?.isActive,
-                ),
-            )
-        }
     }
 
     private fun setLoading(isLoading: Boolean) {
@@ -184,5 +172,19 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    private suspend fun handleAlreadySavedCard(messageId: Int, walletId: UserWalletId, scanResponse: ScanResponse) {
+        uiMessageSender.send(
+            message = DialogMessage(
+                message = resourceReference(messageId),
+            ),
+        )
+        userWalletsListRepository.unlock(
+            userWalletId = walletId,
+            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+        ).onRight {
+            router.replaceAll(AppRoute.Wallet)
+        }
     }
 }

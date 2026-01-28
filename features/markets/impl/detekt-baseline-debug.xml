@@ -37,7 +37,6 @@
     <ID>MultilineLambdaItParameter:AddToPortfolioBSContentUMFactory.kt$AddToPortfolioBSContentUMFactory${ if (it != selectedWalletId) { onAnotherWalletSelect(it) onWalletSelectorVisibilityChange(false) } }</ID>
     <ID>MultilineLambdaItParameter:AddToPortfolioBottomSheet.kt${ Content( modifier = Modifier.fillMaxWidth(), state = it, ) WalletSelectorBottomSheet(it.walletSelectorConfig) }</ID>
     <ID>MultilineLambdaItParameter:AddToPortfolioManager.kt$AddToPortfolioManager${ it.toMutableMap().apply { this[userWalletId] = if (isAddAction) { this[userWalletId].orEmpty() + network } else { this[userWalletId].orEmpty() - network } } }</ID>
-    <ID>MultilineLambdaItParameter:AddToPortfolioModel.kt$AddToPortfolioModel${ PortfolioData.CryptoCurrencyData( userWallet = selectedPortfolio.userWallet, status = addedToken, actions = it.states, ) }</ID>
     <ID>MultilineLambdaItParameter:AddToPortfolioModel.kt$AddToPortfolioModel${ Timber.e(it) params.callback.onDismiss() }</ID>
     <ID>MultilineLambdaItParameter:AddToPortfolioModel.kt$AddToPortfolioModel${ tokenActionsData.emit(it) navigation.replaceAll(AddToPortfolioRoutes.TokenActions) }</ID>
     <ID>MultilineLambdaItParameter:AddTokenModel.kt$AddTokenModel${ processError(error = it) uiState.value = um.toggleProgress(false) return@launch }</ID>
@@ -58,7 +57,6 @@
     <ID>MultilineLambdaItParameter:MarketsListBatchFlowManager.kt$MarketsListBatchFlowManager${ when (val status = it.status) { is PaginationStatus.Paginating -&gt; { if (status.lastResult is BatchFetchResult.Success) { it.data.size == 1 } else { null } } is PaginationStatus.EndOfPagination -&gt; { it.data.size == 1 } else -&gt; null } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListItem.kt${ if (Random.nextBoolean()) { it.first.inc() to PriceChangeType.UP } else { it.first.dec() to PriceChangeType.DOWN } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListLazyColumn.kt${ (it.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first() ?.let { rawId -&gt; CryptoCurrency.RawID(rawId) } }</ID>
-    <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it == BottomSheetState.EXPANDED) { analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened) } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it) { analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = false)) } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it.isNotEmpty()) { activeListManager.getBatchKeysByItemIds(visibleItemIds.value) } else { null } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it.list !is ListUM.Content) { visibleItemIds.value = emptyList() } }</ID>
@@ -118,12 +116,6 @@
     <ID>NoNameShadowing:MarketsTokenDetailsModel.kt$MarketsTokenDetailsModel${ it.copy( chartState = it.chartState.copy( status = MarketsTokenDetailsUM.ChartState.Status.ERROR, ), body = if (it.body is MarketsTokenDetailsUM.Body.Error) { MarketsTokenDetailsUM.Body.Nothing } else { it.body }, ) }</ID>
     <ID>NoNameShadowing:MyPortfolioUMFactory.kt$MyPortfolioUMFactory${ networkIds.contains(it.status.currency.network.backendId) }</ID>
     <ID>NoNameShadowing:NewMarketsPortfolioDelegate.kt$NewMarketsPortfolioDelegate$portfolio</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MarketsListBatchFlowManager.kt$MarketsListBatchFlowManager$val isInInitialLoadingErrorState = batchFlow.state .map { it.status is PaginationStatus.InitialLoadingError } .distinctUntilChanged() .stateIn( scope = modelScope, started = SharingStarted.Eagerly, initialValue = false, )</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MarketsListBatchFlowManager.kt$MarketsListBatchFlowManager$val isSearchNotFoundState = batchFlow.state .map { currentSearchText().isNullOrEmpty().not() &amp;&amp; it.status is PaginationStatus.EndOfPagination &amp;&amp; it.data.isEmpty() } .distinctUntilChanged() .stateIn( scope = modelScope, started = SharingStarted.Eagerly, initialValue = false, )</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MarketsListModel.kt$MarketsListModel$val isVisibleOnScreen = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MarketsListUMStateManager.kt$MarketsListUMStateManager$val isInSearchStateFlow = state.map { it.searchBar.isActive }.distinctUntilChanged()</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MarketsTokenDetailsModel.kt$MarketsTokenDetailsModel$val isVisibleOnScreen = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:TokenActionsHandler.kt$TokenActionsHandler$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>NullableToStringCall:MarketsListItemUM.kt$MarketsListItemUM$marketCap.toString()</ID>
     <ID>PropertyUsedBeforeDeclaration:MarketsListModel.kt$MarketsListModel$activeListManager</ID>
     <ID>PropertyUsedBeforeDeclaration:MarketsListUMStateManager.kt$MarketsListUMStateManager$state</ID>

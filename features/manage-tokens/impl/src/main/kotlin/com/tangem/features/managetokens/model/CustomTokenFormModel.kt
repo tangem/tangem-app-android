@@ -364,7 +364,7 @@ internal class CustomTokenFormModel @Inject constructor(
             return@resource
         }
 
-        params.onCurrencyAdded()
+        params.onCurrencyAdded(currency)
     }
 
     private fun selectNetwork() {

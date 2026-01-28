@@ -5,9 +5,13 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import com.tangem.features.tangempay.model.transformers.PinCodeChangeTransformer
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
@@ -23,6 +27,7 @@ import javax.inject.Inject
 internal class TangemPayChangePinModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val uiMessageSender: UiMessageSender,
     private val router: Router,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : Model() {
@@ -49,8 +54,12 @@ internal class TangemPayChangePinModel @Inject constructor(
             }
             uiState.update { it.copy(submitButtonLoading = false) }
             when (result) {
+                SetPinResult.PIN_TOO_WEAK -> {
+                    uiMessageSender.send(
+                        message = ToastMessage(resourceReference(R.string.tangempay_pin_validation_error_message)),
+                    )
+                }
                 SetPinResult.SUCCESS -> router.push(TangemPayDetailsInnerRoute.ChangePINSuccess)
-                SetPinResult.PIN_TOO_WEAK,
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
                 null,

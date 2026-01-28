@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 /**
  * Send analytics
@@ -12,7 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 sealed class CommonSendAnalyticEvents(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
     /** Recipient address screen opened */
@@ -25,7 +26,7 @@ sealed class CommonSendAnalyticEvents(
         params = mapOf(
             SOURCE to source.analyticsName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     /** Amount screen opened */
     data class AmountScreenOpened(
@@ -37,7 +38,7 @@ sealed class CommonSendAnalyticEvents(
         params = mapOf(
             SOURCE to source.analyticsName,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     /** Fee screen opened */
     data class FeeScreenOpened(
@@ -51,17 +52,30 @@ sealed class CommonSendAnalyticEvents(
         ),
     )
 
+    @Suppress("NullableToStringCall")
     /** Confirmation screen opened */
     data class ConfirmationScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
+        val sendBlockchain: String,
+        val sendToken: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Confirm Screen Opened",
-        params = mapOf(
-            SOURCE to source.analyticsName,
-        ),
-    )
+        params = buildMap {
+            put(SOURCE, source.analyticsName)
+            put("Token", sendToken)
+            put("Blockchain", sendBlockchain)
+            if (fromDerivationIndex != null || toDerivationIndex != null) {
+                put(
+                    "Account Derivation From or To (optional)",
+                    "$fromDerivationIndex, $toDerivationIndex",
+                )
+            }
+        },
+    ), AppsFlyerIncludedEvent
 
     /** If transaction delays notification is present */
     data class NoticeTransactionDelays(

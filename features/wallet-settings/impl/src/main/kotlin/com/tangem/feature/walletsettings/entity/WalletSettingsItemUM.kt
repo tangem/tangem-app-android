@@ -31,6 +31,7 @@ internal sealed class WalletSettingsItemUM {
         val text: TextReference,
         val isEnabled: Boolean,
         val imageState: ImageState,
+        val additionalBlock: BlockUM? = null,
         val onClick: () -> Unit,
     ) : WalletSettingsItemUM()
 
@@ -45,14 +46,6 @@ internal sealed class WalletSettingsItemUM {
         override val id: String,
         val title: TextReference,
         val description: TextReference,
-    ) : WalletSettingsItemUM()
-
-    data class UpgradeWallet(
-        override val id: String,
-        val title: TextReference,
-        val description: TextReference,
-        val onClick: () -> Unit,
-        val onDismissClick: () -> Unit,
     ) : WalletSettingsItemUM()
 }
 
