@@ -127,7 +127,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         }
     }
 
-    private fun createToken(blockchain: Blockchain, sdkToken: Token, network: Network): CryptoCurrency.Token {
+    fun createToken(blockchain: Blockchain, sdkToken: Token, network: Network): CryptoCurrency.Token {
         val id = getTokenId(network, sdkToken)
 
         return CryptoCurrency.Token(
