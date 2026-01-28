@@ -90,12 +90,14 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         params = FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = model::loadFee,
+            onLoadFeeExtended = model::loadFeeExtended,
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
             feeDisplaySource = FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
         ),
         onResult = model::onFeeResult,
     )
@@ -106,7 +108,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
-            feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
@@ -120,6 +121,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             ),
         ),
     )

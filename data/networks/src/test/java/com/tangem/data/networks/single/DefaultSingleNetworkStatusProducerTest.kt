@@ -3,6 +3,7 @@ package com.tangem.data.networks.single
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -29,11 +30,13 @@ internal class DefaultSingleNetworkStatusProducerTest {
 
     private val multiNetworkStatusSupplier = mockk<MultiNetworkStatusSupplier>()
     private val dispatchers = TestingCoroutineDispatcherProvider()
+    private val flowProducerTools: FlowProducerTools = mockk()
 
     private val producer = DefaultSingleNetworkStatusProducer(
         params = params,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         dispatchers = dispatchers,
+        flowProducerTools = flowProducerTools,
     )
 
     @Test

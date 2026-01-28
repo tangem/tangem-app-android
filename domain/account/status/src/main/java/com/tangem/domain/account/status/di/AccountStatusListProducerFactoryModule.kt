@@ -1,9 +1,8 @@
 package com.tangem.domain.account.status.di
 
-import com.tangem.domain.account.status.producer.DefaultMultiAccountStatusListProducer
-import com.tangem.domain.account.status.producer.DefaultSingleAccountStatusListProducer
-import com.tangem.domain.account.status.producer.MultiAccountStatusListProducer
-import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.producer.*
+import com.tangem.domain.core.flow.FlowProducerScope
+import com.tangem.domain.core.flow.FlowProducerTools
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,4 +24,12 @@ internal interface AccountStatusListProducerFactoryModule {
     fun bindMultiAccountStatusListProducerFactory(
         factory: DefaultMultiAccountStatusListProducer.Factory,
     ): MultiAccountStatusListProducer.Factory
+
+    @Binds
+    @Singleton
+    fun bindDefaultFlowProducerTools(impl: DefaultFlowProducerTools): FlowProducerTools
+
+    @Binds
+    @Singleton
+    fun bindFlowProducerScope(impl: DefaultFlowProducerAppScope): FlowProducerScope
 }

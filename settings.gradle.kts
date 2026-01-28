@@ -302,9 +302,6 @@ include(":features:yield-supply:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
-
-include(":features:news:news-details:api")
-include(":features:news:news-details:impl")
 // endregion Feature modules
 
 // region Domain modules
