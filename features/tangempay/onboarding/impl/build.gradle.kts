@@ -27,6 +27,8 @@ dependencies {
     implementation(projects.features.tangempay.onboarding.api)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.kyc.api)
+    implementation(projects.features.wallet.api)
+    implementation(projects.features.hotWallet.api)
 
     /** Domain */
     implementation(projects.domain.visa)
@@ -40,6 +42,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.decompose.ext.compose)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -48,4 +51,5 @@ dependencies {
     /** Other */
     implementation(deps.timber)
     implementation(deps.arrow.core)
+    implementation(deps.kotlin.immutable.collections)
 }

@@ -1,8 +1,9 @@
 package com.tangem.domain.news.usecase
 
-import com.tangem.domain.models.news.ShortArticle
+import com.tangem.domain.models.news.TrendingNews
 import com.tangem.domain.news.repository.NewsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * Exposes trending news as a cached flow and provides helpers to refresh or mark items as viewed.
@@ -12,17 +13,12 @@ import kotlinx.coroutines.flow.Flow
 class ManageTrendingNewsUseCase(private val repository: NewsRepository) {
 
     /**
-     * Observes the current cached list of trending articles (max 10 items).
+     * Observes the current cached list of trending articles (max 10 items) or error.
      */
-    operator fun invoke(): Flow<List<ShortArticle>> {
-        return repository.observeTrendingNews()
-    }
-
-    /**
-     * Forces refresh from backend while preserving local `viewed` flags.
-     */
-    suspend fun refresh(limit: Int, language: String?) {
-        repository.refreshTrendingNews(limit, language)
+    fun observeTrendingNews(): Flow<TrendingNews> {
+        return repository
+            .observeTrendingNews()
+            .distinctUntilChanged()
     }
 
     /**

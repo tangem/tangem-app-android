@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import java.util.concurrent.ConcurrentHashMap
 
 plugins {
     alias(deps.plugins.kotlin.android) apply false
@@ -32,21 +33,53 @@ interface Injected {
     val fs: FileSystemOperations
 }
 
-// Test Logging
+data class TestStats(
+    val total: Long = 0,
+    val passed: Long = 0,
+    val failed: Long = 0,
+    val skipped: Long = 0,
+)
+
+val testResultsByModule = ConcurrentHashMap<String, TestStats>()
+
+// Test task to run unit tests for debug/googleDebug variant (Android) and all JVM modules
+val unitTest by tasks.registering {
+    group = "verification"
+    description = "Run unit tests for debug/googleDebug variant and all JVM modules"
+
+    doLast {
+        if (testResultsByModule.isNotEmpty()) {
+            val totalStats = testResultsByModule.values.fold(TestStats()) { acc, stats ->
+                TestStats(
+                    total = acc.total + stats.total,
+                    passed = acc.passed + stats.passed,
+                    failed = acc.failed + stats.failed,
+                    skipped = acc.skipped + stats.skipped,
+                )
+            }
+
+            println("\n" + "=".repeat(80))
+            println("TEST SUMMARY")
+            println("=".repeat(80))
+
+            testResultsByModule.toSortedMap().forEach { (module, stats) ->
+                println("  $module: ${stats.total} tests (${stats.passed} passed, ${stats.failed} failed, ${stats.skipped} skipped)")
+            }
+
+            println("-".repeat(80))
+            println("TOTAL: ${totalStats.total} tests in ${testResultsByModule.size} modules")
+            println("  Passed:  ${totalStats.passed}")
+            println("  Failed:  ${totalStats.failed}")
+            println("  Skipped: ${totalStats.skipped}")
+            println("=".repeat(80))
+        }
+    }
+}
+
+// Test Logging and testCI dependencies
 subprojects {
     tasks.withType<Test>().configureEach {
-        val taskName = name.lowercase()
-        if (taskName.contains("external") ||
-            taskName.contains("internal") ||
-            taskName.contains("release") ||
-            taskName.contains("mocked") ||
-            taskName.contains("huawei")
-        ) {
-            enabled = false
-            println("Skipping test task: $name")
-        } else {
-            println("Test task scheduled: $name")
-        }
+        println("Test task scheduled: $path")
 
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
@@ -54,6 +87,13 @@ subprojects {
 
             afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ desc, result ->
                 if (desc.parent == null) { // will match the outermost suite
+                    testResultsByModule[path] = TestStats(
+                        total = result.testCount,
+                        passed = result.successfulTestCount,
+                        failed = result.failedTestCount,
+                        skipped = result.skippedTestCount,
+                    )
+
                     val output =
                         "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
                     val startItem = "| "
@@ -66,6 +106,28 @@ subprojects {
                     )
                 }
             }))
+        }
+    }
+
+    // Register testCI dependencies
+    // App module
+    plugins.withId("com.android.application") {
+        afterEvaluate {
+            unitTest.configure { dependsOn(tasks.named("testGoogleDebugUnitTest")) }
+        }
+    }
+
+    // Android libraries
+    plugins.withId("com.android.library") {
+        afterEvaluate {
+            unitTest.configure { dependsOn(tasks.named("testDebugUnitTest")) }
+        }
+    }
+
+    // Jvm modules
+    plugins.withId("org.jetbrains.kotlin.jvm") {
+        if (!plugins.hasPlugin("com.android.library") && !plugins.hasPlugin("com.android.application")) {
+            unitTest.configure { dependsOn(tasks.named("test")) }
         }
     }
 }

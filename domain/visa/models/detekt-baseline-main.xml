@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NamedArguments:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$ActivationStarted( value.activationInput!!, value.authTokens!!, value.remoteState!!, value.cardWalletAddress!!, )</ID>
+    <ID>NamedArguments:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$VisaCardActivationStatus_Json( VisaCardActivationStatus_Type.ActivationStarted, value.activationInput, value.authTokens, value.remoteState, value.cardWalletAddress, )</ID>
+    <ID>UnsafeCallOnNullableType:VisaActivationRemoteState.kt$VisaActivationRemoteState_JsonAdapter$value.activationOrderInfo!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaActivationRemoteState.kt$VisaActivationRemoteState_JsonAdapter$value.awaitingPinCodeStatus!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$value.activationInput!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$value.authTokens!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$value.cardWalletAddress!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaCardActivationStatus.kt$VisaCardActivationStatus_JsonAdapter$value.remoteState!!</ID>
+  </CurrentIssues>
+</SmellBaseline>

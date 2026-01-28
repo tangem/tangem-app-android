@@ -20,10 +20,10 @@ internal class FeeSelectorAlertFactory @Inject constructor(
 ) {
 
     fun checkAndShowAlerts(feeSelectorUM: FeeSelectorUM.Content, onConfirmClick: () -> Unit) {
-        val showFeeTooLow = checkAndShowFeeTooLow(feeSelectorUM, onConfirmClick)
-        val showFeeTooHigh = checkAndShowFeeTooHigh(feeSelectorUM, onConfirmClick)
+        val isShowFeeTooLow = checkAndShowFeeTooLow(feeSelectorUM, onConfirmClick)
+        val isShowFeeTooHigh = checkAndShowFeeTooHigh(feeSelectorUM, onConfirmClick)
 
-        if (!showFeeTooLow && !showFeeTooHigh) {
+        if (!isShowFeeTooLow && !isShowFeeTooHigh) {
             onConfirmClick()
         }
     }
@@ -78,20 +78,20 @@ internal class FeeSelectorAlertFactory @Inject constructor(
     }
 
     fun getFeeUpdatedAlert(
-        newFee: TransactionFee,
+        newTransactionFee: TransactionFee,
         feeSelectorUM: FeeSelectorUM,
         proceedAction: () -> Unit,
         stopAction: () -> Unit,
     ) {
         if (feeSelectorUM !is FeeSelectorUM.Content) return
-        val newFee = when (newFee) {
-            is TransactionFee.Single -> newFee.normal
+        val newFee = when (newTransactionFee) {
+            is TransactionFee.Single -> newTransactionFee.normal
             is TransactionFee.Choosable -> {
                 when (feeSelectorUM.selectedFeeItem) {
                     is FeeItem.Suggested -> feeSelectorUM.selectedFeeItem.fee
-                    is FeeItem.Slow -> newFee.minimum
-                    is FeeItem.Market -> newFee.normal
-                    is FeeItem.Fast -> newFee.priority
+                    is FeeItem.Slow -> newTransactionFee.minimum
+                    is FeeItem.Market -> newTransactionFee.normal
+                    is FeeItem.Fast -> newTransactionFee.priority
                     is FeeItem.Custom -> return
                 }
             }
