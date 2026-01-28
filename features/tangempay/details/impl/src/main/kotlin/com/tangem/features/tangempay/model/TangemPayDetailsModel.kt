@@ -22,6 +22,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayTopUpData
@@ -48,6 +49,8 @@ import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
+import com.tangem.features.tokendetails.ExpressTransactionsEvent
+import com.tangem.features.tokendetails.ExpressTransactionsEventListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -79,6 +82,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val orderRepository: CustomerOrderRepository,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val expressTransactionsEventListener: ExpressTransactionsEventListener,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener, ViewPinListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -101,6 +105,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private var balance: TangemPayCardBalance? = null
 
+    private val userWallet: UserWallet? = getUserWalletUseCase(params.userWalletId).getOrNull()
+    val cryptoCurrency: CryptoCurrency? = userWallet?.let { wallet ->
+        tangemPayCryptoCurrencyFactory.create(userWallet = wallet, chainId = params.config.chainId).getOrNull()
+    }
+
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
@@ -109,6 +118,18 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchAddToWalletBanner()
         fetchBalance()
         subscribeToCardFrozenState()
+    }
+
+    fun onResume() {
+        modelScope.launch {
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
+        }
+    }
+
+    fun onPause() {
+        modelScope.launch {
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Clear)
+        }
     }
 
     private fun subscribeToCardFrozenState() {
@@ -262,8 +283,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                 if (hasActiveWithdrawal) {
                     showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
                 } else {
-                    val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
-                    val currency = userWallet?.let {
+                    val userWallet = userWallet ?: getUserWalletUseCase(params.userWalletId).getOrNull()
+                    val currency = cryptoCurrency ?: userWallet?.let {
                         tangemPayCryptoCurrencyFactory.create(userWallet = userWallet, chainId = params.config.chainId)
                             .getOrNull()
                     }
@@ -359,6 +380,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             cardDetailsEventListener.send(CardDetailsEvent.Hide)
+            expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
             txHistoryUpdateListener.triggerUpdate()
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
