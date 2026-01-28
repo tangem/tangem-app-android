@@ -247,7 +247,7 @@
         "source": "https://docs.p2p.org/",
         "name": "pooledUnstake"
     },
-    "0xaa03b617": {
+    "0x6234d42b": {
         "info": "GaslessTransactions",
         "source": "https://github.com/tangem-developments/tangem-gasless-service",
         "name": "gaslessTransaction"
