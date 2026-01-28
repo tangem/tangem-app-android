@@ -208,28 +208,36 @@ internal class NewsDetailsModel @Inject constructor(
             newsIds = params.preselectedArticlesId,
             language = currentLanguage,
         ).onLeft { errors ->
-            errors.onEach { (newsId, throwable) ->
+            errors.onEach { (newsId, error) ->
                 when {
                     // an article is opened from deeplink and is not found
                     params.screenSource == AnalyticsParam.ScreensSources.NewsLink.value &&
                         newsId == params.articleId &&
-                        throwable is ApiResponseError.HttpException &&
-                        throwable.code == ApiResponseError.HttpException.Code.NOT_FOUND
+                        error is ApiResponseError.HttpException &&
+                        error.code == ApiResponseError.HttpException.Code.NOT_FOUND
                     -> {
                         analyticsEventHandler.send(
                             NewsDetailsAnalyticsEvent.NewsLinkMismatch(
                                 newsId = params.articleId,
+                                code = error.code.numericCode,
+                                message = error.message.orEmpty(),
                             ),
                         )
                     }
                     // global request executing error
                     newsId < 0 -> {
-                        Timber.e(throwable)
+                        Timber.e(error)
                     }
                     else -> {
+                        val (code, message) = when (error) {
+                            is ApiResponseError.HttpException -> error.code.numericCode to error.message.orEmpty()
+                            else -> null to ""
+                        }
                         analyticsEventHandler.send(
                             NewsDetailsAnalyticsEvent.NewsArticleLoadError(
                                 newsId = newsId,
+                                code = code,
+                                message = message,
                             ),
                         )
                     }
