@@ -57,11 +57,11 @@ internal fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: ()
             val modifier = Modifier.padding(padding)
             when {
                 state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() &&
-                    state.tokensListData.tokensList.isEmpty() && state.afterSearch -> {
+                    state.tokensListData.tokensList.isEmpty() && state.isAfterSearch -> {
                     TokensNotFound(modifier)
                 }
                 state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() &&
-                    state.tokensListData.tokensList.isEmpty() && !state.afterSearch -> {
+                    state.tokensListData.tokensList.isEmpty() && !state.isAfterSearch -> {
                     EmptyTokensList(modifier)
                 }
                 else -> {
@@ -313,7 +313,7 @@ private fun TokenItem(
             .fillMaxWidth()
             .height(TangemTheme.dimens.size72)
             .clickable(
-                enabled = token.available,
+                enabled = token.isAvailable,
                 onClick = onTokenClick,
             )
             .padding(
@@ -336,7 +336,7 @@ private fun TokenItem(
             EllipsisText(
                 text = token.name,
                 style = TangemTheme.typography.subtitle1,
-                color = if (token.available) {
+                color = if (token.isAvailable) {
                     TangemTheme.colors.text.primary1
                 } else {
                     TangemTheme.colors.text.tertiary
@@ -366,7 +366,7 @@ private fun TokenItem(
                     maxLines = 1,
                     softWrap = false,
                     overflow = TextOverflow.Visible,
-                    color = if (token.available) {
+                    color = if (token.isAvailable) {
                         TangemTheme.colors.text.primary1
                     } else {
                         TangemTheme.colors.text.tertiary
@@ -417,7 +417,7 @@ private fun TokenScreenPreview() {
                 availableTokens = listOf(title, token, token, token).toImmutableList(),
                 unavailableTokens = listOf(title, token, token, token).toImmutableList(),
                 tokensListData = TokenListUMData.EmptyList,
-                afterSearch = false,
+                isAfterSearch = false,
                 isBalanceHidden = false,
                 onSearchEntered = {},
                 onTokenSelected = {},
