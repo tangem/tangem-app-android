@@ -417,10 +417,11 @@ class TokenItemStateConverter(
             if (promoCryptoCurrencyStatus == null || status.currency.id != promoCryptoCurrencyStatus.currency.id) {
                 return TokenItemState.PromoBannerState.Empty
             }
-            val tokenKey = "${token.network.rawId}_${token.contractAddress}"
-            val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
             val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull { (key, _) ->
-                key.equals(tokenKey, shouldIgnoreCase)
+                key.equals(
+                    other = token.yieldSupplyKey(),
+                    ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
+                )
             }?.value ?: return TokenItemState.PromoBannerState.Empty
 
             return TokenItemState.PromoBannerState.Content(
