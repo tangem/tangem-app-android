@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 // TODO: Split to blocks [REDACTED_JIRA]
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun TokenDetailsScreen(
     state: TokenDetailsState,
@@ -62,6 +62,7 @@ internal fun TokenDetailsScreen(
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
         val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+        val dialogConfig = state.dialogConfig
         val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = Modifier
@@ -162,7 +163,9 @@ internal fun TokenDetailsScreen(
             }
         }
 
-        TokenDetailsDialogs(state = state)
+        if (dialogConfig != null) {
+            TokenDetailsDialogs(dialogConfig = dialogConfig)
+        }
 
         state.bottomSheetConfig?.let { config ->
             when (config.content) {

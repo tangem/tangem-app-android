@@ -33,27 +33,12 @@ internal class SetWalletCardDropDownItemsTransformer(
                     dropDownItems = constructDropDownItems(prevState.walletCardState.id),
                 ),
             )
-            is WalletState.Visa.Content -> prevState.copy(
-                walletCardState = prevState.walletCardState.copySealed(
-                    dropDownItems = constructDropDownItems(prevState.walletCardState.id),
-                ),
-            )
             is WalletState.MultiCurrency.Locked -> prevState.copy(
                 walletCardState = prevState.walletCardState.copySealed(
                     dropDownItems = constructDropDownItems(prevState.walletCardState.id),
                 ),
             )
             is WalletState.SingleCurrency.Locked -> prevState.copy(
-                walletCardState = prevState.walletCardState.copySealed(
-                    dropDownItems = constructDropDownItems(prevState.walletCardState.id),
-                ),
-            )
-            is WalletState.Visa.Locked -> prevState.copy(
-                walletCardState = prevState.walletCardState.copySealed(
-                    dropDownItems = constructDropDownItems(prevState.walletCardState.id),
-                ),
-            )
-            is WalletState.Visa.AccessTokenLocked -> prevState.copy(
                 walletCardState = prevState.walletCardState.copySealed(
                     dropDownItems = constructDropDownItems(prevState.walletCardState.id),
                 ),
