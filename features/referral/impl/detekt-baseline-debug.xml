@@ -3,12 +3,9 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>MultilineLambdaItParameter:AgreementText.kt${ val clickableSpanStyle = requireNotNull(agreementText.spanStyles.getOrNull(1)) if (it in clickableSpanStyle.start..clickableSpanStyle.end) { onClick() } }</ID>
-    <ID>MultilineLambdaItParameter:ReferralModel.kt$ReferralModel${ analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful) referralData.value = it }</ID>
     <ID>MultilineLambdaItParameter:ReferralScreen.kt${ // TODO: use StateEvent if (stateHolder.errorSnackbar != null) { TangemSnackbar(data = it, actionOnNewLine = true) } else { CopiedTextSnackbar(it) } }</ID>
     <ID>MultilineLambdaItParameter:ReferralScreen.kt${ ReferralContent( stateHolder = stateHolder, snackbarHostState = snackbarHostState, onAgreementClick = stateHolder.analytics.onAgreementClicked, modifier = Modifier.padding(it), ) }</ID>
     <ID>NamedArguments:ReferralScreen.kt$Text( formatAwardConditionsString( quantity = award, network = networkName, address = if (!address.isNullOrBlank()) " $address" else "", ), color = TangemTheme.colors.text.tertiary, style = TangemTheme.typography.body2, modifier = Modifier.testTag(ReferralProgramScreenTestTags.INFO_FOR_YOU_TEXT), )</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:ParticipateBottomBlock.kt$val isExpanded = remember { mutableStateOf(false) }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:ReferralModel.kt$ReferralModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>SuspendFunSwallowedCancellation:ReferralModel.kt$ReferralModel$runCatching</ID>
     <ID>UseOrEmpty:ReferralScreen.kt$matchResult.groups[1]?.value ?: ""</ID>
     <ID>VarCouldBeVal:ReferralModel.kt$ReferralModel$private var referralData: MutableStateFlow&lt;ReferralData?&gt; = MutableStateFlow(null)</ID>
