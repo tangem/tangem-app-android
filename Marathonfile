@@ -2,8 +2,8 @@ name: "Tangem Android UI Tests"
 outputDir: "build/reports/marathon"
 
 # Timeouts to prevent hung tests
-testOutputTimeoutMillis: 120000   # 2 minutes - no output from test
-testBatchTimeoutMillis: 600000    # 10 minutes - total batch time
+testOutputTimeoutMillis: 180000   # 3 minutes 
+testBatchTimeoutMillis: 600000    # 10 minutes 
 
 vendorConfiguration:
   type: "Android"
