@@ -1,6 +1,12 @@
 package com.tangem.data.notifications
 
+import androidx.datastore.preferences.core.edit
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConverter
+import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
@@ -9,6 +15,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.notifications.models.ApplicationId
+import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,9 +54,15 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
             ?.let(::ApplicationId)
     }
 
-    override suspend fun sendPushToken(appId: ApplicationId, pushToken: String) {
+    override suspend fun clearApplicationId() {
+        appPreferencesStore.edit { mutablePreferences ->
+            mutablePreferences.remove(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
+        }
+    }
+
+    override suspend fun sendPushToken(appId: ApplicationId, pushToken: String): Either<NotificationsError, Unit> =
         withContext(dispatchers.io) {
-            tangemTechApi.updatePushTokenForApplicationId(
+            val response = tangemTechApi.updatePushTokenForApplicationId(
                 appId.value,
                 NotificationApplicationCreateBody(
                     pushToken = pushToken,
@@ -58,9 +71,21 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
                     timezone = appInfoProvider.timezone,
                     version = appInfoProvider.appVersion,
                 ),
-            ).getOrThrow()
+            )
+            when (response) {
+                is ApiResponse.Success -> Unit.right()
+                is ApiResponse.Error -> {
+                    val cause = response.cause
+                    if (cause is ApiResponseError.HttpException &&
+                        cause.code == ApiResponseError.HttpException.Code.NOT_FOUND
+                    ) {
+                        NotificationsError.ApplicationIdNotFound.left()
+                    } else {
+                        NotificationsError.DataError(cause.message ?: "Unknown error").left()
+                    }
+                }
+            }
         }
-    }
 
     override suspend fun getEligibleNetworks(): List<NotificationsEligibleNetwork> = withContext(dispatchers.io) {
         tangemTechApi.getEligibleNetworksForPushNotifications().getOrThrow().mapNotNull {
