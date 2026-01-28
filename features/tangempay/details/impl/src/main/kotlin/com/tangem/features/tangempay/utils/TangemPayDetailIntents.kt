@@ -7,7 +7,7 @@ internal interface TangemPayDetailIntents {
     fun onRefreshSwipe(refreshState: ShowRefreshState)
     fun onClickAddFunds()
     fun onClickWithdraw()
-    fun onClickChangePin()
+    fun onClickPinCode()
     fun onClickFreezeCard()
     fun onClickUnfreezeCard()
     fun onClickTermsAndLimits()

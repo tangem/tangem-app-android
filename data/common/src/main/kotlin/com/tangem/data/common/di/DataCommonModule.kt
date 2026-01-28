@@ -13,7 +13,7 @@ import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.retryer.RetryerPool
@@ -54,12 +54,12 @@ internal object DataCommonModule {
     @Singleton
     fun provideUserTokensEncricher(
         walletsRepository: WalletsRepository,
-        multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+        walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
     ): UserTokensResponseAddressesEnricher {
         return UserTokensResponseAddressesEnricher(
             walletsRepository = walletsRepository,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+            walletManagersFacade = walletManagersFacade,
             dispatchers = dispatchers,
         )
     }

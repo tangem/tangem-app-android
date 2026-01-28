@@ -51,7 +51,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onBalancesAndLimitsClick() {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.LimitsClicked)
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.LimitsClicked())
         modelScope.launch(dispatchers.main) {
             val userWalletId = stateController.getSelectedWalletId()
             val balancesAndLimits = getVisaCurrencyUseCase(userWalletId)
@@ -92,7 +92,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onExploreClick(exploreUrl: String) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonExplore)
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonExplore())
         router.openUrl(exploreUrl)
     }
 

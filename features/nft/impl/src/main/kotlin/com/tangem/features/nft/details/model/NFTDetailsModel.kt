@@ -69,7 +69,7 @@ internal class NFTDetailsModel @Inject constructor(
         onBackClick = { params.onBackClick() },
         onReadMoreClick = ::onReadMoreClick,
         onSeeAllTraitsClick = {
-            analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSeeAll)
+            analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSeeAll())
             params.onAllTraitsClick()
         },
         onExploreClick = ::onExploreClick,
@@ -161,7 +161,7 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onInfoBlockClick(title: TextReference, text: TextReference) {
-        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore)
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore())
         bottomSheetNavigation.activate(
             NFTDetailsBottomSheetConfig.Info(
                 title = title,
@@ -171,7 +171,7 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onReadMoreClick() {
-        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore)
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore())
         when (val topInfo = _state.value.nftAsset.topInfo) {
             is NFTAssetUM.TopInfo.Empty -> Unit
             is NFTAssetUM.TopInfo.Content -> {
@@ -186,7 +186,7 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onExploreClick() {
-        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonExplore)
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonExplore())
         modelScope.launch {
             val url = getNFTExploreUrlUseCase.invoke(
                 network = params.nftAsset.network,
@@ -199,7 +199,7 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onSendClick() {
-        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSend)
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSend())
         router.push(
             AppRoute.NFTSend(
                 userWalletId = params.userWalletId,

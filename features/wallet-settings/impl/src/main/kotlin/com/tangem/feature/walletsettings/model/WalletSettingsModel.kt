@@ -25,6 +25,8 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.PortfolioId
@@ -84,17 +86,20 @@ internal class WalletSettingsModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
-    private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
-    private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
     val dialogNavigation = SlotNavigation<DialogConfig>()
     val bottomSheetNavigation: SlotNavigation<NetworksAvailableForNotificationBSConfig> = SlotNavigation()
-    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(dialogNavigation)
+    private val walletCardItemDelegate = walletCardItemDelegateFactory.create(
+        dialogNavigation = dialogNavigation,
+        onUpgradeHotWalletClick = ::onUpgradeWalletClick,
+    )
 
     val state: MutableStateFlow<WalletSettingsUM> = MutableStateFlow(
         value = WalletSettingsUM(
@@ -115,7 +120,18 @@ internal class WalletSettingsModel @Inject constructor(
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight { wallet ->
             trackingContextProxy.addContext(wallet)
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletSettingsScreenOpened)
+            modelScope.launch {
+                val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                    singleAccountListSupplier(wallet.walletId)
+                        .first()
+                        .accounts
+                        .size
+                } else {
+                    null
+                }
+                val event = WalletSettingsAnalyticEvents.WalletSettingsScreenOpened(accountsCount)
+                analyticsEventHandler.send(event)
+            }
         }
 
         fun combineUI(wallet: UserWallet) = combine(
@@ -125,10 +141,9 @@ internal class WalletSettingsModel @Inject constructor(
             flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId)
                 .distinctUntilChanged()
                 .conflate(),
-            flow3 = isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
-            flow4 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow5 = accountItemsDelegate.loadAccount(wallet),
-        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
+            flow3 = walletCardItemDelegate.cardItemFlow(wallet),
+            flow4 = accountItemsDelegate.loadAccount(wallet),
+        ) { nftEnabled, notificationsEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -141,7 +156,6 @@ internal class WalletSettingsModel @Inject constructor(
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
-                        isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
@@ -182,7 +196,6 @@ internal class WalletSettingsModel @Inject constructor(
         isNFTEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
-        isUpgradeNotificationEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
         val isAccountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
@@ -220,7 +233,7 @@ internal class WalletSettingsModel @Inject constructor(
             },
             onReferralClick = { onReferralClick(userWallet) },
             onManageTokensClick = {
-                analyticsEventHandler.send(Settings.ButtonManageTokens)
+                analyticsEventHandler.send(Settings.ButtonManageTokens())
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
@@ -239,9 +252,6 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
             onAccessCodeClick = { onAccessCodeClick(userWallet) },
-            walletUpgradeDismissed = isUpgradeNotificationEnabled,
-            onUpgradeWalletClick = { onUpgradeWalletClick() },
-            onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
             onBackupClick = ::onBackupClick,
             onCardSettingsClick = ::onCardSettingsClick,
             accountsUM = accountList,
@@ -366,10 +376,7 @@ internal class WalletSettingsModel @Inject constructor(
             val isCodeSet = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
             analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAccessCode(isCodeSet))
             if (!state.value.isWalletBackedUp) {
-                showMakeBackupAtFirstAlertBS(
-                    isUpgradeFlow = false,
-                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
-                )
+                showMakeBackupAtFirstAlertBS()
             } else {
                 unlockWalletIfNeedAndProceed { authorizationRequired ->
                     router.push(
@@ -384,42 +391,28 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
-        if (!state.value.isWalletBackedUp) {
-            showMakeBackupAtFirstAlertBS(
-                isUpgradeFlow = true,
-                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
-            )
-        } else {
-            unlockWalletIfNeedAndProceed {
-                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
-            }
-        }
-    }
-
-    private fun onDismissUpgradeWalletClick() {
-        modelScope.launch {
-            dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
-        }
+        router.push(AppRoute.WalletHardwareBackup(userWalletId = params.userWalletId))
     }
 
     private fun onBackupClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup)
-        router.push(AppRoute.WalletBackup(params.userWalletId))
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup())
+        router.push(
+            AppRoute.WalletBackup(
+                userWalletId = params.userWalletId,
+                isColdWalletOptionShown = false,
+            ),
+        )
     }
 
     private fun onCardSettingsClick() {
         router.push(AppRoute.CardSettings(params.userWalletId))
     }
 
-    private fun showMakeBackupAtFirstAlertBS(
-        action: WalletSettingsAnalyticEvents.NoticeBackupFirst.Action,
-        isUpgradeFlow: Boolean,
-    ) {
+    private fun showMakeBackupAtFirstAlertBS() {
         analyticsEventHandler.send(
             event = WalletSettingsAnalyticEvents.NoticeBackupFirst(
                 source = AnalyticsParam.ScreensSources.WalletSettings.value,
-                action = action,
+                action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.AccessCode,
             ),
         )
         val message = bottomSheetMessage {
@@ -437,14 +430,10 @@ internal class WalletSettingsModel @Inject constructor(
                     router.push(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
-                            isUpgradeFlow = isUpgradeFlow,
-                            setAccessCode = true,
+                            isUpgradeFlow = false,
+                            shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
-                            analyticsAction = if (isUpgradeFlow) {
-                                RecoveryPhraseScreenAction.Backup.value
-                            } else {
-                                RecoveryPhraseScreenAction.AccessCode.value
-                            },
+                            analyticsAction = RecoveryPhraseScreenAction.AccessCode.value,
                         ),
                     )
                     closeBs()
