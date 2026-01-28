@@ -31,32 +31,44 @@ internal class TokensDataConverterV2(
 
     override fun transform(prevState: SwapStateHolder): SwapStateHolder {
         val accountList = tokensDataState.accountCurrencyList
+        val currentMarketsState = prevState.selectTokenState?.marketsState
         return prevState.copy(
             selectTokenState = SwapSelectTokenStateHolder(
                 availableTokens = persistentListOf(),
                 unavailableTokens = persistentListOf(),
                 tokensListData = if (isAccountsMode) {
+                    val portfolioList = accountListItemConverter.convertList(accountList).toPersistentList()
+                    val totalTokensCount = portfolioList.sumOf { it.tokens.size }
                     TokenListUMData.AccountList(
-                        tokensList = accountListItemConverter.convertList(accountList).toPersistentList(),
+                        tokensList = portfolioList,
+                        totalTokensCount = totalTokensCount,
                     )
                 } else {
-                    TokenListUMData.TokenList(
-                        tokensList = persistentListOf(
-                            TokensListItemUM.GroupTitle(
-                                id = "available_tokens_title",
-                                text = resourceReference(R.string.exchange_tokens_available_tokens_header),
-                            ),
-                        ) + accountList.flatMap { (_, currencyList) ->
-                            currencyList.asSequence().map { accountSwapCurrency ->
-                                if (accountSwapCurrency.isAvailable) {
-                                    accountListItemConverter.createAvailableItemConverter()
-                                } else {
-                                    accountListItemConverter.createUnavailableItemConverter()
-                                }.convert(accountSwapCurrency.cryptoCurrencyStatus)
-                            }.map(TokensListItemUM::Token).toPersistentList()
-                        }.toPersistentList(),
-                    )
+                    val tokensList = accountList.flatMap { (_, currencyList) ->
+                        currencyList.asSequence().map { accountSwapCurrency ->
+                            if (accountSwapCurrency.isAvailable) {
+                                accountListItemConverter.createAvailableItemConverter()
+                            } else {
+                                accountListItemConverter.createUnavailableItemConverter()
+                            }.convert(accountSwapCurrency.cryptoCurrencyStatus)
+                        }.map(TokensListItemUM::Token).toPersistentList()
+                    }.toPersistentList()
+
+                    if (tokensList.isNotEmpty()) {
+                        TokenListUMData.TokenList(
+                            tokensList = persistentListOf(
+                                TokensListItemUM.GroupTitle(
+                                    id = "available_tokens_title",
+                                    text = resourceReference(R.string.exchange_tokens_available_tokens_header),
+                                ),
+                            ) + tokensList,
+                            totalTokensCount = tokensList.size,
+                        )
+                    } else {
+                        TokenListUMData.EmptyList
+                    }
                 },
+                marketsState = currentMarketsState,
                 onSearchEntered = onSearchEntered,
                 onTokenSelected = onTokenSelected,
                 isBalanceHidden = isBalanceHidden,

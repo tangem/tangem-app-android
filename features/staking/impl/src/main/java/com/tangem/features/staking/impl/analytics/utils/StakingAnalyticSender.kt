@@ -18,10 +18,10 @@ internal class StakingAnalyticSender(
 
     fun initialInfoScreen(value: StakingUiState) {
         val initialInfoState = value.initialInfoState as? StakingStates.InitialInfoState.Data
-        val validatorState = initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data
-        val validatorCount = validatorState?.balances
-            ?.filterNot { it.validator?.address.isNullOrBlank() }
-            ?.distinctBy { it.validator?.address }
+        val balanceState = initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data
+        val validatorCount = balanceState?.balances
+            ?.filterNot { it.target?.address.isNullOrBlank() }
+            ?.distinctBy { it.target?.address }
             ?.size ?: 0
 
         analyticsEventHandler.send(
@@ -34,7 +34,7 @@ internal class StakingAnalyticSender(
     fun confirmationScreen(value: StakingUiState) {
         val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
         val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
-        val validatorName = validatorState?.chosenValidator?.name ?: return
+        val validatorName = validatorState?.chosenTarget?.name ?: return
 
         if (confirmationState?.innerState == InnerConfirmationStakingState.COMPLETED) return
 
@@ -72,6 +72,7 @@ internal class StakingAnalyticSender(
                     token = tokenCryptoCurrency.symbol,
                     feeType = AnalyticsParam.FeeType.Normal,
                     permissionType = ApproveType.LIMITED.name,
+                    feeToken = tokenCryptoCurrency.symbol,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
@@ -80,7 +81,7 @@ internal class StakingAnalyticSender(
 
     fun sendTransactionStakingAnalytics(value: StakingUiState, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
-        val validatorName = validatorState?.chosenValidator?.name ?: return
+        val validatorName = validatorState?.chosenTarget?.name ?: return
 
         analyticsEventHandler.send(
             Basic.TransactionSent(
@@ -88,6 +89,7 @@ internal class StakingAnalyticSender(
                     blockchain = cryptoCurrencyStatus.currency.network.name,
                     token = value.cryptoCurrencySymbol,
                     feeType = AnalyticsParam.FeeType.Normal,
+                    feeToken = cryptoCurrencyStatus.currency.symbol,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
             ),
@@ -102,7 +104,7 @@ internal class StakingAnalyticSender(
 
     fun sendTransactionStakingClickedAnalytics(value: StakingUiState) {
         val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
-        val validatorName = validatorState?.chosenValidator?.name ?: return
+        val validatorName = validatorState?.chosenTarget?.name ?: return
 
         analyticsEventHandler.send(
             StakingAnalyticsEvent.ButtonAction(
