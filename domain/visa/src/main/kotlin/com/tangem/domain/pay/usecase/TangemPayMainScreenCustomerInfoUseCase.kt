@@ -128,7 +128,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             }
             .map { customerInfo ->
                 Timber.tag(TAG).i("customerInfo")
-                if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
+                if (customerInfo.cardInfo == null && customerInfo.kycStatus == CustomerInfo.KycStatus.APPROVED) {
                     // If order id wasn't saved -> start order creation and get customer info
                     onboardingRepository.createOrder(userWalletId)
                 }
@@ -151,7 +151,12 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
                         -> MainScreenCustomerInfo(
-                            info = CustomerInfo(productInstance = null, isKycApproved = true, cardInfo = null),
+                            info = CustomerInfo(
+                                customerId = null,
+                                productInstance = null,
+                                kycStatus = CustomerInfo.KycStatus.APPROVED,
+                                cardInfo = null,
+                            ),
                             orderStatus = orderStatus,
                         ).right()
 
