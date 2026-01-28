@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:P2PEthPoolStaking.kt$P2PEthPoolStaking.Metadata.Fee$val enabled: Boolean</ID>
+    <ID>BooleanPropertyNaming:P2PEthPoolStaking.kt$P2PEthPoolStaking.Status$val enter: Boolean</ID>
+    <ID>BooleanPropertyNaming:P2PEthPoolStaking.kt$P2PEthPoolStaking.Status$val exit: Boolean</ID>
+    <ID>BooleanPropertyNaming:StakingActionCommonType.kt$StakingActionCommonType.Enter$val skipEnterAmount: Boolean</ID>
+    <ID>BooleanPropertyNaming:StakingActionCommonType.kt$StakingActionCommonType.Exit$val partiallyUnstakeDisabled: Boolean</ID>
+    <ID>BooleanPropertyNaming:StakingActionCommonType.kt$StakingActionCommonType.Pending.Stake$val skipEnterAmount: Boolean</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$AddressArgument$val required: Boolean</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield$val allValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield.Metadata$val supportsMultipleValidators: Boolean?</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield.Metadata.Enabled$val enabled: Boolean</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield.Status$val enter: Boolean</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield.Status$val exit: Boolean?</ID>
+    <ID>BooleanPropertyNaming:Yield.kt$Yield.Validator$val preferred: Boolean</ID>
+  </CurrentIssues>
+</SmellBaseline>

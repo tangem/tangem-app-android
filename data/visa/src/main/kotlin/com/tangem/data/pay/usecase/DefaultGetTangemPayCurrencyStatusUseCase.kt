@@ -53,7 +53,7 @@ internal class DefaultGetTangemPayCurrencyStatusUseCase @Inject constructor(
                 ),
                 sources = CryptoCurrencyStatus.Sources(),
                 pendingTransactions = emptySet(),
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
             ),

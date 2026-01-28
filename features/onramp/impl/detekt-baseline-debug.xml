@@ -1,13 +1,5 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NonBooleanPropertyPrefixedWithIs:AvailableSwapPairsModel.kt$AvailableSwapPairsModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:HotCryptoModel.kt$HotCryptoModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:OnrampAddTokenUiBuilder.kt$OnrampAddTokenUiBuilder$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:OnrampMainComponentModel.kt$OnrampMainComponentModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:OnrampOperationModel.kt$OnrampOperationModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:OnrampTokenListModel.kt$OnrampTokenListModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapSelectTokensModel.kt$SwapSelectTokensModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-  </CurrentIssues>
+  <CurrentIssues/>
 </SmellBaseline>
