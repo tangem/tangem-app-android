@@ -22,6 +22,7 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -621,6 +622,22 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override suspend fun getNativeTokenBalance(
+        userWalletId: UserWalletId,
+        networkId: String,
+        derivationPath: String?,
+    ): BigDecimal {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
+
+        return walletManager?.wallet?.amounts
+            ?.firstNotNullOfOrNull { amountEntry ->
+                amountEntry.takeIf { amountEntry.key is AmountType.Coin }
+            }
+            ?.value?.value
+            ?: BigDecimal.ZERO
     }
 
     override suspend fun getAssetRequirements(
