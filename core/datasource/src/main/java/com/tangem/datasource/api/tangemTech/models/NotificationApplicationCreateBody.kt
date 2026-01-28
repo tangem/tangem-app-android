@@ -12,4 +12,5 @@ data class NotificationApplicationCreateBody(
     @Json(name = "version") val version: String? = null,
     @Json(name = "language") val language: String? = null,
     @Json(name = "timezone") val timezone: String? = null,
+    @Json(name = "appsflyerId") val appsflyerId: String? = null,
 )
