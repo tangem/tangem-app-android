@@ -49,7 +49,7 @@ internal sealed class ManageTokensAnalyticEvent(
             AnalyticsParam.Key.SOURCE to source.analyticsName,
         ),
     )
-    data object ButtonLater : ManageTokensAnalyticEvent(
+    class ButtonLater : ManageTokensAnalyticEvent(
         event = "Button - Later",
         params = mapOf(AnalyticsParam.SOURCE to ManageTokensSource.ONBOARDING.analyticsName),
     )

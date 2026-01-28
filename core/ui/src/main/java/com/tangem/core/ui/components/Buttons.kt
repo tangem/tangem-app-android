@@ -220,6 +220,8 @@ fun SecondaryButtonIconEnd(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -230,6 +232,8 @@ fun SecondaryButtonIconEnd(
         enabled = enabled,
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
+        size = size,
+        shape = shape,
     )
 }
 
@@ -244,6 +248,8 @@ fun SecondaryButtonIconStart(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -254,6 +260,8 @@ fun SecondaryButtonIconStart(
         enabled = enabled,
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
+        size = size,
+        shape = shape,
     )
 }
 // endregion SecondaryButton

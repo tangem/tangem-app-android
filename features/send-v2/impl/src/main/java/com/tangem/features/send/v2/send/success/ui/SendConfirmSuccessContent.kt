@@ -29,17 +29,17 @@ import kotlinx.coroutines.delay
 
 @Composable
 internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent: SendDestinationBlockComponent) {
-    var visible by remember { mutableStateOf(false) }
+    var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(ANIMATION_DELAY)
-        visible = true
+        isVisible = true
     }
 
     val height = ANIMATION_OFFSET.toPx().toInt()
 
     AnimatedVisibility(
-        visible = visible,
+        visible = isVisible,
         enter = slideInVertically(
             initialOffsetY = { height },
         ).plus(fadeIn()),
