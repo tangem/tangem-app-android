@@ -27,6 +27,7 @@ import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -155,7 +156,7 @@ internal class DefaultYieldSupplyRepository(
     override suspend fun getTokenPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): YieldSupplyEnterStatus? = try {
+    ): YieldSupplyEnterStatus? = runSuspendCatching {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -174,10 +175,9 @@ internal class DefaultYieldSupplyRepository(
             hasRecentYieldExitTxs -> YieldSupplyEnterStatus.Exit
             else -> null
         }
-    } catch (e: Exception) {
-        Timber.e(e, "Failed to get pending yield supply status")
-        null
-    }
+    }.onFailure { exception ->
+        Timber.w(exception, "Failed to get pending yield supply status")
+    }.getOrNull()
 
     override fun getShouldShowYieldPromoBanner(): Flow<Boolean> {
         return appPreferencesStore.get(PreferencesKeys.YIELD_SUPPLY_SHOULD_SHOW_MAIN_PROMO_KEY, true)

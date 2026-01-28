@@ -77,7 +77,7 @@ sealed class SwapCardState {
 
 data class SwapButton(
     @DrawableRes val walletInteractionIcon: Int?,
-    val enabled: Boolean,
+    val isEnabled: Boolean,
     val onClick: () -> Unit,
 )
 
@@ -94,7 +94,7 @@ sealed interface TransactionCardType {
     ) : TransactionCardType
 
     data class ReadOnly(
-        val showWarning: Boolean = false,
+        val shouldShowWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
         override val inputError: InputError = InputError.Empty,
         override val accountTitleUM: AccountTitleUM? = null,

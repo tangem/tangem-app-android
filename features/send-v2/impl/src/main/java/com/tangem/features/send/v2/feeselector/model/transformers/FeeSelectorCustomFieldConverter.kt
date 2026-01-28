@@ -107,10 +107,10 @@ internal class FeeSelectorCustomFieldConverter(
         when (val fees = feeSelectorState.fees) {
             is TransactionFee.Choosable -> fees.minimum
             is TransactionFee.Single -> fees.normal
-        }.let {
-            when (it) {
+        }.let { fee ->
+            when (fee) {
                 is Fee.Kaspa -> kaspaCustomFeeConverter.tryAutoFixValue(
-                    minimumFee = it,
+                    minimumFee = fee,
                     customValues = customValues,
                 )
                 else -> customValues

@@ -74,7 +74,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     override fun goToProviderClick(providerLink: String) {
-        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
         urlOpener.openUrl(providerLink)
     }
 
@@ -177,10 +177,12 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private fun showErrorAlert(error: OnrampError) {
         val errorCode = (error as? OnrampError.DataError)?.code
         val message = DialogMessage(
-            message = if (errorCode.isNullOrBlank()) {
-                resourceReference(R.string.common_unknown_error)
-            } else {
-                resourceReference(R.string.express_error_code, wrappedList(errorCode))
+            message = when {
+                !errorCode.isNullOrBlank() -> resourceReference(R.string.express_error_code, wrappedList(errorCode))
+                error is OnrampError.AlreadyHandledTransaction -> resourceReference(
+                    R.string.onramp_error_transaction_already_processed,
+                )
+                else -> resourceReference(R.string.common_unknown_error)
             },
             firstActionBuilder = {
                 okAction(router::pop)

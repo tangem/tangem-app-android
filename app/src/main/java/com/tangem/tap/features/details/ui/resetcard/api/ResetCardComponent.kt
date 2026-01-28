@@ -11,6 +11,7 @@ interface ResetCardComponent : ComposableContentComponent {
         val cardId: String,
         val isActiveBackupStatus: Boolean,
         val backupCardsCount: Int,
+        val hasTangemPay: Boolean,
     )
 
     interface Factory : ComponentFactory<Params, ResetCardComponent>
