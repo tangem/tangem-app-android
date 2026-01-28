@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -98,8 +99,8 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             }
         }
 
-    private fun addFirstTokenFlow(): Flow<MyPortfolioUM> = buttonState.map {
-        when (it) {
+    private fun addFirstTokenFlow(): Flow<MyPortfolioUM> = buttonState.map { state ->
+        when (state) {
             AddButtonState.Loading -> MyPortfolioUM.Loading
             AddButtonState.Available -> MyPortfolioUM.AddFirstToken(
                 onAddClick = onAddClick,
@@ -120,7 +121,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             }.flatten()
 
         val allAddedTokenActions =
-            portfolio.portfolios.map { portfolio -> portfolio.actionsFoAccountCurrencies() }.flatten()
+            portfolio.portfolios.map { portfolioItem -> portfolioItem.actionsFoAccountCurrencies() }.flatten()
 
         return combine(
             flow = combine(allAddedTokenActions) { it.toMap() }.distinctUntilChanged(),
@@ -153,12 +154,12 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
                 val currency = allAddedCurrency.first()
                 // find userWallet than have this single added token
                 portfolio.portfolios
-                    .find { it.accountsWithAdded.find { account -> account.addedCurrency.isNotEmpty() } != null }
+                    .find { it.accountsWithAdded.any { account -> account.addedCurrency.isNotEmpty() } }
                     ?.userWallet
                     ?.let { setOf(it.walletId to currency.currency.id) }
-                    ?: setOf()
+                    .orEmpty()
             }
-            else -> setOf()
+            else -> emptySet()
         }
         return MutableStateFlow(initValue)
             .also { this.expandedHolder = it }
@@ -166,10 +167,10 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
 
     private fun portfolioWithThisCurrencyFLow(): Flow<PortfoliosWithThisCurrency> =
         allAccountSupplier().map { list -> list.map { it.addedAccountsFlow() } }.flatMapLatest { flows ->
-            combine(flows) {
+            combine(flows) { portfolios ->
                 PortfoliosWithThisCurrency(
                     currencyRawId = currencyRawId,
-                    portfolios = it.toList(),
+                    portfolios = portfolios.toList(),
                 )
             }
         }.distinctUntilChanged()
@@ -186,7 +187,10 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     private fun AccountStatusList.filterByRawID(): List<AccountWithAdded> {
         fun AccountStatus.filterByRawID(): List<CryptoCurrencyStatus> = when (this) {
             is AccountStatus.CryptoPortfolio -> this.tokenList.flattenCurrencies()
-                .filter { status -> status.currency.id.rawCurrencyId == currencyRawId }
+                .filter { status ->
+                    val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
+                    getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
+                }
         }
         return accountStatuses.map { accountStatus ->
             AccountWithAdded(
@@ -237,8 +241,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
                 }
 
                 accountWithAdded.addedCurrency.forEach { currencyStatus ->
-                    val actions = allActions[currencyStatus.currency]?.states
-                        ?: emptyList()
+                    val actions = allActions[currencyStatus.currency]?.states.orEmpty()
                     val value = PortfolioData.CryptoCurrencyData(
                         userWallet = userWallet,
                         status = currencyStatus,
@@ -273,6 +276,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             name = this.accountName.toUM().value,
             icon = when (this) {
                 is Account.CryptoPortfolio -> this.icon.toUM()
+                is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),
     )

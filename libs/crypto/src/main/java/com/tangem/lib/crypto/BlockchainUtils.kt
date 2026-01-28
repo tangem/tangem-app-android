@@ -21,6 +21,8 @@ import java.math.BigDecimal
 object BlockchainUtils {
 
     private const val XRP_X_ADDRESS = 'X'
+    private const val TERRA_CLASSIC_USD_COIN_ID = "terrausd"
+    private const val TERRA_LUNA_CLASSIC_COIN_ID = "terra-luna"
     const val SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES = 930
 
     /** Decodes XRP Blockchain address */
@@ -115,6 +117,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
+    fun isEthereum(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet
+    }
+
     fun isClore(blockchainId: String): Boolean {
         return Blockchain.fromId(blockchainId) == Blockchain.Clore
     }
@@ -159,8 +166,10 @@ object BlockchainUtils {
         return blockchain != Blockchain.Cardano
     }
 
-    fun isStakingRewardUnavailable(blockchainId: String): Boolean {
-        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId)
+    fun isStakingRewardUnavailable(blockchainId: String, isCoin: Boolean): Boolean {
+        val isP2PEthPool = isEthereum(blockchainId) && isCoin
+
+        return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId) || isP2PEthPool
     }
 
     /** Checks if the blockchain uses case-insensitive contract addresses */
@@ -183,5 +192,20 @@ object BlockchainUtils {
 
     private fun getNetworkNameWithoutTestnet(blockchain: Blockchain): String {
         return blockchain.fullName.replace(oldValue = " Testnet", newValue = "")
+    }
+
+    /**
+     * Checks if token is not blocked by TerraV1 (Terra Classic) filter.
+     * For non-TerraV1 networks, tokens are never blocked.
+     * For TerraV1 network, all tokens are blocked except native coin (LUNC) and TerraClassicUSD (USTC).
+     *
+     * @param networkId network ID (e.g. "terra")
+     * @param coinId token/coin ID (e.g. "terrausd")
+     * @return true if token is not blocked, false otherwise
+     */
+    fun isNotBlockedByTerraV1Filter(networkId: String, coinId: String): Boolean {
+        return Blockchain.fromNetworkId(networkId) != Blockchain.TerraV1 ||
+            coinId == TERRA_CLASSIC_USD_COIN_ID ||
+            coinId == TERRA_LUNA_CLASSIC_COIN_ID
     }
 }
