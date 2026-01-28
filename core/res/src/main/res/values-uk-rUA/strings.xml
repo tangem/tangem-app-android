@@ -122,10 +122,10 @@
   <string name="auth_info_subtitle">Виберіть гаманець для входу</string>
   <string name="auth_info_title">З поверненням!</string>
   <plurals name="auth_wallet_hardware_description">
-    <item quantity="one">%s картка</item>
-    <item quantity="few">%s картки</item>
-    <item quantity="many">%s карток</item>
-    <item quantity="other">%s картки</item>
+    <item quantity="one">%d картка</item>
+    <item quantity="few">%d картки</item>
+    <item quantity="many">%d карток</item>
+    <item quantity="other">%d картки</item>
   </plurals>
   <string name="auth_wallet_mobile_description">Мобільний гаманець</string>
   <string name="backup_complete_description">Ви успішно створили резервну копію свого гаманця.</string>
@@ -177,10 +177,10 @@
     <item quantity="other">%d пристроїв</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">%1$d токен</item>
-    <item quantity="few">%1$d токени</item>
-    <item quantity="many">%1$d токенів</item>
-    <item quantity="other">%1$d токени</item>
+    <item quantity="one">%d токен</item>
+    <item quantity="few">%d токени</item>
+    <item quantity="many">%d токенів</item>
+    <item quantity="other">%d токени</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Будь ласка, скиньте налаштування наступного пристрою, щоб продовжити.</string>
   <string name="card_reset_alert_continue_title">Скидання гаманця</string>
@@ -322,10 +322,10 @@
   <string name="common_network_fee_title">Комісія мережі</string>
   <string name="common_network_fee_warning_content">Сума відправлення буде зменшена на %1$s (%2$s) для покриття обраного рівня комісії</string>
   <plurals name="common_networks_count">
-    <item quantity="one">%1$s мережа</item>
-    <item quantity="few">%1$s мережі</item>
-    <item quantity="many">%1$s мереж</item>
-    <item quantity="other">%1$s мережі</item>
+    <item quantity="one">%d мережа</item>
+    <item quantity="few">%d мережі</item>
+    <item quantity="many">%d мереж</item>
+    <item quantity="other">%d мережі</item>
   </plurals>
   <string name="common_new_address">Нова адреса</string>
   <string name="common_news">Новини</string>
@@ -824,16 +824,16 @@
   <string name="mobile_wallet_requires_min_os_warning_title">Мобільний гаманець потребує %1$s або новіше.</string>
   <string name="news_all_news">Всі новини</string>
   <plurals name="news_published_hours_ago">
-    <item quantity="one">%1$s годину тому</item>
-    <item quantity="few">%1$s години тому</item>
-    <item quantity="many">%1$s годин тому</item>
-    <item quantity="other">%1$s годин тому</item>
+    <item quantity="one">%d годину тому</item>
+    <item quantity="few">%d години тому</item>
+    <item quantity="many">%d годин тому</item>
+    <item quantity="other">%d годин тому</item>
   </plurals>
   <plurals name="news_published_minutes_ago">
-    <item quantity="one">%1$s хвилину тому</item>
-    <item quantity="few">%1$s хвилини тому</item>
-    <item quantity="many">%1$s хвилин тому</item>
-    <item quantity="other">%1$s хвилин тому</item>
+    <item quantity="one">%d хвилину тому</item>
+    <item quantity="few">%d хвилини тому</item>
+    <item quantity="many">%d хвилин тому</item>
+    <item quantity="other">%d хвилин тому</item>
   </plurals>
   <string name="news_related_tokens">Пов\'язані токени</string>
   <string name="news_stay_in_the_loop">Залишайтеся в курсі подій</string>
@@ -1033,10 +1033,10 @@
   <string name="onramp_provider_max_amount">Доступно до %s</string>
   <string name="onramp_provider_min_amount">Доступно від %s</string>
   <plurals name="onramp_providers_count">
-    <item quantity="one">%s провайдер</item>
-    <item quantity="few">%s провайдери</item>
-    <item quantity="many">%s провайдерів</item>
-    <item quantity="other">%s провайдерів</item>
+    <item quantity="one">%d провайдер</item>
+    <item quantity="few">%d провайдери</item>
+    <item quantity="many">%d провайдерів</item>
+    <item quantity="other">%d провайдерів</item>
   </plurals>
   <string name="onramp_providers_subtitle">Провайдери</string>
   <string name="onramp_recently_used_title">Нещодавно використано</string>
@@ -1050,10 +1050,10 @@
   <string name="onramp_settings_title">Параметри</string>
   <string name="onramp_statuses_view_footer">Ви можете закрити цей екран і перевірити статус транзакції на екрані деталей токена.</string>
   <plurals name="onramp_timing_days">
-    <item quantity="one">до %s дня</item>
-    <item quantity="few">до %s днів</item>
-    <item quantity="many">до %s днів</item>
-    <item quantity="other">до %s днів</item>
+    <item quantity="one">до %d дня</item>
+    <item quantity="few">до %d днів</item>
+    <item quantity="many">до %d днів</item>
+    <item quantity="other">до %d днів</item>
   </plurals>
   <string name="onramp_timing_minutes">%s хв</string>
   <string name="onramp_title_available_from">Доступно з</string>
@@ -1063,6 +1063,7 @@
   <string name="onramp_transaction_status_footer_text">Ви можете перевірити статус транзакції на сторінці токена</string>
   <string name="onramp_up_to_rate">До</string>
   <string name="onramp_via">Через</string>
+  <string name="onramp_via_provider">через %s</string>
   <string name="onramp_you_will_pay_title">Ви заплатите</string>
   <string name="organize_tokens_group">Групами</string>
   <string name="organize_tokens_sort_by_balance">За балансом</string>
@@ -1664,10 +1665,10 @@
   <string name="user_wallet_list_unlock_all">Розблокувати все</string>
   <string name="user_wallet_list_unlock_all_with">Розблокувати все з %s</string>
   <plurals name="visa_limits_available_for_days_title">
-    <item quantity="one">доступно протягом %1$s дня</item>
-    <item quantity="few">доступно протягом %1$s днів</item>
-    <item quantity="many">доступно протягом %1$s днів</item>
-    <item quantity="other">доступно протягом %1$s днів</item>
+    <item quantity="one">доступно протягом %d дня</item>
+    <item quantity="few">доступно протягом %d днів</item>
+    <item quantity="many">доступно протягом %d днів</item>
+    <item quantity="other">доступно протягом %d днів</item>
   </plurals>
   <string name="visa_main_balances_and_limits">Баланси та ліміти</string>
   <string name="visa_onboarding_access_code_navigation_title">Код доступу</string>
