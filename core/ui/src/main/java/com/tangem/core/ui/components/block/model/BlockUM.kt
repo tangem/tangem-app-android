@@ -7,7 +7,7 @@ import javax.annotation.concurrent.Immutable
 
 data class BlockUM(
     val text: TextReference,
-    @DrawableRes val iconRes: Int,
+    @DrawableRes val iconRes: Int?,
     val onClick: () -> Unit,
     val accentType: AccentType = AccentType.NONE,
     val endContent: EndContent = EndContent.None,
