@@ -1,9 +1,11 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.raise.catch
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
+import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -22,6 +24,7 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -49,7 +52,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return requestHelper.performWithStaticToken {
             tangemPayApi.validateDeeplink(body = DeeplinkValidityRequest(link = link))
         }.map { response ->
-            response.result?.status == VALID_STATUS
+            response.result?.status.equals(VALID_STATUS, ignoreCase = true)
         }
     }
 
@@ -65,15 +68,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun produceInitialData(userWalletId: UserWalletId) {
         withContext(dispatcherProvider.io) {
-            val initialCredentials = authDataSource.produceInitialCredentials(cardId = getCardId(userWalletId))
+            val userWallet = getUserWallet(userWalletId)
+            val initialCredentials = authDataSource.produceInitialCredentials(userWallet)
                 .fold(
                     ifLeft = { error -> error("Can not produce initial data: ${error.message}") },
                     ifRight = { it },
                 )
             // should storeCheckCustomerWalletResult because we already know this
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId, true)
+            tangemPayStorage.storeCheckCustomerWalletResult(userWallet.walletId, true)
             tangemPayStorage.storeCustomerWalletAddress(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 customerWalletAddress = initialCredentials.customerWalletAddress,
             )
             tangemPayStorage.storeAuthTokens(
@@ -84,7 +88,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
-        // TODO implement selector
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
             .map { response -> getCustomerInfo(userWalletId = userWalletId, response = response.result) }
     }
@@ -109,29 +112,31 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun createOrder(userWalletId: UserWalletId) = withContext(dispatcherProvider.io) {
         launch {
-            requestHelper.runWithErrorLogs(TAG) {
-                val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-                val result = requestHelper.request(userWalletId) { authHeader ->
-                    tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
-                }.result ?: error("Create order result is null")
+            catch(
+                block = {
+                    val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+                    val response = requestHelper.performRequest(userWalletId) { authHeader ->
+                        tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
+                    }.getOrNull()
 
-                val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
-                tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
-            }
+                    val result = requireNotNull(response?.result)
+                    val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
+                    tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
+                },
+                catch = {
+                    Timber.tag(TAG).e("createOrder: $it")
+                },
+            )
         }
     }
 
-    private fun getCardId(userWalletId: UserWalletId): String {
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         val userWallet = if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
         } else {
             userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == userWalletId }
         } ?: error("no userWallet found")
-        return if (userWallet is UserWallet.Cold) {
-            userWallet.cardId
-        } else {
-            TODO("[REDACTED_JIRA]")
-        }
+        return userWallet
     }
 
     private suspend fun getCustomerInfo(
@@ -148,6 +153,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 currencyCode = fiatBalance.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
                 depositAddress = response.depositAddress,
+                isPinSet = response.card?.isPinSet == true,
             )
         } else {
             null
@@ -182,15 +188,52 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 customerWalletId = userWalletId.stringValue,
             )
         }.map { response ->
-            val id = response.id
-            val isPaeraCustomer = !id.isNullOrEmpty()
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer)
-            isPaeraCustomer
+            val id = response.result?.id
+            val isTangemPayEnabled = response.result?.isTangemPayEnabled == true
+            val shouldShowTangemPayBlock = !id.isNullOrEmpty() && isTangemPayEnabled
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, shouldShowTangemPayBlock)
+            shouldShowTangemPayBlock
         }.mapLeft { error ->
             if (error is VisaApiError.NotPaeraCustomer) {
                 tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
             }
             error
+        }
+    }
+
+    override suspend fun checkCustomerEligibility(): Boolean {
+        val response = requestHelper.performWithoutToken {
+            tangemPayApi.checkCustomerEligibility()
+        }.getOrNull()
+
+        val isAvailable = response?.result?.isTangemPayAvailable == true
+        tangemPayStorage.storeTangemPayEligibility(eligibility = isAvailable)
+
+        return isAvailable
+    }
+
+    override suspend fun getCustomerEligibility(): Boolean {
+        return tangemPayStorage.getTangemPayEligibility()
+    }
+
+    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
+        return tangemPayStorage.getHideMainOnboardingBanner(userWalletId)
+    }
+
+    override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
+        tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
+    }
+
+    override suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit> {
+        return requestHelper.performRequest(userWalletId) { authHeader ->
+            tangemPayApi.setTangemPayEnabledStatus(
+                authHeader = authHeader,
+                body = SetTangemPayEnabledRequest(isTangemPayEnabled = false),
+            )
+        }.map {
+            val address = requestHelper.getCustomerWalletAddress(userWalletId)
+            tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
+            setHideMainOnboardingBanner(userWalletId)
         }
     }
 }

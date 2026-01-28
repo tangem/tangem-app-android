@@ -50,6 +50,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
             ),
             addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
             isWalletSavingInProgress = true,
+            addNewWalletIconRes = R.drawable.ic_plus_24,
             onAddNewWalletClick = {},
         ),
     )
