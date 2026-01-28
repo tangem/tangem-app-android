@@ -18,8 +18,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -486,6 +489,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }.onEach { (state, _) ->
             val confirmUM = state.confirmUM
             val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isTransactionInProcess
+            val isHoldToConfirm = params.userWallet.isHotWallet && confirmUM is ConfirmUM.Content
             params.callback.onResult(
                 route = SendWithSwapRoute.Confirm,
                 sendWithSwapUM = state.copy(
@@ -496,18 +500,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_back_24,
                         backIconClick = router::pop,
                         primaryButton = NavigationButton(
-                            textReference = when (confirmUM) {
-                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
-                                is ConfirmUM.Content -> if (confirmUM.isTransactionInProcess) {
-                                    resourceReference(R.string.send_sending)
-                                } else {
-                                    resourceReference(R.string.common_send)
-                                }
-                                else -> resourceReference(R.string.common_send)
-                            },
+                            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
                             iconRes = walletInterationIcon(params.userWallet),
-                            isIconVisible = isReadyToSend,
+                            isIconVisible = isReadyToSend && !isHoldToConfirm,
                             isHapticClick = isReadyToSend,
+                            isHoldToConfirm = isHoldToConfirm,
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
                             onClick = {
                                 when (confirmUM) {
@@ -524,5 +521,18 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
+    }
+
+    private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
+        return when {
+            isHoldToConfirm -> resourceReference(
+                id = com.tangem.core.ui.R.string.common_hold_to,
+                formatArgs = wrappedList(resourceReference(R.string.common_send)),
+            )
+            confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
+            confirmUM is ConfirmUM.Content && confirmUM.isTransactionInProcess ->
+                resourceReference(R.string.send_sending)
+            else -> resourceReference(R.string.common_send)
+        }
     }
 }
