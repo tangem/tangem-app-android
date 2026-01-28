@@ -85,9 +85,10 @@ internal class DefaultNewsRepository(
                 articlesToUpdate.map { article ->
                     val isViewed = viewedFlags[article.id] == true
                     article.copy(viewed = isViewed)
-                }.sortedBy { it.viewed }.right()
+                }.sortedBy { it.viewed }
             }
-            .catch { it.left() }
+            .map<List<ShortArticle>, Either<Throwable, List<ShortArticle>>> { it.right() }
+            .catch { emit(it.left()) }
     }
 
     override fun observeDetailedArticles(): Flow<Map<Int, DetailedArticle>> {
