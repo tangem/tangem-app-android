@@ -16,7 +16,7 @@ import timber.log.Timber
  */
 @Suppress("NullableToStringCall")
 internal class DisclaimerWebViewClient(
-    private val onLoadingFinished: () -> Unit,
+    private val onLoadingFinished: (isWithError: Boolean) -> Unit,
 ) : AccompanistWebViewClient() {
 
     private val loadedUrls: MutableMap<String, Boolean> = mutableMapOf()
@@ -25,7 +25,6 @@ internal class DisclaimerWebViewClient(
         super.onPageStarted(view, url, favicon)
 
         Timber.d("onPageStarted: $url")
-
         if (url != null) {
             loadedUrls[url] = false
         }
@@ -35,10 +34,9 @@ internal class DisclaimerWebViewClient(
         super.onPageFinished(view, url)
 
         Timber.d("onPageFinished: $url")
-
         if (url != null && loadedUrls.containsKey(url)) {
             loadedUrls[url] = true
-            onLoadingFinished()
+            onLoadingFinished(false)
         }
     }
 
@@ -51,7 +49,7 @@ internal class DisclaimerWebViewClient(
 
         if (url != null && loadedUrls.containsKey(url)) {
             loadedUrls[url] = true
-            onLoadingFinished()
+            onLoadingFinished(true)
         }
     }
 }
