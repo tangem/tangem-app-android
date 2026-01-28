@@ -10,7 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -18,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.BuildConfig
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.account.AccountCharIcon
@@ -33,6 +33,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.internal.GroupTitleItem
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 
@@ -68,102 +69,101 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
 @Suppress("MagicNumber", "ReusedModifierInstance", "LongMethod")
 @Composable
 fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    // Box is not needed here, but due to a bug in compose
-    // we use it like a wrapper to properly handle lookahead scope inside this composable
-    Box(modifier) {
-        SharedTransitionLayout {
-            AnimatedContent(
-                state.isExpanded,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(350, delayMillis = 90))
-                        .togetherWith(fadeOut(animationSpec = tween(350)))
+    SharedTransitionLayout(modifier) {
+        val iconSharedContentState = rememberSharedContentState(key = "icon_${state.id}")
+        val titleSharedContentState = rememberSharedContentState(key = "title_${state.id}")
+        val boundsTransform = BoundsTransform { _, _ -> tween(350) }
+
+        AnimatedContent(
+            targetState = state.isExpanded,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(350, delayMillis = 90))
+                    .togetherWith(fadeOut(animationSpec = tween(350)))
+            },
+        ) { isExpanded ->
+            val animatedContentScope = this
+
+            val composables = TokenItemComposables(
+                icon = { modifier: Modifier ->
+                    val iconState = when (val icon = state.tokenItemUM.iconState) {
+                        is CurrencyIconState.CryptoPortfolio.Icon ->
+                            icon.copy(
+                                size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
+                            )
+                        is CurrencyIconState.CryptoPortfolio.Letter ->
+                            icon.copy(
+                                size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
+                            )
+                        else -> icon
+                    }
+
+                    CurrencyIcon(
+                        state = iconState,
+                        withFixedSize = false,
+                        modifier = modifier
+                            .conditional(BuildConfig.DEBUG.not()) {
+                                sharedBounds(
+                                    sharedContentState = iconSharedContentState,
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = boundsTransform,
+                                )
+                            },
+                    )
                 },
-            ) { isExpanded ->
-                val animatedContentScope = this
-                val iconSharedContentState = rememberSharedContentState(key = "icon")
-                val titleSharedContentState = rememberSharedContentState(key = "title")
-                val boundsTransform = BoundsTransform { _, _ -> tween(350) }
+                title = { modifier: Modifier ->
+                    val textStyle = if (isExpanded) {
+                        TangemTheme.typography.caption1
+                    } else {
+                        TangemTheme.typography.subtitle2
+                    }
 
-                val composables = remember {
-                    TokenItemComposables(
-                        icon = { modifier: Modifier ->
-                            val iconState = when (val icon = state.tokenItemUM.iconState) {
-                                is CurrencyIconState.CryptoPortfolio.Icon ->
-                                    icon.copy(
-                                        size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
-                                    )
-                                is CurrencyIconState.CryptoPortfolio.Letter ->
-                                    icon.copy(
-                                        size = if (isExpanded) AccountIconSize.ExtraSmall else AccountIconSize.Default,
-                                    )
-                                else -> icon
-                            }
-
-                            CurrencyIcon(
-                                state = iconState,
-                                withFixedSize = false,
-                                modifier = modifier
-                                    .sharedBounds(
-                                        sharedContentState = iconSharedContentState,
-                                        animatedVisibilityScope = animatedContentScope,
-                                        boundsTransform = boundsTransform,
-                                    ),
-                            )
-                        },
-                        title = { modifier: Modifier ->
-                            val textStyle = if (isExpanded) {
-                                TangemTheme.typography.caption1
-                            } else {
-                                TangemTheme.typography.subtitle2
-                            }
-
-                            val textSize by animateFloatAsState(
-                                targetValue = textStyle.fontSize.value,
-                                animationSpec = tween(350),
-                            )
-
-                            TokenTitle(
-                                state = state.tokenItemUM.titleState,
-                                textStyle = textStyle.copy(fontSize = textSize.sp),
-                                modifier = modifier
-                                    .sharedBounds(
-                                        sharedContentState = titleSharedContentState,
-                                        animatedVisibilityScope = animatedContentScope,
-                                        boundsTransform = boundsTransform,
-                                        resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
-                                    ),
-                            )
-                        },
+                    val textSize by animateFloatAsState(
+                        targetValue = textStyle.fontSize.value,
+                        animationSpec = tween(350),
                     )
-                }
 
-                if (isExpanded) {
-                    ExpandedPortfolioHeader(
-                        state = state.tokenItemUM,
-                        isCollapsable = state.isCollapsable,
-                        composables = composables,
-                        balanceTextModifier = Modifier
-                            .animateEnterExit(
-                                enter = fadeIn(tween(350)) +
-                                    slideInHorizontally(
-                                        tween(350),
-                                        initialOffsetX = { fullWidth -> fullWidth * 2 },
-                                    ),
-                                exit = fadeOut(
+                    TokenTitle(
+                        state = state.tokenItemUM.titleState,
+                        textStyle = textStyle.copy(fontSize = textSize.sp),
+                        modifier = modifier
+                            .conditional(BuildConfig.DEBUG.not()) {
+                                sharedBounds(
+                                    sharedContentState = titleSharedContentState,
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = boundsTransform,
+                                    resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
+                                )
+                            },
+                    )
+                },
+            )
+
+            if (isExpanded) {
+                ExpandedPortfolioHeader(
+                    state = state.tokenItemUM,
+                    isCollapsable = state.isCollapsable,
+                    composables = composables,
+                    balanceTextModifier = Modifier
+                        .animateEnterExit(
+                            enter = fadeIn(tween(350)) +
+                                slideInHorizontally(
                                     tween(350),
-                                ) + slideOutHorizontally(
-                                    tween(350),
-                                    targetOffsetX = { fullWidth -> fullWidth * 2 },
+                                    initialOffsetX = { fullWidth -> fullWidth * 2 },
                                 ),
+                            exit = fadeOut(
+                                tween(350),
+                            ) + slideOutHorizontally(
+                                tween(350),
+                                targetOffsetX = { fullWidth -> fullWidth * 2 },
                             ),
-                    )
-                } else {
-                    TokenItem(
-                        state = state.tokenItemUM,
-                        isBalanceHidden = isBalanceHidden,
-                        composables = composables,
-                    )
-                }
+                        ),
+                )
+            } else {
+                TokenItem(
+                    state = state.tokenItemUM,
+                    isBalanceHidden = isBalanceHidden,
+                    composables = composables,
+                )
             }
         }
     }
