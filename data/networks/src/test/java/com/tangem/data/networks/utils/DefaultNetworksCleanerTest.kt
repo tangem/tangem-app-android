@@ -7,6 +7,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -45,7 +46,7 @@ class DefaultNetworksCleanerTest {
 
         // Assert
         coVerifyOrder {
-            networksStatusesStore.clear(userWalletId, setOf(network))
+            networksStatusesStore.clear(userWalletId = userWalletId, networks = setOf(network))
             walletManagersFacade.remove(userWalletId = userWalletId, networks = setOf(network))
             walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = setOf(token))
         }
@@ -66,12 +67,15 @@ class DefaultNetworksCleanerTest {
 
     @Test
     fun `should clear only networks when there are no tokens`() = runTest {
+        // Arrange
         val currencies = listOf(coin)
 
+        // Act
         cleaner(userWalletId = userWalletId, currencies = currencies)
 
+        // Assert
         coVerifyOrder {
-            networksStatusesStore.clear(userWalletId, setOf(network))
+            networksStatusesStore.clear(userWalletId = userWalletId, networks = setOf(network))
             walletManagersFacade.remove(userWalletId = userWalletId, networks = setOf(network))
         }
 
@@ -96,6 +100,29 @@ class DefaultNetworksCleanerTest {
         coVerifyOrder(inverse = true) {
             networksStatusesStore.clear(userWalletId = any(), networks = any())
             walletManagersFacade.remove(userWalletId = any(), networks = any())
+        }
+    }
+
+    @Test
+    fun `should handle exception during cleaning`() = runTest {
+        // Arrange
+        val currencies = listOf(coin, token)
+
+        val exception = Exception("Test exception")
+        coEvery { networksStatusesStore.clear(userWalletId, setOf(network)) } throws exception
+        coEvery { walletManagersFacade.remove(userWalletId = userWalletId, networks = setOf(network)) } throws exception
+        coEvery {
+            walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = setOf(token))
+        } throws exception
+
+        // Act
+        cleaner(userWalletId = userWalletId, currencies = currencies)
+
+        // Assert
+        coVerifyOrder {
+            networksStatusesStore.clear(userWalletId = userWalletId, networks = setOf(network))
+            walletManagersFacade.remove(userWalletId = userWalletId, networks = setOf(network))
+            walletManagersFacade.removeTokens(userWalletId = userWalletId, tokens = setOf(token))
         }
     }
 }
