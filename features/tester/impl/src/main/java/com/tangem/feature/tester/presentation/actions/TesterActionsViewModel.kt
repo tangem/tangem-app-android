@@ -6,14 +6,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
+import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.domain.apptheme.ChangeAppThemeModeUseCase
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleAppThemeUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
-import com.tangem.lib.crypto.UserWalletManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -24,10 +25,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class TesterActionsViewModel @Inject constructor(
-    private val userWalletManager: UserWalletManager,
     private val changeAppThemeModeUseCase: ChangeAppThemeModeUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val feedbackRepository: FeedbackRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val walletAccountsSaver: WalletAccountsSaver,
 ) : ViewModel() {
 
     var uiState: TesterActionsContentState by mutableStateOf(initialState)
@@ -56,7 +58,20 @@ internal class TesterActionsViewModel @Inject constructor(
         uiState = uiState.copy(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Progress,
         )
-        userWalletManager.hideAllTokens()
+
+        val userWalletId = userWalletsListRepository.selectedUserWalletSync()?.walletId
+
+        if (userWalletId != null) {
+            walletAccountsSaver.update(userWalletId = userWalletId) { response ->
+                response ?: return@update response
+
+                response.copy(
+                    accounts = response.accounts.map { accountDTO ->
+                        accountDTO.copy(tokens = emptyList())
+                    },
+                )
+            }
+        }
 
         uiState = uiState.copy(
             hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this@TesterActionsViewModel::hideAllCurrencies),
