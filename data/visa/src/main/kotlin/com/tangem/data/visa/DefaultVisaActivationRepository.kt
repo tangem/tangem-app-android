@@ -10,15 +10,16 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.pay.TangemPayApi
-import com.tangem.datasource.api.pay.models.request.*
-import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
+import com.tangem.datasource.api.pay.models.request.SetPinCodeRequest
+import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
+import com.tangem.datasource.api.visa.VisaApi
+import com.tangem.datasource.api.visa.models.request.*
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -29,7 +30,7 @@ import kotlinx.coroutines.withContext
 internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val visaCardId: VisaCardId,
     @NetworkMoshi private val moshi: Moshi,
-    private val visaApi: TangemPayApi,
+    private val visaApi: VisaApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
@@ -37,7 +38,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val apiConfigsManager: ApiConfigsManager,
 ) : VisaActivationRepository {
 
-    private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
+    private val errorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
 
     override suspend fun getActivationRemoteState(): Either<VisaApiError, VisaActivationRemoteState> =
         withContext(dispatcherProvider.io) {
@@ -171,6 +172,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
             ApiEnvironment.MOCK,
             -> rsaPublicKey.dev
             ApiEnvironment.PROD -> rsaPublicKey.prod
@@ -186,7 +188,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 responseError.errorBody != null
             ) {
                 val errorCode =
-                    visaErrorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
+                    errorAdapter.fromJson(responseError.errorBody!!)?.error?.code ?: responseError.code.numericCode
                 return Either.Left(VisaApiError.fromBackendError(errorCode))
             }
 
@@ -206,7 +208,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             }.getOrElse { responseError ->
                 if (responseError is ApiResponseError.HttpException && responseError.errorBody != null) {
                     val errorCode =
-                        visaErrorAdapter.fromJson(responseError.errorBody!!)?.error?.code
+                        errorAdapter.fromJson(responseError.errorBody!!)?.error?.code
                             ?: responseError.code.numericCode
                     Either.Left(VisaApiError.fromBackendError(errorCode))
                 } else {

@@ -157,6 +157,7 @@ class ApplyAccountListSortingUseCaseTest {
             userWalletId = accountList.userWalletId,
             accounts = accountList.accounts.reversed(),
             totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
             sortType = accountList.sortType,
             groupType = accountList.groupType,
         ).getOrNull()!!

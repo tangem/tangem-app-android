@@ -1,26 +1,83 @@
 package com.tangem.tap.common.analytics.handlers.appsflyer
 
 import android.content.Context
+import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
+import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
+import com.tangem.core.analytics.api.UserIdHolder
+import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
+import timber.log.Timber
 
-interface AppsFlyerAnalyticsClient : EventLogger
+interface AppsFlyerAnalyticsClient : EventLogger, UserIdHolder
 
 internal class AppsFlyerClient(
     private val context: Context,
     key: String,
-    appId: String,
 ) : AppsFlyerAnalyticsClient {
 
     private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
+    private val eventConverter = UnderscoreAnalyticsEventConverter()
+    private val logEventListener = object : AppsFlyerRequestListener {
+        override fun onSuccess() {
+            Timber.tag("AppsFlyerClient").i("AppsFlyerRequestListener send")
+        }
+
+        override fun onError(p0: Int, p1: String) {
+            Timber.tag("AppsFlyerClient").e("AppsFlyerRequestListener onError: $p0, $p1")
+        }
+    }
 
     init {
-        appsFlyerLib.init(key, null, context)
-        appsFlyerLib.setAppId(appId)
-        appsFlyerLib.start(context)
+        val conversionListener = object : AppsFlyerConversionListener {
+            override fun onConversionDataSuccess(p0: Map<String?, Any?>?) {
+                Timber.i("AppsFlyer conversion data success: ${p0.orEmpty()}")
+            }
+            override fun onConversionDataFail(p0: String?) {
+                Timber.e("AppsFlyer conversion data failure: ${p0.orEmpty()}")
+            }
+            override fun onAppOpenAttribution(p0: Map<String?, String?>?) {
+                Timber.i("AppsFlyer app open attribution: ${p0.orEmpty()}")
+            }
+            override fun onAttributionFailure(p0: String?) {
+                Timber.e("AppsFlyer attribution failure: ${p0.orEmpty()}")
+            }
+        }
+
+        appsFlyerLib.run {
+            setAppId(context.packageName)
+            setDebugLog(true)
+
+            init(key, conversionListener, context)
+            Timber.i("Starting AppsFlyer SDK")
+            start(context, key, object : AppsFlyerRequestListener {
+                override fun onSuccess() {
+                    Timber.i("AppsFlyer initialized successfully")
+                }
+
+                override fun onError(p0: Int, p1: String) {
+                    Timber.e("AppsFlyer initialization error: $p0, $p1")
+                }
+            })
+            Timber.i("AppsFlyer SDK started")
+        }
+    }
+
+    override fun setUserId(userId: String) {
+        appsFlyerLib.setCustomerUserId(userId)
+    }
+
+    override fun clearUserId() {
+        appsFlyerLib.setCustomerUserId(null)
     }
 
     override fun logEvent(event: String, params: Map<String, String>) {
-        appsFlyerLib.logEvent(context, event, params)
+        Timber.tag("AppsFlyer").i("Logging event: $event with params: $params")
+        appsFlyerLib.logEvent(
+            context,
+            event,
+            eventConverter.convertEventParams(params),
+            logEventListener,
+        )
     }
 }
