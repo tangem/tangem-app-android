@@ -13,6 +13,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.CustomerInfo.KycStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -95,7 +96,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 .onRight { customerInfo ->
                     uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     when {
-                        !customerInfo.isKycApproved -> {
+                        customerInfo.kycStatus != KycStatus.APPROVED -> {
                             when (params) {
                                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> openKyc(userWalletId)
                                 else -> startOnboarding(userWalletId)
@@ -172,7 +173,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     },
                     ifRight = { customerInfo ->
-                        if (customerInfo.isKycApproved) {
+                        if (customerInfo.kycStatus == KycStatus.APPROVED) {
                             back()
                         } else {
                             openKyc(userWalletId)
