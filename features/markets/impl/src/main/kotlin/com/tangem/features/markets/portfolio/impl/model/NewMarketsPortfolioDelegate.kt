@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -186,7 +187,10 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     private fun AccountStatusList.filterByRawID(): List<AccountWithAdded> {
         fun AccountStatus.filterByRawID(): List<CryptoCurrencyStatus> = when (this) {
             is AccountStatus.CryptoPortfolio -> this.tokenList.flattenCurrencies()
-                .filter { status -> status.currency.id.rawCurrencyId == currencyRawId }
+                .filter { status ->
+                    val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
+                    getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
+                }
         }
         return accountStatuses.map { accountStatus ->
             AccountWithAdded(
