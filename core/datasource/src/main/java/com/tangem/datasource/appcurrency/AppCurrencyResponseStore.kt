@@ -15,4 +15,7 @@ interface AppCurrencyResponseStore {
 
     /** Get [CurrenciesResponse.Currency] synchronously or null */
     suspend fun getSyncOrNull(): CurrenciesResponse.Currency?
+
+    /** Store [CurrenciesResponse.Currency] */
+    suspend fun store(currency: CurrenciesResponse.Currency)
 }

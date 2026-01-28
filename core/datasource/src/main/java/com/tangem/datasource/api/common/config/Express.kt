@@ -30,6 +30,7 @@ internal class Express(
         createDev2Environment(),
         createDev3Environment(),
         createStageEnvironment(),
+        createStage2Environment(),
         createMockedEnvironment(),
         createProdEnvironment(),
     )
@@ -69,6 +70,12 @@ internal class Express(
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
+        baseUrl = "[REDACTED_ENV_URL]",
+        headers = createHeaders(isProd = false),
+    )
+
+    private fun createStage2Environment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
+        environment = ApiEnvironment.STAGE_2,
         baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(isProd = false),
     )
