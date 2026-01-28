@@ -9,11 +9,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
@@ -125,11 +123,8 @@ internal class ArchivedAccountListModel @Inject constructor(
 
             messageSender.send(
                 DialogMessage(
-                    title = resourceReference(R.string.common_something_went_wrong),
-                    message = resourceReference(
-                        id = R.string.account_recover_limit_dialog_description,
-                        formatArgs = wrappedList(AccountList.MAX_ACCOUNTS_COUNT.toString()),
-                    ),
+                    title = resourceReference(R.string.account_recover_limit_dialog_title),
+                    message = resourceReference(R.string.account_archived_recover_error_message),
                     firstActionBuilder = { firstAction },
                 ),
             )
@@ -139,7 +134,11 @@ internal class ArchivedAccountListModel @Inject constructor(
 
         val featureError = AccountFeatureError.ArchivedAccountList.FailedToRecoverAccount(cause = error)
         logError(error = featureError)
-        messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_generic_error_dialog_message),
+        )
+        messageSender.send(dialogMessage)
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
