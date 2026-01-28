@@ -7,6 +7,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
@@ -45,6 +46,10 @@ internal class FeedEntryChildFactory @Inject constructor(
         @Serializable
         @Immutable
         data class NewsDetails(val params: DefaultNewsDetailsComponent.Params) : Child
+
+        @Serializable
+        @Immutable
+        data class Earn(val params: DefaultEarnComponent.Params) : Child
     }
 
     fun createChild(
@@ -95,6 +100,12 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
                     params = DefaultFeedComponent.FeedParams(feedClickIntents = feedEntryClickIntents),
+                )
+            }
+            is Child.Earn -> {
+                DefaultEarnComponent(
+                    appComponentContext = appComponentContext,
+                    params = child.params,
                 )
             }
         }
