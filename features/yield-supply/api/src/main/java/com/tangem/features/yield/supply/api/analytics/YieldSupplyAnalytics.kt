@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class YieldSupplyAnalytics(
     event: String,
@@ -20,7 +21,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class StartEarningScreen(
         val token: String,
@@ -31,7 +32,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class StopEarningScreen(
         val token: String,
@@ -42,7 +43,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class ButtonStartEarning(
         val token: String,
@@ -97,7 +98,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class FundsEarned(
         val token: String,
@@ -108,7 +109,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class FundsWithdrawn(
         val token: String,
@@ -119,7 +120,7 @@ sealed class YieldSupplyAnalytics(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
         ),
-    )
+    ), AppsFlyerIncludedEvent
 
     data class EarnedFundsInfo(
         val token: String,
@@ -189,7 +190,7 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
-    data object ApyChartViewed : YieldSupplyAnalytics(
+    class ApyChartViewed : YieldSupplyAnalytics(
         event = "APY Chart",
     )
 

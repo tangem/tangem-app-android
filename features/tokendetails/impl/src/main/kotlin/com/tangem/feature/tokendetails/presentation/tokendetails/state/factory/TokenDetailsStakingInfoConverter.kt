@@ -10,7 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.RewardBlockType
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.utils.getRewardStakingBalance
@@ -54,18 +54,29 @@ internal class TokenDetailsStakingInfoConverter(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun getStakingInfoBlock(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
-        val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
+        val stakingBalance = status.value.stakingBalance as? StakingBalance.Data
 
-        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance(status.currency.network.rawId)
-        val pendingBalances = yieldBalance?.balance?.items ?: emptyList()
+        val stakingCryptoAmount = stakingBalance?.getTotalStakingBalance(status.currency.network.rawId)
+
+        val hasPendingBalances = when (stakingBalance) {
+            is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.isNotEmpty()
+            is StakingBalance.Data.P2P -> !stakingBalance.unstakingAmount.isNullOrZero()
+            null -> false
+        }
+        val pendingAmount = when (stakingBalance) {
+            is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.sumOf { it.amount }
+            is StakingBalance.Data.P2P -> stakingBalance.unstakingAmount
+            null -> BigDecimal.ZERO
+        }
 
         val iconState = state.tokenInfoBlockState.iconState
 
         Timber.i(
             """
             getStakingInfoBlock:
-            – yieldBalance: $yieldBalance
+            – stakingBalance: ${stakingBalance ?: "null"}
             – stakingCryptoAmount: $stakingCryptoAmount
             – stakingEntryInfo: $stakingEntryInfo
             """.trimIndent(),
@@ -73,16 +84,24 @@ internal class TokenDetailsStakingInfoConverter(
 
         return when {
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
-                if (pendingBalances.isEmpty()) {
+                if (!hasPendingBalances) {
                     getStakeAvailableState(stakingEntryInfo, iconState, isStakingButtonEnabled(status))
                 } else {
-                    getStakedBlockWithFiatAmount(status, pendingBalances.sumOf { it.amount }, null)
+                    getStakedBlockWithFiatAmount(status, pendingAmount, null)
                 }
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
                 null
             }
-            else -> getStakedBlockWithFiatAmount(status, stakingCryptoAmount, yieldBalance?.getRewardStakingBalance())
+            else -> getStakedBlockWithFiatAmount(
+                status = status,
+                stakingAmount = stakingCryptoAmount,
+                rewardAmount = when (stakingBalance) {
+                    is StakingBalance.Data.StakeKit -> stakingBalance.getRewardStakingBalance()
+                    is StakingBalance.Data.P2P -> stakingBalance.totalRewards
+                    else -> BigDecimal.ZERO
+                },
+            )
         }
     }
 

@@ -6,7 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 internal sealed class SwapAmountAnalyticEvents(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
     data class ProviderSelectorClicked(

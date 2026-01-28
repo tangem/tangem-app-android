@@ -50,6 +50,7 @@ internal object WalletAdditionalInfoFactory {
                     backedUp.not() -> DIVIDER + TextReference.Res(R.string.hw_backup_no_backup)
                     else -> TextReference.Str("")
                 },
+            isHotBackedUp = backedUp,
         )
     }
 

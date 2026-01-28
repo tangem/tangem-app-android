@@ -271,6 +271,7 @@ private fun AmountFieldError(
             style = TangemTheme.typography.caption2,
             color = color,
             textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_ERROR_TEXT),
         )
     }
 }

@@ -6,5 +6,5 @@ import com.tangem.pagination.PaginationStatus
 
 data class TxHistoryListState(
     val status: PaginationStatus<*> = PaginationStatus.None,
-    val uiBatches: List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> = listOf(),
+    val uiBatches: List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> = emptyList(),
 )

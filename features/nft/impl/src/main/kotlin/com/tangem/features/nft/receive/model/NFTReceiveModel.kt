@@ -89,7 +89,7 @@ internal class NFTReceiveModel @Inject constructor(
     val state: StateFlow<NFTReceiveUM> get() = _state
 
     init {
-        analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ScreenOpened)
+        analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ScreenOpened())
         subscribeToNFTAvailableNetworks()
         loadPortfolioName()
     }
