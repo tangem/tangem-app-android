@@ -2,6 +2,9 @@ package com.tangem.features.feed.model.news.details.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
 import com.tangem.core.analytics.models.OneTimePerSessionEvent
 
 internal sealed class NewsDetailsAnalyticsEvent(
@@ -44,19 +47,27 @@ internal sealed class NewsDetailsAnalyticsEvent(
 
     data class NewsArticleLoadError(
         private val newsId: Int,
+        private val code: Int?,
+        private val message: String,
     ) : NewsDetailsAnalyticsEvent(
         event = "News Article Load Error",
         params = mapOf(
             "News Id" to newsId.toString(),
+            ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
+            ERROR_MESSAGE to message,
         ),
     )
 
     data class NewsLinkMismatch(
         private val newsId: Int,
+        private val code: Int?,
+        private val message: String,
     ) : NewsDetailsAnalyticsEvent(
         event = "News Link Mismatch",
         params = mapOf(
             "News Id" to newsId.toString(),
+            ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
+            ERROR_MESSAGE to message,
         ),
     )
 }
