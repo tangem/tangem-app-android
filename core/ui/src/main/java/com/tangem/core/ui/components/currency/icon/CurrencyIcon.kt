@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,8 @@ fun CurrencyIcon(
     state: CurrencyIconState,
     modifier: Modifier = Modifier,
     shouldDisplayNetwork: Boolean = true,
+    networkBadgeSize: Dp = 14.dp,
+    networkBadgeBackground: Color = TangemTheme.colors.background.primary,
     withFixedSize: Boolean = true,
     iconSize: Dp = 36.dp,
 ) {
@@ -64,6 +67,8 @@ fun CurrencyIcon(
                     icon = state,
                     modifier = iconModifier,
                     shouldShowTopBadge = shouldDisplayNetwork,
+                    networkBadgeSize = networkBadgeSize,
+                    networkBadgeBackground = networkBadgeBackground,
                 )
             }
         }
@@ -111,6 +116,8 @@ private fun EmptyIcon(@DrawableRes resId: Int, modifier: Modifier = Modifier) {
 private fun BoxScope.ContentIconContainer(
     icon: CurrencyIconState,
     shouldShowTopBadge: Boolean,
+    networkBadgeSize: Dp,
+    networkBadgeBackground: Color,
     modifier: Modifier = Modifier,
 ) {
     val networkBadgeOffset = TangemTheme.dimens.spacing4
@@ -131,8 +138,10 @@ private fun BoxScope.ContentIconContainer(
                 .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
                 .align(Alignment.TopEnd),
             iconResId = requireNotNull(icon.topBadgeIconResId),
+            size = networkBadgeSize,
             alpha = alpha,
             colorFilter = colorFilter,
+            background = networkBadgeBackground,
         )
     }
 
