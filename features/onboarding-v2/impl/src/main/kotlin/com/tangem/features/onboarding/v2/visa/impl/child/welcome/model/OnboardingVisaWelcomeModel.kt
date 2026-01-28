@@ -50,7 +50,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     val onDone = MutableSharedFlow<DoneEvent>()
 
     init {
-        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ActivationScreenOpened)
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ActivationScreenOpened())
     }
 
     private fun getInitialState(): OnboardingVisaWelcomeUM {
@@ -65,7 +65,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     }
 
     private fun onContinueClick() {
-        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ButtonActivate)
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ButtonActivate())
         if (params !is Config.WelcomeBack) {
             modelScope.launch { onDone.emit(DoneEvent.WelcomeDone) }
             return

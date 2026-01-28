@@ -2,10 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>MultilineLambdaItParameter:DefaultWalletManagersFacade.kt$DefaultWalletManagersFacade${ Token( name = it.name, symbol = it.symbol, contractAddress = it.contractAddress, decimals = it.decimals, id = it.id, ) }</ID>
     <ID>MultilineLambdaItParameter:UpdateWalletManagerResultFactory.kt$UpdateWalletManagerResultFactory${ createCurrencyTransaction( txHistoryItemConverter = txHistoryItemConverter, data = it, ) }</ID>
-    <ID>NamedArguments:DefaultWalletManagersFacade.kt$DefaultWalletManagersFacade$getAndUpdateWalletManager(userWallet, blockchain, derivationPath, extraTokens)</ID>
-    <ID>UnnecessaryLet:DefaultWalletManagersFacade.kt$DefaultWalletManagersFacade$let(txHistoryStateConverter::convert)</ID>
     <ID>UnsafeCallOnNullableType:WalletManagerFactory.kt$blockchain.getTestnetVersion()!!</ID>
     <ID>UnsafeCallOnNullableType:WalletManagerFactory.kt$scanResponse.secondTwinPublicKey!!</ID>
   </CurrentIssues>
