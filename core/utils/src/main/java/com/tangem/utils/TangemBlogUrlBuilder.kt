@@ -2,6 +2,7 @@ package com.tangem.utils
 
 import java.util.Locale
 
+@Deprecated("Use TangemBlogUrlBuilder from common module")
 object TangemBlogUrlBuilder {
 
     private const val RU_LOCALE = "ru"
