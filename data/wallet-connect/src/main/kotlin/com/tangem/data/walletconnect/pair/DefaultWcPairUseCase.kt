@@ -166,7 +166,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     }
 
     override fun approve(sessionForApprove: WcSessionApprove) {
-        analytics.send(WcAnalyticEvents.PairButtonConnect)
         onCallTerminalAction.trySend(TerminalAction.Approve(sessionForApprove))
     }
 

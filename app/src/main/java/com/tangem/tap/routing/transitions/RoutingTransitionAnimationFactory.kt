@@ -14,7 +14,6 @@ object RoutingTransitionAnimationFactory {
     @Suppress("MagicNumber")
     fun create(appRoute: AppRoute): StackAnimator {
         return when (appRoute) {
-            is AppRoute.Onboarding,
             is AppRoute.Welcome,
             is AppRoute.Home,
             -> fade(tween(400)).plus(scale(tween(400)))

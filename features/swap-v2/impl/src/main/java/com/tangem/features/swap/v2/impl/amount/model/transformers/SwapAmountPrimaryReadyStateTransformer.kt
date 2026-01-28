@@ -24,7 +24,7 @@ internal class SwapAmountPrimaryReadyStateTransformer(
     private val clickIntents: AmountScreenClickIntents,
     private val swapDirection: SwapDirection,
     private val isBalanceHidden: Boolean,
-    private val showBestRateAnimation: Boolean,
+    private val isShowBestRateAnimation: Boolean,
     private val isSingleWallet: Boolean,
     private val isAccountsMode: Boolean,
     private val account: Account.CryptoPortfolio?,
@@ -60,8 +60,8 @@ internal class SwapAmountPrimaryReadyStateTransformer(
             swapQuotes = persistentListOf(),
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
-            showBestRateAnimation = showBestRateAnimation,
-            showFCAWarning = false,
+            isShowBestRateAnimation = isShowBestRateAnimation,
+            isShowFCAWarning = false,
         )
     }
 }
