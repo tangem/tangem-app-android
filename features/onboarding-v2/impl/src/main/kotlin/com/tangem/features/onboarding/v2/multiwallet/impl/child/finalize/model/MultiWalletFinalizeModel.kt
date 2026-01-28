@@ -390,7 +390,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         modelScope.launch {
             val cardInfo =
                 getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
-            sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
+            sendFeedbackEmailUseCase(FeedbackEmailType.BackupProblem(cardInfo))
         }
     }
 

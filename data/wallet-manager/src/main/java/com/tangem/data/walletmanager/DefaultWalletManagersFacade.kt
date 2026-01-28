@@ -35,6 +35,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -61,6 +62,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val gaslessTransactionRepository: GaslessTransactionRepository,
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
@@ -284,6 +286,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 items = SdkTransactionHistoryItemConverter(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
+                    gaslessFeeAddresses = gaslessTransactionRepository.getGaslessFeeAddresses(),
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
@@ -313,13 +316,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             return UpdateWalletManagerResult.Unreachable()
         }
 
-        updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
+        val isUpdated = updateWalletManagerTokensIfNeeded(walletManager, extraTokens)
 
         return try {
             if (userWallet is UserWallet.Cold && demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
                 updateDemoWalletManager(walletManager)
             } else {
-                updateWalletManager(walletManager)
+                updateWalletManager(walletManager = walletManager, forceUpdate = isUpdated)
             }
         } finally {
             walletManagersStore.store(userWallet.walletId, walletManager)
@@ -333,9 +336,12 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         return resultFactory.getDemoResult(walletManager, amount)
     }
 
-    private suspend fun updateWalletManager(walletManager: WalletManager): UpdateWalletManagerResult {
+    private suspend fun updateWalletManager(
+        walletManager: WalletManager,
+        forceUpdate: Boolean,
+    ): UpdateWalletManagerResult {
         return try {
-            walletManager.update()
+            walletManager.update(forceUpdate)
 
             resultFactory.getResult(walletManager)
         } catch (e: BlockchainSdkError.AccountNotFound) {
@@ -765,14 +771,19 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             .joinToString(separator = "|")
     }
 
-    private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
-        if (tokens.isEmpty()) return
+    private fun updateWalletManagerTokensIfNeeded(
+        walletManager: WalletManager,
+        tokens: Set<CryptoCurrency.Token>,
+    ): Boolean {
+        if (tokens.isEmpty()) return false
 
         val tokensToAdd = sdkTokenConverter
             .convertList(tokens)
             .filter { it !in walletManager.cardTokens }
 
         walletManager.addTokens(tokensToAdd)
+
+        return tokensToAdd.isNotEmpty()
     }
 
     private suspend fun readSmartContractMethods(): Map<String, SmartContractMethod> {
