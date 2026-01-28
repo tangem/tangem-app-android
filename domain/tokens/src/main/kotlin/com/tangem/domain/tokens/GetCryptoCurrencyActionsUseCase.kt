@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.actions.OutdatedDataActionsFactory
 import com.tangem.domain.tokens.actions.UnreachableActionsFactory
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -54,7 +55,11 @@ class GetCryptoCurrencyActionsUseCase(
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus): Flow<TokenActionsState> {
+    operator fun invoke(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        yieldSupplyAvailability: YieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+    ): Flow<TokenActionsState> {
         return when {
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation -> {
                 flowOf(value = MissedDerivationsActionsFactory.create())
@@ -74,11 +79,12 @@ class GetCryptoCurrencyActionsUseCase(
                     userWalletId = userWallet.walletId,
                     currency = cryptoCurrencyStatus.currency,
                 )
-                    .mapLatest {
+                    .mapLatest { stakingAvailability ->
                         outdatedDataActionsFactory.create(
                             userWallet = userWallet,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            stakingAvailability = it,
+                            stakingAvailability = stakingAvailability,
+                            yieldSupplyAvailability = yieldSupplyAvailability,
                         )
                     }
             }
@@ -94,6 +100,7 @@ class GetCryptoCurrencyActionsUseCase(
                         userWallet = userWallet,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         stakingAvailability = stakingAvailability,
+                        yieldSupplyAvailability = yieldSupplyAvailability,
                         shouldShowSwapStories = swapStoryContent != null,
                     )
                 }

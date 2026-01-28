@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -18,10 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -68,7 +73,7 @@ private fun Content(
 ) {
     LazyColumn(
         modifier = modifier.testTag(DetailsScreenTestTags.SCREEN_CONTAINER),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.SpaceBetween,
         contentPadding = PaddingValues(
             top = TangemTheme.dimens.spacing12,
             bottom = TangemTheme.dimens.spacing16,
@@ -94,6 +99,7 @@ private fun Content(
         }
 
         item(key = "footer") {
+            SpacerH16()
             Footer(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
                 model = state.footer,
@@ -108,6 +114,16 @@ private fun Block(
     userWalletListBlockContent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
+    if (model is DetailsItemUM.UnderSectionText) {
+        UnderSectionTextBlock(
+            modifier = Modifier.fillMaxWidth(),
+            text = model.text,
+        )
+        return
+    }
+
+    SpacerH16()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -142,8 +158,19 @@ private fun Block(
             is DetailsItemUM.UserWalletList -> {
                 userWalletListBlockContent.Content(modifier = itemModifier)
             }
+            is DetailsItemUM.UnderSectionText -> { /* Handled above */ }
         }
     }
+}
+
+@Composable
+private fun UnderSectionTextBlock(text: TextReference, modifier: Modifier = Modifier) {
+    Text(
+        modifier = modifier.padding(horizontal = 30.dp, vertical = 8.dp),
+        text = text.resolveReference(),
+        style = TangemTheme.typography.body2,
+        color = TangemTheme.colors.text.tertiary,
+    )
 }
 
 @Composable
@@ -185,7 +212,9 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
         }
 
         Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing6)
+                .testTag(DetailsScreenTestTags.VERSION_NAME),
             text = model.appVersion,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
