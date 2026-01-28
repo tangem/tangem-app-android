@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -21,15 +21,15 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AppsFlyerReferralParamsHandlerTest {
 
-    private val appsFlyerConversionStore: AppsFlyerConversionStore = mockk(relaxUnitFun = true)
+    private val appsFlyerStore: AppsFlyerStore = mockk(relaxUnitFun = true)
     private val handler = AppsFlyerReferralParamsHandler(
-        appsFlyerConversionStore = appsFlyerConversionStore,
+        appsFlyerStore = appsFlyerStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(appsFlyerConversionStore)
+        clearMocks(appsFlyerStore)
     }
 
     @Nested
@@ -43,9 +43,9 @@ class AppsFlyerReferralParamsHandlerTest {
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
-                coVerify { appsFlyerConversionStore.storeIfAbsent(value = value) }
+                coVerify { appsFlyerStore.storeIfAbsent(value = value) }
             } else {
-                coVerify(inverse = true) { appsFlyerConversionStore.storeIfAbsent(value = any()) }
+                coVerify(inverse = true) { appsFlyerStore.storeIfAbsent(value = any()) }
             }
         }
 
@@ -112,9 +112,9 @@ class AppsFlyerReferralParamsHandlerTest {
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
-                coVerify { appsFlyerConversionStore.storeIfAbsent(value = value) }
+                coVerify { appsFlyerStore.storeIfAbsent(value = value) }
             } else {
-                coVerify(inverse = true) { appsFlyerConversionStore.storeIfAbsent(value = any()) }
+                coVerify(inverse = true) { appsFlyerStore.storeIfAbsent(value = any()) }
             }
         }
 

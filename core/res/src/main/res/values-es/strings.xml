@@ -174,8 +174,8 @@
     <item quantity="other">%d tarjetas</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">%s token</item>
-    <item quantity="other">%s tokens</item>
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Por favor restablezca el siguiente dispositivo para continuar.</string>
   <string name="card_reset_alert_continue_title">Restablecer billetera</string>
@@ -1043,6 +1043,7 @@
   <string name="onramp_transaction_status_footer_text">Puede comprobar el estado de la transacción desde la página detallada del token</string>
   <string name="onramp_up_to_rate">Hasta</string>
   <string name="onramp_via">Vía</string>
+  <string name="onramp_via_provider">vía %s</string>
   <string name="onramp_you_will_pay_title">Pagará</string>
   <string name="organize_tokens_group">Agrupar</string>
   <string name="organize_tokens_sort_by_balance">Por saldo</string>
