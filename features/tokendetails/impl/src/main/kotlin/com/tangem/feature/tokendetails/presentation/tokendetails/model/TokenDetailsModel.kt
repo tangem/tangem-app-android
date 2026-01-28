@@ -535,6 +535,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -560,6 +561,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = null,
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
@@ -581,6 +583,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -701,6 +704,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -769,6 +773,12 @@ internal class TokenDetailsModel @Inject constructor(
         showErrorIfDemoModeOrElse(action = ::openExplorer)
     }
 
+    private fun getAccountIndexOrNull(): Int? {
+        val account = account
+        val isNotMainAccount = account != null && !account.isMainAccount
+        return if (isNotMainAccount) account.derivationIndex.value else null
+    }
+
     private fun openExplorer() {
         val currencyStatus = cryptoCurrencyStatus ?: return
 
@@ -820,6 +830,7 @@ internal class TokenDetailsModel @Inject constructor(
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
             networkId = cryptoCurrency.network.id,
+            currency = cryptoCurrency,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
             ifRight = { router.openUrl(url = it) },
@@ -881,7 +892,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed(),
                 ),
             )
         }
@@ -894,7 +905,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked(),
                 ),
             )
         }

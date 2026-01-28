@@ -1,18 +1,15 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.annotation.StringRes
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.wallet.R
+import kotlinx.collections.immutable.ImmutableList
 
 internal data class ResetCardScreenState(
     val isResetButtonEnabled: Boolean,
     val descriptionText: TextReference,
-    val warningsToShow: List<WarningsToReset>,
-    val isResetPasswordButtonShown: Boolean,
-    val isAcceptCondition1Checked: Boolean,
-    val isAcceptCondition2Checked: Boolean,
-    val onAcceptCondition1ToggleClick: (Boolean) -> Unit,
-    val onAcceptCondition2ToggleClick: (Boolean) -> Unit,
+    val warningsToShow: ImmutableList<WarningUM>,
+    val onToggleWarning: (WarningType) -> Unit,
     val onResetButtonClick: () -> Unit,
     val dialog: Dialog?,
 ) {
@@ -58,7 +55,13 @@ internal data class ResetCardScreenState(
         }
     }
 
-    internal enum class WarningsToReset {
-        LOST_WALLET_ACCESS, LOST_PASSWORD_RESTORE
+    internal data class WarningUM(
+        val isChecked: Boolean,
+        val type: WarningType,
+        val description: TextReference,
+    )
+
+    internal enum class WarningType {
+        LOST_WALLET_ACCESS, LOST_PASSWORD_RESTORE, LOST_TANGEM_PAY
     }
 }
