@@ -92,6 +92,7 @@ internal class FeeSelectorAlertFactory @Inject constructor(
                     is FeeItem.Slow -> newTransactionFee.minimum
                     is FeeItem.Market -> newTransactionFee.normal
                     is FeeItem.Fast -> newTransactionFee.priority
+                    FeeItem.Loading -> newTransactionFee.normal
                     is FeeItem.Custom -> return
                 }
             }
