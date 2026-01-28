@@ -25,7 +25,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isF
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
@@ -43,7 +43,7 @@ import java.util.Locale
 // Fixme [REDACTED_JIRA]
 @Suppress("LargeClass")
 internal class TokenDetailsSwapTransactionsStateConverter(
-    private val clickIntents: TokenDetailsClickIntents,
+    private val clickIntents: ExpressTransactionsClickIntents,
     private val cryptoCurrency: CryptoCurrency,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     appCurrencyProvider: Provider<AppCurrency>,
