@@ -14,6 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -291,9 +292,9 @@ fun SelectorButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
 @Composable
 fun HoldToConfirmButton(
     text: String,
-    hintText: String,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
+    hintText: String = stringResourceSafe(R.string.common_tap_and_hold_hint),
     enabled: Boolean = true,
     isLoading: Boolean = false,
 ) {
