@@ -1,5 +1,6 @@
 package com.tangem.features.feed.components.market.details.portfolio.impl.model
 
+import arrow.core.getOrElse
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.toUM
@@ -24,6 +25,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
 import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.PortfolioHeader
@@ -47,6 +50,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     private val allAccountSupplier: MultiAccountStatusListSupplier,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
     isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val token: TokenMarketParams,
@@ -112,10 +116,17 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     private fun contentFlow(portfoliosWithThisCurrency: PortfoliosWithThisCurrency): Flow<MyPortfolioUM.Content> {
         fun Portfolio.actionsFoAccountCurrencies(): List<Flow<Pair<CryptoCurrency, TokenActionsState>>> =
             accountsWithAdded.map { account ->
-                fun CryptoCurrencyStatus.actionsFlow() = getCryptoCurrencyActionsUseCase(
-                    accountId = account.accountStatus.account.accountId,
-                    currency = this.currency,
-                ).map { actionsState -> actionsState.cryptoCurrencyStatus.currency to actionsState }
+                fun CryptoCurrencyStatus.actionsFlow(): Flow<Pair<CryptoCurrency, TokenActionsState>> = flow {
+                    val yieldSupplyAvailability = yieldSupplyGetAvailabilityUseCase(this@actionsFlow.currency)
+                        .getOrElse { YieldSupplyAvailability.Unavailable }
+                    emitAll(
+                        getCryptoCurrencyActionsUseCase(
+                            accountId = account.accountStatus.account.accountId,
+                            currency = this@actionsFlow.currency,
+                            yieldSupplyAvailability = yieldSupplyAvailability,
+                        ).map { actionsState -> actionsState.cryptoCurrencyStatus.currency to actionsState },
+                    )
+                }
                 account.addedCurrency.map { it.actionsFlow() }
             }.flatten()
 
