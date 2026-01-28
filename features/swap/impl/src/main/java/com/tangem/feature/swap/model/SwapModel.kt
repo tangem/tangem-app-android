@@ -104,6 +104,7 @@ import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_I
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -944,6 +945,10 @@ internal class SwapModel @Inject constructor(
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
             makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+            modelScope.launch {
+                delay(SWAP_IN_PROGRESS_DELAY)
+                startLoadingQuotesFromLastState()
+            }
             return
         }
         modelScope.launch(dispatchers.main) {
@@ -2237,6 +2242,7 @@ internal class SwapModel @Inject constructor(
         const val DEBOUNCE_AMOUNT_DELAY = 1000L
         const val DEBOUNCE_SEARCH_DELAY = 500L
         const val UPDATE_BALANCE_DELAY_MILLIS = 11000L
+        const val SWAP_IN_PROGRESS_DELAY = 200L
         const val CHANGELLY_PROVIDER_ID = "changelly"
     }
 }
