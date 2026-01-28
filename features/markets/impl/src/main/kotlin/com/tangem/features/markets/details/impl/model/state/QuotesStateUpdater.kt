@@ -53,7 +53,7 @@ internal class QuotesStateUpdater(
         val priceChangeType = percent.percentChangeType()
 
         // wait until marker is removed
-        state.first { it.markerSet.not() }
+        state.first { it.isMarkerSet.not() }
 
         currentQuotes.value = newQuotes
         lastUpdatedTimestamp.value = DateTime.now().millis

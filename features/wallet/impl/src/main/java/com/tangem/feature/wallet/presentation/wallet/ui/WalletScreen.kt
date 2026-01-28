@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -57,7 +56,6 @@ import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
-import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -79,14 +77,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistor
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
-import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPayMainScreenBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -154,7 +148,6 @@ private fun WalletContent(
      */
     val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
-    val (expandedState, collapsedState) = getExpandPortfolioStates(selectedWallet)
 
     val listState = rememberLazyListState()
 
@@ -199,6 +192,7 @@ private fun WalletContent(
                 contentType = state.wallets.map { it.walletCardState.id },
             ) {
                 WalletsList(
+                    modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     lazyListState = walletsListState,
                     wallets = state.wallets.map(WalletState::walletCardState).toImmutableList(),
                     isBalanceHidden = state.isHidingMode,
@@ -206,9 +200,7 @@ private fun WalletContent(
             }
 
             when (selectedWallet) {
-                is WalletState.MultiCurrency,
-                is WalletState.Visa,
-                -> {
+                is WalletState.MultiCurrency -> {
                     actions(
                         actions = selectedWallet.buttons,
                         selectedWalletIndex = selectedWalletIndex,
@@ -251,25 +243,11 @@ private fun WalletContent(
                 }
             }
 
-            (selectedWallet as? WalletState.Visa.Content)?.let {
-                balancesAndLimitsBlock(
-                    modifier = itemModifier,
-                    state = it.balancesAndLimitBlockState,
-                )
-            }
-
             contentItems(
                 state = selectedWallet,
                 txHistoryItems = txHistoryItems,
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
-                portfolioVisibleState = {
-                    findPortfolioVisibleState(
-                        portfolio = it,
-                        expandedState = expandedState,
-                        collapsedState = collapsedState,
-                    )
-                },
             )
 
             nftCollections(state = selectedWallet, itemModifier = itemModifier)
@@ -305,61 +283,6 @@ private fun WalletContent(
         bottomSheetContent = bottomSheetContent,
         content = scaffoldContent,
     )
-}
-
-private fun findPortfolioVisibleState(
-    portfolio: TokensListItemUM.Portfolio,
-    expandedState: SnapshotStateMap<String, MutableTransitionState<Boolean>>,
-    collapsedState: SnapshotStateMap<String, MutableTransitionState<Boolean>>,
-): MutableTransitionState<Boolean> {
-    val portfolioKey = portfolio.id
-
-    fun forceVisible() = MutableTransitionState(true).apply { targetState = true }
-    val shouldExpand = portfolio.isExpanded
-    return if (shouldExpand) {
-        collapsedState[portfolioKey] ?: forceVisible()
-    } else {
-        expandedState[portfolioKey] ?: forceVisible()
-    }
-}
-
-@Composable
-private fun getExpandPortfolioStates(
-    state: WalletState,
-): Pair<
-    SnapshotStateMap<String, MutableTransitionState<Boolean>>,
-    SnapshotStateMap<String, MutableTransitionState<Boolean>>,
-    > {
-    val expandedTransitionState =
-        remember { mutableStateMapOf<String, MutableTransitionState<Boolean>>() }
-    val collapsedTransitionState =
-        remember { mutableStateMapOf<String, MutableTransitionState<Boolean>>() }
-
-    val portfolioContent = state is WalletState.MultiCurrency.Content &&
-        state.tokensListState is WalletTokensListState.ContentState.PortfolioContent
-    if (!portfolioContent) {
-        return expandedTransitionState to collapsedTransitionState
-    }
-
-    state.tokensListState.items.fastForEach { portfolio ->
-        val portfolioKey = portfolio.id
-        val shouldExpand = portfolio.isExpanded
-
-        fun toggleVisible() = MutableTransitionState(false).apply { targetState = true }
-        fun forceVisible() = MutableTransitionState(true).apply { targetState = true }
-
-        val isFirstCall = collapsedTransitionState[portfolioKey] == null ||
-            expandedTransitionState[portfolioKey] == null
-        when {
-            isFirstCall -> {
-                collapsedTransitionState[portfolioKey] = forceVisible()
-                expandedTransitionState[portfolioKey] = forceVisible()
-            }
-            shouldExpand -> expandedTransitionState[portfolioKey] = toggleVisible()
-            else -> collapsedTransitionState[portfolioKey] = toggleVisible()
-        }
-    }
-    return expandedTransitionState to collapsedTransitionState
 }
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
@@ -409,7 +332,7 @@ private inline fun BaseScaffoldWithMarkets(
     }
 
     CompositionLocalProvider(
-        LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
     ) {
         val backgroundColor = LocalMainBottomSheetColor.current
         var isSearchFieldFocused by remember { mutableStateOf(false) }
@@ -449,20 +372,21 @@ private inline fun BaseScaffoldWithMarkets(
                     }
 
                     Column(
-                        modifier = Modifier.sizeIn(maxHeight = maxHeight - statusBarHeight),
+                        modifier = Modifier
+                            // expand bottom sheet when clicked on the header
+                            .clickable(
+                                enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
+                                indication = null,
+                                interactionSource = null,
+                            ) {
+                                coroutineScope.launch { bottomSheetState.expand() }
+                            }
+                            .sizeIn(maxHeight = maxHeight - statusBarHeight),
                     ) {
                         Hand(Modifier.drawBehind { drawRect(backgroundColor.value) })
 
                         Box(
                             modifier = Modifier
-                                // expand bottom sheet when clicked on the header
-                                .clickable(
-                                    enabled = bottomSheetState.currentValue == TangemSheetValue.PartiallyExpanded,
-                                    indication = null,
-                                    interactionSource = null,
-                                ) {
-                                    coroutineScope.launch { bottomSheetState.expand() }
-                                }
                                 .onFocusChanged {
                                     isSearchFieldFocused = it.isFocused
                                 },
@@ -492,7 +416,7 @@ private inline fun BaseScaffoldWithMarkets(
                             color = if (state.showMarketsOnboarding) {
                                 Color.Black.copy(alpha = .65f)
                             } else {
-                                BottomSheetDefaults.ScrimColor
+                                Color.Black.copy(alpha = .40f)
                             },
                             visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                                 state.showMarketsOnboarding,
@@ -785,8 +709,6 @@ private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
             is TokenReceiveBottomSheetConfig -> TokenReceiveBottomSheet(config = bottomSheetConfig)
             is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
             is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
-            is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
-            is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
             is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)
         }
     }
