@@ -170,6 +170,8 @@ fun PrimaryButtonIconStart(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    size: TangemButtonSize = TangemButtonSize.Default,
+    shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
@@ -180,6 +182,8 @@ fun PrimaryButtonIconStart(
         enabled = enabled,
         showProgress = showProgress,
         textStyle = TangemTheme.typography.subtitle1,
+        size = size,
+        shape = shape,
     )
 }
 // endregion PrimaryButton
@@ -279,6 +283,27 @@ fun SelectorButton(text: String, onClick: () -> Unit, modifier: Modifier = Modif
         showProgress = false,
         enabled = enabled,
         size = TangemButtonSize.Selector,
+    )
+}
+// endregion Other
+
+// region Other HoldToConfirmButton
+@Composable
+fun HoldToConfirmButton(
+    text: String,
+    hintText: String,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+) {
+    TangemHoldToConfirmButton(
+        text = text,
+        hintText = hintText,
+        onConfirm = onConfirm,
+        modifier = modifier,
+        enabled = enabled,
+        isLoading = isLoading,
     )
 }
 // endregion Other
