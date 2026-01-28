@@ -66,8 +66,8 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
     }
 
     private fun initContent() {
-        val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse {
-            Timber.e("Failed to get user wallet: $it")
+        val userWallet = getUserWalletUseCase(params.userWalletId).getOrElse { error ->
+            Timber.e("Failed to get user wallet: $error")
             swapChooseTokenAlertFactory.getGenericErrorState(params.onDismiss)
             return
         }
@@ -87,8 +87,8 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
                 cryptoCurrencyList = cryptoCurrencyList + params.initialCurrency,
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
                 swapTxType = SwapTxType.SendWithSwap,
-            ).getOrElse {
-                Timber.e(it.toString())
+            ).getOrElse { error ->
+                Timber.e(error.toString())
                 uiState.update(
                     SwapChooseErrorStateTransformer(
                         tokenName = params.token.name,

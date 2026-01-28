@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.authentication.storage.AuthenticatedStorage
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.hot.sdk.android.crypto.AESEncryptionProtocol
@@ -96,7 +97,13 @@ internal class UserWalletEncryptionKeysRepository(
             StorageKey.UserWalletEncryptionKey(userWalletId).name
         }
 
-        authenticatedStorage.get(keys).mapNotNull {
+        val result = authenticatedStorage.get(keys)
+
+        if (keys.isNotEmpty() && result.isEmpty()) {
+            throw TangemSdkError.KeystoreInvalidated(Exception("Keys is empty"))
+        }
+
+        result.mapNotNull {
             it.value.decodeToKey()
         }
     }
