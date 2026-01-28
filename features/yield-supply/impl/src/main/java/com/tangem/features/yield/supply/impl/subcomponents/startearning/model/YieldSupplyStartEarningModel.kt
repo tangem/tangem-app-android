@@ -21,7 +21,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -65,6 +65,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -245,23 +246,27 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         },
                     )
                 },
-                ifRight = {
-                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
+                ifRight = { txsData ->
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM, txsData)
                 },
             )
         }
     }
 
-    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWalletId,
-            cryptoCurrency,
-            YieldSupplyEnterStatus.Enter,
+    private suspend fun onStartEarningTransactionSuccess(
+        yieldSupplyFeeUM: YieldSupplyFeeUM.Content,
+        txsData: List<String>,
+    ) {
+        yieldSupplyRepository.saveTokenProtocolPendingStatus(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txsData),
         )
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatusFlow.value.currency.symbol,
         )
         analytics.send(
             YieldSupplyAnalytics.FundsEarned(
@@ -288,6 +293,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
 
         modelScope.launch {
+            yieldSupplyPendingTracker.addPending(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                txIds = txsData,
+            )
             params.callback.onTransactionSent()
         }
     }
