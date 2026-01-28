@@ -225,7 +225,7 @@ internal class DefaultNewsRepository(
             when (val apiResponse = newsApi.getTrendingNews(limit = limit, language = language)) {
                 is ApiResponse.Error -> {
                     Timber.e(
-                        apiResponse.cause.cause,
+                        apiResponse.cause,
                         "Trending news fetch failed cause: ${
                             when (val error = apiResponse.cause) {
                                 is ApiResponseError.HttpException -> error.code
@@ -238,7 +238,7 @@ internal class DefaultNewsRepository(
                     trendingNewsStore.clear()
                     trendingNewsStore.store(
                         key = TRENDING_NEWS_KEY,
-                        value = TrendingNews.Error(error = newsErrorResolver.resolve(apiResponse.cause.cause)),
+                        value = TrendingNews.Error(error = newsErrorResolver.resolve(apiResponse.cause)),
                     )
                 }
                 is ApiResponse.Success<NewsTrendingResponse> -> {

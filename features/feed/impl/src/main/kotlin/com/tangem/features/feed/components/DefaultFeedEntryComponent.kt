@@ -74,7 +74,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             onArticleClick(
                                 articleId = articleId,
                                 preselectedArticlesId = preselectedArticlesId,
-                                screenSource = AnalyticsParam.ScreensSources.Markets,
+                                screenSource = AnalyticsParam.ScreensSources.Token,
                             )
                         },
                     ),
