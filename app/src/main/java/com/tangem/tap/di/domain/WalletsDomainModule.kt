@@ -398,26 +398,6 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesIsUpgradeWalletNotificationEnabledUseCase(
-        walletsRepository: WalletsRepository,
-    ): IsUpgradeWalletNotificationEnabledUseCase {
-        return IsUpgradeWalletNotificationEnabledUseCase(
-            walletsRepository = walletsRepository,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providesDismissUpgradeWalletNotificationUseCase(
-        walletsRepository: WalletsRepository,
-    ): DismissUpgradeWalletNotificationUseCase {
-        return DismissUpgradeWalletNotificationUseCase(
-            walletsRepository = walletsRepository,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun providesUnlockHotWalletContextualUseCase(
         hotWalletAccessor: HotWalletAccessor,
     ): UnlockHotWalletContextualUseCase {

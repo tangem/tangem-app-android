@@ -60,7 +60,7 @@ internal class TesterAccountsViewModel @Inject constructor(
 
             userWallets.firstOrNull()?.let(::onWalletSelect)
 
-            userWallets.mapIndexed { index, userWallet ->
+            userWallets.map { userWallet ->
                 singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId = userWallet.walletId))
                     .distinctUntilChanged()
                     .onEach { accountList ->
@@ -102,12 +102,16 @@ internal class TesterAccountsViewModel @Inject constructor(
                 },
             ),
             buttons = persistentListOf(
-                AccountsUM.Button(title = "Show the account list") { updateAccountsList() },
-                AccountsUM.Button(title = "Fetch accounts", onClick = ::fetchAccounts),
-                AccountsUM.Button(title = "Fill out the list (up to 20)", onClick = ::fillOutAccountList),
-                AccountsUM.Button(title = "Archive all", onClick = ::archiveAllAccounts),
-                AccountsUM.Button(title = "Sort by derivation index", onClick = ::sortAccountsByIndex),
-                AccountsUM.Button(title = "Clear ETag") { clearETag() },
+                AccountsUM.Button(id = AccountsUM.Button.ID.ShowAccountList, onClick = ::updateAccountsList),
+                AccountsUM.Button(id = AccountsUM.Button.ID.FetchAccounts, onClick = ::fetchAccounts),
+                AccountsUM.Button(id = AccountsUM.Button.ID.FillOutList, onClick = ::onFillOutClick),
+                AccountsUM.Button(
+                    id = AccountsUM.Button.ID.FillOutArchivedList,
+                    onClick = ::fillOutArchivedAccountList,
+                ),
+                AccountsUM.Button(id = AccountsUM.Button.ID.ArchiveAll, onClick = ::onArchiveAllClick),
+                AccountsUM.Button(id = AccountsUM.Button.ID.SortByDerivationIndex, onClick = ::sortAccountsByIndex),
+                AccountsUM.Button(id = AccountsUM.Button.ID.ClearETag) { clearETag() },
             ),
         )
     }
@@ -137,19 +141,15 @@ internal class TesterAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun fetchAccounts(title: String) {
-        viewModelScope.launch {
-            val userWalletId = uiState.value.walletSelector.selected?.walletId ?: return@launch
+    private fun fetchAccounts() {
+        val userWalletId = uiState.value.walletSelector.selected?.walletId ?: return
 
-            toggleButtonProgress(title = title, isInProgress = true)
-
+        withProgress(id = AccountsUM.Button.ID.FetchAccounts) {
             withContext(dispatchers.default) {
                 singleAccountListFetcher(
                     params = SingleAccountListFetcher.Params(userWalletId = userWalletId),
                 )
             }
-
-            toggleButtonProgress(title = title, isInProgress = false)
         }
     }
 
@@ -160,84 +160,113 @@ internal class TesterAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun fillOutAccountList(title: String) {
+    private fun onFillOutClick() {
         val userWalletId = getUserWallet()?.walletId ?: return
 
-        viewModelScope.launch {
-            toggleButtonProgress(title = title, isInProgress = true)
+        withProgress(id = AccountsUM.Button.ID.FillOutList) {
+            fillOutAccountList(userWalletId = userWalletId)
+        }
+    }
 
-            withContext(dispatchers.default) {
-                var accountList = walletAccounts.value[userWalletId] ?: return@withContext
-                val occupiedIndexes = accountList.accounts
-                    .filterIsInstance<Account.CryptoPortfolio>()
-                    .map { it.derivationIndex.value }
-                    .toSet()
+    private fun fillOutArchivedAccountList() {
+        val userWalletId = getUserWallet()?.walletId ?: return
+        val accountList = walletAccounts.value[userWalletId] ?: return
+        if (accountList.totalArchivedAccounts == AccountList.MAX_ARCHIVED_ACCOUNTS_COUNT) return
 
-                var nextIndex = 0
-                @Suppress("LoopWithTooManyJumpStatements") // never mind for Tester Menu
-                while (accountList.canAddMoreAccounts) {
-                    while (occupiedIndexes.contains(nextIndex)) {
-                        nextIndex++
-                    }
+        val id = AccountsUM.Button.ID.FillOutArchivedList
 
-                    val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
+        viewModelScope.launch(dispatchers.default) {
+            var currentTotalArchived = accountList.totalArchivedAccounts
 
-                    val newAccount = Account.CryptoPortfolio.invoke(
-                        accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
-                        name = "Account #$nextIndex",
-                        icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-                        derivationIndex = nextIndex,
-                        cryptoCurrencies = emptySet(),
+            while (currentTotalArchived < AccountList.MAX_ARCHIVED_ACCOUNTS_COUNT) {
+                updateButton(id) { button ->
+                    button.copy(
+                        title = "In progress... ($currentTotalArchived/${AccountList.MAX_ARCHIVED_ACCOUNTS_COUNT})",
+                        isEnabled = false,
                     )
-                        .getOrNull()
-                        ?: break
-
-                    (accountList + newAccount)
-                        .onRight { accountList = it }
-                        .getOrNull()
-                        ?: break
-
-                    nextIndex++
                 }
 
-                accountsCRUDRepository.saveAccounts(accountList)
+                fillOutAccountList(userWalletId = userWalletId)
+                archiveAll(userWalletId = userWalletId)
+
+                accountsCRUDRepository.getAccountListSync(userWalletId).onSome {
+                    currentTotalArchived = it.totalArchivedAccounts
+                }
             }
 
-            toggleButtonProgress(title = title, isInProgress = false)
+            updateButton(id = id, button = AccountsUM.Button::reset)
         }
     }
 
-    private fun archiveAllAccounts(title: String) {
-        val userWalletId = getUserWallet()?.walletId ?: return
-        val accountList = walletAccounts.value[userWalletId] ?: return
+    private suspend fun fillOutAccountList(userWalletId: UserWalletId) {
+        withContext(dispatchers.default) {
+            var accountList = walletAccounts.value[userWalletId] ?: return@withContext
 
-        viewModelScope.launch {
-            toggleButtonProgress(title = title, isInProgress = true)
+            var nextIndex = accountList.totalAccounts
+            @Suppress("LoopWithTooManyJumpStatements") // never mind for Tester Menu
+            while (accountList.canAddMoreAccounts) {
+                val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
 
-            withContext(dispatchers.default) {
-                val updatedAccountList = AccountList.invoke(
-                    userWalletId = accountList.userWalletId,
-                    accounts = listOf(accountList.mainAccount),
-                    totalAccounts = accountList.totalAccounts,
-                    sortType = accountList.sortType,
-                    groupType = accountList.groupType,
+                val newAccount = Account.CryptoPortfolio.invoke(
+                    accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
+                    name = "Account #$nextIndex",
+                    icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+                    derivationIndex = nextIndex,
+                    cryptoCurrencies = emptySet(),
                 )
-                    .getOrElse { return@withContext }
+                    .getOrNull()
+                    ?: break
 
-                accountsCRUDRepository.saveAccounts(accountList = updatedAccountList)
+                (accountList + newAccount)
+                    .onRight { accountList = it }
+                    .getOrNull()
+                    ?: break
+
+                nextIndex++
             }
 
-            toggleButtonProgress(title = title, isInProgress = false)
+            accountsCRUDRepository.saveAccounts(accountList)
         }
     }
 
-    private fun sortAccountsByIndex(title: String) {
+    private fun onArchiveAllClick() {
+        val userWalletId = getUserWallet()?.walletId ?: return
+
+        withProgress(id = AccountsUM.Button.ID.ArchiveAll) {
+            archiveAll(userWalletId = userWalletId)
+        }
+    }
+
+    private suspend fun archiveAll(userWalletId: UserWalletId) {
+        val accountList = walletAccounts.value[userWalletId] ?: return
+        val possibleToArchive = AccountList.MAX_ARCHIVED_ACCOUNTS_COUNT - accountList.totalArchivedAccounts
+
+        if (possibleToArchive == 0) return
+
+        withContext(dispatchers.default) {
+            val updatedAccountList = AccountList.invoke(
+                userWalletId = accountList.userWalletId,
+                accounts = if (possibleToArchive > AccountList.MAX_ACCOUNTS_COUNT - 1) {
+                    listOf(accountList.mainAccount)
+                } else {
+                    accountList.accounts.subList(fromIndex = 0, toIndex = accountList.accounts.size - possibleToArchive)
+                },
+                totalAccounts = accountList.totalAccounts,
+                totalArchivedAccounts = accountList.totalArchivedAccounts,
+                sortType = accountList.sortType,
+                groupType = accountList.groupType,
+            )
+                .getOrElse { return@withContext }
+
+            accountsCRUDRepository.saveAccounts(accountList = updatedAccountList)
+        }
+    }
+
+    private fun sortAccountsByIndex() {
         val userWalletId = getUserWallet()?.walletId ?: return
         val accountList = walletAccounts.value[userWalletId] ?: return
 
-        viewModelScope.launch {
-            toggleButtonProgress(title = title, isInProgress = true)
-
+        withProgress(id = AccountsUM.Button.ID.SortByDerivationIndex) {
             withContext(dispatchers.default) {
                 val sortedAccountList = AccountList.invoke(
                     userWalletId = accountList.userWalletId,
@@ -245,6 +274,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                         .filterIsInstance<Account.CryptoPortfolio>()
                         .sortedBy { it.derivationIndex.value },
                     totalAccounts = accountList.totalAccounts,
+                    totalArchivedAccounts = accountList.totalArchivedAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
                 )
@@ -252,8 +282,6 @@ internal class TesterAccountsViewModel @Inject constructor(
 
                 accountsCRUDRepository.saveAccounts(accountList = sortedAccountList)
             }
-
-            toggleButtonProgress(title = title, isInProgress = false)
         }
     }
 
@@ -266,22 +294,30 @@ internal class TesterAccountsViewModel @Inject constructor(
             ?: persistentListOf()
     }
 
-    private fun toggleButtonProgress(title: String, isInProgress: Boolean) {
-        uiState.update { state ->
-            state.copy(
-                buttons = state.buttons.updateButton(title) {
-                    it.copy(isInProgress = isInProgress)
-                },
-            )
+    private fun withProgress(id: AccountsUM.Button.ID, block: suspend () -> Unit) {
+        viewModelScope.launch {
+            toggleButtonProgress(id = id, isInProgress = true)
+            try {
+                block()
+            } finally {
+                toggleButtonProgress(id = id, isInProgress = false)
+            }
         }
     }
 
-    private fun ImmutableList<AccountsUM.Button>.updateButton(
-        title: String,
-        button: (AccountsUM.Button) -> AccountsUM.Button,
-    ): ImmutableList<AccountsUM.Button> {
-        return this
-            .map { if (it.title == title) button(it) else it }
-            .toImmutableList()
+    private fun toggleButtonProgress(id: AccountsUM.Button.ID, isInProgress: Boolean) {
+        updateButton(id) {
+            it.copy(isInProgress = isInProgress)
+        }
+    }
+
+    private fun updateButton(id: AccountsUM.Button.ID, button: (AccountsUM.Button) -> AccountsUM.Button) {
+        uiState.update { state ->
+            state.copy(
+                buttons = state.buttons
+                    .map { if (it.id == id) button(it) else it }
+                    .toImmutableList(),
+            )
+        }
     }
 }

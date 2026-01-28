@@ -17,7 +17,7 @@ dependencies {
 
     // region Project – Domain
     implementation(projects.domain.core)
-    implementation(projects.domain.account.status)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.nft.models)
