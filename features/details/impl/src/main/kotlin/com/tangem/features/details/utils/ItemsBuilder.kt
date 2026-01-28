@@ -8,19 +8,26 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import javax.inject.Inject
 
+private const val TANGEM_PAY_ITEM_ID = "get_tangem_pay"
+
 @ModelScoped
-internal class ItemsBuilder @Inject constructor(private val router: Router) {
+internal class ItemsBuilder @Inject constructor(
+    private val router: Router,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+) {
 
     @Suppress("LongParameterList")
     fun buildAll(
         isWalletConnectAvailable: Boolean,
         isSupportChatAvailable: Boolean,
+        hasAnyMobileWallet: Boolean,
         userWalletId: UserWalletId,
         onSupportEmailClick: () -> Unit,
         onSupportChatClick: () -> Unit,
@@ -28,6 +35,14 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
     ): ImmutableList<DetailsItemUM> = buildList {
         buildWalletConnectBlock(isWalletConnectAvailable, userWalletId)?.let(::add)
         buildUserWalletListBlock().let(::add)
+
+        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled && hasAnyMobileWallet) {
+            DetailsItemUM.UnderSectionText(
+                id = "only_one_mobile_wallet_explanation",
+                text = resourceReference(R.string.only_one_mobile_wallet_explanation),
+            ).let(::add)
+        }
+
         buildShopBlock(onBuyClick).let(::add)
         buildSettingsBlock().let(::add)
         buildSupportBlock(
@@ -36,6 +51,30 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
             isSupportChatAvailable = isSupportChatAvailable,
         ).let(::add)
     }.toImmutableList()
+
+    fun addTangemPayItem(items: ImmutableList<DetailsItemUM>, onClick: () -> Unit): ImmutableList<DetailsItemUM> {
+        return items.toMutableList().map { block ->
+            if (block.id == "shop" && block is DetailsItemUM.Basic) {
+                val newItems = block
+                    .items
+                    .toMutableList()
+                    .apply { add(getTangemPayItem(onClick = onClick)) }
+                block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
+    fun removeTangemPayItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.map { block ->
+            if (block is DetailsItemUM.Basic && block.items.any { it.id == TANGEM_PAY_ITEM_ID }) {
+                block.copy(items = block.items.filter { it.id != TANGEM_PAY_ITEM_ID }.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
 
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
@@ -113,5 +152,14 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
                 ),
             ).let(::add)
         }.toPersistentList(),
+    )
+
+    private fun getTangemPayItem(onClick: () -> Unit): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = TANGEM_PAY_ITEM_ID,
+        block = BlockUM(
+            text = resourceReference(R.string.tangempay_get_tangem_pay),
+            iconRes = R.drawable.ic_tangem_pay_24,
+            onClick = onClick,
+        ),
     )
 }

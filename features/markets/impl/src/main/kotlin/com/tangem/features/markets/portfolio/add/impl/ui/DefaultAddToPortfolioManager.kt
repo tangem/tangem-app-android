@@ -31,7 +31,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
 
     override val allAvailableNetworks: Flow<List<TokenMarketInfo.Network>> = _allAvailableNetworks.asSharedFlow()
     override val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
-        mode = PortfolioFetcher.Mode.All(onlyMultiCurrency = true),
+        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
         scope = scope,
     )
 

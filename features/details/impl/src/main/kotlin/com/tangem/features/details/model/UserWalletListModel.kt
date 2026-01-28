@@ -3,6 +3,9 @@ package com.tangem.features.details.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -39,6 +42,7 @@ internal class UserWalletListModel @Inject constructor(
     private val userWalletSaver: UserWalletSaver,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val unlockWalletUseCase: UnlockWalletUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -56,6 +60,7 @@ internal class UserWalletListModel @Inject constructor(
             isWalletSavingInProgress = false,
             addNewWalletText = TextReference.EMPTY,
             onAddNewWalletClick = ::onAddNewWalletClick,
+            addNewWalletIconRes = R.drawable.ic_plus_24,
         ),
     )
 
@@ -77,17 +82,26 @@ internal class UserWalletListModel @Inject constructor(
         value.copy(
             userWallets = userWallets,
             isWalletSavingInProgress = isWalletSavingInProgress,
-            addNewWalletText = if (shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled) {
-                resourceReference(R.string.user_wallet_list_add_button)
-            } else {
-                resourceReference(R.string.scan_card_settings_button)
+            addNewWalletText = when {
+                shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled -> {
+                    resourceReference(R.string.user_wallet_list_add_button)
+                }
+                else -> resourceReference(R.string.scan_card_settings_button)
             },
         )
     }
 
     private fun onAddNewWalletClick() {
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            router.push(AppRoute.CreateWalletSelection)
+            analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
+
+            if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
+                withProgress(isWalletSavingInProgress) {
+                    userWalletSaver.scanAndSaveUserWallet(modelScope)
+                }
+            } else {
+                router.push(AppRoute.CreateWalletSelection)
+            }
         } else {
             withProgress(isWalletSavingInProgress) {
                 userWalletSaver.scanAndSaveUserWallet(modelScope)
@@ -104,7 +118,9 @@ internal class UserWalletListModel @Inject constructor(
                         Timber.e("Failed to unlock wallet $userWalletId: $error")
                         error.handle(
                             onUserCancelled = {},
+                            isFromUnlockAll = false,
                             onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
+                            analyticsEventHandler = analyticsEventHandler,
                             showMessage = messageSender::send,
                         )
                     }

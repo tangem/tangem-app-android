@@ -48,7 +48,7 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
             SwapSuccessScreenButtons(
                 textRes = R.string.common_close,
                 txUrl = state.txUrl,
-                showStatusButton = state.showStatusButton,
+                shouldShowStatusButton = state.shouldShowStatusButton,
                 onExploreClick = state.onExploreButtonClick,
                 onStatusClick = state.onStatusButtonClick,
                 onDoneClick = onBack,
@@ -160,7 +160,7 @@ private fun SwapAmountBlock(
 private fun SwapSuccessScreenButtons(
     @StringRes textRes: Int,
     txUrl: String,
-    showStatusButton: Boolean,
+    shouldShowStatusButton: Boolean,
     onExploreClick: () -> Unit,
     onStatusClick: () -> Unit,
     onDoneClick: () -> Unit,
@@ -178,7 +178,7 @@ private fun SwapSuccessScreenButtons(
                     onClick = onExploreClick,
                     modifier = Modifier.weight(1f),
                 )
-                if (showStatusButton) {
+                if (shouldShowStatusButton) {
                     SpacerW12()
                     SecondaryButtonIconStart(
                         text = stringResourceSafe(id = R.string.express_cex_status_button_title),

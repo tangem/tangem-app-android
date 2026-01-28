@@ -40,6 +40,8 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerOnMain
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerInSettings
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -188,6 +190,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        isColdWalletOptionShown = route.isColdWalletOptionShown,
                     ),
                     componentFactory = walletBackupComponentFactory,
                 )
@@ -422,6 +425,7 @@ internal class ChildFactory @Inject constructor(
                         cardId = route.cardId,
                         isActiveBackupStatus = route.isActiveBackupStatus,
                         backupCardsCount = route.backupCardsCount,
+                        hasTangemPay = route.hasTangemPay,
                     ),
                     componentFactory = resetCardComponentFactory,
                 )
@@ -529,7 +533,9 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.CreateMobileWallet -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = CreateMobileWalletComponent.Params(
+                        source = route.source,
+                    ),
                     componentFactory = createMobileWalletComponentFactory,
                 )
             }
@@ -565,7 +571,7 @@ internal class ChildFactory @Inject constructor(
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
                         isUpgradeFlow = route.isUpgradeFlow,
-                        shouldSetAccessCode = route.setAccessCode,
+                        shouldSetAccessCode = route.shouldSetAccessCode,
                         analyticsSource = route.analyticsSource,
                         analyticsAction = route.analyticsAction,
                     ),
@@ -665,6 +671,9 @@ internal class ChildFactory @Inject constructor(
                         )
                         is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(
                             deeplink = mode.deeplink,
+                        )
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain(
                             userWalletId = mode.userWalletId,
                         )
                     },
