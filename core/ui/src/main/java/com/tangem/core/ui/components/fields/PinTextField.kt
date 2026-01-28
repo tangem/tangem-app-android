@@ -39,8 +39,8 @@ fun PinTextField(
     pinTextColor: PinTextColor,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
-    val focusRequester = remember { FocusRequester() }
     val textFieldValue = remember(value) {
         TextFieldValue(value, selection = TextRange(value.length))
     }

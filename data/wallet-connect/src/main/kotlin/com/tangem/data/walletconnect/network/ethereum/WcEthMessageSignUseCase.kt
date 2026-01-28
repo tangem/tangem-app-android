@@ -83,6 +83,7 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
 object LegacySdkHelper {
     private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
 
+    // TODO: [REDACTED_TASK_KEY] - Get this public function from Blockchain SDK
     fun prepareToSendMessageData(signedHash: ByteArray, hashToSign: ByteArray, walletManager: WalletManager): String =
         UnmarshalHelper.unmarshalSignatureExtended(
             signature = signedHash,

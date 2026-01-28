@@ -57,9 +57,18 @@ class CreateCryptoCurrencyUseCase(
         formValues: AddCustomTokenForm.Validated.All?,
     ): Either<Throwable, CryptoCurrency> = Either.catch {
         if (formValues == null) {
-            customTokensRepository.createCoin(userWalletId, networkId, derivationPath)
+            customTokensRepository.createCoin(
+                userWalletId = userWalletId,
+                networkId = networkId,
+                derivationPath = derivationPath,
+            )
         } else {
-            customTokensRepository.createCustomToken(userWalletId, networkId, derivationPath, formValues)
+            customTokensRepository.createCustomToken(
+                userWalletId = userWalletId,
+                networkId = networkId,
+                derivationPath = derivationPath,
+                formValues = formValues,
+            )
         }
     }
 }

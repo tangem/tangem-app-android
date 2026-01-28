@@ -25,5 +25,14 @@ interface OnboardingRepository {
 
     suspend fun checkCustomerWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
+    suspend fun checkCustomerEligibility(): Boolean
+    suspend fun getCustomerEligibility(): Boolean
+
     fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo?
+
+    suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+
+    suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId)
+
+    suspend fun disableTangemPay(userWalletId: UserWalletId): Either<VisaApiError, Unit>
 }

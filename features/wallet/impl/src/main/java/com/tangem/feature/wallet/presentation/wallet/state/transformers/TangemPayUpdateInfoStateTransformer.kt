@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -11,11 +12,10 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
+import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createCancelledState
-import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createIssueProgressState
-import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createKycInProgressState
 import java.util.Currency
 
 /**
@@ -26,12 +26,9 @@ private const val POLYGON_CHAIN_ID = 137
 
 internal class TangemPayUpdateInfoStateTransformer(
     userWalletId: UserWalletId,
-    private val value: MainScreenCustomerInfo? = null,
+    private val value: MainScreenCustomerInfo,
     private val cardFrozenState: TangemPayCardFrozenState,
-    private val onClickKyc: () -> Unit = {},
-    private val onIssuingCard: () -> Unit = {},
-    private val onIssuingFailed: () -> Unit = {},
-    private val openDetails: (config: TangemPayDetailsConfig) -> Unit = {},
+    private val tangemPayClickIntents: TangemPayIntents,
 ) : WalletStateTransformer(userWalletId = userWalletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -44,16 +41,15 @@ internal class TangemPayUpdateInfoStateTransformer(
     }
 
     private fun createInitialState(): TangemPayState {
-        val cardInfo = value?.info?.cardInfo
-        val productInstance = value?.info?.productInstance
+        val cardInfo = value.info.cardInfo
+        val productInstance = value.info.productInstance
 
         // when statement copied to WalletTangemPayAnalyticsEventSender. Be careful when editing.
         return when {
-            value == null -> TangemPayState.Empty
-            value.orderStatus == OrderStatus.CANCELED -> createCancelledState(onIssuingFailed)
-            !value.info.isKycApproved -> createKycInProgressState(onClickKyc)
+            value.orderStatus == OrderStatus.CANCELED -> createCancelledState()
+            !value.info.isKycApproved -> createKycInProgressState()
             cardInfo != null && productInstance != null -> getCardInfoState(cardInfo, productInstance)
-            else -> createIssueProgressState(onIssuingCard)
+            else -> createIssueProgressState()
         }
     }
 
@@ -63,9 +59,11 @@ internal class TangemPayUpdateInfoStateTransformer(
             balanceText = TextReference.Str(getBalanceText(cardInfo)),
             balanceSymbol = stringReference("USDC"), // TODO hardcode for now
             onClick = {
-                openDetails(
+                tangemPayClickIntents.openDetails(
+                    userWalletId,
                     TangemPayDetailsConfig(
                         cardId = productInstance.cardId,
+                        isPinSet = cardInfo.isPinSet,
                         cardFrozenState = cardFrozenState,
                         customerWalletAddress = cardInfo.customerWalletAddress,
                         cardNumberEnd = cardInfo.lastFourDigits,
@@ -81,4 +79,28 @@ internal class TangemPayUpdateInfoStateTransformer(
             fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
         }
     }
+
+    private fun createKycInProgressState(): TangemPayState = Progress(
+        title = TextReference.Res(R.string.tangempay_payment_account),
+        description = TextReference.Res(R.string.tangempay_kyc_in_progress),
+        buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
+        iconRes = R.drawable.ic_promo_kyc_36,
+        onButtonClick = { tangemPayClickIntents.onKycProgressClicked(userWalletId) },
+    )
+
+    private fun createIssueProgressState(): TangemPayState = Progress(
+        title = TextReference.Res(R.string.tangempay_payment_account),
+        description = TextReference.Res(R.string.tangempay_issuing_your_card),
+        buttonText = TextReference.EMPTY,
+        iconRes = R.drawable.ic_tangem_pay_promo_card_36,
+        onButtonClick = tangemPayClickIntents::onIssuingCardClicked,
+        showProgress = true,
+    )
+
+    private fun createCancelledState(): TangemPayState = TangemPayState.FailedIssue(
+        title = TextReference.Res(R.string.tangempay_payment_account),
+        description = TextReference.Res(R.string.tangempay_failed_to_issue_card),
+        iconRes = R.drawable.ic_alert_24,
+        onButtonClick = tangemPayClickIntents::onIssuingFailedClicked,
+    )
 }

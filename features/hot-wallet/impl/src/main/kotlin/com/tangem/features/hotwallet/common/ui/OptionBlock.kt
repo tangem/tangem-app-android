@@ -1,8 +1,10 @@
 package com.tangem.features.hotwallet.common.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -18,16 +20,17 @@ import com.tangem.core.ui.res.TangemTheme
 
 private const val DISABLED_COLORS_ALPHA = 0.5f
 
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongParameterList")
 @Composable
 internal fun OptionBlock(
     title: String,
     description: String,
-    badge: (@Composable () -> Unit)?,
     onClick: (() -> Unit)?,
-    enabled: Boolean,
-    backgroundColor: Color,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = TangemTheme.colors.background.primary,
+    badge: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -43,11 +46,11 @@ internal fun OptionBlock(
             }
             .padding(16.dp),
     ) {
-        Row {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Text(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .padding(end = 4.dp),
                 text = title,
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
