@@ -47,7 +47,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     val onDone = MutableSharedFlow<Unit>()
 
     init {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinCodeScreenOpened)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinCodeScreenOpened())
     }
 
     private fun getInitialState(): OnboardingVisaPinCodeUM {
@@ -67,12 +67,12 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
         if (PinCodeValidation.validateAllDigits(pin)) {
             val isError = PinCodeValidation.validateLength(pin) && PinCodeValidation.validate(pin).not()
 
-            _uiState.update {
-                it.copy(
+            _uiState.update { currentState ->
+                currentState.copy(
                     pinCode = pin,
                     submitButtonEnabled = PinCodeValidation.validate(pin),
                     error = if (isError) {
-                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation)
+                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation())
                         resourceReference(R.string.visa_onboarding_pin_validation_error_message)
                     } else {
                         null
@@ -83,7 +83,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     }
 
     private fun onSubmitClick() {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinEntered)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinEntered())
         val pinCode = _uiState.value.pinCode
         if (PinCodeValidation.validate(pinCode).not()) return
 
