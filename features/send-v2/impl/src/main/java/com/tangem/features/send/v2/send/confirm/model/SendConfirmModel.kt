@@ -5,6 +5,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -29,6 +30,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -36,6 +38,7 @@ import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
@@ -111,6 +114,7 @@ internal class SendConfirmModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
+    private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -153,10 +157,7 @@ internal class SendConfirmModel @Inject constructor(
     internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
 
     init {
-        modelScope.launch {
-            isAmountSubtractAvailable =
-                isAmountSubtractAvailableUseCase(userWallet.walletId, cryptoCurrency).getOrElse { false }
-        }
+        updateAmountSubtractAvailability()
         configConfirmNavigation()
         subscribeOnNotificationsUpdateTrigger()
         subscribeOnCheckFeeResultUpdates()
@@ -355,7 +356,7 @@ internal class SendConfirmModel @Inject constructor(
 
         val receivingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = confirmData.reduceAmountBy.orZero(),
@@ -388,11 +389,24 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private suspend fun sendTransaction(txData: TransactionData.Uncompiled) {
-        val result = sendTransactionUseCase(
-            txData = txData,
-            userWallet = userWallet,
-            network = cryptoCurrency.network,
-        )
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val feeToken = getCurrencyStatusForFeePayment().currency
+
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+
+        val result = if (isFeeInTokenCurrency) {
+            createAndSendGaslessTransactionUseCase(
+                userWallet = userWallet,
+                transactionData = txData,
+                fee = feeExtended,
+            )
+        } else {
+            sendTransactionUseCase(
+                txData = txData,
+                userWallet = userWallet,
+                network = cryptoCurrency.network,
+            )
+        }
 
         _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
 
@@ -412,19 +426,30 @@ internal class SendConfirmModel @Inject constructor(
                     ),
                 )
             },
-            ifRight = {
-                updateTransactionStatus(txData)
+            ifRight = { txHash ->
+                updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
                 sendAnalyticHelper.sendSuccessAnalytics(
                     cryptoCurrency = cryptoCurrency,
                     sendUM = uiState.value,
                     account = params.accountFlow.value,
+                    feeToken = feeToken,
                 )
                 params.callback.onResult(uiState.value)
                 params.onSendTransaction()
             },
         )
+    }
+
+    private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: cryptoCurrencyStatus
+        } else {
+            params.feeCryptoCurrencyStatus
+        }
     }
 
     private fun addTokenToWalletIfNeeded() {
@@ -456,10 +481,9 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
-    private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+    private fun updateTransactionStatus(txData: TransactionData.Uncompiled, txHash: String) {
         val txUrl = getExplorerTransactionUrlUseCase(
-            txHash = txData.hash.orEmpty(),
-            networkId = cryptoCurrency.network.id,
+            txHash = txHash.ifEmpty { txData.hash.orEmpty() },
             currency = cryptoCurrency,
         ).getOrNull().orEmpty()
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
@@ -498,6 +522,7 @@ internal class SendConfirmModel @Inject constructor(
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
+                    feeCryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
                 ),
             )
             _uiState.update { state ->
@@ -599,7 +624,21 @@ internal class SendConfirmModel @Inject constructor(
     override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
         sendIdleTimer = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
+        updateAmountSubtractAvailability()
         updateConfirmNotifications()
+    }
+
+    private fun updateAmountSubtractAvailability() {
+        modelScope.launch {
+            val fee = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.transactionFee?.normal
+            // we assume if feeExtraInfo is empty then pay fee in the main currency
+            val feeTokenId = feeUMV2?.feeExtraInfo?.transactionFeeExtended?.feeTokenId ?: cryptoCurrency.id
+            isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrency,
+                maybeGaslessFee = fee?.let { feeTokenId to fee },
+            ).getOrElse { false }
+        }
     }
 
     private companion object {
