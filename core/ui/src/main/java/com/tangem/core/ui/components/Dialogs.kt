@@ -70,17 +70,6 @@ fun BasicDialog(
     )
 }
 
-@Composable
-fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
-    TangemDialog(
-        type = DialogType.Message(message),
-        confirmButton = DialogButtonUM(onClick = onDismissDialog),
-        onDismissDialog = onDismissDialog,
-        title = null,
-        dismissButton = null,
-    )
-}
-
 /**
  * Dialog with text field
  *
@@ -109,34 +98,6 @@ fun TextInputDialog(
 ) {
     TangemDialog(
         type = DialogType.TextInput(
-            value = fieldValue,
-            onValueChange = onValueChange,
-            params = textFieldParams,
-        ),
-        confirmButton = confirmButton,
-        onDismissDialog = onDismissDialog,
-        title = title,
-        dismissButton = dismissButton,
-        properties = DialogProperties(
-            dismissOnBackPress = isDismissable,
-            dismissOnClickOutside = isDismissable,
-        ),
-    )
-}
-
-@Composable
-fun TextInputDialog(
-    fieldValue: String,
-    confirmButton: DialogButtonUM,
-    onDismissDialog: () -> Unit,
-    onValueChange: (String) -> Unit,
-    textFieldParams: AdditionalTextInputDialogUM = remember { AdditionalTextInputDialogUM() },
-    title: String? = null,
-    dismissButton: DialogButtonUM? = null,
-    isDismissable: Boolean = true,
-) {
-    TangemDialog(
-        type = DialogType.SimpleTextInput(
             value = fieldValue,
             onValueChange = onValueChange,
             params = textFieldParams,
@@ -442,14 +403,6 @@ private sealed class DialogType {
 
 // region Preview
 @Composable
-private fun SimpleOkDialogPreview() {
-    SimpleOkDialog(
-        message = "All protected passwords will be deleted from the " +
-            "secure storage, you must enter the wallet password to work with the app.",
-    ) {}
-}
-
-@Composable
 private fun BasicDialogPreview() {
     BasicDialog(
         message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
@@ -459,15 +412,6 @@ private fun BasicDialogPreview() {
         dismissButton = DialogButtonUM {},
         onDismissDialog = {},
     )
-}
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun Preview_SimpleOkDialog() {
-    TangemThemePreview {
-        SimpleOkDialogPreview()
-    }
 }
 
 @Preview(showBackground = true)

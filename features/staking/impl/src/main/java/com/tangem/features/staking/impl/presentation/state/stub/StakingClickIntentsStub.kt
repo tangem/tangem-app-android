@@ -3,7 +3,7 @@ package com.tangem.features.staking.impl.presentation.state.stub
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
@@ -40,7 +40,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun openValidators() {}
 
-    override fun onValidatorSelect(validator: Yield.Validator) {}
+    override fun onTargetSelect(target: StakingTarget) {}
 
     override fun openRewardsValidators() {}
 
@@ -83,5 +83,9 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onActivateTonAccountNotificationShow() {}
 
+    override fun onNotEnoughFeeNotificationShow() {}
+
     override fun onActivateTonAccountClick() {}
+
+    override fun onAmountReduceByFeeClick(reduceAmount: BigDecimal, notification: Class<out NotificationUM>) {}
 }

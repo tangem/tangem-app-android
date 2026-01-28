@@ -1,10 +1,14 @@
 package com.tangem.feature.swap.domain
 
+import arrow.core.Either
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.IncludeFeeInAmount
 import com.tangem.feature.swap.domain.models.domain.PermissionOptions
@@ -37,7 +41,7 @@ interface SwapInteractor {
      * @param providers         list of providers to find quote
      * @param amountToSwap      amount you want to swap
      * @param reduceBalanceBy   amount to reduce from balance (used for fee calculation)
-     * @param selectedFee       selected fee to swap
+     * @param txFeeSealedState  selected fee to swap
      * @return
      */
     @Suppress("LongParameterList")
@@ -50,7 +54,7 @@ interface SwapInteractor {
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
-        selectedFee: FeeType = FeeType.NORMAL,
+        txFeeSealedState: TxFeeSealedState,
     ): Map<SwapProvider, SwapState>
 
     /**
@@ -131,6 +135,50 @@ interface SwapInteractor {
         txExternalId: String? = null,
         averageDuration: Int? = null,
     )
+
+    /**
+     * Loads fee for swap transaction
+     *
+     * @param fromToken token from which want to swap
+     * @param fromAccount account from which swap will be made
+     * @param toToken token that receive after swap
+     * @param toAccount account to which receive token after swap
+     * @param amount amount you want to swap
+     * @param reduceBalanceBy amount to reduce from balance (used for fee calculation)
+     * @param selectedFeeToken selected token to pay fee or null to pay fee with coin
+     */
+    @Suppress("LongParameterList")
+    suspend fun loadFeeForSwapTransaction(
+        fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
+        amount: String,
+        reduceBalanceBy: BigDecimal,
+        provider: SwapProvider,
+        selectedFeeToken: CryptoCurrencyStatus?,
+    ): Either<GetFeeError, TransactionFeeExtended>
+
+    /**
+     * Loads fee for swap transaction
+     *
+     * @param fromToken token from which want to swap
+     * @param fromAccount account from which swap will be made
+     * @param toToken token that receive after swap
+     * @param toAccount account to which receive token after swap
+     * @param amount amount you want to swap
+     * @param reduceBalanceBy amount to reduce from balance (used for fee calculation)
+     */
+    @Suppress("LongParameterList")
+    suspend fun loadFeeForSwapTransaction(
+        fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
+        amount: String,
+        reduceBalanceBy: BigDecimal,
+        provider: SwapProvider,
+    ): Either<GetFeeError, TransactionFee>
 
     interface Factory {
         fun create(selectedWalletId: UserWalletId): SwapInteractor

@@ -360,7 +360,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private fun createReduxStore(): Store<AppState> {
         return Store(
-            reducer = { action, state -> appReducer(action, state) },
+            reducer = { action, state -> appReducer(action, requireNotNull(state)) },
             middleware = AppState.getMiddleware(),
             state = AppState(
                 daggerGraphState = DaggerGraphState(
