@@ -6,6 +6,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.models.OneTimePerSessionEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -31,6 +32,7 @@ object Analytics : GlobalAnalyticsEventHandler {
 
     private val handlers = mutableMapOf<String, AnalyticsHandler>()
     private val paramsInterceptors = ConcurrentHashMap<String, ParamsInterceptor>()
+    private val oneEventsPerSession = ConcurrentHashMap<String, Boolean>()
     private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
     private val analyticsMutex = Mutex()
 
@@ -85,6 +87,11 @@ object Analytics : GlobalAnalyticsEventHandler {
 
     override fun send(event: AnalyticsEvent) {
         analyticsScope.launch {
+            if (event is OneTimePerSessionEvent &&
+                oneEventsPerSession.putIfAbsent(event.oneTimeEventId, true) != null
+            ) {
+                return@launch
+            }
             event.params = applyParamsInterceptors(event)
             val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
 
