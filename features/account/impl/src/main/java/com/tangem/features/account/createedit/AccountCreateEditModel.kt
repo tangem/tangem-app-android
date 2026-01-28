@@ -314,7 +314,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private fun showAccountNameExist() {
         val dialogMessage = DialogMessage(
-            title = resourceReference(R.string.common_something_went_wrong),
+            title = resourceReference(R.string.account_form_name_already_exist_error_title),
             message = resourceReference(R.string.account_form_name_already_exist_error_description),
         )
         messageSender.send(dialogMessage)
