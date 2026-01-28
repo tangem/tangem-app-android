@@ -26,7 +26,7 @@ class YieldSupplyPromoBannerConverterTest {
             tokenList = tokenList,
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
+            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = false,
         )
 
@@ -62,7 +62,7 @@ class YieldSupplyPromoBannerConverterTest {
             tokenList = ungroupedTokenList(statusActive),
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.12")),
+            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.12")),
             shouldShowMainPromo = true,
         )
 
@@ -81,8 +81,8 @@ class YieldSupplyPromoBannerConverterTest {
         val statusBig = createLoadedStatus(token = tokenBig, amount = BigDecimal("10.00"), isYieldActive = false)
 
         val apyMap = mapOf(
-            "${tokenSmall.network.rawId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
-            "${tokenBig.network.rawId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
+            "${tokenSmall.network.backendId}_${tokenSmall.contractAddress.lowercase()}" to BigDecimal("0.05"),
+            "${tokenBig.network.backendId}_${tokenBig.contractAddress.uppercase()}" to BigDecimal("0.15"),
         )
 
         val params = TokenConverterParams.Wallet(
@@ -105,7 +105,7 @@ class YieldSupplyPromoBannerConverterTest {
         val token = createToken(networkId = nonEvmId, backendId = nonEvmId, contract = "rAbC123")
         val status = createLoadedStatus(token = token, amount = BigDecimal("3"), isYieldActive = false)
 
-        val mismatchedKey = "${token.network.rawId}_${token.contractAddress.lowercase()}"
+        val mismatchedKey = "${token.network.backendId}_${token.contractAddress.lowercase()}"
         val apyMap = mapOf(mismatchedKey to BigDecimal("0.07"))
 
         val params = TokenConverterParams.Wallet(
@@ -131,7 +131,7 @@ class YieldSupplyPromoBannerConverterTest {
             tokenList = ungroupedTokenList(status),
         )
         val converter = YieldSupplyPromoBannerConverter(
-            yieldModuleApyMap = mapOf("${token.network.rawId}_${token.contractAddress}" to BigDecimal("0.10")),
+            yieldModuleApyMap = mapOf("${token.network.backendId}_${token.contractAddress}" to BigDecimal("0.10")),
             shouldShowMainPromo = true,
         )
 
