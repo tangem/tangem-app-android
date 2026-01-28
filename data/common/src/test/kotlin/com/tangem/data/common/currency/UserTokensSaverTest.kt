@@ -6,7 +6,7 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -30,7 +30,7 @@ class UserTokensSaverTest {
         every { this@mockk.isFeatureEnabled } returns true
     }
     private val walletServerBinder: WalletServerBinder = mockk()
-    private val appsFlyerConversionStore: AppsFlyerConversionStore = mockk()
+    private val appsFlyerStore: AppsFlyerStore = mockk()
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -39,7 +39,7 @@ class UserTokensSaverTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
         walletServerBinder = walletServerBinder,
-        appsFlyerConversionStore = appsFlyerConversionStore,
+        appsFlyerStore = appsFlyerStore,
         accountsFeatureToggles = accountsFeatureToggles,
         pushTokensRetryerPool = mockk(),
     )
