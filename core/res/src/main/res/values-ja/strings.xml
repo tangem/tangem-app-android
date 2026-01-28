@@ -172,7 +172,7 @@
     <item quantity="other">%d デバイス</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="other">%1$dトークン</item>
+    <item quantity="other">%dトークン</item>
   </plurals>
   <string name="card_reset_alert_continue_message">続行するには次のデバイスをリセットしてください。</string>
   <string name="card_reset_alert_continue_title">ウォレットのリセット</string>
@@ -1031,6 +1031,7 @@
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
   <string name="onramp_up_to_rate">最大</string>
   <string name="onramp_via">経由</string>
+  <string name="onramp_via_provider">%s 経由</string>
   <string name="onramp_you_will_pay_title">支払い</string>
   <string name="organize_tokens_group">グループ</string>
   <string name="organize_tokens_sort_by_balance">残高順</string>
