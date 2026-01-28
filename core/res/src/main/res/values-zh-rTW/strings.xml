@@ -388,13 +388,14 @@
   <string name="tangempay_issue_card_notification_description">通常需要最多15分钟</string>
   <string name="tangempay_issue_card_notification_title">設置您的 Tangem 卡</string>
   <string name="tangempay_issuing_your_card">正在发行您的卡片</string>
-  <string name="tangempay_issuing_your_card_description">正在为您准备卡片，这可能需要一些时间</string>
+  <string name="tangempay_issuing_your_card_description">卡片通常會在 5 分鐘內自動發行。如需人工審核的特殊情況，可能需要最長 48 小時。</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_failed_description">我们无法验证您的资料。如有任何疑问，请联系客服。</string>
   <string name="tangempay_kyc_failed_title">很抱歉，我们无法验证您的身份</string>
   <string name="tangempay_kyc_in_progress">KYC进行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">查看状态</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem Pay 的 KYC 正在進行中</string>
+  <string name="tangempay_kyc_in_progress_popup_description">文件通常會在 5 分鐘內自動驗證完成。如需人工審核的特殊情況，可能需要最長 48 小時。</string>
   <string name="tangempay_onboarding_banner_description">獲取您的免費 Tangem Visa 虛擬卡</string>
   <string name="tangempay_onboarding_banner_title">使用 USDC 進行日常支付</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
@@ -415,6 +416,8 @@
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">點擊下方按鈕以恢復存取權限</string>
+  <string name="tangempay_withdrawal_note_description">您的 USDC Polygon 鏈上餘額與卡片餘額不同，並在購買後 2 個工作日內更新。退款交易的資金不會返回到您的鏈上餘額或可供提現，但會保留在您的卡片餘額中用於購買。</string>
+  <string name="tangempay_withdrawal_note_title">請注意</string>
   <string name="tangempay_your_pin_code">您的PIN码</string>
   <string name="token_details_hide_alert_hide">隱藏</string>
   <string name="token_details_hide_alert_message">您即將在主屏幕上隱藏此代幣。您可以隨時通過管理代幣頁面將其添加回來。</string>

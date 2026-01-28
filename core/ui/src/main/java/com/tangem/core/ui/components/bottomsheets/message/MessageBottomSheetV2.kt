@@ -1,10 +1,10 @@
 package com.tangem.core.ui.components.bottomsheets.message
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.icons.HighlightedIcon
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -91,9 +92,7 @@ fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifie
 @Composable
 private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: Modifier = Modifier) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        state.icon?.let {
-            BottomSheetIcon(it)
-        }
+        BottomSheetIconContainer(state.icon, state.iconImage)
         state.title?.let { title ->
             Text(
                 modifier = Modifier
@@ -125,6 +124,26 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
     }
 }
 
+@Suppress("CanBeNonNullable")
+@Composable
+private fun BottomSheetIconContainer(
+    icon: MessageBottomSheetUMV2.Icon?,
+    iconImage: MessageBottomSheetUMV2.IconImage?,
+    modifier: Modifier = Modifier,
+) {
+    if (icon != null) {
+        BottomSheetIcon(icon, modifier)
+    } else if (iconImage != null) {
+        Image(
+            modifier = modifier
+                .size(TangemTheme.dimens.size56)
+                .clip(CircleShape),
+            painter = painterResource(id = iconImage.res),
+            contentDescription = null,
+        )
+    }
+}
+
 @Composable
 private fun BottomSheetIcon(icon: MessageBottomSheetUMV2.Icon, modifier: Modifier = Modifier) {
     val tint = when (icon.type) {
@@ -144,20 +163,11 @@ private fun BottomSheetIcon(icon: MessageBottomSheetUMV2.Icon, modifier: Modifie
         MessageBottomSheetUMV2.Icon.BackgroundType.Warning -> TangemTheme.colors.icon.warning
     }
 
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size56)
-            .clip(CircleShape)
-            .background(backgroundColor.copy(alpha = 0.1F)),
-        contentAlignment = Alignment.Center,
-        content = {
-            Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                painter = painterResource(icon.res),
-                contentDescription = null,
-                tint = tint,
-            )
-        },
+    HighlightedIcon(
+        modifier = modifier,
+        icon = icon.res,
+        iconTint = tint,
+        backgroundColor = backgroundColor,
     )
 }
 
@@ -229,6 +239,35 @@ private fun Preview() {
                         type = MessageBottomSheetUMV2.Icon.Type.Attention
                         backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                     }
+                    title = TextReference.Str("Title Title Title")
+                    body = TextReference.Str("Body")
+                    chip(text = TextReference.Str("Some chip information"))
+                }
+                primaryButton {
+                    text = TextReference.Str("Test")
+                    icon = R.drawable.ic_tangem_24
+                }
+                secondaryButton {
+                    icon = R.drawable.ic_tangem_24
+                    text = TextReference.Str("asdasd")
+                    onClick {
+                        closeBs()
+                    }
+                }
+            },
+            onDismissRequest = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview2() {
+    TangemThemePreview {
+        MessageBottomSheetV2(
+            messageBottomSheetUM {
+                infoBlock {
+                    iconImage = MessageBottomSheetUMV2.IconImage(R.drawable.img_visa_notification)
                     title = TextReference.Str("Title Title Title")
                     body = TextReference.Str("Body")
                     chip(text = TextReference.Str("Some chip information"))

@@ -37,6 +37,15 @@ internal class RainCryptoUtil @Inject constructor(
             secretKeyBytes to sessionId
         }
 
+    suspend fun decryptPin(base64Secret: String, base64Iv: String, secretKeyBytes: ByteArray): String? {
+        val pinBlock = decryptSecret(
+            base64Secret = base64Secret,
+            base64Iv = base64Iv,
+            secretKeyBytes = secretKeyBytes,
+        )
+        return extractPinFromPinBlock(pinBlock)
+    }
+
     suspend fun encryptPin(pin: String, secretKeyBytes: ByteArray): EncryptedData = withContext(dispatchers.default) {
         val bytes = pinBlockByteArray(pin)
         try {
@@ -111,6 +120,17 @@ internal class RainCryptoUtil @Inject constructor(
             while (length < pinBlockHexLength) append(PIN_BLOCK_FILL_CHAR)
         }
         return hex.toByteArray(StandardCharsets.UTF_8)
+    }
+
+    private suspend fun extractPinFromPinBlock(pinBlock: String): String? = withContext(dispatchers.default) {
+        val pinLength = pinBlock[1].digitToIntOrNull()
+        require(pinLength == PIN_LENGTH) { "Unexpected PIN length: ${pinBlock[1]}" }
+
+        val pinStartIndex = 2
+        val pinEndIndex = pinStartIndex + pinLength
+        val pin = pinBlock.substring(pinStartIndex, pinEndIndex)
+
+        pin.takeIf { value -> value.all { it.isDigit() } && value.length == PIN_LENGTH }
     }
 
     private fun ByteArray.clear() {
