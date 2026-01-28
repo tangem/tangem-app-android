@@ -55,8 +55,12 @@ object PayloadToDeeplinkConverter : Converter<Map<String, String>, String?> {
                 addQueryParam(DERIVATION_PATH_KEY, derivationPath)
             }
 
-            transactionId?.let { addQueryParam(TRANSACTION_ID_KEY, it) }
-            name?.let { addQueryParam(NAME_KEY, it) }
+            if (transactionId != null) {
+                addQueryParam(TRANSACTION_ID_KEY, transactionId)
+            }
+            if (name != null) {
+                addQueryParam(NAME_KEY, name)
+            }
         }.build()
     }
 
