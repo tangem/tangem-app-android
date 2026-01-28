@@ -10,15 +10,17 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
-import com.tangem.utils.info.AppInfoProvider
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.*
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.info.AppInfoProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -26,6 +28,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val appInfoProvider: AppInfoProvider,
     private val appPreferencesStore: AppPreferencesStore,
+    private val appsFlyerStore: AppsFlyerStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : PushNotificationsRepository {
 
@@ -39,6 +42,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
                 timezone = appInfoProvider.timezone,
                 version = appInfoProvider.appVersion,
                 pushToken = pushToken,
+                appsflyerId = appsFlyerStore.getUID(),
             ),
         ).getOrThrow().appId
 
