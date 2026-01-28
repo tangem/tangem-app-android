@@ -299,6 +299,7 @@
   <string name="common_go_to_token">Go to token</string>
   <string name="common_got_it">Got it</string>
   <string name="common_hide">Hide</string>
+  <string name="common_hold_to">Hold to %s</string>
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
@@ -374,6 +375,7 @@
   <string name="common_swap">Swap</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Tap and hold</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
   <string name="common_to">To</string>
@@ -528,7 +530,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
-  <string name="express_provider_great_rate">Best choice</string>
+  <string name="express_provider_great_rate">Competitive rate</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
@@ -730,7 +732,7 @@
   <string name="markets_loading_no_data_title">No data</string>
   <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
-  <string name="markets_search_header_title">Search through the market</string>
+  <string name="markets_search_header_title">Search tokens</string>
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
   <string name="markets_search_show_tokens">Show tokens</string>
@@ -745,10 +747,10 @@
   <string name="markets_selector_interval_7d_title">7d</string>
   <string name="markets_selector_interval_all_title">All</string>
   <string name="markets_sort_by_experienced_buyers_title">Experienced buyers</string>
-  <string name="markets_sort_by_rating_title">Capitalization</string>
+  <string name="markets_sort_by_rating_title">Market Cap</string>
   <string name="markets_sort_by_title">Sort By</string>
-  <string name="markets_sort_by_top_gainers_title">Top Gainers</string>
-  <string name="markets_sort_by_top_losers_title">Top Losers</string>
+  <string name="markets_sort_by_top_gainers_title">Gainers</string>
+  <string name="markets_sort_by_top_losers_title">Losers</string>
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_sort_by_yield_mode_title">Yield Mode</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
@@ -778,7 +780,7 @@
   <string name="markets_token_details_exchanges_title">Exchanges</string>
   <string name="markets_token_details_experienced_buyers">Experienced buyers</string>
   <string name="markets_token_details_experienced_buyers_description">Net buyers with the additional requirement of having at least 100 outgoing transactions</string>
-  <string name="markets_token_details_experienced_buyers_full">Experienced buyers</string>
+  <string name="markets_token_details_experienced_buyers_full">Active Buyers</string>
   <string name="markets_token_details_fully_diluted_valuation">Fully diluted valuation</string>
   <string name="markets_token_details_fully_diluted_valuation_description">The total theoretical value of a cryptocurrency if all coins that could exist are in circulation, including those not currently circulating</string>
   <string name="markets_token_details_fully_diluted_valuation_full">Fully diluted valuation</string>
@@ -1022,7 +1024,7 @@
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
-  <string name="onramp_offer_type_fastet">Fastest</string>
+  <string name="onramp_offer_type_fastet">Quickest Processing</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_payment_method_subtitle">Payment method</string>
   <string name="onramp_provider_max_amount">Available up to %s</string>
@@ -1054,6 +1056,7 @@
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_up_to_rate">Up to</string>
   <string name="onramp_via">Via</string>
+  <string name="onramp_via_provider">via %s</string>
   <string name="onramp_you_will_pay_title">You will pay</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
@@ -1609,7 +1612,7 @@
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
-  <string name="tokens_list_hot_crypto_header">Hot crypto 🔥</string>
+  <string name="tokens_list_hot_crypto_header">Market Trend 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Unavailable to purchase</string>
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
