@@ -2,7 +2,7 @@ package com.tangem.data.pay.util
 
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.pay.models.response.VisaErrorResponse
+import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.converter.Converter
@@ -14,7 +14,7 @@ internal class TangemPayErrorConverter @Inject constructor(
     @NetworkMoshi moshi: Moshi,
 ) : Converter<Throwable, VisaApiError> {
 
-    private val visaErrorAdapter by lazy { moshi.adapter(VisaErrorResponse::class.java) }
+    private val tangemPayErrorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
 
     override fun convert(value: Throwable): VisaApiError {
         return if (value is ApiResponseError.HttpException) {
@@ -24,7 +24,7 @@ internal class TangemPayErrorConverter @Inject constructor(
 
             val errorBody = value.errorBody ?: return VisaApiError.UnknownWithoutCode
             return runCatching {
-                visaErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode
+                tangemPayErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode
             }.map {
                 VisaApiError.fromBackendError(it)
             }.getOrElse {

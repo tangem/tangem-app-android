@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.wallets)
     implementation(projects.domain.models)
+    implementation(projects.domain.hotWallet)
 
     /** Core modules */
     implementation(projects.core.configToggles)
@@ -38,6 +39,7 @@ dependencies {
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
+    implementation(projects.common)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
