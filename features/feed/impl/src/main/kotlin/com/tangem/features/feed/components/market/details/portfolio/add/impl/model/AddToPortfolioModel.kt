@@ -19,12 +19,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.account.PortfolioSelectorController
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
-import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddAccount
-import com.tangem.features.feed.components.market.details.portfolio.add.AvailableToAddData
-import com.tangem.features.feed.components.market.details.portfolio.add.SelectedNetwork
-import com.tangem.features.feed.components.market.details.portfolio.add.SelectedPortfolio
+import com.tangem.features.feed.components.market.details.portfolio.add.*
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.ChooseNetworkComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.TokenActionsComponent
@@ -234,7 +229,15 @@ internal class AddToPortfolioModel @Inject constructor(
         portfolioSelectorController.selectAccount(selectedAccount)
         val changedPortfolio = setupPortfolioFlow(data)
             .drop(1)
-            .onEach { portfolio -> navigation.pushNew(routeToNetworkSelector(portfolio)) }
+            .onEach { portfolio ->
+                val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
+                if (isSingleAvailableNetwork) {
+                    val singleNetwork = portfolio.account.availableToAddNetworks.first()
+                    callbackDelegate.onNetworkSelected(singleNetwork)
+                } else {
+                    navigation.pushNew(routeToNetworkSelector(portfolio))
+                }
+            }
         val changedNetwork = setupNetworkFlow(changedPortfolio)
         combine(
             flow = changedPortfolio,
