@@ -12,7 +12,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -41,7 +41,7 @@ class DefaultWalletsRepositoryTest {
     private lateinit var tangemTechApi: TangemTechApi
     private lateinit var dispatchers: CoroutineDispatcherProvider
     private lateinit var walletServerBinder: WalletServerBinder
-    private lateinit var appsFlyerConversionStore: AppsFlyerConversionStore
+    private lateinit var appsFlyerStore: AppsFlyerStore
 
     private val testWalletId = UserWalletId("1234567890abcdef")
 
@@ -49,7 +49,7 @@ class DefaultWalletsRepositoryTest {
     fun setup() {
         tangemTechApi = mockk()
         walletServerBinder = mockk()
-        appsFlyerConversionStore = mockk()
+        appsFlyerStore = mockk()
         dispatchers = TestingCoroutineDispatcherProvider()
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
@@ -59,7 +59,7 @@ class DefaultWalletsRepositoryTest {
             dispatchers = dispatchers,
             authProvider = mockk(),
             walletServerBinder = walletServerBinder,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             accountsFeatureToggles = mockk(),
             moshi = mockk(),
         )
@@ -227,12 +227,12 @@ class DefaultWalletsRepositoryTest {
             dispatchers = dispatchers,
             authProvider = authProvider,
             walletServerBinder = walletServerBinder,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             accountsFeatureToggles = accountsFeatureToggles,
             moshi = mockk(),
         )
 
-        coEvery { appsFlyerConversionStore.get() } returns null
+        coEvery { appsFlyerStore.get() } returns null
 
         coEvery {
             tangemTechApi.associateApplicationIdWithWallets(
