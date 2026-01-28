@@ -3,6 +3,7 @@ package com.tangem.features.feed.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.model.FeedEntryModel
+import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
@@ -17,6 +18,11 @@ import dagger.multibindings.IntoMap
 @Module
 @InstallIn(ModelComponent::class)
 internal interface ModelModule {
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnModel::class)
+    fun bindsEarnModel(model: EarnModel): Model
 
     @Binds
     @IntoMap
