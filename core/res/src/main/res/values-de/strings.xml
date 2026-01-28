@@ -123,8 +123,8 @@
   <string name="auth_info_subtitle">Wähle eine Wallet zum Einloggen</string>
   <string name="auth_info_title">Willkommen zurück!</string>
   <plurals name="auth_wallet_hardware_description">
-    <item quantity="one">%s Karte</item>
-    <item quantity="other">%s Karten</item>
+    <item quantity="one">%d Karte</item>
+    <item quantity="other">%d Karten</item>
   </plurals>
   <string name="auth_wallet_mobile_description">Mobile-Wallet</string>
   <string name="backup_complete_description">Du hast Deine Wallet erfolgreich gesichert.</string>
@@ -313,8 +313,8 @@
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
   <plurals name="common_networks_count">
-    <item quantity="one">%1$s Netzwerk</item>
-    <item quantity="other">%1$s Netzwerke</item>
+    <item quantity="one">%d Netzwerk</item>
+    <item quantity="other">%d Netzwerke</item>
   </plurals>
   <string name="common_new_address">Neue Adresse</string>
   <string name="common_news">Nachrichten</string>
@@ -1047,6 +1047,7 @@
   <string name="onramp_transaction_status_footer_text">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
   <string name="onramp_up_to_rate">Bis zu</string>
   <string name="onramp_via">Über</string>
+  <string name="onramp_via_provider">über %s</string>
   <string name="onramp_you_will_pay_title">Du zahlst</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>

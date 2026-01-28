@@ -3,20 +3,23 @@ package com.tangem.data.notifications
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.utils.info.AppInfoProvider
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.notifications.converters.NotificationsEligibleNetworkConverter
 import arrow.core.Either
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.CryptoNetworkResponse
+import com.tangem.datasource.api.tangemTech.models.NotificationApplicationCreateBody
+import com.tangem.datasource.api.tangemTech.models.NotificationApplicationIdResponse
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import com.tangem.utils.info.AppInfoProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -34,10 +37,12 @@ class DefaultPushNotificationsRepositoryTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = preferencesDataStore,
     )
+    private val appsFlyerStore: AppsFlyerStore = mockk()
     private val repository = DefaultPushNotificationsRepository(
         tangemTechApi = tangemTechApi,
         appInfoProvider = appInfoProvider,
         appPreferencesStore = appPreferencesStore,
+        appsFlyerStore = appsFlyerStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -55,6 +60,7 @@ class DefaultPushNotificationsRepositoryTest {
         coEvery { appInfoProvider.language } returns "en"
         coEvery { appInfoProvider.appVersion } returns "5.21.1"
         coEvery { appInfoProvider.timezone } returns "UTC"
+        coEvery { appsFlyerStore.getUID() } returns "UID"
         coEvery { tangemTechApi.createApplicationId(any()) } returns ApiResponse.Success(
             expectedAppIdResponse,
         )
@@ -74,6 +80,7 @@ class DefaultPushNotificationsRepositoryTest {
                     timezone = "UTC",
                     version = "5.21.1",
                     pushToken = pushToken,
+                    appsflyerId = "UID",
                 ),
             )
         }
