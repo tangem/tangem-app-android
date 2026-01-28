@@ -12,7 +12,7 @@ import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -45,7 +45,7 @@ internal object WalletsDataModule {
         dispatchers: CoroutineDispatcherProvider,
         authProvider: AuthProvider,
         walletServerBinder: WalletServerBinder,
-        appsFlyerConversionStore: AppsFlyerConversionStore,
+        appsFlyerStore: AppsFlyerStore,
         accountsFeatureToggles: AccountsFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): WalletsRepository {
@@ -57,7 +57,7 @@ internal object WalletsDataModule {
             dispatchers = dispatchers,
             authProvider = authProvider,
             walletServerBinder = walletServerBinder,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             accountsFeatureToggles = accountsFeatureToggles,
             moshi = moshi,
         )
