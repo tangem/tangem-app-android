@@ -61,4 +61,7 @@ interface CurrencyChecksRepository {
         currencyStatus: CryptoCurrencyStatus?,
         balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent?
+
+    /** Checks if the network supports gasless transactions */
+    fun isNetworkSupportedForGaslessTx(network: Network): Boolean
 }
