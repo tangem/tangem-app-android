@@ -299,6 +299,7 @@
   <string name="common_go_to_token">Go to token</string>
   <string name="common_got_it">Got it</string>
   <string name="common_hide">Hide</string>
+  <string name="common_hold_to">Hold to %s</string>
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
@@ -374,6 +375,7 @@
   <string name="common_swap">Swap</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Tap and hold</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
   <string name="common_to">To</string>
@@ -528,7 +530,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
-  <string name="express_provider_great_rate">Best choice</string>
+  <string name="express_provider_great_rate">Competitive rate</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>

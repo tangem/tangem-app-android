@@ -109,7 +109,7 @@
   <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены из приложения.</string>
   <string name="app_settings_on_require_access_code_alert_message">Это удалит все сохранённые коды доступа к кошелькам. Любое дальнейшее взаимодействие с кошельком будет требовать ввода кода доступа.</string>
   <string name="app_settings_require_access_code">Требуется код доступа</string>
-  <string name="app_settings_require_access_code_footer">Эта опция отключает использование биометрии для выполнения чувствительных действий. Каждый раз, например при подписании транзакции, вам потребуется вводить код доступа.</string>
+  <string name="app_settings_require_access_code_footer">Эта опция отключает использование биометрии для выполнения чувствительных действий. Каждый раз, например, при подписании транзакции, вам потребуется вводить код доступа.</string>
   <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
   <string name="app_settings_saved_access_codes_footer">Подключите функцию хранения кодов доступа от карт на телефоне в зашифрованном виде, и при работе с картой или кольцом вместо кода доступа будет запрашиваться биометрическая аутентификация.</string>
   <string name="app_settings_saved_wallet">Cохранение кошелька</string>
