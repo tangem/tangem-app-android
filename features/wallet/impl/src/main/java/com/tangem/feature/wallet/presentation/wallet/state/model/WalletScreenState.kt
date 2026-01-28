@@ -13,5 +13,6 @@ internal data class WalletScreenState(
     val event: StateEvent<WalletEvent>,
     val isHidingMode: Boolean,
     val showMarketsOnboarding: Boolean,
+    val isNewMarketEnabled: Boolean,
     val onDismissMarketsOnboarding: () -> Unit,
 )
