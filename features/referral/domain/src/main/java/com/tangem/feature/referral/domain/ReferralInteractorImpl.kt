@@ -72,9 +72,9 @@ internal class ReferralInteractorImpl(
                 manageCryptoCurrenciesUseCase(accountId = portfolioId.accountId, add = cryptoCurrency)
             }
             is PortfolioId.Wallet -> {
-                derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
-                    Timber.e("Failed to derive public keys: $it")
-                    throw it.mapToDomainError()
+                derivePublicKeysUseCase(userWallet.walletId, listOf(cryptoCurrency)).getOrElse { throwable ->
+                    Timber.e("Failed to derive public keys: $throwable")
+                    throw throwable.mapToDomainError()
                 }
 
                 addCryptoCurrenciesUseCase(
@@ -118,9 +118,9 @@ internal class ReferralInteractorImpl(
     private fun Throwable.mapToDomainError(): ReferralError {
         if (this !is TangemSdkError) return ReferralError.DataError(this)
         return if (this is TangemSdkError.UserCancelled) {
-            ReferralError.UserCancelledException
+            ReferralError.UserCancelledException()
         } else {
-            ReferralError.SdkError
+            ReferralError.SdkError()
         }
     }
 }

@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 internal sealed class NotificationsAnalyticEvents(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
     abstract val categoryName: String

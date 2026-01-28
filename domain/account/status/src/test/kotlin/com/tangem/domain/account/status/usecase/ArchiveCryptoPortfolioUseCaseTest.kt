@@ -295,6 +295,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
                 )
             },
             totalAccounts = totalAccounts,
+            totalArchivedAccounts = totalArchivedAccounts,
             totalFiatBalance = TotalFiatBalance.Loading,
             sortType = sortType,
             groupType = groupType,

@@ -13,11 +13,40 @@ internal data class AccountsUM(
 ) {
 
     data class Button(
-        val title: String,
+        val id: ID,
+        val title: String = createTitle(id),
         val isInProgress: Boolean = false,
         val isEnabled: Boolean = true,
-        val onClick: (title: String) -> Unit,
-    )
+        val onClick: () -> Unit,
+    ) {
+
+        enum class ID {
+            ShowAccountList,
+            FetchAccounts,
+            FillOutList,
+            FillOutArchivedList,
+            ArchiveAll,
+            SortByDerivationIndex,
+            ClearETag,
+        }
+
+        fun reset(): Button {
+            return copy(title = createTitle(id), isInProgress = false, isEnabled = true)
+        }
+
+        companion object {
+
+            private fun createTitle(id: ID): String = when (id) {
+                ID.ShowAccountList -> "Show the account list"
+                ID.FetchAccounts -> "Fetch accounts"
+                ID.FillOutList -> "Fill out the list (up to 20)"
+                ID.FillOutArchivedList -> "Fill out the archived list"
+                ID.ArchiveAll -> "Archive all"
+                ID.SortByDerivationIndex -> "Sort by derivation index"
+                ID.ClearETag -> "Clear ETag"
+            }
+        }
+    }
 
     data class WalletSelector(
         val selected: UserWallet?,
