@@ -4,5 +4,4 @@ import com.squareup.moshi.Json
 
 data class CardBalanceResponse(
     @Json(name = "result") val result: BalanceResponse?,
-    @Json(name = "error") val error: String?,
 )

@@ -1,6 +1,8 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -23,4 +25,8 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
 
     api(projects.core.pagination)
+
+    /** DI */
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }
