@@ -173,8 +173,8 @@
     <item quantity="other">%d cartes</item>
   </plurals>
   <plurals name="card_label_token_count">
-    <item quantity="one">%s token</item>
-    <item quantity="other">%s tokens</item>
+    <item quantity="one">%d token</item>
+    <item quantity="other">%d tokens</item>
   </plurals>
   <string name="card_reset_alert_continue_message">Veuillez réinitialiser l\'appareil suivant pour continuer.</string>
   <string name="card_reset_alert_continue_title">Réinitialisation du portefeuille</string>
@@ -1039,6 +1039,7 @@
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_up_to_rate">Jusqu\'à</string>
   <string name="onramp_via">Via</string>
+  <string name="onramp_via_provider">via %s</string>
   <string name="onramp_you_will_pay_title">Vous paierez</string>
   <string name="organize_tokens_group">Grouper</string>
   <string name="organize_tokens_sort_by_balance">Par solde</string>
