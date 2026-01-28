@@ -12,7 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.datasource.local.appsflyer.AppsFlyerConversionStore
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -72,7 +72,7 @@ class DefaultPromoDeeplinkHandlerTest {
     private lateinit var bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase
 
     @MockK
-    private lateinit var appsFlyerConversionStore: AppsFlyerConversionStore
+    private lateinit var appsFlyerStore: AppsFlyerStore
 
     private lateinit var messages: MutableList<UiMessage>
 
@@ -114,7 +114,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -148,7 +148,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -181,7 +181,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
@@ -220,7 +220,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -263,7 +263,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -381,7 +381,7 @@ class DefaultPromoDeeplinkHandlerTest {
             activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
             getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
             bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-            appsFlyerConversionStore = appsFlyerConversionStore,
+            appsFlyerStore = appsFlyerStore,
             analyticsEventsHandler = analyticsEventHandler,
             dispatchers = dispatcherProvider,
         )
@@ -414,7 +414,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -456,7 +456,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -519,7 +519,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -573,7 +573,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -633,7 +633,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -692,7 +692,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -747,7 +747,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
@@ -802,7 +802,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 activateBitcoinPromocodeUseCase = activateBitcoinPromocodeUseCase,
                 getSelectedWalletSyncUseCase = getSelectedWalletSyncUseCase,
                 bindRefcodeWithWalletUseCase = bindRefcodeWithWalletUseCase,
-                appsFlyerConversionStore = appsFlyerConversionStore,
+                appsFlyerStore = appsFlyerStore,
                 analyticsEventsHandler = analyticsEventHandler,
                 dispatchers = dispatcherProvider,
             )
