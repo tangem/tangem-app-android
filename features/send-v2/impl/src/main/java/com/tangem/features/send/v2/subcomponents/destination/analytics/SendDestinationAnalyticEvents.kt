@@ -8,7 +8,7 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 internal sealed class SendDestinationAnalyticEvents(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
     abstract val categoryName: String

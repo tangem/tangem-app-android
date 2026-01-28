@@ -3,6 +3,7 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -30,7 +31,12 @@ class CardContextInterceptor(
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
         return when (event) {
-            is IntroductionProcess.ButtonScanCard -> false
+            is IntroductionProcess.ButtonScanCard,
+            is IntroductionProcess.ButtonScanCardLegacy,
+            is SignIn.ScreenOpened,
+            is SignIn.ButtonAddWallet,
+            -> false
+            is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
             else -> true
         }
     }

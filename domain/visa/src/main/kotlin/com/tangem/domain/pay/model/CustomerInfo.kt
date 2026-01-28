@@ -5,6 +5,7 @@ import java.math.BigDecimal
 
 sealed class MainCustomerInfoContentState {
     object Loading : MainCustomerInfoContentState()
+    object OnboardingBanner : MainCustomerInfoContentState()
     data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
 }
 
@@ -31,5 +32,6 @@ data class CustomerInfo(
         val currencyCode: String,
         val customerWalletAddress: String,
         val depositAddress: String?,
+        val isPinSet: Boolean,
     )
 }

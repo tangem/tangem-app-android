@@ -11,6 +11,7 @@ data class TangemPayAuthTokens(
     @Json(name = "expires_at") val expiresAt: Long,
     @Json(name = "refresh_token") val refreshToken: String,
     @Json(name = "refresh_expires_at") val refreshExpiresAt: Long,
+    @Json(name = "idempotency_key") val idempotencyKey: String? = null,
 )
 
 fun TangemPayAuthTokens.getAuthHeader(): String {

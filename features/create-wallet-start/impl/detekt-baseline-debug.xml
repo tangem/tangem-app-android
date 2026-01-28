@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>BooleanPropertyNaming:CreateWalletStartUM.kt$CreateWalletStartUM$val showScanSecondaryButton: Boolean</ID>
-    <ID>MultilineLambdaItParameter:CreateWalletStartContent.kt${ FeatureItem( iconResId = it.iconResId, text = it.text, ) }</ID>
-    <ID>MultilineLambdaItParameter:CreateWalletStartModel.kt$CreateWalletStartModel${ delay(HIDE_PROGRESS_DELAY) setLoading(false) when (it) { is SaveWalletError.DataError -&gt; Timber.e(it.toString(), "Unable to save user wallet") is SaveWalletError.WalletAlreadySaved -&gt; { userWalletsListRepository.unlock( userWalletId = userWallet.walletId, unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse), ).onRight { appRouter.replaceAll(AppRoute.Wallet) } } } }</ID>
-  </CurrentIssues>
-</SmellBaseline>
