@@ -51,10 +51,10 @@ internal class DefaultSwapTransactionRepository(
         toAccount: Account.CryptoPortfolio?,
         transaction: SavedSwapTransactionModel,
     ) {
-        transaction.status?.let {
+        transaction.status?.let { status ->
             storeTransactionState(
                 txId = transaction.txId,
-                status = it,
+                status = status,
                 accountWithCurrency = null,
             )
         }
@@ -63,8 +63,8 @@ internal class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedTransactions
-                ?.firstOrNull {
-                    it.checkId(
+                ?.firstOrNull { savedTx ->
+                    savedTx.checkId(
                         checkUserWalletId = userWalletId,
                         fromCurrencyId = fromCryptoCurrency.id,
                         toCurrencyId = toCryptoCurrency.id,
@@ -73,7 +73,7 @@ internal class DefaultSwapTransactionRepository(
                 ?.transactions
                 ?.addOrReplace(
                     item = transaction,
-                    predicate = { it.txId == transaction.txId },
+                    predicate = { tx -> tx.txId == transaction.txId },
                 ) ?: listOf(transaction)
 
             mutablePreferences.setObject(
@@ -117,31 +117,31 @@ internal class DefaultSwapTransactionRepository(
             },
         ) { savedTransactions, txStatuses, accountList ->
 
-            val currencyToTxs = savedTransactions?.filter {
-                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
-                val toCurrency = it.toCryptoCurrencyId == cryptoCurrencyId.value
-                isUserWallet && toCurrency
+            val currencyToTxs = savedTransactions?.filter { savedTx ->
+                val isUserWallet = savedTx.userWalletId == userWallet.walletId.stringValue
+                val isToCurrency = savedTx.toCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && isToCurrency
             }
 
-            val currencyFromTxs = savedTransactions?.filter {
-                val isUserWallet = it.userWalletId == userWallet.walletId.stringValue
-                val fromCurrency = it.fromCryptoCurrencyId == cryptoCurrencyId.value
-                isUserWallet && fromCurrency
+            val currencyFromTxs = savedTransactions?.filter { savedTx ->
+                val isUserWallet = savedTx.userWalletId == userWallet.walletId.stringValue
+                val isFromCurrency = savedTx.fromCryptoCurrencyId == cryptoCurrencyId.value
+                isUserWallet && isFromCurrency
             }
 
-            val toTxs = currencyToTxs?.mapNotNull {
+            val toTxs = currencyToTxs?.mapNotNull { savedTx ->
                 converter.convertBack(
-                    value = it,
+                    value = savedTx,
                     userWallet = userWallet,
                     accountList = accountList,
                     txStatuses = txStatuses,
-                    onFilter = { it.swapTxTypeDTO == SwapTxTypeDTO.Swap },
+                    onFilter = { tx -> tx.swapTxTypeDTO == SwapTxTypeDTO.Swap },
                 )
             }.orEmpty()
 
-            val fromTxs = currencyFromTxs?.mapNotNull {
+            val fromTxs = currencyFromTxs?.mapNotNull { savedTx ->
                 converter.convertBack(
-                    value = it,
+                    value = savedTx,
                     userWallet = userWallet,
                     accountList = accountList,
                     txStatuses = txStatuses,
@@ -161,9 +161,9 @@ internal class DefaultSwapTransactionRepository(
             )
             val tokenTransactions = savedList
                 ?.asSequence()
-                ?.map {
-                    it.copy(transactions = it.transactions.filterNot { it.txId == txId })
-                }?.filterNot { it.transactions.isEmpty() }
+                ?.map { savedTx ->
+                    savedTx.copy(transactions = savedTx.transactions.filterNot { tx -> tx.txId == txId })
+                }?.filterNot { savedTx -> savedTx.transactions.isEmpty() }
                 ?.toList()
 
             if (tokenTransactions.isNullOrEmpty()) {
@@ -261,8 +261,8 @@ internal class DefaultSwapTransactionRepository(
                 toAccount = toAccount,
                 tokenTransactions = transactions,
             ),
-            predicate = {
-                it.checkId(
+            predicate = { savedTx ->
+                savedTx.checkId(
                     checkUserWalletId = userWalletId,
                     fromCurrencyId = fromCryptoCurrency.id,
                     toCurrencyId = toCryptoCurrency.id,
