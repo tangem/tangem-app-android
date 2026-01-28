@@ -14,4 +14,6 @@ internal enum class TesterScreen {
     BLOCKCHAIN_PROVIDERS,
     TEST_PUSHES,
     ACCOUNTS,
+    NEWS,
+    NEWS_DETAILS,
 }

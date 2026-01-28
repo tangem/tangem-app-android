@@ -73,7 +73,7 @@ class UserTokensSaverTest {
         }
 
         coVerify(inverse = true) {
-            tangemTechApi.saveUserTokens(any(), any())
+            tangemTechApi.saveTokens(any(), any())
         }
     }
 
@@ -108,7 +108,8 @@ class UserTokensSaverTest {
 
             coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
-            coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
+            coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
+            coEvery { tangemTechApi.createWallet(body = any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
 
             // WHEN
             userTokensSaver.push(
@@ -120,7 +121,7 @@ class UserTokensSaverTest {
             // THEN
             coVerifyOrder {
                 enricher(userWalletId, response)
-                tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+                tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
             }
 
             assert(onFailSendCalled) { "onFailSend callback should be called when API call fails" }
@@ -155,7 +156,7 @@ class UserTokensSaverTest {
         coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
         coEvery { enricher(userWalletId, response) } returns enrichedResponse
         coEvery {
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
         } returns ApiResponse.Success(Unit)
 
         // WHEN
@@ -164,7 +165,7 @@ class UserTokensSaverTest {
         // THEN
         coVerifyOrder {
             enricher(userWalletId, response)
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
         }
     }
 }

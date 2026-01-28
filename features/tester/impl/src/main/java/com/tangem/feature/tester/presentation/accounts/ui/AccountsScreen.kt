@@ -206,7 +206,7 @@ private fun LazyListScope.ManageAccountsButtons(buttons: ImmutableList<AccountsU
     items(buttons) { button ->
         PrimaryButton(
             text = button.title,
-            onClick = { button.onClick(button.title) },
+            onClick = button.onClick,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),

@@ -42,12 +42,12 @@ internal class SendEntryPointModel @Inject constructor(
         lastSavedAmount = lastAmount
         isEnterInFiat = isEnterInFiatSelected
         modelScope.launch {
-            val showSendViaSwapNotification = shouldShowNotificationUseCase(
+            val isShowSendViaSwapNotification = shouldShowNotificationUseCase(
                 NotificationId.SendViaSwapTokenSelectorNotification.key,
             )
             router.push(
                 SendEntryRoute.ChooseToken(
-                    showSendViaSwapNotification = showSendViaSwapNotification,
+                    isShowSendViaSwapNotification = isShowSendViaSwapNotification,
                 ),
             )
         }
