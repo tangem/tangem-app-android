@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.converter.Converter
@@ -30,11 +31,11 @@ internal class YieldSupplyPromoBannerConverter(
         val max = cryptoCurrencyStatuses.asSequence()
             .mapNotNull { status ->
                 val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
-                val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
-                val tokenKey = "${token.network.rawId}_${token.contractAddress}"
-
                 val matchedKey = yieldModuleApyMap.keys.firstOrNull { mapKey ->
-                    mapKey.equals(tokenKey, shouldIgnoreCase)
+                    mapKey.equals(
+                        other = token.yieldSupplyKey(),
+                        ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
+                    )
                 } ?: return@mapNotNull null
 
                 status to matchedKey
