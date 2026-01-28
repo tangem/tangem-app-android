@@ -37,7 +37,6 @@ internal class SetTokenListTransformer(
                 Timber.w("Impossible to load tokens list for locked wallet")
                 prevState
             }
-            is WalletState.Visa,
             is WalletState.SingleCurrency,
             -> {
                 Timber.w("Impossible to load tokens list for single-currency wallet")
