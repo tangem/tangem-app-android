@@ -219,7 +219,15 @@ internal class AddToPortfolioModel @Inject constructor(
         portfolioSelectorController.selectAccount(selectedAccount)
         val changedPortfolio = setupPortfolioFlow(data)
             .drop(1)
-            .onEach { portfolio -> navigation.pushNew(routeToNetworkSelector(portfolio)) }
+            .onEach { portfolio ->
+                val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
+                if (isSingleAvailableNetwork) {
+                    val singleNetwork = portfolio.account.availableToAddNetworks.first()
+                    callbackDelegate.onNetworkSelected(singleNetwork)
+                } else {
+                    navigation.pushNew(routeToNetworkSelector(portfolio))
+                }
+            }
         val changedNetwork = setupNetworkFlow(changedPortfolio)
         combine(
             flow = changedPortfolio,
