@@ -5,7 +5,6 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class WalletHardwareBackupUM(
-    val showPurchaseBlock: Boolean = false,
     val blocks: ImmutableList<Block>,
     val onBackClick: () -> Unit,
     val onBuyClick: () -> Unit,

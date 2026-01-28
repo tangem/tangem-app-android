@@ -3,6 +3,7 @@ package com.tangem.tap.domain.sdk.impl
 import android.content.res.Resources
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import arrow.core.Either
 import com.tangem.Message
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
@@ -18,7 +19,11 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.pay.WithdrawalSignatureResult
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -214,12 +219,15 @@ class MockTangemSdkManager(
     }
 
     override suspend fun tangemPayProduceInitialCredentials(
-        cardId: String,
-    ): CompletionResult<TangemPayInitialCredentials> {
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, TangemPayInitialCredentials> {
         error("Not implemented")
     }
 
-    override suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String> {
+    override suspend fun getWithdrawalSignature(
+        hash: String,
+        preflightReadFilter: PreflightReadFilter,
+    ): Either<Throwable, WithdrawalSignatureResult> {
         error("Not implemented")
     }
 
