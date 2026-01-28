@@ -16,12 +16,33 @@ sealed class WalletSettingsAnalyticEvents(
         params = mapOf(STATUS to enabled.value),
     )
 
-    object WalletSettingsScreenOpened : WalletSettingsAnalyticEvents(
+    class WalletSettingsScreenOpened(
+        private val accountsCount: Int?,
+    ) : WalletSettingsAnalyticEvents(
         event = "Wallet Settings Screen Opened",
+        params = buildMap {
+            if (accountsCount != null) put("Accounts Count", accountsCount.toString())
+        },
     )
 
-    object ButtonBackup : WalletSettingsAnalyticEvents(
+    class ButtonBackup : WalletSettingsAnalyticEvents(
         event = "Button - Backup",
+    )
+
+    class ButtonAddAccount : WalletSettingsAnalyticEvents(
+        event = "Button - Add Account",
+    )
+
+    class ButtonOpenExistingAccount : WalletSettingsAnalyticEvents(
+        event = "Button - Open Existing Account",
+    )
+
+    class ButtonArchivedAccounts : WalletSettingsAnalyticEvents(
+        event = "Button - Archived Accounts",
+    )
+
+    class LongtapAccountsOrder : WalletSettingsAnalyticEvents(
+        event = "Longtap - Accounts Order",
     )
 
     data class ButtonAccessCode(
@@ -32,13 +53,13 @@ sealed class WalletSettingsAnalyticEvents(
     )
 
     data class BackupScreenOpened(
-        val isManualBackupEnabled: Boolean,
+        val isBackedUp: Boolean,
     ) : WalletSettingsAnalyticEvents(
         event = "Backup Screen Opened",
-        params = mapOf("Manual Backup" to if (isManualBackupEnabled) "Enabled" else "Disabled"),
+        params = mapOf("Manual Backup" to if (isBackedUp) "Yes" else "No"),
     )
 
-    object ButtonRecoveryPhrase : WalletSettingsAnalyticEvents(
+    class ButtonRecoveryPhrase : WalletSettingsAnalyticEvents(
         event = "Button - Recovery phrase",
     )
 
@@ -59,27 +80,27 @@ sealed class WalletSettingsAnalyticEvents(
         }
     }
 
-    object ButtonHardwareUpdate : WalletSettingsAnalyticEvents(
+    class ButtonHardwareUpdate : WalletSettingsAnalyticEvents(
         event = "Button - Hardware Update",
     )
 
-    object HardwareUpgradeScreenOpened : WalletSettingsAnalyticEvents(
+    class HardwareUpgradeScreenOpened : WalletSettingsAnalyticEvents(
         event = "Hardware Upgrade Screen Opened",
     )
 
-    object ButtonCreateNewWallet : WalletSettingsAnalyticEvents(
+    class ButtonCreateNewWallet : WalletSettingsAnalyticEvents(
         event = "Button - Create New Wallet",
     )
 
-    object ButtonUpgradeCurrent : WalletSettingsAnalyticEvents(
+    class ButtonUpgradeCurrent : WalletSettingsAnalyticEvents(
         event = "Button - Upgrade Current",
     )
 
-    object CreateWalletScreenOpened : WalletSettingsAnalyticEvents(
+    class CreateWalletScreenOpened : WalletSettingsAnalyticEvents(
         event = "Create Wallet Screen Opened",
     )
 
-    object HardwareBackupScreenOpened : WalletSettingsAnalyticEvents(
+    class HardwareBackupScreenOpened : WalletSettingsAnalyticEvents(
         event = "Hardware Backup Screen Opened",
     )
 
@@ -141,7 +162,7 @@ sealed class WalletSettingsAnalyticEvents(
         params = mapOf(AnalyticsParam.Key.SOURCE to source),
     )
 
-    object ButtonStartUpgrade : WalletSettingsAnalyticEvents(
+    class ButtonStartUpgrade : WalletSettingsAnalyticEvents(
         event = "Button - Start Upgrade",
     )
 

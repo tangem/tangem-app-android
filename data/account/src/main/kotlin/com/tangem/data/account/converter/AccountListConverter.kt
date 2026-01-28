@@ -36,6 +36,7 @@ internal class AccountListConverter @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             accounts = value.accounts.map(cryptoPortfolioConverter::convert),
             totalAccounts = value.wallet.totalAccounts,
+            totalArchivedAccounts = value.wallet.totalArchivedAccounts,
             sortType = sortType,
             groupType = groupType,
         )
