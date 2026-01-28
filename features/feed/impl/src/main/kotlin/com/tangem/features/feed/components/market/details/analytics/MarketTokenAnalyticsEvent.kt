@@ -13,33 +13,35 @@ internal sealed class MarketTokenAnalyticsEvent(
 ) : AnalyticsEvent(category = "CoinPage", event = event, params = params) {
 
     data class TokenNewsViewed(
-        private val token: String,
+        private val tokenSymbol: String,
     ) : MarketTokenAnalyticsEvent(
         event = "Token News Viewed",
         params = mapOf(
-            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.TOKEN_PARAM to tokenSymbol,
         ),
     ), OneTimePerSessionEvent {
-        override val oneTimeEventId: String = event + token
+        override val oneTimeEventId: String = event + tokenSymbol
     }
 
     data class TokenNewsCarouselScrolled(
-        private val token: String,
+        private val tokenSymbol: String,
     ) : MarketTokenAnalyticsEvent(
         event = "Token News Carousel Scrolled",
         params = mapOf(
-            AnalyticsParam.TOKEN_PARAM to token,
+            AnalyticsParam.TOKEN_PARAM to tokenSymbol,
         ),
     ), OneTimePerSessionEvent {
-        override val oneTimeEventId: String = event + token
+        override val oneTimeEventId: String = event + tokenSymbol
     }
 
     data class TokenNewsLoadError(
+        private val tokenSymbol: String,
         private val code: Int?,
         private val message: String,
     ) : MarketTokenAnalyticsEvent(
         event = "Token News Load Error",
         params = mapOf(
+            AnalyticsParam.TOKEN_PARAM to tokenSymbol,
             ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
             ERROR_MESSAGE to message,
         ),
