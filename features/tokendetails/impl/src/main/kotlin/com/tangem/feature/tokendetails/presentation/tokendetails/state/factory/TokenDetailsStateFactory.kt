@@ -3,6 +3,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import arrow.core.Either
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
@@ -27,12 +28,12 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
@@ -43,7 +44,8 @@ internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
-    private val clickIntents: TokenDetailsClickIntents,
+    private val tokenDetailsClickIntents: TokenDetailsClickIntents,
+    private val expressTransactionsClickIntents: ExpressTransactionsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
@@ -52,7 +54,7 @@ internal class TokenDetailsStateFactory(
 
     private val skeletonStateConverter by lazy {
         TokenDetailsSkeletonStateConverter(
-            clickIntents = clickIntents,
+            clickIntents = tokenDetailsClickIntents,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
@@ -64,7 +66,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsNotificationConverter(
             userWalletId = userWalletId,
             getUserWalletUseCase = getUserWalletUseCase,
-            clickIntents = clickIntents,
+            clickIntents = tokenDetailsClickIntents,
         )
     }
 
@@ -72,7 +74,7 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            clickIntents = clickIntents,
+            clickIntents = tokenDetailsClickIntents,
             yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
@@ -80,7 +82,7 @@ internal class TokenDetailsStateFactory(
     private val tokenDetailsButtonsConverter by lazy {
         TokenDetailsActionButtonsConverter(
             currentStateProvider = currentStateProvider,
-            clickIntents = clickIntents,
+            clickIntents = tokenDetailsClickIntents,
         )
     }
 
@@ -117,7 +119,7 @@ internal class TokenDetailsStateFactory(
         return TokenDetailsStakingInfoConverter(
             currentState = state,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            clickIntents = clickIntents,
+            clickIntents = tokenDetailsClickIntents,
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfo = stakingEntryInfo,
         ).convert(stakingAvailability)
@@ -136,11 +138,11 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmHideConfig(
                     currencyTitle = currency.name,
-                    onConfirmClick = clickIntents::onHideConfirmed,
-                    onCancelClick = clickIntents::onDismissDialog,
+                    onConfirmClick = tokenDetailsClickIntents::onHideConfirmed,
+                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -150,12 +152,12 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.HasLinkedTokensConfig(
                     currencyName = currency.name,
                     currencySymbol = currency.symbol,
                     networkName = currency.network.name,
-                    onConfirmClick = clickIntents::onDismissDialog,
+                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -165,10 +167,10 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.RemoveIncompleteTransactionConfirmDialogConfig(
-                    onConfirmClick = clickIntents::onConfirmDismissIncompleteTransactionClick,
-                    onCancelClick = clickIntents::onDismissDialog,
+                    onConfirmClick = tokenDetailsClickIntents::onConfirmDismissIncompleteTransactionClick,
+                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -178,10 +180,10 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.DisabledButtonReasonDialogConfig(
                     text = unavailabilityReason.getUnavailabilityReasonText(),
-                    onConfirmClick = clickIntents::onDismissDialog,
+                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -191,10 +193,10 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.ErrorDialogConfig(
                     text = text,
-                    onConfirmClick = clickIntents::onDismissDialog,
+                    onConfirmClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -217,7 +219,7 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShown = true,
-                onDismissRequest = clickIntents::onDismissBottomSheet,
+                onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
                 content = TokenReceiveBottomSheetConfig(
                     asset = TokenReceiveBottomSheetConfig.Asset.Currency(
                         name = currency.name,
@@ -240,7 +242,7 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 isShown = true,
-                onDismissRequest = clickIntents::onDismissBottomSheet,
+                onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
                     asset = TokenReceiveBottomSheetConfig.Asset.Currency(
                         name = currency.name,
@@ -248,7 +250,7 @@ internal class TokenDetailsStateFactory(
                     ),
                     network = currency.network,
                     networkAddress = networkAddress,
-                    onClick = clickIntents::onAddressTypeSelected,
+                    onClick = tokenDetailsClickIntents::onAddressTypeSelected,
                 ),
             ),
         )
@@ -338,13 +340,13 @@ internal class TokenDetailsStateFactory(
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
                 isShow = true,
-                onDismissRequest = clickIntents::onDismissDialog,
+                onDismissRequest = expressTransactionsClickIntents::onDismissDialog,
                 content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmExpressStatusHideDialogConfig(
                     onConfirmClick = {
-                        clickIntents.onDisposeExpressStatus()
-                        clickIntents.onDismissDialog()
+                        expressTransactionsClickIntents.onDisposeExpressStatus()
+                        expressTransactionsClickIntents.onDismissDialog()
                     },
-                    onCancelClick = clickIntents::onDismissDialog,
+                    onCancelClick = expressTransactionsClickIntents::onDismissDialog,
                 ),
             ),
         )
@@ -367,13 +369,13 @@ internal class TokenDetailsStateFactory(
                     TangemDropdownMenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColor = themedColor { TangemTheme.colors.text.primary1 },
-                        onClick = clickIntents::onGenerateExtendedKey,
+                        onClick = tokenDetailsClickIntents::onGenerateExtendedKey,
                     ).let(::add)
                 }
                 TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
                     textColor = themedColor { TangemTheme.colors.text.warning },
-                    onClick = clickIntents::onHideClick,
+                    onClick = tokenDetailsClickIntents::onHideClick,
                 ).let(::add)
             }.toImmutableList(),
         )

@@ -18,12 +18,11 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
@@ -48,13 +47,14 @@ internal fun WalletsList(
     lazyListState: LazyListState,
     wallets: ImmutableList<WalletCardState>,
     isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     val horizontalCardPadding = TangemTheme.dimens.spacing16
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val screenWidth = LocalWindowSize.current.width
     val itemWidth by remember(screenWidth) { derivedStateOf { screenWidth - horizontalCardPadding * 2 } }
 
     LazyRow(
-        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+        modifier = modifier.background(color = TangemTheme.colors.background.secondary),
         state = lazyListState,
         contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
