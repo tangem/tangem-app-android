@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -92,17 +93,20 @@ sealed class CurrencyIconState {
         override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
         abstract val color: Color
+        abstract val size: AccountIconSize
 
         data class Icon(
             @DrawableRes val resId: Int,
             override val color: Color,
             override val isGrayscale: Boolean,
+            override val size: AccountIconSize = AccountIconSize.Default,
         ) : CryptoPortfolio()
 
         data class Letter(
             val char: TextReference,
             override val color: Color,
             override val isGrayscale: Boolean,
+            override val size: AccountIconSize = AccountIconSize.Default,
         ) : CryptoPortfolio()
     }
 
