@@ -133,9 +133,10 @@ internal class TokenFeeCalculator(
                 is Fee.Ethereum.TokenCurrency -> raiseIllegalStateError("initialFee could only be native")
             }
 
-            val feeInNativeCurrency = maxTokenFeeGas
-                .multiply(maxFeePerGas)
-                .multiply(GAS_PRICE_MULTIPLIER.toBigInteger())
+            val feeInNativeCurrency = BigDecimal(maxTokenFeeGas.multiply(maxFeePerGas))
+                .multiply(BigDecimal(GAS_PRICE_MULTIPLIER))
+                .setScale(0, RoundingMode.UP)
+                .toBigInteger()
 
             val nativeFiatRate = nativeCurrencyStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
             val tokenFiatRate = tokenForPayFeeStatus.value.fiatRate ?: raiseIllegalStateError("fiatRate is null")
@@ -201,7 +202,7 @@ internal class TokenFeeCalculator(
         /** Amount in token units for fee transfer */
         const val FEE_TRANSFER_AMOUNT = 0.01 // calculate using decimals
         /** Gas price safety multiplier for fee calculation */
-        const val GAS_PRICE_MULTIPLIER = 2
+        const val GAS_PRICE_MULTIPLIER = 1.5
         const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
         const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
 
