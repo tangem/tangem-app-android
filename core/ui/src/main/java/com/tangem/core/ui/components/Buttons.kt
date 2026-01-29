@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,12 +54,16 @@ fun TextButtonIconStart(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = TangemButtonsDefaults.defaultTextButtonColors,
+    tint: Color? = null,
     enabled: Boolean = true,
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.Start(iconResId),
+        icon = TangemButtonIconPosition.Start(
+            iconResId = iconResId,
+            iconTint = tint,
+        ),
         onClick = onClick,
         enabled = enabled,
         showProgress = false,
@@ -116,13 +121,21 @@ fun PrimaryButtonIconEnd(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: TangemButtonSize = TangemButtonSize.Default,
+    tint: Color? = null,
     showProgress: Boolean = false,
     enabled: Boolean = true,
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = if (iconResId != null) TangemButtonIconPosition.End(iconResId) else TangemButtonIconPosition.None,
+        icon = if (iconResId != null) {
+            TangemButtonIconPosition.End(
+                iconResId = iconResId,
+                iconTint = tint,
+            )
+        } else {
+            TangemButtonIconPosition.None
+        },
         onClick = onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
@@ -144,11 +157,15 @@ fun PrimaryButtonIconEndTwoLines(
     showProgress: Boolean = false,
     enabled: Boolean = true,
     additionalText: String? = null,
+    tint: Color? = null,
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.End(iconResId),
+        icon = TangemButtonIconPosition.End(
+            iconResId = iconResId,
+            iconTint = tint,
+        ),
         onClick = onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
@@ -170,13 +187,17 @@ fun PrimaryButtonIconStart(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    tint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.Start(iconResId),
+        icon = TangemButtonIconPosition.Start(
+            iconResId = iconResId,
+            iconTint = tint,
+        ),
         onClick = onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
@@ -224,13 +245,17 @@ fun SecondaryButtonIconEnd(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    tint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.End(iconResId),
+        icon = TangemButtonIconPosition.End(
+            iconResId = iconResId,
+            iconTint = tint,
+        ),
         onClick = onClick,
         colors = TangemButtonsDefaults.secondaryButtonColors,
         enabled = enabled,
@@ -252,13 +277,17 @@ fun SecondaryButtonIconStart(
     modifier: Modifier = Modifier,
     showProgress: Boolean = false,
     enabled: Boolean = true,
+    iconTint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     shape: Shape = size.toShape(),
 ) {
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.Start(iconResId),
+        icon = TangemButtonIconPosition.Start(
+            iconResId = iconResId,
+            iconTint = iconTint,
+        ),
         onClick = onClick,
         colors = TangemButtonsDefaults.secondaryButtonColors,
         enabled = enabled,
