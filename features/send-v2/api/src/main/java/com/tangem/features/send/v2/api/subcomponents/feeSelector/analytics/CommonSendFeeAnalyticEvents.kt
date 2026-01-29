@@ -6,6 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.CommonSendSource
 
 sealed class CommonSendFeeAnalyticEvents(
@@ -38,11 +39,13 @@ sealed class CommonSendFeeAnalyticEvents(
     data class CustomFeeButtonClicked(
         override val categoryName: String,
         val blockchain: String,
+        val token: String,
     ) : CommonSendFeeAnalyticEvents(
         category = categoryName,
         event = "Custom Fee Clicked",
         params = mapOf(
             BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
         ),
     )
 
