@@ -27,7 +27,7 @@ internal class SetAmountDataTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isBalanceHidden: Boolean,
     private val isAccountsModeEnabled: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account.Crypto?,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)

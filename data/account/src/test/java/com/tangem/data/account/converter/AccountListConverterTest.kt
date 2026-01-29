@@ -64,7 +64,7 @@ class AccountListConverterTest {
             if (model.expected.isSuccess) {
                 model.value.accounts.forEach { dto ->
                     val account = model.expected.getOrNull()!!.accounts
-                        .firstOrNull { it.accountId.value == dto.id } as? Account.CryptoPortfolio
+                        .firstOrNull { it.accountId.value == dto.id } as? Account.Crypto.Portfolio
 
                     every { cryptoPortfolioConverter.convert(dto) } returns account!!
                 }

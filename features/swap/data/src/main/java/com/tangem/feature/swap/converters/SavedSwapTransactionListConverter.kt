@@ -120,8 +120,8 @@ internal class SavedSwapTransactionListConverter(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         tokenTransactions: List<SavedSwapTransactionModel>,
     ) = SavedSwapTransactionListModelInner(
         userWalletId = userWalletId.stringValue,
@@ -161,11 +161,8 @@ internal class SavedSwapTransactionListConverter(
         }
     }
 
-    private fun findAccountByDerivationIndex(
-        accountList: AccountList?,
-        derivationIndex: DerivationIndex?,
-    ): Account.CryptoPortfolio? {
-        return accountList?.accounts?.asSequence()?.filterIsInstance<Account.CryptoPortfolio>()
+    private fun findAccountByDerivationIndex(accountList: AccountList?, derivationIndex: DerivationIndex?): Account? {
+        return accountList?.accounts?.asSequence()?.filterIsInstance<Account.Crypto.Portfolio>()
             ?.firstOrNull { it.derivationIndex == derivationIndex }
     }
 

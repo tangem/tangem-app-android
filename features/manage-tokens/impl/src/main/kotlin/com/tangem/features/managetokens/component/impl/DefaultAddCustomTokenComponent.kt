@@ -235,7 +235,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
 
     private fun dismissAndNotify(currency: CryptoCurrency) {
         val account = addedToAccount
-        if (account is Account.CryptoPortfolio && !account.isMainAccount) {
+        if (account is Account.Crypto.Portfolio && !account.isMainAccount) {
             val event = CustomTokenAnalyticsEvent.AddTokenToAnotherAccount(
                 currencySymbol = currency.symbol,
                 derivationPath = currency.network.derivationPath.value.orEmpty(),

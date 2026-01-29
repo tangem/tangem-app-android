@@ -52,7 +52,7 @@ internal class SetInitialDataStateTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<StakingBalanceEntry>>,
     private val isAccountsModeEnabled: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account.Crypto?,
     private val isBalanceHidden: Boolean,
 ) : Transformer<StakingUiState> {
 

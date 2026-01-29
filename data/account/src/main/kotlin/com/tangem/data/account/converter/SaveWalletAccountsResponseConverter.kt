@@ -15,12 +15,12 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
     override fun convert(value: AccountList): SaveWalletAccountsResponse {
         return SaveWalletAccountsResponse(
             accounts = value.accounts
-                .filterIsInstance<Account.CryptoPortfolio>()
+                .filterIsInstance<Account.Crypto.Portfolio>()
                 .map(::toDTO),
         )
     }
 
-    private fun toDTO(account: Account.CryptoPortfolio): SaveWalletAccountsResponse.AccountDTO {
+    private fun toDTO(account: Account.Crypto.Portfolio): SaveWalletAccountsResponse.AccountDTO {
         return SaveWalletAccountsResponse.AccountDTO(
             id = account.accountId.value,
             name = AccountNameConverter.convert(value = account.accountName),

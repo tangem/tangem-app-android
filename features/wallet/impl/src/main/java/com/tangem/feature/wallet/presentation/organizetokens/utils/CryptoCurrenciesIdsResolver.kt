@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencies
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
@@ -34,6 +35,7 @@ internal class CryptoCurrenciesIdsResolver {
         }
     }
 
+    @Suppress("UseOrEmpty")
     fun resolveV2(tokensListUM: OrganizeTokensListUM, accountStatusList: AccountStatusList?): AccountCryptoCurrencies {
         val draggableTokens = when (tokensListUM) {
             OrganizeTokensListUM.EmptyList -> return emptyMap()
@@ -43,10 +45,11 @@ internal class CryptoCurrenciesIdsResolver {
         }
 
         return accountStatusList?.accountStatuses
+            ?.filterIsInstance<AccountStatus.Crypto>()
             ?.filter { it.getCryptoTokenList() != TokenList.Empty }
             ?.associate { accountStatus ->
                 val currencies = accountStatus.flattenCurrencies()
-                accountStatus.account as Account.CryptoPortfolio to draggableTokens
+                accountStatus.account as Account.Crypto.Portfolio to draggableTokens
                     .asSequence()
                     .filter { it.accountId == accountStatus.account.accountId.value }
                     .mapNotNull { sortedToken ->

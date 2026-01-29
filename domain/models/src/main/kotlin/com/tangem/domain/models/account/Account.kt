@@ -3,8 +3,8 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.either
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.DerivationIndexError
+import com.tangem.domain.models.account.Account.Crypto.Portfolio.Error.AccountNameError
+import com.tangem.domain.models.account.Account.Crypto.Portfolio.Error.DerivationIndexError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
@@ -23,27 +23,21 @@ sealed interface Account {
     /** Name of the account */
     val accountName: AccountName
 
+    /** Index used for derivation of the account */
+    val derivationIndex: DerivationIndex
+
     /** The identifier of the user wallet associated with the account */
     val userWalletId: UserWalletId
         get() = accountId.userWalletId
 
-    /**
-     * Represents a crypto portfolio account
-     *
-     * @property accountId        unique identifier of the account
-     * @property accountName      name of the account
-     * @property icon             icon representing the account
-     * @property derivationIndex  index used for derivation of the account
-     * @property cryptoCurrencies set of tokens associated with the account
-     */
     @Serializable
-    data class CryptoPortfolio private constructor(
-        override val accountId: AccountId,
-        override val accountName: AccountName,
-        val icon: CryptoPortfolioIcon,
-        val derivationIndex: DerivationIndex,
-        val cryptoCurrencies: Set<CryptoCurrency>,
-    ) : Account {
+    sealed interface Crypto : Account {
+
+        /** Icon representing the account */
+        val icon: CryptoPortfolioIcon
+
+        /** Set of tokens associated with the account */
+        val cryptoCurrencies: Set<CryptoCurrency>
 
         /** Indicates if the account is the main account */
         val isMainAccount: Boolean
@@ -57,63 +51,108 @@ sealed interface Account {
         val networksCount: Int
             get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
-        fun copy(
-            accountName: AccountName = this.accountName,
-            icon: CryptoPortfolioIcon = this.icon,
-            cryptoCurrencies: Set<CryptoCurrency> = this.cryptoCurrencies,
-        ): CryptoPortfolio {
-            return CryptoPortfolio(
-                accountId = this.accountId,
-                accountName = accountName,
-                icon = icon,
-                derivationIndex = this.derivationIndex,
-                cryptoCurrencies = cryptoCurrencies,
-            )
-        }
-
         /**
-         * Represents possible errors when creating a crypto portfolio account
+         * Represents a crypto portfolio account
+         *
+         * @property accountId        unique identifier of the account
+         * @property accountName      name of the account
+         * @property icon             icon representing the account
+         * @property derivationIndex  index used for derivation of the account
+         * @property cryptoCurrencies set of tokens associated with the account
          */
         @Serializable
-        sealed interface Error {
+        data class Portfolio private constructor(
+            override val accountId: AccountId,
+            override val accountName: AccountName,
+            override val icon: CryptoPortfolioIcon,
+            override val derivationIndex: DerivationIndex,
+            override val cryptoCurrencies: Set<CryptoCurrency>,
+        ) : Crypto {
 
-            /** Error indicating that the account name is blank */
-            @Serializable
-            data class AccountNameError(val cause: AccountName.Error) : Error
-
-            /** Error indicating that the derivation index is negative */
-            @Serializable
-            data class DerivationIndexError(val cause: DerivationIndex.Error) : Error
-        }
-
-        companion object {
+            fun copy(
+                accountName: AccountName = this.accountName,
+                icon: CryptoPortfolioIcon = this.icon,
+                cryptoCurrencies: Set<CryptoCurrency> = this.cryptoCurrencies,
+            ): Portfolio {
+                return Portfolio(
+                    accountId = this.accountId,
+                    accountName = accountName,
+                    icon = icon,
+                    derivationIndex = this.derivationIndex,
+                    cryptoCurrencies = cryptoCurrencies,
+                )
+            }
 
             /**
-             * Constructor for creating a [CryptoPortfolio] instance
-             *
-             * @param accountId        unique identifier of the account
-             * @param name      name of the account
-             * @param icon             icon representing the account
-             * @param derivationIndex  index used for derivation of the account
-             * @param cryptoCurrencies set of tokens associated with the account
+             * Represents possible errors when creating a crypto portfolio account
              */
-            operator fun invoke(
-                accountId: AccountId,
-                name: String,
-                icon: CryptoPortfolioIcon,
-                derivationIndex: Int,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
-            ): Either<Error, CryptoPortfolio> {
-                return either {
-                    val accountName = AccountName(value = name).getOrElse {
-                        raise(AccountNameError(cause = it))
-                    }
+            @Serializable
+            sealed interface Error {
 
-                    val derivationIndex = DerivationIndex(value = derivationIndex).getOrElse {
-                        raise(DerivationIndexError(cause = it))
-                    }
+                /** Error indicating that the account name is blank */
+                @Serializable
+                data class AccountNameError(val cause: AccountName.Error) : Error
 
-                    invoke(
+                /** Error indicating that the derivation index is negative */
+                @Serializable
+                data class DerivationIndexError(val cause: DerivationIndex.Error) : Error
+            }
+
+            companion object {
+
+                /**
+                 * Constructor for creating a [CryptoPortfolio] instance
+                 *
+                 * @param accountId        unique identifier of the account
+                 * @param name      name of the account
+                 * @param icon             icon representing the account
+                 * @param derivationIndex  index used for derivation of the account
+                 * @param cryptoCurrencies set of tokens associated with the account
+                 */
+                operator fun invoke(
+                    accountId: AccountId,
+                    name: String,
+                    icon: CryptoPortfolioIcon,
+                    derivationIndex: Int,
+                    cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                ): Either<Error, Portfolio> {
+                    return either {
+                        val accountName = AccountName(value = name).getOrElse {
+                            raise(AccountNameError(cause = it))
+                        }
+
+                        val index = DerivationIndex(value = derivationIndex).getOrElse {
+                            raise(DerivationIndexError(cause = it))
+                        }
+
+                        invoke(
+                            accountId = accountId,
+                            accountName = accountName,
+                            icon = icon,
+                            derivationIndex = index,
+                            cryptoCurrencies = cryptoCurrencies,
+                        )
+                    }
+                }
+
+                /**
+                 * Constructor for creating a [CryptoPortfolio] instance
+                 *
+                 * @param accountId        unique identifier of the account
+                 * @param accountName      name of the account
+                 * @param icon             icon representing the account
+                 * @param derivationIndex  index used for derivation of the account
+                 * @param cryptoCurrencies set of tokens associated with the account
+                 */
+                @Suppress("LongParameterList")
+                operator fun invoke(
+                    accountId: AccountId,
+                    accountName: AccountName,
+                    icon: CryptoPortfolioIcon,
+                    derivationIndex: DerivationIndex,
+                    cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                ): Portfolio {
+                    return Portfolio(
                         accountId = accountId,
                         accountName = accountName,
                         icon = icon,
@@ -121,65 +160,42 @@ sealed interface Account {
                         cryptoCurrencies = cryptoCurrencies,
                     )
                 }
-            }
 
-            /**
-             * Constructor for creating a [CryptoPortfolio] instance
-             *
-             * @param accountId        unique identifier of the account
-             * @param accountName      name of the account
-             * @param icon             icon representing the account
-             * @param derivationIndex  index used for derivation of the account
-             * @param cryptoCurrencies set of tokens associated with the account
-             */
-            @Suppress("LongParameterList")
-            operator fun invoke(
-                accountId: AccountId,
-                accountName: AccountName,
-                icon: CryptoPortfolioIcon,
-                derivationIndex: DerivationIndex,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
-            ): CryptoPortfolio {
-                return CryptoPortfolio(
-                    accountId = accountId,
-                    accountName = accountName,
-                    icon = icon,
-                    derivationIndex = derivationIndex,
-                    cryptoCurrencies = cryptoCurrencies,
-                )
-            }
+                /**
+                 * Creates a main account for the given user wallet ID
+                 *
+                 * @param userWalletId     the ID of the user wallet
+                 * @param cryptoCurrencies set of tokens associated with the account
+                 */
+                fun createMainAccount(
+                    userWalletId: UserWalletId,
+                    cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                ): Portfolio {
+                    val derivationIndex = DerivationIndex.Main
 
-            /**
-             * Creates a main account for the given user wallet ID
-             *
-             * @param userWalletId     the ID of the user wallet
-             * @param cryptoCurrencies set of tokens associated with the account
-             */
-            fun createMainAccount(
-                userWalletId: UserWalletId,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
-            ): CryptoPortfolio {
-                val derivationIndex = DerivationIndex.Main
-
-                return CryptoPortfolio(
-                    accountId = AccountId.forCryptoPortfolio(
-                        userWalletId = userWalletId,
+                    return Portfolio(
+                        accountId = AccountId.forCryptoPortfolio(
+                            userWalletId = userWalletId,
+                            derivationIndex = derivationIndex,
+                        ),
+                        accountName = AccountName.DefaultMain,
+                        icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
                         derivationIndex = derivationIndex,
-                    ),
-                    accountName = AccountName.DefaultMain,
-                    icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
-                    derivationIndex = derivationIndex,
-                    cryptoCurrencies = cryptoCurrencies,
-                )
+                        cryptoCurrencies = cryptoCurrencies,
+                    )
+                }
             }
         }
     }
 
-    class Payment : Account {
-        override val accountId: AccountId
-            get() = TODO("Not yet implemented")
-        override val accountName: AccountName
-            get() = TODO("Not yet implemented")
+    @Serializable
+    data class Payment(
+        override val accountId: AccountId,
+        override val accountName: AccountName,
+        val cryptoCurrencies: Set<CryptoCurrency>,
+    ) : Account {
+
+        override val derivationIndex: DerivationIndex = DerivationIndex.Payment
 
         init {
             error("Not yet implemented")

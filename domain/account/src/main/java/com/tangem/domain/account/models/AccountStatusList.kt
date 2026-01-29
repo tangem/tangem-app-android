@@ -32,14 +32,17 @@ data class AccountStatusList(
     val groupType: TokensGroupType,
 ) {
 
-    val mainAccount: AccountStatus.CryptoPortfolio
-        get() = accountStatuses.first { accountStatus ->
-            when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
-            }
-        } as AccountStatus.CryptoPortfolio
+    val mainAccount: AccountStatus.Crypto.Portfolio
+        get() = accountStatuses
+            .filterIsInstance<AccountStatus.Crypto>()
+            .first { accountStatus ->
+                when (accountStatus) {
+                    is AccountStatus.Crypto.Portfolio -> accountStatus.account.isMainAccount
+                }
+            } as AccountStatus.Crypto.Portfolio
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
+        .filterIsInstance<AccountStatus.Crypto.Portfolio>()
         .map { accountStatus -> accountStatus.flattenCurrencies() }
         .flatten()
 

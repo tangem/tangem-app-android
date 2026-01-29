@@ -48,7 +48,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-typealias AccountCryptoList = Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>
+typealias AccountCryptoList = Map<Account.Crypto, List<CryptoCurrencyStatus>>
 
 @Suppress("LargeClass", "LongParameterList")
 internal class OnrampTokenListModel @Inject constructor(
@@ -295,13 +295,16 @@ internal class OnrampTokenListModel @Inject constructor(
         )
     }
 
-    private fun AccountStatusList.filterAccountsByQuery(query: String) = accountStatuses.asSequence()
+    private fun AccountStatusList.filterAccountsByQuery(
+        query: String,
+    ): Map<Account.Crypto, List<CryptoCurrencyStatus>> = accountStatuses.asSequence()
         .associate { accountStatus ->
             when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> {
+                is AccountStatus.Crypto.Portfolio -> {
                     val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
                     accountStatus.account to filteredList
                 }
+                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
             }
         }.filter { (_, value) -> value.isNotEmpty() }
 

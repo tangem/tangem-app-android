@@ -30,8 +30,8 @@ interface SwapTransactionRepository {
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         transaction: SwapTransactionModel,
     )
 

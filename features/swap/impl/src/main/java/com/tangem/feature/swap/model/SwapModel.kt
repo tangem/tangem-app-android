@@ -514,7 +514,7 @@ internal class SwapModel @Inject constructor(
         }
     }
 
-    private fun applyAddedToken(addedToken: CryptoCurrencyStatus, addedAccount: Account.CryptoPortfolio?) {
+    private fun applyAddedToken(addedToken: CryptoCurrencyStatus, addedAccount: Account.Crypto?) {
         modelScope.launch {
             runCatching(dispatchers.io) {
                 swapInteractor.getTokensDataState(initialCurrencyFrom)
@@ -573,7 +573,7 @@ internal class SwapModel @Inject constructor(
     private fun applyInitialTokenChoice(
         state: TokensDataStateExpress,
         selectedCurrency: CryptoCurrencyStatus?,
-        selectedAccount: Account.CryptoPortfolio?,
+        selectedAccount: Account.Crypto?,
         isReverseFromTo: Boolean,
     ) {
         // exceptional case
@@ -638,9 +638,9 @@ internal class SwapModel @Inject constructor(
 
     private fun startLoadingQuotes(
         fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account.Crypto?,
         toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account.Crypto?,
         amount: String,
         reduceBalanceBy: BigDecimal,
         toProvidersList: List<SwapProvider>,
@@ -695,9 +695,9 @@ internal class SwapModel @Inject constructor(
 
     private fun loadQuotesTask(
         fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account.Crypto?,
         toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account.Crypto?,
         amount: String,
         reduceBalanceBy: BigDecimal,
         toProvidersList: List<SwapProvider>,
@@ -1273,9 +1273,9 @@ internal class SwapModel @Inject constructor(
 
         if (foundToken != null) {
             val fromToken: CryptoCurrencyStatus
-            val fromAccount: Account.CryptoPortfolio?
+            val fromAccount: Account.Crypto?
             val toToken: CryptoCurrencyStatus
-            val toAccount: Account.CryptoPortfolio?
+            val toAccount: Account.Crypto?
             if (isOrderReversed) {
                 fromToken = foundToken
                 fromAccount = foundAccount
@@ -1346,7 +1346,7 @@ internal class SwapModel @Inject constructor(
     private fun getSelectedTokenAndAccount(
         tokens: TokensDataStateExpress,
         id: String,
-    ): Pair<CryptoCurrencyStatus?, Account.CryptoPortfolio?> {
+    ): Pair<CryptoCurrencyStatus?, Account.Crypto?> {
         return if (accountsFeatureToggles.isFeatureEnabled) {
             val accountCryptoCurrencyStatus = if (isOrderReversed) {
                 tokens.fromGroup

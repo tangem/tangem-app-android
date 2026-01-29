@@ -44,14 +44,16 @@ class ToggleTokenListGroupingUseCaseV2(
         }
 
         val updatedAccountList = accountStatusList.accountStatuses.map { account ->
-            if (account !is AccountStatus.CryptoPortfolio) return@map account
+            if (account !is AccountStatus.Crypto.Portfolio) return@map account
 
             account.copy(tokenList = account.tokenList.reverseGroupType())
         }
+        val updatedCryptoAccount =
+            updatedAccountList.firstOrNull { it is AccountStatus.Crypto } as? AccountStatus.Crypto
 
         accountStatusList.copy(
             accountStatuses = updatedAccountList,
-            groupType = when (updatedAccountList.firstOrNull()?.getCryptoTokenList()) {
+            groupType = when (updatedCryptoAccount?.getCryptoTokenList()) {
                 is TokenList.GroupedByNetwork -> TokensGroupType.NETWORK
                 is TokenList.Ungrouped -> TokensGroupType.NONE
                 else -> accountStatusList.groupType

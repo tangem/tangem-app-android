@@ -14,7 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -272,36 +272,40 @@ internal class SendDestinationModel @Inject constructor(
         return combine(
             flow = getWalletsUseCase().conflate(),
             flow2 = multiAccountStatusListSupplier().conflate(),
-        ) { wallets, accountList ->
+        ) { wallets, accountStatusLists ->
             val cryptoCurrencyNetwork = cryptoCurrency.network
 
             coroutineScope {
-                accountList.mapNotNull { accountStatusList ->
-                    val wallet =
-                        wallets.filterNot { it.isLocked }.firstOrNull { it.walletId == accountStatusList.userWalletId }
-                            ?: return@mapNotNull null
+                accountStatusLists.mapNotNull { accountStatusList ->
+                    val wallet = wallets
+                        .filterNot { it.isLocked }
+                        .firstOrNull { it.walletId == accountStatusList.userWalletId }
+                        ?: return@mapNotNull null
 
                     async {
-                        accountStatusList.accountStatuses.map { accountStatus ->
-                            async {
-                                accountStatus.flattenCurrencies()
-                                    .filter { it.currency.network.rawId == cryptoCurrencyNetwork.rawId }
-                                    .mapNotNull { cryptoCurrencyStatus ->
-                                        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                                            ?: return@mapNotNull null
+                        accountStatusList.flattenCurrencies()
+                            .filter { it.currency.network.rawId == cryptoCurrencyNetwork.rawId }
+                            .mapNotNull { cryptoCurrencyStatus ->
+                                val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                                    ?: return@mapNotNull null
 
-                                        async {
-                                            DestinationWalletUM(
-                                                name = wallet.name,
-                                                address = address,
-                                                cryptoCurrency = cryptoCurrencyStatus.currency,
-                                                userWalletId = wallet.walletId,
-                                                account = accountStatus.account as? Account.CryptoPortfolio,
-                                            )
-                                        }
-                                    }.awaitAll()
+                                // Find the corresponding account from accountStatuses
+                                val account = accountStatusList.accountStatuses
+                                    .filterIsInstance<AccountStatus.Crypto.Portfolio>()
+                                    .firstOrNull { accountStatus ->
+                                        accountStatus.getCryptoTokenList()
+                                            .flattenCurrencies()
+                                            .any { it.currency.id == cryptoCurrencyStatus.currency.id }
+                                    }?.account
+
+                                DestinationWalletUM(
+                                    name = wallet.name,
+                                    address = address,
+                                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                                    userWalletId = wallet.walletId,
+                                    account = account,
+                                )
                             }
-                        }.awaitAll().flatten()
                     }
                 }.awaitAll().flatten()
             }

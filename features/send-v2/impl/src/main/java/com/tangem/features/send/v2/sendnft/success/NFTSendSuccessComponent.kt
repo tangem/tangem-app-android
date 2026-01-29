@@ -89,7 +89,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
         val nftAsset: NFTAsset,
         val nftCollectionName: String,
         val txUrl: String,
-        val account: Account.CryptoPortfolio?,
+        val account: Account.Crypto?,
         val isAccountsMode: Boolean,
         val callback: ModelCallback,
     )

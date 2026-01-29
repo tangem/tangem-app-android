@@ -108,7 +108,7 @@ class GetAccountCurrencyByAddressUseCase(
         networkId: Network.ID,
     ): AccountCryptoCurrency {
         val result = accountList.accounts.asSequence()
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Crypto>()
             .mapNotNull { account ->
                 val currency = account.cryptoCurrencies.firstOrNull { it.network.id == networkId }
                     ?: return@mapNotNull null

@@ -13,15 +13,15 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class OrganizedTokenListConverter(
     private val appCurrency: AppCurrency,
-) : Converter<AccountStatus, PersistentList<DraggableItem>> {
+) : Converter<AccountStatus.Crypto, PersistentList<DraggableItem>> {
 
     private val tokensConverter by lazy { CryptoCurrencyToDraggableItemConverterV2(appCurrency) }
     private val groupsConverter by lazy {
         NetworkGroupToDraggableItemsConverterV2(tokensConverter)
     }
 
-    override fun convert(value: AccountStatus): PersistentList<DraggableItem> {
-        val cryptoAccount = value.account as? Account.CryptoPortfolio ?: return persistentListOf()
+    override fun convert(value: AccountStatus.Crypto): PersistentList<DraggableItem> {
+        val cryptoAccount = value.account as? Account.Crypto.Portfolio ?: return persistentListOf()
         return when (val tokenList = value.getCryptoTokenList()) {
             is TokenList.GroupedByNetwork -> groupsConverter.convertList(
                 tokenList.groups.map { cryptoAccount to it },

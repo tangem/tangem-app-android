@@ -45,13 +45,13 @@ data class CurrenciesGroup(
 )
 
 data class AccountSwapAvailability(
-    val account: Account.CryptoPortfolio,
+    val account: Account.Crypto,
     val currencyList: List<AccountSwapCurrency>,
 )
 
 data class AccountSwapCurrency(
     val isAvailable: Boolean,
-    val account: Account.CryptoPortfolio,
+    val account: Account.Crypto,
     val cryptoCurrencyStatus: CryptoCurrencyStatus,
     val providers: List<SwapProvider>,
 )

@@ -65,7 +65,7 @@ internal class DefaultAccountsCRUDRepository(
         converter.convert(value = accountListResponse)
     }
 
-    override suspend fun getAccountSync(accountId: AccountId): Option<Account.CryptoPortfolio> = option {
+    override suspend fun getAccountSync(accountId: AccountId): Option<Account.Crypto.Portfolio> = option {
         val userWalletId = accountId.userWalletId
 
         val accountResponse = getAccountsResponseSync(userWalletId = userWalletId)
@@ -147,7 +147,7 @@ internal class DefaultAccountsCRUDRepository(
         val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
 
         val accountDTOs = converter.convertListBack(
-            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+            input = accountList.accounts.filterIsInstance<Account.Crypto.Portfolio>(),
         )
 
         val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
@@ -156,7 +156,7 @@ internal class DefaultAccountsCRUDRepository(
         walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
     }
 
-    override suspend fun saveAccount(account: Account.CryptoPortfolio) {
+    override suspend fun saveAccount(account: Account.Crypto.Portfolio) {
         val store = getAccountsResponseStore(userWalletId = account.userWalletId)
 
         val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)

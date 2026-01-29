@@ -173,7 +173,8 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
 
             val availableToAddAccounts = accounts.mapNotNull { accountStatus ->
                 val accountIndex = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
+                    is AccountStatus.Crypto.Portfolio -> accountStatus.account.derivationIndex
+                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val cryptoCurrency = getTokenMarketCryptoCurrency(
@@ -219,7 +220,8 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
         account: AvailableToAddAccount,
     ): CryptoCurrency? {
         val accountIndex = when (val accountStatus = account.account) {
-            is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
+            is AccountStatus.Crypto.Portfolio -> accountStatus.account.derivationIndex
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,

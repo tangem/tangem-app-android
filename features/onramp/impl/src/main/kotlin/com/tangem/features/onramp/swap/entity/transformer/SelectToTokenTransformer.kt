@@ -17,7 +17,7 @@ import com.tangem.features.onramp.swap.entity.utils.toFilled
 internal class SelectToTokenTransformer(
     private val selectedTokenItemState: TokenItemState,
     private val isAccountsMode: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account.Crypto?,
 ) : SwapSelectTokensUMTransformer {
 
     override fun transform(prevState: SwapSelectTokensUM): SwapSelectTokensUM {

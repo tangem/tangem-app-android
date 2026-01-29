@@ -33,7 +33,7 @@ internal class AccountListTest {
         val actual = MockAccounts.onlyMainAccount.mainAccount
 
         // Assert
-        val expected = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+        val expected = Account.Crypto.Portfolio.createMainAccount(userWalletId = userWalletId)
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -136,8 +136,8 @@ internal class AccountListTest {
             ),
             CreateTestModel(
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(userWalletId),
-                    Account.CryptoPortfolio.createMainAccount(userWalletId).copy(
+                    Account.Crypto.Portfolio.createMainAccount(userWalletId),
+                    Account.Crypto.Portfolio.createMainAccount(userWalletId).copy(
                         icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
                     ),
                 ),
@@ -201,7 +201,7 @@ internal class AccountListTest {
         private fun provideTestModels() = listOf(
             // region Add new account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val newAccount = createAccount(derivationIndex = 1)
 
                 PlusTestModel(
@@ -223,7 +223,7 @@ internal class AccountListTest {
             // endregion
             // region Replace existing account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val newAccount = mainAccount.copy(accountName = AccountName("New Name").getOrNull()!!)
 
                 PlusTestModel(
@@ -245,8 +245,8 @@ internal class AccountListTest {
             // endregion
             // region MainAccountNotFound
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val newAccount = Account.CryptoPortfolio(
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
+                val newAccount = Account.Crypto.Portfolio(
                     accountId = mainAccount.accountId,
                     accountName = mainAccount.accountName,
                     derivationIndex = DerivationIndex(1).getOrNull()!!,
@@ -268,8 +268,8 @@ internal class AccountListTest {
             // endregion
             // region ExceedsMaxMainAccountsCount
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val newAccount = Account.CryptoPortfolio.createMainAccount(UserWalletId("012"))
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
+                val newAccount = Account.Crypto.Portfolio.createMainAccount(UserWalletId("012"))
 
                 PlusTestModel(
                     initial = AccountList(
@@ -285,7 +285,7 @@ internal class AccountListTest {
             // endregion
             // region DuplicateAccountNames
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val newAccount = createAccount(derivationIndex = 1).copy(accountName = mainAccount.accountName)
 
                 PlusTestModel(
@@ -338,7 +338,7 @@ internal class AccountListTest {
         private fun provideTestModels() = listOf(
             // region Remove existing account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(
@@ -360,7 +360,7 @@ internal class AccountListTest {
             // endregion
             // region Remove unexisting account
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val notInList = createAccount(derivationIndex = 3)
 
                 val accountList = AccountList(
@@ -379,7 +379,7 @@ internal class AccountListTest {
             // endregion
             // region EmptyAccountsList
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
 
                 MinusTestModel(
                     initial = AccountList(
@@ -395,7 +395,7 @@ internal class AccountListTest {
             // endregion
             // region MainAccountNotFound
             run {
-                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val mainAccount = Account.Crypto.Portfolio.createMainAccount(userWalletId)
                 val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(

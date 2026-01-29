@@ -39,9 +39,12 @@ data class DerivationIndex private constructor(
     companion object {
 
         private const val MAIN_ACCOUNT_DERIVATION_INDEX = 0
+        private const val PAYMENT_ACCOUNT_DERIVATION_INDEX = 0
 
         /** Predefined instance of [DerivationIndex] for the main account */
         val Main: DerivationIndex = DerivationIndex(value = MAIN_ACCOUNT_DERIVATION_INDEX)
+        /** Predefined instance of [DerivationIndex] for the payment account */
+        val Payment: DerivationIndex = DerivationIndex(value = PAYMENT_ACCOUNT_DERIVATION_INDEX)
 
         /**
          * Factory method to create a [DerivationIndex] instance

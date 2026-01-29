@@ -41,7 +41,7 @@ class RecoverCryptoPortfolioUseCase(
      *
      * @param accountId the unique identifier of the account to recover
      */
-    suspend operator fun invoke(accountId: AccountId): Either<Error, Account.CryptoPortfolio> = either {
+    suspend operator fun invoke(accountId: AccountId): Either<Error, Account.Crypto.Portfolio> = either {
         fetchAccountList(userWalletId = accountId.userWalletId)
 
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
@@ -94,8 +94,8 @@ class RecoverCryptoPortfolioUseCase(
             }
     }
 
-    private fun ArchivedAccount.recover(): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    private fun ArchivedAccount.recover(): Account.Crypto.Portfolio {
+        return Account.Crypto.Portfolio(
             accountId = this.accountId,
             accountName = this.name,
             icon = this.icon,
@@ -111,7 +111,7 @@ class RecoverCryptoPortfolioUseCase(
         )
     }
 
-    private fun Raise<Error>.add(accountList: AccountList, recoveredAccount: Account.CryptoPortfolio): AccountList {
+    private fun Raise<Error>.add(accountList: AccountList, recoveredAccount: Account.Crypto.Portfolio): AccountList {
         val maybeAccountList = accountList + recoveredAccount
 
         return maybeAccountList.mapLeft {

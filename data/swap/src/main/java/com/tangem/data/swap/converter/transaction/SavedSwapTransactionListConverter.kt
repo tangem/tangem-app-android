@@ -101,8 +101,8 @@ internal class SavedSwapTransactionListConverter(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         tokenTransactions: List<SwapTransactionDTO>,
     ) = SwapTransactionListDTO(
         userWalletId = userWalletId.stringValue,
@@ -141,11 +141,11 @@ internal class SavedSwapTransactionListConverter(
     private fun getAccountByDerivationIndex(
         multiAccountList: List<AccountList>,
         derivationIndex: DerivationIndex?,
-    ): Account.CryptoPortfolio? {
+    ): Account.Crypto.Portfolio? {
         if (derivationIndex == null) return null
 
         return multiAccountList.asSequence().firstNotNullOfOrNull { accountList ->
-            accountList.accounts.asSequence().filterIsInstance<Account.CryptoPortfolio>()
+            accountList.accounts.asSequence().filterIsInstance<Account.Crypto.Portfolio>()
                 .firstOrNull { it.derivationIndex == derivationIndex }
         }
     }

@@ -108,7 +108,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Crypto.Portfolio>()
 
         val token = createUserToken(accountIndex = 0)
         val defaultResponse = UserTokensResponse(
@@ -163,7 +163,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         }
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Crypto.Portfolio>()
 
         coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
@@ -218,7 +218,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         )
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+            .filterIsInstance<Account.Crypto.Portfolio>()
         val accountsDTO = createWalletAccountDTO(userWalletId = userWalletId)
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountsDTO)
 

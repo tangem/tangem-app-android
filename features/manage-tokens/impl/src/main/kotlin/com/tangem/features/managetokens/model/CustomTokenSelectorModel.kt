@@ -208,15 +208,16 @@ internal class CustomTokenSelectorModel @Inject constructor(
                 ?.let { Blockchain.fromId(it.rawId.value) }?.let(::AccountNodeRecognizer)
                 ?.let { recognizer -> derivationPath.value.value?.let { recognizer.recognize(it) } }
                 ?.let { accountNode ->
-                    fun AccountStatus.CryptoPortfolio.sameNodeAndNotMain() = !this.account.isMainAccount &&
+                    fun AccountStatus.Crypto.Portfolio.sameNodeAndNotMain() = !this.account.isMainAccount &&
                         this.account.derivationIndex.value.toLong() == accountNode
 
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
                         .first().accountStatuses
 
-                    val accountStatus = accounts.find {
-                        when (it) {
-                            is AccountStatus.CryptoPortfolio -> it.sameNodeAndNotMain()
+                    val accountStatus = accounts.find { account ->
+                        when (account) {
+                            is AccountStatus.Crypto.Portfolio -> account.sameNodeAndNotMain()
+                            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                         }
                     }
 
@@ -224,7 +225,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                 }
 
             val accountName = when (account) {
-                is Account.CryptoPortfolio -> account.accountName
+                is Account.Crypto.Portfolio -> account.accountName
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
                 null -> null
             }

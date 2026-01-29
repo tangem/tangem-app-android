@@ -180,7 +180,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>, // doesn't change if select gasless fee
-        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val accountFlow: StateFlow<Account?>,
         val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
     )

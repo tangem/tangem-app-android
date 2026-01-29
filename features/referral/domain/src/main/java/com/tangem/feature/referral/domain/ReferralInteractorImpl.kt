@@ -6,6 +6,7 @@ import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -55,7 +56,10 @@ internal class ReferralInteractorImpl(
                 )
                     ?: error("Account not found: ${portfolioId.accountId}")
 
-                account.derivationIndex
+                when (account) {
+                    is Account.Crypto.Portfolio -> account.derivationIndex
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
+                }
             }
             is PortfolioId.Wallet -> null
         }

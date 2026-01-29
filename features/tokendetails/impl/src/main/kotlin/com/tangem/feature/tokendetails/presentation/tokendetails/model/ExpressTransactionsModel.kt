@@ -74,7 +74,7 @@ internal class ExpressTransactionsModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-    private var account: Account.CryptoPortfolio? = null
+    private var account: Account.Crypto? = null
     private val expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
     private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)

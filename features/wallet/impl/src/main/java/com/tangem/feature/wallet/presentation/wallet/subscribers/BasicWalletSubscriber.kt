@@ -42,14 +42,14 @@ internal abstract class BasicWalletSubscriber : WalletSubscriber() {
      *
      * @return A [Flow] emitting the [AccountStatus] of the wallet, distinct and conflated.
      */
-    protected fun getMainAccountStatusFlow(): Flow<AccountStatus.CryptoPortfolio> {
+    protected fun getMainAccountStatusFlow(): Flow<AccountStatus.Crypto.Portfolio> {
         return getAccountStatusListFlow()
             .mapNotNull { accountStatusList ->
-                accountStatusList.accountStatuses.find { accountStatus ->
+                accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Crypto>().find { accountStatus ->
                     when (accountStatus) {
-                        is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
+                        is AccountStatus.Crypto.Portfolio -> accountStatus.account.isMainAccount
                     }
-                } as? AccountStatus.CryptoPortfolio
+                } as? AccountStatus.Crypto.Portfolio
             }
             .distinctUntilChanged()
             .conflate()

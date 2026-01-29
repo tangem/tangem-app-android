@@ -175,7 +175,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-    private var account: Account.CryptoPortfolio? = null
+    private var account: Account.Crypto? = null
     private var isBalanceLoadedEventSent = false
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 

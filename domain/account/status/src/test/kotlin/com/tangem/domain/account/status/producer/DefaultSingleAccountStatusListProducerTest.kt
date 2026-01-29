@@ -85,7 +85,7 @@ class DefaultSingleAccountStatusListProducerTest {
         val expected = AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Crypto.Portfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
                     priceChangeLce = PriceChange(value = BigDecimal("0.00"), source = StatusSource.ACTUAL).lceContent(),
@@ -128,7 +128,7 @@ class DefaultSingleAccountStatusListProducerTest {
         val expected = AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Crypto.Portfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
                     priceChangeLce = PriceChange(value = BigDecimal("0.00"), source = StatusSource.ACTUAL).lceContent(),
@@ -150,7 +150,7 @@ class DefaultSingleAccountStatusListProducerTest {
         val expected2 = AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Crypto.Portfolio(
                     account = updatedAccountList.mainAccount,
                     tokenList = TokenList.Empty,
                     priceChangeLce = PriceChange(value = BigDecimal("0.00"), source = StatusSource.ACTUAL).lceContent(),
@@ -190,7 +190,7 @@ class DefaultSingleAccountStatusListProducerTest {
         val expected = AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Crypto.Portfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
                     priceChangeLce = PriceChange(value = BigDecimal("0.00"), source = StatusSource.ACTUAL).lceContent(),
@@ -268,7 +268,7 @@ class DefaultSingleAccountStatusListProducerTest {
         val expected = AccountStatusList(
             userWalletId = userWalletId,
             accountStatuses = listOf(
-                AccountStatus.CryptoPortfolio(
+                AccountStatus.Crypto.Portfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Ungrouped(
                         totalFiatBalance = TotalFiatBalance.Loading,

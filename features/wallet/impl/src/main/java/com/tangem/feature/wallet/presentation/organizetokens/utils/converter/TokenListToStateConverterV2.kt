@@ -61,7 +61,7 @@ internal class AccountTokenItemConverter(
                 isGrouped = isGrouping,
                 items = value.accountStatuses
                     .asSequence()
-                    .filterIsInstance<AccountStatus.CryptoPortfolio>()
+                    .filterIsInstance<AccountStatus.Crypto.Portfolio>()
                     .flatMap { accountStatus ->
                         if (accountStatus.tokenList != TokenList.Empty) {
                             buildList {

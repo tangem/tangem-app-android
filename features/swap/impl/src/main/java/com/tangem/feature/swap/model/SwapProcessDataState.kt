@@ -15,8 +15,8 @@ data class SwapProcessDataState(
     val fromCryptoCurrency: CryptoCurrencyStatus? = null,
     val toCryptoCurrency: CryptoCurrencyStatus? = null,
     val feePaidCryptoCurrency: CryptoCurrencyStatus? = null,
-    val fromAccount: Account.CryptoPortfolio? = null,
-    val toAccount: Account.CryptoPortfolio? = null,
+    val fromAccount: Account.Crypto? = null,
+    val toAccount: Account.Crypto? = null,
     // Amount from input
     val amount: String? = null,
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,

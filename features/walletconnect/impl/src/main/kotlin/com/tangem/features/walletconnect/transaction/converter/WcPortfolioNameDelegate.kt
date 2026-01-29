@@ -19,13 +19,12 @@ internal class WcPortfolioNameDelegate @AssistedInject constructor(
     isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     @Assisted private val scope: CoroutineScope,
 ) {
-    val isAccountMode = isAccountsModeEnabledUseCase.invoke()
+    private val isAccountMode = isAccountsModeEnabledUseCase.invoke()
         .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = false)
 
     fun createAccountTitleUM(value: WcSession): AccountTitleUM? {
         val account = when (val account = value.account) {
-            is Account.CryptoPortfolio -> account
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
+            is Account.Crypto.Portfolio -> account
             null -> null
         }
 

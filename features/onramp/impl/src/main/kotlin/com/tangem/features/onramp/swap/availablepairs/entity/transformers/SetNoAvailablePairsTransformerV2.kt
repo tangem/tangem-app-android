@@ -17,7 +17,7 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class SetNoAvailablePairsTransformerV2(
     private val appCurrency: AppCurrency,
-    private val accountList: Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>,
+    private val accountList: Map<Account.Crypto, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
     private val isAccountsMode: Boolean,
     private val unavailableErrorText: TextReference,

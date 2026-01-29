@@ -139,13 +139,13 @@ class ManageCryptoCurrenciesUseCase(
         }
     }
 
-    private suspend fun Raise<Throwable>.getAccountStatus(accountId: AccountId): AccountStatus.CryptoPortfolio {
+    private suspend fun Raise<Throwable>.getAccountStatus(accountId: AccountId): AccountStatus.Crypto.Portfolio {
         val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(
             params = SingleAccountStatusListProducer.Params(userWalletId = accountId.userWalletId),
         ) ?: raise(IllegalStateException("No accounts for wallet ${accountId.userWalletId}"))
 
         return accountStatusList.accountStatuses
-            .firstOrNull { it.accountId == accountId } as? AccountStatus.CryptoPortfolio
+            .firstOrNull { it.accountId == accountId } as? AccountStatus.Crypto.Portfolio
             ?: raise(IllegalStateException("No account with id $accountId"))
     }
 
@@ -223,7 +223,7 @@ class ManageCryptoCurrenciesUseCase(
         return destination
     }
 
-    private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
+    private suspend fun Raise<Throwable>.saveAccount(account: Account.Crypto.Portfolio) {
         catch(
             block = { accountsCRUDRepository.saveAccount(account) },
             catch = ::raise,

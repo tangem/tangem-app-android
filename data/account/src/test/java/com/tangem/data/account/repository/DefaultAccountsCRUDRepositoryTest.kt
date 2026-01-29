@@ -20,7 +20,7 @@ import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
-import com.tangem.domain.models.account.Account.CryptoPortfolio
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
@@ -244,7 +244,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             accountsResponseStoreFlow.value = response
 
-            val cryptoPortfolio = mockk<CryptoPortfolio>()
+            val cryptoPortfolio = mockk<Account.Crypto.Portfolio>()
 
             every { cryptoPortfolioConverter.convert(accountDTO) } returns cryptoPortfolio
 
@@ -588,7 +588,7 @@ class DefaultAccountsCRUDRepositoryTest {
         fun `saveAccounts should call API and update store`() = runTest {
             // Arrange
             val accountList = AccountList.empty(userWalletId = userWalletId)
-            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
+            val accounts = accountList.accounts.filterIsInstance< Account.Crypto.Portfolio>()
 
             val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse
@@ -617,7 +617,7 @@ class DefaultAccountsCRUDRepositoryTest {
         fun `saveAccounts if API request is failed`() = runTest {
             // Arrange
             val accountList = AccountList.empty(userWalletId = userWalletId)
-            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
+            val accounts = accountList.accounts.filterIsInstance<Account.Crypto.Portfolio>()
 
             val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse

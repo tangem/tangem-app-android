@@ -30,7 +30,7 @@ internal class GetWalletAccountsResponseConverter @AssistedInject constructor(
                 totalArchivedAccounts = value.totalArchivedAccounts,
             ),
             accounts = value.accounts
-                .filterIsInstance<Account.CryptoPortfolio>()
+                .filterIsInstance<Account.Crypto.Portfolio>()
                 .map(cryptoPortfolioConverter::convertBack),
             unassignedTokens = emptyList(),
         )

@@ -49,7 +49,7 @@ internal object AccountCryptoCurrencyStatusFinder {
     ): AccountCryptoCurrencyStatus? {
         return accountStatusList.getExpectedAccountStatuses(network)
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Crypto.Portfolio>()
             .mapNotNull { accountStatus ->
                 val status = accountStatus.flattenCurrencies().firstOrNull { it.currency.id == currencyId }
                     ?: return@mapNotNull null
@@ -78,7 +78,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
         return accountStatusList.getExpectedAccountStatuses(networks)
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Crypto.Portfolio>()
             .associate { accountStatus ->
                 val statuses = accountStatus.flattenCurrencies()
                     .filter { it.currency.id in currencyIds }
@@ -108,7 +108,7 @@ internal object AccountCryptoCurrencyStatusFinder {
             derivationPath = derivationPath,
         )
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Crypto.Portfolio>()
             .mapNotNull { accountStatus ->
                 val status = accountStatus.flattenCurrencies().firstOrNull {
                     val currency = it.currency
@@ -156,8 +156,8 @@ internal object AccountCryptoCurrencyStatusFinder {
             DerivationIndex.Main.value -> listOf(mainAccount)
             // currency only in the account with specific derivation index or in the main account
             else -> {
-                val accountStatus = accountStatuses.firstOrNull {
-                    val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@firstOrNull false
+                val accountStatus = accountStatuses.firstOrNull { accountStatus ->
+                    val cryptoPortfolio = accountStatus.account as? Account.Crypto.Portfolio ?: return@firstOrNull false
 
                     cryptoPortfolio.derivationIndex.value == possibleAccountIndex
                 }
@@ -172,8 +172,8 @@ internal object AccountCryptoCurrencyStatusFinder {
 
         if (possibleAccountIndexes.isEmpty()) return this@getExpectedAccountStatuses.accountStatuses
 
-        val accountStatuses = this@getExpectedAccountStatuses.accountStatuses.filter {
-            val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@filter false
+        val accountStatuses = this@getExpectedAccountStatuses.accountStatuses.filter { accountStatus ->
+            val cryptoPortfolio = accountStatus.account as? Account.Crypto.Portfolio ?: return@filter false
 
             cryptoPortfolio.derivationIndex.value in possibleAccountIndexes
         }

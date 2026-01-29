@@ -106,7 +106,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
         account: Account,
     ): CryptoCurrency? {
         val derivationIndex = when (account) {
-            is Account.CryptoPortfolio -> account.derivationIndex
+            is Account.Crypto -> account.derivationIndex
             is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(

@@ -23,7 +23,7 @@ internal class AccountAwardConverter(
     private val appCurrency: AppCurrency,
     private val awardCryptoCurrency: CryptoCurrency,
     private val accountAwardToken: CryptoCurrencyStatus?,
-    private val cryptoPortfolio: AccountStatus.CryptoPortfolio,
+    private val cryptoPortfolio: AccountStatus.Crypto.Portfolio,
     private val onAccountClick: () -> Unit,
 ) : Converter<Unit, AccountAward> {
 

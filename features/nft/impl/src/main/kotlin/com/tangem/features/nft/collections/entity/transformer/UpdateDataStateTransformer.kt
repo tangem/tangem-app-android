@@ -101,7 +101,7 @@ internal class UpdateDataStateTransformer(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
             icon = when (this) {
-                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
+                is Account.Crypto.Portfolio -> CryptoPortfolioIconConverter.convert(this.icon)
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),

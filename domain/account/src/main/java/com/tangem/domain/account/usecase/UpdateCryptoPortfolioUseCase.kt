@@ -37,7 +37,7 @@ class UpdateCryptoPortfolioUseCase(
         accountId: AccountId,
         accountName: AccountName? = null,
         icon: CryptoPortfolioIcon? = null,
-    ): Either<Error, Account.CryptoPortfolio> = either {
+    ): Either<Error, Account.Crypto.Portfolio> = either {
         validate(accountName, icon)
 
         fetchAccountList(accountId.userWalletId)
@@ -45,7 +45,7 @@ class UpdateCryptoPortfolioUseCase(
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
 
         val account = accountList.accounts
-            .firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
+            .firstOrNull { it.accountId == accountId } as? Account.Crypto.Portfolio
             ?: raise(Error.DataOperationFailed(message = "Account not found: $accountId"))
 
         val updatedAccount = account
@@ -92,11 +92,11 @@ class UpdateCryptoPortfolioUseCase(
         )
     }
 
-    private fun Account.CryptoPortfolio.setName(name: AccountName?): Account.CryptoPortfolio {
+    private fun Account.Crypto.Portfolio.setName(name: AccountName?): Account.Crypto.Portfolio {
         return if (name != null) this.copy(accountName = name) else this
     }
 
-    private fun Account.CryptoPortfolio.setIcon(icon: CryptoPortfolioIcon?): Account.CryptoPortfolio {
+    private fun Account.Crypto.Portfolio.setIcon(icon: CryptoPortfolioIcon?): Account.Crypto.Portfolio {
         return if (icon != null) this.copy(icon = icon) else this
     }
 

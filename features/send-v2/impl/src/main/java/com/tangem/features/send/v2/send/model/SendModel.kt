@@ -147,7 +147,7 @@ internal class SendModel @Inject constructor(
             ),
         )
 
-    val accountFlow: StateFlow<Account.CryptoPortfolio?>
+    val accountFlow: StateFlow<Account?>
         field = MutableStateFlow(null)
     val isAccountModeFlow: StateFlow<Boolean>
         field = MutableStateFlow(false)

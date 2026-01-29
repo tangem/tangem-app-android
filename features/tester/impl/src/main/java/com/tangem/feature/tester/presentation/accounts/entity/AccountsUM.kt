@@ -56,7 +56,7 @@ internal data class AccountsUM(
 
     data class AccountListBottomSheetConfig(
         val isAccountsShown: Boolean,
-        val accounts: ImmutableList<Account.CryptoPortfolio>,
+        val accounts: ImmutableList<Account.Crypto>,
         val onDismiss: () -> Unit,
     ) : TangemBottomSheetConfigContent
 }

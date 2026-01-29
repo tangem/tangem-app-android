@@ -128,7 +128,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         fromAmount: BigDecimal,
         fromStatus: CryptoCurrencyStatus,
         toStatus: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
         fee: Fee,
         feeExtended: TransactionFeeExtended?,
         provider: ExpressProvider,

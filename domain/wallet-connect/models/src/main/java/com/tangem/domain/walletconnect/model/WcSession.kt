@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWallet
 
 data class WcSession(
     val wallet: UserWallet,
-    val account: Account?,
+    val account: Account.Crypto?,
     val networks: Set<Network>,
     val sdkModel: WcSdkSession,
     val securityStatus: CheckDAppResult,

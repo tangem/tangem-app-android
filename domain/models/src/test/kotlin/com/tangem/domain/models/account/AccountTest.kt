@@ -1,8 +1,8 @@
 package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth
-import com.tangem.domain.models.account.Account.CryptoPortfolio
-import com.tangem.domain.models.account.Account.CryptoPortfolio.Error.AccountNameError
+import com.tangem.domain.models.account.Account.Crypto
+import com.tangem.domain.models.account.Account.Crypto.Portfolio.Error.AccountNameError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.every
@@ -97,7 +97,7 @@ class AccountTest {
             val name = ""
 
             // Act
-            val actual = CryptoPortfolio.invoke(
+            val actual = Crypto.Portfolio.invoke(
                 accountId = mockk(),
                 name = name,
                 icon = mockk(),
@@ -115,7 +115,7 @@ class AccountTest {
         fun `invoke returns CryptoPortfolio`() {
             // Act
             val derivationIndex = DerivationIndex.Main
-            val actual = CryptoPortfolio(
+            val actual = Crypto.Portfolio(
                 accountId = AccountId.forCryptoPortfolio(
                     userWalletId = UserWalletId("011"),
                     derivationIndex = derivationIndex,
@@ -139,10 +139,10 @@ class AccountTest {
             val derivationIndex = DerivationIndex.Main
 
             // Act
-            val actual = CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
+            val actual = Crypto.Portfolio.createMainAccount(userWalletId = userWalletId)
 
             // Assert
-            val expected = CryptoPortfolio(
+            val expected = Crypto.Portfolio(
                 accountId = AccountId.forCryptoPortfolio(
                     userWalletId = userWalletId,
                     derivationIndex = derivationIndex,
@@ -162,10 +162,10 @@ class AccountTest {
         name: String = "Test Account",
         derivationIndex: Int = 0,
         currencies: Set<CryptoCurrency> = emptySet(),
-    ): CryptoPortfolio {
+    ): Crypto.Portfolio {
         val accountIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
 
-        return CryptoPortfolio.invoke(
+        return Crypto.Portfolio.invoke(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = accountIndex),
             name = name,
             icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),

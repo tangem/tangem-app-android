@@ -258,10 +258,10 @@ class RecoverCryptoPortfolioUseCaseTest {
         name: String = "Test Account",
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
         derivationIndex: Int = Random.nextInt(1, 21),
-    ): Account.CryptoPortfolio {
+    ): Account.Crypto.Portfolio {
         val derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!
 
-        return Account.CryptoPortfolio(
+        return Account.Crypto.Portfolio(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,

@@ -18,7 +18,9 @@ internal class SetLoadingTokenItemsTransformer(
 
     override fun transform(prevState: TokenListUM): TokenListUM {
         return prevState.copy(
-            availableItems = LoadingTokenListItemConverter.convertList(input = statuses).toImmutableList(),
+            availableItems = LoadingTokenListItemConverter.convertList(
+                input = statuses.map(CryptoCurrencyStatus::currency),
+            ).toImmutableList(),
             unavailableItems = persistentListOf(),
             warning = null,
         )

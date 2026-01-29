@@ -197,11 +197,12 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
 
     private fun AccountStatusList.filterByRawID(): List<AccountWithAdded> {
         fun AccountStatus.filterByRawID(): List<CryptoCurrencyStatus> = when (this) {
-            is AccountStatus.CryptoPortfolio -> this.tokenList.flattenCurrencies()
+            is AccountStatus.Crypto.Portfolio -> this.tokenList.flattenCurrencies()
                 .filter { status ->
                     val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
                     getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
                 }
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return accountStatuses.map { accountStatus ->
             AccountWithAdded(
@@ -286,7 +287,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             prefixText = TextReference.EMPTY,
             name = this.accountName.toUM().value,
             icon = when (this) {
-                is Account.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(this.icon)
+                is Account.Crypto.Portfolio -> CryptoPortfolioIconConverter.convert(this.icon)
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             },
         ),

@@ -37,8 +37,8 @@ data class AccountList private constructor(
 ) {
 
     /** Retrieves the main crypto portfolio account from the list of accounts */
-    val mainAccount: Account.CryptoPortfolio
-        get() = accounts.first { it is Account.CryptoPortfolio && it.isMainAccount } as Account.CryptoPortfolio
+    val mainAccount: Account.Crypto.Portfolio
+        get() = accounts.first { it is Account.Crypto.Portfolio && it.isMainAccount } as Account.Crypto.Portfolio
 
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
     val canAddMoreAccounts: Boolean
@@ -101,7 +101,7 @@ data class AccountList private constructor(
     fun flattenCurrencies(): List<CryptoCurrency> {
         return accounts.flatMap { account ->
             when (account) {
-                is Account.CryptoPortfolio -> account.cryptoCurrencies
+                is Account.Crypto.Portfolio -> account.cryptoCurrencies
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
         }
@@ -110,7 +110,7 @@ data class AccountList private constructor(
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
         accounts.forEach { acc ->
             val account = when (acc) {
-                is Account.CryptoPortfolio -> acc
+                is Account.Crypto.Portfolio -> acc
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
             account.cryptoCurrencies.forEach { currency ->
@@ -242,7 +242,7 @@ data class AccountList private constructor(
             return AccountList(
                 userWalletId = userWalletId,
                 accounts = listOf(
-                    Account.CryptoPortfolio.createMainAccount(
+                    Account.Crypto.Portfolio.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),
@@ -255,7 +255,7 @@ data class AccountList private constructor(
         }
 
         private fun List<Account>.mainAccountsCount(): Int {
-            return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
+            return count { (it as? Account.Crypto.Portfolio)?.isMainAccount == true }
         }
     }
 }

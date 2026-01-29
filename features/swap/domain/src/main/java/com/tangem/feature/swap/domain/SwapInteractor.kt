@@ -48,9 +48,9 @@ interface SwapInteractor {
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account.Crypto?,
         toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account.Crypto?,
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
@@ -76,8 +76,8 @@ interface SwapInteractor {
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee?,
@@ -125,8 +125,8 @@ interface SwapInteractor {
     suspend fun storeSwapTransaction(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         amount: SwapAmount,
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
@@ -150,9 +150,9 @@ interface SwapInteractor {
     @Suppress("LongParameterList")
     suspend fun loadFeeForSwapTransaction(
         fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
         toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         amount: String,
         reduceBalanceBy: BigDecimal,
         provider: SwapProvider,
@@ -172,9 +172,9 @@ interface SwapInteractor {
     @Suppress("LongParameterList")
     suspend fun loadFeeForSwapTransaction(
         fromToken: CryptoCurrencyStatus,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
         toToken: CryptoCurrencyStatus,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account?,
         amount: String,
         reduceBalanceBy: BigDecimal,
         provider: SwapProvider,

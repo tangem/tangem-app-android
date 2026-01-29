@@ -10,9 +10,9 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class LoadingAccountTokenItemConverter(
     private val appCurrency: AppCurrency,
-) : Converter<AccountStatus.CryptoPortfolio, TokensListItemUM.Portfolio> {
+) : Converter<AccountStatus.Crypto.Portfolio, TokensListItemUM.Portfolio> {
 
-    override fun convert(value: AccountStatus.CryptoPortfolio): TokensListItemUM.Portfolio {
+    override fun convert(value: AccountStatus.Crypto.Portfolio): TokensListItemUM.Portfolio {
         val (account, currencies) = value
 
         return TokensListItemUM.Portfolio(
@@ -23,7 +23,9 @@ internal class LoadingAccountTokenItemConverter(
             ).convert(TotalFiatBalance.Failed),
             isExpanded = true,
             isCollapsable = false,
-            tokens = currencies.flattenCurrencies().map(LoadingTokenListItemConverter::convert).toPersistentList(),
+            tokens = currencies.flattenCurrencies()
+                .map { LoadingTokenListItemConverter.convert(it.currency) }
+                .toPersistentList(),
         )
     }
 }

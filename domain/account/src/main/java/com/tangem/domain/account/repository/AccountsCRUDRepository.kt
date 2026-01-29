@@ -29,9 +29,9 @@ interface AccountsCRUDRepository {
      * Retrieves a specific account by its unique identifier
      *
      * @param accountId the unique identifier of the account
-     * @return an [Option] containing the [Account.CryptoPortfolio] if found, or `Option.None` if not
+     * @return an [Option] containing the [Account] if found, or `Option.None` if not
      */
-    suspend fun getAccountSync(accountId: AccountId): Option<Account.CryptoPortfolio>
+    suspend fun getAccountSync(accountId: AccountId): Option<Account.Crypto>
 
     /**
      * Retrieves a archived account by its unique identifier
@@ -81,7 +81,7 @@ interface AccountsCRUDRepository {
      *
      * @param account account to be saved
      */
-    suspend fun saveAccount(account: Account.CryptoPortfolio)
+    suspend fun saveAccount(account: Account.Crypto.Portfolio)
 
     /** Synchronizes tokens for a specific [userWalletId] with remote data source */
     suspend fun syncTokens(userWalletId: UserWalletId)

@@ -72,7 +72,7 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 onCurrencyAdded = { account ->
                     val accountName = account?.accountName as? AccountName.Custom
-                    if (accountName != null && (account as? Account.CryptoPortfolio)?.isMainAccount == false) {
+                    if (accountName != null && (account as? Account.Crypto.Portfolio)?.isMainAccount == false) {
                         messageSender.send(
                             SnackbarMessage(
                                 message = resourceReference(

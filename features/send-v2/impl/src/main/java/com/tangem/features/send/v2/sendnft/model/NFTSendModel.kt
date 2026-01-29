@@ -101,7 +101,7 @@ internal class NFTSendModel @Inject constructor(
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
 
-    var account: Account.CryptoPortfolio? = null
+    var account: Account.Crypto? = null
     var isAccountsMode: Boolean = false
 
     init {

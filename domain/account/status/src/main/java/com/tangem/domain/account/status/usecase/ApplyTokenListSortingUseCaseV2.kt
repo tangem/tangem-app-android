@@ -127,7 +127,7 @@ class ApplyTokenListSortingUseCaseV2(
         errors: MutableMap<AccountId, TokenListSortingError>,
     ): List<Account> {
         return map { account ->
-            if (account !is Account.CryptoPortfolio) return@map account
+            if (account !is Account.Crypto.Portfolio) return@map account
 
             val sortedCurrencies = sortedTokensIdsByAccount[account] ?: return@map account
 

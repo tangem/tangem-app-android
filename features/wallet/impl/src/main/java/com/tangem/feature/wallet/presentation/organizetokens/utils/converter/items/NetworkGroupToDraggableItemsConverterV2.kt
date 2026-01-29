@@ -11,9 +11,9 @@ import com.tangem.utils.converter.Converter
 
 internal class NetworkGroupToDraggableItemsConverterV2(
     private val itemConverter: CryptoCurrencyToDraggableItemConverterV2,
-) : Converter<Pair<Account.CryptoPortfolio, NetworkGroup>, List<DraggableItem>> {
+) : Converter<Pair<Account.Crypto.Portfolio, NetworkGroup>, List<DraggableItem>> {
 
-    override fun convert(value: Pair<Account.CryptoPortfolio, NetworkGroup>): List<DraggableItem> {
+    override fun convert(value: Pair<Account.Crypto.Portfolio, NetworkGroup>): List<DraggableItem> {
         val (account, networkGroup) = value
         return buildList {
             add(createGroupHeader(account.accountId, networkGroup))
@@ -22,7 +22,7 @@ internal class NetworkGroupToDraggableItemsConverterV2(
     }
 
     override fun convertList(
-        input: Collection<Pair<Account.CryptoPortfolio, NetworkGroup>>,
+        input: Collection<Pair<Account.Crypto.Portfolio, NetworkGroup>>,
     ): List<List<DraggableItem>> {
         return input.mapIndexed { index, pair ->
             convert(pair).toMutableList()
@@ -40,7 +40,7 @@ internal class NetworkGroupToDraggableItemsConverterV2(
         networkName = group.network.name,
     )
 
-    private fun createTokens(account: Account.CryptoPortfolio, group: NetworkGroup): List<DraggableItem.Token> {
+    private fun createTokens(account: Account.Crypto.Portfolio, group: NetworkGroup): List<DraggableItem.Token> {
         return itemConverter.convertList(
             group.currencies.map {
                 AccountCryptoCurrencyStatus(

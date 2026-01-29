@@ -147,7 +147,7 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun buildUI(account: Account): AccountDetailsUM {
         val archiveMode = when (account) {
-            is Account.CryptoPortfolio -> when (account.isMainAccount) {
+            is Account.Crypto.Portfolio -> when (account.isMainAccount) {
                 true -> ArchiveMode.None
                 false -> ArchiveMode.Available(
                     onArchiveAccountClick = ::onArchiveAccountClick,

@@ -149,7 +149,7 @@ internal class SendAmountModel @Inject constructor(
 
     private suspend fun initMinBoundary(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        account: Account.CryptoPortfolio?,
+        account: Account?,
         isAccountsMode: Boolean,
     ) {
         minAmountBoundary = getMinimumTransactionAmountSyncUseCase(
@@ -178,11 +178,7 @@ internal class SendAmountModel @Inject constructor(
         }
     }
 
-    private fun initialState(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        account: Account.CryptoPortfolio?,
-        isAccountsMode: Boolean,
-    ) {
+    private fun initialState(cryptoCurrencyStatus: CryptoCurrencyStatus, account: Account?, isAccountsMode: Boolean) {
         val userWallet = userWallet
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1

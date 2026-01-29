@@ -1,9 +1,11 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.converters
 
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_DEFAULT_COUNT
@@ -59,7 +61,10 @@ internal class SendRecipientWalletListConverter(
                                 accountTitleUM = if (account != null && isAccountsMode) {
                                     AccountTitleUM.Account(
                                         name = account.accountName.toUM().value,
-                                        icon = CryptoPortfolioIconConverter.convert(account.icon),
+                                        icon = when (account) {
+                                            is Account.Crypto -> CryptoPortfolioIconConverter.convert(account.icon)
+                                            is Account.Payment -> AccountIconUM.Payment
+                                        },
                                         prefixText = stringReference(StringsSigns.DOT),
                                     )
                                 } else {

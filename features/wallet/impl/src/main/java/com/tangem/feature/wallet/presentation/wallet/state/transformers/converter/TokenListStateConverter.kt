@@ -108,11 +108,11 @@ internal class TokenListStateConverter(
     private fun convertAccountList(params: TokenConverterParams.Account): WalletTokensListState {
         val accountList = params.accountList
 
-        fun AccountStatus.CryptoPortfolio.map(): TokensListItemUM.Portfolio {
+        fun AccountStatus.Crypto.Portfolio.map(): TokensListItemUM.Portfolio {
             val tokenList: TokenList = this.tokenList
-            val account: Account.CryptoPortfolio = this.account
+            val account: Account.Crypto.Portfolio = this.account
             val isExtend = params.expandedAccounts.contains(account.accountId)
-            val onItemClick: (Account.CryptoPortfolio) -> Unit = {
+            val onItemClick: (Account.Crypto) -> Unit = {
                 if (isExtend) {
                     clickIntents.onAccountCollapseClick(it)
                 } else {
@@ -144,9 +144,10 @@ internal class TokenListStateConverter(
         }
 
         val accountItems = accountList.accountStatuses
+            .filterIsInstance<AccountStatus.Crypto>()
             .map { accountStatus ->
                 when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> accountStatus.map()
+                    is AccountStatus.Crypto.Portfolio -> accountStatus.map()
                 }
             }
         return WalletTokensListState.ContentState.PortfolioContent(

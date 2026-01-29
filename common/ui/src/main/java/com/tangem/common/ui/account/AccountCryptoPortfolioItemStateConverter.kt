@@ -23,10 +23,10 @@ import java.math.BigDecimal
 
 class AccountCryptoPortfolioItemStateConverter(
     private val appCurrency: AppCurrency,
-    private val account: Account.CryptoPortfolio,
+    private val account: Account.Crypto,
     private val priceChangeLce: Lce<Unit, PriceChange>? = null,
-    private val onItemClick: ((Account.CryptoPortfolio) -> Unit)? = null,
-    private val onItemLongClick: ((Account.CryptoPortfolio) -> Unit)? = null,
+    private val onItemClick: ((Account.Crypto) -> Unit)? = null,
+    private val onItemLongClick: ((Account.Crypto) -> Unit)? = null,
 ) : Converter<TotalFiatBalance, TokenItemState> {
 
     override fun convert(value: TotalFiatBalance): TokenItemState {
@@ -37,9 +37,7 @@ class AccountCryptoPortfolioItemStateConverter(
         }
     }
 
-    private fun Account.CryptoPortfolio.mapToContentState(
-        fiatBalance: TotalFiatBalance.Loaded,
-    ): TokenItemState.Content {
+    private fun Account.Crypto.mapToContentState(fiatBalance: TotalFiatBalance.Loaded): TokenItemState.Content {
         val subtitle2State = priceChangeLce?.fold(
             ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
             ifError = { null },
@@ -70,7 +68,7 @@ class AccountCryptoPortfolioItemStateConverter(
         )
     }
 
-    private fun Account.CryptoPortfolio.mapToLoadingState(): TokenItemState.Content {
+    private fun Account.Crypto.mapToLoadingState(): TokenItemState.Content {
         return TokenItemState.Content(
             id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(account),
@@ -92,7 +90,7 @@ class AccountCryptoPortfolioItemStateConverter(
         )
     }
 
-    private fun Account.CryptoPortfolio.mapToUnreachableState(): TokenItemState.Unreachable {
+    private fun Account.Crypto.mapToUnreachableState(): TokenItemState.Unreachable {
         return TokenItemState.Unreachable(
             id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(account),

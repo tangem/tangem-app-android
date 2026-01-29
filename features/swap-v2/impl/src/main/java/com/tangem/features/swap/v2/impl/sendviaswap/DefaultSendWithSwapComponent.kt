@@ -20,6 +20,7 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
@@ -110,8 +111,11 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                     }
                     is SendWithSwapConfirmComponent -> {
                         val fromCurrency = params.currency
-                        val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
-                            .takeIf { model.isAccountModeFlow.value }
+                        val fromDerivationIndex = when (val account = model.accountFlow.value) {
+                            is Account.Crypto.Portfolio -> account.derivationIndex.value
+                            is Account.Payment -> TODO("[REDACTED_JIRA]")
+                            null -> null
+                        }.takeIf { model.isAccountModeFlow.value }
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,

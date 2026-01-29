@@ -39,7 +39,7 @@ internal class AccountCreateEditUMBuilder(
                 name = params.account.accountName.toUM(),
                 portfolioIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon),
                 derivationInfo = createAccountDerivationInfo(
-                    index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
+                    index = (params.account as Account.Crypto).derivationIndex.value,
                 ),
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = onNameChange,
@@ -88,7 +88,7 @@ internal class AccountCreateEditUMBuilder(
 
         val Account.portfolioIcon: CryptoPortfolioIcon
             get() = when (this) {
-                is Account.CryptoPortfolio -> this.icon
+                is Account.Crypto.Portfolio -> this.icon
                 is Account.Payment -> TODO("[REDACTED_JIRA]")
             }
 

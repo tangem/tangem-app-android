@@ -5,7 +5,7 @@ import com.tangem.domain.core.flow.FlowCachingSupplier
 import com.tangem.domain.models.account.Account
 
 /**
- * Supplies instances of [SingleAccountProducer] that produce flows of [Account.CryptoPortfolio]
+ * Supplies instances of [SingleAccountProducer] that produce flows of [Account]
  * for individual accounts. Each producer is uniquely identified by its [SingleAccountProducer.Params].
  *
  * @property factory A factory to create instances of [SingleAccountProducer].
@@ -14,4 +14,4 @@ import com.tangem.domain.models.account.Account
 abstract class SingleAccountSupplier(
     override val factory: SingleAccountProducer.Factory,
     override val keyCreator: (SingleAccountProducer.Params) -> String,
-) : FlowCachingSupplier<SingleAccountProducer, SingleAccountProducer.Params, Account.CryptoPortfolio>()
+) : FlowCachingSupplier<SingleAccountProducer, SingleAccountProducer.Params, Account>()

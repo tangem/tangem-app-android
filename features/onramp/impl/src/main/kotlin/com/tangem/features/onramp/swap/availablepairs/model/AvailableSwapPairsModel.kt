@@ -104,7 +104,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
             .distinctUntilChanged()
             .mapNotNull { accountStatusList ->
                 accountStatusList.accountStatuses.filter {
-                    it is AccountStatus.CryptoPortfolio && it.tokenList !is TokenList.Empty
+                    it is AccountStatus.Crypto.Portfolio && it.tokenList !is TokenList.Empty
                 }
             }
             .flowOn(dispatchers.default)
@@ -259,10 +259,10 @@ internal class AvailableSwapPairsModel @Inject constructor(
     ): TokenListUMTransformer {
         val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
-        val filterByQueryAccountList = accountList
+        val filterByQueryAccountList: Map<Account.Crypto, List<CryptoCurrencyStatus>> = accountList
             .associate { accountStatus ->
                 when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> {
+                    is AccountStatus.Crypto.Portfolio -> {
                         val statuses = accountStatus.tokenList.flattenCurrencies()
                             .filterNot { status ->
                                 status.currency.network.backendId == selectedStatus?.currency?.network?.backendId &&
@@ -272,6 +272,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
                         accountStatus.account to statuses
                     }
+                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                 }
             }
             .filterValues { it.isNotEmpty() }
@@ -332,7 +333,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
             onRefresh = {
                 modelScope.launch {
                     if (networkInfo != null) {
-                        accountList.filterIsInstance<AccountStatus.CryptoPortfolio>()
+                        accountList.filterIsInstance<AccountStatus.Crypto.Portfolio>()
                             .forEach { (_, currencies) ->
                                 updateAvailablePairs(networkInfo, currencies.flattenCurrencies())
                             }
@@ -356,7 +357,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                         val accountList = accountListFlow.firstOrNull() ?: return@collectLatest
                         updateAvailablePairs(
                             networkInfo = networkInfo,
-                            statuses = accountList.filterIsInstance<AccountStatus.CryptoPortfolio>()
+                            statuses = accountList.filterIsInstance<AccountStatus.Crypto.Portfolio>()
                                 .flatMap { accountStatus ->
                                     accountStatus.flattenCurrencies()
                                 }.toSet().toList(),
@@ -453,7 +454,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
         }
     }
 
-    private fun Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>.filterByAvailability(
+    private fun Map<Account.Crypto, List<CryptoCurrencyStatus>>.filterByAvailability(
         availablePairs: List<SwapPairLeast>,
     ): List<AccountAvailabilityUM> {
         return map { (account, currencies) ->

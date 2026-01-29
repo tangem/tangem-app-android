@@ -9,6 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
@@ -116,7 +117,7 @@ internal class DefaultWcSessionsManager(
         val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
-            val account = storeSession.accountId?.let { wcNetworksConverter.getAccount(it) }
+            val account = storeSession.accountId?.let { wcNetworksConverter.getAccount(it) } as? Account.Crypto
             if (accountsFeatureToggles.isFeatureEnabled && account == null) {
                 return@mapNotNull null
             }

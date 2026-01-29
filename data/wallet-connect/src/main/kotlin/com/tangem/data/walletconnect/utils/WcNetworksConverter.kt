@@ -137,10 +137,12 @@ internal class WcNetworksConverter @Inject constructor(
             .filterIsInstance<CryptoCurrency.Coin>().map(CryptoCurrency.Coin::network)
     }
 
-    private suspend fun getAccountStatus(accountId: AccountId): AccountStatus? {
+    private suspend fun getAccountStatus(accountId: AccountId): AccountStatus.Crypto? {
         return singleAccountStatusListSupplier.getSyncOrNull(
             SingleAccountStatusListProducer.Params(accountId.userWalletId),
-        )?.accountStatuses?.find { it.account.accountId == accountId }
+        )?.accountStatuses
+            ?.filterIsInstance<AccountStatus.Crypto>()
+            ?.find { it.account.accountId == accountId }
     }
 
     suspend fun getAccountNetworks(accountId: AccountId): List<Network> {

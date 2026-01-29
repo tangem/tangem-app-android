@@ -13,7 +13,7 @@ interface NFTDetailsBlockComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val nftAsset: NFTAsset,
         val nftCollectionName: String,
-        val account: Account.CryptoPortfolio?,
+        val account: Account.Crypto?,
         val isAccountsMode: Boolean,
         val walletTitle: TextReference,
         val isSuccessScreen: Boolean,

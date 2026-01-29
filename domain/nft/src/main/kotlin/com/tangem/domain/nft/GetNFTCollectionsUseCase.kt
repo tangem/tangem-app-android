@@ -35,7 +35,7 @@ class GetNFTCollectionsUseCase(
     @OptIn(ExperimentalCoroutinesApi::class)
     fun invokeForAccounts(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
         fun Account.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>>? {
-            val currencies = (this as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
+            val currencies = (this as? Account.Crypto)?.cryptoCurrencies.orEmpty()
             if (currencies.isEmpty()) return null
             return nftCollections(userWalletId = userWalletId, cryptoCurrencies = currencies.toList())
                 .map { nfts -> this to nfts }

@@ -241,10 +241,11 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         }
     }
 
-    private fun getAccountStatusFlow(userWallet: UserWallet): Flow<AccountStatus> {
+    private fun getAccountStatusFlow(userWallet: UserWallet): Flow<AccountStatus.Crypto> {
         val accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId)
 
         return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(accountId))
+            .filterIsInstance<AccountStatus.Crypto>()
             .distinctUntilChanged()
             .conflate()
     }

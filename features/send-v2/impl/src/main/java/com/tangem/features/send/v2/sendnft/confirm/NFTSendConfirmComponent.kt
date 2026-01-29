@@ -154,7 +154,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         val nftCollectionName: String,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
-        val account: Account.CryptoPortfolio?,
+        val account: Account.Crypto?,
         val isAccountsMode: Boolean,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute.Confirm>,

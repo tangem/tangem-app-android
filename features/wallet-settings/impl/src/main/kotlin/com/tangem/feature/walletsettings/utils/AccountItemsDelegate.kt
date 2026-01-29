@@ -71,7 +71,7 @@ internal class AccountItemsDelegate @Inject constructor(
         isBalanceHidden: Boolean,
         accountsOrder: List<AccountId>?,
     ): List<WalletSettingsAccountsUM> = buildList {
-        fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
+        fun AccountStatus.Crypto.Portfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
                 onClick = {
                     analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonOpenExistingAccount())
@@ -84,11 +84,11 @@ internal class AccountItemsDelegate @Inject constructor(
             return WalletSettingsAccountsUM.Account(state = accountItemUM)
         }
 
-        fun mapAccount(account: AccountStatus): WalletSettingsAccountsUM = when (account) {
-            is AccountStatus.CryptoPortfolio -> account.mapCryptoPortfolio()
+        fun mapAccount(account: AccountStatus.Crypto): WalletSettingsAccountsUM = when (account) {
+            is AccountStatus.Crypto.Portfolio -> account.mapCryptoPortfolio()
         }
 
-        val accounts = accountStatusList.accountStatuses
+        val accounts = accountStatusList.accountStatuses.filterIsInstance<AccountStatus.Crypto>()
 
         val header = WalletSettingsAccountsUM.Header(
             id = "accounts_header",

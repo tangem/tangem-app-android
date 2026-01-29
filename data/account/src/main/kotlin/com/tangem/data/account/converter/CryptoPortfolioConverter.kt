@@ -22,12 +22,12 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val userTokensResponseFactory: UserTokensResponseFactory,
-) : TwoWayConverter<WalletAccountDTO, Account.CryptoPortfolio> {
+) : TwoWayConverter<WalletAccountDTO, Account.Crypto.Portfolio> {
 
-    override fun convert(value: WalletAccountDTO): Account.CryptoPortfolio {
+    override fun convert(value: WalletAccountDTO): Account.Crypto.Portfolio {
         val tokens = value.tokens ?: error("Tokens should not be null")
 
-        return Account.CryptoPortfolio(
+        return Account.Crypto.Portfolio(
             accountId = value.id.toAccountId(userWallet.walletId),
             accountName = AccountNameConverter.convertBack(value = value.name),
             icon = value.toIcon(),
@@ -44,7 +44,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
         )
     }
 
-    override fun convertBack(value: Account.CryptoPortfolio): WalletAccountDTO {
+    override fun convertBack(value: Account.Crypto.Portfolio): WalletAccountDTO {
         return WalletAccountDTO(
             id = value.accountId.value,
             name = AccountNameConverter.convert(value = value.accountName),

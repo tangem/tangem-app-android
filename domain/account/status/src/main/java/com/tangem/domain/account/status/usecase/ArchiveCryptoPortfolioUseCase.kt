@@ -68,7 +68,7 @@ class ArchiveCryptoPortfolioUseCase(
 
         val account = accountStatusList.accountStatuses
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterIsInstance<AccountStatus.Crypto>()
             .firstOrNull { it.accountId == accountId }
 
         ensureNotNull(account) {

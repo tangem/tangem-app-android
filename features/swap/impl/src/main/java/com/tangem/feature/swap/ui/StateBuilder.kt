@@ -201,8 +201,8 @@ internal class StateBuilder(
         fromToken: CryptoCurrency,
         toToken: CryptoCurrency,
         mainTokenId: String,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account.Crypto?,
+        toAccount: Account.Crypto?,
     ): SwapStateHolder {
         val canSelectSendToken = mainTokenId != fromToken.id.value
         val canSelectReceiveToken = mainTokenId != toToken.id.value
@@ -444,7 +444,7 @@ internal class StateBuilder(
         swapProvider: SwapProvider,
         fromToken: TokenSwapInfo,
         toToken: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account.Crypto?,
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
@@ -561,7 +561,7 @@ internal class StateBuilder(
         emptyAmountState: SwapState.EmptyAmountState,
         fromTokenStatus: CryptoCurrencyStatus,
         toTokenStatus: CryptoCurrencyStatus?,
-        toAccount: Account.CryptoPortfolio?,
+        toAccount: Account.Crypto?,
         isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -664,7 +664,7 @@ internal class StateBuilder(
         amountFormatted: String,
         amountRaw: String,
         fromToken: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
+        fromAccount: Account.Crypto?,
         minTxAmount: BigDecimal?,
     ): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
@@ -1424,7 +1424,7 @@ internal class StateBuilder(
         return FCA_RESTRICTED_PROVIDER_IDS.contains(providerId)
     }
 
-    private fun getFromCardAccountTitle(fromAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getFromCardAccountTitle(fromAccount: Account.Crypto?): AccountTitleUM {
         return if (fromAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
@@ -1436,7 +1436,7 @@ internal class StateBuilder(
         }
     }
 
-    private fun getToCardAccountTitle(toAccount: Account.CryptoPortfolio?): AccountTitleUM {
+    private fun getToCardAccountTitle(toAccount: Account.Crypto?): AccountTitleUM {
         return if (toAccount != null && isAccountsModeProvider()) {
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_to),

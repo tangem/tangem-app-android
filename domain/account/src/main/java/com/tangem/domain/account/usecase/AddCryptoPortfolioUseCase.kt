@@ -44,7 +44,7 @@ class AddCryptoPortfolioUseCase(
         accountName: AccountName,
         icon: CryptoPortfolioIcon,
         derivationIndex: DerivationIndex,
-    ): Either<Error, Account.CryptoPortfolio> = either {
+    ): Either<Error, Account.Crypto.Portfolio> = either {
         fetchAccountList(userWalletId)
 
         val accountList = getAccountList(userWalletId = userWalletId)
@@ -75,8 +75,8 @@ class AddCryptoPortfolioUseCase(
         accountName: AccountName,
         icon: CryptoPortfolioIcon,
         derivationIndex: DerivationIndex,
-    ): Account.CryptoPortfolio {
-        return Account.CryptoPortfolio(
+    ): Account.Crypto.Portfolio {
+        return Account.Crypto.Portfolio(
             accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
             accountName = accountName,
             icon = icon,

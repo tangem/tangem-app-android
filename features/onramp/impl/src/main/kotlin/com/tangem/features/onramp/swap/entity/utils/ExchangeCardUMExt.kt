@@ -32,7 +32,7 @@ internal fun createEmptyExchangeTo(): ExchangeCardUM.Empty {
  */
 internal fun ExchangeCardUM.toFilled(
     selectedTokenItemState: TokenItemState,
-    account: Account.CryptoPortfolio?,
+    account: Account.Crypto?,
     isAccountsMode: Boolean,
     isFromCurrency: Boolean,
     removeButtonUM: ExchangeCardUM.RemoveButtonUM? = null,

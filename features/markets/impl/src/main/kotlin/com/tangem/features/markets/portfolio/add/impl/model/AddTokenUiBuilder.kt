@@ -13,7 +13,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.iconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.AccountStatus.*
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
@@ -36,7 +36,7 @@ internal class AddTokenUiBuilder @Inject constructor(
     }
 
     private fun createPortfolio(selectedPortfolio: SelectedPortfolio): PortfolioSelectUM {
-        val accountIcon: AccountIconUM.CryptoPortfolio?
+        val accountIcon: AccountIconUM?
         val portfolioName: TextReference
         when (selectedPortfolio.isAccountMode) {
             false -> {
@@ -47,7 +47,8 @@ internal class AddTokenUiBuilder @Inject constructor(
                 val accountStatus = selectedPortfolio.account.account
                 portfolioName = accountStatus.account.accountName.toUM().value
                 accountIcon = when (accountStatus) {
-                    is AccountStatus.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
+                    is Crypto.Portfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
+                    is Payment -> AccountIconUM.Payment
                 }
             }
         }

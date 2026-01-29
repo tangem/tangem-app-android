@@ -65,7 +65,7 @@ class GetAccountCurrencyStatusUseCase(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
     ): Option<AccountCryptoCurrencyStatuses> {
-        if (currencies.isEmpty()) return emptyMap<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>().some()
+        if (currencies.isEmpty()) return emptyMap<Account.Crypto, List<CryptoCurrencyStatus>>().some()
 
         val accountStatusList = getAccountStatusListSync(userWalletId) ?: return none()
 

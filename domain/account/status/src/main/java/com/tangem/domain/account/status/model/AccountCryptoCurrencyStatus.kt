@@ -4,7 +4,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import kotlinx.serialization.Serializable
 
-typealias AccountCryptoCurrencyStatuses = Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>
+typealias AccountCryptoCurrencyStatuses = Map<Account.Crypto, List<CryptoCurrencyStatus>>
 
 /**
  * Combines an [Account] with its corresponding [CryptoCurrencyStatus].
@@ -14,7 +14,7 @@ typealias AccountCryptoCurrencyStatuses = Map<Account.CryptoPortfolio, List<Cryp
 [REDACTED_AUTHOR]
  */
 @Serializable
-data class AccountCryptoCurrencyStatus(val account: Account.CryptoPortfolio, val status: CryptoCurrencyStatus) {
+data class AccountCryptoCurrencyStatus(val account: Account.Crypto, val status: CryptoCurrencyStatus) {
 
     init {
         require(account.cryptoCurrencies.contains(status.currency))

@@ -22,14 +22,17 @@ internal class SendAnalyticHelper @Inject constructor(
         cryptoCurrency: CryptoCurrency,
         sendUM: SendUM,
         feeToken: CryptoCurrency,
-        account: Account.CryptoPortfolio?,
+        account: Account?,
     ) {
         val destinationUM = sendUM.destinationUM as? DestinationUM.Content
         val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
         val feeTokenSymbol = feeToken.symbol
-        val isNotMainAccount = account != null && !account.isMainAccount
-        val derivationIndex = if (isNotMainAccount) account.derivationIndex.value else null
+        val derivationIndex = when (account) {
+            is Account.Crypto -> if (!account.isMainAccount) account.derivationIndex else null
+            is Account.Payment -> account.derivationIndex
+            null -> null
+        }
         analyticsEventHandler.send(
             SendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
@@ -37,7 +40,7 @@ internal class SendAnalyticHelper @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
                 isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
                 ensStatus = getEnsStatus(sendUM),
-                derivationIndex = derivationIndex,
+                derivationIndex = derivationIndex?.value,
                 feeToken = feeTokenSymbol,
             ),
         )

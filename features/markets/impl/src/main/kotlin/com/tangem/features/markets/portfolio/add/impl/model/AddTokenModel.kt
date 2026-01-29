@@ -105,7 +105,7 @@ internal class AddTokenModel @Inject constructor(
                 processError(error = null)
             } else {
                 when (account) {
-                    is Account.CryptoPortfolio -> if (!account.isMainAccount) {
+                    is Account.Crypto -> if (!account.isMainAccount) {
                         analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
                     }
                     is Account.Payment -> TODO("[REDACTED_JIRA]")

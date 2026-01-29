@@ -8,7 +8,7 @@ import com.tangem.utils.converter.Converter
 object AccountIconItemStateConverter : Converter<Account, CurrencyIconState.CryptoPortfolio> {
 
     override fun convert(value: Account): CurrencyIconState.CryptoPortfolio = when (value) {
-        is Account.CryptoPortfolio -> when {
+        is Account.Crypto.Portfolio -> when {
             value.icon.value == CryptoPortfolioIcon.Icon.Letter -> CurrencyIconState.CryptoPortfolio.Letter(
                 char = value.accountName.toUM().value,
                 color = value.icon.color.getUiColor(),

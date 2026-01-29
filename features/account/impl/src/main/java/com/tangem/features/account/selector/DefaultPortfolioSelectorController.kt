@@ -35,21 +35,23 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
         _selectedAccount.tryEmit(accountId)
     }
 
-    override fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?> =
-        combine(
-            flow = _selectedAccount,
-            flow2 = portfolioFetcher.data,
-            transform = { accountId, data ->
-                accountId ?: return@combine null
-                var result: Pair<UserWallet, AccountStatus>? = null
+    override fun selectedAccountWithData(
+        portfolioFetcher: PortfolioFetcher,
+    ): Flow<Pair<UserWallet, AccountStatus.Crypto>?> = combine(
+        flow = _selectedAccount,
+        flow2 = portfolioFetcher.data,
+        transform = { accountId, data ->
+            accountId ?: return@combine null
+            var result: Pair<UserWallet, AccountStatus.Crypto>? = null
 
-                data.balances.forEach { wallet, balance ->
-                    val accountStatuses = balance.accountsBalance.accountStatuses
-                        .find { accountId == it.account.accountId }
-                    if (accountStatuses != null) result = balance.userWallet to accountStatuses
-                }
+            data.balances.forEach { wallet, balance ->
+                val accountStatuses = balance.accountsBalance.accountStatuses
+                    .filterIsInstance<AccountStatus.Crypto>()
+                    .find { accountId == it.account.accountId }
+                if (accountStatuses != null) result = balance.userWallet to accountStatuses
+            }
 
-                return@combine result
-            },
-        )
+            return@combine result
+        },
+    )
 }

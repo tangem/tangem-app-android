@@ -113,9 +113,9 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             flow = accountListFlow,
             flow2 = cryptoCurrencyStatusFlow,
             transform = { accountList, currencyStatusMap ->
-                val accountStatuses: List<AccountStatus.CryptoPortfolio> = accountList.accounts.map { acc ->
-                    val account: Account.CryptoPortfolio = when (acc) {
-                        is Account.CryptoPortfolio -> acc
+                val accountStatuses: List<AccountStatus.Crypto.Portfolio> = accountList.accounts.map { acc ->
+                    val account: Account.Crypto.Portfolio = when (acc) {
+                        is Account.Crypto.Portfolio -> acc
                         is Account.Payment -> TODO("[REDACTED_JIRA]")
                     }
                     if (account.cryptoCurrencies.isEmpty()) {
@@ -125,7 +125,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                             val acId = account.accountId to currency.id
                             currencyStatusMap[acId] ?: currency.toLoadingCurrencyStatus()
                         }
-                        AccountStatus.CryptoPortfolio(
+                        AccountStatus.Crypto.Portfolio(
                             account = account,
                             tokenList = TokenListFactory.create(
                                 statuses = statuses,
@@ -270,7 +270,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         )
     }
 
-    private fun Account.CryptoPortfolio.toEmptyAccountStatus() = AccountStatus.CryptoPortfolio(
+    private fun Account.Crypto.Portfolio.toEmptyAccountStatus() = AccountStatus.Crypto.Portfolio(
         account = this,
         tokenList = TokenList.Empty,
         priceChangeLce = PriceChange(
@@ -287,7 +287,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     private fun List<AccountStatus>.flattenTotalFiatBalance(): List<TotalFiatBalance> {
         return map { accountStatus ->
             when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
+                is AccountStatus.Crypto.Portfolio -> accountStatus.tokenList.totalFiatBalance
+                is AccountStatus.Payment -> accountStatus.totalFiatBalance
             }
         }
     }
@@ -297,12 +298,12 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             userWalletId = accountList.userWalletId,
             accountStatuses = accountList.accounts.map { account ->
                 when (account) {
-                    is Account.CryptoPortfolio -> {
+                    is Account.Crypto.Portfolio -> {
                         val currencyStatuses = account.cryptoCurrencies.map {
                             CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
                         }
 
-                        AccountStatus.CryptoPortfolio(
+                        AccountStatus.Crypto.Portfolio(
                             account = account,
                             tokenList = TokenListFactory.create(
                                 statuses = currencyStatuses,

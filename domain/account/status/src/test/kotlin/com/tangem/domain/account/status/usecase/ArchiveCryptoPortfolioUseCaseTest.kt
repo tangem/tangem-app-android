@@ -161,8 +161,8 @@ class ArchiveCryptoPortfolioUseCaseTest {
 
         val accountList = createAccountList(activeAccounts = 2)
         val archivingAccount = accountList.accounts.last()
-        val archivingAccountStatus = AccountStatus.CryptoPortfolio(
-            account = archivingAccount as Account.CryptoPortfolio,
+        val archivingAccountStatus = AccountStatus.Crypto.Portfolio(
+            account = archivingAccount as Account.Crypto.Portfolio,
             tokenList = TokenList.Ungrouped(
                 totalFiatBalance = TotalFiatBalance.Failed,
                 sortedBy = TokensSortType.NONE,
@@ -288,8 +288,8 @@ class ArchiveCryptoPortfolioUseCaseTest {
         return AccountStatusList(
             userWalletId = Companion.userWalletId,
             accountStatuses = accounts.map {
-                AccountStatus.CryptoPortfolio(
-                    account = it as Account.CryptoPortfolio,
+                AccountStatus.Crypto.Portfolio(
+                    account = it as Account.Crypto.Portfolio,
                     tokenList = TokenList.Empty,
                     priceChangeLce = Unit.lceError(),
                 )

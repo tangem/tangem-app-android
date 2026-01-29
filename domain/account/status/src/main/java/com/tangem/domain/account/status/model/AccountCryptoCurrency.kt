@@ -14,7 +14,7 @@ typealias AccountCryptoCurrencies = Map<Account, List<CryptoCurrency>>
 [REDACTED_AUTHOR]
  */
 @Serializable
-data class AccountCryptoCurrency(val account: Account.CryptoPortfolio, val cryptoCurrency: CryptoCurrency) {
+data class AccountCryptoCurrency(val account: Account.Crypto, val cryptoCurrency: CryptoCurrency) {
 
     init {
         require(account.cryptoCurrencies.contains(cryptoCurrency))

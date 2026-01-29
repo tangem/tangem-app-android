@@ -105,7 +105,7 @@ internal class WcPairModel @Inject constructor(
     private val selectedUserWalletFlow: MutableStateFlow<UserWallet> by lazy {
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
     }
-    private val selectedPortfolio = MutableSharedFlow<Pair<UserWallet, AccountStatus>>(
+    private val selectedPortfolio = MutableSharedFlow<Pair<UserWallet, AccountStatus.Crypto>>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
@@ -171,7 +171,7 @@ internal class WcPairModel @Inject constructor(
     private suspend fun handlePairState(
         pairState: WcPairState,
         portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus>? = null,
+        selected: Pair<UserWallet, AccountStatus.Crypto>? = null,
         isAccountMode: Boolean? = null,
     ) {
         when (pairState) {
@@ -206,7 +206,7 @@ internal class WcPairModel @Inject constructor(
     private suspend fun handleProposalState(
         pairState: WcPairState.Proposal,
         portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus>? = null,
+        selected: Pair<UserWallet, AccountStatus.Crypto>? = null,
     ) {
         val availableWallets = pairState.dAppSession.proposalNetwork.keys
             .filter { !it.isLocked && it.isMultiCurrency }
@@ -266,15 +266,14 @@ internal class WcPairModel @Inject constructor(
     }
 
     private suspend fun tryToCreatePortfolioSelectRow(
-        selectedPortfolio: Pair<UserWallet, AccountStatus>?,
+        selectedPortfolio: Pair<UserWallet, AccountStatus.Crypto>?,
         portfolios: PortfolioFetcher.Data?,
     ): PortfolioSelectUM? {
         selectedPortfolio ?: return null
         portfolios ?: return null
         val (wallet, portfolioAccount) = selectedPortfolio
         val account = when (val account = portfolioAccount.account) {
-            is Account.CryptoPortfolio -> account
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
+            is Account.Crypto.Portfolio -> account
         }
         val isAccountMode = selectorController.isAccountMode.first()
         val icon: AccountIconUM.CryptoPortfolio?
@@ -326,8 +325,7 @@ internal class WcPairModel @Inject constructor(
         modelScope.launch {
             if (selectorController.isAccountModeSync() && account != null) {
                 val derivationIndex = when (account) {
-                    is Account.CryptoPortfolio -> account.derivationIndex.value
-                    is Account.Payment -> TODO("[REDACTED_JIRA]")
+                    is Account.Crypto.Portfolio -> account.derivationIndex.value
                 }
                 analytics.send(WcAnalyticAccountEvents.PairButtonConnect(derivationIndex))
             } else {

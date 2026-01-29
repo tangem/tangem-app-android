@@ -18,7 +18,7 @@ import com.tangem.features.onramp.swap.entity.utils.toFilled
 internal class SelectFromTokenTransformer(
     private val selectedTokenItemState: TokenItemState,
     private val onRemoveClick: () -> Unit,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account.Crypto?,
     private val isAccountsMode: Boolean,
 ) : SwapSelectTokensUMTransformer {
 

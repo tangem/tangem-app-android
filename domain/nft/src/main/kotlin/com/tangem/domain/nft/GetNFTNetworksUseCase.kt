@@ -26,7 +26,7 @@ class GetNFTNetworksUseCase(
                 .mapNotNull { accountList ->
                     val account = accountList.accounts.find { it.accountId == portfolioId.accountId }
 
-                    (account as? Account.CryptoPortfolio)?.cryptoCurrencies?.toList()
+                    (account as? Account.Crypto)?.cryptoCurrencies?.toList()
                 }
                 .mapLatest { it.toNFTNetworks(portfolioId.userWalletId) }
         }

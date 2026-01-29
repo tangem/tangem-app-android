@@ -18,7 +18,7 @@ interface SwapComponent : ComposableContentComponent {
         val screenSource: String,
         val tangemPayInput: TangemPayInput? = null,
         val preselectedToToken: CryptoCurrencyStatus? = null,
-        val preselectedAccount: Account.CryptoPortfolio? = null,
+        val preselectedAccount: Account? = null,
     ) {
         data class TangemPayInput(
             val cryptoAmount: BigDecimal,

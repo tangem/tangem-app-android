@@ -60,5 +60,5 @@ interface PortfolioSelectorController {
     suspend fun isAccountModeSync(): Boolean
 
     fun selectAccount(accountId: AccountId?)
-    fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?>
+    fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus.Crypto>?>
 }

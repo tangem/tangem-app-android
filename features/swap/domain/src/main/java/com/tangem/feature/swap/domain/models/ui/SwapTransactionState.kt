@@ -36,8 +36,8 @@ sealed class SwapTransactionState {
         data class StoreTransactionData(
             val currencyToSend: CryptoCurrencyStatus,
             val currencyToGet: CryptoCurrencyStatus,
-            val fromAccount: Account.CryptoPortfolio?,
-            val toAccount: Account.CryptoPortfolio?,
+            val fromAccount: Account?,
+            val toAccount: Account?,
             val amount: SwapAmount,
             val swapProvider: SwapProvider,
             val swapDataModel: SwapDataModel,

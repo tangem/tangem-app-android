@@ -72,8 +72,8 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns None when AccountList does not contain required currency id`() = runTest {
             // Arrange
-            val accountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            val accountStatus = AccountStatus.Crypto.Portfolio(
+                account = Account.Crypto.Portfolio.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
@@ -95,18 +95,18 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns Some if network is not null`() = runTest {
             // Arrange
-            val mainAccountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            val mainAccountStatus = AccountStatus.Crypto.Portfolio(
+                account = Account.Crypto.Portfolio.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
 
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
+            val account = mockk<Account.Crypto.Portfolio>(relaxed = true) {
                 every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
                 every { this@mockk.cryptoCurrencies } returns setOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Crypto.Portfolio(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -139,11 +139,11 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invokeSync returns Some if network is null`() = runTest {
             // Arrange
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
+            val account = mockk<Account.Crypto.Portfolio>(relaxed = true) {
                 every { this@mockk.cryptoCurrencies } returns setOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Crypto.Portfolio(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -191,8 +191,8 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns empty flow when AccountList does not contain required currency id`() = runTest {
             // Arrange
-            val accountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            val accountStatus = AccountStatus.Crypto.Portfolio(
+                account = Account.Crypto.Portfolio.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
@@ -215,18 +215,18 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns data if network is not null`() = runTest {
             // Arrange
-            val mainAccountStatus = AccountStatus.CryptoPortfolio(
-                account = Account.CryptoPortfolio.createMainAccount(userWalletId),
+            val mainAccountStatus = AccountStatus.Crypto.Portfolio(
+                account = Account.Crypto.Portfolio.createMainAccount(userWalletId),
                 tokenList = TokenList.Empty,
                 priceChangeLce = lceLoading(),
             )
 
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
+            val account = mockk<Account.Crypto.Portfolio>(relaxed = true) {
                 every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
                 every { this@mockk.cryptoCurrencies } returns setOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Crypto.Portfolio(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,
@@ -256,11 +256,11 @@ class GetAccountCurrencyStatusUseCaseTest {
         @Test
         fun `invoke returns data if network is null`() = runTest {
             // Arrange
-            val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
+            val account = mockk<Account.Crypto.Portfolio>(relaxed = true) {
                 every { this@mockk.cryptoCurrencies } returns setOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
-            val accountStatus = AccountStatus.CryptoPortfolio(
+            val accountStatus = AccountStatus.Crypto.Portfolio(
                 account = account,
                 tokenList = TokenList.Ungrouped(
                     totalFiatBalance = TotalFiatBalance.Loading,

@@ -207,7 +207,7 @@ internal class TesterAccountsViewModel @Inject constructor(
             while (accountList.canAddMoreAccounts) {
                 val derivationIndex = DerivationIndex(nextIndex).getOrNull() ?: break
 
-                val newAccount = Account.CryptoPortfolio.invoke(
+                val newAccount = Account.Crypto.Portfolio.invoke(
                     accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex),
                     name = "Account #$nextIndex",
                     icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -271,7 +271,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                 val sortedAccountList = AccountList.invoke(
                     userWalletId = accountList.userWalletId,
                     accounts = accountList.accounts
-                        .filterIsInstance<Account.CryptoPortfolio>()
+                        .filterIsInstance<Account.Crypto.Portfolio>()
                         .sortedBy { it.derivationIndex.value },
                     totalAccounts = accountList.totalAccounts,
                     totalArchivedAccounts = accountList.totalArchivedAccounts,
@@ -287,9 +287,9 @@ internal class TesterAccountsViewModel @Inject constructor(
 
     private fun getUserWallet(): UserWallet? = uiState.value.walletSelector.selected
 
-    private fun getWalletAccounts(userWalletId: UserWalletId): ImmutableList<Account.CryptoPortfolio> {
+    private fun getWalletAccounts(userWalletId: UserWalletId): ImmutableList<Account.Crypto.Portfolio> {
         return walletAccounts.value[userWalletId]?.accounts
-            ?.filterIsInstance<Account.CryptoPortfolio>()
+            ?.filterIsInstance<Account.Crypto.Portfolio>()
             ?.toImmutableList()
             ?: persistentListOf()
     }

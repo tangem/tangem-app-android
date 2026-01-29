@@ -23,7 +23,7 @@ class AccountPortfolioItemUMConverter(
 
     override fun convert(value: Account): UserWalletItemUM {
         return when (value) {
-            is Account.CryptoPortfolio -> with(value) {
+            is Account.Crypto.Portfolio -> with(value) {
                 UserWalletItemUM(
                     id = accountId.value,
                     name = accountName.toUM().value,
@@ -39,8 +39,8 @@ class AccountPortfolioItemUMConverter(
         }
     }
 
-    private fun getInfo(account: Account.CryptoPortfolio): UserWalletItemUM.Information.Loaded = when (account) {
-        is Account.CryptoPortfolio -> {
+    private fun getInfo(account: Account.Crypto): UserWalletItemUM.Information.Loaded = when (account) {
+        is Account.Crypto.Portfolio -> {
             val text = pluralReference(
                 R.plurals.common_tokens_count,
                 count = account.tokensCount,
@@ -51,8 +51,8 @@ class AccountPortfolioItemUMConverter(
         is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 
-    private fun getImageState(account: Account.CryptoPortfolio) = when (account) {
-        is Account.CryptoPortfolio -> UserWalletItemUM.ImageState.Account(
+    private fun getImageState(account: Account.Crypto) = when (account) {
+        is Account.Crypto.Portfolio -> UserWalletItemUM.ImageState.Account(
             name = account.accountName.toUM().value,
             icon = CryptoPortfolioIconConverter.convert(account.icon),
         )

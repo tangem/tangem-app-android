@@ -265,7 +265,7 @@ internal class StakingModel @Inject constructor(
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
 
     private var isAccountsModeEnabled: Boolean = true
-    private var account: Account.CryptoPortfolio? = null
+    private var account: Account.Crypto? = null
 
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
