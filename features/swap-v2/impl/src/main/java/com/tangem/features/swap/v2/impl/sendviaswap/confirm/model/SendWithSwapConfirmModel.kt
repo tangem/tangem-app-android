@@ -488,8 +488,9 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             it.second is SendWithSwapRoute.Confirm
         }.onEach { (state, _) ->
             val confirmUM = state.confirmUM
-            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isTransactionInProcess
-            val isHoldToConfirm = params.userWallet.isHotWallet && confirmUM is ConfirmUM.Content
+            val isContent = confirmUM is ConfirmUM.Content
+            val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
+            val isHoldToConfirm = params.userWallet.isHotWallet && isContent
             params.callback.onResult(
                 route = SendWithSwapRoute.Confirm,
                 sendWithSwapUM = state.copy(
