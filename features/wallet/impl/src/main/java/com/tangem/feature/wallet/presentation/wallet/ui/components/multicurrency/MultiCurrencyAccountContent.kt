@@ -84,7 +84,7 @@ internal fun LazyListScope.portfolioTokensList(
     }
     itemsIndexed(
         items = tokens,
-        key = { _, item -> item.id },
+        key = { _, item -> item.id.toString() + "-portfolio-${portfolio.id}" },
         contentType = { _, item -> item::class.java },
         itemContent = { tokenIndex, token ->
             val indexWithHeader = tokenIndex.inc()

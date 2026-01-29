@@ -65,6 +65,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.test.MarketTooltipTestTags
+import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
@@ -180,79 +181,81 @@ private fun WalletContent(
             )
         } ?: PaddingValues(bottom = TangemTheme.dimens.spacing92 + bottomBarHeight)
 
-        LazyColumn(
-            modifier = Modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            item(
-                // !!! Type of the key should be saveable via Bundle on Android !!!
-                key = state.wallets.map { it.walletCardState.id.stringValue },
-                contentType = state.wallets.map { it.walletCardState.id },
+        TangemSharedTransitionLayout {
+            LazyColumn(
+                modifier = Modifier.testTag(MainScreenTestTags.SCREEN_CONTAINER),
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                WalletsList(
-                    modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                    lazyListState = walletsListState,
-                    wallets = state.wallets.map(WalletState::walletCardState).toImmutableList(),
-                    isBalanceHidden = state.isHidingMode,
-                )
-            }
-
-            when (selectedWallet) {
-                is WalletState.MultiCurrency -> {
-                    actions(
-                        actions = selectedWallet.buttons,
-                        selectedWalletIndex = selectedWalletIndex,
-                        modifier = movableItemModifier.padding(top = betweenItemsPadding),
-                    )
-                }
-                is WalletState.SingleCurrency -> {
-                    lazyActions(
-                        actions = selectedWallet.buttons,
-                        selectedWalletIndex = selectedWalletIndex,
-                        modifier = movableItemModifier.padding(top = betweenItemsPadding),
-                    )
-                }
-            }
-
-            notifications(configs = selectedWallet.warnings, modifier = itemModifier)
-
-            if (selectedWallet is WalletState.MultiCurrency) {
                 item(
-                    key = "TangemPayMainScreenBlock",
-                    contentType = selectedWallet.tangemPayState::class.java,
+                    // !!! Type of the key should be saveable via Bundle on Android !!!
+                    key = state.wallets.map { it.walletCardState.id.stringValue },
+                    contentType = state.wallets.map { it.walletCardState.id },
                 ) {
-                    TangemPayMainScreenBlock(
-                        state = selectedWallet.tangemPayState,
+                    WalletsList(
+                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        lazyListState = walletsListState,
+                        wallets = state.wallets.map(WalletState::walletCardState).toImmutableList(),
                         isBalanceHidden = state.isHidingMode,
-                        modifier = itemModifier,
                     )
                 }
-            }
 
-            (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
-                walletState.marketPriceBlockState?.let { marketPriceBlockState ->
-                    marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
+                when (selectedWallet) {
+                    is WalletState.MultiCurrency -> {
+                        actions(
+                            actions = selectedWallet.buttons,
+                            selectedWalletIndex = selectedWalletIndex,
+                            modifier = movableItemModifier.padding(top = betweenItemsPadding),
+                        )
+                    }
+                    is WalletState.SingleCurrency -> {
+                        lazyActions(
+                            actions = selectedWallet.buttons,
+                            selectedWalletIndex = selectedWalletIndex,
+                            modifier = movableItemModifier.padding(top = betweenItemsPadding),
+                        )
+                    }
                 }
-                if (walletState is WalletState.SingleCurrency.Content) {
-                    expressTransactionsItems(
-                        expressTxs = walletState.expressTxsToDisplay,
-                        modifier = itemModifier,
-                    )
+
+                notifications(configs = selectedWallet.warnings, modifier = itemModifier)
+
+                if (selectedWallet is WalletState.MultiCurrency) {
+                    item(
+                        key = "TangemPayMainScreenBlock",
+                        contentType = selectedWallet.tangemPayState::class.java,
+                    ) {
+                        TangemPayMainScreenBlock(
+                            state = selectedWallet.tangemPayState,
+                            isBalanceHidden = state.isHidingMode,
+                            modifier = itemModifier,
+                        )
+                    }
                 }
+
+                (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
+                    walletState.marketPriceBlockState?.let { marketPriceBlockState ->
+                        marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
+                    }
+                    if (walletState is WalletState.SingleCurrency.Content) {
+                        expressTransactionsItems(
+                            expressTxs = walletState.expressTxsToDisplay,
+                            modifier = itemModifier,
+                        )
+                    }
+                }
+
+                contentItems(
+                    state = selectedWallet,
+                    txHistoryItems = txHistoryItems,
+                    isBalanceHidden = state.isHidingMode,
+                    modifier = movableItemModifier,
+                )
+
+                nftCollections(state = selectedWallet, itemModifier = itemModifier)
+
+                organizeTokens(state = selectedWallet, itemModifier = itemModifier)
             }
-
-            contentItems(
-                state = selectedWallet,
-                txHistoryItems = txHistoryItems,
-                isBalanceHidden = state.isHidingMode,
-                modifier = movableItemModifier,
-            )
-
-            nftCollections(state = selectedWallet, itemModifier = itemModifier)
-
-            organizeTokens(state = selectedWallet, itemModifier = itemModifier)
         }
 
         ShowBottomSheet(bottomSheetConfig = selectedWallet.bottomSheetConfig)
