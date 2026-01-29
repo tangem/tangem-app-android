@@ -85,7 +85,7 @@ internal class DefaultNewsRepository(
                 articlesToUpdate.map { article ->
                     val isViewed = viewedFlags[article.id] == true
                     article.copy(viewed = isViewed)
-                }.sortedBy { it.viewed }
+                }
             }
             .map<List<ShortArticle>, Either<Throwable, List<ShortArticle>>> { it.right() }
             .catch { emit(it.left()) }
