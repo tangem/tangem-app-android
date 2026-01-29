@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLogic @AssistedInject constructor(
@@ -269,6 +270,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
         val availableTokens = getAvailableFeeTokens().fold(
             ifLeft = { error ->
+                Timber.e("Failed to get available fee tokens: $error")
                 if (selectedToken.currency !is CryptoCurrency.Coin) {
                     raise(error)
                 }
