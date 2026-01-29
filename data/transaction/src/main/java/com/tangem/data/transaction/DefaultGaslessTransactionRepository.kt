@@ -149,7 +149,7 @@ class DefaultGaslessTransactionRepository(
     }
 
     private companion object {
-        val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("100000")
+        val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("60000")
         val EMPTY_ADDRESSES = emptySet<String>()
     }
 }
