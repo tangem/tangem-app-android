@@ -329,7 +329,12 @@ internal class SwapModel @Inject constructor(
             }
         }
 
-        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(initialCurrencyFrom.symbol))
+        analyticsEventHandler.send(
+            SwapEvents.SwapScreenOpened(
+                token = initialCurrencyFrom.symbol,
+                blockchain = initialCurrencyFrom.network.name,
+            ),
+        )
 
         getBalanceHidingSettingsUseCase()
             .onEach { settings ->
