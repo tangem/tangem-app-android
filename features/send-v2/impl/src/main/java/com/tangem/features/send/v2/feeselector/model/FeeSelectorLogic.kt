@@ -122,6 +122,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(
                     categoryName = params.analyticsCategoryName,
                     blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                    token = params.cryptoCurrencyStatus.currency.symbol,
                 ),
             )
         }
