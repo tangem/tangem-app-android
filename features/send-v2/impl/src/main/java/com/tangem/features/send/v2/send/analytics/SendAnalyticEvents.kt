@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NONCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -42,6 +43,7 @@ internal sealed class SendAnalyticEvents(
                 AnalyticsParam.EmptyFull.Full -> true.toString().capitalize()
             }
             put(ENS_ADDRESS, ensAddress)
+            put(FEE_TOKEN, feeToken)
         },
     ), AppsFlyerIncludedEvent
 
