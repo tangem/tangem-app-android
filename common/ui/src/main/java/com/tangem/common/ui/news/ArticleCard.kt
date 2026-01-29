@@ -95,8 +95,6 @@ private fun TrendingArticle(
                 TangemTheme.colors.text.primary1
             },
             style = TangemTheme.typography.h3,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
 
