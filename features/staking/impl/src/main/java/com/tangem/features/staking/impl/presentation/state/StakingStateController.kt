@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.wallet.isColdWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import javax.inject.Inject
 
 @ModelScoped
@@ -35,9 +37,10 @@ internal class StakingStateController @Inject constructor(
     private val titleTransformer = SetTitleTransformer
 
     fun initializeWithUserWallet(userWallet: UserWallet) {
-        mutableUiState.update {
-            it.copy(
-                showColdWalletInteractionIcon = userWallet is UserWallet.Cold,
+        mutableUiState.update { state ->
+            state.copy(
+                showColdWalletInteractionIcon = userWallet.isColdWallet,
+                shouldShowHoldToConfirmButton = userWallet.isHotWallet,
             )
         }
     }
@@ -98,6 +101,7 @@ internal class StakingStateController @Inject constructor(
             buttonsState = NavigationButtonsState.Empty,
             balanceState = null,
             showColdWalletInteractionIcon = true,
+            shouldShowHoldToConfirmButton = false,
         )
     }
 }
