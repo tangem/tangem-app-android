@@ -17,7 +17,11 @@ vendorConfiguration:
   instrumentationArgs:
     wiremockBaseUrl: "http://localhost:8080"
   allureConfiguration:
-    enabled: false
+    enabled: true
+    # Kaspresso writes to /storage/emulated/0/Documents/allure-results/
+    # Marathon will automatically collect from this path
+    pathRoot: "EXTERNAL_STORAGE"
+    relativeResultsDirectory: "Documents/allure-results"
   # Kaspresso handles screenshots via FailedStepScreenshotInterceptor - more granular (per step)
 
 poolingStrategy:

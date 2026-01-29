@@ -43,9 +43,9 @@ RUN curl -L "https://github.com/allure-framework/allurectl/releases/latest/downl
     chmod +x /usr/local/bin/allurectl
 
 # Install Marathon test runner
-RUN curl -L "https://github.com/MarathonLabs/marathon/releases/download/0.9.1/marathon-0.9.1.zip" -o /tmp/marathon.zip && \
+RUN curl -L "https://github.com/MarathonLabs/marathon/releases/download/0.10.4/marathon-0.10.4.zip" -o /tmp/marathon.zip && \
     unzip /tmp/marathon.zip -d /opt && \
-    ln -s /opt/marathon-0.9.1/bin/marathon /usr/local/bin/marathon && \
+    ln -s /opt/marathon-0.10.4/bin/marathon /usr/local/bin/marathon && \
     rm /tmp/marathon.zip
 
 RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
