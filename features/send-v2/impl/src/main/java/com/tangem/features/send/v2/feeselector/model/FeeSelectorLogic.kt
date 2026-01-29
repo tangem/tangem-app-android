@@ -266,10 +266,20 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun populateExtendedFee(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
+        val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
+        val availableTokens = getAvailableFeeTokens().fold(
+            ifLeft = { error ->
+                if (selectedToken.currency !is CryptoCurrency.Coin) {
+                    raise(error)
+                }
+                emptyList()
+            },
+            ifRight = { it },
+        )
         LoadedFeeResult.Extended(
             fee = fee,
-            selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind(),
-            availableTokens = getAvailableFeeTokens().bind(),
+            selectedToken = selectedToken,
+            availableTokens = availableTokens,
         )
     }
 
