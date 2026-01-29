@@ -281,7 +281,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
 
         val gaslessFeeAddresses = try {
             gaslessTransactionRepository.getGaslessFeeAddresses()
-        } catch (_: Throwable) {
+        } catch (error: Throwable) {
+            Timber.e(error, "Failed to load gasless fee addresses; falling back to empty set")
             emptySet()
         }
         return when (itemsResult) {
