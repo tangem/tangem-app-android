@@ -99,7 +99,7 @@ fun TangemButton(
                         .padding(vertical = 2.dp)
                         .testTag(BaseButtonTestTags.ICON),
                     painter = painterResource(id = iconResId),
-                    tint = colors.contentColor(enabled = enabled).value,
+                    tint = icon.iconTint ?: colors.contentColor(enabled = enabled).value,
                     contentDescription = null,
                 )
             },
