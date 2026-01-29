@@ -37,10 +37,10 @@ internal class TangemPayTxHistoryItemsConverter(
         val localDate = spend.date.withZone(DateTimeZone.getDefault())
         val amountPrefix = when {
             spend.amount.isZero() -> ""
-            spend.status == TangemPayTxHistoryItem.Status.DECLINED -> ""
-            else -> StringsSigns.MINUS
+            spend.status == TangemPayTxHistoryItem.Status.DECLINED || spend.amount.isPositive() -> StringsSigns.MINUS
+            else -> StringsSigns.PLUS
         }
-        val amount = amountPrefix + spend.amount.format {
+        val amount = amountPrefix + spend.amount.abs().format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
         return TangemPayTransactionState.Content.Spend(
@@ -48,8 +48,9 @@ internal class TangemPayTxHistoryItemsConverter(
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
             amount = amount,
             amountColor = themedColor {
-                when (spend.status) {
-                    TangemPayTxHistoryItem.Status.DECLINED -> TangemTheme.colors.text.warning
+                when {
+                    spend.status == TangemPayTxHistoryItem.Status.DECLINED -> TangemTheme.colors.text.warning
+                    amountPrefix == StringsSigns.PLUS -> TangemTheme.colors.text.accent
                     else -> TangemTheme.colors.text.primary1
                 }
             },
