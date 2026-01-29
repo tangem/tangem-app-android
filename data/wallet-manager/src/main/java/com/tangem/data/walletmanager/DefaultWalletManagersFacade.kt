@@ -279,6 +279,11 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             ),
         )
 
+        val gaslessFeeAddresses = try {
+            gaslessTransactionRepository.getGaslessFeeAddresses()
+        } catch (_: Throwable) {
+            emptySet()
+        }
         return when (itemsResult) {
             is Result.Success -> PaginationWrapper(
                 currentPage = sdkPageConverter.convert(page),
@@ -286,7 +291,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 items = SdkTransactionHistoryItemConverter(
                     smartContractMethods = readSmartContractMethods(),
                     yieldSupplyAddresses = YIELD_SUPPLY_ADDRESSES,
-                    gaslessFeeAddresses = gaslessTransactionRepository.getGaslessFeeAddresses(),
+                    gaslessFeeAddresses = gaslessFeeAddresses,
                 ).convertList(itemsResult.data.items),
             )
             is Result.Failure -> error(itemsResult.error.message ?: itemsResult.error.customMessage)
