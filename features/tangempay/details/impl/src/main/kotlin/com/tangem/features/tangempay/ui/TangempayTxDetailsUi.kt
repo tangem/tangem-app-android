@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tangempay.details.impl.R
@@ -83,21 +84,24 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
                 style = TangemTheme.typography.head,
                 color = state.transactionAmountColor.resolveReference(),
             )
-            state.localTransactionText?.let { localTransaction ->
+            if (state.localTransactionText != null) {
                 Text(
                     modifier = Modifier.padding(top = 4.dp),
-                    text = localTransaction.orMaskWithStars(state.isBalanceHidden),
+                    text = state.localTransactionText.orMaskWithStars(state.isBalanceHidden),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                 )
             }
-            state.labelState?.let { Label(state = state.labelState, modifier = Modifier.padding(top = 12.dp)) }
+            if (state.labelState != null) {
+                Label(state = state.labelState, modifier = Modifier.padding(top = 12.dp))
+            }
             SpacerH32()
-            state.notification?.let {
+            if (state.notification != null) {
                 Notification(
-                    config = state.notification,
-                    titleColor = TangemTheme.colors.text.tertiary,
-                    iconTint = TangemTheme.colors.icon.secondary,
+                    config = state.notification.config,
+                    titleColor = state.notification.titleColor.resolveReference(),
+                    iconTint = state.notification.iconTint.resolveReference(),
+                    containerColor = state.notification.containerColor?.resolveReference(),
                 )
             }
             ButtonsContainer(
@@ -195,10 +199,15 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
                 text = resourceReference(R.string.tangem_pay_status_declined),
                 style = LabelStyle.WARNING,
             ),
-            notification = NotificationConfig(
-                title = stringReference("The bank rejected this transaction request."),
-                subtitle = TextReference.EMPTY,
-                iconResId = R.drawable.ic_token_info_24,
+            notification = TangemPayTxHistoryDetailsUM.NotificationState(
+                config = NotificationConfig(
+                    title = stringReference("The bank rejected this transaction request."),
+                    subtitle = TextReference.EMPTY,
+                    iconResId = R.drawable.ic_token_info_24,
+                ),
+                titleColor = themedColor { TangemTheme.colors.text.warning },
+                iconTint = themedColor { TangemTheme.colors.icon.warning },
+                containerColor = themedColor { TangemColorPalette.Amaranth.copy(alpha = 0.1F) },
             ),
             buttons = persistentListOf(
                 TangemPayTxHistoryDetailsUM.ButtonState(
@@ -240,10 +249,15 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
             localTransactionText = null,
             labelState = null,
-            notification = NotificationConfig(
-                title = stringReference("This fee goes to cover the cost of handling your transfer."),
-                subtitle = TextReference.EMPTY,
-                iconResId = R.drawable.ic_token_info_24,
+            notification = TangemPayTxHistoryDetailsUM.NotificationState(
+                config = NotificationConfig(
+                    title = stringReference("This fee goes to cover the cost of handling your transfer."),
+                    subtitle = TextReference.EMPTY,
+                    iconResId = R.drawable.ic_token_info_24,
+                ),
+                titleColor = themedColor { TangemTheme.colors.text.tertiary },
+                iconTint = themedColor { TangemTheme.colors.icon.secondary },
+                containerColor = null,
             ),
             buttons = persistentListOf(
                 TangemPayTxHistoryDetailsUM.ButtonState(
