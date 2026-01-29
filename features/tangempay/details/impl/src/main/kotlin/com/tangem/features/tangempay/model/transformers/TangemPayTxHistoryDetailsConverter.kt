@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.price
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -24,7 +25,7 @@ internal object TangemPayTxHistoryDetailsConverter :
     Converter<TangemPayTxHistoryDetailsConverter.Input, TangemPayTxHistoryDetailsUM> {
     private val dateFormatter = DateTimeFormatters.getBestFormatterBySkeleton("dd MMMM")
 
-    private val paySpendSubtitleConverter = PaySpendSubtitleConverter
+    private val paySpendSubtitleConverter = PayDetailsSpendSubtitleConverter
 
     override fun convert(value: Input): TangemPayTxHistoryDetailsUM {
         val transaction = value.item
@@ -140,12 +141,15 @@ internal object TangemPayTxHistoryDetailsConverter :
     private fun TangemPayTxHistoryItem.extractAmountColor(): ColorReference {
         return when (this) {
             is TangemPayTxHistoryItem.Fee,
-            is TangemPayTxHistoryItem.Spend,
             is TangemPayTxHistoryItem.Payment,
             -> themedColor { TangemTheme.colors.text.primary1 }
             is TangemPayTxHistoryItem.Collateral -> when (this.type) {
                 TangemPayTxHistoryItem.Type.Deposit -> themedColor { TangemTheme.colors.text.accent }
                 TangemPayTxHistoryItem.Type.Withdrawal -> themedColor { TangemTheme.colors.text.primary1 }
+            }
+            is TangemPayTxHistoryItem.Spend -> when (this.status) {
+                TangemPayTxHistoryItem.Status.DECLINED -> themedColor { TangemTheme.colors.text.warning }
+                else -> themedColor { TangemTheme.colors.text.primary1 }
             }
         }
     }
@@ -200,21 +204,39 @@ internal object TangemPayTxHistoryDetailsConverter :
         }
     }
 
-    private fun TangemPayTxHistoryItem.extractNotification(): NotificationConfig? {
+    private fun TangemPayTxHistoryItem.extractNotification(): TangemPayTxHistoryDetailsUM.NotificationState? {
         return when (this) {
             is TangemPayTxHistoryItem.Payment -> null
             is TangemPayTxHistoryItem.Collateral -> null
-            is TangemPayTxHistoryItem.Fee -> NotificationConfig(
-                title = resourceReference(R.string.tangem_pay_transaction_fee_notification_text),
-                subtitle = TextReference.EMPTY,
-                iconResId = R.drawable.ic_token_info_24,
-            )
-            is TangemPayTxHistoryItem.Spend -> when (this.status) {
-                TangemPayTxHistoryItem.Status.DECLINED -> NotificationConfig(
-                    title = resourceReference(R.string.tangem_pay_transaction_declined_notification_text),
+            is TangemPayTxHistoryItem.Fee -> TangemPayTxHistoryDetailsUM.NotificationState(
+                config = NotificationConfig(
+                    title = resourceReference(R.string.tangem_pay_transaction_fee_notification_text),
                     subtitle = TextReference.EMPTY,
                     iconResId = R.drawable.ic_token_info_24,
-                )
+                ),
+                titleColor = themedColor { TangemTheme.colors.text.tertiary },
+                iconTint = themedColor { TangemTheme.colors.icon.secondary },
+                containerColor = null,
+            )
+            is TangemPayTxHistoryItem.Spend -> when (this.status) {
+                TangemPayTxHistoryItem.Status.DECLINED ->
+                    TangemPayTxHistoryDetailsUM.NotificationState(
+                        config = NotificationConfig(
+                            title = if (declinedReason.isNullOrEmpty()) {
+                                resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
+                            } else {
+                                resourceReference(
+                                    id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
+                                    formatArgs = wrappedList(requireNotNull(declinedReason)),
+                                )
+                            },
+                            subtitle = TextReference.EMPTY,
+                            iconResId = R.drawable.ic_token_info_24,
+                        ),
+                        titleColor = themedColor { TangemTheme.colors.text.warning },
+                        iconTint = themedColor { TangemTheme.colors.icon.warning },
+                        containerColor = themedColor { TangemColorPalette.Amaranth.copy(alpha = 0.1F) },
+                    )
                 TangemPayTxHistoryItem.Status.PENDING,
                 TangemPayTxHistoryItem.Status.COMPLETED,
                 TangemPayTxHistoryItem.Status.RESERVED,
