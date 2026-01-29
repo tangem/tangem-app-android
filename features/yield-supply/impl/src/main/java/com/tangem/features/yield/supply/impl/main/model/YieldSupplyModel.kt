@@ -31,8 +31,6 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -57,6 +55,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
+    private val yieldSupplyEnterStatusFlowUseCase: YieldSupplyEnterStatusFlowUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
 ) : Model(), YieldSupplyClickIntents {
@@ -71,8 +70,6 @@ internal class YieldSupplyModel @Inject constructor(
     var userWallet: UserWallet by Delegates.notNull()
     private var latestCryptoCurrencyStatus: CryptoCurrencyStatus? = null
 
-    private val loadStatusJobHolder = JobHolder()
-
     private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
 
     init {
@@ -84,7 +81,7 @@ internal class YieldSupplyModel @Inject constructor(
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
-                subscribeOnCurrencyStatusUpdates()
+                loadUserWalletData()
                 singleNetworkStatusFetcher(
                     params = SingleNetworkStatusFetcher.Params(
                         userWalletId = params.userWalletId,
@@ -95,30 +92,12 @@ internal class YieldSupplyModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnCurrencyStatusUpdates() {
+    private fun loadUserWalletData() {
         modelScope.launch {
             getUserWalletUseCase(params.userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
-
-                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                        userWalletId = params.userWalletId,
-                        currencyId = cryptoCurrency.id,
-                        isSingleWalletWithTokens = false,
-                    ).onEach { maybeCryptoCurrency ->
-                        maybeCryptoCurrency.fold(
-                            ifRight = { cryptoCurrencyStatus ->
-                                latestCryptoCurrencyStatus = cryptoCurrencyStatus
-                                if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
-                                    sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
-                                }
-                                onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
-                            },
-                            ifLeft = {
-                                Timber.w(it.toString())
-                            },
-                        )
-                    }.launchIn(modelScope)
+                    subscribeOnCurrencyStatusUpdates()
                 },
                 ifLeft = {
                     Timber.w(it.toString())
@@ -126,6 +105,36 @@ internal class YieldSupplyModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun subscribeOnCurrencyStatusUpdates() {
+        combine(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+                userWalletId = params.userWalletId,
+                currencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = false,
+            ),
+            yieldSupplyEnterStatusFlowUseCase(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = cryptoCurrency,
+            ),
+        ) { maybeCryptoCurrency, _ ->
+            maybeCryptoCurrency
+        }.flowOn(dispatchers.io)
+            .onEach { maybeCryptoCurrency ->
+                maybeCryptoCurrency.fold(
+                    ifRight = { cryptoCurrencyStatus ->
+                        latestCryptoCurrencyStatus = cryptoCurrencyStatus
+                        if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
+                            sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+                        }
+                        onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
+                    },
+                    ifLeft = {
+                        Timber.w(it.toString())
+                    },
+                )
+            }.launchIn(modelScope)
     }
 
     private suspend fun loadTokenStatus() {
@@ -168,13 +177,11 @@ internal class YieldSupplyModel @Inject constructor(
         )
     }
 
-    private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) = modelScope.launch(
-        dispatchers.default,
-    ) {
+    private suspend fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
         val processing = uiState.value is YieldSupplyUM.Processing
         if (isCryptoCurrencyStatusFromCache && processing) {
-            return@launch
+            return
         }
 
         val pendingStatus = yieldSupplyEnterStatusUseCase(
@@ -187,7 +194,7 @@ internal class YieldSupplyModel @Inject constructor(
         } else {
             loadStatus(cryptoCurrencyStatus)
         }
-    }.saveIn(loadStatusJobHolder)
+    }
 
     private fun showProcessing(status: YieldSupplyPendingStatus) {
         uiState.update {

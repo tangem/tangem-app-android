@@ -27,9 +27,10 @@ import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultYieldSupplyRepository(
     private val yieldSupplyApi: YieldSupplyApi,
@@ -40,7 +41,7 @@ internal class DefaultYieldSupplyRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : YieldSupplyRepository {
 
-    private val statusMap: MutableMap<String, YieldSupplyPendingStatus> = ConcurrentHashMap()
+    private val statusMapFlow = MutableStateFlow<Map<String, YieldSupplyPendingStatus>>(emptyMap())
 
     override suspend fun getCachedMarkets(): List<YieldMarketToken>? = withContext(dispatchers.io) {
         val cache = store.getSyncOrNull().orEmpty()
@@ -129,10 +130,12 @@ internal class DefaultYieldSupplyRepository(
         yieldSupplyPendingStatus: YieldSupplyPendingStatus?,
     ) {
         val key = getTokenProtocolStatusKey(userWalletId, cryptoCurrency)
-        if (yieldSupplyPendingStatus != null) {
-            statusMap[key] = yieldSupplyPendingStatus
-        } else {
-            statusMap.remove(key)
+        statusMapFlow.update { currentMap ->
+            if (yieldSupplyPendingStatus != null) {
+                currentMap + (key to yieldSupplyPendingStatus)
+            } else {
+                currentMap - key
+            }
         }
     }
 
@@ -153,7 +156,15 @@ internal class DefaultYieldSupplyRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldSupplyPendingStatus? {
-        return statusMap[getTokenProtocolStatusKey(userWalletId, cryptoCurrency)]
+        return statusMapFlow.value[getTokenProtocolStatusKey(userWalletId, cryptoCurrency)]
+    }
+
+    override fun getTokenProtocolPendingStatusFlow(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Flow<YieldSupplyPendingStatus?> {
+        val key = getTokenProtocolStatusKey(userWalletId, cryptoCurrency)
+        return statusMapFlow.map { it[key] }
     }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
