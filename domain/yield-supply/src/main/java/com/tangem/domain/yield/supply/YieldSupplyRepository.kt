@@ -104,6 +104,18 @@ interface YieldSupplyRepository {
         cryptoCurrency: CryptoCurrency,
     ): YieldSupplyPendingStatus?
 
+    /**
+     * Observe the pending status for the given wallet and currency as a [Flow].
+     *
+     * @param userWalletId the wallet to observe
+     * @param cryptoCurrency the currency or token to observe
+     * @return a [Flow] emitting the current pending status or null if none exists
+     */
+    fun getTokenProtocolPendingStatusFlow(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Flow<YieldSupplyPendingStatus?>
+
     fun getShouldShowYieldPromoBanner(): Flow<Boolean>
 
     suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean)
