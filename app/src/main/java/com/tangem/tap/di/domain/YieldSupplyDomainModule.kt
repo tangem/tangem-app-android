@@ -206,6 +206,16 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
+    fun provideYieldSupplyEnterStatusFlowUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyEnterStatusFlowUseCase {
+        return YieldSupplyEnterStatusFlowUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideYieldSupplyGetShouldShowMainPromoUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyGetShouldShowMainPromoUseCase {
