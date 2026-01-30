@@ -17,7 +17,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.core.ui.BuildConfig
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.account.AccountCharIcon
@@ -33,9 +32,9 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.internal.GroupTitleItem
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
-import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.ProvideSharedTransitionScope
 
 /**
  * Multi-currency content item
@@ -69,7 +68,7 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
 @Suppress("MagicNumber", "ReusedModifierInstance", "LongMethod")
 @Composable
 fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
-    SharedTransitionLayout(modifier) {
+    ProvideSharedTransitionScope(modifier) {
         val iconSharedContentState = rememberSharedContentState(key = "icon_${state.id}")
         val titleSharedContentState = rememberSharedContentState(key = "title_${state.id}")
         val boundsTransform = BoundsTransform { _, _ -> tween(350) }
@@ -101,13 +100,11 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                         state = iconState,
                         withFixedSize = false,
                         modifier = modifier
-                            .conditional(BuildConfig.DEBUG.not()) {
-                                sharedBounds(
-                                    sharedContentState = iconSharedContentState,
-                                    animatedVisibilityScope = animatedContentScope,
-                                    boundsTransform = boundsTransform,
-                                )
-                            },
+                            .sharedBounds(
+                                sharedContentState = iconSharedContentState,
+                                animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = boundsTransform,
+                            ),
                     )
                 },
                 title = { modifier: Modifier ->
@@ -126,14 +123,12 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                         state = state.tokenItemUM.titleState,
                         textStyle = textStyle.copy(fontSize = textSize.sp),
                         modifier = modifier
-                            .conditional(BuildConfig.DEBUG.not()) {
-                                sharedBounds(
-                                    sharedContentState = titleSharedContentState,
-                                    animatedVisibilityScope = animatedContentScope,
-                                    boundsTransform = boundsTransform,
-                                    resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
-                                )
-                            },
+                            .sharedBounds(
+                                sharedContentState = titleSharedContentState,
+                                animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = boundsTransform,
+                                resizeMode = scaleToBounds(ContentScale.Fit, Alignment.CenterStart),
+                            ),
                     )
                 },
             )

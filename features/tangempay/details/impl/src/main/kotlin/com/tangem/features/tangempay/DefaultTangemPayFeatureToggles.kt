@@ -7,6 +7,4 @@ internal class DefaultTangemPayFeatureToggles(
 ) : TangemPayFeatureToggles {
     override val isTangemPayEnabled
         get() = featureTogglesManager.isFeatureEnabled("TANGEM_PAY_ENABLED")
-    override val isEntryPointsEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("TANGEM_PAY_ENTRYPOINT_ENABLED")
 }

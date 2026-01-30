@@ -1469,6 +1469,9 @@
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
   <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
   <string name="tangem_pay_get_help">Get Help</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Reason: %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Other</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>

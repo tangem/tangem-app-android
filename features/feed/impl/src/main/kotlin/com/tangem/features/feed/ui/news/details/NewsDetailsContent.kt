@@ -16,15 +16,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -141,6 +146,7 @@ private fun ArticleDetail(
     relatedTokensUM: RelatedTokensUM,
     modifier: Modifier = Modifier,
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
     val density = LocalDensity.current
     val background = LocalMainBottomSheetColor.current.value
     val pagerHeight = 32.dp
@@ -184,23 +190,21 @@ private fun ArticleDetail(
 
                 SpacerH(24.dp)
 
-                if (article.isLiked) {
-                    PrimaryButtonIconStart(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        iconResId = R.drawable.ic_heart_20,
-                        text = stringResourceSafe(R.string.news_like),
-                        size = TangemButtonSize.RoundedAction,
-                        onClick = { onLikeClick() },
-                    )
-                } else {
-                    SecondaryButtonIconStart(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        iconResId = R.drawable.ic_heart_20,
-                        text = stringResourceSafe(R.string.news_like),
-                        size = TangemButtonSize.RoundedAction,
-                        onClick = { onLikeClick() },
-                    )
-                }
+                SecondaryButtonIconStart(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    iconResId = if (article.isLiked) {
+                        R.drawable.ic_heart_filled_20
+                    } else {
+                        R.drawable.ic_heart_20
+                    },
+                    iconTint = Color.Unspecified,
+                    text = stringResourceSafe(R.string.news_like),
+                    size = TangemButtonSize.RoundedAction,
+                    onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLikeClick()
+                    },
+                )
 
                 RelatedTokensBlock(
                     relatedTokensUM = relatedTokensUM,
@@ -375,16 +379,21 @@ private fun RelatedNewsItem(relatedArticle: RelatedArticleUM, modifier: Modifier
 @Composable
 private fun PreviewNewsDetailsContent() {
     TangemThemePreview {
-        NewsDetailsContent(
-            state = NewsDetailsUM(
-                articlesStateUM = ArticlesStateUM.Content,
-                articles = MockArticlesFactory.createMockArticles(),
-                selectedArticleIndex = 0,
-                onShareClick = {},
-                onLikeClick = {},
-                onBackClick = {},
-                onArticleIndexChanged = {},
-            ),
-        )
+        val background = TangemTheme.colors.background.tertiary
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            NewsDetailsContent(
+                state = NewsDetailsUM(
+                    articlesStateUM = ArticlesStateUM.Content,
+                    articles = MockArticlesFactory.createMockArticles(),
+                    selectedArticleIndex = 0,
+                    onShareClick = {},
+                    onLikeClick = {},
+                    onBackClick = {},
+                    onArticleIndexChanged = {},
+                ),
+            )
+        }
     }
 }

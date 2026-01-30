@@ -44,22 +44,30 @@ sealed class CommonSendAnalyticEvents(
     data class FeeScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val blockchain: String,
+        val token: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Fee Screen Opened",
         params = mapOf(
             SOURCE to source.analyticsName,
+            BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
         ),
     )
 
     data class FeeSummaryScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val blockchain: String,
+        val token: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Fee Summary Screen Opened",
         params = mapOf(
             SOURCE to source.analyticsName,
+            BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
         ),
     )
 
@@ -67,12 +75,14 @@ sealed class CommonSendAnalyticEvents(
         val categoryName: String,
         val source: CommonSendSource,
         val availableTokens: String,
+        val blockchain: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Fee Token Screen Opened",
         params = mapOf(
             SOURCE to source.analyticsName,
             "Available Fee" to availableTokens,
+            BLOCKCHAIN to blockchain,
         ),
     )
 

@@ -376,6 +376,7 @@ class DefaultMainAccountTokensMigrationTest {
             derivationIndex = DerivationIndex.Main.value,
             tokens = listOf(
                 createBitcoin(accountIndex = 0),
+                createBitcoin(accountIndex = 10),
             ),
         )
 
