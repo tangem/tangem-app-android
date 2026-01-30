@@ -34,6 +34,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.TransactionSendingProblem,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
+            is FeedbackEmailType.BiometricsAuthenticationFailed,
             -> R.string.feedback_preface_tx_failed
         }
 
