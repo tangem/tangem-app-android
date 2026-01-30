@@ -82,5 +82,9 @@
     {
         "name": "SWAP_MARKET_LIST_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "EARN_BLOCK_ENABLED",
+        "version": "undefined"
     }
 ]

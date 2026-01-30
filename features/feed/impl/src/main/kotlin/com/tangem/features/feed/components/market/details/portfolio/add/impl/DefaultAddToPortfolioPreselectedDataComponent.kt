@@ -1,34 +1,30 @@
 package com.tangem.features.feed.components.market.details.portfolio.add.impl
 
 import androidx.compose.runtime.Composable
-import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.backStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
-import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioModel
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioPreselectedDataModel
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioRoutes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
+internal class DefaultAddToPortfolioPreselectedDataComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: AddToPortfolioComponent.Params,
+    @Assisted private val params: AddToPortfolioPreselectedDataComponent.Params,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addTokenComponentFactory: AddTokenComponent.Factory,
-    tokenActionsComponentFactory: TokenActionsComponent.Factory,
-    private val chooseNetworkComponentFactory: ChooseNetworkComponent.Factory,
-) : AppComponentContext by context, AddToPortfolioComponent {
+) : AppComponentContext by context, AddToPortfolioPreselectedDataComponent {
 
-    private val model: AddToPortfolioModel = getOrCreateModel(params)
+    private val model: AddToPortfolioPreselectedDataModel = getOrCreateModel(params)
 
     private val portfolioSelectorComponent: PortfolioSelectorComponent = portfolioSelectorComponentFactory.create(
         context = child("portfolioSelectorComponent"),
@@ -48,22 +44,15 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         ),
     )
 
-    private val tokenActionsComponent: TokenActionsComponent = tokenActionsComponentFactory.create(
-        context = child("tokenActionsComponent"),
-        params = TokenActionsComponent.Params(
-            eventBuilder = model.eventBuilder,
-            callbacks = model,
-            data = model.tokenActionsData,
-        ),
-    )
-
     private val childStack = childStack(
-        key = "addToPortfolioStack",
+        key = "addToPortfolioFromEarnStack",
         handleBackButton = true,
         source = model.navigation,
         serializer = AddToPortfolioRoutes.serializer(),
         initialStack = { model.currentStack },
-        childFactory = ::contentChild,
+        childFactory = { configuration, _ ->
+            contentChild(configuration)
+        },
     )
 
     private fun onBack() {
@@ -83,28 +72,19 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         )
     }
 
-    private fun contentChild(
-        config: AddToPortfolioRoutes,
-        componentContext: ComponentContext,
-    ): ComposableContentComponent = when (config) {
+    private fun contentChild(config: AddToPortfolioRoutes): ComposableContentComponent = when (config) {
         AddToPortfolioRoutes.AddToken -> addTokenComponent
         AddToPortfolioRoutes.PortfolioSelector -> portfolioSelectorComponent
-        AddToPortfolioRoutes.TokenActions -> tokenActionsComponent
+        AddToPortfolioRoutes.TokenActions -> ComposableContentComponent.EMPTY
         AddToPortfolioRoutes.Empty -> ComposableContentComponent.EMPTY
-        is AddToPortfolioRoutes.NetworkSelector -> chooseNetworkComponentFactory.create(
-            context = childByContext(componentContext),
-            params = ChooseNetworkComponent.Params(
-                selectedPortfolio = config.selectedPortfolio,
-                callbacks = model,
-            ),
-        )
+        is AddToPortfolioRoutes.NetworkSelector -> ComposableContentComponent.EMPTY
     }
 
     @AssistedFactory
-    interface Factory : AddToPortfolioComponent.Factory {
+    interface Factory : AddToPortfolioPreselectedDataComponent.Factory {
         override fun create(
             context: AppComponentContext,
-            params: AddToPortfolioComponent.Params,
-        ): DefaultAddToPortfolioComponent
+            params: AddToPortfolioPreselectedDataComponent.Params,
+        ): DefaultAddToPortfolioPreselectedDataComponent
     }
 }

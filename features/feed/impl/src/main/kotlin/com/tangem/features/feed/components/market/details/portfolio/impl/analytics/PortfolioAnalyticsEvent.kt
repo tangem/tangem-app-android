@@ -1,7 +1,6 @@
 package com.tangem.features.feed.components.market.details.portfolio.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 
 internal class PortfolioAnalyticsEvent(
@@ -10,14 +9,14 @@ internal class PortfolioAnalyticsEvent(
 ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params) {
 
     data class EventBuilder(
-        val token: TokenMarketParams,
+        val tokenSymbol: String,
         val source: String?,
     ) {
 
         fun addToPortfolioClicked() = PortfolioAnalyticsEvent(
             event = "Button - Add To Portfolio",
             params = mapOf(
-                "Token" to token.symbol,
+                "Token" to tokenSymbol,
             ),
         )
 
@@ -35,7 +34,7 @@ internal class PortfolioAnalyticsEvent(
             event = "Token Network Selected",
             params = mapOf(
                 "Count" to blockchainNames.size.toString(),
-                "Token" to token.symbol,
+                "Token" to tokenSymbol,
                 "blockchain" to blockchainNames.joinToString(separator = ", "),
             ),
         )
@@ -51,7 +50,7 @@ internal class PortfolioAnalyticsEvent(
                     else -> "error"
                 },
                 params = buildMap {
-                    put("Token", token.symbol)
+                    put("Token", tokenSymbol)
                     source?.let { put("Source", it) }
                     put("blockchain", blockchainName)
                 },
