@@ -18,6 +18,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -35,6 +36,7 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
@@ -64,6 +66,8 @@ import javax.inject.Inject
 internal interface WalletWarningsClickIntents {
 
     fun onAddBackupCardClick()
+
+    fun onCloreMigrationClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onCloseAlreadySignedHashesWarningClick()
 
@@ -144,6 +148,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped())
 
         prepareAndStartOnboardingProcess()
+    }
+
+    override fun onCloreMigrationClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        router.openTokenDetails(
+            userWalletId = userWallet.walletId,
+            currencyStatus = cryptoCurrencyStatus,
+            navigationAction = NavigationAction.CloreMigration,
+        )
     }
 
     private fun prepareAndStartOnboardingProcess() {
