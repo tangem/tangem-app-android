@@ -43,7 +43,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
@@ -88,9 +87,7 @@ internal class WalletModel @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
-    private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
@@ -210,49 +207,39 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun trackScreenOpened() {
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            modelScope.launch {
-                userWalletsListRepository
-                    .selectedUserWalletSync()
-                    ?.let { selectedWallet ->
-                        val hasMobileWallet = userWalletsListRepository.userWalletsSync()
-                            .any { it is UserWallet.Hot }
+        modelScope.launch {
+            userWalletsListRepository
+                .selectedUserWalletSync()
+                ?.let { selectedWallet ->
+                    val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                        .any { it is UserWallet.Hot }
 
-                        val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
-                            singleAccountListSupplier(selectedWallet.walletId)
-                                .first()
-                                .accounts
-                                .size
-                        } else {
-                            null
-                        }
-                        val result = getAppThemeModeUseCase().firstOrNull()
-                        val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
-                        analyticsEventsHandler.send(
-                            WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
-                                hasMobileWallet = hasMobileWallet,
-                                accountsCount = accountsCount,
-                                theme = theme.value,
-                                isImported = selectedWallet.isImported(),
-                            ),
-                        )
+                    val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                        singleAccountListSupplier(selectedWallet.walletId)
+                            .first()
+                            .accounts
+                            .size
+                    } else {
+                        null
                     }
-            }
-        } else {
-            analyticsEventsHandler.send(
-                WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy(),
-            )
+                    val result = getAppThemeModeUseCase().firstOrNull()
+                    val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+                    analyticsEventsHandler.send(
+                        WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                            hasMobileWallet = hasMobileWallet,
+                            accountsCount = accountsCount,
+                            theme = theme.value,
+                            isImported = selectedWallet.isImported(),
+                        ),
+                    )
+                }
         }
     }
 
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
-        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
-                shouldShowAskBiometryUseCase() &&
-                canUseBiometryUseCase()
-        } else {
-            innerWalletRouter.isWalletLastScreen() && shouldShowAskBiometryUseCase() && canUseBiometryUseCase()
-        }
+        return userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
+            shouldShowAskBiometryUseCase() &&
+            canUseBiometryUseCase()
     }
 
     private fun subscribeToUserWalletsUpdates() = channelFlow<Unit> {
@@ -298,20 +285,16 @@ internal class WalletModel @Inject constructor(
         modelScope.launch {
             val shouldAskNotificationPermissionsViaBs = notificationsRepository.shouldAskNotificationPermissionsViaBs()
             val shouldShow = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
-            val isBiometricsEnabled = shouldSaveUserWalletsSyncUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
             Timber.d(
                 "push BS afterUpdate: $shouldShow," +
-                    "isBiometricsEnabled $isBiometricsEnabled," +
                     "isHuaweiDevice $isHuaweiDevice",
             )
             if (!shouldAskNotificationPermissionsViaBs) {
                 notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
                 return@launch
             }
-            if (!hotWalletFeatureToggles.isHotWalletEnabled && !isBiometricsEnabled) {
-                return@launch
-            }
+
             if (!shouldShow) {
                 return@launch
             }
