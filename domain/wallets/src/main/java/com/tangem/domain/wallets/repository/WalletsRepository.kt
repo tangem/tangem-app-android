@@ -11,15 +11,6 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions")
 interface WalletsRepository {
 
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    suspend fun shouldSaveUserWalletsSync(): Boolean
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    fun shouldSaveUserWallets(): Flow<Boolean>
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    suspend fun saveShouldSaveUserWallets(item: Boolean)
-
     suspend fun useBiometricAuthentication(): Boolean
 
     suspend fun setUseBiometricAuthentication(value: Boolean)

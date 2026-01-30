@@ -3,7 +3,6 @@ package com.tangem.features.details.model
 import android.content.res.Resources
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -34,7 +33,6 @@ import com.tangem.features.details.entity.DetailsUM
 import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -59,7 +57,6 @@ internal class DetailsModel @Inject constructor(
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
     private val urlOpener: UrlOpener,
-    private val appInstanceIdProvider: AppInstanceIdProvider,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appStateHolder: ReduxStateHolder,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
@@ -67,7 +64,6 @@ internal class DetailsModel @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
 ) : Model() {
@@ -229,14 +225,10 @@ internal class DetailsModel @Inject constructor(
 
     private fun onBuyClick() {
         modelScope.launch {
-            if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Settings))
-                generateBuyTangemCardLinkUseCase
-                    .invoke(GenerateBuyTangemCardLinkUseCase.Source.Settings).let { urlOpener.openUrl(it) }
-            } else {
-                // This is incorrect implementation of buy link generation, but it is left here
-                urlOpener.openUrl(buildBuyLink())
-            }
+            analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Settings))
+
+            val url = generateBuyTangemCardLinkUseCase(GenerateBuyTangemCardLinkUseCase.Source.Settings)
+            urlOpener.openUrl(url)
         }
     }
 
@@ -270,12 +262,6 @@ internal class DetailsModel @Inject constructor(
 
     private fun getAppVersion(): String = "${appVersionProvider.versionName} (${appVersionProvider.versionCode})"
 
-    private suspend fun buildBuyLink(): String {
-        return appInstanceIdProvider.getAppInstanceId()?.let {
-            "$BUY_TANGEM_URL&app_instance_id=$it"
-        } ?: BUY_TANGEM_URL
-    }
-
     private companion object {
         val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }
         val APP_LANGUAGE = Locale.getDefault().language
@@ -283,7 +269,5 @@ internal class DetailsModel @Inject constructor(
             "&utm_medium=app" +
             "&utm_campaign=users-$SYSTEM_LANGUAGE" +
             "&utm_content=devicelang-$APP_LANGUAGE"
-
-        val BUY_TANGEM_URL = "https://buy.tangem.com/?$UTM_MARKS"
     }
 }

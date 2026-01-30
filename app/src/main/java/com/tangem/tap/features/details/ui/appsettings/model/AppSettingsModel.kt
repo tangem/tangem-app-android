@@ -14,10 +14,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.settings.CanUseBiometryUseCase
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -52,14 +49,11 @@ internal class AppSettingsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val walletsRepository: WalletsRepository,
-    private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val balanceHidingRepository: BalanceHidingRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appThemeModeRepository: AppThemeModeRepository,
-    private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val uiMessageSender: UiMessageSender,
 ) : Model(), StoreSubscriber<DetailsState> {
 
@@ -120,47 +114,25 @@ internal class AppSettingsModel @Inject constructor(
                 ),
             )
 
-            if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                val canUseBiometrics =
-                    !state.needEnrollBiometrics && !state.isInProgress && state.hasSecuredWallets
+            val canUseBiometrics =
+                !state.needEnrollBiometrics && !state.isInProgress && state.hasSecuredWallets
 
-                add(
-                    itemsFactory.createUseBiometricsSwitch(
-                        isChecked = state.useBiometricAuthentication,
-                        isEnabled = canUseBiometrics,
-                        onCheckedChange = ::onBiometricAuthenticationToggled,
-                        onDisabledClick = ::onBiometricAuthenticationDisabledClicked,
-                    ),
-                )
+            add(
+                itemsFactory.createUseBiometricsSwitch(
+                    isChecked = state.useBiometricAuthentication,
+                    isEnabled = canUseBiometrics,
+                    onCheckedChange = ::onBiometricAuthenticationToggled,
+                    onDisabledClick = ::onBiometricAuthenticationDisabledClicked,
+                ),
+            )
 
-                add(
-                    itemsFactory.createRequireAccessCodeSwitch(
-                        isChecked = state.requireAccessCode || !state.useBiometricAuthentication,
-                        isEnabled = canUseBiometrics && state.useBiometricAuthentication,
-                        onCheckedChange = ::onRequireAccessCodeToggled,
-                    ),
-                )
-            } else {
-                if (state.isBiometricsAvailable) {
-                    val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
-
-                    add(
-                        itemsFactory.createSaveWalletsSwitch(
-                            isChecked = state.saveWallets,
-                            isEnabled = canUseBiometrics,
-                            onCheckedChange = ::onSaveWalletsToggled,
-                        ),
-                    )
-
-                    add(
-                        itemsFactory.createSaveAccessCodeSwitch(
-                            isChecked = state.saveAccessCodes,
-                            isEnabled = canUseBiometrics,
-                            onCheckedChange = ::onSaveAccessCodesToggled,
-                        ),
-                    )
-                }
-            }
+            add(
+                itemsFactory.createRequireAccessCodeSwitch(
+                    isChecked = state.requireAccessCode || !state.useBiometricAuthentication,
+                    isEnabled = canUseBiometrics && state.useBiometricAuthentication,
+                    onCheckedChange = ::onRequireAccessCodeToggled,
+                ),
+            )
 
             add(
                 itemsFactory.createFlipToHideBalanceSwitch(
@@ -261,42 +233,6 @@ internal class AppSettingsModel @Inject constructor(
         }
     }
 
-    private fun onSaveWalletsToggled(isChecked: Boolean) {
-        if (isChecked) {
-            onSettingsToggled(AppSetting.SaveWallets, enable = true)
-        } else {
-            updateContentState {
-                copy(
-                    dialog = dialogsFactory.createDeleteSavedWalletsAlert(
-                        onDelete = {
-                            onSettingsToggled(AppSetting.SaveWallets, enable = false)
-                            dismissDialog()
-                        },
-                        onDismiss = ::dismissDialog,
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun onSaveAccessCodesToggled(isChecked: Boolean) {
-        if (isChecked) {
-            onSettingsToggled(AppSetting.SaveAccessCode, enable = true)
-        } else {
-            updateContentState {
-                copy(
-                    dialog = dialogsFactory.createDeleteSavedAccessCodesAlert(
-                        onDelete = {
-                            onSettingsToggled(AppSetting.SaveAccessCode, enable = false)
-                            dismissDialog()
-                        },
-                        onDismiss = ::dismissDialog,
-                    ),
-                )
-            }
-        }
-    }
-
     private fun onSettingsToggled(setting: AppSetting, enable: Boolean) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
     }
@@ -326,9 +262,6 @@ internal class AppSettingsModel @Inject constructor(
 
     private fun bootstrapBiometricsUpdates() = modelScope.launch {
         val state = AppSettingsState(
-            saveWallets = walletsRepository.shouldSaveUserWalletsSync(),
-            saveAccessCodes = settingsRepository.shouldSaveAccessCodes(),
-            isBiometricsAvailable = canUseBiometryUseCase(),
             useBiometricAuthentication = walletsRepository.useBiometricAuthentication(),
             requireAccessCode = walletsRepository.requireAccessCode(),
             isHidingEnabled = balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings,

@@ -13,7 +13,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -33,7 +32,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBot
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
@@ -90,7 +88,6 @@ internal interface WalletContentClickIntents {
 internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val currencyActionsClickIntents: WalletCurrencyActionsClickIntentsImplementor,
-    private val walletWarningsClickIntents: WalletWarningsClickIntentsImplementor,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
@@ -100,44 +97,13 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletEventSender: WalletEventSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val accountDependencies: AccountDependencies,
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            router.openDetailsScreen(stateHolder.getSelectedWalletId())
-            return
-        }
-
-        // Will be removed after Hot Wallet release
-        modelScope.launch(dispatchers.main) {
-            val userWalletId = stateHolder.getSelectedWalletId()
-            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
-                Timber.e(
-                    """
-                        Unable to get user wallet
-                        |- ID: $userWalletId
-                        |- Exception: $it
-                    """.trimIndent(),
-                )
-
-                return@launch
-            }
-
-            if (userWallet.isLocked) {
-                stateHolder.showBottomSheet(
-                    WalletBottomSheetConfig.UnlockWallets(
-                        onUnlockClick = walletWarningsClickIntents::onUnlockWalletClick,
-                        onScanClick = walletWarningsClickIntents::onScanToUnlockWalletClick,
-                    ),
-                )
-            } else {
-                router.openDetailsScreen(stateHolder.getSelectedWalletId())
-            }
-        }
+        router.openDetailsScreen(stateHolder.getSelectedWalletId())
     }
 
     override fun onOrganizeTokensClick() {

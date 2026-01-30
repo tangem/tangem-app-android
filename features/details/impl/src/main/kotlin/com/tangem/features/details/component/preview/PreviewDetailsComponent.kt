@@ -21,9 +21,7 @@ internal class PreviewDetailsComponent : DetailsComponent {
         ItemsBuilder(
             router = DummyRouter(),
             hotWalletFeatureToggles = object : HotWalletFeatureToggles {
-                override val isHotWalletEnabled: Boolean = true
                 override val isWalletCreationRestrictionEnabled: Boolean = true
-                override val isHotWalletVisible: Boolean = true
             },
         ).buildAll(
             isWalletConnectAvailable = true,

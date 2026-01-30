@@ -27,8 +27,6 @@ internal object LegacyMiddleware {
             { action ->
                 when (action) {
                     is LegacyAction.PrepareDetailsScreen -> {
-                        val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
-
                         selectedUserWallet()
                             .distinctUntilChanged { old, new ->
                                 if (old is UserWallet.Cold && new is UserWallet.Cold) {
@@ -39,9 +37,7 @@ internal object LegacyMiddleware {
                                 }
                             }
                             .onEach { selectedUserWallet ->
-                                val initializedAppSettingsStateContent = initializeAppSettingsState(
-                                    shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
-                                )
+                                val initializedAppSettingsStateContent = initializeAppSettingsState()
                                 store.dispatchWithMain(
                                     DetailsAction.PrepareScreen(
                                         scanResponse = (selectedUserWallet as? UserWallet.Cold)?.scanResponse,
@@ -60,24 +56,15 @@ internal object LegacyMiddleware {
     }
 
     private fun selectedUserWallet(): Flow<UserWallet> {
-        val hotWalletFeatureToggles = store.inject(DaggerGraphState::hotWalletFeatureToggles)
-        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            store.inject(DaggerGraphState::userWalletsListRepository).selectedUserWallet.filterNotNull()
-        } else {
-            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-            userWalletsListManager.selectedUserWallet
-        }
+        return store.inject(DaggerGraphState::userWalletsListRepository).selectedUserWallet.filterNotNull()
     }
 
     /**
      * LEGACY: We need to initialize [AppSettingsState] async to avoid drawing blocking
      * previously it was initialized in runBlocking and blocked details screen
      */
-    private suspend fun initializeAppSettingsState(shouldSaveUserWallets: Boolean): AppSettingsState {
+    private suspend fun initializeAppSettingsState(): AppSettingsState {
         return AppSettingsState(
-            isBiometricsAvailable = tangemSdkManager.checkCanUseBiometry(),
-            saveWallets = shouldSaveUserWallets,
-            saveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes(),
             selectedAppCurrency = store.state.globalState.appCurrency,
             selectedThemeMode = store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
                 ?: AppThemeMode.DEFAULT,

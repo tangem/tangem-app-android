@@ -9,7 +9,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.impl.model.HomeModel
 import com.tangem.features.home.impl.ui.Home
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -17,7 +16,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultHomeComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: HomeComponent.Params,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : HomeComponent, AppComponentContext by appComponentContext {
 
     private val model: HomeModel = getOrCreateModel(params)
@@ -26,11 +24,7 @@ internal class DefaultHomeComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        Home(
-            state = state,
-            modifier = modifier,
-            isV2StoriesEnabled = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+        Home(state = state, modifier = modifier)
     }
 
     @AssistedFactory
