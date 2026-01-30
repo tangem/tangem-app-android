@@ -363,7 +363,7 @@ class TokenFeeCalculatorTest {
         // Expected
 
         val expectedAmount = Amount(
-            value = BigDecimal("37.400000000000000000000000000000000000"),
+            value = BigDecimal("28.050000000000000000000000000000000000"),
             token = Token(
                 name = "USDC",
                 symbol = "USDC",

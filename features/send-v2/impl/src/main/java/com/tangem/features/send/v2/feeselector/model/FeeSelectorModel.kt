@@ -86,6 +86,8 @@ internal class FeeSelectorModel @Inject constructor(
             CommonSendAnalyticEvents.FeeSummaryScreenOpened(
                 categoryName = params.analyticsCategoryName,
                 source = params.analyticsSendSource,
+                blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                token = params.cryptoCurrencyStatus.currency.symbol,
             ),
         )
     }
@@ -95,6 +97,8 @@ internal class FeeSelectorModel @Inject constructor(
             CommonSendAnalyticEvents.FeeScreenOpened(
                 categoryName = params.analyticsCategoryName,
                 source = params.analyticsSendSource,
+                blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                token = params.cryptoCurrencyStatus.currency.symbol,
             ),
         )
     }
@@ -105,6 +109,7 @@ internal class FeeSelectorModel @Inject constructor(
                 categoryName = params.analyticsCategoryName,
                 source = params.analyticsSendSource,
                 availableTokens = getAvailableTokensString(),
+                blockchain = params.cryptoCurrencyStatus.currency.network.name,
             ),
         )
     }
