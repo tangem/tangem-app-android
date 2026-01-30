@@ -38,6 +38,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
                 resources.getStringSafe(R.string.feedback_token_description_error)
             }
             FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
+            FeedbackEmailType.BiometricsAuthenticationFailed -> "Biometrics authentication failed"
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
             is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] {auto-filled subject}"
