@@ -19,8 +19,6 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,9 +40,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : OnboardingRepository {
 
     // Save data for a session
@@ -133,12 +129,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
-        val userWallet = if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
-        } else {
-            userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == userWalletId }
-        } ?: error("no userWallet found")
-        return userWallet
+        return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
+            ?: error("no userWallet found")
     }
 
     private suspend fun getCustomerInfo(
