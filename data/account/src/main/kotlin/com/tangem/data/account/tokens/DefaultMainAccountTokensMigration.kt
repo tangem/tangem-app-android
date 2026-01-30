@@ -48,15 +48,17 @@ internal class DefaultMainAccountTokensMigration(
             exception
         }
         val mainAccount = findAccount(response = response, derivationIndex = DerivationIndex.Main)
-        val notMainAccounts = response.accounts
+        val customAccounts = response.accounts
             .filterNot { accountDTO -> accountDTO.derivationIndex.toDerivationIndex().isMain }
 
-        if (notMainAccounts.isEmpty()) {
+        if (customAccounts.isEmpty()) {
             Timber.i("There is only the Main account. Nothing to migrate")
             return@either response
         }
 
+        val customAccountIndexes = customAccounts.mapTo(hashSetOf(), WalletAccountDTO::derivationIndex)
         val unassignedTokens = mainAccount.groupUnassignedTokens()
+            .filter { it.key.value in customAccountIndexes }
 
         if (unassignedTokens.isEmpty()) {
             Timber.i("No unassigned tokens found for migration")
@@ -64,7 +66,7 @@ internal class DefaultMainAccountTokensMigration(
         }
 
         var updatedMainAccount = mainAccount
-        val assignedTokensAccounts = notMainAccounts.mapNotNull { accountDTO ->
+        val assignedTokensAccounts = customAccounts.mapNotNull { accountDTO ->
             val derivationIndex = accountDTO.derivationIndex.toDerivationIndex()
             val tokensForAccount = unassignedTokens[derivationIndex]
             if (tokensForAccount.isNullOrEmpty()) return@mapNotNull null
