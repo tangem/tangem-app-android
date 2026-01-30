@@ -300,6 +300,7 @@ internal class OnboardingTwinModel @Inject constructor(
         saveWalletUseCase(
             userWallet = userWallet,
             canOverride = true,
+            analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
         ).onLeft {
             Timber.e("Unable to save user wallet: $it")
             setLoading(false)
@@ -329,6 +330,7 @@ internal class OnboardingTwinModel @Inject constructor(
             saveWalletUseCase(
                 userWallet = userWallet,
                 canOverride = true,
+                analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
             ).onLeft {
                 Timber.e("Unable to save user wallet: $it")
                 setLoading(false)
