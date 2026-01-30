@@ -7,8 +7,6 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
@@ -19,9 +17,7 @@ import javax.inject.Inject
 
 internal class DefaultTangemPayEligibilityManager @Inject constructor(
     dispatchers: CoroutineDispatcherProvider,
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
@@ -73,11 +69,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             return emptyList()
         }
 
-        val wallets = if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            userWalletsListRepository.userWallets.value
-        } else {
-            userWalletsListManager.userWalletsSync
-        } ?: return emptyList()
+        val wallets = userWalletsListRepository.userWallets.value ?: return emptyList()
 
         return wallets.filter { wallet ->
             wallet.isMultiCurrency && !wallet.isLocked && wallet.isCompatible()
@@ -111,11 +103,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
 
     private fun resetDataWhenWalletsUpdate() {
         coroutineScope.launch {
-            if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                userWalletsListRepository.userWallets.collectLatest { reset() }
-            } else {
-                userWalletsListManager.userWallets.collectLatest { reset() }
-            }
+            userWalletsListRepository.userWallets.collectLatest { reset() }
         }
     }
 
