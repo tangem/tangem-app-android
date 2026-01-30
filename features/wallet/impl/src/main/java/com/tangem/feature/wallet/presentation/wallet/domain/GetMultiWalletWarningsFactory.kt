@@ -33,6 +33,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.hot.sdk.model.HotWalletId
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -317,6 +318,29 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             element = WalletNotification.Warning.SomeNetworksUnreachable,
             condition = flattenCurrencies.hasUnreachableNetworks(),
         )
+
+        addCloreMigrationNotification(flattenCurrencies, clickIntents)
+    }
+
+    private fun MutableList<WalletNotification>.addCloreMigrationNotification(
+        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
+        clickIntents: WalletClickIntents,
+    ) {
+        val cloreCurrency = flattenCurrencies.findCloreCurrency() ?: return
+
+        add(
+            WalletNotification.CloreMigration(
+                onStartMigrationClick = { clickIntents.onCloreMigrationClick(cloreCurrency) },
+            ),
+        )
+    }
+
+    private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.findCloreCurrency(): CryptoCurrencyStatus? {
+        val currencies = getOrNull(isPartialContentAccepted = true) ?: return null
+
+        return currencies.find { currencyStatus ->
+            BlockchainUtils.isClore(currencyStatus.currency.network.rawId)
+        }
     }
 
     private fun MutableList<WalletNotification>.addPushReminderNotification(

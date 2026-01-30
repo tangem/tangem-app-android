@@ -414,4 +414,18 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconSize = 54.dp,
         ),
     )
+
+    data class CloreMigration(
+        val onStartMigrationClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_title),
+            subtitle = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_sheet_description),
+            iconResId = R.drawable.img_attention_20,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_button),
+                onClick = onStartMigrationClick,
+            ),
+        ),
+    )
 }

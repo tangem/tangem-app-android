@@ -76,6 +76,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.UsedOutdatedData,
             is WalletNotification.UnlockVisaAccess,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
+            is WalletNotification.CloreMigration,
             -> null
             is WalletNotification.FinishWalletActivation -> {
                 val activationState = if (warning.isBackupExists) {
