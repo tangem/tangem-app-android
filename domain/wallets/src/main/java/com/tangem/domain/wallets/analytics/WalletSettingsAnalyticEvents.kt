@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
+import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 sealed class WalletSettingsAnalyticEvents(
     category: String = "Settings / Wallet Settings",
@@ -165,6 +166,10 @@ sealed class WalletSettingsAnalyticEvents(
     class ButtonStartUpgrade : WalletSettingsAnalyticEvents(
         event = "Button - Start Upgrade",
     )
+
+    class WalletUpgraded : WalletSettingsAnalyticEvents(
+        event = "Wallet Upgraded",
+    ), AppsFlyerIncludedEvent
 
     enum class RecoveryPhraseScreenAction(val value: String) {
         Upgrade("Upgrade"),
