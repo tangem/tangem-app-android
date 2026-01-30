@@ -907,6 +907,9 @@
   <string name="notification_sepa_title">Acheter des cryptomonnaies avec SEPA</string>
   <string name="notification_visa_waitlist_promo_text">Rejoignez la liste d’attente et obtenez une carte de paiement pas comme les autres.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Conditions générales</string>
+  <string name="notification_yield_promo_text">Déposez 100 $ ou plus, conservez le dépôt pendant 30 jours et recevez 10 $.</string>
+  <string name="notification_yield_promo_title">Rejoignez la campagne Yield Mode !</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -1468,7 +1471,7 @@
   <string name="tangem_pay_freeze_card_freeze">Geler</string>
   <string name="tangem_pay_freeze_card_success">Votre carte est gelée.</string>
   <string name="tangem_pay_get_help">Obtenir de l\'aide</string>
-  <string name="tangem_pay_history_item_spend_mc_declined_reason">Raison : %s</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Raison: %s</string>
   <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
   <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Autre</string>
