@@ -81,7 +81,7 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-        token = params.token,
+        tokenSymbol = params.token.symbol,
         source = params.analyticsParams?.source,
     )
 
