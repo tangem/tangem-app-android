@@ -86,6 +86,8 @@
   <string name="address_qr_code_message_format">Надсилайте тільки %1$s (%2$s) в мережі %3$s на цю адресу. Використання іншої мережі може призвести до втрати коштів.</string>
   <string name="address_type_default">За замовчуванням</string>
   <string name="address_type_legacy">Застарілий</string>
+  <string name="alert_authentication_error_message">Сталася помилка під час роботи з біометрією. Будь ласка, спробуйте оновити біометрію на вашому пристрої або зверніться до служби підтримки.</string>
+  <string name="alert_authentication_error_title">Помилка автентифікації</string>
   <string name="alert_button_how_to_scan">Як сканувати</string>
   <string name="alert_button_request_support">Звернутися в підтримку</string>
   <string name="alert_button_try_again">Спробуйте ще раз</string>
