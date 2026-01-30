@@ -32,7 +32,6 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletstart.entity.CreateWalletStartUM
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
@@ -64,7 +63,6 @@ internal class CreateWalletStartModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
@@ -99,7 +97,6 @@ internal class CreateWalletStartModel @Inject constructor(
                     onBackClick = { router.pop() },
                     onScanClick = ::onScanClick,
                     isScanInProgress = false,
-                    isHotWalletOptionVisible = hotWalletFeatureToggles.isHotWalletVisible,
                 )
                 CreateWalletStartComponent.Mode.HotWallet -> CreateWalletStartUM(
                     title = resourceReference(R.string.hw_mobile_wallet),
