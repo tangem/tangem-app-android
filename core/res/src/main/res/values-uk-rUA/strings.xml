@@ -44,6 +44,7 @@
   <string name="account_form_edit_button">Зберегти</string>
   <string name="account_form_name">Назва акаунту</string>
   <string name="account_form_name_already_exist_error_description">Акаунт з такою назвою вже існує. Будь ласка, виберіть іншу назву.</string>
+  <string name="account_form_name_already_exist_error_title">Обліковий запис з таким ім’ям уже існує</string>
   <string name="account_form_placeholder_edit_account">Акаунт</string>
   <string name="account_form_placeholder_new_account">Новий акаунт</string>
   <string name="account_form_title_create">Додати акаунт</string>
