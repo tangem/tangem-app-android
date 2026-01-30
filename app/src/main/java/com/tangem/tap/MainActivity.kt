@@ -43,9 +43,7 @@ import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
@@ -115,9 +113,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
 
     @Inject
-    lateinit var userWalletsListManager: UserWalletsListManager
-
-    @Inject
     @RootAppComponentContext
     internal lateinit var rootComponentContext: AppComponentContext
 
@@ -162,9 +157,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var userWalletsListRepository: UserWalletsListRepository
-
-    @Inject
-    internal lateinit var hotWalletFeatureToggles: HotWalletFeatureToggles
 
     @Inject
     internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
@@ -258,10 +250,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
             settingsRepository = settingsRepository,
-            userWalletsListManager = userWalletsListManager,
             coroutineScope = mainScope,
             userWalletsListRepository = userWalletsListRepository,
-            hotWalletFeatureToggles = hotWalletFeatureToggles,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
         )
 
