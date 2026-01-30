@@ -96,6 +96,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
                 .distinctUntilChanged(),
             getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.YieldPromo)
+                .distinctUntilChanged(),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
@@ -108,6 +110,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowOnePlusOnePromo = array[4] as Boolean
                 val shouldShowEnablePushesReminderNotification = array[5] as Boolean
                 val shouldAccessCodeSkipped = array[6] as Boolean
+                val shouldShowYieldPromo = array[7] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -122,6 +125,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                     )
 
                     addOnePlusOnePromoNotification(clickIntents, shouldShowOnePlusOnePromo)
+
+                    addYieldPromoNotification(clickIntents, shouldShowYieldPromo)
 
                     addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
 
@@ -282,6 +287,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             element = WalletNotification.OnePlusOnePromo(
                 onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.OnePlusOne) },
                 onClick = { clickIntents.onPromoClick(promoId = PromoId.OnePlusOne) },
+            ),
+            condition = shouldShowPromo,
+        )
+    }
+
+    private fun MutableList<WalletNotification>.addYieldPromoNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPromo: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.YieldPromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.YieldPromo) },
+                onTermsAndConditionsClick = { clickIntents.onYieldPromoTermsAndConditionsClick() },
             ),
             condition = shouldShowPromo,
         )

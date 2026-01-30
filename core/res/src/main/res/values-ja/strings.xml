@@ -894,6 +894,9 @@
   <string name="notification_sepa_title">SEPAで暗号資産を購入</string>
   <string name="notification_visa_waitlist_promo_text">事前申し込み受付中。他にない特別なカードを、いち早く体験しよう。</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visaカード</string>
+  <string name="notification_yield_promo_button">利用規約</string>
+  <string name="notification_yield_promo_text">100ドル以上を入金し、30日間保持すると、10ドルを受け取れます。</string>
+  <string name="notification_yield_promo_title">Yield Mode キャンペーンに参加しよう！</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
