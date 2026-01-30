@@ -35,14 +35,12 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
@@ -70,8 +68,6 @@ internal class HomeModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
-    private val userWalletsListManager: UserWalletsListManager,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val reduxStateHolder: ReduxStateHolder,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -216,19 +212,11 @@ internal class HomeModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = getWalletsCount().toString(),
+                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
                     isImported = isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
-        }
-    }
-
-    private suspend fun getWalletsCount(): Int {
-        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            userWalletsListRepository.userWalletsSync().size
-        } else {
-            userWalletsListManager.walletsCount
         }
     }
 
