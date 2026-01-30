@@ -1800,7 +1800,17 @@
   <string name="warning_button_ok">Понятно!</string>
   <string name="warning_button_really_cool">Очень круто!</string>
   <string name="warning_button_refresh">Обновить</string>
+  <string name="warning_clore_migration_button">Начать миграцию</string>
+  <string name="warning_clore_migration_copy_button">Копировать</string>
+  <string name="warning_clore_migration_error_signing_not_supported">Подписание сообщений не поддерживается в этой сети</string>
+  <string name="warning_clore_migration_error_wallet_manager_not_found">Невозможно подписать сообщение. Пожалуйста, попробуй позже.</string>
   <string name="warning_clore_migration_message">Согласно официальной документации Clore, все монеты, полученные до 21 декабря, будут мигрированы в токен Clore (ERC-20); монеты, полученные после этой даты, — нет. Решение для перевода находится в разработке — следите за обновлениями.</string>
+  <string name="warning_clore_migration_message_label">Сообщение</string>
+  <string name="warning_clore_migration_open_portal_button">Открыть портал клейма</string>
+  <string name="warning_clore_migration_sheet_description">Чтобы сохранить доступ к своим средствам, начните миграцию в соответствии с официальной инструкцией Clore.</string>
+  <string name="warning_clore_migration_sheet_title">Миграция сети Clore</string>
+  <string name="warning_clore_migration_sign_button">Подписать</string>
+  <string name="warning_clore_migration_signature_label">Подпись</string>
   <string name="warning_clore_migration_title">Миграция сети Clore</string>
   <string name="warning_demo_mode_message">Вы находитесь в режиме демо</string>
   <string name="warning_demo_mode_title">Демо режим включен</string>

@@ -1469,6 +1469,9 @@
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
   <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
   <string name="tangem_pay_get_help">Get Help</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Reason: %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Other</string>
   <string name="tangem_pay_rooted_device_subtitle">Unable to use on rooted devices</string>
   <string name="tangem_pay_status_completed">Completed</string>
@@ -1840,7 +1843,17 @@
   <string name="warning_button_ok">Ok, Got it!</string>
   <string name="warning_button_really_cool">Really cool!</string>
   <string name="warning_button_refresh">Refresh</string>
+  <string name="warning_clore_migration_button">Start migration</string>
+  <string name="warning_clore_migration_copy_button">Copy</string>
+  <string name="warning_clore_migration_error_signing_not_supported">Message signing is not supported for this network</string>
+  <string name="warning_clore_migration_error_wallet_manager_not_found">Unable to sign message. Please try again.</string>
   <string name="warning_clore_migration_message">According to Clore’s official documentation, all coins received before December 21 will be migrated to Clore (ERC-20 token); coins received after that date will not. A transfer solution is coming — stay tuned.</string>
+  <string name="warning_clore_migration_message_label">Message</string>
+  <string name="warning_clore_migration_open_portal_button">Open Claim portal</string>
+  <string name="warning_clore_migration_sheet_description">To keep access to your funds, start the migration according to the official Clore guidelines.</string>
+  <string name="warning_clore_migration_sheet_title">Clore Network Migration</string>
+  <string name="warning_clore_migration_sign_button">Sign</string>
+  <string name="warning_clore_migration_signature_label">Signature</string>
   <string name="warning_clore_migration_title">Clore Network Migration</string>
   <string name="warning_demo_mode_message">You are currently in the Demo mode</string>
   <string name="warning_demo_mode_title">Demo mode active</string>
