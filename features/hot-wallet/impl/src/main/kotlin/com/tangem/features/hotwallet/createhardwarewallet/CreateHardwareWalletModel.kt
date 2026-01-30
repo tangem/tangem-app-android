@@ -133,7 +133,10 @@ internal class CreateHardwareWalletModel @Inject constructor(
             return
         }
 
-        saveWalletUseCase(userWallet = userWallet).fold(
+        saveWalletUseCase(
+            userWallet = userWallet,
+            analyticsSource = AnalyticsParam.ScreensSources.AddNew,
+        ).fold(
             ifLeft = { saveWalletError ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
