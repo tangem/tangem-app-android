@@ -925,6 +925,9 @@
   <string name="notification_sepa_title">Покупайте крипту через SEPA</string>
   <string name="notification_visa_waitlist_promo_text">Присоединяйтесь к списку ожидания и получите уникальную платёжную карту, не похожую ни на одну другую.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Условия программы</string>
+  <string name="notification_yield_promo_text">Внесите депозит от $100, удерживайте его 30 дней и получите бонус $10</string>
+  <string name="notification_yield_promo_title">Подключите Режим доходности!</string>
   <string name="onboarding_access_code_feature_1_description">Установите единый код доступа для защиты всех ваших карт или колец</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Установите индивидуальный код доступа для каждой карты или кольца позже.</string>

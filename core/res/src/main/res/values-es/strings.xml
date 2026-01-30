@@ -907,6 +907,9 @@
   <string name="notification_sepa_title">Comprar criptomonedas con SEPA</string>
   <string name="notification_visa_waitlist_promo_text">Únete a la lista de espera y consigue una tarjeta de pago como ninguna otra.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Términos y condiciones</string>
+  <string name="notification_yield_promo_text">Deposite $100 o más, manténgalo durante 30 días y reciba $10.</string>
+  <string name="notification_yield_promo_title">¡Únase a la campaña Yield Mode!</string>
   <string name="onboarding_access_code_feature_1_description">Configure un código de acceso único para proteger todos sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
