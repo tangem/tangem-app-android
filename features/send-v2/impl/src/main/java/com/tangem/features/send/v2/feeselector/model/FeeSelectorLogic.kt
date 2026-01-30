@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class FeeSelectorLogic @AssistedInject constructor(
@@ -122,6 +123,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                 CommonSendFeeAnalyticEvents.CustomFeeButtonClicked(
                     categoryName = params.analyticsCategoryName,
                     blockchain = params.cryptoCurrencyStatus.currency.network.name,
+                    token = params.cryptoCurrencyStatus.currency.symbol,
                 ),
             )
         }
@@ -265,10 +267,21 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun populateExtendedFee(
         fee: TransactionFeeExtended,
     ): Either<GetFeeError, LoadedFeeResult.Extended> = either {
+        val selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind()
+        val availableTokens = getAvailableFeeTokens().fold(
+            ifLeft = { error ->
+                Timber.e("Failed to get available fee tokens: $error")
+                if (selectedToken.currency !is CryptoCurrency.Coin) {
+                    raise(error)
+                }
+                emptyList()
+            },
+            ifRight = { it },
+        )
         LoadedFeeResult.Extended(
             fee = fee,
-            selectedToken = getSelectedTokenStatus(fee.feeTokenId).bind(),
-            availableTokens = getAvailableFeeTokens().bind(),
+            selectedToken = selectedToken,
+            availableTokens = availableTokens,
         )
     }
 
