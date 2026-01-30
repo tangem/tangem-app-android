@@ -262,7 +262,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         private val onMigrationClick: () -> Unit,
     ) : Warning(
         title = resourceReference(id = R.string.warning_clore_migration_title),
-        subtitle = resourceReference(id = R.string.warning_clore_migration_sheet_description),
+        subtitle = resourceReference(id = R.string.warning_clore_migration_description),
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(id = R.string.warning_clore_migration_button),
             onClick = onMigrationClick,
