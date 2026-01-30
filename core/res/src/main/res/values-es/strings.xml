@@ -86,6 +86,8 @@
   <string name="address_qr_code_message_format">Envíe solo %1$s (%2$s) desde redes como %3$s a esta dirección. Usar otros tokens y redes puede resultar en la pérdida de fondos.</string>
   <string name="address_type_default">Por defecto</string>
   <string name="address_type_legacy">Legacy</string>
+  <string name="alert_authentication_error_message">Algo salió mal con la biometría. Por favor, intente restablecer la biometría en su dispositivo o contacte con soporte.</string>
+  <string name="alert_authentication_error_title">Error de inicio de sesión</string>
   <string name="alert_button_how_to_scan">Cómo escanear</string>
   <string name="alert_button_request_support">Solicitar soporte</string>
   <string name="alert_button_try_again">Inténtelo de nuevo</string>
@@ -836,7 +838,7 @@
     <item quantity="other">Hace %d minutos</item>
   </plurals>
   <string name="news_quick_recap">Resumen rápido</string>
-  <string name="news_related_news">Noticias relacionadas</string>
+  <string name="news_related_news">Noticias</string>
   <string name="news_related_tokens">Tokens relacionados</string>
   <string name="news_sources">Fuentes</string>
   <string name="news_stay_in_the_loop">Manténgase informado</string>
