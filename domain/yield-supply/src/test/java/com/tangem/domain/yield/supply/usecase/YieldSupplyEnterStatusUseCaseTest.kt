@@ -91,16 +91,13 @@ class YieldSupplyEnterStatusUseCaseTest {
         coEvery {
             yieldSupplyRepository.getPendingTxHashes(userWalletId, cryptoStatus.currency)
         } returns emptyList()
-        coEvery {
-            yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null)
-        } returns Unit
 
         val result = useCase(userWalletId, cryptoStatus)
 
         assertThat(result.isRight()).isTrue()
         val value = (result as Either.Right).value
         assertThat(value).isNull()
-        coVerify { yieldSupplyRepository.saveTokenProtocolPendingStatus(userWalletId, token, null) }
+        coVerify(exactly = 0) { yieldSupplyRepository.saveTokenProtocolPendingStatus(any(), any(), any()) }
     }
 
     @Test
@@ -147,7 +144,7 @@ class YieldSupplyEnterStatusUseCaseTest {
     @Test
     fun `GIVEN exit status with pending tx WHEN invoke THEN returns status`() = runTest {
         val token = createToken()
-        val cryptoStatus = createStatus(token)
+        val cryptoStatus = createStatus(token, isActive = true)
         val pendingTxHash = "0xexit456"
         val status = YieldSupplyPendingStatus.Exit(txIds = listOf(pendingTxHash))
 
