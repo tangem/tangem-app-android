@@ -219,8 +219,16 @@ internal class SwapModel @Inject constructor(
     private val swapRouter: SwapRouter = SwapRouter(router = router)
     private var userCountry: UserCountry? = null
 
-    private lateinit var fromAccountCurrencyStatus: AccountCryptoCurrencyStatus
+    private var fromAccountCurrencyStatus: AccountCryptoCurrencyStatus? = null
     private var toAccountCurrencyStatus: AccountCryptoCurrencyStatus? = null
+
+    /**
+     * If accountsFeatureToggles is off OR user came from Tangem Pay -> fromAccountCurrencyStatus == null
+     * If accountsFeatureToggles is on AND user didn't come from Tangem Pay -> fromAccountCurrencyStatus != null
+     *
+     * Remove when accounts are integrated into Tangem Pay
+     */
+    private val canUseFromAccountCurrencyStatus = accountsFeatureToggles.isFeatureEnabled && tangemPayInput == null
 
     private val isUserResolvableError: (SwapState) -> Boolean = { swapState ->
         swapState is SwapState.SwapError &&
@@ -287,7 +295,7 @@ internal class SwapModel @Inject constructor(
         }
 
         modelScope.launch(dispatchers.io) {
-            if (accountsFeatureToggles.isFeatureEnabled && tangemPayInput == null) {
+            if (canUseFromAccountCurrencyStatus) {
                 isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
 
                 val fromAccountStatus = getAccountCurrencyStatusUseCase.invokeSync(
@@ -578,11 +586,11 @@ internal class SwapModel @Inject constructor(
         } else {
             initialFromStatus to selectedCurrency
         }
-        val (fromAccount, toAccount) = if (accountsFeatureToggles.isFeatureEnabled && tangemPayInput == null) {
+        val (fromAccount, toAccount) = if (canUseFromAccountCurrencyStatus) {
             if (isOrderReversed) {
-                selectedAccount to fromAccountCurrencyStatus.account
+                selectedAccount to requireNotNull(fromAccountCurrencyStatus).account
             } else {
-                fromAccountCurrencyStatus.account to selectedAccount
+                requireNotNull(fromAccountCurrencyStatus).account to selectedAccount
             }
         } else {
             null to null
@@ -1261,7 +1269,7 @@ internal class SwapModel @Inject constructor(
                 fromAccount = foundAccount
                 toToken = initialFromStatus
                 toAccount = if (accountsFeatureToggles.isFeatureEnabled) {
-                    fromAccountCurrencyStatus.account
+                    fromAccountCurrencyStatus?.account
                 } else {
                     null
                 }
@@ -1279,7 +1287,7 @@ internal class SwapModel @Inject constructor(
             } else {
                 fromToken = initialFromStatus
                 fromAccount = if (accountsFeatureToggles.isFeatureEnabled) {
-                    fromAccountCurrencyStatus.account
+                    fromAccountCurrencyStatus?.account
                 } else {
                     null
                 }
