@@ -108,6 +108,8 @@ internal interface WalletWarningsClickIntents {
     fun onDenyPermissions()
 
     fun onFinishWalletActivationClick(isBackupExists: Boolean)
+
+    fun onYieldPromoTermsAndConditionsClick()
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -337,6 +339,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     program = Program.OnePlusOne,
                     action = PromotionBannerClicked.BannerAction.Closed(),
                 )
+                PromoId.YieldPromo -> PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Main,
+                    program = Program.YieldPromo,
+                    action = PromotionBannerClicked.BannerAction.Closed(),
+                )
             },
 
         )
@@ -394,6 +401,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
                 urlOpener.openUrl(ONE_PLUS_ONE_PROMO_LINK)
             }
+            PromoId.YieldPromo -> Unit // banner is not clickable, only terms and conditions button
         }
     }
 
@@ -611,6 +619,17 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
+    override fun onYieldPromoTermsAndConditionsClick() {
+        analyticsEventHandler.send(
+            PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                program = Program.YieldPromo,
+                action = PromotionBannerClicked.BannerAction.Clicked(),
+            ),
+        )
+        urlOpener.openUrl(YIELD_PROMO_TERMS_LINK)
+    }
+
     private companion object {
         const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
@@ -625,5 +644,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             "&utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
             "&utm_campaign=BOGO50"
+        const val YIELD_PROMO_TERMS_LINK = "https://tangem.com/docs/yield-mode-toc.html"
     }
 }
