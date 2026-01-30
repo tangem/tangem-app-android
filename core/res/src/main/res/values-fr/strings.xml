@@ -43,6 +43,7 @@
   <string name="account_form_create_button">Ajouter un compte</string>
   <string name="account_form_edit_button">Enregistrer</string>
   <string name="account_form_name">Nom du compte</string>
+  <string name="account_form_name_already_exist_error_description">Un compte portant ce nom existe déjà. Veuillez choisir un autre nom.</string>
   <string name="account_form_name_already_exist_error_title">Nom de compte déjà utilisé</string>
   <string name="account_form_placeholder_edit_account">Compte</string>
   <string name="account_form_placeholder_new_account">Nouveau compte</string>
@@ -298,6 +299,7 @@
   <string name="common_go_to_token">Aller au jeton</string>
   <string name="common_got_it">Compris</string>
   <string name="common_hide">Cacher</string>
+  <string name="common_hold_to">Maintenir contre %s</string>
   <string name="common_hour">heure</string>
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
@@ -322,6 +324,7 @@
   <string name="common_no">Non</string>
   <string name="common_no_address">Aucune adresse</string>
   <string name="common_not_added">Non ajouté</string>
+  <string name="common_not_available">Indisponible</string>
   <string name="common_not_now">Pas maintenant</string>
   <string name="common_now">Maintenant</string>
   <string name="common_ok">OK</string>
@@ -372,6 +375,7 @@
   <string name="common_swap">Échanger</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Appuyez et maintenez enfoncé</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
   <string name="common_to">À</string>
@@ -399,6 +403,8 @@
   <string name="common_yield_mode">Mode Rendement</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
+  <string name="custom_token_another_account_dialog_description">La dérivation de votre token correspond à la dérivation de %1$s. Votre token sera ajouté à ce compte.</string>
+  <string name="custom_token_another_account_dialog_title">La dérivation appartient à un autre compte.</string>
   <string name="custom_token_another_account_snackbar_text">Jeton ajouté au compte %1$s</string>
   <string name="custom_token_contract_address_input_title">Adresse du contrat</string>
   <string name="custom_token_creation_error_invalid_contract_address">L\'adresse du contrat n\'est pas valide</string>
@@ -459,6 +465,11 @@
   <string name="domain_receive_assets_onboarding_description">L’envoi d’actifs sur d’autres réseaux entraînera une perte définitive.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s réseau</string>
   <string name="domain_receive_assets_onboarding_title">Envoyez des fonds en utilisant uniquement</string>
+  <string name="earn_best_opportunities">Meilleures opportunités</string>
+  <string name="earn_filter_all_networks">Tous les réseaux</string>
+  <string name="earn_filter_all_types">Tous les types</string>
+  <string name="earn_mostly_used">Principalement utilisé</string>
+  <string name="earn_title">Gagner</string>
   <string name="email_preface_wc_error">Bonjour équipe de support, j’ai rencontré une erreur avec le code : %s</string>
   <string name="email_subject_wc_error">Erreur WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Vous avez utilisé une carte d\'un autre portefeuille. Appuyez sur la carte associée à ce portefeuille</string>
@@ -558,6 +569,8 @@
   <string name="feedback_subject_support_tangem">Commentaires sur Tangem</string>
   <string name="feedback_subject_tx_failed">Impossible d\'effectuer une transaction</string>
   <string name="feedback_token_description_error">Erreur de description de la pièce</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">Fonds insuffisants</string>
+  <string name="gasless_transaction_fee">Frais de transaction</string>
   <string name="generic_error">Une erreur s\'est produite</string>
   <string name="generic_error_code">Une erreur s\'est produite. Code:%s</string>
   <string name="generic_requires_memo_error">Un mémo est requis</string>
@@ -607,6 +620,7 @@
   <string name="hw_backup_need_title">Finalisez d\'abord la sauvegarde.</string>
   <string name="hw_backup_no_backup">Incomplet</string>
   <string name="hw_backup_section_other_title">Autres méthodes</string>
+  <string name="hw_backup_seed_code_description">Conservez votre seed phrase dans un endroit sûr et gardez-la confidentielle afin de protéger vos fonds, puis configurez un code d\'accès pour plus de sécurité.</string>
   <string name="hw_backup_seed_description">Conservez votre seed phrase dans un endroit sûr et gardez-la confidentielle afin de protéger vos fonds.</string>
   <string name="hw_backup_seed_title">Seed phrase</string>
   <string name="hw_backup_to_secure_description">Pour sécuriser votre wallet avec un code d\'accès, effectuez la procédure de sauvegarde.</string>
@@ -644,7 +658,7 @@
   <string name="hw_upgrade_error_wallet2_card_required">Une erreur s\'est produite pendant l\'opération.</string>
   <string name="hw_upgrade_funds_access_description">Vos fonds restent en sécurité et entièrement accessibles pendant toute la durée du processus.</string>
   <string name="hw_upgrade_funds_access_title">Accès aux fonds</string>
-  <string name="hw_upgrade_general_security_description">Après la mise à niveau, votre portefeuille mobile sera supprimé de l\'application et stocké sur votre hardware wallet; votre seedphrase restera en votre possession.</string>
+  <string name="hw_upgrade_general_security_description">Après la mise à niveau, votre portefeuille mobile sera supprimé de l\'application et stocké sur votre hardware wallet; votre seed phrase restera en votre possession.</string>
   <string name="hw_upgrade_general_security_title">Sécurité générale</string>
   <string name="hw_upgrade_key_migration_description">Les clés privées seront transférées de l\'application vers votre hardware wallet Tangem.</string>
   <string name="hw_upgrade_key_migration_title">Migration des clés</string>
@@ -992,6 +1006,7 @@
   <string name="onboarding_wallet_info_title_fourth">Restauration du code d\'accès</string>
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
+  <string name="only_one_mobile_wallet_explanation">Vous ne pouvez avoir qu\'un seul portefeuille mobile. Passez au portefeuille matériel Tangem ou ajoutez un nouveau portefeuille matériel.</string>
   <string name="onramp_all_offers_button_title">Toutes les offres</string>
   <string name="onramp_avaiable_with_payment_methods">Disponible avec %s</string>
   <string name="onramp_choose_provider_title_hint">L\'achat de crypto-monnaies sur Tangem est assuré par des fournisseurs tiers selon leurs conditions.</string>
@@ -1036,6 +1051,7 @@
   <string name="onramp_title_available_from">Disponible auprès de</string>
   <string name="onramp_title_available_up_to">Disponible jusqu\'à</string>
   <string name="onramp_title_you_get">Vous obtenez</string>
+  <string name="onramp_tos_external_providers">Le service est fourni par un prestataire externe. Tangem n\'est pas responsable.</string>
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_up_to_rate">Jusqu\'à</string>
   <string name="onramp_via">Via</string>
@@ -1248,18 +1264,21 @@
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_upgrade_banner_advantage_feature_title">Facile à utiliser</string>
   <string name="settings_upgrade_banner_description">Gardez vos cryptomonnaies en sécurité et hors ligne. Aussi fin qu\'une carte de crédit, plus sûr qu\'un coffre-fort bancaire.</string>
-  <string name="settings_upgrade_banner_seed_phrase_feature_title">Pas de seedphrase</string>
+  <string name="settings_upgrade_banner_seed_phrase_feature_title">Pas de seed phrase</string>
   <string name="settings_upgrade_banner_superiority_feature_title">Le meilleur hardware wallet</string>
   <string name="settings_upgrade_banner_title">Tangem Hardware Wallet</string>
   <string name="settings_wallet_name_title">Nom</string>
   <string name="stake_token_description">Faites travailler votre jeton pour vous</string>
+  <string name="staking_account_initialization_footer">Les frais de réseau sont une petite somme à payer pour traiter et confirmer ta transaction sur la blockchain.</string>
   <string name="staking_account_initialization_message">Pour commencer à staker, votre compte TON doit être activé avec une transaction de 1 TON. Les fonds restent sur votre compte, car cette étape sert uniquement à l\'activer pour le staking.</string>
+  <string name="staking_account_initialization_title">Activation du compte</string>
   <string name="staking_alert_network_fee_updated_message">Les frais de réseau ont changé. Veuillez vérifier le nouveau montant avant de continuer.</string>
   <string name="staking_alert_network_fee_updated_title">Frais de réseau mis à jour</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_amount_tron_integer_error">Le montant du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Le montant d\'annulation du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_apr_earn_badge">TAEG %1$s%%</string>
+  <string name="staking_cardano_details_rewards_info_text">Vos récompenses de staking commenceront après 5 époques (~25 jours), une fois que votre délégation aura été enregistrée et comptabilisée par le réseau.</string>
   <string name="staking_claim_unstaked">Réclamation déstakée</string>
   <string name="staking_details_account_fee">Frais de staking du compte</string>
   <string name="staking_details_account_fee_info">Un compte de staking est un compte spécial où sont stockés les jetons SOL stakés. Il est créé lorsque vous déléguez vos jetons à un validateur pour participer à la validation des transactions et gagner des récompenses. Des frais minimes sont facturés pour la création du compte de staking, qui sont restitués une fois le staking terminé.</string>
@@ -1270,6 +1289,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Les récompenses s\'accumulent automatiquement sur votre solde de staking quotidiennement.</string>
+  <string name="staking_details_autocompound_rewards_earned">Les récompenses sont ajoutées à votre solde de staking. Fonds gagnés : %s</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Taux de récompense moyen</string>
   <string name="staking_details_banner_text">Qu\'est-ce que le Staking ?</string>
@@ -1325,6 +1345,7 @@
   <string name="staking_notification_restake_text">L\'option de restaker vous permet de déplacer vos fonds d\'un validateur à un autre sans avoir besoin de les déstaker.</string>
   <string name="staking_notification_stake_entire_balance_text">Vous êtes sur le point de staker l\'intégralité de votre solde. Nous vous recommandons de laisser un petit montant pour couvrir les frais de réseau pour unstaking ou la réclamation des récompenses.</string>
   <string name="staking_notification_ton_account_initialization_message">Pour commencer le staking, vous devez d’abord activer votre compte TON</string>
+  <string name="staking_notification_ton_account_initialization_title">Activation du compte</string>
   <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
   <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 TON peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0,2 TON requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
@@ -1413,6 +1434,7 @@
   <string name="swap_story_third_subtitle">Simple et intuitif, vous permettant d\'échanger des jetons en quelques clics</string>
   <string name="swap_story_third_title">Plus Simple Que Jamais</string>
   <string name="swap_via_provider">Échange via le fournisseur</string>
+  <string name="swap_your_assets_title">Vos actifs</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
   <string name="swapping_alert_cex_description_with_slippage">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %1$s depuis l\'échange vers l\'adresse de l\'utilisateur. \n\nLe slippage du fournisseur peut atteindre %2$s</string>
   <string name="swapping_alert_dex_description">Le montant comprend les frais du fournisseur de services.</string>
@@ -1427,6 +1449,7 @@
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
   <string name="swapping_permission_header">Donner l\'autorisation</string>
   <string name="swapping_swap_action">Échanger</string>
+  <string name="swapping_swap_action_in_progress">Échange...</string>
   <string name="swapping_to_title">Vous recevez</string>
   <string name="swapping_token_list_title">Choisir le jeton</string>
   <string name="swapping_token_not_available">non disponible</string>
@@ -1445,6 +1468,9 @@
   <string name="tangem_pay_freeze_card_freeze">Geler</string>
   <string name="tangem_pay_freeze_card_success">Votre carte est gelée.</string>
   <string name="tangem_pay_get_help">Obtenir de l\'aide</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Raison : %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Autre</string>
   <string name="tangem_pay_rooted_device_subtitle">Impossible à utiliser sur les appareils rootés</string>
   <string name="tangem_pay_status_completed">Terminé</string>
@@ -1521,10 +1547,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Êtes-vous sûr de vouloir interrompre le processus KYC ? Vous pouvez y revenir à tout moment.</string>
   <string name="tangempay_kyc_failed_description">Nous n\'avons pas pu vérifier votre profil. Pour toute question, veuillez contacter le support.</string>
   <string name="tangempay_kyc_failed_title">Malheureusement, nous n\'avons pas pu vérifier votre identité</string>
+  <string name="tangempay_kyc_has_failed">KYC a échoué</string>
   <string name="tangempay_kyc_in_progress">KYC en cours</string>
   <string name="tangempay_kyc_in_progress_notification_button">Voir le statut</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en cours pour Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Les documents sont généralement vérifiés automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, le processus peut prendre jusqu’à 48 heures.</string>
+  <string name="tangempay_kyc_rejected">KYC rejeté</string>
+  <string name="tangempay_kyc_rejected_button_text">Masquer le bloc KYC</string>
+  <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier.</string>
+  <string name="tangempay_kyc_rejected_description_span">votre profil.</string>
   <string name="tangempay_onboarding_banner_description">Obtenez votre carte virtuelle Tangem Visa gratuite</string>
   <string name="tangempay_onboarding_banner_title">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtenir la carte</string>
@@ -1579,6 +1610,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
   <string name="token_details_unable_hide_alert_title">Impossible de masquer %s</string>
+  <string name="token_receive_show_qr_code_title">Afficher le code QR</string>
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
@@ -1710,6 +1742,12 @@
   <string name="visa_unlock_notification_subtitle">Scannez votre carte pour déverrouiller l\'accès</string>
   <string name="visa_unlock_notification_title">Déverrouillage nécessaire</string>
   <string name="wallet_add_common_title">Choisissez comment ajouter votre portefeuille</string>
+  <string name="wallet_add_hardware_description">Scannez votre carte ou votre bague Tangem pour la restaurer ou l\'importer depuis un autre portefeuille.</string>
+  <string name="wallet_add_hardware_info_create">Créer un Hardware Wallet</string>
+  <string name="wallet_add_hardware_purchase">Vous souhaitez acheter un portefeuille Tangem ?</string>
+  <string name="wallet_add_import_seed_phrase">Importer la seed phrase</string>
+  <string name="wallet_add_mobile_description">Restaurez votre portefeuille sur votre téléphone ou importez-le depuis une autre application — pratique, mais moins sécurisé qu\'une carte Tangem.</string>
+  <string name="wallet_add_support_title">Que choisir ?</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">La blockchain n\'est pas accessible. Réessayez plus tard</string>
   <string name="wallet_balance_missing_derivation">Scanner la carte ou la bague</string>
   <string name="wallet_been_activated_message">Ce portefeuille a déjà été activé auparavant.\nSi cela n\'a pas été fait par vous, veuillez contacter le support.\nTangem ne vend jamais de portefeuilles avec le code d\'accès pré-généré.</string>
@@ -1766,9 +1804,9 @@
   <string name="wallet_import_navtitle">Ajouter un portefeuille existant</string>
   <string name="wallet_import_scan_description">Dispositifs physiques qui stockent votre clé privée hors ligne en toute sécurité.</string>
   <string name="wallet_import_scan_title">Scanner un Tangem Wallet</string>
-  <string name="wallet_import_seed_description">Importez un portefeuille existant à l\'aide de votre seedphrase.</string>
+  <string name="wallet_import_seed_description">Importez un portefeuille existant à l\'aide de votre seed phrase.</string>
   <string name="wallet_import_seed_navtitle">Importer un wallet</string>
-  <string name="wallet_import_seed_title">Entrez la seedphrase</string>
+  <string name="wallet_import_seed_title">Entrez la seed phrase</string>
   <string name="wallet_import_success_description">Vous avez importé votre portefeuille avec succès.</string>
   <string name="wallet_import_success_navtitle">Importer un wallet</string>
   <string name="wallet_import_success_title">Importation terminée</string>
@@ -1984,7 +2022,7 @@
   <string name="welcome_create_wallet_feature_delivery">Livraison rapide</string>
   <string name="welcome_create_wallet_feature_one_tap">Commencez en un seul clic</string>
   <string name="welcome_create_wallet_feature_seamless">Sans faille et sécurisé</string>
-  <string name="welcome_create_wallet_feature_seedphrase">Pas de seedphrase</string>
+  <string name="welcome_create_wallet_feature_seedphrase">Pas de seed phrase</string>
   <string name="welcome_create_wallet_feature_use">Facile à utiliser</string>
   <string name="welcome_create_wallet_hardware_description">Créez un harware wallet avec Tangem. Aussi fin qu\'une carte bancaire, aussi sûr qu\'un coffre-fort.</string>
   <string name="welcome_create_wallet_mobile_description">Créer ou importer un portefeuille logiciel</string>
@@ -2105,4 +2143,5 @@
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
   <string name="yield_module_unavailable_subtitle">Le mode rendement n\'est pas disponible pour le moment. Veuillez réessayer plus tard.</string>
   <string name="yield_module_unavailable_title">Le mode Rendement est indisponible</string>
+  <string name="yield_supply_chart_loading_error">Impossible de charger le graphique...</string>
 </resources>
