@@ -1,6 +1,7 @@
 package com.tangem.features.account.createedit.entity
 
 import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
@@ -17,7 +18,7 @@ internal class AccountCreateEditUMBuilder(
 
     private val accountColors = CryptoPortfolioIcon.Color.entries.toImmutableList()
     private val accountIcons = CryptoPortfolioIcon.Icon.entries.toImmutableList()
-    private val createIcon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM()
+    private val createIcon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount())
 
     val toolbarTitle: TextReference
         get() = when (params) {
@@ -36,7 +37,7 @@ internal class AccountCreateEditUMBuilder(
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
                 name = params.account.accountName.toUM(),
-                portfolioIcon = params.account.portfolioIcon.toUM(),
+                portfolioIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon),
                 derivationInfo = createAccountDerivationInfo(
                     index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
                 ),
