@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.swap.entity.utils
 
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
@@ -45,7 +46,7 @@ internal fun ExchangeCardUM.toFilled(
                     resourceReference(R.string.common_to)
                 },
                 name = account.accountName.toUM().value,
-                icon = account.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(account.icon),
             )
         } else {
             titleUM
