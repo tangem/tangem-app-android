@@ -50,9 +50,6 @@ internal class TokensPortfolioUMConverter(
             buttonState = addButtonState,
             addToPortfolioBSConfig = bsConfig,
             onAddClick = onAddClick,
-            tokenReceiveBSConfig = (currentState() as? MyPortfolioUM.Tokens)
-                ?.tokenReceiveBSConfig
-                ?: TangemBottomSheetConfig.Empty,
         )
     }
 

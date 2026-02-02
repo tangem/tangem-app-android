@@ -393,4 +393,18 @@ internal object TransactionDomainModule {
             currencyChecksRepository = currencyChecksRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideSignCloreMessageUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): SignCloreMessageUseCase {
+        return SignCloreMessageUseCase(
+            walletManagersFacade = walletManagersFacade,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
 }

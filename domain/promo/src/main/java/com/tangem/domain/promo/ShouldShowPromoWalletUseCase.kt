@@ -33,6 +33,7 @@ class ShouldShowPromoWalletUseCase(
             PromoId.VisaPresale,
             PromoId.BlackFriday,
             PromoId.OnePlusOne,
+            PromoId.YieldPromo,
             -> true
             PromoId.Sepa -> {
                 val walletFirstUsageDate = settingsRepository.getWalletFirstUsageDate()

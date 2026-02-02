@@ -66,6 +66,10 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.OnePlusOne,
             )
+            is WalletNotification.YieldPromo -> NoticePromotionBanner(
+                source = AnalyticsParam.ScreensSources.Main,
+                program = Program.YieldPromo,
+            )
             is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
             is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
@@ -76,6 +80,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.UsedOutdatedData,
             is WalletNotification.UnlockVisaAccess,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
+            is WalletNotification.CloreMigration,
             -> null
             is WalletNotification.FinishWalletActivation -> {
                 val activationState = if (warning.isBackupExists) {

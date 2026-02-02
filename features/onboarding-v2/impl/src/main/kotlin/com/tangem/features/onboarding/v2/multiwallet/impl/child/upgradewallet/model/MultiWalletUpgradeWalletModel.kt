@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -134,17 +135,20 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
             val scanResponse = params.multiWalletState.value.currentScanResponse
 
             val userWallet = createUserWallet(scanResponse)
-            saveWalletUseCase(userWallet, canOverride = true)
-                .onRight {
-                    cardRepository.finishCardActivation(scanResponse.card.cardId)
+            saveWalletUseCase(
+                userWallet,
+                canOverride = true,
+                analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
+            ).onRight {
+                cardRepository.finishCardActivation(scanResponse.card.cardId)
 
-                    // save user wallet for manage tokens screen
-                    params.multiWalletState.update {
-                        it.copy(resultUserWallet = userWallet)
-                    }
-
-                    onDone.emit(Step.Done)
+                // save user wallet for manage tokens screen
+                params.multiWalletState.update {
+                    it.copy(resultUserWallet = userWallet)
                 }
+
+                onDone.emit(Step.Done)
+            }
         }
     }
 

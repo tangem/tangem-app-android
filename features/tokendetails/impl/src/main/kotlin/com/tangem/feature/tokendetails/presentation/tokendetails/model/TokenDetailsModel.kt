@@ -23,7 +23,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -59,7 +58,10 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.*
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
@@ -87,7 +89,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
@@ -133,7 +134,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
@@ -143,7 +143,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
@@ -153,6 +152,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
+    private val signCloreMessageUseCase: SignCloreMessageUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
     ExpressTransactionsClickIntents,
@@ -162,7 +162,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val userWalletId: UserWalletId = params.userWalletId
     private val cryptoCurrency: CryptoCurrency = params.currency
 
-    private val userWallet: UserWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
+    private val userWallet: UserWallet = getUserWalletUseCase(userWalletId).getOrNull()
+        ?: error("UserWallet not found")
 
     private val marketPriceJobHolder = JobHolder()
     private val refreshStateJobHolder = JobHolder()
@@ -195,6 +196,27 @@ internal class TokenDetailsModel @Inject constructor(
         yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
+    private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
+    val uiState: StateFlow<TokenDetailsState> = internalUiState
+
+    // region Clore migration
+    // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
+    private val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
+        CloreMigrationModel(
+            stateFactory = stateFactory,
+            signCloreMessageUseCase = signCloreMessageUseCase,
+            clipboardManager = clipboardManager,
+            uiMessageSender = uiMessageSender,
+            router = router,
+            userWallet = userWallet,
+            cryptoCurrency = cryptoCurrency,
+            coroutineScope = modelScope,
+            dispatchers = dispatchers,
+            onStateUpdate = { internalUiState.value = it },
+        )
+    }
+    // endregion
+
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         expressStatusFactory.create(
             clickIntents = this,
@@ -216,9 +238,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val currencyStatusAnalyticsSender by lazy(mode = LazyThreadSafetyMode.NONE) {
         TokenDetailsCurrencyStatusAnalyticsSender(analyticsEventsHandler)
     }
-
-    private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
-    val uiState: StateFlow<TokenDetailsState> = internalUiState
 
     init {
         updateTopBarMenu()
@@ -668,9 +687,8 @@ internal class TokenDetailsModel @Inject constructor(
                 vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
                 clipboardManager.setText(text = extendedKey, isSensitive = true)
 
-                uiMessageSender.send(
-                    message = SnackbarMessage(message = resourceReference(R.string.wallet_notification_address_copied)),
-                )
+                val message = resourceReference(R.string.wallet_notification_address_copied)
+                uiMessageSender.send(message = SnackbarMessage(message = message))
             }
         }
     }
@@ -787,7 +805,8 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    internalUiState.value = stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
+                    internalUiState.value =
+                        stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -1250,36 +1269,32 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun navigateToReceive() {
-        val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
-        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-            modelScope.launch {
-                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
-                    ?.let { bottomSheetNavigation.activate(it) }
-            }
-        } else {
-            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
-            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
-                currency = cryptoCurrency,
-                networkAddress = networkAddress,
-                onCopyClick = {
-                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
-                    clipboardManager.setText(text = it, isSensitive = true)
-                },
-                onShareClick = {
-                    analyticsEventsHandler.send(
-                        TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
-                    )
-                    shareManager.shareText(text = it)
-                },
-            )
+        modelScope.launch {
+            configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                ?.let { bottomSheetNavigation.activate(it) }
         }
     }
 
     private fun handleNavigationParam() {
-        if (params.navigationAction is NavigationAction.Staking) {
-            openStaking()
+        when (params.navigationAction) {
+            is NavigationAction.Staking -> openStaking()
+            is NavigationAction.CloreMigration -> onCloreMigrationClick()
+            is NavigationAction.YieldSupply,
+            null,
+            -> Unit
         }
     }
+
+    // region Clore migration
+    // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
+
+    override fun onCloreMigrationClick() = cloreMigrationModel.onCloreMigrationClick()
+
+    override fun onCloreSignMessage(message: String) = cloreMigrationModel.onCloreSignMessage(message)
+
+    override fun onOpenCloreClaimPortal() = cloreMigrationModel.onOpenCloreClaimPortal()
+
+    // endregion Clore migration
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L

@@ -2,10 +2,7 @@ package com.tangem.features.feed.components.market.details.portfolio.add.impl.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddToPortfolioModel
-import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.AddTokenModel
-import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.ChooseNetworkModel
-import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.TokenActionsModel
+import com.tangem.features.feed.components.market.details.portfolio.add.impl.model.*
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,6 +22,11 @@ internal interface AddToPortfolioModelModule {
     @IntoMap
     @ClassKey(AddToPortfolioModel::class)
     fun addToPortfolioModel(model: AddToPortfolioModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(AddToPortfolioPreselectedDataModel::class)
+    fun addToPortfolioPreselectedDataModel(model: AddToPortfolioPreselectedDataModel): Model
 
     @Binds
     @IntoMap

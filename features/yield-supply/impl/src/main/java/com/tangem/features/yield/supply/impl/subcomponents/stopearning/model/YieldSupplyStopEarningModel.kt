@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -99,6 +100,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
             ),
         )
 
