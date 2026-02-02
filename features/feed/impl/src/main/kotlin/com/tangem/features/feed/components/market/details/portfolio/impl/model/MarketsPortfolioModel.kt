@@ -39,7 +39,6 @@ import com.tangem.features.feed.components.market.details.portfolio.impl.loader.
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.features.feed.impl.R
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.operations.attestation.ArtworkSize
@@ -68,7 +67,6 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     accountsFeatureToggles: AccountsFeatureToggles,
@@ -81,7 +79,7 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-        token = params.token,
+        tokenSymbol = params.token.symbol,
         source = params.analyticsParams?.source,
     )
 
@@ -111,13 +109,6 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val tokenActionsHandler = tokenActionsIntentsFactory.create(
         currentAppCurrency = Provider { currentAppCurrency.value },
-        updateTokenReceiveBSConfig = { updateBlock ->
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
-                updateTokensState {
-                    it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
-                }
-            }
-        },
         onHandleQuickAction = { handledAction ->
             analyticsEventHandler.send(
                 analyticsEventBuilder.quickActionClick(
@@ -130,9 +121,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                         .name,
                 ),
             )
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-                configureReceiveAddresses(handledAction)
-            }
+            configureReceiveAddresses(handledAction)
         },
     )
 
@@ -426,8 +415,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
-        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive &&
-            tokenReceiveFeatureToggle.isNewTokenReceiveEnabled
+        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive
         if (isNewReceive) {
             modelScope.launch {
                 val tokenConfig = receiveAddressesFactory.create(
