@@ -1,6 +1,7 @@
 package com.tangem.features.account.details
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -159,7 +160,7 @@ internal class AccountDetailsModel @Inject constructor(
             ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
-            accountIcon = account.portfolioIcon.toUM(),
+            accountIcon = CryptoPortfolioIconConverter.convert(account.portfolioIcon),
             onCloseClick = { router.pop() },
             onAccountEditClick = { onEditAccountClick(account) },
             onManageTokensClick = { onManageTokensClick(account) },
