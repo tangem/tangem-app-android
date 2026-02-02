@@ -20,6 +20,7 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -336,6 +337,47 @@ class DefaultWalletAccountsFetcherTest {
                 eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
                 userTokensSaver.push(userWalletId = userWalletId, response = savedAccountsResponse.toUserTokensResponse())
                 tokensMigration.migrate(userWalletId)
+            }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class Get {
+
+        @Test
+        fun get() = runTest {
+            // Arrange
+            val response = createGetWalletAccountsResponse(userWalletId = userWalletId)
+            accountsResponseStoreFlow.value = response
+
+            // Act
+            val actual = getEmittedValues(fetcher.get(userWalletId))
+
+            // Assert
+            val expected = response
+            Truth.assertThat(actual).containsExactly(expected)
+
+            coVerifyOrder {
+                accountsResponseStoreFactory.create(userWalletId)
+                accountsResponseStore.data
+            }
+        }
+
+        @Test
+        fun `get if store is empty`() = runTest {
+            // Arrange
+            accountsResponseStoreFlow.value = null
+
+            // Act
+            val actual = getEmittedValues(fetcher.get(userWalletId))
+
+            // Assert
+            Truth.assertThat(actual).isEmpty()
+
+            coVerifyOrder {
+                accountsResponseStoreFactory.create(userWalletId)
+                accountsResponseStore.data
             }
         }
     }
