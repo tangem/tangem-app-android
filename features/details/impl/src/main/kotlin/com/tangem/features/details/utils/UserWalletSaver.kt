@@ -75,7 +75,12 @@ internal class UserWalletSaver @Inject constructor(
 
     private suspend fun Raise<Error>.saveWallet(userWallet: UserWallet) {
         fold(
-            block = { saveWalletUseCase(userWallet).bind() },
+            block = {
+                saveWalletUseCase(
+                    userWallet = userWallet,
+                    analyticsSource = AnalyticsParam.ScreensSources.Settings,
+                ).bind()
+            },
             recover = { error ->
                 when (error) {
                     is SaveWalletError.WalletAlreadySaved -> {
