@@ -1,19 +1,11 @@
 package com.tangem.domain.models.news
 
-import kotlinx.serialization.Serializable
+sealed interface NewsError {
 
-@Serializable
-sealed class NewsError {
-    abstract val message: String?
-    abstract val code: Int?
+    data class HttpError(
+        val code: Int,
+        val message: String,
+    ) : NewsError
 
-    data class ArticleNotFound(
-        override val message: String?,
-        override val code: Int?,
-    ) : NewsError()
-
-    data class Unknown(
-        override val message: String?,
-        override val code: Int?,
-    ) : NewsError()
+    data object NotHttpError : NewsError
 }
