@@ -299,6 +299,7 @@
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_got_it">Entendido</string>
   <string name="common_hide">Ocultar</string>
+  <string name="common_hold_to">Mantener para %s</string>
   <string name="common_hour">hora</string>
   <string name="common_import">Importe</string>
   <string name="common_in_progress">En progreso</string>
@@ -323,6 +324,7 @@
   <string name="common_no">No</string>
   <string name="common_no_address">Ninguna dirección</string>
   <string name="common_not_added">No agregadas</string>
+  <string name="common_not_available">No disponible</string>
   <string name="common_not_now">Ahora no</string>
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
@@ -373,6 +375,7 @@
   <string name="common_swap">Intercambiar</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Toque y mantenga presionado</string>
   <string name="common_terms_and_conditions">términos y condiciones</string>
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_to">A</string>
@@ -462,6 +465,11 @@
   <string name="domain_receive_assets_onboarding_description">Enviar activos a otras redes resultará en una pérdida permanente.</string>
   <string name="domain_receive_assets_onboarding_network_name">Red de %s</string>
   <string name="domain_receive_assets_onboarding_title">Envíe fondos utilizando solo</string>
+  <string name="earn_best_opportunities">Las mejores oportunidades</string>
+  <string name="earn_filter_all_networks">Todas las redes</string>
+  <string name="earn_filter_all_types">Todos los tipos</string>
+  <string name="earn_mostly_used">Mayormente usado</string>
+  <string name="earn_title">Ganar</string>
   <string name="email_preface_wc_error">Hola equipo de soporte, he encontrado un error con el código: %s</string>
   <string name="email_subject_wc_error">Error de WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Ha usado una tarjeta de otra billetera. Toque la tarjeta asociada con esta billetera</string>
@@ -561,6 +569,8 @@
   <string name="feedback_subject_support_tangem">Comentarios en Tangem</string>
   <string name="feedback_subject_tx_failed">No se puede completar una transacción</string>
   <string name="feedback_token_description_error">Error de descripción de moneda</string>
+  <string name="gasless_not_enough_funds_to_cover_token_fee">Fondos insuficientes</string>
+  <string name="gasless_transaction_fee">Tarifa de transacción</string>
   <string name="generic_error">Ocurrió un error</string>
   <string name="generic_error_code">Ocurrió un error. Código: %s</string>
   <string name="generic_requires_memo_error">Requiere memo</string>
@@ -610,6 +620,7 @@
   <string name="hw_backup_need_title">Finalizar la copia de seguridad primero</string>
   <string name="hw_backup_no_backup">Incompleto</string>
   <string name="hw_backup_section_other_title">Otros métodos</string>
+  <string name="hw_backup_seed_code_description">Guarde su frase de recuperación en un lugar seguro y manténgala privada para proteger sus fondos y configure un código de acceso para mayor seguridad.</string>
   <string name="hw_backup_seed_description">Guarde su frase de recuperación en un lugar seguro y manténgala en privado para proteger sus fondos.</string>
   <string name="hw_backup_seed_title">Frase de recuperación</string>
   <string name="hw_backup_to_secure_description">Para proteger su billetera con un código de acceso, complete el proceso de copia de seguridad.</string>
@@ -896,6 +907,9 @@
   <string name="notification_sepa_title">Comprar criptomonedas con SEPA</string>
   <string name="notification_visa_waitlist_promo_text">Únete a la lista de espera y consigue una tarjeta de pago como ninguna otra.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Términos y condiciones</string>
+  <string name="notification_yield_promo_text">Deposite $100 o más, manténgalo durante 30 días y reciba $10.</string>
+  <string name="notification_yield_promo_title">¡Únase a la campaña Yield Mode!</string>
   <string name="onboarding_access_code_feature_1_description">Configure un código de acceso único para proteger todos sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
@@ -995,6 +1009,7 @@
   <string name="onboarding_wallet_info_title_fourth">Restaurar código de acceso</string>
   <string name="onboarding_wallet_info_title_second">Tarjetas idénticas</string>
   <string name="onboarding_wallet_info_title_third">Código de acceso</string>
+  <string name="only_one_mobile_wallet_explanation">Solo puede tener una billetera móvil. Actualícela a la billetera de hardware Tangem o añada una nueva billetera de hardware.</string>
   <string name="onramp_all_offers_button_title">Todas las ofertas</string>
   <string name="onramp_avaiable_with_payment_methods">Disponible con %s</string>
   <string name="onramp_choose_provider_title_hint">La compra de criptomonedas en Tangem se lleva a cabo utilizando proveedores externos.</string>
@@ -1266,6 +1281,7 @@
   <string name="staking_amount_tron_integer_error">La cantidad de staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
   <string name="staking_amount_tron_integer_error_unstaking">La cantidad de unstaking se redondeará a %1$s TRX debido a las reglas de la red.</string>
   <string name="staking_apr_earn_badge">APR %1$s%%</string>
+  <string name="staking_cardano_details_rewards_info_text">Sus recompensas de staking comenzarán después de 5 épocas (~25 días) mientras su delegación esté registrada y contabilizada por la red.</string>
   <string name="staking_claim_unstaked">Reclamar lo que no está en staking</string>
   <string name="staking_details_account_fee">Tarifa de staking de la cuenta </string>
   <string name="staking_details_account_fee_info">Una cuenta de staking es una cuenta especial donde se almacenan los tokens SOL de staking. Se crea cuando delegas sus tokens a un validador para participar en la validación de transacciones y ganar recompensas. Se cobra una pequeña tarifa por crear la cuenta de staking, que se devuelve una vez que se completa el staking.</string>
@@ -1276,6 +1292,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Las recompensas se acumulan automáticamente en su saldo de staking diariamente.</string>
+  <string name="staking_details_autocompound_rewards_earned">Las recompensas se acumulan en su saldo de staking. Fondos ganados: %s</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Tasa de recompensa promedio</string>
   <string name="staking_details_banner_text">¿Cómo funciona el staking?</string>
@@ -1420,6 +1437,7 @@
   <string name="swap_story_third_subtitle">Sencillo e intuitivo, permite cambiar tokens con solo unos cuantos toques</string>
   <string name="swap_story_third_title">Simplemente cómodo</string>
   <string name="swap_via_provider">Intercambio a través del proveedor</string>
+  <string name="swap_your_assets_title">Sus activos</string>
   <string name="swapping_alert_cex_description">La cantidad incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
   <string name="swapping_alert_cex_description_with_slippage">El importe incluye:\n- comisión del proveedor de servicios\n- comisión de red por el envío de %1$s desde el exchange de vuelta a la dirección del usuario. \n\nEl deslizamiento (slippage) del proveedor es de hasta %2$s</string>
   <string name="swapping_alert_dex_description">El importe incluye los honorarios del proveedor de servicios.</string>
@@ -1434,6 +1452,7 @@
   <string name="swapping_insufficient_funds">Fondos insuficientes</string>
   <string name="swapping_permission_header">Dar autorización</string>
   <string name="swapping_swap_action">Intercambiar</string>
+  <string name="swapping_swap_action_in_progress">Intercambiando...</string>
   <string name="swapping_to_title">Usted recibe</string>
   <string name="swapping_token_list_title">Elige token</string>
   <string name="swapping_token_not_available">no disponible</string>
@@ -1452,6 +1471,9 @@
   <string name="tangem_pay_freeze_card_freeze">Mantén tu dinero seguro. Puedes desbloquear en cualquier momento.</string>
   <string name="tangem_pay_freeze_card_success">Tu tarjeta está congelada.</string>
   <string name="tangem_pay_get_help">Obtener ayuda</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Razón: %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Otro</string>
   <string name="tangem_pay_rooted_device_subtitle">No se puede usar en dispositivos rooteados</string>
   <string name="tangem_pay_status_completed">Completado</string>
@@ -1528,10 +1550,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">¿Seguro que desea detener el proceso KYC? Puede retomarlo en cualquier momento.</string>
   <string name="tangempay_kyc_failed_description">No pudimos verificar tu perfil. Si tienes alguna pregunta, contacta con el soporte.</string>
   <string name="tangempay_kyc_failed_title">Lamentablemente, no pudimos verificar tu identidad</string>
+  <string name="tangempay_kyc_has_failed">El proceso KYC ha fallado</string>
   <string name="tangempay_kyc_in_progress">KYC en curso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Ver estado</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en progreso para Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Los documentos suelen verificarse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, el proceso puede tardar hasta 48 horas.</string>
+  <string name="tangempay_kyc_rejected">KYC rechazado</string>
+  <string name="tangempay_kyc_rejected_button_text">Ocultar el bloque KYC</string>
+  <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificarle</string>
+  <string name="tangempay_kyc_rejected_description_span">su perfil.</string>
   <string name="tangempay_onboarding_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
   <string name="tangempay_onboarding_banner_title">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
@@ -1818,7 +1845,17 @@
   <string name="warning_button_ok">Entendido</string>
   <string name="warning_button_really_cool">¡Realmente genial!</string>
   <string name="warning_button_refresh">Actualizar</string>
+  <string name="warning_clore_migration_button">Iniciar migración</string>
+  <string name="warning_clore_migration_copy_button">Copiar</string>
+  <string name="warning_clore_migration_error_signing_not_supported">La firma de mensajes no es compatible con esta red</string>
+  <string name="warning_clore_migration_error_wallet_manager_not_found">No se puede firmar el mensaje. Por favor, inténtelo de nuevo.</string>
   <string name="warning_clore_migration_message">Según la documentación oficial de Clore, todas las monedas recibidas antes del 21 de diciembre serán migradas a Clore (token ERC-20); las monedas recibidas después de esa fecha no lo serán. Se está desarrollando una solución de transferencia — mantente atento.</string>
+  <string name="warning_clore_migration_message_label">Mensaje</string>
+  <string name="warning_clore_migration_open_portal_button">Abrir el portal de reclamaciones</string>
+  <string name="warning_clore_migration_sheet_description">Para mantener el acceso a sus fondos, comience la migración de acuerdo con las pautas oficiales de Clore.</string>
+  <string name="warning_clore_migration_sheet_title">Migración de la red Clore</string>
+  <string name="warning_clore_migration_sign_button">Firmar</string>
+  <string name="warning_clore_migration_signature_label">Firma</string>
   <string name="warning_clore_migration_title">Migración de la red Clore</string>
   <string name="warning_demo_mode_message">Actualmente estás en el modo Demo</string>
   <string name="warning_demo_mode_title">Modo demo activo</string>
