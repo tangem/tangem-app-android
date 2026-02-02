@@ -47,10 +47,10 @@ internal class FeedComponentModel @Inject constructor(
     private val fetchTrendingNewsUseCase: FetchTrendingNewsUseCase,
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val stateController: FeedStateController,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
-    private val stateController: FeedStateController,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultFeedComponent.FeedParams>()
@@ -80,11 +80,9 @@ internal class FeedComponentModel @Inject constructor(
     init {
         initializeState()
         updateCallbacks()
-
-        modelScope.launch(dispatchers.default) {
-            fetchTrendingNewsUseCase()
-        }
-
+        fetchTrendingNews()
+        subscribeOnCurrencyUpdate()
+        loadCharts()
         modelScope.launch(dispatchers.default) {
             combine(
                 flow = marketsBatchFlowManager.itemsByOrder,
@@ -144,13 +142,23 @@ internal class FeedComponentModel @Inject constructor(
                 }
             }.collect()
         }
+    }
 
+    private fun fetchTrendingNews() {
+        modelScope.launch(dispatchers.default) {
+            fetchTrendingNewsUseCase()
+        }
+    }
+
+    private fun subscribeOnCurrencyUpdate() {
         modelScope.launch(dispatchers.default) {
             currentAppCurrency.drop(1).collect {
                 marketsBatchFlowManager.reloadAll()
             }
         }
+    }
 
+    private fun loadCharts() {
         modelScope.launch(dispatchers.default) {
             TokenMarketListConfig.Order.entries.forEach { order ->
                 marketsBatchFlowManager.getOnLastBatchLoadedSuccessFlow(order)?.collect { batchKey ->
