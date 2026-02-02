@@ -143,7 +143,6 @@ abstract class BaseTestCase : TestCase(
     private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
         return ApplicationInjectionExecutionRule(
             toggleStates = mapOf(
-                "NEW_TOKEN_RECEIVE_ENABLED" to true,
                 "SWAP_REDESIGN_ENABLED" to false,
                 "NEW_ONRAMP_MAIN_ENABLED" to true,
                 "HOT_WALLET_ENABLED" to true,
