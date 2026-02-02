@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -129,12 +130,14 @@ internal object WalletsDomainModule {
         userWalletsListRepository: UserWalletsListRepository,
         hotWalletFeatureToggles: HotWalletFeatureToggles,
         walletsRepository: WalletsRepository,
+        analyticsEventHandler: AnalyticsEventHandler,
     ): SaveWalletUseCase {
         return SaveWalletUseCase(
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
             useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
