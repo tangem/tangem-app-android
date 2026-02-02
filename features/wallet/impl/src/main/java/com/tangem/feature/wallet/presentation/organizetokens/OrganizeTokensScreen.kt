@@ -218,6 +218,7 @@ private fun LazyItemScope.DraggableItem(
             is DraggableItem.Portfolio -> ExpandedPortfolioHeader(
                 state = item.tokenItemState,
                 isCollapsable = false,
+                composables = null,
                 modifier = modifierWithBackground
                     .padding(top = 8.dp)
                     .fillMaxWidth(),

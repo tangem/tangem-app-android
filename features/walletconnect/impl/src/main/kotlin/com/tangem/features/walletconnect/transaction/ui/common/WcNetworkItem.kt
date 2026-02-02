@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
@@ -44,7 +45,7 @@ internal fun WcNetworkItem(networkInfo: WcNetworkInfoUM, modifier: Modifier = Mo
             )
             TangemTooltip(
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
-                text = networkInfo.name,
+                text = stringReference(networkInfo.name),
                 enabled = isTooltipEnabled,
                 content = { contentModifier ->
                     Text(

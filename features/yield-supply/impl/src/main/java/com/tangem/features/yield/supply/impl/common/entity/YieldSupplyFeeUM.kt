@@ -31,4 +31,5 @@ internal data class YieldSupplyActionUM(
     val yieldSupplyFeeUM: YieldSupplyFeeUM,
     val isPrimaryButtonEnabled: Boolean,
     val isTransactionSending: Boolean,
+    val isHoldToConfirmEnabled: Boolean,
 )
