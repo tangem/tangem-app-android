@@ -82,7 +82,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     private fun createWalletAndNavigateBackWithDone(scanResponse: ScanResponse) {
         modelScope.launch {
             val userWallet = createUserWallet(scanResponse)
-            saveWalletUseCase(userWallet, canOverride = true).onRight {
+            saveWalletUseCase(
+                userWallet,
+                canOverride = true,
+                analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
+            ).onRight {
                 params.onWalletCreated(userWallet)
             }
             _uiState.update {
