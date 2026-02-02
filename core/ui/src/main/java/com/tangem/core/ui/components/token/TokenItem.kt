@@ -120,7 +120,7 @@ fun TokenItem(
             composables.icon.invoke(
                 Modifier
                     .layoutId(layoutId = LayoutId.ICON)
-                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(end = TangemTheme.dimens.spacing12)
                     .testTag(TokenElementsTestTags.TOKEN_ICON),
             )
         } else {
@@ -128,7 +128,7 @@ fun TokenItem(
                 state = state.iconState,
                 modifier = Modifier
                     .layoutId(layoutId = LayoutId.ICON)
-                    .padding(end = TangemTheme.dimens.spacing8)
+                    .padding(end = TangemTheme.dimens.spacing12)
                     .testTag(TokenElementsTestTags.TOKEN_ICON),
             )
         }
