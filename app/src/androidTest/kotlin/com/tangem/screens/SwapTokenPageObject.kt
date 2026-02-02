@@ -13,6 +13,10 @@ import androidx.compose.ui.test.hasTestTag as withTestTag
 class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SwapTokenPageObject>(semanticsProvider = semanticsProvider) {
 
+    val container: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.CONTAINER)
+    }
+
     val title: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         hasText(getResourceString(R.string.common_swap))
@@ -78,6 +82,7 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
 
     fun tokenSymbol(symbol: String): KNode = child {
         hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+        hasText(symbol)
     }
 
 }
