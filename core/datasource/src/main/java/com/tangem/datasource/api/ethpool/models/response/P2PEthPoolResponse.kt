@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 /**
  * Unified response wrapper for all P2P.org API responses
  *
- * All P2P API endpoints return responses in this format:
+ * All P2PEthPool API endpoints return responses in this format:
  * ```json
  * {
  *   "error": null | { code, message, name, errors },

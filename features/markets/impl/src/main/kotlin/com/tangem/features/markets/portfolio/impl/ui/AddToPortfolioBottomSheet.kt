@@ -54,13 +54,13 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
         containerColor = TangemTheme.colors.background.tertiary,
         addBottomInsets = false,
         titleText = resourceReference(R.string.common_add_to_portfolio),
-    ) {
+    ) { contentState ->
         Content(
             modifier = Modifier.fillMaxWidth(),
-            state = it,
+            state = contentState,
         )
 
-        WalletSelectorBottomSheet(it.walletSelectorConfig)
+        WalletSelectorBottomSheet(contentState.walletSelectorConfig)
     }
 }
 
@@ -130,7 +130,7 @@ private fun Content(state: AddToPortfolioBSContentUM, modifier: Modifier = Modif
                 .onGloballyPositioned {
                     continueButtonAreaHeight = it.size.height
                 },
-            enabled = state.continueButtonEnabled,
+            enabled = state.isContinueButtonEnabled,
             isTangemIconVisible = state.isScanCardNotificationVisible,
             onClick = state.onContinueButtonClick,
         )
@@ -355,11 +355,11 @@ private fun PreviewContentTestOnDevice(
                         isScanCardNotificationVisible = !contentState.isScanCardNotificationVisible,
                     )
                 },
-                continueButtonEnabled = true,
+                isContinueButtonEnabled = true,
                 selectedWallet = content.selectedWallet.copy(
                     onClick = {
                         contentState = contentState.copy(
-                            continueButtonEnabled = !contentState.continueButtonEnabled,
+                            isContinueButtonEnabled = !contentState.isContinueButtonEnabled,
                         )
                     },
                 ),
