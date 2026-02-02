@@ -3,6 +3,7 @@ package com.tangem.data.onramp.di
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
@@ -28,6 +29,7 @@ import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -109,6 +111,8 @@ internal object OnrampDataModule {
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
         userTokensResponseStore: UserTokensResponseStore,
+        accountsFeatureToggles: AccountsFeatureToggles,
+        walletAccountsFetcher: WalletAccountsFetcher,
     ): HotCryptoRepository {
         return DefaultHotCryptoRepository(
             excludedBlockchains = excludedBlockchains,
@@ -119,6 +123,8 @@ internal object OnrampDataModule {
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
             userTokensResponseStore = userTokensResponseStore,
+            accountsFeatureToggles = accountsFeatureToggles,
+            walletAccountsFetcher = walletAccountsFetcher,
         )
     }
 
