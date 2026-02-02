@@ -2,9 +2,7 @@ package com.tangem.feature.swap
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
@@ -103,13 +101,9 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         if (sendFeatureToggles.isGaslessTransactionsEnabled) {
-            val fromCryptoCurrency = if (model.isOrderReversed) {
-                model.dataState.toCryptoCurrency
-            } else {
-                model.dataState.fromCryptoCurrency
-            }
-            val feePaidCryptoCurrency = model.dataState.feePaidCryptoCurrency
-            val amount = model.dataState.amount
+            val fromCryptoCurrency by remember { derivedStateOf { model.dataState.fromCryptoCurrency } }
+            val feePaidCryptoCurrency by remember { derivedStateOf { model.dataState.feePaidCryptoCurrency } }
+            val amount by remember { derivedStateOf { model.dataState.amount } }
 
             LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, amount.isNullOrBlank()) {
                 if (amount.isNullOrBlank()) {
