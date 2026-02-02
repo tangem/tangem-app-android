@@ -47,7 +47,10 @@ class AppsFlyerAnalyticsHandler(
         const val ID = "AppsFlyer"
     }
 
-    class Builder : AnalyticsHandlerBuilder {
+    internal class Builder(
+        private val appsFlyerClientFactory: AppsFlyerClient.Factory,
+    ) : AnalyticsHandlerBuilder {
+
         init {
             Timber.tag("AppsFlyer").i("AppsFlyer Analytics Handler Builder created")
         }
@@ -58,7 +61,7 @@ class AppsFlyerAnalyticsHandler(
                 AppsFlyerLogClient(data.jsonConverter)
             } else {
                 Timber.tag("AppsFlyer").i("AppsFlyer log disabled, real client created")
-                AppsFlyerClient(data.application, data.config.appsFlyerApiKey)
+                appsFlyerClientFactory.create(apiKey = data.config.appsFlyerApiKey)
             },
         )
     }

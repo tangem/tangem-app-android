@@ -150,6 +150,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         if (eligibleWalletsIds.size == 1) {
             checkCustomerInfo(userWalletId = eligibleWalletsIds[0])
         } else {
+            analytics.send(TangemPayAnalyticsEvents.ChooseWalletPopup())
             bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(eligibleWalletsIds))
         }
     }

@@ -4,14 +4,21 @@ import com.tangem.datasource.api.tangemTech.models.CardInfoBody
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.models.AppsFlyerConversionData
 
 object WalletIdBodyConverter {
 
-    fun convert(userWallet: UserWallet, publicKeys: Map<String, String>? = null): WalletIdBody {
+    fun convert(
+        userWallet: UserWallet,
+        conversionData: AppsFlyerConversionData? = null,
+        publicKeys: Map<String, String>? = null,
+    ): WalletIdBody {
         return WalletIdBody(
             walletId = userWallet.walletId.stringValue,
             name = userWallet.name,
             walletType = WalletType.from(userWallet),
+            refcode = conversionData?.refcode,
+            campaign = conversionData?.campaign,
             cards = publicKeys?.map { publicKeyById ->
                 CardInfoBody(
                     cardId = publicKeyById.key,
