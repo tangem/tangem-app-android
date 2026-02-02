@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 internal data class AvailableToAddData(
     val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet>,
 ) {
-    val availableToAdd: Boolean
+    val isAvailableToAdd: Boolean
         get() = availableToAddWallets.isNotEmpty()
     val isSinglePortfolio: Boolean
         get() = availableToAddWallets.size == 1 && availableToAddWallets.values.first().accounts.size == 1
@@ -48,11 +48,11 @@ internal data class SelectedPortfolio(
     val userWallet: UserWallet,
     val account: AvailableToAddAccount,
     val isAccountMode: Boolean,
-    val availableMorePortfolio: Boolean,
+    val hasMorePortfoliosAvailable: Boolean,
 )
 
 internal data class SelectedNetwork(
     val selectedNetwork: TokenMarketInfo.Network,
     val cryptoCurrency: CryptoCurrency,
-    val availableMoreNetwork: Boolean,
+    val hasMoreNetworksAvailable: Boolean,
 )

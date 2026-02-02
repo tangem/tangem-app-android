@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -141,7 +140,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
         sheetState = SheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             initialValue = Expanded,
-            density = LocalDensity.current,
+            positionalThreshold = { 0f },
+            velocityThreshold = { 0f },
         ),
         onBack = null,
         containerColor = containerColor,
@@ -247,32 +247,18 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
         }
     }
 
-    if (onBack != null) {
-        ModalBottomSheetWithBackHandling(
-            modifier = modifier,
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = Color.Transparent,
-            shape = TangemTheme.shapes.roundedCornersLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            onBack = onBack,
-            dragHandle = null,
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    } else {
-        ModalBottomSheet(
-            modifier = modifier,
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = Color.Transparent,
-            shape = TangemTheme.shapes.roundedCornersLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            dragHandle = null,
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    }
+    ModalBottomSheetWithBackHandling(
+        modifier = modifier,
+        onDismissRequest = config.onDismissRequest,
+        sheetState = sheetState,
+        containerColor = Color.Transparent,
+        shape = TangemTheme.shapes.roundedCornersLarge,
+        contentWindowInsets = { WindowInsetsZero },
+        onBack = onBack,
+        dragHandle = null,
+        content = bsContent,
+        scrimColor = TangemTheme.colors.overlay.secondary,
+    )
 }
 
 // region Preview
