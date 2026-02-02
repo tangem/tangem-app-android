@@ -46,6 +46,7 @@ import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
+import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -157,4 +158,6 @@ interface ApplicationEntryPoint {
     fun getTrackingContextProxy(): TrackingContextProxy
 
     fun getABTestsManager(): ABTestsManager
+
+    fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
 }
