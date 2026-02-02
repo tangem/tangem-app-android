@@ -18,6 +18,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -35,6 +36,7 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
@@ -64,6 +66,8 @@ import javax.inject.Inject
 internal interface WalletWarningsClickIntents {
 
     fun onAddBackupCardClick()
+
+    fun onCloreMigrationClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onCloseAlreadySignedHashesWarningClick()
 
@@ -104,6 +108,8 @@ internal interface WalletWarningsClickIntents {
     fun onDenyPermissions()
 
     fun onFinishWalletActivationClick(isBackupExists: Boolean)
+
+    fun onYieldPromoTermsAndConditionsClick()
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -144,6 +150,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped())
 
         prepareAndStartOnboardingProcess()
+    }
+
+    override fun onCloreMigrationClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        router.openTokenDetails(
+            userWalletId = userWallet.walletId,
+            currencyStatus = cryptoCurrencyStatus,
+            navigationAction = NavigationAction.CloreMigration,
+        )
     }
 
     private fun prepareAndStartOnboardingProcess() {
@@ -323,6 +339,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     program = Program.OnePlusOne,
                     action = PromotionBannerClicked.BannerAction.Closed(),
                 )
+                PromoId.YieldPromo -> PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Main,
+                    program = Program.YieldPromo,
+                    action = PromotionBannerClicked.BannerAction.Closed(),
+                )
             },
 
         )
@@ -380,6 +401,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
                 urlOpener.openUrl(ONE_PLUS_ONE_PROMO_LINK)
             }
+            PromoId.YieldPromo -> Unit // banner is not clickable, only terms and conditions button
         }
     }
 
@@ -597,6 +619,17 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
+    override fun onYieldPromoTermsAndConditionsClick() {
+        analyticsEventHandler.send(
+            PromotionBannerClicked(
+                source = AnalyticsParam.ScreensSources.Main,
+                program = Program.YieldPromo,
+                action = PromotionBannerClicked.BannerAction.Clicked(),
+            ),
+        )
+        urlOpener.openUrl(YIELD_PROMO_TERMS_LINK)
+    }
+
     private companion object {
         const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
@@ -611,5 +644,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             "&utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
             "&utm_campaign=BOGO50"
+        const val YIELD_PROMO_TERMS_LINK = "https://tangem.com/docs/yield-mode-toc.html"
     }
 }
