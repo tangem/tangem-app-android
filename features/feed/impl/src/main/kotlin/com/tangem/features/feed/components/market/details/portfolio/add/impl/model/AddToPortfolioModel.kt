@@ -67,7 +67,7 @@ internal class AddToPortfolioModel @Inject constructor(
     private val addToPortfolioManager = params.addToPortfolioManager
     val portfolioFetcher = addToPortfolioManager.portfolioFetcher
     val eventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-        token = addToPortfolioManager.token,
+        tokenSymbol = addToPortfolioManager.token.symbol,
         source = addToPortfolioManager.analyticsParams?.source,
     )
 
