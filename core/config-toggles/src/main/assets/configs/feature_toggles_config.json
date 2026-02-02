@@ -48,10 +48,6 @@
         "version": "5.31.0"
     },
     {
-        "name": "NEW_TOKEN_RECEIVE_ENABLED",
-        "version": "5.28.0"
-    },
-    {
         "name": "YIELD_SUPPLY_FEATURE_ENABLED",
         "version": "5.30.0"
     },
@@ -81,6 +77,10 @@
     },
     {
         "name": "SWAP_MARKET_LIST_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "EARN_BLOCK_ENABLED",
         "version": "undefined"
     }
 ]

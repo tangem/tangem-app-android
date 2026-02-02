@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.account.AccountTitle
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SmallButtonShimmer
@@ -141,8 +140,6 @@ private fun TokenList(state: MyPortfolioUM.Tokens, modifier: Modifier = Modifier
             }
         }
     }
-
-    TokenReceiveBottomSheet(config = state.tokenReceiveBSConfig)
 }
 
 @Composable
