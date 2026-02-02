@@ -35,6 +35,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
@@ -45,7 +47,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 // TODO: Split to blocks [REDACTED_JIRA]
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 internal fun TokenDetailsScreen(
     state: TokenDetailsState,
@@ -164,17 +166,25 @@ internal fun TokenDetailsScreen(
 
         TokenDetailsDialogs(state = state)
 
-        state.bottomSheetConfig?.let { config ->
-            when (config.content) {
-                is TokenReceiveBottomSheetConfig -> {
-                    TokenReceiveBottomSheet(config = config)
-                }
-                is ChooseAddressBottomSheetConfig -> {
-                    ChooseAddressBottomSheet(config = config)
-                }
-                is ExpressStatusBottomSheetConfig -> {
-                    ExpressStatusBottomSheet(config = config)
-                }
+        TokenDetailsBottomSheets(state = state)
+    }
+}
+
+@Composable
+private fun TokenDetailsBottomSheets(state: TokenDetailsState) {
+    state.bottomSheetConfig?.let { config ->
+        when (config.content) {
+            is TokenReceiveBottomSheetConfig -> {
+                TokenReceiveBottomSheet(config = config)
+            }
+            is ChooseAddressBottomSheetConfig -> {
+                ChooseAddressBottomSheet(config = config)
+            }
+            is ExpressStatusBottomSheetConfig -> {
+                ExpressStatusBottomSheet(config = config)
+            }
+            is CloreMigrationBottomSheetConfig -> {
+                CloreMigrationBottomSheet(config = config)
             }
         }
     }
