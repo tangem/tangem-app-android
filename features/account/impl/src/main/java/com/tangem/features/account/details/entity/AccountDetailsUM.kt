@@ -1,12 +1,12 @@
 package com.tangem.features.account.details.entity
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.extensions.TextReference
 
 internal data class AccountDetailsUM(
     val accountName: TextReference,
-    val accountIcon: CryptoPortfolioIconUM,
+    val accountIcon: AccountIconUM.CryptoPortfolio,
     val archiveMode: ArchiveMode,
     val isManageTokensAvailable: Boolean,
     val onCloseClick: () -> Unit,
