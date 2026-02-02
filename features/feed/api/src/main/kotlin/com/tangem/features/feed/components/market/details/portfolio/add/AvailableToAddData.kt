@@ -12,8 +12,7 @@ import kotlinx.serialization.Serializable
 data class AvailableToAddData(
     val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet>,
 ) {
-    val isAvailableToAdd: Boolean
-        get() = availableToAddWallets.isNotEmpty()
+    val isAvailableToAdd: Boolean = availableToAddWallets.values.any { item -> item.isAvailableToAdd }
     val isSinglePortfolio: Boolean
         get() = availableToAddWallets.size == 1 && availableToAddWallets.values.first().accounts.size == 1
 }
@@ -23,7 +22,9 @@ data class AvailableToAddWallet(
     val accounts: List<AccountStatus>,
     val availableNetworks: Set<TokenMarketInfo.Network>,
     val availableToAddAccounts: Map<AccountId, AvailableToAddAccount>,
-)
+) {
+    val isAvailableToAdd: Boolean = availableToAddAccounts.values.any { item -> item.isAvailableToAdd }
+}
 
 @Serializable
 data class AvailableToAddAccount(
@@ -37,6 +38,8 @@ data class AvailableToAddAccount(
     val availableToAddNetworks: Set<TokenMarketInfo.Network> = availableNetworks
         .filter { available -> addedNetworks.none { added -> added.backendId == available.networkId } }
         .toSet()
+
+    val isAvailableToAdd: Boolean = availableToAddNetworks.isNotEmpty()
 
     val addedMarketNetworks: Set<TokenMarketInfo.Network> = availableNetworks
         .filter { available -> addedNetworks.any { added -> added.backendId == available.networkId } }
