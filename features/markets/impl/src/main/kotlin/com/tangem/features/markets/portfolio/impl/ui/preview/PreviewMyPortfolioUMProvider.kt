@@ -93,21 +93,18 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
                 tokens = persistentListOf(sampleToken, sampleToken),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Available,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
                 tokens = persistentListOf(sampleToken, sampleToken.copy(isQuickActionsShown = true)),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Unavailable,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
                 tokens = persistentListOf(sampleToken.copy(isQuickActionsShown = true), sampleToken),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Loading,
                 addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.AddFirstToken(
