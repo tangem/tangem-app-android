@@ -48,6 +48,7 @@ dependencies {
     /** Core modules */
     implementation(projects.common.routing)
     implementation(projects.core.navigation)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
