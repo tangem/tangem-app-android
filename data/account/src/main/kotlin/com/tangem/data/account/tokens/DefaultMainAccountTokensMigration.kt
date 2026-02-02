@@ -11,6 +11,7 @@ import com.tangem.data.account.converter.AccountNameConverter
 import com.tangem.data.account.converter.toDerivationIndex
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -22,6 +23,10 @@ import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -37,7 +42,11 @@ internal class DefaultMainAccountTokensMigration(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val accountTokenMigrationStore: AccountTokenMigrationStore,
     private val userTokensSaver: UserTokensSaver,
+    private val eTagsStore: ETagsStore,
+    dispatchers: CoroutineDispatcherProvider,
 ) : MainAccountTokensMigration {
+
+    private val coroutineScope = CoroutineScope(dispatchers.default + SupervisorJob())
 
     internal suspend fun migrate(userWalletId: UserWalletId): Either<Throwable, GetWalletAccountsResponse> = either {
         val store = accountsResponseStoreFactory.create(userWalletId)
@@ -89,16 +98,7 @@ internal class DefaultMainAccountTokensMigration(
 
         store.updateData { updatedResponse }
 
-        val userTokensResponse = updatedResponse.toUserTokensResponse()
-        userTokensSaver.pushWithRetryer(
-            userWalletId = userWalletId,
-            response = userTokensResponse,
-            onFailSend = {
-                val exception = IllegalStateException("Failed to push updated tokens after migration")
-                Timber.e(exception)
-                raise(exception)
-            },
-        )
+        pushTokens(userWalletId, updatedResponse)
         return@either updatedResponse
     }
 
@@ -151,16 +151,7 @@ internal class DefaultMainAccountTokensMigration(
         val selectedAccountName = AccountNameConverter.convertBack(selectedAccount.name)
         accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
 
-        val userTokensResponse = updatedResponse.toUserTokensResponse()
-        userTokensSaver.pushWithRetryer(
-            userWalletId = userWalletId,
-            response = userTokensResponse,
-            onFailSend = {
-                val exception = IllegalStateException("Failed to push updated tokens after migration")
-                Timber.e(exception)
-                raise(exception)
-            },
-        )
+        pushTokens(userWalletId, updatedResponse)
     }
 
     private fun Raise<Throwable>.findAccount(
@@ -231,5 +222,21 @@ internal class DefaultMainAccountTokensMigration(
 
             accountNodeValue == derivationIndex.value.toLong()
         }
+    }
+
+    private suspend fun Raise<Throwable>.pushTokens(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
+        val userTokensResponse = response.toUserTokensResponse()
+        userTokensSaver.pushWithRetryer(
+            userWalletId = userWalletId,
+            response = userTokensResponse,
+            onFailSend = {
+                coroutineScope.launch {
+                    eTagsStore.clear(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+                }
+                val exception = IllegalStateException("Failed to push updated tokens after migration")
+                Timber.e(exception)
+                raise(exception)
+            },
+        )
     }
 }
