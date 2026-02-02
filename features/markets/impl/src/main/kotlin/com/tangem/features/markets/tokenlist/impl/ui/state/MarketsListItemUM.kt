@@ -36,7 +36,7 @@ data class MarketsListItemUM(
     )
 
     fun getComposeKey(): String {
-        return id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + marketCap.toString() + updateTimestamp
+        return id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + marketCap.orEmpty() + updateTimestamp
     }
 
     companion object {
