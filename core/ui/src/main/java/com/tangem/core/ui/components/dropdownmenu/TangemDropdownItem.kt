@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.dropdownmenu
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
     }
     Text(
         modifier = modifier
+            .fillMaxWidth()
             .then(
                 if (item.isEnabled) {
                     Modifier.clickable {
