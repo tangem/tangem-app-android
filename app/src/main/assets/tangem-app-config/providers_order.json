@@ -1,0 +1,1462 @@
+{
+    "aleph-zero": [
+        {
+            "type": "public",
+            "url": "https://rpc.azero.dev/"
+        },
+        {
+            "type": "public",
+            "url": "https://aleph-zero.api.onfinality.io/public/"
+        }
+    ],
+    "alephium": [
+        {
+            "type": "public",
+            "url": "https://node.mainnet.alephium.org/"
+        },
+        {
+            "type": "private",
+            "name": "tangemAlephium"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "algorand": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet-api.algonode.cloud/"
+        }
+    ],
+    "aptos": [
+        {
+            "type": "public",
+            "url": "https://fullnode.mainnet.aptoslabs.com/"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "arbitrum-one": [
+        {
+            "type": "private",
+            "name": "blink"
+        },
+        {
+            "type": "public",
+            "url": "https://arb1.arbitrum.io/rpc/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "infura"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/arb/"
+        },
+        {
+            "type": "public",
+            "url": "https://arbitrum-one-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/arbitrum/"
+        },
+        {
+            "type": "public",
+            "url": "https://arbitrum-one.public.blastapi.io/"
+        }
+    ],
+    "areon-network": [
+        {
+            "type": "public",
+            "url": "https://mainnet-rpc.areon.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet-rpc2.areon.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet-rpc3.areon.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet-rpc4.areon.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet-rpc5.areon.network/"
+        }
+    ],
+    "aurora": [
+        {
+            "type": "public",
+            "url": "https://mainnet.aurora.dev/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://aurora.drpc.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/aurora/"
+        }
+    ],
+    "avalanche": [
+        {
+            "type": "public",
+            "url": "https://api.avax.network/ext/bc/C/rpc/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "base": [
+        {
+            "type": "private",
+            "name": "blink"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.base.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://base.meowrpc.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://base-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://base.llamarpc.com/"
+        }
+    ],
+    "binance-smart-chain": [
+        {
+            "type": "private",
+            "name": "blink"
+        },
+        {
+            "type": "public",
+            "url": "https://bsc-dataseed.binance.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "quicknode"
+        }
+    ],
+    "bitcoin": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "blockchair"
+        },
+        {
+            "type": "private",
+            "name": "blockcypher"
+        }
+    ],
+    "bitcoin-cash": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "blockchair"
+        }
+    ],
+    "bittensor": [
+        {
+            "type": "public",
+            "url": "https://entrypoint-finney.opentensor.ai/"
+        },
+        {
+            "type": "private",
+            "name": "dwellirBittensor"
+        },
+        {
+            "type": "private",
+            "name": "onfinalityBittensor"
+        }
+    ],
+    "blast": [
+        {
+            "type": "public",
+            "url": "https://rpc.blast.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://blast-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/blast/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "canxium": [
+        {
+            "type": "public",
+            "url": "https://rpc.canxium.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://canxium.rpc.thirdweb.com/"
+        }
+    ],
+    "cardano": [
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "adalite"
+        }
+    ],
+    "casper-network": [
+        {
+            "type": "public",
+            "url": "https://node.mainnet.casper.network/rpc/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "chia": [
+        {
+            "type": "private",
+            "name": "tangemChia"
+        },
+        {
+            "type": "private",
+            "name": "tangemChia3"
+        }
+    ],
+    "chiliz": [
+        {
+            "type": "public",
+            "url": "https://rpc.chiliz.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/chiliz/"
+        },
+        {
+            "type": "public",
+            "url": "https://chiliz.publicnode.com/"
+        }
+    ],
+    "core": [
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/core/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.coredao.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://core.public.infstones.com/"
+        }
+    ],
+    "cosmos": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rest.cosmos.directory/cosmoshub/"
+        },
+        {
+            "type": "public",
+            "url": "https://rest-cosmoshub.ecostake.com/"
+        }
+    ],
+    "cronos": [
+        {
+            "type": "public",
+            "url": "https://evm.cronos.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://evm-cronos.crypto.org/"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "cyber": [
+        {
+            "type": "public",
+            "url": "https://rpc.cyber.co/"
+        },
+        {
+            "type": "public",
+            "url": "https://cyber.alt.technology/"
+        }
+    ],
+    "dash": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "blockchair"
+        },
+        {
+            "type": "private",
+            "name": "blockcypher"
+        }
+    ],
+    "decimal": [
+        {
+            "type": "public",
+            "url": "https://node.decimalchain.com/web3/"
+        },
+        {
+            "type": "public",
+            "url": "https://node1-mainnet.decimalchain.com/web3/"
+        },
+        {
+            "type": "public",
+            "url": "https://node2-mainnet.decimalchain.com/web3/"
+        },
+        {
+            "type": "public",
+            "url": "https://node3-mainnet.decimalchain.com/web3/"
+        },
+        {
+            "type": "public",
+            "url": "https://node4-mainnet.decimalchain.com/web3/"
+        }
+    ],
+    "dogecoin": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "blockchair"
+        },
+        {
+            "type": "private",
+            "name": "blockcypher"
+        }
+    ],
+    "energy-web-chain": [
+        {
+            "type": "public",
+            "url": "https://rpc.energyweb.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://consortia-rpc.energyweb.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://energy-web-chain.rpc.thirdweb.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://explorer.energyweb.org/api/"
+        }
+    ],
+    "energy-web-x": [
+        {
+            "type": "public",
+            "url": "https://public-rpc.mainnet.energywebx.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://wnp-rpc.mainnet.energywebx.com/"
+        }
+    ],
+    "ethereum": [
+        {
+            "type": "private",
+            "name": "blink"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "infura"
+        }
+    ],
+    "ethereum-classic": [
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://etc.etcdesktop.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://etc.mytokenpocket.vip/"
+        },
+        {
+            "type": "public",
+            "url": "https://geth-at.etc-network.info/"
+        }
+    ],
+    "ethereumfair": [
+        {
+            "type": "public",
+            "url": "https://rpc.dischain.xyz/"
+        }
+    ],
+    "ethereum-pow-iou": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.ethereumpow.org/"
+        }
+    ],
+    "fact0rn": [
+        {
+            "type": "public",
+            "url": "wss://electrumx.fact0rn.io:443/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx2.fact0rn.io:443/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx3.fact0rn.io:443/"
+        }
+    ],
+    "fantom": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpcapi.fantom.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://fantom-mainnet.public.blastapi.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/fantom/"
+        }
+    ],
+    "filecoin": [
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/filecoin/"
+        },
+        {
+            "type": "public",
+            "url": "https://filecoin.chainup.net/rpc/v1/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "flare-network": [
+        {
+            "type": "public",
+            "url": "https://flare-api.flare.network/ext/bc/C/rpc/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://flare.rpc.thirdweb.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/flare/"
+        },
+        {
+            "type": "public",
+            "url": "https://flare.solidifi.app/ext/C/rpc/"
+        }
+    ],
+    "hedera-hashgraph": [
+        {
+            "type": "public",
+            "url": "https://mainnet-public.mirrornode.hedera.com/api/v1/"
+        },
+        {
+            "type": "private",
+            "name": "arkhiaHedera"
+        }
+    ],
+    "hyperevm": [
+        {
+            "type": "public",
+            "url": "https://rpc.hyperliquid.xyz/evm/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.hypurrscan.io/"
+        }
+    ],
+    "internet-computer": [
+        {
+            "type": "public",
+            "url": "https://icp-api.io/"
+        }
+    ],
+    "joystream": [
+        {
+            "type": "public",
+            "url": "https://rpc.joyutils.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.joystream.org/"
+        }
+    ],
+    "kaspa": [
+        {
+            "type": "public",
+            "url": "https://api.kaspa.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "kaspa"
+        }
+    ],
+    "kava": [
+        {
+            "type": "public",
+            "url": "https://evm.kava.io/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://evm2.kava.io/"
+        }
+    ],
+    "koinos": [
+        {
+            "type": "public",
+            "url": "https://api.koinos.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://api.koinosblocks.com/"
+        },
+        {
+            "type": "private",
+            "name": "koinospro"
+        }
+    ],
+    "kusama": [
+         {
+              "type": "public",
+              "url": "https://asset-hub-kusama-rpc.n.dwellir.com/"
+         },
+         {
+              "type": "private",
+              "name": "tatum"
+        },
+        {
+              "type": "public",
+              "url": "https://statemine-rpc-tn.dwellir.com/"
+        },
+        {
+              "type": "public",
+              "url": "https://sys.ibp.network/asset-hub-kusama/"
+        },
+        {
+              "type": "public",
+              "url": "https://asset-hub-kusama.dotters.network/"
+        },
+        {
+              "type": "public",
+              "url": "https://rpc-asset-hub-kusama.luckyfriday.io/"
+        },
+        {
+              "type": "public",
+              "url": "https://assethub-kusama.api.onfinality.io/public/"
+        },
+        {
+              "type": "public",
+              "url": "https://kusama-asset-hub-rpc.polkadot.io/"
+        },
+        {
+              "type": "public",
+              "url": "https://ksm-rpc.stakeworld.io/assethub/"
+        },
+        {
+              "type": "private",
+              "name": "nownodes"
+        }     
+    ],
+    "litecoin": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "blockchair"
+        },
+        {
+            "type": "private",
+            "name": "blockcypher"
+        }
+    ],
+    "manta-pacific": [
+        {
+            "type": "public",
+            "url": "https://manta-pacific.drpc.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://pacific-rpc.manta.network/http/"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/manta/"
+        }
+    ],
+    "mantle": [
+        {
+            "type": "public",
+            "url": "https://rpc.mantle.xyz/"
+        },
+        {
+            "type": "public",
+            "url": "https://mantle-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://mantle-mainnet.public.blastapi.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/mantle/"
+        }
+    ],
+    "moonbeam": [
+        {
+            "type": "public",
+            "url": "https://rpc.api.moonbeam.network/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/glmr/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonbeam.public.blastapi.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonbeam-rpc.dwellir.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonbeam.unitedbloc.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonbeam-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/moonbeam/"
+        }
+    ],
+    "moonriver": [
+        {
+            "type": "public",
+            "url": "https://moonriver-rpc.dwellir.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonriver.unitedbloc.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://moonriver-rpc.publicnode.com/"
+        }
+    ],
+    "near-protocol": [
+        {
+            "type": "public",
+            "url": "https://rpc.mainnet.near.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "octaspace": [
+        {
+            "type": "public",
+            "url": "https://rpc.octa.space/"
+        },
+        {
+            "type": "public",
+            "url": "https://octaspace.rpc.thirdweb.com/"
+        }
+    ],
+    "optimistic-ethereum": [
+        {
+            "type": "public",
+            "url": "https://mainnet.optimism.io/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://optimism-mainnet.public.blastapi.io/"
+        }
+    ],
+    "playa3ull-games": [
+        {
+            "type": "public",
+            "url": "https://api.mainnet.playa3ull.games/"
+        }
+    ],
+    "polkadot": [
+        {
+            "type": "public",
+            "url": "https://rpc.polkadot.io/"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://polkadot.api.onfinality.io/public-ws/"
+        },
+        {
+            "type": "public",
+            "url": "https://polkadot-rpc.dwellir.com/"
+        }
+    ],
+    "polygon-pos": [
+        {
+            "type": "public",
+            "url": "https://polygon-rpc.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc-mainnet.matic.quiknode.pro/"
+        }
+    ],
+    "polygon-zkevm": [
+        {
+            "type": "public",
+            "url": "https://zkevm-rpc.com/"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/polygon/zkevm/"
+        },
+        {
+            "type": "public",
+            "url": "https://polygon-zkevm.drpc.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://polygon-zkevm-mainnet.public.blastapi.io/"
+        }
+    ],
+    "pulsechain": [
+        {
+            "type": "public",
+            "url": "https://rpc.pulsechain.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc-pulsechain.g4mm4.io/"
+        }
+    ],
+    "radiant": [
+        {
+            "type": "public",
+            "url": "wss://electrumx.radiant4people.com:50022/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx2.radiant4people.com:50022/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx-dex02.radiantexplorer.com:50022/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx-01-ssl.radiant4people.com:51002/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrumx-02-ssl.radiant4people.com:51002/"
+        }
+    ],
+    "ravencoin": [
+        {
+            "type": "public",
+            "url": "https://explorer.rvn.zelcore.io/api/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "rootstock": [
+        {
+            "type": "public",
+            "url": "https://public-node.rsk.co/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "sei-network": [
+        {
+            "type": "public",
+            "url": "https://rest.wallet.pacific-1.sei.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://rest.sei-apis.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://sei-api.polkachu.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://sei-rest.brocha.in/"
+        }
+    ],
+    "shibarium": [
+        {
+            "type": "public",
+            "url": "https://www.shibrpc.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "solana": [
+        {
+            "type": "private",
+            "name": "blink"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "quicknode"
+        },
+        {
+            "type": "private",
+            "name": "solana"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "stellar": [
+        {
+            "type": "public",
+            "url": "https://horizon.stellar.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "taraxa": [
+        {
+            "type": "public",
+            "url": "https://rpc.mainnet.taraxa.io/"
+        }
+    ],
+    "telos": [
+        {
+            "type": "public",
+            "url": "https://mainnet.telos.net/evm/"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://telos-evm.rpc.thirdweb.com/"
+        }
+    ],
+    "terra": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://terra-classic-lcd.publicnode.com/"
+        }
+    ],
+    "terra-2": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://phoenix-lcd.terra.dev/"
+        }
+    ],
+    "tezos": [
+        {
+            "type": "public",
+            "url": "https://rpc.tzbeta.net/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.smartpy.io/"
+        }
+    ],
+    "the-open-network": [
+        {
+            "type": "private",
+            "name": "ton"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "tron": [
+        {
+            "type": "public",
+            "url": "https://api.trongrid.io/"
+        },
+        {
+            "type": "private",
+            "name": "tron"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "vechain": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.vecha.in/"
+        },
+        {
+            "type": "public",
+            "url": "https://sync-mainnet.vechain.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.veblocks.net/"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnetc1.vechain.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://us.node.vechain.energy/"
+        }
+    ],
+    "xdai": [
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.gnosischain.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://gnosis-mainnet.public.blastapi.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/gnosis/"
+        }
+    ],
+    "xdc-network": [
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.xdcrpc.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://erpc.xdcrpc.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.xinfin.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://erpc.xinfin.network/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.ankr.com/xdc/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc1.xinfin.network/"
+        }
+    ],
+    "xodex": [
+        {
+            "type": "public",
+            "url": "https://mainnet.xo-dex.com/rpc/"
+        },
+        {
+            "type": "public",
+            "url": "https://2415.rpc.thirdweb.com/"
+        }
+    ],
+    "xrp": [
+        {
+            "type": "public",
+            "url": "https://xrplcluster.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        }
+    ],
+    "zksync": [
+        {
+            "type": "public",
+            "url": "https://mainnet.era.zksync.io/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://1rpc.io/zksync2-era/"
+        },
+        {
+            "type": "public",
+            "url": "https://zksync.meowrpc.com/"
+        }
+    ],
+    "sui": [
+        {
+            "type": "public",
+            "url": "https://fullnode.mainnet.sui.io/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc-mainnet.suiscan.xyz/"
+        }
+    ],
+    "clore-ai": [
+        {
+            "type": "public",
+            "url": "https://blockbook.clore.ai/"
+        },
+        {
+            "type": "public",
+            "url": "https://blockbook.clore.zelcore.io/"
+        }
+    ],
+    "dione": [
+        {
+            "type": "public",
+            "url": "https://node.dioneprotocol.com/ext/bc/D/rpc/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "bitrock": [
+        {
+            "type": "public",
+            "url": "https://connect.bit-rock.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://brockrpc.io/"
+        }
+    ],
+    "sonic": [
+        {
+            "type": "public",
+            "url": "https://rpc.soniclabs.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "public",
+            "url": "https://sonic-rpc.publicnode.com/"
+        }
+    ],
+    "apechain": [
+        {
+            "type": "public",
+            "url": "https://rpc.apechain.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://apechain.drpc.org/"
+        },
+        {
+            "type": "public",
+            "url": "https://apechain.calderachain.xyz/http/"
+        }
+    ],
+    "vanar-chain": [
+        {
+            "type": "public",
+            "url": "https://rpc.vanarchain.com/"
+        }
+    ],
+    "zklink": [
+        {
+            "type": "public",
+            "url": "https://rpc.zklink.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.zklink.network/"
+        }
+    ],
+    "pepecoin": [
+        {
+            "type": "public",
+            "url": "wss://electrum.pepeblocks.com:50004/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrum.pepelum.site:50004/"
+        },
+        {
+            "type": "public",
+            "url": "wss://electrum.pepe.tips:50004/"
+        }
+    ],
+    "quai-network": [
+        {
+            "type": "public",
+            "url": "https://rpc.quai.network/cyprus1/"
+        },
+        {
+            "type": "public",
+            "url": "https://9.rpc.thirdweb.com/"
+        }
+    ],
+    "scroll": [
+        {
+            "type": "public",
+            "url": "https://rpc.scroll.io/"
+        },
+        {
+            "type": "public",
+            "url": "https://scroll-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://scroll-mainnet.public.blastapi.io/"
+        }
+    ],
+    "linea": [
+        {
+            "type": "public",
+            "url": "https://rpc.linea.build/"
+        },
+        {
+            "type": "public",
+            "url": "https://linea-rpc.publicnode.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        }
+    ],
+    "arbitrum-nova": [
+        {
+            "type": "public",
+            "url": "https://nova.arbitrum.io/rpc/"
+        },
+        {
+            "type": "public",
+            "url": "https://arbitrum-nova-rpc.publicnode.com/"
+        },
+        {
+            "type": "public",
+            "url": "https://arbitrum-nova.public.blastapi.io/"
+        }
+    ],
+    "plasma": [
+        {
+            "type": "public",
+            "url": "https://rpc.plasma.to/"
+        },
+        {
+            "type": "public",
+            "url": "https://plasma.drpc.org/"
+        },
+        {
+            "type": "private",
+            "name": "quicknode"
+        }
+    ],
+    "monad": [
+        {
+            "type": "public",
+            "url": "https://rpc.monad.xyz"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc3.monad.xyz"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc-mainnet.monadinfra.com"
+        },
+        {
+            "type": "public",
+            "url": "https://www.quicknode.com/chains/monad"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "private",
+            "name": "quicknode"
+        }
+    ]
+}
