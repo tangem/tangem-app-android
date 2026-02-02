@@ -1,6 +1,6 @@
 package com.tangem.common.ui.userwallet.state
 
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
 import javax.annotation.concurrent.Immutable
@@ -64,7 +64,7 @@ data class UserWalletItemUM(
 
         data class Account(
             val name: TextReference,
-            val icon: CryptoPortfolioIconUM,
+            val icon: AccountIconUM.CryptoPortfolio,
         ) : ImageState()
 
         data class Image(
