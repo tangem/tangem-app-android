@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -267,6 +268,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
                         ),
                         canOverride = true,
+                        analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
                     )
                     userWalletCreated
                 }
