@@ -258,9 +258,15 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         subtitle = resourceReference(id = R.string.warning_matic_migration_message),
     )
 
-    data object MigrationClore : Warning(
+    data class MigrationClore(
+        private val onMigrationClick: () -> Unit,
+    ) : Warning(
         title = resourceReference(id = R.string.warning_clore_migration_title),
-        subtitle = resourceReference(id = R.string.warning_clore_migration_message),
+        subtitle = resourceReference(id = R.string.warning_clore_migration_description),
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(id = R.string.warning_clore_migration_button),
+            onClick = onMigrationClick,
+        ),
     )
 
     data object UsedOutdatedData : TokenDetailsNotification(
