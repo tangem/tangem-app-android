@@ -85,6 +85,7 @@ sealed class AnalyticsParam {
         data object ImportWallet : ScreensSources("Import Wallet")
         data object CreateWalletIntro : ScreensSources("Create Wallet Intro")
         data object AddNewWallet : ScreensSources("Add New Wallet")
+        data object AddNew : ScreensSources("Add New")
         data object CreateWallet : ScreensSources("Create Wallet")
     }
 

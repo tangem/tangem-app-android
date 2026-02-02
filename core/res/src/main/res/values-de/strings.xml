@@ -899,6 +899,9 @@
   <string name="notification_sepa_title">Krypto mit SEPA kaufen</string>
   <string name="notification_visa_waitlist_promo_text">Trage dich in die Warteliste ein und erhalte eine Zahlungskarte, die es so noch nie gab.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Bedingungen</string>
+  <string name="notification_yield_promo_text">Zahlen Sie mindestens $100 ein, halten Sie den Betrag 30 Tage und erhalten Sie $10.</string>
+  <string name="notification_yield_promo_title">Yield-Mode-Kampagne</string>
   <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
   <string name="onboarding_access_code_feature_2_description">Du kannst später auf jeder Karte oder Ring einen individuellen Zugangscode einrichten</string>

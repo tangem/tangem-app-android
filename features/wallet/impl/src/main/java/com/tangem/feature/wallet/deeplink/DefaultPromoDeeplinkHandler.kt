@@ -59,14 +59,15 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
     init {
         analyticsEventsHandler.send(PromoActivationAnalytics.PromoDeepLinkActivationStart())
+
+        saveAndBindRefcode()
+
         val promoCode = queryParams[PROMO_CODE_KEY].orEmpty()
         if (promoCode.isEmpty()) {
             showAlert(InvalidPromoCode)
         } else {
             findSelectedWallet(promoCode)
         }
-
-        saveAndBindRefcode()
     }
 
     private fun findSelectedWallet(promoCode: String) {
@@ -183,14 +184,19 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 message = message,
                 dismissOnFirstAction = true,
                 firstActionBuilder = {
-                    okAction { }
+                    okAction {
+                        uiMessageSender.send(GlobalLoadingMessage(false))
+                    }
                 },
             ),
         )
     }
 
+    @Suppress("NullableToStringCall")
     private fun saveAndBindRefcode() {
         scope.launch(dispatchers.default) {
+            Timber.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
+
             if (!refcode.isNullOrBlank()) {
                 val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
 

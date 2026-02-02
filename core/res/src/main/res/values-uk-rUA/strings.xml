@@ -44,6 +44,7 @@
   <string name="account_form_edit_button">Зберегти</string>
   <string name="account_form_name">Назва акаунту</string>
   <string name="account_form_name_already_exist_error_description">Акаунт з такою назвою вже існує. Будь ласка, виберіть іншу назву.</string>
+  <string name="account_form_name_already_exist_error_title">Обліковий запис з таким ім’ям уже існує</string>
   <string name="account_form_placeholder_edit_account">Акаунт</string>
   <string name="account_form_placeholder_new_account">Новий акаунт</string>
   <string name="account_form_title_create">Додати акаунт</string>
@@ -908,6 +909,9 @@
   <string name="notification_sepa_title">Купуйте криптовалюту через SEPA</string>
   <string name="notification_visa_waitlist_promo_text">Приєднуйтесь до списку очікування та отримайте унікальну платіжну картку, якої ще не було.</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
+  <string name="notification_yield_promo_button">Умови та положення</string>
+  <string name="notification_yield_promo_text">Внесіть депозит від $100, утримуйте його 30 днів та отримайте $10.</string>
+  <string name="notification_yield_promo_title">Кампанія Yield Mode!</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
