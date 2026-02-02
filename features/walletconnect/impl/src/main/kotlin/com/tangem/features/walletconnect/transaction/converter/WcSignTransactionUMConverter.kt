@@ -10,6 +10,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
@@ -35,6 +36,7 @@ internal class WcSignTransactionUMConverter @Inject constructor(
             isLoading = value.signState.domainStep == WcSignStep.Signing,
             address = WcAddressConverter.convert(value.context.derivationState),
             walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
+            isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             requestBlockUMConverter.convert(
