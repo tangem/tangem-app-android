@@ -24,6 +24,8 @@ import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -75,6 +77,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         val migratedResponse = mainAccountTokensMigration.migrate(userWalletId).getOrNull() ?: updatedResponse
         return migratedResponse
+    }
+
+    override fun get(userWalletId: UserWalletId): Flow<GetWalletAccountsResponse> {
+        return getAccountsResponseStore(userWalletId = userWalletId).data.filterNotNull()
     }
 
     override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
