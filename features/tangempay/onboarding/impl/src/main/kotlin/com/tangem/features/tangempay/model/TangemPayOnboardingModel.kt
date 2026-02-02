@@ -131,13 +131,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
                     checkCustomerInfo(params.userWalletId)
                 }
-                is TangemPayOnboardingComponent.Params.FromBannerOnMain -> {
-                    if (eligibleWalletsIds.any { walletId -> walletId == params.userWalletId }) {
-                        checkCustomerInfo(userWalletId = params.userWalletId)
-                    } else {
-                        openWalletSelectorIfNeeds(eligibleWalletsIds)
-                    }
-                }
+                is TangemPayOnboardingComponent.Params.FromBannerOnMain,
                 is TangemPayOnboardingComponent.Params.Deeplink,
                 is TangemPayOnboardingComponent.Params.FromBannerInSettings,
                 -> {
