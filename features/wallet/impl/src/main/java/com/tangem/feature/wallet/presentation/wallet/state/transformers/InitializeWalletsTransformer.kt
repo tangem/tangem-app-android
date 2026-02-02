@@ -3,13 +3,13 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState.MultiCurrency.WalletType
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createStateByWalletType
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState.MultiCurrency.WalletType
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -73,15 +73,6 @@ internal class InitializeWalletsTransformer(
                     walletCardState = userWallet.toLockedWalletCardState(),
                     bottomSheetConfig = null,
                     buttons = createSingleWalletDisabledButtons(),
-                    onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
-                    onExploreClick = clickIntents::onExploreClick,
-                )
-            },
-            visaWalletCreator = {
-                WalletState.Visa.Locked(
-                    walletCardState = userWallet.toLockedWalletCardState(),
-                    buttons = createMultiWalletEnabledButtons(userWallet),
-                    bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
                 )

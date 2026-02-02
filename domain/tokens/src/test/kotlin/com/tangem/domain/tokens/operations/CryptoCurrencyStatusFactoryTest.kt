@@ -428,10 +428,10 @@ class CryptoCurrencyStatusFactoryTest {
                 source = StatusSource.ACTUAL,
                 balance = YieldBalanceItem(
                     items = listOf(
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
                         },
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),
@@ -525,10 +525,10 @@ class CryptoCurrencyStatusFactoryTest {
                 source = StatusSource.ACTUAL,
                 balance = YieldBalanceItem(
                     items = listOf(
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
                         },
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),
@@ -614,10 +614,10 @@ class CryptoCurrencyStatusFactoryTest {
                 source = StatusSource.ACTUAL,
                 balance = YieldBalanceItem(
                     items = listOf(
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns currency.id.rawCurrencyId?.value
                         },
-                        mockk<BalanceItem> {
+                        mockk<BalanceItem>(relaxed = true) {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),

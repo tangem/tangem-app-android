@@ -9,7 +9,6 @@ import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import kotlinx.coroutines.flow.*
@@ -21,7 +20,6 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val deviceSecurity: DeviceSecurityInfoProvider,
 ) {
 
@@ -44,7 +42,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             .fold(
                 ifLeft = { error ->
                     Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
-                    if (error is VisaApiError.NotPaeraCustomer && tangemPayFeatureToggles.isEntryPointsEnabled) {
+                    if (error is VisaApiError.NotPaeraCustomer) {
                         showOnboardingBannerIfEligible(userWalletId)
                     } else {
                         updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
@@ -62,13 +60,8 @@ class TangemPayMainScreenCustomerInfoUseCase(
                             .map(MainCustomerInfoContentState::Content)
                         updateState(userWalletId, result)
                     } else {
-                        if (tangemPayFeatureToggles.isEntryPointsEnabled) {
-                            // if there's no tangem pay, check eligibility and show onboarding banner
-                            showOnboardingBannerIfEligible(userWalletId)
-                        } else {
-                            // ignore if there's no TangemPay
-                            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
-                        }
+                        // if there's no tangem pay, check eligibility and show onboarding banner
+                        showOnboardingBannerIfEligible(userWalletId)
                     }
                 },
             )
@@ -128,7 +121,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             }
             .map { customerInfo ->
                 Timber.tag(TAG).i("customerInfo")
-                if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
+                if (customerInfo.cardInfo == null && customerInfo.kycStatus == CustomerInfo.KycStatus.APPROVED) {
                     // If order id wasn't saved -> start order creation and get customer info
                     onboardingRepository.createOrder(userWalletId)
                 }
@@ -151,7 +144,12 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
                         -> MainScreenCustomerInfo(
-                            info = CustomerInfo(productInstance = null, isKycApproved = true, cardInfo = null),
+                            info = CustomerInfo(
+                                customerId = null,
+                                productInstance = null,
+                                kycStatus = CustomerInfo.KycStatus.APPROVED,
+                                cardInfo = null,
+                            ),
                             orderStatus = orderStatus,
                         ).right()
 
