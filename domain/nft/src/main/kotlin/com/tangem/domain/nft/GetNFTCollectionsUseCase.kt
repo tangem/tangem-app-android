@@ -34,15 +34,15 @@ class GetNFTCollectionsUseCase(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun invokeForAccounts(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
-        fun Account.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>> {
+        fun Account.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>>? {
             val currencies = (this as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
-
+            if (currencies.isEmpty()) return null
             return nftCollections(userWalletId = userWalletId, cryptoCurrencies = currencies.toList())
                 .map { nfts -> this to nfts }
         }
 
         return singleAccountListSupplier(userWalletId)
-            .mapLatest { statusList -> statusList.accounts.map { it.flowOfNFTCollections() } }
+            .mapLatest { statusList -> statusList.accounts.mapNotNull { it.flowOfNFTCollections() } }
             .flatMapLatest { flows -> combine(flows) { WalletNFTCollections(it.toMap()) } }
     }
 
@@ -53,6 +53,7 @@ class GetNFTCollectionsUseCase(
         val networks = cryptoCurrencies
             .map { cryptoCurrency -> cryptoCurrency.network }
             .distinct()
+        if (networks.isEmpty()) return flowOf(emptyList())
         return nftRepository.observeCollections(userWalletId, networks)
     }
 }
