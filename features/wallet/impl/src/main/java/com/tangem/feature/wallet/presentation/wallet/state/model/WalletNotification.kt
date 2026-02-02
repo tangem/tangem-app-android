@@ -396,6 +396,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class YieldPromo(
+        val onCloseClick: () -> Unit,
+        val onTermsAndConditionsClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_yield_promo_title),
+            subtitle = resourceReference(R.string.notification_yield_promo_text),
+            iconResId = R.drawable.ic_yield_promo_36,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_yield_promo_button),
+                onClick = onTermsAndConditionsClick,
+            ),
+            iconSize = 36.dp,
+        ),
+    )
+
     data class PushNotifications(
         val onCloseClick: () -> Unit,
         val onEnabledClick: () -> Unit,
@@ -412,6 +429,20 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 onSecondaryClick = onCloseClick,
             ),
             iconSize = 54.dp,
+        ),
+    )
+
+    data class CloreMigration(
+        val onStartMigrationClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_title),
+            subtitle = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_description),
+            iconResId = R.drawable.img_attention_20,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(com.tangem.core.res.R.string.warning_clore_migration_button),
+                onClick = onStartMigrationClick,
+            ),
         ),
     )
 }
