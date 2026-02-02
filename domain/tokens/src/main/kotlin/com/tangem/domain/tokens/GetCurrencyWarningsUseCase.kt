@@ -29,6 +29,7 @@ class GetCurrencyWarningsUseCase(
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+
 ) {
 
     suspend operator fun invoke(
@@ -56,7 +57,7 @@ class GetCurrencyWarningsUseCase(
                 maybeRentWarning,
                 maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
                 maybeFeeResource?.let { getFeeResourceWarning(it) },
-                * coinRelatedWarnings.toTypedArray(),
+                *coinRelatedWarnings.toTypedArray(),
                 getNetworkUnavailableWarning(currencyStatus),
                 getNetworkNoAccountWarning(currencyStatus),
                 getBeaconChainShutdownWarning(rawId = currency.network.id.rawId),
@@ -114,11 +115,14 @@ class GetCurrencyWarningsUseCase(
     ): CryptoCurrencyWarning? {
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
         val isNetworkFeeZero = currenciesRepository.isNetworkFeeZero(userWalletId, tokenStatus.currency.network)
+        val isNetworkSupportGasless =
+            currencyChecksRepository.isNetworkSupportedForGaslessTx(coinStatus.currency.network)
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
                 !tokenStatus.value.amount.isZero() &&
                 coinStatus.value.amount.isZero() &&
-                !isNetworkFeeZero -> {
+                !isNetworkFeeZero &&
+                !isNetworkSupportGasless -> {
                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
                     tokenCurrency = tokenStatus.currency,
                     coinCurrency = coinStatus.currency,
