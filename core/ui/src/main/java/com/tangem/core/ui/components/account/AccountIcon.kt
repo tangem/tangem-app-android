@@ -6,22 +6,20 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -73,6 +71,33 @@ fun AccountResIcon(@DrawableRes resId: Int, color: Color, size: AccountIconSize,
             imageVector = ImageVector.vectorResource(id = resId),
             contentDescription = null,
         )
+    }
+}
+
+/**
+ * Displays a PaymentAccount icon using a predefined painter resource.
+ *
+ * The icon size is adapted based on the provided [size].
+ *
+ * @param size The size of the icon, defined by [AccountIconSize].
+ */
+@Composable
+fun PaymentAccountIcon(size: AccountIconSize, modifier: Modifier = Modifier) {
+    val boxSize by animateDpAsState(
+        targetValue = size.boxSizeInDp(),
+        animationSpec = animation(),
+    )
+    val boxShapeCornerSize by animateDpAsState(
+        targetValue = size.boxShapeSizeInDp(),
+        animationSpec = animation(),
+    )
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(boxSize)
+            .clip(RoundedCornerShape(boxShapeCornerSize)),
+    ) {
+        Image(painter = painterResource(id = R.drawable.img_visa_36), contentDescription = null)
     }
 }
 
@@ -186,6 +211,7 @@ private fun Sample() {
         AccountResIcon(resId = R.drawable.ic_user_24, color = Color.Magenta, size = AccountIconSize.Medium)
         AccountResIcon(resId = R.drawable.ic_family_24, color = Color.DarkGray, size = AccountIconSize.Small)
         AccountResIcon(resId = R.drawable.ic_wallet_24, color = Color.Green, size = AccountIconSize.ExtraSmall)
+        PaymentAccountIcon(size = AccountIconSize.Default)
     }
     Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
         AccountCharIcon(char = 'D', color = Color.Red, size = sizeState)
