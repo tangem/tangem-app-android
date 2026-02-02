@@ -68,6 +68,11 @@ internal class DefaultPromoRepository(
 
                         isActive && shouldShow
                     }
+                    PromoId.YieldPromo -> {
+                        val isActive = getYieldPromoBanner(userWalletId)?.isActive == true
+
+                        isActive && shouldShow
+                    }
                 }
             }
     }
@@ -79,6 +84,7 @@ internal class DefaultPromoRepository(
             PromoId.VisaPresale -> flowOf(false)
             PromoId.BlackFriday -> flowOf(false)
             PromoId.OnePlusOne -> flowOf(false)
+            PromoId.YieldPromo -> flowOf(false)
         }
     }
 
@@ -190,12 +196,22 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getYieldPromoBanner(userWalletId: UserWalletId): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            val response = tangemApi.getPromoBannersV2(userWalletId.stringValue).getOrThrow()
+            val yieldPromotion = response.promotions.find { it.name == YIELD_PROMO_NAME }
+                ?: return@runCatching null
+            promoBannerConverter.convert(yieldPromotion)
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
         const val VISA_NAME = "visa-waitlist"
         const val BLACK_FRIDAY_NAME = "black-friday"
         const val MOONPAY_NAME = "moonpay"
         const val ONE_PLUS_ONE_NAME = "one-plus-one"
+        const val YIELD_PROMO_NAME = "promo-yield"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }
