@@ -252,7 +252,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
         SpacerW(6.dp)
 
         Text(
-            text = providerName,
+            text = stringResourceSafe(R.string.onramp_via_provider, providerName),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.PROVIDER_NAME),
