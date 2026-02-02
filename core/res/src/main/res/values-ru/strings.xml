@@ -109,7 +109,7 @@
   <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены из приложения.</string>
   <string name="app_settings_on_require_access_code_alert_message">Это удалит все сохранённые коды доступа к кошелькам. Любое дальнейшее взаимодействие с кошельком будет требовать ввода кода доступа.</string>
   <string name="app_settings_require_access_code">Требуется код доступа</string>
-  <string name="app_settings_require_access_code_footer">Эта опция отключает использование биометрии для выполнения чувствительных действий. Каждый раз, например при подписании транзакции, вам потребуется вводить код доступа.</string>
+  <string name="app_settings_require_access_code_footer">Эта опция отключает использование биометрии для выполнения чувствительных действий. Каждый раз, например, при подписании транзакции, вам потребуется вводить код доступа.</string>
   <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
   <string name="app_settings_saved_access_codes_footer">Подключите функцию хранения кодов доступа от карт на телефоне в зашифрованном виде, и при работе с картой или кольцом вместо кода доступа будет запрашиваться биометрическая аутентификация.</string>
   <string name="app_settings_saved_wallet">Cохранение кошелька</string>
@@ -737,7 +737,7 @@
   <string name="markets_loading_no_data_title">Нет данных</string>
   <string name="markets_pulse_common_title">Пульс рынка</string>
   <string name="markets_quick_actions">Быстрые действия</string>
-  <string name="markets_search_header_title">Поиск на рынке</string>
+  <string name="markets_search_header_title">Поиск токенов</string>
   <string name="markets_search_result_title">Результат</string>
   <string name="markets_search_see_tokens_under_100k">Токены с капитализацией меньше 100к USD</string>
   <string name="markets_search_show_tokens">Показать токены</string>
@@ -1079,6 +1079,7 @@
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
   <string name="onramp_up_to_rate">До</string>
   <string name="onramp_via">Через</string>
+  <string name="onramp_via_provider">через %s</string>
   <string name="onramp_you_will_pay_title">Вы заплатите</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>

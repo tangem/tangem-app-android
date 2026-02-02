@@ -60,7 +60,7 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
                     // We check that map contains the first seen wallet (will return null instead false/true otherwise)
                     // and for this wallet we haven't shown the activation bs yet (check that returns false, not true)
                     if (isActivationBottomSheetShown[userWalletId] == false) {
-                        if (event.type == WalletActivationBannerType.Warning) {
+                        if (event.type == WalletActivationBannerType.Warning && event.isBackupExists.not()) {
                             showFinishActivationBottomSheet(userWalletId)
                         }
                         isActivationBottomSheetShown[userWalletId] = true
