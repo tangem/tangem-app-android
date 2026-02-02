@@ -7,8 +7,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.internal.GroupTitleItem
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.ProvideSharedTransitionScope
@@ -71,13 +74,13 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
     ProvideSharedTransitionScope(modifier) {
         val iconSharedContentState = rememberSharedContentState(key = "icon_${state.id}")
         val titleSharedContentState = rememberSharedContentState(key = "title_${state.id}")
-        val boundsTransform = BoundsTransform { _, _ -> tween(350) }
+        val boundsTransform = BoundsTransform { _, _ -> tween(250) }
 
         AnimatedContent(
             targetState = state.isExpanded,
             transitionSpec = {
-                fadeIn(animationSpec = tween(350, delayMillis = 90))
-                    .togetherWith(fadeOut(animationSpec = tween(350)))
+                fadeIn(animationSpec = tween(250, delayMillis = 90))
+                    .togetherWith(fadeOut(animationSpec = tween(250)))
             },
         ) { isExpanded ->
             val animatedContentScope = this
@@ -116,7 +119,7 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
 
                     val textSize by animateFloatAsState(
                         targetValue = textStyle.fontSize.value,
-                        animationSpec = tween(350),
+                        animationSpec = tween(250),
                     )
 
                     TokenTitle(
@@ -133,32 +136,34 @@ fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolea
                 },
             )
 
-            if (isExpanded) {
-                ExpandedPortfolioHeader(
-                    state = state.tokenItemUM,
-                    isCollapsable = state.isCollapsable,
-                    composables = composables,
-                    balanceTextModifier = Modifier
-                        .animateEnterExit(
-                            enter = fadeIn(tween(350)) +
-                                slideInHorizontally(
-                                    tween(350),
-                                    initialOffsetX = { fullWidth -> fullWidth * 2 },
-                                ),
-                            exit = fadeOut(
-                                tween(350),
-                            ) + slideOutHorizontally(
-                                tween(350),
-                                targetOffsetX = { fullWidth -> fullWidth * 2 },
+            CompositionLocalProvider(LocalRippleConfiguration provides null) {
+                if (isExpanded) {
+                    ExpandedPortfolioHeader(
+                        state = state.tokenItemUM,
+                        isCollapsable = state.isCollapsable,
+                        isBalanceHidden = isBalanceHidden,
+                        composables = composables,
+                        balanceTextModifier = Modifier
+                            .animateEnterExit(
+                                enter = fadeIn(tween(250)) +
+                                    slideInHorizontally(
+                                        tween(250),
+                                        initialOffsetX = { fullWidth -> fullWidth },
+                                    ),
+                                exit = fadeOut(tween(250)) +
+                                    slideOutHorizontally(
+                                        tween(250),
+                                        targetOffsetX = { fullWidth -> fullWidth },
+                                    ),
                             ),
-                        ),
-                )
-            } else {
-                TokenItem(
-                    state = state.tokenItemUM,
-                    isBalanceHidden = isBalanceHidden,
-                    composables = composables,
-                )
+                    )
+                } else {
+                    TokenItem(
+                        state = state.tokenItemUM,
+                        isBalanceHidden = isBalanceHidden,
+                        composables = composables,
+                    )
+                }
             }
         }
     }
@@ -180,6 +185,7 @@ fun PortfolioTokensListItem(state: PortfolioTokensListItemUM, isBalanceHidden: B
 @Composable
 fun ExpandedPortfolioHeader(
     state: TokenItemState,
+    isBalanceHidden: Boolean,
     isCollapsable: Boolean,
     composables: TokenItemComposables?,
     modifier: Modifier = Modifier,
@@ -191,8 +197,10 @@ fun ExpandedPortfolioHeader(
             .fillMaxWidth()
             .clickable(onClick = { state.onItemClick?.invoke(state) })
             .padding(
-                vertical = if (composables != null) 8.dp else 4.dp,
-                horizontal = 12.dp,
+                top = 12.dp,
+                bottom = 4.dp,
+                start = 12.dp,
+                end = 12.dp,
             ),
     ) {
         if (composables != null) {
@@ -227,12 +235,19 @@ fun ExpandedPortfolioHeader(
             modifier = Modifier.weight(1f),
         ) {
             if (composables != null) {
-                composables.title.invoke(Modifier.alignByBaseline())
+                composables.title.invoke(
+                    Modifier
+                        .padding(vertical = 2.dp)
+                        .alignByBaseline(),
+                )
             } else {
                 when (val titleState = state.titleState) {
                     TokenItemState.TitleState.Loading -> Unit
                     TokenItemState.TitleState.Locked -> Unit
                     is TokenItemState.TitleState.Content -> Text(
+                        modifier = Modifier
+                            .padding(vertical = 2.dp)
+                            .alignByBaseline(),
                         text = titleState.text.resolveReference(),
                         color = TangemTheme.colors.text.primary1,
                         overflow = TextOverflow.Ellipsis,
@@ -249,10 +264,10 @@ fun ExpandedPortfolioHeader(
             }
 
             Text(
-                text = text.orEmpty(),
+                text = text.orEmpty().orMaskWithStars(isBalanceHidden),
                 modifier = balanceTextModifier
                     .alignByBaseline()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 4.dp),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption1,
                 overflow = TextOverflow.Ellipsis,
