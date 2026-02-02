@@ -87,6 +87,15 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         store.updateData { response }
     }
 
+    override suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?,
+    ) {
+        val store = getAccountsResponseStore(userWalletId = userWalletId)
+
+        store.updateData { transform(it) }
+    }
+
     override suspend fun push(
         userWalletId: UserWalletId,
         accounts: List<WalletAccountDTO>,
