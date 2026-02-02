@@ -72,6 +72,19 @@ interface TokenDetailsClickIntents {
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
 
+    fun onYieldInfoClick()
+
+    // region Clore migration
+    // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])
+
+    fun onCloreMigrationClick()
+
+    fun onCloreSignMessage(message: String)
+
+    fun onOpenCloreClaimPortal()
+
+    // endregion Clore migration
+
     fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
 
     fun onOpenUrlClick(url: String)
@@ -79,6 +92,4 @@ interface TokenDetailsClickIntents {
     fun onConfirmDisposeExpressStatus()
 
     fun onDisposeExpressStatus()
-
-    fun onYieldInfoClick()
 }
