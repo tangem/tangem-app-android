@@ -344,9 +344,10 @@ internal class AddToPortfolioModel @Inject constructor(
                 portfolioSelectorController.isEnabled.value = isEnabled@{ userWallet, accountStatus ->
                     val availableWallet = state.availableToAddData.availableToAddWallets[userWallet.walletId]
                         ?: return@isEnabled false
-                    val availableAccount =
+                    val isAvailableAccount =
                         availableWallet.availableToAddAccounts[accountStatus.account.accountId]
-                    return@isEnabled availableAccount != null
+                            ?.isAvailableToAdd == true
+                    return@isEnabled isAvailableAccount
                 }
             AddToPortfolioManager.State.Init,
             AddToPortfolioManager.State.NothingToAdd,
