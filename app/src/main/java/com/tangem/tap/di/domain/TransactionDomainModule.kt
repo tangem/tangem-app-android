@@ -265,4 +265,18 @@ internal object TransactionDomainModule {
     ): SendLargeSolanaTransactionUseCase {
         return SendLargeSolanaTransactionUseCase(cardSdkConfigRepository, walletManagersFacade)
     }
+
+    @Provides
+    @Singleton
+    fun provideSignCloreMessageUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): SignCloreMessageUseCase {
+        return SignCloreMessageUseCase(
+            walletManagersFacade = walletManagersFacade,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
 }
