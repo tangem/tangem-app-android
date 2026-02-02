@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,6 +26,7 @@ import timber.log.Timber
  */
 internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: MultiNetworkStatusProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val networksStatusesStore: NetworksStatusesStore,
     private val userWalletsStore: UserWalletsStore,
     private val networkFactory: NetworkFactory,
@@ -54,7 +56,6 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
                     NetworkStatus(network = network, value = status.value)
                 }
             }
-            .distinctUntilChanged()
             .onEmpty { emit(value = hashSetOf()) }
             .flowOn(dispatchers.default)
     }

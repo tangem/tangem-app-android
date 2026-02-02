@@ -35,7 +35,6 @@ import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -71,7 +70,6 @@ internal class DetailsModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -249,7 +247,6 @@ internal class DetailsModel @Inject constructor(
     }
 
     private fun addTangemPayItemIfEligible() {
-        if (!tangemPayFeatureToggles.isEntryPointsEnabled) return
         modelScope.launch {
             val isEligible = tangemPayEligibilityManager
                 .getEligibleWallets(shouldExcludePaeraCustomers = true)

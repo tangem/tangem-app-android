@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
@@ -14,6 +15,7 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -34,6 +36,7 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
@@ -62,18 +65,17 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         contractAddress: String?,
-    ): Either<Throwable, Boolean> = when (mode) {
-        is AddCustomTokenMode.Account -> {
-            getAccountCurrencyStatusUseCase.invokeSync(
-                userWalletId = mode.accountId.userWalletId,
-                networkId = networkId,
-                derivationPath = derivationPath,
-                contractAddress = contractAddress,
-            )
-                .fold(ifEmpty = { true }, ifSome = { false })
-                .right()
-        }
-        is AddCustomTokenMode.Wallet -> checkIsCurrencyNotAddedUseCase.invoke(
+    ): Either<Throwable, Boolean> = if (accountsFeatureToggles.isFeatureEnabled) {
+        getAccountCurrencyStatusUseCase.invokeSync(
+            userWalletId = mode.userWalletId,
+            networkId = networkId,
+            derivationPath = derivationPath,
+            contractAddress = contractAddress,
+        )
+            .fold(ifEmpty = { true }, ifSome = { false })
+            .right()
+    } else {
+        checkIsCurrencyNotAddedUseCase.invoke(
             userWalletId = mode.userWalletId,
             networkId = networkId,
             derivationPath = derivationPath,
@@ -124,10 +126,15 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         val accountNodeRecognizer = AccountNodeRecognizer(blockchain)
         val index = accountNodeRecognizer.recognize(derivationPathValue)?.toInt()
 
-        ensureNotNull(index) {
-            val exception = IllegalStateException("Token has unrecognized derivation path: ${currency.id}")
-            Timber.e(exception)
-            exception
+        if (index == null) {
+            Timber.e(
+                "%s%s",
+                "Unable to determine account index for derivation path: $derivationPathValue. ",
+                "Use main account index instead.",
+            )
+            DerivationIndex.Main.value
+        } else {
+            index
         }
     }
 

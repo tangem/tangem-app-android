@@ -158,7 +158,7 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
         model = with(model) {
             ChainRowUM(
                 name = name,
-                type = type,
+                type = currencySymbol,
                 icon = CurrencyIconState.CoinIcon(
                     url = null,
                     fallbackResId = model.iconResId,

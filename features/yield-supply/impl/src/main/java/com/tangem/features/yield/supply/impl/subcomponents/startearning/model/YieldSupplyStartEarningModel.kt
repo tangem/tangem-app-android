@@ -15,13 +15,14 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -65,6 +66,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -106,6 +108,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = false,
             ),
         )
 
@@ -245,23 +248,27 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         },
                     )
                 },
-                ifRight = {
-                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
+                ifRight = { txsData ->
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM, txsData)
                 },
             )
         }
     }
 
-    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWalletId,
-            cryptoCurrency,
-            YieldSupplyEnterStatus.Enter,
+    private suspend fun onStartEarningTransactionSuccess(
+        yieldSupplyFeeUM: YieldSupplyFeeUM.Content,
+        txsData: List<String>,
+    ) {
+        yieldSupplyRepository.saveTokenProtocolPendingStatus(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyPendingStatus = YieldSupplyPendingStatus.Enter(txsData),
         )
         val event = AnalyticsParam.TxSentFrom.Earning(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatusFlow.value.currency.symbol,
         )
         analytics.send(
             YieldSupplyAnalytics.FundsEarned(
@@ -288,6 +295,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
 
         modelScope.launch {
+            yieldSupplyPendingTracker.addPending(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                txIds = txsData,
+            )
             params.callback.onTransactionSent()
         }
     }
@@ -297,6 +309,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
+                    uiState.update {
+                        it.copy(isHoldToConfirmEnabled = wallet.isHotWallet)
+                    }
                     getCurrenciesStatusUpdates()
                 },
                 ifLeft = {

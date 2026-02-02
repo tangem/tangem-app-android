@@ -236,5 +236,20 @@
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "supplyTopUp"
+    },
+    "0xf9609f08": {
+        "info": "P2PEthPool",
+        "source": "https://docs.p2p.org/",
+        "name": "pooledStake"
+    },
+    "0xac9650d8": {
+        "info": "P2PEthPool",
+        "source": "https://docs.p2p.org/",
+        "name": "pooledUnstake"
+    },
+    "0x6234d42b": {
+        "info": "GaslessTransactions",
+        "source": "https://github.com/tangem-developments/tangem-gasless-service",
+        "name": "gaslessTransaction"
     }
 }

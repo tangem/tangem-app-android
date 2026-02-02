@@ -12,6 +12,5 @@
     <ID>NestedScopeFunctions:RetrofitApiBuilder.kt$RetrofitApiBuilder$let { withWriteTimeout(timeout = it.duration, unit = it.unit) }</ID>
     <ID>UnreachableCode:MockApiConfigsManager.kt$MockApiConfigsManager$apiConfigs + (apiConfig to environment)</ID>
     <ID>UnreachableCode:MockApiConfigsManager.kt$MockApiConfigsManager$val apiConfig = apiConfigs.keys.firstOrNull { it.id.name == id } ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")</ID>
-    <ID>UnusedImports:NetworkModule.kt$import com.tangem.datasource.api.common.config.MoonPay</ID>
   </CurrentIssues>
 </SmellBaseline>

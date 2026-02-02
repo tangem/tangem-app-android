@@ -17,10 +17,17 @@ internal data class TangemPayTxHistoryDetailsUM(
     val transactionAmountColor: ColorReference,
     val localTransactionText: String?,
     val labelState: LabelUM?,
-    val notification: NotificationConfig?,
+    val notification: NotificationState?,
     val buttons: ImmutableList<ButtonState>,
     val dismiss: () -> Unit,
 ) {
+
+    data class NotificationState(
+        val config: NotificationConfig,
+        val titleColor: ColorReference,
+        val iconTint: ColorReference,
+        val containerColor: ColorReference?,
+    )
 
     data class ButtonState(val text: TextReference, val onClick: () -> Unit, val startIcon: ImageReference.Res? = null)
 }

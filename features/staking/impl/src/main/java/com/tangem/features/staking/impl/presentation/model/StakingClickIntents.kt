@@ -4,7 +4,7 @@ import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import java.math.BigDecimal
@@ -35,7 +35,7 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun openValidators()
 
-    fun onValidatorSelect(validator: Yield.Validator)
+    fun onTargetSelect(target: StakingTarget)
 
     fun openRewardsValidators()
 
@@ -75,5 +75,9 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
 
     fun onActivateTonAccountNotificationShow()
 
+    fun onNotEnoughFeeNotificationShow()
+
     fun onActivateTonAccountClick()
+
+    fun onAmountReduceByFeeClick(reduceAmount: BigDecimal, notification: Class<out NotificationUM>)
 }

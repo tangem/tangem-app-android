@@ -6,6 +6,8 @@ import com.tangem.common.routing.DeepLinkRoute
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
@@ -50,6 +52,8 @@ internal class DeepLinkFactory @Inject constructor(
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
+    private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
+    private val feedFeatureToggle: FeedFeatureToggle,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -102,7 +106,7 @@ internal class DeepLinkFactory @Inject constructor(
 
     private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         when (deeplinkUri.scheme) {
-            DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri)
+            DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri, coroutineScope)
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
             DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
@@ -116,10 +120,18 @@ internal class DeepLinkFactory @Inject constructor(
         }
     }
 
-    private fun handleHttpDeepLinks(deeplinkUri: Uri) {
-        if (deeplinkUri.host == DeepLinkRoute.PayApp.host && deeplinkUri.path?.startsWith("/pay-app") == true) {
-            onboardVisaDeepLink.create(deeplinkUri)
-            return
+    private fun handleHttpDeepLinks(deeplinkUri: Uri, coroutineScope: CoroutineScope) {
+        if (deeplinkUri.host == DeepLinkRoute.PayApp.host) {
+            when {
+                deeplinkUri.path?.startsWith("/pay-app") == true -> {
+                    onboardVisaDeepLink.create(deeplinkUri)
+                    return
+                }
+                deeplinkUri.path?.startsWith("/news") == true && feedFeatureToggle.isFeedEnabled -> {
+                    newsDetailsDeepLink.create(coroutineScope, deeplinkUri)
+                    return
+                }
+            }
         }
     }
 

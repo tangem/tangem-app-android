@@ -84,7 +84,7 @@ class SwapTokenTest : BaseTestCase() {
             }
             step("Assert 'Providers' block is displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                         providersBlock.assertIsDisplayed()
                     }
                 }
@@ -210,24 +210,25 @@ class SwapTokenTest : BaseTestCase() {
             step("Click on 'Network fee' block") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                        networkFeeBlock.clickWithAssertion()
+                        selectFeeIcon.clickWithAssertion()
                     }
                 }
             }
             step("Assert 'Select fee' bottom sheet title is displayed") {
-                onSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
+                onSwapSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
             }
             step("Assert 'Market' item is displayed") {
-                onSelectNetworkFeeBottomSheet { marketSelectorItem.assertIsDisplayed() }
+                printSemanticTree(rootIndex = 1, useUnmergedTree = true)
+                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.assertIsDisplayed() }
             }
             step("Assert 'Fast' item is displayed") {
-                onSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
             }
             step("Assert 'Read more' text block is displayed") {
-                onSelectNetworkFeeBottomSheet { readMoreTextBlock.assertIsDisplayed() }
+                onSwapSelectNetworkFeeBottomSheet { readMoreTextBlock.assertIsDisplayed() }
             }
             step("Click on 'Fast' item") {
-                onSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.assertIsDisplayed() }
             }
             step("Assert 'Network fee' block is displayed") {
                 onSwapTokenScreen {

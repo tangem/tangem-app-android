@@ -2,6 +2,7 @@ package com.tangem.features.account.createedit
 
 import androidx.annotation.StringRes
 import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toDomain
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -109,7 +110,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private suspend fun createNewCryptoPortfolio(params: AccountCreateEditComponent.Params.Create) {
         val state = uiState.value
         val name = state.account.name.toDomain().getOrNull() ?: return
-        val icon = state.account.portfolioIcon.toDomain()
+        val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val index = state.account.derivationInfo.index ?: return
         val derivationIndex = DerivationIndex(value = index).getOrNull() ?: return
         val event = AccountSettingsAnalyticEvents.ButtonAddNewAccount(
@@ -161,7 +162,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
         val state = uiState.value
         val name = state.account.name.toDomain().getOrNull() ?: return
-        val icon = state.account.portfolioIcon.toDomain()
+        val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon))
@@ -246,9 +247,10 @@ internal class AccountCreateEditModel @Inject constructor(
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
+                val oldIcon = CryptoPortfolioIconConverter.convert(params.account.portfolioIcon)
 
                 val isNewName = this.account.name.trim() != oldName
-                val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon.toUM()
+                val isNewIcon = this.account.portfolioIcon != oldIcon
                 isValidName && (isNewName || isNewIcon)
             }
         }
@@ -314,7 +316,7 @@ internal class AccountCreateEditModel @Inject constructor(
 
     private fun showAccountNameExist() {
         val dialogMessage = DialogMessage(
-            title = resourceReference(R.string.common_something_went_wrong),
+            title = resourceReference(R.string.account_form_name_already_exist_error_title),
             message = resourceReference(R.string.account_form_name_already_exist_error_description),
         )
         messageSender.send(dialogMessage)

@@ -23,7 +23,7 @@ internal class StakingBalancesStoreUpdateMethodsTest {
     private val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
     private val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
-    private val store = DefaultStakingBalancesStore(
+    private val store = DefaultStakeKitBalancesStore(
         runtimeStore = runtimeStore,
         persistenceStore = persistenceStore,
         dispatchers = TestingCoroutineDispatcherProvider(),

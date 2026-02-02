@@ -10,6 +10,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,7 +38,7 @@ import coil.request.ImageRequest
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resourceReference
@@ -266,11 +267,15 @@ private fun Content(
             when (type) {
                 is TransactionCardType.ReadOnly -> {
                     if (textFieldValue != null) {
-                        ResizableText(
+                        Text(
                             text = textFieldValue.text,
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
-                            fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                            autoSize = TextAutoSize.StepBased(
+                                minFontSize = 16.sp,
+                                maxFontSize = TangemTheme.typography.h2.fontSize,
+                            ),
+                            maxLines = 1,
                             modifier = sumTextModifier.testTag(SwapTokenScreenTestTags.RECEIVE_TEXT_FIELD),
                         )
                     } else {
@@ -599,7 +604,7 @@ private fun TransactionCardPreviewWithPriceImpact() {
             accountTitleUM = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = AccountNameUM.DefaultMain.value,
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
         amountEquivalent = "1 000 000",
@@ -608,7 +613,7 @@ private fun TransactionCardPreviewWithPriceImpact() {
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
         balance = "123",
-        textFieldValue = TextFieldValue(),
+        textFieldValue = TextFieldValue("1000000.0000000000000000000000000"),
         priceImpact = PriceImpact.Value(0.15F),
     )
 }
@@ -621,7 +626,7 @@ private fun TransactionCardPreviewWithoutPriceImpact() {
             accountTitleUM = AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = AccountNameUM.DefaultMain.value,
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
         amountEquivalent = "1 000 000",

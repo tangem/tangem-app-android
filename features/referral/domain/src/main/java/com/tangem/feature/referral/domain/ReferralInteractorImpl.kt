@@ -10,23 +10,23 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
-import com.tangem.lib.crypto.UserWalletManager
 import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class ReferralInteractorImpl(
     private val repository: ReferralRepository,
-    private val userWalletManager: UserWalletManager,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val singleAccountSupplier: SingleAccountSupplier,
+    private val walletManagersFacade: WalletManagersFacade,
 ) : ReferralInteractor {
 
     private val tokensForReferral = mutableListOf<TokenData>()
@@ -85,13 +85,14 @@ internal class ReferralInteractorImpl(
         }
             .onLeft(Timber::e)
 
-        val publicAddress = userWalletManager.getWalletAddress(
-            networkId = tokenData.networkId,
-            derivationPath = cryptoCurrency.network.derivationPath.value,
+        val publicAddress = walletManagersFacade.getDefaultAddress(
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
         )
+            ?: error("Address not found: ${cryptoCurrency.network.id}")
 
         return repository.startReferral(
-            walletId = userWalletManager.getWalletId(),
+            walletId = userWalletId.stringValue,
             networkId = tokenData.networkId,
             tokenId = tokenData.id,
             address = publicAddress,

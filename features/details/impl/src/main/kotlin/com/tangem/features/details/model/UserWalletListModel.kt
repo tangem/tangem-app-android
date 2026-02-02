@@ -23,10 +23,7 @@ import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -65,13 +62,18 @@ internal class UserWalletListModel @Inject constructor(
     )
 
     init {
-        combine(
-            flow = userWalletsFetcher.userWallets,
-            flow2 = shouldSaveUserWalletsUseCase(),
-            flow3 = isWalletSavingInProgress,
-        ) { userWallets, shouldSaveUserWallets, isWalletSavingInProgress ->
-            updateState(userWallets, shouldSaveUserWallets, isWalletSavingInProgress)
-        }.launchIn(modelScope)
+        modelScope.launch {
+            val userWalletsFlow = userWalletsFetcher.userWallets.stateIn(this)
+            state.update { value -> value.copy(userWallets = userWalletsFlow.value) }
+
+            combine(
+                flow = userWalletsFlow,
+                flow2 = shouldSaveUserWalletsUseCase(),
+                flow3 = isWalletSavingInProgress,
+            ) { userWallets, shouldSaveUserWallets, isWalletSavingInProgress ->
+                updateState(userWallets, shouldSaveUserWallets, isWalletSavingInProgress)
+            }.collect()
+        }
     }
 
     private fun updateState(

@@ -49,6 +49,7 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = false,
             ),
         )
 

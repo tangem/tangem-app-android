@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.navigationButtons.preview.NavigationButtonsPreview
+import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.buttons.common.TangemButton
@@ -98,34 +99,48 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
         modifier = modifier.fillMaxWidth(),
     ) { button ->
         if (button != null && button.textReference != TextReference.EMPTY) {
-            val icon = if (button.iconRes != null && button.isIconVisible) {
-                TangemButtonIconPosition.End(iconResId = button.iconRes)
-            } else {
-                TangemButtonIconPosition.None
-            }
-            val color = if (button.isDimmed) {
-                TangemButtonsDefaults.secondaryButtonColors
-                    .copy(contentColor = TangemTheme.colors.text.tertiary)
-            } else {
-                TangemButtonsDefaults.primaryButtonColors
-            }
-            TangemButton(
-                text = button.textReference.resolveReference(),
-                enabled = button.isEnabled,
-                onClick = {
-                    GlobalMultipleClickPreventer.processEvent {
-                        if (button.isHapticClick) {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            if (button.isHoldToConfirm) {
+                HoldToConfirmButton(
+                    text = button.textReference.resolveReference(),
+                    enabled = button.isEnabled,
+                    isLoading = button.shouldShowProgress,
+                    onConfirm = {
+                        GlobalMultipleClickPreventer.processEvent {
+                            button.onClick()
                         }
-                        button.onClick()
-                    }
-                },
-                showProgress = button.shouldShowProgress,
-                colors = color,
-                textStyle = TangemTheme.typography.subtitle1,
-                icon = icon,
-                modifier = Modifier.fillMaxWidth(),
-            )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                val icon = if (button.iconRes != null && button.isIconVisible) {
+                    TangemButtonIconPosition.End(iconResId = button.iconRes)
+                } else {
+                    TangemButtonIconPosition.None
+                }
+                val color = if (button.isDimmed) {
+                    TangemButtonsDefaults.secondaryButtonColors
+                        .copy(contentColor = TangemTheme.colors.text.tertiary)
+                } else {
+                    TangemButtonsDefaults.primaryButtonColors
+                }
+                TangemButton(
+                    text = button.textReference.resolveReference(),
+                    enabled = button.isEnabled,
+                    onClick = {
+                        GlobalMultipleClickPreventer.processEvent {
+                            if (button.isHapticClick) {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            }
+                            button.onClick()
+                        }
+                    },
+                    showProgress = button.shouldShowProgress,
+                    colors = color,
+                    textStyle = TangemTheme.typography.subtitle1,
+                    icon = icon,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         } else {
             Spacer(modifier = Modifier.fillMaxWidth())
         }

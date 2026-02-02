@@ -18,6 +18,9 @@ sealed interface FeedbackEmailType {
     /** User rate the app as "can be better" */
     data class RateCanBeBetter(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
+    /** User has problem with backup */
+    data class BackupProblem(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
+
     /** User has problem with scanning */
     data object ScanningProblem : FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
@@ -81,5 +84,7 @@ sealed interface FeedbackEmailType {
         ) : Visa()
 
         data class FeatureIsBeta(override val walletMetaInfo: WalletMetaInfo) : Visa()
+
+        data class KycRejected(override val walletMetaInfo: WalletMetaInfo, val customerId: String) : Visa()
     }
 }

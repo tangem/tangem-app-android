@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.none
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.flowOn
  */
 internal class DefaultSingleAccountListProducer @AssistedInject constructor(
     @Assisted val params: SingleAccountListProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountListProducer {

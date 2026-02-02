@@ -333,6 +333,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                         isFeeApproximate = false,
                         isFeeConvertibleToFiat = false,
                         isTronToken = false,
+                        feeCryptoCurrencyStatus = SwapAmountContentPreview.cryptoCurrencyStatus,
                     ),
                     feeFiatRateUM = null,
                     feeNonce = FeeNonce.None,

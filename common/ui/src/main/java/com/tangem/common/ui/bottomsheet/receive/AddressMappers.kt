@@ -1,9 +1,7 @@
 package com.tangem.common.ui.bottomsheet.receive
 
-import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -19,20 +17,6 @@ fun Set<NetworkAddress.Address>.mapToAddressModels(cryptoCurrency: CryptoCurrenc
     stringReference("${cryptoCurrency.name} (${cryptoCurrency.symbol})"),
     cryptoCurrency.network,
 )
-
-fun Set<NetworkAddress.Address>.mapToAddressModels(
-    asset: TokenReceiveBottomSheetConfig.Asset,
-    network: Network,
-): List<AddressModel> = when (asset) {
-    is TokenReceiveBottomSheetConfig.Asset.Currency -> mapToAddressModels(
-        stringReference("${asset.name} (${asset.symbol})"),
-        network,
-    )
-    is TokenReceiveBottomSheetConfig.Asset.NFT -> mapToAddressModels(
-        resourceReference(R.string.common_nft),
-        network,
-    )
-}
 
 private fun Set<NetworkAddress.Address>.mapToAddressModels(name: TextReference, network: Network): List<AddressModel> =
     this

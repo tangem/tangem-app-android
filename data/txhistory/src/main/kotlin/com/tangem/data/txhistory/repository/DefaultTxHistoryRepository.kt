@@ -10,7 +10,6 @@ import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -75,8 +74,8 @@ class DefaultTxHistoryRepository(
         return pager.flow
     }
 
-    override fun getTxExploreUrl(txHash: String, networkId: Network.ID, currency: CryptoCurrency): String {
-        val blockchain = networkId.toBlockchain()
+    override fun getTxExploreUrl(txHash: String, currency: CryptoCurrency): String {
+        val blockchain = currency.network.id.toBlockchain()
         val txExploreState = when (currency) {
             is CryptoCurrency.Token -> blockchain.getTokenExplorerTxUrl(txHash)
             else -> blockchain.getExploreTxUrl(txHash)

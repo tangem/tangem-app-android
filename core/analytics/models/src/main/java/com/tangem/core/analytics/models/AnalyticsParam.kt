@@ -1,5 +1,7 @@
 package com.tangem.core.analytics.models
 
+const val IS_NOT_HTTP_ERROR = "Is not http error"
+
 sealed class AnalyticsParam {
 
     sealed class CardBalanceState(val value: String) {
@@ -77,7 +79,9 @@ sealed class AnalyticsParam {
         data object Backup : ScreensSources("Backup")
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
+        data object Market : ScreensSources("Market")
         data object Markets : ScreensSources("Markets")
+        data object MarketPulse : ScreensSources("Market Pulse")
         data object TangemPay : ScreensSources("Tangem Pay")
         data object WalletSettings : ScreensSources("Wallet Settings")
         data object Upgrade : ScreensSources("Upgrade")
@@ -87,6 +91,9 @@ sealed class AnalyticsParam {
         data object AddNewWallet : ScreensSources("Add New Wallet")
         data object AddNew : ScreensSources("Add New")
         data object CreateWallet : ScreensSources("Create Wallet")
+        data object NewsList : ScreensSources("News List")
+        data object NewsLink : ScreensSources("News Link")
+        data object NewsPage : ScreensSources("News Page")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -94,24 +101,28 @@ sealed class AnalyticsParam {
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("Send"), TxData
 
         data class Swap(
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("Swap"), TxData
 
         data class Staking(
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("Staking"), TxData
 
         data class Approve(
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
             val permissionType: String,
         ) : TxSentFrom("Approve"), TxData
 
@@ -119,6 +130,7 @@ sealed class AnalyticsParam {
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType?,
+            override val feeToken: String,
         ) : TxSentFrom("WalletConnect"), TxData
 
         data object Sell : TxSentFrom("Sell")
@@ -127,24 +139,28 @@ sealed class AnalyticsParam {
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("NFT"), TxData
 
         data class SendWithSwap(
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("Send&Swap"), TxData
 
         data class Earning(
             override val blockchain: String,
             override val token: String,
             override val feeType: FeeType,
+            override val feeToken: String,
         ) : TxSentFrom("Earning"), TxData
     }
 
     sealed interface TxData {
         val blockchain: String
         val token: String
+        val feeToken: String
         val feeType: FeeType?
     }
 
@@ -268,5 +284,6 @@ sealed class AnalyticsParam {
         const val ENS = "ENS"
         const val ENS_ADDRESS = "ENS Address"
         const val ACCOUNT_DERIVATION_FROM = "Account Derivation (from)"
+        const val FEE_TOKEN = "Fee Token"
     }
 }

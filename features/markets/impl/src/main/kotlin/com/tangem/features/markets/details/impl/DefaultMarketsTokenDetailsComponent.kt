@@ -62,9 +62,11 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     init {
         componentScope.launch {
-            model.networksState.collectLatest {
-                when (it) {
-                    is TokenNetworksState.NetworksAvailable -> portfolioComponent?.setTokenNetworks(it.networks)
+            model.networksState.collectLatest { networksState ->
+                when (networksState) {
+                    is TokenNetworksState.NetworksAvailable -> portfolioComponent?.setTokenNetworks(
+                        networksState.networks,
+                    )
                     TokenNetworksState.NoNetworksAvailable -> portfolioComponent?.setNoNetworksAvailable()
                     else -> {}
                 }

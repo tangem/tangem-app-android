@@ -11,6 +11,16 @@ import com.tangem.domain.models.wallet.UserWalletId
 interface NetworksCleaner {
 
     /**
+     * Cleans up network-related data for the given [userWalletId] and [currency].
+     *
+     * @param userWalletId The ID of the user wallet for which to clean up data.
+     * @param currency The cryptocurrency whose associated network data should be cleaned.
+     */
+    suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        invoke(userWalletId = userWalletId, currencies = listOf(currency))
+    }
+
+    /**
      * Cleans up network-related data for the given [userWalletId] and list of [currencies].
      *
      * @param userWalletId The ID of the user wallet for which to clean up data.
