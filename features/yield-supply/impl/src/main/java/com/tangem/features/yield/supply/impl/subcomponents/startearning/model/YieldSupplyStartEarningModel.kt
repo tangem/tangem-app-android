@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
@@ -107,6 +108,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = false,
             ),
         )
 
@@ -307,6 +309,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
+                    uiState.update {
+                        it.copy(isHoldToConfirmEnabled = wallet.isHotWallet)
+                    }
                     getCurrenciesStatusUpdates()
                 },
                 ifLeft = {

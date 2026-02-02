@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.converters
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -58,7 +59,7 @@ internal class SendRecipientWalletListConverter(
                                 accountTitleUM = if (account != null && isAccountsMode) {
                                     AccountTitleUM.Account(
                                         name = account.accountName.toUM().value,
-                                        icon = account.icon.toUM(),
+                                        icon = CryptoPortfolioIconConverter.convert(account.icon),
                                         prefixText = stringReference(StringsSigns.DOT),
                                     )
                                 } else {
