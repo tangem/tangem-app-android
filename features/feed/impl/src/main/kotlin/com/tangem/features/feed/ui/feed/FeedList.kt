@@ -423,7 +423,7 @@ private fun Charts(
 ) {
     BlockCard(
         modifier = modifier,
-        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.primary),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {
