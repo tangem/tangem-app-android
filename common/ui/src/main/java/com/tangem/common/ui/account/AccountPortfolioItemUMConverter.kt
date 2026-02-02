@@ -22,21 +22,24 @@ class AccountPortfolioItemUMConverter(
 ) : Converter<Account, UserWalletItemUM> {
 
     override fun convert(value: Account): UserWalletItemUM {
-        return with(value) {
-            UserWalletItemUM(
-                id = accountId.value,
-                name = accountName.toUM().value,
-                information = getInfo(account = this),
-                balance = getBalanceInfo(),
-                isEnabled = isEnabled,
-                endIcon = endIcon,
-                onClick = onClick,
-                imageState = getImageState(account = this),
-            )
+        return when (value) {
+            is Account.CryptoPortfolio -> with(value) {
+                UserWalletItemUM(
+                    id = accountId.value,
+                    name = accountName.toUM().value,
+                    information = getInfo(account = this),
+                    balance = getBalanceInfo(),
+                    isEnabled = isEnabled,
+                    endIcon = endIcon,
+                    onClick = onClick,
+                    imageState = getImageState(account = this),
+                )
+            }
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
     }
 
-    private fun getInfo(account: Account): UserWalletItemUM.Information.Loaded = when (account) {
+    private fun getInfo(account: Account.CryptoPortfolio): UserWalletItemUM.Information.Loaded = when (account) {
         is Account.CryptoPortfolio -> {
             val text = pluralReference(
                 R.plurals.common_tokens_count,
@@ -45,13 +48,15 @@ class AccountPortfolioItemUMConverter(
             )
             UserWalletItemUM.Information.Loaded(text)
         }
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 
-    private fun getImageState(account: Account) = when (account) {
+    private fun getImageState(account: Account.CryptoPortfolio) = when (account) {
         is Account.CryptoPortfolio -> UserWalletItemUM.ImageState.Account(
             name = account.accountName.toUM().value,
-            icon = account.icon.toUM(),
+            icon = CryptoPortfolioIconConverter.convert(account.icon),
         )
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 
     private fun getBalanceInfo(): UserWalletItemUM.Balance {

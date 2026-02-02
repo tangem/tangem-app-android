@@ -1,5 +1,6 @@
 package com.tangem.data.account.token
 
+import arrow.core.right
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
@@ -13,6 +14,7 @@ import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.core.assertEitherRight
 import io.mockk.*
@@ -211,6 +213,213 @@ class DefaultMainAccountTokensMigrationTest {
                 response = migratedResponse.toUserTokensResponse(),
                 onFailSend = any(),
             )
+        }
+    }
+
+    @Test
+    fun `migrate updates tokens for all accounts`() = runTest {
+        // Arrange
+        val unassignedToken1 = createBitcoin(accountIndex = 1)
+        val unassignedToken2 = createBitcoin(accountIndex = 2)
+
+        val derivationIndex1 = DerivationIndex(1).getOrNull()!!
+        val derivationIndex2 = DerivationIndex(2).getOrNull()!!
+
+        val mainAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main).value,
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = listOf(
+                createBitcoin(accountIndex = 0),
+                unassignedToken1,
+                unassignedToken2,
+            ),
+        )
+
+        val account1 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex1).value,
+            derivationIndex = derivationIndex1.value,
+            tokens = emptyList(),
+        )
+
+        val account2 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex2).value,
+            derivationIndex = derivationIndex2.value,
+            tokens = emptyList(),
+        )
+
+        val response = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = UserTokensResponse.GroupType.NONE,
+                sort = UserTokensResponse.SortType.MANUAL,
+                totalAccounts = 3,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = listOf(mainAccount, account1, account2),
+            unassignedTokens = emptyList(),
+        )
+
+        accountsResponseStoreFlow.value = response
+
+        coEvery { accountsResponseStore.updateData(any()) } returns mockk()
+
+        // Act
+        val actual = migration.migrate(userWalletId)
+
+        val migratedResponse = response.copy(
+            accounts = listOf(
+                mainAccount.copy(tokens = mainAccount.tokens!! - unassignedToken1 - unassignedToken2),
+                account1.copy(tokens = listOf(unassignedToken1)),
+                account2.copy(tokens = listOf(unassignedToken2)),
+            ),
+        )
+
+        // Assert
+        assertEither(actual, migratedResponse.right())
+
+        coVerifySequence {
+            accountsResponseStoreFactory.create(userWalletId)
+            accountsResponseStore.data
+            accountsResponseStore.updateData(any())
+            userTokensSaver.pushWithRetryer(
+                userWalletId = userWalletId,
+                response = migratedResponse.toUserTokensResponse(),
+                onFailSend = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `migrate updates tokens only for one account`() = runTest {
+        // Arrange
+        val unassignedToken1 = createBitcoin(accountIndex = 1)
+
+        val derivationIndex1 = DerivationIndex(1).getOrNull()!!
+        val derivationIndex2 = DerivationIndex(2).getOrNull()!!
+
+        val mainAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main).value,
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = listOf(
+                createBitcoin(accountIndex = 0),
+                unassignedToken1,
+            ),
+        )
+
+        val account1 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex1).value,
+            derivationIndex = derivationIndex1.value,
+            tokens = emptyList(),
+        )
+
+        val account2 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex2).value,
+            derivationIndex = derivationIndex2.value,
+            tokens = emptyList(),
+        )
+
+        val response = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = UserTokensResponse.GroupType.NONE,
+                sort = UserTokensResponse.SortType.MANUAL,
+                totalAccounts = 3,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = listOf(mainAccount, account1, account2),
+            unassignedTokens = emptyList(),
+        )
+
+        accountsResponseStoreFlow.value = response
+
+        coEvery { accountsResponseStore.updateData(any()) } returns mockk()
+
+        // Act
+        val actual = migration.migrate(userWalletId)
+
+        val migratedResponse = response.copy(
+            accounts = listOf(
+                mainAccount.copy(tokens = mainAccount.tokens!! - unassignedToken1),
+                account1.copy(tokens = listOf(unassignedToken1)),
+                account2,
+            ),
+        )
+
+        // Assert
+        assertEither(actual, migratedResponse.right())
+
+        coVerifySequence {
+            accountsResponseStoreFactory.create(userWalletId)
+            accountsResponseStore.data
+            accountsResponseStore.updateData(any())
+            userTokensSaver.pushWithRetryer(
+                userWalletId = userWalletId,
+                response = migratedResponse.toUserTokensResponse(),
+                onFailSend = any(),
+            )
+        }
+    }
+
+    @Test
+    fun `migrate all skips when no unassigned tokens`() = runTest {
+        // Arrange
+        val derivationIndex1 = DerivationIndex(1).getOrNull()!!
+        val derivationIndex2 = DerivationIndex(2).getOrNull()!!
+
+        val mainAccount = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex.Main).value,
+            derivationIndex = DerivationIndex.Main.value,
+            tokens = listOf(
+                createBitcoin(accountIndex = 0),
+                createBitcoin(accountIndex = 10),
+            ),
+        )
+
+        val account1 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex1).value,
+            derivationIndex = derivationIndex1.value,
+            tokens = emptyList(),
+        )
+
+        val account2 = createWalletAccountDTO(
+            userWalletId = userWalletId,
+            accountId = AccountId.forCryptoPortfolio(userWalletId, derivationIndex2).value,
+            derivationIndex = derivationIndex2.value,
+            tokens = emptyList(),
+        )
+
+        val response = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = UserTokensResponse.GroupType.NONE,
+                sort = UserTokensResponse.SortType.MANUAL,
+                totalAccounts = 3,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = listOf(mainAccount, account1, account2),
+            unassignedTokens = emptyList(),
+        )
+
+        accountsResponseStoreFlow.value = response
+
+        // Act
+        val actual = migration.migrate(userWalletId)
+
+        // Assert
+        assertEither(actual, response.right())
+
+        coVerifySequence {
+            accountsResponseStoreFactory.create(userWalletId)
+            accountsResponseStore.data
+        }
+
+        coVerify(inverse = true) {
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
