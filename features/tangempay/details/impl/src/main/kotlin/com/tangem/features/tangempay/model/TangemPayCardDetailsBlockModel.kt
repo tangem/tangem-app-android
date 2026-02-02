@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
@@ -29,6 +31,7 @@ import com.tangem.utils.transformer.update as transformerUpdate
 
 private const val SHOW_DETAILS_TIME = 30_000L
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class TangemPayCardDetailsBlockModel @Inject constructor(
@@ -38,6 +41,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: TangemPayCardDetailsBlockComponent.Params = paramsContainer.require()
@@ -74,6 +78,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     }
 
     private fun revealCardDetails() {
+        analytics.send(TangemPayAnalyticsEvents.ViewCardDetailsClicked())
         modelScope.launch {
             uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
@@ -115,7 +120,17 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         )
     }
 
-    private fun copyData(text: String) {
+    private fun copyData(text: String, type: CardDataType) {
+        val event = when (type) {
+            CardDataType.Number -> TangemPayAnalyticsEvents.CopyCardNumberClicked()
+            CardDataType.Expiry -> TangemPayAnalyticsEvents.CopyCardExpiryClicked()
+            CardDataType.CVV -> TangemPayAnalyticsEvents.CopyCardCVVClicked()
+        }
+        analytics.send(event)
         clipboardManager.setText(text = text.filterNot { it.isWhitespace() }, isSensitive = true)
     }
+}
+
+internal enum class CardDataType {
+    Number, Expiry, CVV
 }
