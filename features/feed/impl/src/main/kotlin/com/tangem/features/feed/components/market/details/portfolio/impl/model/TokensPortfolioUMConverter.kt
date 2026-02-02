@@ -12,7 +12,6 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlin.collections.map
 
 /**
  * Converter from [Map] of [UserWallet] and [CryptoCurrencyStatus] to [MyPortfolioUM.Tokens]
@@ -50,9 +49,6 @@ internal class TokensPortfolioUMConverter(
             buttonState = addButtonState,
             addToPortfolioBSConfig = bsConfig,
             onAddClick = onAddClick,
-            tokenReceiveBSConfig = (currentState() as? MyPortfolioUM.Tokens)
-                ?.tokenReceiveBSConfig
-                ?: TangemBottomSheetConfig.Empty,
         )
     }
 

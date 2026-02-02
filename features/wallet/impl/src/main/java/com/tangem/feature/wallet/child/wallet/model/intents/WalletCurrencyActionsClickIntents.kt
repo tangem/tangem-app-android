@@ -5,7 +5,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,9 +12,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
@@ -35,7 +32,6 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -47,7 +43,6 @@ import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
-import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
@@ -67,7 +62,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -144,10 +138,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
@@ -247,29 +239,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             ),
         )
         return resourceReference(R.string.wallet_notification_address_copied)
-    }
-
-    private fun createReceiveBottomSheetContent(
-        currency: CryptoCurrency,
-        addresses: NetworkAddress,
-    ): TangemBottomSheetConfigContent {
-        return TokenReceiveBottomSheetConfig(
-            asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                name = currency.name,
-                symbol = currency.symbol,
-            ),
-            network = currency.network,
-            networkAddress = addresses,
-            showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-            onCopyClick = {
-                analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
-                clipboardManager.setText(text = it, isSensitive = true)
-            },
-            onShareClick = {
-                analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
-                shareManager.shareText(text = it)
-            },
-        )
     }
 
     override fun onCopyAddressClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -596,11 +565,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     ) {
         stateHolder.showBottomSheet(
             ChooseAddressBottomSheetConfig(
-                asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                    name = currency.name,
-                    symbol = currency.symbol,
-                ),
-                network = currency.network,
+                currency = currency,
                 networkAddress = addresses,
                 onClick = {
                     onAddressTypeSelected(
@@ -768,25 +733,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private fun navigateToReceive(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-            stateHolder.hideBottomSheet()
-            modelScope.launch {
-                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
-                    router.openTokenReceiveBottomSheet(it)
-                }
+        stateHolder.hideBottomSheet()
+        modelScope.launch {
+            configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
+                router.openTokenReceiveBottomSheet(it)
             }
-        } else {
-            analyticsEventHandler.send(
-                event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
-            )
-            stateHolder.showBottomSheet(
-                createReceiveBottomSheetContent(
-                    currency = cryptoCurrencyStatus.currency,
-                    addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
-                ),
-                userWalletId,
-            )
         }
     }
 

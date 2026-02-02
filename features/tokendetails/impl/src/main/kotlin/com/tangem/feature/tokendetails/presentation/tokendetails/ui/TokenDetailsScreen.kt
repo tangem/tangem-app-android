@@ -16,8 +16,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
@@ -169,9 +167,6 @@ internal fun TokenDetailsScreen(
 
         state.bottomSheetConfig?.let { config ->
             when (config.content) {
-                is TokenReceiveBottomSheetConfig -> {
-                    TokenReceiveBottomSheet(config = config)
-                }
                 is ChooseAddressBottomSheetConfig -> {
                     ChooseAddressBottomSheet(config = config)
                 }

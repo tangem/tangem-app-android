@@ -1,20 +1,16 @@
 package com.tangem.features.feed.components.market.details.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
@@ -36,11 +32,9 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val uiMessageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
-    @Assisted private val updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
     @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
-    private val shareManager: ShareManager,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -60,7 +54,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         when (action) {
             TokenActionsBSContentUM.Action.Buy -> onBuyClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Exchange -> onExchangeClick(cryptoCurrencyData)
-            TokenActionsBSContentUM.Action.Receive -> onReceiveClick(cryptoCurrencyData)
+            TokenActionsBSContentUM.Action.Receive -> Unit
             TokenActionsBSContentUM.Action.CopyAddress -> onCopyAddress(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Sell -> onSellClick(cryptoCurrencyData)
             TokenActionsBSContentUM.Action.Send -> onSendClick(cryptoCurrencyData)
@@ -85,34 +79,6 @@ internal class TokenActionsHandler @AssistedInject constructor(
             message = resourceReference(R.string.alert_demo_feature_disabled),
         )
         messageSender.send(message)
-    }
-
-    private fun onReceiveClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        val cryptoCurrencyStatus = cryptoCurrencyData.status
-        val currency = cryptoCurrencyStatus.currency
-        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return
-
-        updateTokenReceiveBSConfig {
-            TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {
-                    updateTokenReceiveBSConfig {
-                        it.copy(isShown = false)
-                    }
-                },
-                content = TokenReceiveBottomSheetConfig(
-                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                    ),
-                    network = currency.network,
-                    networkAddress = networkAddress,
-                    showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = { clipboardManager.setText(networkAddress.defaultAddress.value, isSensitive = true) },
-                    onShareClick = { shareManager.shareText(networkAddress.defaultAddress.value) },
-                ),
-            )
-        }
     }
 
     private fun onCopyAddress(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
@@ -196,7 +162,6 @@ internal class TokenActionsHandler @AssistedInject constructor(
     interface Factory {
         fun create(
             currentAppCurrency: Provider<AppCurrency>,
-            updateTokenReceiveBSConfig: ((TangemBottomSheetConfig) -> TangemBottomSheetConfig) -> Unit,
             onHandleQuickAction: (HandledQuickAction) -> Unit,
         ): TokenActionsHandler
     }
