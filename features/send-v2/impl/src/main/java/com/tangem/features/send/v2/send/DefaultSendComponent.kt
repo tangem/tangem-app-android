@@ -216,6 +216,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     callback = model,
                     predefinedValues = model.predefinedValues,
                     onLoadFee = model::loadFee,
+                    onLoadFeeExtended = model::loadFeeExtended,
                     onSendTransaction = {
                         innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess)
                     },

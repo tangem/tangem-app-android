@@ -35,6 +35,7 @@ class UserWalletItemUMConverter(
     private val isClickableIfLocked: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     artwork: UserWalletItemUM.ImageState? = null,
+    private val mode: InfoField = InfoField.Devices,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
     private val artwork = artwork ?: UserWalletItemUM.ImageState.Loading
@@ -61,17 +62,29 @@ class UserWalletItemUMConverter(
     private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {
         val text = when (userWallet) {
             is UserWallet.Cold -> {
-                val cardCount = userWallet.getCardsCount() ?: 1
-                TextReference.PluralRes(
-                    id = R.plurals.card_label_card_count,
-                    count = cardCount,
-                    formatArgs = wrappedList(cardCount),
-                )
+                when (mode) {
+                    is InfoField.Devices -> {
+                        val cardCount = userWallet.getCardsCount() ?: 1
+                        TextReference.PluralRes(
+                            id = R.plurals.card_label_card_count,
+                            count = cardCount,
+                            formatArgs = wrappedList(cardCount),
+                        )
+                    }
+                    is InfoField.Tokens -> {
+                        TextReference.PluralRes(
+                            id = R.plurals.common_tokens_count,
+                            count = mode.tokensCount,
+                            formatArgs = wrappedList(mode.tokensCount),
+                        )
+                    }
+                }
             }
             is UserWallet.Hot -> {
                 TextReference.Res(R.string.hw_mobile_wallet)
             }
         }
+
         return UserWalletItemUM.Information.Loaded(text)
     }
 
@@ -102,5 +115,10 @@ class UserWalletItemUMConverter(
                 }
             }
         }
+    }
+
+    sealed interface InfoField {
+        data object Devices : InfoField
+        data class Tokens(val tokensCount: Int) : InfoField
     }
 }

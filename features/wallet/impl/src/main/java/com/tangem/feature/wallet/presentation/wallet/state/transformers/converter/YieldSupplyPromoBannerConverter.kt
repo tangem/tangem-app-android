@@ -1,0 +1,47 @@
+package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
+
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
+import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
+
+internal class YieldSupplyPromoBannerConverter(
+    private val yieldModuleApyMap: Map<String, BigDecimal>,
+    private val shouldShowMainPromo: Boolean,
+) : Converter<TokenConverterParams, CryptoCurrencyStatus?> {
+
+    override fun convert(value: TokenConverterParams): CryptoCurrencyStatus? {
+        if (!shouldShowMainPromo) return null
+
+        val currencies = when (value) {
+            is TokenConverterParams.Wallet -> value.tokenList.flattenCurrencies()
+            is TokenConverterParams.Account -> value.accountList.flattenCurrencies()
+        }.filter { status ->
+            status.value is CryptoCurrencyStatus.Loaded
+        }
+
+        val cryptoCurrencyStatuses = currencies.filter { it.currency is CryptoCurrency.Token }
+
+        if (cryptoCurrencyStatuses.any { it.value.yieldSupplyStatus?.isActive == true }) return null
+        if (yieldModuleApyMap.isEmpty()) return null
+
+        val max = cryptoCurrencyStatuses.asSequence()
+            .mapNotNull { status ->
+                val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
+                val matchedKey = yieldModuleApyMap.keys.firstOrNull { mapKey ->
+                    mapKey.equals(
+                        other = token.yieldSupplyKey(),
+                        ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
+                    )
+                } ?: return@mapNotNull null
+
+                status to matchedKey
+            }
+            .maxByOrNull { (status, _) -> status.value.amount ?: BigDecimal.ZERO }
+
+        return max?.first
+    }
+}

@@ -144,22 +144,6 @@ internal object NFTDomainModule {
 
     @Provides
     @Singleton
-    fun provideClearNFTCacheUseCase(
-        nftCleaner: NFTCleaner,
-        currenciesRepository: CurrenciesRepository,
-        accountsFeatureToggles: AccountsFeatureToggles,
-        singleAccountListSupplier: SingleAccountListSupplier,
-    ): ObserveAndClearNFTCacheIfNeedUseCase {
-        return ObserveAndClearNFTCacheIfNeedUseCase(
-            nftCleaner = nftCleaner,
-            currenciesRepository = currenciesRepository,
-            accountsFeatureToggles = accountsFeatureToggles,
-            singleAccountListSupplier = singleAccountListSupplier,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideGetNftCurrencyUseCase(nftRepository: NFTRepository): GetNFTCurrencyUseCase {
         return GetNFTCurrencyUseCase(nftRepository)
     }

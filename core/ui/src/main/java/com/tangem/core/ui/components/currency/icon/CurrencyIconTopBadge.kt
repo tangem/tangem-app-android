@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -21,10 +22,12 @@ fun CurrencyIconTopBadge(
     colorFilter: ColorFilter?,
     modifier: Modifier = Modifier,
     background: Color = TangemTheme.colors.background.primary,
+    size: Dp = TangemTheme.dimens.size14,
 ) {
+    val innerSpacing = TangemTheme.dimens.spacing2
     Box(
         modifier = modifier
-            .size(TangemTheme.dimens.size18)
+            .size(size + innerSpacing * 2)
             .background(
                 color = background,
                 shape = CircleShape,
@@ -32,7 +35,7 @@ fun CurrencyIconTopBadge(
     ) {
         Image(
             modifier = Modifier
-                .padding(all = TangemTheme.dimens.spacing2)
+                .padding(all = innerSpacing)
                 .matchParentSize(),
             painter = painterResource(id = iconResId),
             colorFilter = colorFilter,
