@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,6 +31,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SwapSelectTokenScreenTestTags
 import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
@@ -50,7 +52,8 @@ internal fun ExchangeCard(state: ExchangeCardUM, isBalanceHidden: Boolean, modif
             .fillMaxWidth()
             .heightIn(min = 116.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors.background.primary)
+            .testTag(SwapSelectTokenScreenTestTags.YOU_SWAP_BLOCK),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Title(
@@ -157,6 +160,7 @@ private fun EmptyTokenBlock(text: TextReference, modifier: Modifier = Modifier) 
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.body2,
+            modifier = Modifier.testTag(SwapSelectTokenScreenTestTags.CHOOSE_TOKEN_TEXT),
         )
     }
 }
