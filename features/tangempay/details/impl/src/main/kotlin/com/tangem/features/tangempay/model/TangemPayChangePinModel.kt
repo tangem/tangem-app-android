@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
@@ -30,17 +32,23 @@ internal class TangemPayChangePinModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val router: Router,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
     val uiState: StateFlow<TangemPayChangePinUM>
         field = MutableStateFlow(getInitialState())
 
+    init {
+        analytics.send(TangemPayAnalyticsEvents.ChangePinScreenShown())
+    }
+
     private fun onPinCodeChange(pin: String) {
         uiState.update(transformer = PinCodeChangeTransformer(newPin = pin))
     }
 
     private fun onClickSubmit() {
+        analytics.send(TangemPayAnalyticsEvents.ChangePinSubmitClicked())
         modelScope.launch {
             uiState.update { it.copy(submitButtonLoading = true) }
             val result = try {
@@ -59,7 +67,10 @@ internal class TangemPayChangePinModel @Inject constructor(
                         message = ToastMessage(resourceReference(R.string.tangempay_pin_validation_error_message)),
                     )
                 }
-                SetPinResult.SUCCESS -> router.push(TangemPayDetailsInnerRoute.ChangePINSuccess)
+                SetPinResult.SUCCESS -> {
+                    analytics.send(TangemPayAnalyticsEvents.ChangePinSuccessShown())
+                    router.push(TangemPayDetailsInnerRoute.ChangePINSuccess)
+                }
                 SetPinResult.DECRYPTION_ERROR,
                 SetPinResult.UNKNOWN_ERROR,
                 null,
