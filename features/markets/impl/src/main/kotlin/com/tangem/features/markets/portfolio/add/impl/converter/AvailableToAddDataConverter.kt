@@ -70,7 +70,6 @@ internal class AvailableToAddDataConverter @Inject constructor(
                     val availableToAddAccount = accountStatus.getAvailableToAddAccount(wallet) ?: return@mapNotNull null
                     accountStatus.account.accountId to availableToAddAccount
                 }
-                .filter { (_, account) -> account.availableToAddNetworks.isNotEmpty() }
                 .toMap()
             return AvailableToAddWallet(
                 userWallet = wallet,
