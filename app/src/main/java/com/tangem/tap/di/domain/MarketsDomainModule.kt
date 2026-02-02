@@ -115,7 +115,7 @@ object MarketsDomainModule {
         return FilterAvailableNetworksForWalletUseCase(
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            shouldUseNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             excludedBlockchains = excludedBlockchains,
         )
     }
