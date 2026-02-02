@@ -169,19 +169,19 @@ class TangemColors internal constructor(
     @Stable
     class Control internal constructor(
         checked: Color,
-        unchecked: Color,
+        default: Color,
         key: Color,
     ) {
         var checked by mutableStateOf(checked)
             private set
-        var unchecked by mutableStateOf(unchecked)
+        var default by mutableStateOf(default)
             private set
         var key by mutableStateOf(key)
             private set
 
         fun update(other: Control) {
             checked = other.checked
-            unchecked = other.unchecked
+            default = other.default
             key = other.key
         }
     }

@@ -1,7 +1,9 @@
 package com.tangem.common.ui.account
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -9,11 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SendScreenTestTags
+import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.utils.StringsSigns
 
 /**
  * A composable function that displays an account label (icon + name) with an optional prefix.
@@ -58,6 +65,30 @@ fun AccountTitle(
                 style = textStyle,
                 color = textColor,
                 modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewAccountTitle() {
+    TangemThemePreview {
+        Column {
+            AccountTitle(
+                accountTitleUM = AccountTitleUM.Account(
+                    prefixText = stringReference(StringsSigns.DOT),
+                    name = stringReference("Main Wallet"),
+                    icon = AccountIconUM.CryptoPortfolio(
+                        value = CryptoPortfolioIcon.Icon.Bookmark,
+                        color = CryptoPortfolioIcon.Color.Pattypan,
+                    ),
+                ),
+                modifier = Modifier.padding(4.dp),
+            )
+            AccountTitle(
+                accountTitleUM = AccountTitleUM.Account.payment(prefixText = stringReference(StringsSigns.DOT)),
+                modifier = Modifier.padding(4.dp),
             )
         }
     }

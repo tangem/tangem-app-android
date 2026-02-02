@@ -24,6 +24,9 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
+    /** Common */
+    implementation(projects.data.common)
+
     /** Domain */
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.legacy)
@@ -33,6 +36,9 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.demo)
+
+    /** Api */
+    implementation(projects.features.sendV2.api)
 
     /** DI */
     implementation(deps.hilt.android)

@@ -2,6 +2,7 @@ package com.tangem.feature.tester.presentation
 
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,6 +21,8 @@ import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
 import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
+import com.tangem.feature.tester.presentation.addresses.ui.AddressesInfoScreen
+import com.tangem.feature.tester.presentation.addresses.viewmodels.AddressesInfoViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
@@ -35,11 +38,6 @@ import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersSc
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
-import com.tangem.feature.tester.presentation.news.ui.NewsScreen
-import com.tangem.feature.tester.presentation.news.viewmodel.NewsViewModel
-import com.tangem.features.news.details.impl.MockArticlesFactory
-import com.tangem.features.news.details.impl.ui.NewsDetailsContent
-import com.tangem.features.news.details.impl.ui.NewsDetailsUM
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
@@ -87,7 +85,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TESTER_ACTIONS,
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
-                            ButtonUM.NEWS,
+                            ButtonUM.ADDRESSES_INFO,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -98,7 +96,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TESTER_ACTIONS -> TesterScreen.TESTER_ACTIONS
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
-                                ButtonUM.NEWS -> TesterScreen.NEWS
+                                ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
                             }
 
                             innerTesterRouter.open(route)
@@ -170,25 +168,16 @@ internal class TesterActivity : ComposeActivity() {
                 AccountsScreen(state)
             }
 
-            composable(route = TesterScreen.NEWS.name) {
-                val viewModel = hiltViewModel<NewsViewModel>().apply {
-                    setupNavigation(innerTesterRouter)
+            composable(route = TesterScreen.ADDRESSES_INFO.name) {
+                val viewModel = hiltViewModel<AddressesInfoViewModel>()
+
+                LaunchedEffect(viewModel) {
+                    viewModel.setupNavigation(innerTesterRouter)
                 }
+
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-                NewsScreen(state)
-            }
-
-            composable(route = TesterScreen.NEWS_DETAILS.name) {
-                NewsDetailsContent(
-                    state = NewsDetailsUM(
-                        articles = MockArticlesFactory.createMockArticles(),
-                        selectedArticleIndex = 0,
-                        onLikeClick = { },
-                        onShareClick = { },
-                    ),
-                    onBackClick = { innerTesterRouter.back() },
-                )
+                AddressesInfoScreen(state)
             }
         }
     }
