@@ -48,6 +48,11 @@ class MarketsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val searchThroughMarketPlaceholder: KNode = child {
+        hasText(getResourceString(R.string.markets_search_header_title))
+        useUnmergedTree = true
+    }
+
     fun tokenWithTitle(title: String): KNode {
         return lazyList.child<KNode> {
             hasText(title)
