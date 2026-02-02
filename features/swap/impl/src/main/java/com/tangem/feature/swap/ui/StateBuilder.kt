@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
@@ -24,6 +25,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
@@ -125,6 +127,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = {},
             ),
             onRefresh = {},
@@ -184,6 +187,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
@@ -249,6 +253,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = {},
             ),
             providerState = ProviderState.Loading(),
@@ -371,6 +376,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = getSwapButtonEnabled(notifications),
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -499,6 +505,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -596,6 +603,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
+                isHoldToConfirm = userWalletProvider().isHotWallet,
                 onClick = { },
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -1421,7 +1429,7 @@ internal class StateBuilder(
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_from),
                 name = fromAccount.accountName.toUM().value,
-                icon = fromAccount.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(fromAccount.icon),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_from_title))
@@ -1433,7 +1441,7 @@ internal class StateBuilder(
             AccountTitleUM.Account(
                 prefixText = resourceReference(R.string.common_to),
                 name = toAccount.accountName.toUM().value,
-                icon = toAccount.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(toAccount.icon),
             )
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))
