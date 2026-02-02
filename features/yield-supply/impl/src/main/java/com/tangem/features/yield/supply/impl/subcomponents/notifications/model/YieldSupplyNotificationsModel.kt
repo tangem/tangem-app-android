@@ -54,7 +54,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         fee = data.feeValue.orZero(),
                         userWalletId = params.userWalletId,
                         tokenStatus = cryptoCurrencyStatus,
-                        coinStatus = feeCryptoCurrencyStatus,
+                        feeStatus = feeCryptoCurrencyStatus,
                     ).getOrNull()
 
                     addExceedsBalanceNotification(
@@ -64,7 +64,8 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                             blockchainId = cryptoCurrencyStatus.currency.network.backendId,
                         ),
                         onClick = ::openTokenDetails,
-                        onAnalyticsEvent = { },
+                        onAnalyticsEvent = { /*no-op*/ },
+                        onResetAnalyticsEvent = { /*no-op*/ },
                     )
 
                     addFeeUnreachableNotification(
