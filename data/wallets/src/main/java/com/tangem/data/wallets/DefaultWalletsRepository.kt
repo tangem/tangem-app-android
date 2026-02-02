@@ -3,6 +3,7 @@ package com.tangem.data.wallets
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -14,6 +15,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -46,6 +48,8 @@ internal class DefaultWalletsRepository(
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
+    private val walletServerBinder: WalletServerBinder,
+    private val appsFlyerStore: AppsFlyerStore,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
@@ -250,13 +254,7 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun createWallet(userWalletId: UserWalletId) {
-        runCatching(dispatchers.io) {
-            val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
-
-            tangemTechApi.createWallet(
-                body = WalletIdBodyConverter.convert(userWallet = userWallet),
-            )
-        }
+        walletServerBinder.bind(userWalletId)
     }
 
     override suspend fun rejectSeedPhraseSecondNotification(userWalletId: UserWalletId) {
@@ -413,10 +411,12 @@ internal class DefaultWalletsRepository(
                     associateApplicationIdWithWallets().getOrThrow()
                 }
             } else {
+                val conversionData = appsFlyerStore.get()
                 val publicKeys = authProvider.getCardsPublicKeys()
                 val walletsBody = wallets.map { userWallet ->
                     WalletIdBodyConverter.convert(
                         userWallet = userWallet,
+                        conversionData = conversionData,
                         publicKeys = if (userWallet is UserWallet.Cold) {
                             publicKeys.filterKeys {
                                 userWallet.cardsInWallet.contains(it)
