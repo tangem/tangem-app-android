@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.mo
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -50,17 +51,20 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
             val scanResponse = params.multiWalletState.value.currentScanResponse
 
             val userWallet = createUserWallet(scanResponse)
-            saveWalletUseCase(userWallet, canOverride = true)
-                .onRight {
-                    cardRepository.finishCardActivation(scanResponse.card.cardId)
+            saveWalletUseCase(
+                userWallet = userWallet,
+                canOverride = true,
+                analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
+            ).onRight {
+                cardRepository.finishCardActivation(scanResponse.card.cardId)
 
-                    // save user wallet for manage tokens screen
-                    params.multiWalletState.update {
-                        it.copy(resultUserWallet = userWallet)
-                    }
-
-                    returnToParentFlow.emit(Unit)
+                // save user wallet for manage tokens screen
+                params.multiWalletState.update {
+                    it.copy(resultUserWallet = userWallet)
                 }
+
+                returnToParentFlow.emit(Unit)
+            }
         }
     }
 
