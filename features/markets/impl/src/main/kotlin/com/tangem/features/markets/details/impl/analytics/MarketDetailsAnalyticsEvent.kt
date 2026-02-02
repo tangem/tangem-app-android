@@ -6,7 +6,7 @@ import com.tangem.domain.markets.TokenMarketParams
 
 internal class MarketDetailsAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params) {
 
     data class EventBuilder(
