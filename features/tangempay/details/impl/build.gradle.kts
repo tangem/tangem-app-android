@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.tokendetails.api)
 
     /** Domain */
     implementation(projects.domain.balanceHiding)

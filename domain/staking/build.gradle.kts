@@ -22,14 +22,13 @@ dependencies {
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
+    implementation(deps.timber)
 
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager) // TODO refactor to use from data module
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
-
-    implementation(projects.features.staking.api)
 
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
