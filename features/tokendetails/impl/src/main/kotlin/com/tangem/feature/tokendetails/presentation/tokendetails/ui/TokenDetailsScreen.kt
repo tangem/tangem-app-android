@@ -16,8 +16,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
@@ -64,6 +62,7 @@ internal fun TokenDetailsScreen(
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
         val txHistoryComponentState by txHistoryComponent.txHistoryState.collectAsStateWithLifecycle()
+        val dialogConfig = state.dialogConfig
         val betweenItemsPadding = TangemTheme.dimens.spacing12
         val horizontalPadding = TangemTheme.dimens.spacing16
         val itemModifier = Modifier
@@ -164,27 +163,21 @@ internal fun TokenDetailsScreen(
             }
         }
 
-        TokenDetailsDialogs(state = state)
+        if (dialogConfig != null) {
+            TokenDetailsDialogs(dialogConfig = dialogConfig)
+        }
 
-        TokenDetailsBottomSheets(state = state)
-    }
-}
-
-@Composable
-private fun TokenDetailsBottomSheets(state: TokenDetailsState) {
-    state.bottomSheetConfig?.let { config ->
-        when (config.content) {
-            is TokenReceiveBottomSheetConfig -> {
-                TokenReceiveBottomSheet(config = config)
-            }
-            is ChooseAddressBottomSheetConfig -> {
-                ChooseAddressBottomSheet(config = config)
-            }
-            is ExpressStatusBottomSheetConfig -> {
-                ExpressStatusBottomSheet(config = config)
-            }
-            is CloreMigrationBottomSheetConfig -> {
-                CloreMigrationBottomSheet(config = config)
+        state.bottomSheetConfig?.let { config ->
+            when (config.content) {
+                is ChooseAddressBottomSheetConfig -> {
+                    ChooseAddressBottomSheet(config = config)
+                }
+                is ExpressStatusBottomSheetConfig -> {
+                    ExpressStatusBottomSheet(config = config)
+                }
+                is CloreMigrationBottomSheetConfig -> {
+                    CloreMigrationBottomSheet(config = config)
+                }
             }
         }
     }
