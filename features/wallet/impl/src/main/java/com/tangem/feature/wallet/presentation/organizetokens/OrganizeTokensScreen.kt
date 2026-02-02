@@ -219,9 +219,8 @@ private fun LazyItemScope.DraggableItem(
                 state = item.tokenItemState,
                 isCollapsable = false,
                 composables = null,
-                modifier = modifierWithBackground
-                    .padding(top = 8.dp)
-                    .fillMaxWidth(),
+                isBalanceHidden = isBalanceHidden,
+                modifier = modifierWithBackground.fillMaxWidth(),
             )
         }
     }
