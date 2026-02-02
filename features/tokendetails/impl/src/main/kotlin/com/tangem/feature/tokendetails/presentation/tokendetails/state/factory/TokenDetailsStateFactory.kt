@@ -2,7 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -15,7 +14,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -210,31 +208,6 @@ internal class TokenDetailsStateFactory(
         return refreshStateConverter.convert(false)
     }
 
-    fun getStateWithReceiveBottomSheet(
-        currency: CryptoCurrency,
-        networkAddress: NetworkAddress,
-        onCopyClick: (String) -> Unit,
-        onShareClick: (String) -> Unit,
-    ): TokenDetailsState {
-        return currentStateProvider().copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
-                content = TokenReceiveBottomSheetConfig(
-                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                    ),
-                    network = currency.network,
-                    networkAddress = networkAddress,
-                    showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = onCopyClick,
-                    onShareClick = onShareClick,
-                ),
-            ),
-        )
-    }
-
     fun getStateWithChooseAddressBottomSheet(
         currency: CryptoCurrency,
         networkAddress: NetworkAddress,
@@ -244,11 +217,7 @@ internal class TokenDetailsStateFactory(
                 isShown = true,
                 onDismissRequest = expressTransactionsClickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                    ),
-                    network = currency.network,
+                    currency = currency,
                     networkAddress = networkAddress,
                     onClick = tokenDetailsClickIntents::onAddressTypeSelected,
                 ),

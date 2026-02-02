@@ -40,7 +40,6 @@ import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.operations.attestation.ArtworkSize
@@ -69,12 +68,11 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
+    accountsFeatureToggles: AccountsFeatureToggles,
     newAddToPortfolioManagerFactory: NewAddToPortfolioManager.Factory,
-    private val newMarketsPortfolioDelegateFactory: NewMarketsPortfolioDelegate.Factory,
+    newMarketsPortfolioDelegateFactory: NewMarketsPortfolioDelegate.Factory,
 ) : Model() {
 
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
@@ -111,13 +109,6 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val tokenActionsHandler = tokenActionsIntentsFactory.create(
         currentAppCurrency = Provider { currentAppCurrency.value },
-        updateTokenReceiveBSConfig = { updateBlock ->
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
-                updateTokensState {
-                    it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
-                }
-            }
-        },
         onHandleQuickAction = { handledAction ->
             val currencyNetwork = handledAction.cryptoCurrencyData.status.currency.network
             analyticsEventHandler.send(
@@ -126,9 +117,7 @@ internal class MarketsPortfolioModel @Inject constructor(
                     blockchainName = currencyNetwork.name,
                 ),
             )
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-                configureReceiveAddresses(handledAction)
-            }
+            configureReceiveAddresses(handledAction)
         },
     )
 
@@ -423,8 +412,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
-        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive &&
-            tokenReceiveFeatureToggle.isNewTokenReceiveEnabled
+        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive
         if (isNewReceive) {
             modelScope.launch {
                 val tokenConfig = receiveAddressesFactory.create(

@@ -23,7 +23,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -59,7 +58,10 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.*
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
@@ -87,7 +89,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
@@ -133,7 +134,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
@@ -143,7 +143,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
@@ -1250,28 +1249,9 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun navigateToReceive() {
-        val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
-        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-            modelScope.launch {
-                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
-                    ?.let { bottomSheetNavigation.activate(it) }
-            }
-        } else {
-            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
-            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
-                currency = cryptoCurrency,
-                networkAddress = networkAddress,
-                onCopyClick = {
-                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
-                    clipboardManager.setText(text = it, isSensitive = true)
-                },
-                onShareClick = {
-                    analyticsEventsHandler.send(
-                        TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
-                    )
-                    shareManager.shareText(text = it)
-                },
-            )
+        modelScope.launch {
+            configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                ?.let { bottomSheetNavigation.activate(it) }
         }
     }
 
