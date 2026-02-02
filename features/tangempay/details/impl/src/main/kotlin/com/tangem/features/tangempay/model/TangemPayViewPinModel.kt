@@ -1,10 +1,12 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.components.TangemPayViewPinComponent
 import com.tangem.features.tangempay.entity.TangemPayViewPinUM
 import com.tangem.features.tangempay.model.transformers.TangemPayViewPinErrorStateTransformer
@@ -22,6 +24,7 @@ internal class TangemPayViewPinModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val analytics: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayViewPinComponent.Params>()
@@ -30,6 +33,7 @@ internal class TangemPayViewPinModel @Inject constructor(
         field = MutableStateFlow(getInitialState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.CurrentPinShown())
         getCardPin()
     }
 
