@@ -33,6 +33,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.hot.sdk.model.HotWalletId
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.orZero
@@ -95,6 +96,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
                 .distinctUntilChanged(),
             getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.YieldPromo)
+                .distinctUntilChanged(),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
@@ -107,6 +110,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowOnePlusOnePromo = array[4] as Boolean
                 val shouldShowEnablePushesReminderNotification = array[5] as Boolean
                 val shouldAccessCodeSkipped = array[6] as Boolean
+                val shouldShowYieldPromo = array[7] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -121,6 +125,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                     )
 
                     addOnePlusOnePromoNotification(clickIntents, shouldShowOnePlusOnePromo)
+
+                    addYieldPromoNotification(clickIntents, shouldShowYieldPromo)
 
                     addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
 
@@ -286,6 +292,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private fun MutableList<WalletNotification>.addYieldPromoNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPromo: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.YieldPromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.YieldPromo) },
+                onTermsAndConditionsClick = { clickIntents.onYieldPromoTermsAndConditionsClick() },
+            ),
+            condition = shouldShowPromo,
+        )
+    }
+
     // private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
     //     flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
     // ) {
@@ -317,6 +336,29 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             element = WalletNotification.Warning.SomeNetworksUnreachable,
             condition = flattenCurrencies.hasUnreachableNetworks(),
         )
+
+        addCloreMigrationNotification(flattenCurrencies, clickIntents)
+    }
+
+    private fun MutableList<WalletNotification>.addCloreMigrationNotification(
+        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
+        clickIntents: WalletClickIntents,
+    ) {
+        val cloreCurrency = flattenCurrencies.findCloreCurrency() ?: return
+
+        add(
+            WalletNotification.CloreMigration(
+                onStartMigrationClick = { clickIntents.onCloreMigrationClick(cloreCurrency) },
+            ),
+        )
+    }
+
+    private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.findCloreCurrency(): CryptoCurrencyStatus? {
+        val currencies = getOrNull(isPartialContentAccepted = true) ?: return null
+
+        return currencies.find { currencyStatus ->
+            BlockchainUtils.isClore(currencyStatus.currency.network.rawId)
+        }
     }
 
     private fun MutableList<WalletNotification>.addPushReminderNotification(
