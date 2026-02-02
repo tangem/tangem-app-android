@@ -32,4 +32,7 @@ internal sealed interface WalletDialogConfig {
         val tokenAction: TokenAction,
         val onWarningAcknowledged: (TokenAction) -> Unit,
     ) : WalletDialogConfig
+
+    @Serializable
+    data class KycRejected(val walletId: UserWalletId, val customerId: String) : WalletDialogConfig
 }

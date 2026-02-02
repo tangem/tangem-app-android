@@ -37,7 +37,7 @@ internal class ShowApprovalBottomSheetTransformer(
         val fee = feeState.fee ?: return prevState
 
         val walletAddress = cryptoCurrencyValue.networkAddress?.defaultAddress?.value.orEmpty()
-        val validatorAddress = validatorState.chosenValidator.address
+        val targetAddress = validatorState.chosenTarget.address
         val feeCryptoValue = fee.amount.value.format {
             crypto(fee.amount.currencySymbol, fee.amount.decimals)
         }
@@ -57,7 +57,7 @@ internal class ShowApprovalBottomSheetTransformer(
                         amount = amountState.amountTextField.value,
                         approveType = ApproveType.UNLIMITED,
                         walletAddress = walletAddress,
-                        spenderAddress = validatorAddress,
+                        spenderAddress = targetAddress,
                         fee = resourceReference(
                             R.string.common_crypto_fiat_format,
                             wrappedList(feeCryptoValue, feeFiatValue),
