@@ -1,4 +1,4 @@
-package com.tangem.tests
+package com.tangem.tests.swap
 
 import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
@@ -19,7 +19,7 @@ import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
 
 @HiltAndroidTest
-class SwapTokenTest : BaseTestCase() {
+class SwapTokenScreenTest : BaseTestCase() {
 
     @ApiEnv(
         ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
@@ -43,7 +43,7 @@ class SwapTokenTest : BaseTestCase() {
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
             }
-            step("Click on token with name: '$tokenTitle'") {
+            step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
@@ -123,7 +123,7 @@ class SwapTokenTest : BaseTestCase() {
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
             }
-            step("Click on token with name: '$tokenTitle'") {
+            step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Turn off Wi-Fi and Mobile Data") {
@@ -171,7 +171,7 @@ class SwapTokenTest : BaseTestCase() {
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
             }
-            step("Click on token with name: '$tokenTitle'") {
+            step("Assert title: '$tokenTitle' is displayed") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
@@ -236,6 +236,57 @@ class SwapTokenTest : BaseTestCase() {
                         networkFeeBlock.assertIsDisplayed()
                     }
                 }
+            }
+        }
+    }
+
+    @AllureId("2828")
+    @DisplayName("Swap: network fee")
+    @Test
+    fun goToTokenSwapTest() {
+        val swapTokenSymbol = "POL"
+        val receiveTokenSymbol = "ETH"
+        val tokenTitle = "Polygon"
+
+        setupHooks().run {
+
+            resetWireMockScenarios()
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Click on 'Swap' button") {
+                onTokenDetailsScreen { swapButton().performClick() }
+            }
+            step("Close 'Stories' screen") {
+                onSwapStoriesScreen { closeButton.clickWithAssertion() }
+            }
+            step("Assert 'Swap' screen title is displayed") {
+                onSwapTokenScreen { title.assertIsDisplayed() }
+            }
+            step("Assert 'Close' button is displayed") {
+                onSwapTokenScreen { closeButton.assertIsDisplayed() }
+            }
+            step("Assert 'Swap tokens on screen' button is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        swapTokensOnscreenButton.assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert token symbol: '$swapTokenSymbol' is displayed") {
+                onSwapTokenScreen { tokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert token symbol: '$receiveTokenSymbol' is displayed") {
+                onSwapTokenScreen { tokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
         }
     }
