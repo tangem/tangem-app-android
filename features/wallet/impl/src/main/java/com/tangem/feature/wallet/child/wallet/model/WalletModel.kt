@@ -104,6 +104,7 @@ internal class WalletModel @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val feedFeatureToggle: FeedFeatureToggle,
+    private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -138,6 +139,11 @@ internal class WalletModel @Inject constructor(
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
+
+        modelScope.launch {
+            bindRefcodeWithWalletUseCase.retry()
+                .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
+        }
     }
 
     fun onResume() {
