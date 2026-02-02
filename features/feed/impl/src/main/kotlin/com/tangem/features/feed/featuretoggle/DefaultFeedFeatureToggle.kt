@@ -9,4 +9,7 @@ internal class DefaultFeedFeatureToggle(
 
     override val isFeedEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled("FEED_ENABLED")
+
+    override val isEarnBlockEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("EARN_BLOCK_ENABLED")
 }
