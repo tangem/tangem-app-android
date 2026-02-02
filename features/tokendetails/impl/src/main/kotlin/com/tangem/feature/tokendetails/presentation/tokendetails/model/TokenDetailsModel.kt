@@ -23,7 +23,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -54,13 +53,15 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
-import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.tokens.model.analytics.*
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
+import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
 import com.tangem.domain.tokens.model.details.NavigationAction
@@ -88,7 +89,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
@@ -124,7 +124,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
-    private val getYieldUseCase: GetYieldUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
@@ -135,7 +134,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
@@ -145,7 +143,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
@@ -158,6 +155,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val signCloreMessageUseCase: SignCloreMessageUseCase,
 ) : Model(),
     TokenDetailsClickIntents,
+    ExpressTransactionsClickIntents,
     YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -190,7 +188,8 @@ internal class TokenDetailsModel @Inject constructor(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        clickIntents = this,
+        tokenDetailsClickIntents = this,
+        expressTransactionsClickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
@@ -851,7 +850,6 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onTransactionClick(txHash: String) {
         getExplorerTransactionUrlUseCase(
             txHash = txHash,
-            networkId = cryptoCurrency.network.id,
             currency = cryptoCurrency,
         ).fold(
             ifLeft = { Timber.e(it.toString()) },
@@ -1142,16 +1140,26 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun openStaking() {
         modelScope.launch {
-            getYieldUseCase.invoke(
-                cryptoCurrencyId = cryptoCurrency.id,
-                symbol = cryptoCurrency.symbol,
-            ).onRight { yield ->
-                router.openStaking(userWalletId, cryptoCurrency, yield.id)
-            }.onLeft {
-                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
-                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
-            }
+            getStakingAvailabilityUseCase.invokeSync(userWalletId, cryptoCurrency)
+                .onRight { availability ->
+                    val option = (availability as? StakingAvailability.Available)?.option
+                    if (option != null) {
+                        router.openStaking(
+                            userWalletId = userWalletId,
+                            cryptoCurrency = cryptoCurrency,
+                            integrationId = option.integrationId,
+                        )
+                    } else {
+                        showStakingUnavailable()
+                    }
+                }
+                .onLeft { showStakingUnavailable() }
         }
+    }
+
+    private fun showStakingUnavailable() {
+        Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+        uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
     }
 
     private fun checkForActionUpdates() {
@@ -1261,28 +1269,9 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun navigateToReceive() {
-        val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
-        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-            modelScope.launch {
-                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
-                    ?.let { bottomSheetNavigation.activate(it) }
-            }
-        } else {
-            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
-            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
-                currency = cryptoCurrency,
-                networkAddress = networkAddress,
-                onCopyClick = {
-                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
-                    clipboardManager.setText(text = it, isSensitive = true)
-                },
-                onShareClick = {
-                    analyticsEventsHandler.send(
-                        TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
-                    )
-                    shareManager.shareText(text = it)
-                },
-            )
+        modelScope.launch {
+            configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                ?.let { bottomSheetNavigation.activate(it) }
         }
     }
 
