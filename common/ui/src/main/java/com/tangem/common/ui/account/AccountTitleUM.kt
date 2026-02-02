@@ -1,7 +1,9 @@
 package com.tangem.common.ui.account
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 
 /**
  * A sealed interface representing the title of an account, which can be either a simple text
@@ -19,6 +21,16 @@ sealed interface AccountTitleUM {
     data class Account(
         val prefixText: TextReference,
         val name: TextReference,
-        val icon: CryptoPortfolioIconUM,
-    ) : AccountTitleUM
+        val icon: AccountIconUM,
+    ) : AccountTitleUM {
+        companion object {
+            fun payment(prefixText: TextReference = TextReference.EMPTY): Account {
+                return Account(
+                    prefixText = prefixText,
+                    name = resourceReference(R.string.tangempay_payment_account),
+                    icon = AccountIconUM.Payment,
+                )
+            }
+        }
+    }
 }

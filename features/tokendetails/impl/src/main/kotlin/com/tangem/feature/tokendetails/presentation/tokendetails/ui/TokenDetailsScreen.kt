@@ -16,8 +16,6 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
@@ -35,6 +33,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
@@ -169,14 +169,14 @@ internal fun TokenDetailsScreen(
 
         state.bottomSheetConfig?.let { config ->
             when (config.content) {
-                is TokenReceiveBottomSheetConfig -> {
-                    TokenReceiveBottomSheet(config = config)
-                }
                 is ChooseAddressBottomSheetConfig -> {
                     ChooseAddressBottomSheet(config = config)
                 }
                 is ExpressStatusBottomSheetConfig -> {
                     ExpressStatusBottomSheet(config = config)
+                }
+                is CloreMigrationBottomSheetConfig -> {
+                    CloreMigrationBottomSheet(config = config)
                 }
             }
         }

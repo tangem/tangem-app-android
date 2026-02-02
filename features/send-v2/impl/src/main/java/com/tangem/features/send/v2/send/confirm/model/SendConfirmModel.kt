@@ -19,8 +19,11 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -592,21 +595,16 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun primaryButtonUM(): NavigationButton {
         val confirmUM = uiState.value.confirmUM
-        val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
+        val isContent = confirmUM is ConfirmUM.Content
+        val isReadyToSend = isContent && !confirmUM.isSending
+        val isHoldToConfirm = userWallet.isHotWallet && isContent
         return NavigationButton(
-            textReference = when (confirmUM) {
-                is ConfirmUM.Success -> resourceReference(R.string.common_close)
-                is ConfirmUM.Content -> if (confirmUM.isSending) {
-                    resourceReference(R.string.send_sending)
-                } else {
-                    resourceReference(R.string.common_send)
-                }
-                else -> resourceReference(R.string.common_send)
-            },
+            textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
-            isIconVisible = isReadyToSend,
+            isIconVisible = isReadyToSend && !isHoldToConfirm,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,
+            isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 when (confirmUM) {
                     is ConfirmUM.Success -> appRouter.pop()
@@ -619,6 +617,18 @@ internal class SendConfirmModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
+        return when {
+            isHoldToConfirm -> resourceReference(
+                id = com.tangem.core.ui.R.string.common_hold_to,
+                formatArgs = wrappedList(resourceReference(R.string.common_send)),
+            )
+            confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
+            confirmUM is ConfirmUM.Content && confirmUM.isSending -> resourceReference(R.string.send_sending)
+            else -> resourceReference(R.string.common_send)
+        }
     }
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
