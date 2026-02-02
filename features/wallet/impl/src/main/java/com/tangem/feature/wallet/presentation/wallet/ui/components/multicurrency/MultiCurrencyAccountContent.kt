@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -141,7 +142,7 @@ private fun LazyListScope.portfolioItem(
                 lastIndexProxy = lastIndex
                 return@LaunchedEffect
             }
-            delay(timeMillis = minOf(50 * tokens.size, 350).toLong())
+            delay(timeMillis = minOf(50 * tokens.size, 250).toLong())
             lastIndexProxy = 0
         }
 
@@ -179,13 +180,13 @@ private fun SlideInItemVisibility(
         enter = fadeIn(
             tween(100, delayMillis = delayEnter),
         ) + expandVertically(
-            tween(100, delayMillis = delayEnter),
+            tween(100, delayMillis = delayEnter, easing = FastOutLinearInEasing),
             expandFrom = Alignment.Top,
         ),
         exit = fadeOut(
             tween(100, delayMillis = delayExit),
         ) + shrinkVertically(
-            tween(100, delayMillis = delayExit),
+            tween(100, delayMillis = delayExit, easing = FastOutLinearInEasing),
             shrinkTowards = Alignment.Top,
         ),
     ) {
