@@ -1,6 +1,7 @@
 package com.tangem.common.ui.amountScreen.converters
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.Account
@@ -15,7 +16,7 @@ class AmountAccountConverter(
         return if (value != null && isAccountsMode) {
             AccountTitleUM.Account(
                 name = value.accountName.toUM().value,
-                icon = value.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(value.icon),
                 prefixText = prefixText,
             )
         } else {

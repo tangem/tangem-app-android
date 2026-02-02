@@ -78,6 +78,8 @@ sealed class SwapCardState {
 data class SwapButton(
     @DrawableRes val walletInteractionIcon: Int?,
     val isEnabled: Boolean,
+    val isInProgress: Boolean = false,
+    val isHoldToConfirm: Boolean = false,
     val onClick: () -> Unit,
 )
 
