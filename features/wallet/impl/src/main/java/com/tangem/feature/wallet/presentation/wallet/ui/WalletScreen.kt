@@ -100,13 +100,6 @@ internal fun WalletScreen(
     val snackbarHostState = remember(::SnackbarHostState)
     val isAutoScroll = remember { mutableStateOf(value = false) }
 
-    var alertConfig by remember { mutableStateOf<WalletAlertState?>(value = null) }
-
-    val config = alertConfig
-    if (config != null) {
-        WalletAlert(state = config, onDismiss = { alertConfig = null })
-    }
-
     WalletContent(
         state = state,
         walletsListState = walletsListState,
@@ -114,7 +107,6 @@ internal fun WalletScreen(
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
         bottomSheetContent = bottomSheetContent,
-        alertConfig = alertConfig,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
     )
@@ -124,7 +116,6 @@ internal fun WalletScreen(
         snackbarHostState = snackbarHostState,
         event = state.event,
         onAutoScrollSet = { isAutoScroll.value = true },
-        onAlertConfigSet = { alertConfig = it },
     )
 }
 
@@ -135,7 +126,6 @@ private fun WalletContent(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
-    alertConfig: WalletAlertState?,
     onAutoScrollReset: () -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -279,7 +269,6 @@ private fun WalletContent(
         selectedWallet = selectedWallet,
         snackbarHostState = snackbarHostState,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
-        alertConfig = alertConfig,
         onBottomSheetStateChange = onBottomSheetStateChange,
         bottomSheetContent = bottomSheetContent,
         content = scaffoldContent,
@@ -294,7 +283,6 @@ private inline fun BaseScaffoldWithMarkets(
     listState: LazyListState,
     selectedWallet: WalletState,
     snackbarHostState: SnackbarHostState,
-    alertConfig: WalletAlertState?,
     bottomSheetHeaderHeightProvider: () -> Dp,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
     crossinline bottomSheetContent: @Composable () -> Unit,
@@ -341,7 +329,6 @@ private inline fun BaseScaffoldWithMarkets(
 
         BottomSheetStateEffects(
             bottomSheetState = bottomSheetState,
-            alertConfig = alertConfig,
             onBottomSheetStateChange = onBottomSheetStateChange,
             navigationBarVisible = isNavBarVisible,
             isSearchFieldFocused = isSearchFieldFocused,
@@ -615,7 +602,6 @@ private fun BottomSheetScrim(color: Color, visible: Boolean, onDismissRequest: (
 @Composable
 private fun BottomSheetStateEffects(
     bottomSheetState: TangemSheetState,
-    alertConfig: WalletAlertState?,
     navigationBarVisible: MutableState<Boolean>,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     isSearchFieldFocused: Boolean,
@@ -634,7 +620,7 @@ private fun BottomSheetStateEffects(
     val isKeyboardVisible by rememberIsKeyboardVisible()
 
     LaunchedEffect(isKeyboardVisible) {
-        if (isKeyboardVisible && alertConfig == null && isSearchFieldFocused) {
+        if (isKeyboardVisible && isSearchFieldFocused) {
             bottomSheetState.expand()
         }
     }
