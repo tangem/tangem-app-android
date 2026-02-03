@@ -6,4 +6,5 @@ import kotlinx.serialization.Serializable
 sealed class NavigationAction {
     data object Staking : NavigationAction()
     data class YieldSupply(val isActive: Boolean) : NavigationAction()
+    data object CloreMigration : NavigationAction()
 }
