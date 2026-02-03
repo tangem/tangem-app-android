@@ -37,8 +37,6 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
-import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -48,11 +46,8 @@ import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWall
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
@@ -75,11 +70,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onOpenUnlockWalletsBottomSheetClick()
 
-    fun onUnlockWalletClick()
-
     fun onUnlockVisaAccessClick()
-
-    fun onScanToUnlockWalletClick()
 
     fun onLikeAppClick()
 
@@ -123,7 +114,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
-    private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -137,7 +127,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
@@ -205,66 +194,25 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onOpenUnlockWalletsBottomSheetClick() {
         analyticsEventHandler.send(MainScreen.WalletUnlockTapped())
 
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            modelScope.launch {
-                userWalletsListRepository.unlockAllWallets()
-                    .onLeft {
-                        val selectedUserWalletId = stateHolder.getSelectedWalletId()
-                        nonBiometricUnlockWalletUseCase(selectedUserWalletId)
-                            .onLeft { error ->
-                                error.handle(
-                                    onAlreadyUnlocked = {},
-                                    onUserCancelled = {},
-                                    analyticsEventHandler = analyticsEventHandler,
-                                    isFromUnlockAll = true,
-                                    showMessage = uiMessageSender::send,
-                                )
-                            }
-                    }
-            }
-            return
-        }
-
-        // Will be removed after hot wallet release
-        stateHolder.showBottomSheet(
-            WalletBottomSheetConfig.UnlockWallets(
-                onUnlockClick = this::onUnlockWalletClick,
-                onScanClick = this::onScanToUnlockWalletClick,
-            ),
-        )
-    }
-
-    @Deprecated("Will be removed with hot wallet release")
-    override fun onUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics())
-
-        modelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
-                .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
-                .onLeft(::handleUnlockWalletsError)
+        modelScope.launch {
+            userWalletsListRepository.unlockAllWallets()
+                .onLeft {
+                    val selectedUserWalletId = stateHolder.getSelectedWalletId()
+                    nonBiometricUnlockWalletUseCase(selectedUserWalletId)
+                        .onLeft { error ->
+                            error.handle(
+                                onAlreadyUnlocked = {},
+                                onUserCancelled = {},
+                                analyticsEventHandler = analyticsEventHandler,
+                                isFromUnlockAll = true,
+                                showMessage = uiMessageSender::send,
+                            )
+                        }
+                }
         }
     }
 
     override fun onUnlockVisaAccessClick() {
-        openScanCardDialog()
-    }
-
-    private fun handleUnlockWalletsError(error: UnlockWalletsError) {
-        val event = when (error) {
-            is UnlockWalletsError.DataError,
-            is UnlockWalletsError.UnableToUnlockWallets,
-            -> WalletEvent.ShowError(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
-            is UnlockWalletsError.NoUserWalletSelected,
-            is UnlockWalletsError.NotAllUserWalletsUnlocked,
-            -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
-        }
-
-        walletEventSender.send(event)
-    }
-
-    @Deprecated("Will be removed with hot wallet release")
-    override fun onScanToUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockWithCardScan())
         openScanCardDialog()
     }
 

@@ -1,6 +1,7 @@
 package com.tangem.core.ui.test
 
 object SwapTokenScreenTestTags {
+    const val CONTAINER = "SWAP_TOKEN_SCREEN_CONTAINER"
     const val SWAP_BLOCK_HEADER = "SWAP_TOKEN_SCREEN_SWAP_BLOCK"
     const val BALANCE = "SWAP_TOKEN_SCREEN_BALANCE"
     const val SWAP_TEXT_FIELD = "SWAP_TOKEN_SCREEN_SWAP_TEXT_FIELD"

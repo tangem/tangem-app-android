@@ -104,8 +104,6 @@ internal fun List<UserWallet>.updateWith(
     }
 }
 
-internal fun List<UserWallet>.lockAll(): List<UserWallet> = map(UserWallet::lock)
-
 internal fun UserWallet.lock(): UserWallet = when (this) {
     is UserWallet.Cold -> {
         copy(

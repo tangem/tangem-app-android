@@ -5,29 +5,18 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.utils.ChangeRootBackgroundColorEffect
-import com.tangem.features.home.impl.ui.compose.StoriesScreen
 import com.tangem.features.home.impl.ui.compose.StoriesScreenV2
 import com.tangem.features.home.impl.ui.state.HomeUM
 
 @Composable
-internal fun Home(state: HomeUM, isV2StoriesEnabled: Boolean, modifier: Modifier = Modifier) {
+internal fun Home(state: HomeUM, modifier: Modifier = Modifier) {
     SystemBarsIconsDisposable(darkIcons = false)
 
-    if (isV2StoriesEnabled) {
-        StoriesScreenV2(
-            modifier = modifier,
-            state = state,
-            onGetStartedClick = state.onGetStartedClick,
-        )
-    } else {
-        StoriesScreen(
-            modifier = modifier,
-            state = state,
-            onScanButtonClick = state.onScanClick,
-            onShopButtonClick = state.onShopClick,
-            onSearchTokensClick = state.onSearchTokensClick,
-        )
-    }
+    StoriesScreenV2(
+        modifier = modifier,
+        state = state,
+        onGetStartedClick = state.onGetStartedClick,
+    )
 
     ChangeRootBackgroundColorEffect(TangemColorPalette.Black)
 }
