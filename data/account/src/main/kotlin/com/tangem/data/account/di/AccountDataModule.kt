@@ -16,6 +16,7 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
@@ -117,11 +118,15 @@ internal object AccountDataModule {
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userTokensSaver: UserTokensSaver,
         accountTokenMigrationStore: AccountTokenMigrationStore,
+        eTagsStore: ETagsStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): DefaultMainAccountTokensMigration {
         return DefaultMainAccountTokensMigration(
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             accountTokenMigrationStore = accountTokenMigrationStore,
             userTokensSaver = userTokensSaver,
+            eTagsStore = eTagsStore,
+            dispatchers = dispatchers,
         )
     }
 }
