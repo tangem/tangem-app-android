@@ -243,7 +243,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
             if (isEligible) {
-                router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain(userWalletId))
+                router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
             } else {
                 stateHolder.update(transformer = TangemPayHideOnboardingStateTransformer(userWalletId))
             }

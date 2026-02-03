@@ -197,18 +197,20 @@ internal class WelcomeModel @Inject constructor(
                 onSuccess = { scanResponse ->
                     val userWallet =
                         coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build() ?: return@scan
-                    saveWalletUseCase.invoke(userWallet)
-                        .onLeft { error ->
-                            if (error is SaveWalletError.WalletAlreadySaved) {
-                                userWalletsListRepository.unlock(
-                                    userWallet.walletId,
-                                    unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
-                                ).onRight {
-                                    userWalletsListRepository.select(userWallet.walletId)
-                                    router.replaceAll(AppRoute.Wallet)
-                                }
+                    saveWalletUseCase.invoke(
+                        userWallet = userWallet,
+                        analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                    ).onLeft { error ->
+                        if (error is SaveWalletError.WalletAlreadySaved) {
+                            userWalletsListRepository.unlock(
+                                userWallet.walletId,
+                                unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                            ).onRight {
+                                userWalletsListRepository.select(userWallet.walletId)
+                                router.replaceAll(AppRoute.Wallet)
                             }
                         }
+                    }
                         .onRight {
                             router.replaceAll(AppRoute.Wallet)
                         }
