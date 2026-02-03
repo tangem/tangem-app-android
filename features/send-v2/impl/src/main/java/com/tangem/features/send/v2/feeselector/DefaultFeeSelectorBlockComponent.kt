@@ -56,6 +56,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     analyticsCategoryName = params.analyticsCategoryName,
                     analyticsSendSource = params.analyticsSendSource,
                     userWalletId = params.userWalletId,
+                    shouldShowOnlySpeedOption = model.shouldShowOnlySpeedOption,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
