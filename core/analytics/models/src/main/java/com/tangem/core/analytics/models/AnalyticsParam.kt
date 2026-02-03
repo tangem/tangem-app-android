@@ -278,5 +278,5 @@ sealed class AnalyticsParam {
 
 fun getReferralParams(referralId: String?): List<Pair<String, String>> = listOf(
     REFERRAL to (!referralId.isNullOrBlank()).toString().replaceFirstChar(Char::titlecase),
-    REFERRAL_ID to (referralId ?: "None"),
+    REFERRAL_ID to (referralId ?: "Empty"),
 )
