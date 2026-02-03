@@ -72,7 +72,7 @@ sealed class WalletScreenAnalyticsEvent {
                 }
                 put("Wallet Type", seedPhrase)
             },
-        )
+        ), AppsFlyerIncludedEvent
 
         data class NoticeFinishActivation(
             private val activationState: ActivationState,
