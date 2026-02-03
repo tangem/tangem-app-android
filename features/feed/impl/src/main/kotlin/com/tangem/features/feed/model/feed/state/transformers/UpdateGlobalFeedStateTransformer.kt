@@ -25,15 +25,19 @@ internal class UpdateGlobalFeedStateTransformer(
             prevState.news.newsUMState == NewsUMState.ERROR
 
         val hasLoadingInCharts = loadingStatesByOrder.values.any { it }
-        val hasErrorInCharts = errorStatesByOrder.values.any { it != null }
-        val hasAllErrorInCharts = errorStatesByOrder.values.isNotEmpty() && errorStatesByOrder.values.all { it != null }
+        val hasErrorInMarketChart = errorStatesByOrder[SortByTypeUM.Rating] != null
+        val hasErrorInMarketPulseChart = errorStatesByOrder
+            .any { it.key != SortByTypeUM.Rating && it.value != null }
 
         val areAllChartsLoading = loadingStatesByOrder.values.isNotEmpty() && loadingStatesByOrder.values.all { it }
-        val areAllChartsError = hasAllErrorInCharts || hasErrorInCharts && hasLoadingInCharts
+        val areAllChartsError = when {
+            hasErrorInMarketChart && hasErrorInMarketPulseChart -> true
+            hasErrorInMarketPulseChart && hasLoadingInCharts -> true
+            hasErrorInMarketChart && hasLoadingInCharts -> true
+            else -> false
+        }
 
         val newGlobalState = when {
-            isNewsLoading && areAllChartsError -> GlobalFeedState.Loading
-            isNewsLoading && areAllChartsLoading -> GlobalFeedState.Loading
             isNewsError && areAllChartsLoading -> GlobalFeedState.Loading
             isNewsError && areAllChartsError -> {
                 if (previousGlobalState !is GlobalFeedState.Error) {
@@ -43,18 +47,11 @@ internal class UpdateGlobalFeedStateTransformer(
                     onRetryClicked = onRetryClicked,
                 )
             }
+            isNewsLoading && areAllChartsError -> GlobalFeedState.Loading
+            isNewsLoading && areAllChartsLoading -> GlobalFeedState.Loading
             else -> GlobalFeedState.Content
         }
-
-        return prevState.copy(
-            globalState = newGlobalState,
-            news = prevState.news.copy(
-                newsUMState = when {
-                    isNewsError -> NewsUMState.ERROR
-                    else -> NewsUMState.CONTENT
-                },
-            ),
-        )
+        return prevState.copy(globalState = newGlobalState)
     }
 
     private fun sendErrorAnalytics() {
