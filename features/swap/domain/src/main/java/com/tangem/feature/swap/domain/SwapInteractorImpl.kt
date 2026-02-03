@@ -1536,9 +1536,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                             swapAmount = amount,
                             quotesLoadedState = swapState,
                             isAllowedToSpend = isAllowedToSpend,
-                            spenderAddress = requireNotNull(quoteModel.allowanceContract) {
-                                "allowanceContract is required for DEX"
-                            },
+                            spenderAddress = quoteModel.allowanceContract,
                         )
                         if (state !is SwapState.QuotesLoadedState) return state
                         state.copy(
@@ -2081,14 +2079,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         ) ?: TxFeeState.Empty
     }
 
-    @Suppress("LongParameterList", "LongMethod")
+    @Suppress("LongParameterList", "LongMethod", "CanBeNonNullable")
     private suspend fun updatePermissionState(
         networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
-        spenderAddress: String,
+        spenderAddress: String?,
         isAllowedToSpend: Boolean,
     ): SwapState {
         val fromToken = fromTokenStatus.currency
@@ -2111,7 +2109,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
-            spenderAddress = spenderAddress,
+            spenderAddress = requireNotNull(spenderAddress) { "spenderAddress cant be null" },
             amount = swapAmount.value.convertToSdkAmount(fromTokenStatus),
             blockchain = fromToken.network.toBlockchain(),
         )
