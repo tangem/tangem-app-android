@@ -80,7 +80,6 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.AddToPortfolioRoute
-import com.tangem.feature.swap.models.SwapCardState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
@@ -200,7 +199,12 @@ internal class SwapModel @Inject constructor(
     private val searchDebouncer = Debouncer()
     private val singleTaskScheduler = SingleTaskScheduler<Map<SwapProvider, SwapState>>()
 
-    var dataState by mutableStateOf(SwapProcessDataState())
+    val dataStateStateFlow = MutableStateFlow(SwapProcessDataState())
+    var dataState
+        get() = dataStateStateFlow.value
+        set(value) {
+            dataStateStateFlow.value = value
+        }
 
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
@@ -699,6 +703,7 @@ internal class SwapModel @Inject constructor(
         toProvidersList: List<SwapProvider>,
         updateFeeBlock: Boolean = true,
     ): PeriodicTask<Map<SwapProvider, SwapState>> {
+        var shouldUpdateFeeBlock = updateFeeBlock
         return PeriodicTask(
             delay = UPDATE_DELAY,
             task = {
@@ -734,8 +739,10 @@ internal class SwapModel @Inject constructor(
                         tokenSwapInfoForProviders = successStates.entries
                             .associate { it.key.providerId to it.value.toTokenInfo },
                     )
-                    if (updateFeeBlock) {
+                    if (shouldUpdateFeeBlock) {
                         modelScope.launch { feeSelectorReloadTrigger.triggerUpdate() }
+                    } else {
+                        shouldUpdateFeeBlock = true
                     }
                 } else {
                     feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
@@ -2140,20 +2147,19 @@ internal class SwapModel @Inject constructor(
         )
     }
 
+    @Suppress("UnsafeCallOnNullableType")
     inner class FeeSelectorRepository : SwapFeeSelectorBlockComponent.ModelRepositoryExtended {
 
-        override val state = MutableStateFlow<FeeSelectorUM>(FeeSelectorUM.Loading)
+        override val state = MutableStateFlow<FeeSelectorUM>(
+            FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true),
+        )
 
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
-            val sendCardData =
-                uiState.sendCardData as? SwapCardState.SwapCardData ?: return Either.Left(GetFeeError.UnknownError)
-            val receiveCardData =
-                uiState.receiveCardData as? SwapCardState.SwapCardData ?: return Either.Left(GetFeeError.UnknownError)
-            val fromToken = sendCardData.token ?: return Either.Left(GetFeeError.UnknownError)
-            val toToken = receiveCardData.token ?: return Either.Left(GetFeeError.UnknownError)
-            val selectedProvider = dataState.selectedProvider ?: return Either.Left(GetFeeError.UnknownError)
+            val fromToken = dataState.fromCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
+            val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
+            val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
                 return Either.Left(GetFeeError.UnknownError)
@@ -2209,13 +2215,9 @@ internal class SwapModel @Inject constructor(
         }
 
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-            val sendCardData =
-                uiState.sendCardData as? SwapCardState.SwapCardData ?: return Either.Left(GetFeeError.UnknownError)
-            val receiveCardData =
-                uiState.receiveCardData as? SwapCardState.SwapCardData ?: return Either.Left(GetFeeError.UnknownError)
-            val fromToken = sendCardData.token ?: return Either.Left(GetFeeError.UnknownError)
-            val toToken = receiveCardData.token ?: return Either.Left(GetFeeError.UnknownError)
-            val selectedProvider = dataState.selectedProvider ?: return Either.Left(GetFeeError.UnknownError)
+            val fromToken = dataState.fromCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
+            val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
+            val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
                 return Either.Left(GetFeeError.UnknownError)
