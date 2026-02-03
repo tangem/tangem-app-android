@@ -2161,6 +2161,10 @@ internal class SwapModel @Inject constructor(
             val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
+            if (selectedProvider.type != ExchangeProviderType.CEX) {
+                return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+            }
+
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
                 return Either.Left(GetFeeError.UnknownError)
             }
