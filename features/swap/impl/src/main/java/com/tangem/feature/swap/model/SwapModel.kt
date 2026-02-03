@@ -20,6 +20,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.InputNumberFormatter
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -118,6 +119,7 @@ internal class SwapModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getTangemPayCurrencyStatusUseCase: GetTangemPayCurrencyStatusUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -888,7 +890,7 @@ internal class SwapModel @Inject constructor(
             }
     }
 
-    private fun sendSuccessEvent() {
+    private suspend fun sendSuccessEvent() {
         val provider = dataState.selectedProvider ?: return
         val fee = dataState.selectedFee?.feeType ?: return
         val fromCurrency = dataState.fromCryptoCurrency?.currency ?: return
@@ -906,6 +908,7 @@ internal class SwapModel @Inject constructor(
                 receiveToken = toCurrency.symbol,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
+                referralId = appsFlyerStore.get()?.refcode,
             ),
         )
     }

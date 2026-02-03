@@ -1,9 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics
 
-import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
-import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
+import com.tangem.core.analytics.models.*
 import com.tangem.domain.models.wallet.UserWalletId
 
 sealed class WalletScreenAnalyticsEvent {
@@ -59,6 +56,7 @@ sealed class WalletScreenAnalyticsEvent {
             private val accountsCount: Int?,
             val theme: String,
             val isImported: Boolean,
+            val referralId: String?,
         ) : MainScreen(
             event = "Screen opened",
             params = buildMap {
@@ -71,6 +69,7 @@ sealed class WalletScreenAnalyticsEvent {
                     "Seedless"
                 }
                 put("Wallet Type", seedPhrase)
+                putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent
 
