@@ -678,9 +678,7 @@ internal class ChildFactory @Inject constructor(
                             deeplink = mode.deeplink,
                         )
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
-                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain(
-                            userWalletId = mode.userWalletId,
-                        )
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )
