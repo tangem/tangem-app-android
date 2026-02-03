@@ -2,9 +2,9 @@ package com.tangem.data.account.producer
 
 import arrow.core.Option
 import arrow.core.some
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.MultiAccountListProducer
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -19,7 +19,8 @@ import kotlinx.coroutines.flow.*
  * Produces a list of [AccountList]s for all user wallets.
  *
  * @property params                       params
- * @property userWalletsStore             store that provides user wallets
+ * @property flowProducerTools            tools for producing flows
+ * @property userWalletsListRepository    repository for getting user wallets
  * @property walletAccountListFlowFactory builder to create flows of [AccountList] for each wallet
  * @property dispatchers                  coroutine dispatchers provider
  *
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.*
 internal class DefaultMultiAccountListProducer @AssistedInject constructor(
     @Assisted val params: Unit,
     override val flowProducerTools: FlowProducerTools,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiAccountListProducer {
@@ -37,7 +38,7 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<List<AccountList>> {
-        return userWalletsStore.userWallets
+        return userWalletsListRepository.loadAndGet()
             .map { it.map(UserWallet::walletId) }
             .distinctUntilChanged()
             .flatMapLatest { ids ->
