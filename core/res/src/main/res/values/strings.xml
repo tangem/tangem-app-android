@@ -839,7 +839,7 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="news_quick_recap">Quick recap</string>
-  <string name="news_related_news">Related News</string>
+  <string name="news_related_news">News</string>
   <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>

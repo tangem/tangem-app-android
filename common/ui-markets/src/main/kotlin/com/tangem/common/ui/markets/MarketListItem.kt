@@ -181,7 +181,7 @@ private fun RowScope.TokenRatingPlace(ratingPosition: String?) {
             .alignByBaseline()
             .heightIn(min = TangemTheme.dimens.size16)
             .background(
-                color = TangemTheme.colors.field.primary,
+                color = TangemTheme.colors.button.secondary,
                 shape = TangemTheme.shapes.roundedCornersSmall2,
             )
             .padding(horizontal = TangemTheme.dimens.spacing5),
