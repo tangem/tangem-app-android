@@ -38,13 +38,6 @@ internal sealed interface WalletAlertState {
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
 
-    data class RemoveWalletAlert(override val onConfirmClick: (() -> Unit)?) : Basic() {
-        override val title: TextReference? = null
-        override val message: TextReference = resourceReference(id = R.string.user_wallet_list_delete_prompt)
-        override val confirmButtonText: TextReference = resourceReference(id = R.string.common_delete)
-        override val isWarningConfirmButton: Boolean = true
-    }
-
     data class VisaLimitsInfo(
         val totalLimit: String,
         val otherLimit: String,
