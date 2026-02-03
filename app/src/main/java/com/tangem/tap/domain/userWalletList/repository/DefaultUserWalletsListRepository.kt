@@ -21,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.R
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
@@ -390,6 +391,7 @@ internal class DefaultUserWalletsListRepository(
         if (newUserWallet.walletId == oldUserWallet.walletId &&
             oldUserWallet is UserWallet.Hot && newUserWallet is UserWallet.Cold
         ) {
+            trackWalletUpgradeEvent()
             removeHotWalletsFromSDKAndRepos(walletIds = listOf(oldUserWallet.walletId))
             // When upgrading from Hot to Cold, if biometric lock is available, set it
             if (hasBiometry()) {
@@ -535,5 +537,9 @@ internal class DefaultUserWalletsListRepository(
                 walletsCount = userWallets.value?.size ?: 0,
             ),
         )
+    }
+
+    private fun trackWalletUpgradeEvent() {
+        analyticsEventHandler.send(event = WalletSettingsAnalyticEvents.WalletUpgraded())
     }
 }
