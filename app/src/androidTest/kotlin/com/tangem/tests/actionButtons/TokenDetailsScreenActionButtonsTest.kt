@@ -3,6 +3,7 @@ package com.tangem.tests.actionButtons
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.SwipeDirection
+import com.tangem.common.extensions.assertIsDimmed
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
@@ -60,8 +61,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun checkActionButtonsStateTest() {
         val tokenTitle = "Bitcoin"
-        val actionButtonIsNotDimmed = "Action button is not dimmed"
-        val actionButtonIsDimmed = "Action button is dimmed"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -75,19 +74,19 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).performClick() }
             }
             step("Assert 'Receive' button is not dimmed") {
-                onTokenDetailsScreen { receiveButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
+                onTokenDetailsScreen { receiveButton().assertIsDimmed(false) }
             }
             step("Assert 'Buy' button is not dimmed") {
-                onTokenDetailsScreen { buyButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
+                onTokenDetailsScreen { buyButton().assertIsDimmed(false) }
             }
             step("Assert 'Send' button is not dimmed") {
-                onTokenDetailsScreen { sendButton().assertContentDescriptionEquals(actionButtonIsNotDimmed) }
+                onTokenDetailsScreen { sendButton().assertIsDimmed(false) }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { swapButton().assertIsDimmed() }
             }
             step("Assert 'Sell' button is dimmed") {
-                onTokenDetailsScreen { sellButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { sellButton().assertIsDimmed() }
             }
         }
     }
@@ -130,7 +129,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun checkSwapButtonProviderErrorTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val actionButtonIsDimmed = "Action button is dimmed"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -147,7 +145,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).performClick() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { swapButton().assertIsDimmed() }
             }
             step("Click on 'Swap' button") {
                 onTokenDetailsScreen { swapButton().performClick() }
@@ -162,7 +160,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onSwapIsNotSupportedDialog { okButton.performClick() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { swapButton().assertIsDimmed() }
             }
         }
     }
@@ -172,7 +170,6 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun checkSwapButtonExpressErrorTest() {
         val tokenTitle = "Polygon"
-        val actionButtonIsDimmed = "Action button is dimmed"
         val scenarioName = "express_api_assets"
         val scenarioState = "Error"
 
@@ -198,7 +195,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).performClick() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { swapButton().assertIsDimmed() }
             }
             step("Click on 'Swap' button") {
                 onTokenDetailsScreen { swapButton().performClick() }
@@ -213,7 +210,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onOperationIsUnavailableDialog { okButton.performClick() }
             }
             step("Assert 'Swap' button is dimmed") {
-                onTokenDetailsScreen { swapButton().assertContentDescriptionEquals(actionButtonIsDimmed) }
+                onTokenDetailsScreen { swapButton().assertIsDimmed() }
             }
         }
     }

@@ -52,7 +52,6 @@ import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
 import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
-import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
@@ -76,7 +75,6 @@ internal class ChildFactory @Inject constructor(
     private val sellCryptoComponentFactory: SellCryptoComponent.Factory,
     private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
-    private val welcomeComponentFactory: WelcomeComponent.Factory,
     private val newWelcomeComponentFactory: NewWelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
@@ -118,7 +116,6 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val feedFeatureToggle: FeedFeatureToggle,
 ) {
@@ -162,21 +159,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Welcome -> {
-                if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                    createComponentChild(
-                        context = context,
-                        params = Unit,
-                        componentFactory = newWelcomeComponentFactory,
-                    )
-                } else {
-                    createComponentChild(
-                        context = context,
-                        params = WelcomeComponent.Params(
-                            launchMode = route.launchMode,
-                        ),
-                        componentFactory = welcomeComponentFactory,
-                    )
-                }
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = newWelcomeComponentFactory,
+                )
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
