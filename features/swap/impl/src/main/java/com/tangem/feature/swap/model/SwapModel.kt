@@ -2194,9 +2194,14 @@ internal class SwapModel @Inject constructor(
             state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
-            if (newState is FeeSelectorUM.Content &&
+            val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
                 dataState.fromCryptoCurrency?.currency?.id == newState.feeExtraInfo.feeCryptoCurrencyStatus.currency.id
-            ) {
+
+            // If fee currency is coin, we need to reload quotes to update fee related warnings (e.g. insufficient funds)
+            val isCoinFeeSelected = newState is FeeSelectorUM.Content &&
+                newState.feeExtraInfo.feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin
+
+            if (isFeeCurrencySameAsFromCurrency || isCoinFeeSelected) {
                 // block swap button until fee is loaded
                 uiState = uiState.copy(
                     swapButton = uiState.swapButton.copy(
