@@ -60,9 +60,17 @@ internal class VersionNameProvider(
         val outputFile = project.rootProject.file("find-latest-release-branch.output")
 
         return try {
-            project.providers.exec {
+            val execResult = project.providers.exec {
                 commandLine("sh", scriptPath.absolutePath, currentBranch)
-            }.standardOutput.asText.get()
+                isIgnoreExitValue = true
+            }
+
+            val exitCode = execResult.result.get().exitValue
+            if (exitCode != 0) {
+                project.logger.warn("Script failed with exit code: $exitCode")
+                outputFile.delete()
+                return null
+            }
 
             if (!outputFile.exists()) {
                 project.logger.warn("Script output file not found")
