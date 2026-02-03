@@ -3,7 +3,9 @@ package com.tangem.features.details.ui
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -11,10 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.extensions.TextReference
@@ -69,22 +73,29 @@ private fun AddWalletButton(
         ) {
             if (icon != null) {
                 AnimatedContent(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    modifier = Modifier.size(TangemTheme.dimens.size36),
                     targetState = isInProgress,
                     label = "Add wallet progress",
                 ) { isInProgress ->
-                    if (isInProgress) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
-                            color = TangemTheme.colors.icon.accent,
-                        )
-                    } else {
-                        Icon(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
-                            painter = painterResource(id = icon),
-                            tint = TangemTheme.colors.icon.accent,
-                            contentDescription = null,
-                        )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f)),
+                    ) {
+                        if (isInProgress) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(TangemTheme.dimens.size24),
+                                color = TangemTheme.colors.icon.accent,
+                            )
+                        } else {
+                            Icon(
+                                modifier = Modifier.size(TangemTheme.dimens.size24),
+                                painter = painterResource(id = icon),
+                                tint = TangemTheme.colors.icon.accent,
+                                contentDescription = null,
+                            )
+                        }
                     }
                 }
             }
