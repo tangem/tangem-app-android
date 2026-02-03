@@ -444,9 +444,7 @@ sealed class AppRoute(val path: String) : Route {
             ) : Mode()
 
             @Serializable
-            data class FromBannerOnMain(
-                val userWalletId: UserWalletId,
-            ) : Mode()
+            data object FromBannerOnMain : Mode()
 
             @Serializable
             data object FromBannerInSettings : Mode()
