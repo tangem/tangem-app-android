@@ -23,6 +23,7 @@ sealed class FeeSelectorParams {
     abstract val feeDisplaySource: FeeDisplaySource
     abstract val analyticsCategoryName: String
     abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
+    abstract val shouldShowOnlySpeedOption: Boolean
 
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
@@ -37,6 +38,7 @@ sealed class FeeSelectorParams {
         override val feeDisplaySource: FeeDisplaySource,
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val shouldShowOnlySpeedOption: Boolean = false,
         val bottomSheetShown: (Boolean) -> Unit = {},
     ) : FeeSelectorParams()
 
@@ -53,6 +55,7 @@ sealed class FeeSelectorParams {
         override val feeDisplaySource: FeeDisplaySource,
         override val analyticsCategoryName: String,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val shouldShowOnlySpeedOption: Boolean = false,
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
 
