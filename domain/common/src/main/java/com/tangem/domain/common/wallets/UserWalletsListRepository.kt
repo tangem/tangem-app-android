@@ -5,6 +5,7 @@ import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -30,11 +31,20 @@ interface UserWalletsListRepository {
      */
     val selectedUserWallet: StateFlow<UserWallet?>
 
+    /** Get user wallet by [id] */
+    fun getSyncOrNull(id: UserWalletId): UserWallet?
+
+    /** Get user wallet by [id] */
+    fun getSyncStrict(id: UserWalletId): UserWallet
+
     /**
      * Loads user wallets list and selected wallet.
      * If the list is already loaded, it does nothing.
      */
     suspend fun load()
+
+    /** Loads user wallets list and selected wallet and returns a flow of the list */
+    fun loadAndGet(): Flow<List<UserWallet>>
 
     /**
      * Gets and if necessary loads user wallets list and selected wallet.
