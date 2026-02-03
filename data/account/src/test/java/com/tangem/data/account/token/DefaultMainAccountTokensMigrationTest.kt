@@ -6,6 +6,7 @@ import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -17,6 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.core.assertEitherRight
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -34,11 +36,14 @@ class DefaultMainAccountTokensMigrationTest {
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
     private val accountTokenMigrationStore = mockk<AccountTokenMigrationStore>(relaxUnitFun = true)
     private val userTokensSaver = mockk<UserTokensSaver>(relaxUnitFun = true)
+    private val eTagsStore = mockk<ETagsStore>(relaxUnitFun = true)
 
     private val migration = DefaultMainAccountTokensMigration(
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         accountTokenMigrationStore = accountTokenMigrationStore,
         userTokensSaver = userTokensSaver,
+        eTagsStore = eTagsStore,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private val userWalletId = UserWalletId("011")
