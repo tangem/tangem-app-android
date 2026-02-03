@@ -11,6 +11,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -83,6 +84,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
+    private val shareManager: ShareManager,
 ) : Model() {
 
     private val quotesJob = JobHolder()
@@ -247,6 +249,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 onFirstVisible = {},
                 onScroll = {},
             ),
+            onShareClick = ::onShareClick,
         ),
     )
 
@@ -662,6 +665,13 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
+    private fun onShareClick() {
+        val tokenId = params.token.id.value
+        val shareUrl = "$CRYPTOCURRENCIES_BASE_URL$tokenId"
+        shareManager.shareText(shareUrl)
+        analyticsEventHandler.send(analyticsEventBuilder.shareClicked())
+    }
+
     private fun onListedOnClick(exchangesCount: Int) {
         modelScope.launch {
             analyticsEventHandler.send(analyticsEventBuilder.exchangesScreenOpened())
@@ -725,5 +735,6 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private companion object {
         const val QUOTES_UPDATE_INTERVAL_MILLIS = 60000L
         const val RELATED_NEWS_LIMIT = 10
+        const val CRYPTOCURRENCIES_BASE_URL = "https://tangem.com/en/cryptocurrencies/"
     }
 }
