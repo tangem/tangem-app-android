@@ -8,11 +8,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.models.SwapStateHolder
@@ -50,7 +52,9 @@ internal fun SwapScreen(stateHolder: SwapStateHolder, feeSelectorBlockComponent:
             } else {
                 null
             },
-            modifier = Modifier.padding(scaffoldPaddings),
+            modifier = Modifier
+                .padding(scaffoldPaddings)
+                .testTag(SwapTokenScreenTestTags.CONTAINER),
         )
 
         if (stateHolder.bottomSheetConfig != null) {
