@@ -198,4 +198,18 @@ interface TangemTechApi {
      */
     @POST("v1/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
+
+    // region Earn
+    @GET("v1/earn/yield/markets")
+    suspend fun getEarnTokens(
+        @Query("isForEarn") isForEarn: Boolean?,
+        @Query("page") page: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("network") network: String? = null,
+    ): ApiResponse<EarnListResponse>
+
+    @GET("v1/earn/networks")
+    suspend fun getEarnNetworks(@Query("type") type: String): ApiResponse<EarnNetworkListResponse>
+    // endregion
 }
