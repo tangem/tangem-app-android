@@ -6,7 +6,6 @@ import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -107,20 +106,6 @@ interface AccountsCRUDRepository {
      * @param userWalletId the unique identifier of the user wallet
      */
     fun getTotalActiveAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>>
-
-    /**
-     * Retrieves a user wallet by its unique identifier
-     *
-     * @param userWalletId the unique identifier of the user wallet
-     * @return the [UserWallet] associated with the given identifier
-     */
-    fun getUserWallet(userWalletId: UserWalletId): UserWallet
-
-    /** Provides a flow of all user wallets */
-    fun getUserWallets(): Flow<List<UserWallet>>
-
-    /** Synchronously retrieves all user wallets */
-    fun getUserWalletsSync(): List<UserWallet>
 
     /** Checks if the provided account name is the default name within the given account list
      *

@@ -22,7 +22,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
@@ -30,7 +29,6 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.replaceBy
@@ -48,7 +46,6 @@ internal class DefaultAccountsCRUDRepository(
     private val walletAccountsSaver: WalletAccountsSaver,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
-    private val userWalletsStore: UserWalletsStore,
     private val userTokensSaver: UserTokensSaver,
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>>,
     private val convertersContainer: AccountConverterFactoryContainer,
@@ -204,14 +201,6 @@ internal class DefaultAccountsCRUDRepository(
         return getAccountsResponseStore(userWalletId = userWalletId).data
             .map { it?.accounts?.size.toOption() }
     }
-
-    override fun getUserWallet(userWalletId: UserWalletId): UserWallet {
-        return userWalletsStore.getSyncStrict(userWalletId)
-    }
-
-    override fun getUserWallets(): Flow<List<UserWallet>> = userWalletsStore.userWallets
-
-    override fun getUserWalletsSync(): List<UserWallet> = userWalletsStore.userWalletsSync
 
     override fun checkDefaultAccountName(accountList: AccountList, accountName: AccountName) {
         val hasDefaultName = accountList.accounts.any { it.accountName is AccountName.DefaultMain }

@@ -4,9 +4,9 @@ import com.tangem.data.account.converter.AccountListConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -17,6 +17,7 @@ import javax.inject.Inject
 /**
  * Factory that creates a flow of [AccountList] for a specific [UserWallet]
  *
+ * @property userWalletsListRepository    repository to get user wallets
  * @property accountsResponseStoreFactory factory to create [AccountsResponseStore]
  * @property accountListConverterFactory  factory to create [AccountListConverter]
  * @property cardCryptoCurrencyFactory    factory to create supported crypto currencies for a card
@@ -24,14 +25,14 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class WalletAccountListFlowFactory @Inject constructor(
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val accountListConverterFactory: AccountListConverter.Factory,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
 ) {
 
     fun create(userWalletId: UserWalletId): Flow<AccountList> {
-        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
         return if (userWallet.isMultiCurrency) {
             createForMultiWallet(userWallet)

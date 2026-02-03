@@ -1,8 +1,8 @@
 package com.tangem.data.account.producer
 
 import com.google.common.truth.Truth
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
@@ -27,15 +27,15 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultMultiAccountListProducerTest {
 
-    private val userWalletsStore: UserWalletsStore = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory = mockk()
     private val flowProducerTools: FlowProducerTools = mockk()
 
     private val producer = DefaultMultiAccountListProducer(
         params = Unit,
-        userWalletsStore = userWalletsStore,
-        walletAccountListFlowFactory = walletAccountListFlowFactory,
         flowProducerTools = flowProducerTools,
+        userWalletsListRepository = userWalletsListRepository,
+        walletAccountListFlowFactory = walletAccountListFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -46,14 +46,14 @@ class DefaultMultiAccountListProducerTest {
 
     @AfterEach
     fun tearDownEach() {
-        clearMocks(userWalletsStore, walletAccountListFlowFactory)
+        clearMocks(userWalletsListRepository, walletAccountListFlowFactory)
     }
 
     @Test
     fun produce() = runTest {
         // Arrange
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
@@ -66,7 +66,7 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
@@ -75,7 +75,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow will updated if factoryFlow is updated`() = runTest {
         // Arrange
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = AccountList.empty(userWalletId = userWalletId, sortType = TokensSortType.NONE)
@@ -98,9 +98,9 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(secondEmission).containsExactly(listOf(updatedAccountList))
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
@@ -109,7 +109,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow is filtered the same response`() = runTest {
         // Arrange
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         val accountList = AccountList.empty(userWalletId)
         val factoryFlow = MutableStateFlow<AccountList?>(null)
@@ -131,9 +131,9 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(secondEmission).containsExactly(listOf(accountList))
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
@@ -143,7 +143,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow returns empty list if factory throws exception`() = runTest {
         // Arrange
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         val exception = RuntimeException("Converter error")
         every { walletAccountListFlowFactory.create(userWalletId) } throws exception
@@ -156,7 +156,7 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
@@ -165,7 +165,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow is empty if userWalletsFlow returns empty flow`() = runTest {
         // Arrange
         val userWalletsFlow = emptyFlow<List<UserWallet>>()
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -173,7 +173,7 @@ class DefaultMultiAccountListProducerTest {
         // Assert
         Truth.assertThat(actual).isEmpty() // no emissions
 
-        coVerify(exactly = 1) { userWalletsStore.userWallets }
+        coVerify(exactly = 1) { userWalletsListRepository.loadAndGet() }
         coVerify(inverse = true) { walletAccountListFlowFactory.create(any()) }
     }
 
@@ -181,7 +181,7 @@ class DefaultMultiAccountListProducerTest {
     fun `flow is empty if factory returns empty flow`() = runTest {
         // Arrange
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         every { walletAccountListFlowFactory.create(userWalletId) } returns emptyFlow()
 
@@ -192,7 +192,7 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(actual).isEmpty() // no emissions
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
         }
     }
@@ -206,7 +206,7 @@ class DefaultMultiAccountListProducerTest {
         }
 
         val userWalletsFlow = MutableStateFlow(listOf(userWallet, userWallet2))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        every { userWalletsListRepository.loadAndGet() } returns userWalletsFlow
 
         val accountList = AccountList.empty(userWalletId)
         every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
@@ -219,7 +219,7 @@ class DefaultMultiAccountListProducerTest {
         Truth.assertThat(actual).isEmpty() // no emissions
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
+            userWalletsListRepository.loadAndGet()
             walletAccountListFlowFactory.create(userWalletId)
             walletAccountListFlowFactory.create(userWalletId2)
         }

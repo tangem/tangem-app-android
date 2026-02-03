@@ -10,6 +10,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
 
+    api(projects.domain.common)
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.domain.wallets.models)

@@ -22,7 +22,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
@@ -56,7 +55,6 @@ internal object AccountDataModule {
         tangemTechApi: TangemTechApi,
         walletAccountsSaver: WalletAccountsSaver,
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
-        userWalletsStore: UserWalletsStore,
         userTokensSaver: UserTokensSaver,
         accountConverterFactoryContainer: AccountConverterFactoryContainer,
         @ApplicationContext context: Context,
@@ -67,7 +65,6 @@ internal object AccountDataModule {
             walletAccountsSaver = walletAccountsSaver,
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             archivedAccountsStoreFactory = ArchivedAccountsStoreFactory,
-            userWalletsStore = userWalletsStore,
             userTokensSaver = userTokensSaver,
             archivedAccountsETagStore = RuntimeStateStore(emptyMap()),
             convertersContainer = accountConverterFactoryContainer,

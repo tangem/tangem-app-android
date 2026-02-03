@@ -7,8 +7,8 @@ import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.domain.account.models.AccountCurrencyId
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
@@ -55,10 +55,16 @@ import java.math.BigDecimal
  * Produces a flow of [AccountStatusList] for a single user wallet.
  *
  * @property params Parameters containing the user wallet ID.
- * @property accountsCRUDRepository Repository for accessing account data.
+ * @property flowProducerTools Tools for managing the flow producer.
+ * @property userWalletsListRepository Repository for getting user wallet by id.
  * @property singleAccountListSupplier Supplier to get the list of accounts for the user wallet.
- * @property cryptoCurrencyStatusesFlowFactory Factory to create flows of cryptocurrency statuses.
+ * @property networksRepository Repository for checking network statuses in a cache.
  * @property dispatchers Coroutine dispatcher provider for managing threading.
+ * @property networkStatusSupplier Supplier for getting network statuses.
+ * @property quoteStatusSupplier Supplier for getting quote statuses.
+ * @property stakingBalanceSupplier Supplier for getting staking balances.
+ * @property stakingIdFactory Factory for creating staking IDs.
+ * @property analyticsExceptionHandler Handler for analytics exceptions.
  *
 [REDACTED_AUTHOR]
  */
@@ -66,11 +72,11 @@ import java.math.BigDecimal
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class DefaultSingleAccountStatusListProducer @AssistedInject constructor(
     @Assisted private val params: SingleAccountStatusListProducer.Params,
-    private val accountsCRUDRepository: AccountsCRUDRepository,
+    override val flowProducerTools: FlowProducerTools,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val networksRepository: NetworksRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    override val flowProducerTools: FlowProducerTools,
     private val networkStatusSupplier: MultiNetworkStatusSupplier,
     private val quoteStatusSupplier: MultiQuoteStatusSupplier,
     private val stakingBalanceSupplier: MultiStakingBalanceSupplier,
@@ -88,7 +94,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     @Suppress("LongMethod")
     private fun flattenFlow(): Flow<AccountStatusList> = channelFlow {
         val walletId = params.userWalletId
-        val userWallet = accountsCRUDRepository.getUserWallet(userWalletId = params.userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
 
         val flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>> = MutableSharedFlow(
             replay = 1,

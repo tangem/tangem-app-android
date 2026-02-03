@@ -1,9 +1,9 @@
 package com.tangem.domain.account.status.usecase
 
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusFinder
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -17,14 +17,14 @@ import kotlinx.coroutines.flow.transformLatest
 /**
  * Use case to retrieve the available actions for a specific cryptocurrency associated with an account.
  *
- * @property accountsCRUDRepository repository for account CRUD operations.
+ * @property userWalletsListRepository repository to get the user wallets list.
  * @property singleAccountStatusListSupplier supplier to get the list of account statuses.
  * @property getCryptoCurrencyActionsUseCase use case to get the actions for a specific cryptocurrency status.
  *
 [REDACTED_AUTHOR]
  */
 class GetCryptoCurrencyActionsUseCaseV2(
-    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
 ) {
@@ -45,7 +45,7 @@ class GetCryptoCurrencyActionsUseCaseV2(
                 )
 
                 if (accountCurrencyStatus != null) {
-                    val userWallet = accountsCRUDRepository.getUserWallet(userWalletId = accountId.userWalletId)
+                    val userWallet = userWalletsListRepository.getSyncStrict(id = accountId.userWalletId)
                     val actionsFlow = getCryptoCurrencyActionsUseCase(
                         userWallet = userWallet,
                         cryptoCurrencyStatus = accountCurrencyStatus.status,

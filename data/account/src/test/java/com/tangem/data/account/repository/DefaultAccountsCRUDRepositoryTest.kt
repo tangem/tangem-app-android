@@ -17,7 +17,6 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account.CryptoPortfolio
@@ -52,7 +51,6 @@ class DefaultAccountsCRUDRepositoryTest {
     private val archivedAccountsInnerStore = RuntimeStateStore<List<ArchivedAccount>?>(defaultValue = null)
     private val archivedAccountsStore = ArchivedAccountsStore(runtimeStore = archivedAccountsInnerStore)
 
-    private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensSaver: UserTokensSaver = mockk()
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>> = mockk(relaxUnitFun = true)
 
@@ -67,7 +65,6 @@ class DefaultAccountsCRUDRepositoryTest {
         walletAccountsSaver = walletAccountsSaver,
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
-        userWalletsStore = userWalletsStore,
         userTokensSaver = userTokensSaver,
         archivedAccountsETagStore = archivedAccountsETagStore,
         convertersContainer = convertersContainer,
