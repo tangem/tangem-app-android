@@ -101,9 +101,10 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         if (sendFeatureToggles.isGaslessTransactionsEnabled) {
-            val fromCryptoCurrency by remember { derivedStateOf { model.dataState.fromCryptoCurrency } }
-            val feePaidCryptoCurrency by remember { derivedStateOf { model.dataState.feePaidCryptoCurrency } }
-            val amount by remember { derivedStateOf { model.dataState.amount } }
+            val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
+            val fromCryptoCurrency by remember { derivedStateOf { dataState.fromCryptoCurrency } }
+            val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
+            val amount by remember { derivedStateOf { dataState.amount } }
 
             LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, amount.isNullOrBlank()) {
                 if (amount.isNullOrBlank()) {
