@@ -1,5 +1,8 @@
 package com.tangem.core.analytics.models
 
+import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL
+import com.tangem.core.analytics.models.AnalyticsParam.Key.REFERRAL_ID
+
 sealed class AnalyticsParam {
 
     sealed class CardBalanceState(val value: String) {
@@ -268,5 +271,12 @@ sealed class AnalyticsParam {
         const val ENS = "ENS"
         const val ENS_ADDRESS = "ENS Address"
         const val ACCOUNT_DERIVATION_FROM = "Account Derivation (from)"
+        const val REFERRAL = "Referral"
+        const val REFERRAL_ID = "Referral_ID"
     }
 }
+
+fun getReferralParams(referralId: String?): List<Pair<String, String>> = listOf(
+    REFERRAL to (!referralId.isNullOrBlank()).toString().replaceFirstChar(Char::titlecase),
+    REFERRAL_ID to (referralId ?: "None"),
+)
