@@ -57,7 +57,6 @@ internal class UserWalletListModel @Inject constructor(
             isWalletSavingInProgress = false,
             addNewWalletText = TextReference.EMPTY,
             onAddNewWalletClick = ::onAddNewWalletClick,
-            addNewWalletIconRes = R.drawable.ic_plus_24,
         ),
     )
 
