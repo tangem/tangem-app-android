@@ -298,9 +298,12 @@ internal class SwapNotificationsFactory(
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
             feeEnoughState.feeCurrency != fromToken
 
+        val isNotEnoughFee =
+            quoteModel.preparedSwapConfigState.includeFeeInAmount is IncludeFeeInAmount.BalanceNotEnough
+
         val isGaslessAvailable = iGaslessFeeSupportedForNetwork(fromToken.network) &&
             quoteModel.swapProvider.type == ExchangeProviderType.CEX
-        if (shouldShowCoverWarning && !isGaslessAvailable) {
+        if (shouldShowCoverWarning && !isGaslessAvailable || isNotEnoughFee) {
             add(
                 SwapNotificationUM.Error.UnableToCoverFeeWarning(
                     fromToken = fromToken,
