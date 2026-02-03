@@ -31,4 +31,5 @@ enum class PromoId {
     VisaPresale,
     BlackFriday,
     OnePlusOne,
+    YieldPromo,
 }
