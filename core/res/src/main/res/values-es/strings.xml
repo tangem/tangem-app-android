@@ -836,7 +836,7 @@
     <item quantity="other">Hace %d minutos</item>
   </plurals>
   <string name="news_quick_recap">Resumen rápido</string>
-  <string name="news_related_news">Noticias relacionadas</string>
+  <string name="news_related_news">Noticias</string>
   <string name="news_related_tokens">Tokens relacionados</string>
   <string name="news_sources">Fuentes</string>
   <string name="news_stay_in_the_loop">Manténgase informado</string>
