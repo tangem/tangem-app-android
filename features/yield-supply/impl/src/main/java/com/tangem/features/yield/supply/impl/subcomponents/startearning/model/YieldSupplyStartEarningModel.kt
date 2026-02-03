@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -65,6 +66,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -267,6 +269,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             YieldSupplyAnalytics.FundsEarned(
                 blockchain = cryptoCurrency.network.name,
                 token = cryptoCurrency.symbol,
+                referralId = appsFlyerStore.get()?.refcode,
             ),
         )
         yieldSupplyFeeUM.transactionDataList.forEach {
