@@ -11,7 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -38,14 +38,11 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
-import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
-import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -69,8 +66,6 @@ internal interface WalletWarningsClickIntents {
     fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
 
     fun onOpenUnlockWalletsBottomSheetClick()
-
-    fun onUnlockVisaAccessClick()
 
     fun onLikeAppClick()
 
@@ -113,7 +108,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -133,6 +127,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val reviewManager: ReviewManager,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -212,38 +207,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onUnlockVisaAccessClick() {
-        openScanCardDialog()
-    }
-
-    private fun openScanCardDialog() {
-        modelScope.launch(dispatchers.main) {
-            scanCardToUnlockWalletClickHandler(walletId = stateHolder.getSelectedWalletId())
-                .onLeft { error ->
-                    when (error) {
-                        ScanCardToUnlockWalletError.WrongCardIsScanned -> {
-                            walletEventSender.send(
-                                event = WalletEvent.ShowAlert(WalletAlertState.WrongCardIsScanned),
-                            )
-                        }
-                        ScanCardToUnlockWalletError.ManyScanFails -> router.openScanFailedDialog(::openScanCardDialog)
-                    }
-                }
-        }
-    }
-
     override fun onLikeAppClick() {
         analyticsEventHandler.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
 
-        walletEventSender.send(
-            event = WalletEvent.RateApp(
-                onDismissClick = {
-                    modelScope.launch(dispatchers.main) {
-                        neverToSuggestRateAppUseCase()
-                    }
-                },
-            ),
-        )
+        reviewManager.request {
+            modelScope.launch(dispatchers.main) {
+                neverToSuggestRateAppUseCase()
+            }
+        }
     }
 
     override fun onDislikeAppClick() {
@@ -293,7 +264,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     action = PromotionBannerClicked.BannerAction.Closed(),
                 )
             },
-
         )
         modelScope.launch(dispatchers.main) {
             shouldShowPromoWalletUseCase.neverToShow(promoId)
@@ -374,21 +344,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseConfirm {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
 
-                            urlOpener.openUrl(
-                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
-                            )
-                        }
-                    },
-                ),
-            ),
+                    urlOpener.openUrl(
+                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
+                    )
+                }
+            },
         )
     }
 
@@ -397,17 +362,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
-                        }
-                    },
-                ),
-            ),
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseDismiss {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
+                }
+            },
         )
     }
 
@@ -416,21 +376,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseConfirm {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
 
-                            urlOpener.openUrl(
-                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
-                            )
-                        }
-                    },
-                ),
-            ),
+                    urlOpener.openUrl(
+                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
+                    )
+                }
+            },
         )
     }
 
