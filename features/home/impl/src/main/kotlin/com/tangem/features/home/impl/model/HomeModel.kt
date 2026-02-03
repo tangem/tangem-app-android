@@ -186,7 +186,10 @@ internal class HomeModel @Inject constructor(
             return
         }
 
-        saveWalletUseCase(userWallet).fold(
+        saveWalletUseCase(
+            userWallet = userWallet,
+            analyticsSource = AnalyticsParam.ScreensSources.Intro,
+        ).fold(
             ifLeft = {
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)

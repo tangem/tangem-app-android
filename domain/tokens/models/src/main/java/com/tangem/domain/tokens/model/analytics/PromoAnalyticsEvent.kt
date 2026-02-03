@@ -60,5 +60,6 @@ sealed class PromoAnalyticsEvent(
         Sepa("Sepa"),
         BlackFriday("Black Friday"),
         OnePlusOne("One-Plus-One"),
+        YieldPromo("Yield Promo"),
     }
 }
