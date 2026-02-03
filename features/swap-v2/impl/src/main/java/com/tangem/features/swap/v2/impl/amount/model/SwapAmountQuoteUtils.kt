@@ -70,7 +70,6 @@ internal object SwapAmountQuoteUtils {
         }
 
         return copy(
-            isPrimaryButtonEnabled = updatedAmountField.amountField.isPrimaryButtonEnabled,
             primaryAmount = updatedAmountField,
         )
     }

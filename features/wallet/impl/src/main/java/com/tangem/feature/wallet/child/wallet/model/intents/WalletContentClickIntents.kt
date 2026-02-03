@@ -165,6 +165,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 cryptoCurrencyStatus = currencyStatus,
                 apy = apy,
             )
+            is NavigationAction.CloreMigration -> Unit
         }
     }
 
@@ -239,6 +240,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     },
                 )
             }
+            is NavigationAction.CloreMigration -> return
         }
         analyticsEventHandler.send(event)
     }
