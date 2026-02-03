@@ -30,19 +30,16 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
-import com.tangem.tap.domain.userWalletList.utils.encryptionKey
-import com.tangem.tap.domain.userWalletList.utils.lock
-import com.tangem.tap.domain.userWalletList.utils.publicInformation
-import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
-import com.tangem.tap.domain.userWalletList.utils.toUserWallets
-import com.tangem.tap.domain.userWalletList.utils.updateWith
+import com.tangem.tap.domain.userWalletList.utils.*
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -67,7 +64,16 @@ internal class DefaultUserWalletsListRepository(
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
     override val selectedUserWallet = MutableStateFlow<UserWallet?>(null)
+
     private val mutex = Mutex()
+
+    override fun getSyncOrNull(id: UserWalletId): UserWallet? {
+        return userWallets.value?.find { it.walletId == id }
+    }
+
+    override fun getSyncStrict(id: UserWalletId): UserWallet {
+        return requireNotNull(getSyncOrNull(id)) { "Unable to find user wallet with provided ID: $id" }
+    }
 
     override suspend fun load() {
         mutex.withLock {
@@ -100,6 +106,13 @@ internal class DefaultUserWalletsListRepository(
                         loadedWallets
                     }
                 }
+        }
+    }
+
+    override fun loadAndGet(): Flow<List<UserWallet>> = flow {
+        load()
+        userWallets.collect {
+            emit(requireNotNull(it))
         }
     }
 
@@ -289,8 +302,7 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
-                    val res = tangemSdkManagerProvider().scanProduct()
-                    when (res) {
+                    when (val res = tangemSdkManagerProvider().scanProduct()) {
                         is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
                         is CompletionResult.Success -> res.data
                     }
@@ -467,9 +479,7 @@ internal class DefaultUserWalletsListRepository(
             authMode = true, // In auth mode user wallet can be deleted after 30 failed attempts
             hasBiometry = hasBiometry(),
         )
-        val result = passwordRequester.requestPassword(attemptRequest)
-
-        return when (result) {
+        return when (val result = passwordRequester.requestPassword(attemptRequest)) {
             HotWalletPasswordRequester.Result.Dismiss -> {
                 passwordRequester.dismiss()
                 UnlockWalletError.UserCancelled.left()
