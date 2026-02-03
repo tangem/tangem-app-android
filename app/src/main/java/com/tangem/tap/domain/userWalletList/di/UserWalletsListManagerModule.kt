@@ -16,19 +16,14 @@ import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
-import com.tangem.tap.domain.userWalletList.implementation.BiometricUserWalletsListManager
-import com.tangem.tap.domain.userWalletList.implementation.GeneralUserWalletsListManager
-import com.tangem.tap.domain.userWalletList.implementation.RuntimeUserWalletsListManager
 import com.tangem.tap.domain.userWalletList.repository.DefaultUserWalletsListRepository
 import com.tangem.tap.domain.userWalletList.repository.DelegatedKeystoreManager
 import com.tangem.tap.domain.userWalletList.repository.UserWalletEncryptionKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysStoreDecorator
-import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricUserWalletsKeysRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
@@ -46,77 +41,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object UserWalletsListManagerModule {
-
-    @Provides
-    @Singleton
-    @Deprecated("Use UserWalletsListRepository instead")
-    fun provideGeneralUserWalletsListManager(
-        @ApplicationContext applicationContext: Context,
-        appPreferencesStore: AppPreferencesStore,
-        dispatchers: CoroutineDispatcherProvider,
-        analyticsEventHandler: AnalyticsEventHandler,
-    ): UserWalletsListManager {
-        return GeneralUserWalletsListManager(
-            runtimeUserWalletsListManager = RuntimeUserWalletsListManager(),
-            biometricUserWalletsListManager = createBiometricUserWalletsListManager(
-                applicationContext = applicationContext,
-                analyticsEventHandler = analyticsEventHandler,
-                dispatchers = dispatchers,
-            ),
-            appPreferencesStore = appPreferencesStore,
-            dispatchers = dispatchers,
-        )
-    }
-
-    @Deprecated("Use UserWalletsListRepository instead")
-    private fun createBiometricUserWalletsListManager(
-        applicationContext: Context,
-        analyticsEventHandler: AnalyticsEventHandler,
-        dispatchers: CoroutineDispatcherProvider,
-    ): UserWalletsListManager {
-        val moshi = buildMoshi()
-        val secureStorage = buildSecureStorage(applicationContext = applicationContext)
-
-        val authenticatedStorage = AuthenticatedStorage(
-            secureStorage = UserWalletsKeysStoreDecorator(
-                featureStorage = secureStorage,
-                cardSdkStorageProvider = Provider { tangemSdkManager.secureStorage },
-            ),
-            keystoreManager = DelegatedKeystoreManager(
-                keystoreManagerProvider = Provider { tangemSdkManager.keystoreManager },
-            ),
-        )
-
-        val keysRepository = BiometricUserWalletsKeysRepository(
-            moshi = moshi,
-            secureStorage = secureStorage,
-            authenticatedStorage = authenticatedStorage,
-            analyticsEventHandler = analyticsEventHandler,
-        )
-
-        val publicInformationRepository = DefaultUserWalletsPublicInformationRepository(
-            moshi = moshi,
-            secureStorage = secureStorage,
-        )
-
-        val sensitiveInformationRepository = DefaultUserWalletsSensitiveInformationRepository(
-            moshi = moshi,
-            secureStorage = secureStorage,
-        )
-
-        val selectedUserWalletRepository = DefaultSelectedUserWalletRepository(
-            secureStorage = secureStorage,
-            dispatchers = dispatchers,
-        )
-
-        return BiometricUserWalletsListManager(
-            keysRepository = keysRepository,
-            publicInformationRepository = publicInformationRepository,
-            sensitiveInformationRepository = sensitiveInformationRepository,
-            selectedUserWalletRepository = selectedUserWalletRepository,
-            dispatcherProvider = dispatchers,
-        )
-    }
 
     @Provides
     @Singleton
@@ -183,7 +107,7 @@ internal object UserWalletsListManagerModule {
         )
     }
 
-    fun buildMoshi(): Moshi {
+    private fun buildMoshi(): Moshi {
         return Moshi.Builder()
             .add(WalletDerivedKeysMapAdapter())
             .add(ScanResponseDerivedKeysMapAdapter())
@@ -200,7 +124,7 @@ internal object UserWalletsListManagerModule {
             .build()
     }
 
-    fun buildSecureStorage(@ApplicationContext applicationContext: Context): SecureStorage {
+    private fun buildSecureStorage(@ApplicationContext applicationContext: Context): SecureStorage {
         return AndroidSecureStorage(
             preferences = SecureStorage.createEncryptedSharedPreferences(
                 context = applicationContext,
