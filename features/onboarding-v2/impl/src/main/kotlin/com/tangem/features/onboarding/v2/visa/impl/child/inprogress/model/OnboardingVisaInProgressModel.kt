@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -173,7 +174,10 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             }
 
         val userWallet = createUserWallet(params.scanResponse, newTokens)
-        saveWalletUseCase(userWallet)
+        saveWalletUseCase(
+            userWallet = userWallet,
+            analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
+        )
         visaAuthTokenStorage.remove(params.scanResponse.card.cardId)
         otpStorage.removeOTP(params.scanResponse.card.cardId)
 

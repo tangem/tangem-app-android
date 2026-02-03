@@ -2,6 +2,7 @@ package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromoBannerResponse
+import com.tangem.datasource.api.promotion.models.PromoBannerV2Response
 import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -188,6 +189,12 @@ interface TangemTechApi {
         @Query("programName") name: String,
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromoBannerResponse>
+
+    @GET("/v2/promotion")
+    suspend fun getPromoBannersV2(
+        @Query("walletId") walletId: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromoBannerV2Response>
     // endregion
 
     /**

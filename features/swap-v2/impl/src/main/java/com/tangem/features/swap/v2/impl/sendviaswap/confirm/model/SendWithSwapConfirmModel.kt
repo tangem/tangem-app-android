@@ -22,10 +22,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.express.models.ExpressOperationType
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -395,6 +395,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun updateConfirmNotifications() {
         modelScope.launch {
+            val feeCryptoCurrencyStatus =
+                feeUMV2?.feeExtraInfo?.feeCryptoCurrencyStatus ?: params.primaryFeePaidCurrencyStatusFlow.value
             sendNotificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
                     destinationAddress = when (val currency = primaryCurrencyStatus.currency) {
@@ -407,7 +409,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
-                    feeCryptoCurrencyStatus = params.primaryFeePaidCurrencyStatusFlow.value,
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                 ),
             )
             swapNotificationsUpdateTrigger.triggerUpdate(

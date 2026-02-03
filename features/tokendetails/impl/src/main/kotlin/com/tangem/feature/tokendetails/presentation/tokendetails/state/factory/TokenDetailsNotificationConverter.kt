@@ -155,7 +155,9 @@ internal class TokenDetailsNotificationConverter(
                 },
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
-            is CryptoCurrencyWarning.MigrationClore -> MigrationClore
+            is CryptoCurrencyWarning.MigrationClore -> MigrationClore(
+                onMigrationClick = clickIntents::onCloreMigrationClick,
+            )
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
         }
     }

@@ -48,6 +48,7 @@ class AccountPortfolioItemUMConverter(
             )
             UserWalletItemUM.Information.Loaded(text)
         }
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 
     private fun getImageState(account: Account.CryptoPortfolio) = when (account) {
@@ -55,6 +56,7 @@ class AccountPortfolioItemUMConverter(
             name = account.accountName.toUM().value,
             icon = CryptoPortfolioIconConverter.convert(account.icon),
         )
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 
     private fun getBalanceInfo(): UserWalletItemUM.Balance {

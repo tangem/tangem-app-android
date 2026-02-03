@@ -135,17 +135,20 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
             val scanResponse = params.multiWalletState.value.currentScanResponse
 
             val userWallet = createUserWallet(scanResponse)
-            saveWalletUseCase(userWallet, canOverride = true)
-                .onRight {
-                    cardRepository.finishCardActivation(scanResponse.card.cardId)
+            saveWalletUseCase(
+                userWallet = userWallet,
+                canOverride = true,
+                analyticsSource = AnalyticsParam.ScreensSources.Onboarding,
+            ).onRight {
+                cardRepository.finishCardActivation(scanResponse.card.cardId)
 
-                    // save user wallet for manage tokens screen
-                    params.multiWalletState.update {
-                        it.copy(resultUserWallet = userWallet)
-                    }
-
-                    onDone.emit(Step.Done)
+                // save user wallet for manage tokens screen
+                params.multiWalletState.update {
+                    it.copy(resultUserWallet = userWallet)
                 }
+
+                onDone.emit(Step.Done)
+            }
         }
     }
 
