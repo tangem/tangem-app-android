@@ -285,5 +285,6 @@ sealed class AnalyticsParam {
         const val ENS_ADDRESS = "ENS Address"
         const val ACCOUNT_DERIVATION_FROM = "Account Derivation (from)"
         const val FEE_TOKEN = "Fee Token"
+        const val ACCOUNT_DERIVATION = "Account Derivation"
     }
 }
