@@ -32,16 +32,8 @@
         "version": "undefined"
     },
     {
-        "name": "HOT_WALLET_ENABLED",
-        "version": "5.32.0"
-    },
-    {
         "name": "HOT_WALLET_CREATION_RESTRICTION_ENABLED",
         "version": "5.32.0"
-    },
-    {
-        "name": "HOT_WALLET_VISIBLE",
-        "version": "5.32.1"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
