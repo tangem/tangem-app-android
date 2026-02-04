@@ -7,6 +7,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -100,6 +101,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val accountDependencies: AccountDependencies,
     private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
+    private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -311,15 +313,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onConfirmDisposeExpressStatus() {
-        walletEventSender.send(
-            WalletEvent.ShowAlert(
-                WalletAlertState.ConfirmExpressStatusHide(
-                    onConfirmClick = {
-                        walletEventSender.onConsume()
-                        onDisposeExpressStatus()
-                    },
-                    onCancelClick = walletEventSender::onConsume,
-                ),
+        uiMessageSender.send(
+            WalletAlertUM.confirmExpressStatusHide(
+                onConfirmClick = {
+                    walletEventSender.onConsume()
+                    onDisposeExpressStatus()
+                },
             ),
         )
     }
