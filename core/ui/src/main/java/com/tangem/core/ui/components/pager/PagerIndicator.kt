@@ -1,201 +1,284 @@
 package com.tangem.core.ui.components.pager
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.roundToInt
 
-// six - cause the central indicator has width multiplied twice
-private const val TOTAL_MAX_INDICATORS = 6
-private const val SPACER_COUNT_BETWEEN_INDICATORS = 4
+private const val ANIMATION_DURATION = 300
+private const val MAX_VISIBLE_DOTS = 5
+private const val MIN_HIDDEN_FOR_SMALL_DOT = 2
+private const val MIN_DISTANCE_FOR_SMALL_DOT = 3
+private const val MIN_DISTANCE_FOR_HINT_DOT = 2
 
-/**
- * Horizontal pager indicator
- *
- * @param pagerState state of pager
- * @param indicatorCount counter of visible indicator items
- */
+private val SPACING = 4.dp
+private val BACKGROUND_SIZE = DpSize(92.dp, 32.dp)
+
+private val CURRENT_DOT_SIZE = DpSize(16.dp, 8.dp)
+private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
+private val HINT_DOT_SIZE = DpSize(6.dp, 6.dp)
+private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
+
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier, indicatorCount: Int = 5) {
-    if (pagerState.pageCount == 0) return
+fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
+    val totalPages = pagerState.pageCount
+    val currentIndex = pagerState.currentPage
 
-    val listState = rememberLazyListState()
+    if (totalPages == 0) return
 
     val indicatorColor = TangemTheme.colors.control.key
     val overlayColor = TangemTheme.colors.overlay.secondary
+    val inactiveIndicatorColor = TangemTheme.colors.text.tertiary
 
-    val inactiveIndicatorColor = remember(indicatorColor) {
-        indicatorColor.copy(alpha = 0.5f)
-    }
+    val density = LocalDensity.current
 
-    val baseIndicatorSize = 8.dp
-    val spacing = 4.dp
+    val (targetLower, targetUpper) = getWindowBounds(totalPages, currentIndex)
 
-    val indicatorState by remember(pagerState, indicatorCount) {
-        derivedStateOf {
-            val count = pagerState.pageCount
-            val current = pagerState.currentPage
+    var displayLower by remember { mutableIntStateOf(targetLower) }
+    var displayUpper by remember { mutableIntStateOf(targetUpper) }
+    var prevTargetLower by remember { mutableIntStateOf(targetLower) }
 
-            val winSize = min(indicatorCount, count)
-            val centerPosition = winSize / 2
+    val slideOffset = remember { Animatable(0f) }
+    var isSliding by remember { mutableStateOf(false) }
+    var slideDirection by remember { mutableIntStateOf(0) }
+    val fadeProgress = remember { Animatable(0f) }
+    var fadeJob by remember { mutableStateOf<Job?>(null) }
 
-            val start = when {
-                count <= winSize -> 0
-                current <= centerPosition -> 0
-                current >= count - centerPosition - 1 -> count - winSize
-                else -> current - centerPosition
+    LaunchedEffect(targetLower) {
+        if (targetLower != prevTargetLower && totalPages > MAX_VISIBLE_DOTS) {
+            fadeJob?.cancel()
+            slideOffset.stop()
+            fadeProgress.stop()
+
+            val dir = if (targetLower > prevTargetLower) 1 else -1
+            val edgeDotSize = with(density) { (HINT_DOT_SIZE.width + SPACING).toPx() }
+            val halfEdge = edgeDotSize / 2
+
+            isSliding = true
+            slideDirection = dir
+            fadeProgress.snapTo(0f)
+
+            if (dir > 0) {
+                displayLower = prevTargetLower
+                displayUpper = targetUpper
+                slideOffset.snapTo(halfEdge)
+            } else {
+                displayLower = targetLower
+                displayUpper = prevTargetLower + MAX_VISIBLE_DOTS
+                slideOffset.snapTo(-halfEdge)
             }
-            Triple(count, winSize, start)
+
+            prevTargetLower = targetLower
+
+            fadeJob = launch {
+                fadeProgress.animateTo(1f, tween(ANIMATION_DURATION))
+            }
+            slideOffset.animateTo(
+                if (dir > 0) -halfEdge else halfEdge,
+                tween(ANIMATION_DURATION),
+            )
+
+            displayLower = targetLower
+            displayUpper = targetUpper
+            slideOffset.snapTo(0f)
+            isSliding = false
+            slideDirection = 0
         }
     }
-
-    val (itemCount, windowSize, windowStart) = indicatorState
-    val currentItem by remember { derivedStateOf { pagerState.currentPage } }
-
-    LaunchedEffect(currentItem, windowStart) {
-        if (itemCount > windowSize) {
-            listState.animateScrollToItem(windowStart.coerceIn(0, itemCount - 1))
-        }
-    }
-
-    val maxContainerWidth = remember(baseIndicatorSize, spacing) {
-        baseIndicatorSize * TOTAL_MAX_INDICATORS + spacing * SPACER_COUNT_BETWEEN_INDICATORS
-    }
+    val visibleIndices = (displayLower until displayUpper).toList()
 
     Box(
         modifier = modifier
-            .height(32.dp)
-            .width(maxContainerWidth + 32.dp)
+            .width(BACKGROUND_SIZE.width)
+            .height(BACKGROUND_SIZE.height)
             .background(
                 color = overlayColor,
                 shape = CircleShape,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
             .clip(CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        LazyRow(
-            modifier = Modifier.wrapContentWidth(),
-            state = listState,
+        Row(
+            modifier = Modifier.offset {
+                IntOffset(slideOffset.value.roundToInt(), 0)
+            },
+            horizontalArrangement = Arrangement.spacedBy(SPACING),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing),
-            userScrollEnabled = false,
         ) {
-            indicatorItems(
-                itemCount = itemCount,
-                currentItem = currentItem,
-                activeColor = indicatorColor,
-                inActiveColor = inactiveIndicatorColor,
-                baseSize = baseIndicatorSize,
-                windowSize = windowSize,
-                windowStart = windowStart,
-            )
+            visibleIndices.forEach { index ->
+                val dotAlpha = when {
+                    !isSliding -> 1f
+                    slideDirection > 0 && index == displayLower -> 1f - fadeProgress.value
+                    slideDirection > 0 && index == displayUpper - 1 -> fadeProgress.value
+                    slideDirection < 0 && index == displayUpper - 1 -> 1f - fadeProgress.value
+                    slideDirection < 0 && index == displayLower -> fadeProgress.value
+                    else -> 1f
+                }
+
+                key(index) {
+                    Dot(
+                        index = index,
+                        currentIndex = currentIndex,
+                        totalPages = totalPages,
+                        activeColor = indicatorColor,
+                        inactiveColor = inactiveIndicatorColor,
+                        modifier = Modifier.graphicsLayer { alpha = dotAlpha },
+                    )
+                }
+            }
         }
     }
 }
 
-@Suppress("MagicNumber", "CyclomaticComplexMethod")
-private fun calculateIndicatorHeight(position: Int, currentPosition: Int, baseSize: Dp, windowSize: Int): Dp {
-    val distance = abs(position - currentPosition)
-    val mediumSize = 6.dp
-    val smallSize = 4.dp
-
-    if (windowSize < 5) {
-        return when {
-            distance <= 1 -> baseSize
-            distance == 2 -> mediumSize
-            else -> smallSize
-        }
+private fun getWindowBounds(totalPages: Int, currentIndex: Int): Pair<Int, Int> {
+    if (totalPages <= MAX_VISIBLE_DOTS) {
+        return 0 to totalPages
     }
-
-    val isEdgeFocus = currentPosition == 0 || currentPosition == windowSize - 1
-    val isNearEdgeFocus = currentPosition == 1 || currentPosition == windowSize - 2
-    return when {
-        isEdgeFocus -> when {
-            distance <= 2 -> baseSize
-            distance == 3 -> mediumSize
-            else -> smallSize
-        }
-        isNearEdgeFocus -> when {
-            distance <= 1 -> baseSize
-            distance == 2 -> mediumSize
-            else -> smallSize
-        }
-        else -> when {
-            distance <= 1 -> baseSize
-            else -> mediumSize
-        }
+    val lowerBound = when {
+        currentIndex <= 1 -> 0
+        currentIndex >= totalPages - 2 -> totalPages - MAX_VISIBLE_DOTS
+        else -> currentIndex - 2
     }
+    val upperBound = min(lowerBound + MAX_VISIBLE_DOTS, totalPages)
+    return lowerBound to upperBound
 }
 
-@Suppress("LongParameterList")
-private fun LazyListScope.indicatorItems(
-    itemCount: Int,
-    currentItem: Int,
-    activeColor: Color,
-    inActiveColor: Color,
-    baseSize: Dp,
-    windowSize: Int,
-    windowStart: Int,
+private fun getDotSize(index: Int, currentIndex: Int, totalPages: Int): DpSize {
+    if (index == currentIndex) {
+        return CURRENT_DOT_SIZE
+    }
+    if (totalPages <= MAX_VISIBLE_DOTS) {
+        return NORMAL_DOT_SIZE
+    }
+    val params = DotSizeParams.create(index, currentIndex, totalPages)
+    return params.calculateSize()
+}
+
+private class DotSizeParams private constructor(
+    val posInWindow: Int,
+    val currentPosInWindow: Int,
+    val hiddenLeft: Int,
+    val hiddenRight: Int,
+    val distanceFromCurrent: Int,
 ) {
-    val safeWindowSize = min(windowSize, itemCount)
-    if (safeWindowSize <= 0) return
+    private val lastPos = MAX_VISIBLE_DOTS - 1
+    private val isCentered = currentPosInWindow == 2 && hiddenLeft >= 1 && hiddenRight >= 1
 
-    val windowEnd = windowStart + safeWindowSize
-    val currentPosInWindow = (currentItem - windowStart).coerceIn(0, safeWindowSize - 1)
-
-    items(itemCount) { pageIndex ->
-        val isInWindow = pageIndex in windowStart until windowEnd
-        val positionInWindow = (pageIndex - windowStart).coerceIn(0, safeWindowSize - 1)
-
-        val isSelected = pageIndex == currentItem
-
-        val refinedHeight = if (isInWindow) {
-            calculateIndicatorHeight(
-                position = positionInWindow,
-                currentPosition = currentPosInWindow,
-                baseSize = baseSize,
-                windowSize = safeWindowSize,
-            )
-        } else {
-            0.dp
-        }
-        val targetWidth = if (isSelected) refinedHeight * 2 else refinedHeight
-        val targetShape = if (isSelected) RoundedCornerShape(16.dp) else CircleShape
-        val animatedWidth by animateDpAsState(targetValue = targetWidth, label = "width")
-        val animatedHeight by animateDpAsState(targetValue = refinedHeight, label = "height")
-
-        Box(
-            modifier = Modifier
-                .padding(vertical = (baseSize - animatedHeight) / 2)
-                .clip(targetShape)
-                .width(animatedWidth)
-                .height(animatedHeight)
-                .background(
-                    if (isSelected) activeColor else inActiveColor,
-                    targetShape,
-                ),
-        )
+    fun calculateSize(): DpSize = when {
+        isCentered -> getCenteredSize()
+        hiddenRight >= 1 -> getRightEdgeSize()
+        hiddenLeft >= 1 -> getLeftEdgeSize()
+        else -> NORMAL_DOT_SIZE
     }
+
+    private fun getCenteredSize(): DpSize = when (posInWindow) {
+        0, lastPos -> HINT_DOT_SIZE
+        else -> NORMAL_DOT_SIZE
+    }
+
+    private fun getRightEdgeSize(): DpSize {
+        val isLastPos = posInWindow == lastPos
+        val isSecondToLast = posInWindow == lastPos - 1
+        val hasExtraHidden = hiddenRight >= MIN_HIDDEN_FOR_SMALL_DOT
+        val isFarFromCurrent = distanceFromCurrent >= MIN_DISTANCE_FOR_SMALL_DOT
+        val isModerateDistance = distanceFromCurrent >= MIN_DISTANCE_FOR_HINT_DOT
+
+        return when {
+            isLastPos && hasExtraHidden && isFarFromCurrent -> SMALL_DOT_SIZE
+            isLastPos && isModerateDistance -> HINT_DOT_SIZE
+            isSecondToLast && hasExtraHidden && isModerateDistance -> HINT_DOT_SIZE
+            else -> NORMAL_DOT_SIZE
+        }
+    }
+
+    private fun getLeftEdgeSize(): DpSize {
+        val isFirstPos = posInWindow == 0
+        val isSecondPos = posInWindow == 1
+        val hasExtraHidden = hiddenLeft >= MIN_HIDDEN_FOR_SMALL_DOT
+        val isFarFromCurrent = distanceFromCurrent >= MIN_DISTANCE_FOR_SMALL_DOT
+        val isModerateDistance = distanceFromCurrent >= MIN_DISTANCE_FOR_HINT_DOT
+
+        return when {
+            isFirstPos && hasExtraHidden && isFarFromCurrent -> SMALL_DOT_SIZE
+            isFirstPos && isModerateDistance -> HINT_DOT_SIZE
+            isSecondPos && hasExtraHidden && isModerateDistance -> HINT_DOT_SIZE
+            else -> NORMAL_DOT_SIZE
+        }
+    }
+
+    companion object {
+        fun create(index: Int, currentIndex: Int, totalPages: Int): DotSizeParams {
+            val (windowStart, windowEnd) = getWindowBounds(totalPages, currentIndex)
+            val posInWindow = index - windowStart
+            val currentPosInWindow = currentIndex - windowStart
+            return DotSizeParams(
+                posInWindow = posInWindow,
+                currentPosInWindow = currentPosInWindow,
+                hiddenLeft = windowStart,
+                hiddenRight = totalPages - windowEnd,
+                distanceFromCurrent = abs(posInWindow - currentPosInWindow),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Dot(
+    index: Int,
+    currentIndex: Int,
+    totalPages: Int,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val isActive = index == currentIndex
+    val size = getDotSize(index, currentIndex, totalPages)
+
+    val animSpec = tween<Dp>(ANIMATION_DURATION)
+    val colorSpec = tween<Color>(ANIMATION_DURATION)
+
+    val animatedWidth by animateDpAsState(size.width, animSpec, label = "w$index")
+    val animatedHeight by animateDpAsState(size.height, animSpec, label = "h$index")
+    val animatedColor by animateColorAsState(
+        targetValue = if (isActive) activeColor else inactiveColor,
+        animationSpec = colorSpec,
+        label = "c$index",
+    )
+
+    val shape = RoundedCornerShape(animatedHeight / 2)
+
+    Box(
+        modifier = modifier
+            .width(animatedWidth)
+            .height(animatedHeight)
+            .background(animatedColor, shape),
+    )
 }
 
 @Preview(showBackground = true)
@@ -203,28 +286,82 @@ private fun LazyListScope.indicatorItems(
 private fun PagerIndicatorPreview() {
     TangemThemePreview {
         Column(
-            modifier = Modifier
+            Modifier
                 .background(TangemTheme.colors.background.primary)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            val pagerState = rememberPagerState(
-                initialPage = 2,
-                pageCount = { 10 },
-            )
-            PagerIndicator(pagerState = pagerState)
+            listOf(0, 1, 2, 3, 4).forEach { page ->
+                PagerIndicator(rememberPagerState(page) { 5 })
+            }
+        }
+    }
+}
 
-            val pagerState1 = rememberPagerState(
-                initialPage = 0,
-                pageCount = { 3 },
-            )
-            PagerIndicator(pagerState = pagerState1)
+@Preview(showBackground = true)
+@Composable
+private fun PagerIndicator6ItemsPreview() {
+    TangemThemePreview {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            listOf(0, 1, 2, 3, 4, 5).forEach { page ->
+                PagerIndicator(rememberPagerState(page) { 6 })
+            }
+        }
+    }
+}
 
-            val pagerState2 = rememberPagerState(
-                initialPage = 0,
-                pageCount = { 1 },
-            )
-            PagerIndicator(pagerState = pagerState2)
+@Preview(showBackground = true)
+@Composable
+private fun PagerIndicator7ItemsPreview() {
+    TangemThemePreview {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            listOf(0, 1, 2, 3, 4, 5, 6).forEach { page ->
+                PagerIndicator(rememberPagerState(page) { 7 })
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PagerIndicator10ItemsPreview() {
+    TangemThemePreview {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).forEach { page ->
+                PagerIndicator(rememberPagerState(page) { 10 })
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PagerIndicatorSmallCountsPreview() {
+    TangemThemePreview {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            PagerIndicator(rememberPagerState(0) { 1 })
+            PagerIndicator(rememberPagerState(1) { 2 })
+            PagerIndicator(rememberPagerState(1) { 3 })
         }
     }
 }
