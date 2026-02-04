@@ -3,6 +3,8 @@ package com.tangem.features.onboarding.v2.common.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.getReferralParams
+import kotlin.collections.putAll
 
 sealed class OnboardingEvent(
     category: String,
@@ -25,6 +27,7 @@ sealed class OnboardingEvent(
             creationType: WalletCreationType = WalletCreationType.PrivateKey,
             seedPhraseLength: Int? = null,
             passPhraseState: AnalyticsParam.EmptyFull,
+            referralId: String?,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
@@ -33,6 +36,7 @@ sealed class OnboardingEvent(
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
+                putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent
 
