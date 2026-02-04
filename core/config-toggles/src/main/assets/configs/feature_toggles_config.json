@@ -74,5 +74,9 @@
     {
         "name": "EARN_BLOCK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "WALLET_REORDER_FEATURE_ENABLED",
+        "version": "undefined"
     }
 ]
