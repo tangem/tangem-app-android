@@ -43,6 +43,7 @@ internal data class StakingUiState(
     val event: StateEvent<StakingEvent>,
     val balanceState: BalanceState?,
     val showColdWalletInteractionIcon: Boolean,
+    val shouldShowHoldToConfirmButton: Boolean,
 ) {
 
     fun copyWrapped(

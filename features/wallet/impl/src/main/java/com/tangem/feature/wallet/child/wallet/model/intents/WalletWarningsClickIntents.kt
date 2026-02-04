@@ -11,7 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.navigation.review.ReviewManager
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -37,22 +37,14 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
-import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
-import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
-import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
-import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletError
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
@@ -74,12 +66,6 @@ internal interface WalletWarningsClickIntents {
     fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>)
 
     fun onOpenUnlockWalletsBottomSheetClick()
-
-    fun onUnlockWalletClick()
-
-    fun onUnlockVisaAccessClick()
-
-    fun onScanToUnlockWalletClick()
 
     fun onLikeAppClick()
 
@@ -122,8 +108,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val neverToSuggestRateAppUseCase: NeverToSuggestRateAppUseCase,
     private val remindToRateAppLaterUseCase: RemindToRateAppLaterUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
-    private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -137,13 +121,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val reviewManager: ReviewManager,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -205,81 +189,20 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onOpenUnlockWalletsBottomSheetClick() {
         analyticsEventHandler.send(MainScreen.WalletUnlockTapped())
 
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            modelScope.launch {
-                userWalletsListRepository.unlockAllWallets()
-                    .onLeft {
-                        val selectedUserWalletId = stateHolder.getSelectedWalletId()
-                        nonBiometricUnlockWalletUseCase(selectedUserWalletId)
-                            .onLeft { error ->
-                                error.handle(
-                                    onAlreadyUnlocked = {},
-                                    onUserCancelled = {},
-                                    analyticsEventHandler = analyticsEventHandler,
-                                    isFromUnlockAll = true,
-                                    showMessage = uiMessageSender::send,
-                                )
-                            }
-                    }
-            }
-            return
-        }
-
-        // Will be removed after hot wallet release
-        stateHolder.showBottomSheet(
-            WalletBottomSheetConfig.UnlockWallets(
-                onUnlockClick = this::onUnlockWalletClick,
-                onScanClick = this::onScanToUnlockWalletClick,
-            ),
-        )
-    }
-
-    @Deprecated("Will be removed with hot wallet release")
-    override fun onUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics())
-
-        modelScope.launch(dispatchers.main) {
-            unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
-                .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
-                .onLeft(::handleUnlockWalletsError)
-        }
-    }
-
-    override fun onUnlockVisaAccessClick() {
-        openScanCardDialog()
-    }
-
-    private fun handleUnlockWalletsError(error: UnlockWalletsError) {
-        val event = when (error) {
-            is UnlockWalletsError.DataError,
-            is UnlockWalletsError.UnableToUnlockWallets,
-            -> WalletEvent.ShowError(resourceReference(R.string.user_wallet_list_error_unable_to_unlock))
-            is UnlockWalletsError.NoUserWalletSelected,
-            is UnlockWalletsError.NotAllUserWalletsUnlocked,
-            -> WalletEvent.ShowAlert(WalletAlertState.RescanWallets)
-        }
-
-        walletEventSender.send(event)
-    }
-
-    @Deprecated("Will be removed with hot wallet release")
-    override fun onScanToUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockWithCardScan())
-        openScanCardDialog()
-    }
-
-    private fun openScanCardDialog() {
-        modelScope.launch(dispatchers.main) {
-            scanCardToUnlockWalletClickHandler(walletId = stateHolder.getSelectedWalletId())
-                .onLeft { error ->
-                    when (error) {
-                        ScanCardToUnlockWalletError.WrongCardIsScanned -> {
-                            walletEventSender.send(
-                                event = WalletEvent.ShowAlert(WalletAlertState.WrongCardIsScanned),
+        modelScope.launch {
+            userWalletsListRepository.unlockAllWallets()
+                .onLeft {
+                    val selectedUserWalletId = stateHolder.getSelectedWalletId()
+                    nonBiometricUnlockWalletUseCase(selectedUserWalletId)
+                        .onLeft { error ->
+                            error.handle(
+                                onAlreadyUnlocked = {},
+                                onUserCancelled = {},
+                                analyticsEventHandler = analyticsEventHandler,
+                                isFromUnlockAll = true,
+                                showMessage = uiMessageSender::send,
                             )
                         }
-                        ScanCardToUnlockWalletError.ManyScanFails -> router.openScanFailedDialog(::openScanCardDialog)
-                    }
                 }
         }
     }
@@ -287,15 +210,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onLikeAppClick() {
         analyticsEventHandler.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
 
-        walletEventSender.send(
-            event = WalletEvent.RateApp(
-                onDismissClick = {
-                    modelScope.launch(dispatchers.main) {
-                        neverToSuggestRateAppUseCase()
-                    }
-                },
-            ),
-        )
+        reviewManager.request {
+            modelScope.launch(dispatchers.main) {
+                neverToSuggestRateAppUseCase()
+            }
+        }
     }
 
     override fun onDislikeAppClick() {
@@ -345,7 +264,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     action = PromotionBannerClicked.BannerAction.Closed(),
                 )
             },
-
         )
         modelScope.launch(dispatchers.main) {
             shouldShowPromoWalletUseCase.neverToShow(promoId)
@@ -426,21 +344,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseConfirm {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
 
-                            urlOpener.openUrl(
-                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
-                            )
-                        }
-                    },
-                ),
-            ),
+                    urlOpener.openUrl(
+                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
+                    )
+                }
+            },
         )
     }
 
@@ -449,17 +362,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
-                        }
-                    },
-                ),
-            ),
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseDismiss {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
+                }
+            },
         )
     }
 
@@ -468,21 +376,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed())
 
-        walletEventSender.send(
-            event = WalletEvent.ShowAlert(
-                state = WalletAlertState.SimpleOkAlert(
-                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
-                    onOkClick = {
-                        modelScope.launch {
-                            seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
+        uiMessageSender.send(
+            WalletAlertUM.seedPhraseConfirm {
+                modelScope.launch {
+                    seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
 
-                            urlOpener.openUrl(
-                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
-                            )
-                        }
-                    },
-                ),
-            ),
+                    urlOpener.openUrl(
+                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
+                    )
+                }
+            },
         )
     }
 

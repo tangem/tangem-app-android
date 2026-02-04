@@ -235,6 +235,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val searchThroughMarketPlaceholder: KNode = child {
+        hasText(getResourceString(R.string.markets_search_header_title))
+        useUnmergedTree = true
+    }
+
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
         return lazyList.child {
             hasTestTag(MainScreenTestTags.TOKEN_LIST_ITEM)

@@ -24,7 +24,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.features.details.impl.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -38,7 +37,6 @@ internal class UserWalletSaver @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val messageSender: UiMessageSender,
     private val router: Router,
@@ -84,11 +82,7 @@ internal class UserWalletSaver @Inject constructor(
             recover = { error ->
                 when (error) {
                     is SaveWalletError.WalletAlreadySaved -> {
-                        if (shouldSaveUserWalletsSyncUseCase()) {
-                            selectUserWallet()
-                        } else {
-                            router.popTo<AppRoute.Wallet>()
-                        }
+                        selectUserWallet()
                     }
                     is SaveWalletError.DataError -> {
                         val messageRef = ensureNotNull(error.messageId?.let(::resourceReference)) {
@@ -116,7 +110,7 @@ internal class UserWalletSaver @Inject constructor(
         )
     }
 
-    private suspend fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
+    private fun Raise<Error>.createUserWallet(response: ScanResponse): UserWallet {
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse = response).build()
 
         return ensureNotNull(userWallet) { Error.Unknown }

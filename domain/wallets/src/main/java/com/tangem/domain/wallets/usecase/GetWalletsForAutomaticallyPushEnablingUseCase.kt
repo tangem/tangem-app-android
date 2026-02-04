@@ -2,7 +2,6 @@ package com.tangem.domain.wallets.usecase
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -11,24 +10,17 @@ import kotlinx.coroutines.withContext
  * * This use case filters out wallets that have already had push notifications automatically enabled
  * from the complete list of user wallets, returning only those wallets that still need to have
  * push notifications automatically enabled.
- * @property userWalletsListManager Manager for user wallets list operations
  * @property userWalletsListRepository Repository for user wallets list operations
  * @property dispatchers Coroutine dispatcher provider for background operations
  */
 class GetWalletsForAutomaticallyPushEnablingUseCase(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val shouldUseNewListRepository: Boolean,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     suspend operator fun invoke(walletsListWherePushWasEnabled: List<UserWalletId>): List<UserWalletId> =
         withContext(dispatchers.default) {
-            val allLocalWallets = if (shouldUseNewListRepository) {
-                userWalletsListRepository.userWalletsSync().map { it.walletId }
-            } else {
-                userWalletsListManager.userWalletsSync.map { it.walletId }
-            }
+            val allLocalWallets = userWalletsListRepository.userWalletsSync().map { it.walletId }
             allLocalWallets - walletsListWherePushWasEnabled.toSet()
         }
 }

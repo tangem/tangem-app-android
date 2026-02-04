@@ -14,12 +14,9 @@ import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.requireColdWallet
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -52,10 +49,8 @@ internal class ResetCardModel @Inject constructor(
     private val resetCardUseCase: ResetCardUseCase,
     private val deleteSavedAccessCodesUseCase: DeleteSavedAccessCodesUseCase,
     private val deleteWalletUseCase: DeleteWalletUseCase,
-    private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ResetCardComponent.Params>()
@@ -277,16 +272,7 @@ internal class ResetCardModel @Inject constructor(
         if (newSelectedWallet != null) {
             store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
-            if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
-            } else {
-                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked }.isSuccess
-                if (isLocked && userWalletsListManager.hasUserWallets) {
-                    store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
-                } else {
-                    store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
-                }
-            }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
         }
     }
 

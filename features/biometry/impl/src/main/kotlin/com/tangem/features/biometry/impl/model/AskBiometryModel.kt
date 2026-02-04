@@ -16,12 +16,10 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.SetAskBiometryShownUseCase
-import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -40,7 +38,6 @@ internal class AskBiometryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val setAskBiometryShownUseCase: SetAskBiometryShownUseCase,
-    private val settingsRepository: SettingsRepository,
     private val tangemSdkManager: TangemSdkManager,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val walletsRepository: WalletsRepository,
@@ -48,7 +45,6 @@ internal class AskBiometryModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<AskBiometryComponent.Params>()
@@ -110,24 +106,13 @@ internal class AskBiometryModel @Inject constructor(
     }
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
-        walletsRepository.saveShouldSaveUserWallets(item = true)
-
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            walletsRepository.setUseBiometricAuthentication(value = true)
-            walletsRepository.setRequireAccessCode(value = false)
-            setBiometryLockForAllWallets()
-            if (userWallet is UserWallet.Cold) {
-                cardSdkConfigRepository.setAccessCodeRequestPolicy(
-                    isBiometricsRequestPolicy = userWallet.hasAccessCode,
-                )
-            }
-        } else {
-            settingsRepository.setShouldSaveAccessCodes(value = true)
-            if (userWallet is UserWallet.Cold) {
-                cardSdkConfigRepository.setAccessCodeRequestPolicy(
-                    isBiometricsRequestPolicy = userWallet.hasAccessCode,
-                )
-            }
+        walletsRepository.setUseBiometricAuthentication(value = true)
+        walletsRepository.setRequireAccessCode(value = false)
+        setBiometryLockForAllWallets()
+        if (userWallet is UserWallet.Cold) {
+            cardSdkConfigRepository.setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = userWallet.hasAccessCode,
+            )
         }
 
         if (_uiState.value.isBottomSheetVariant) {
