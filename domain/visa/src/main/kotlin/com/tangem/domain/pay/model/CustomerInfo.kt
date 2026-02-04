@@ -7,6 +7,7 @@ sealed class MainCustomerInfoContentState {
     object Loading : MainCustomerInfoContentState()
     object OnboardingBanner : MainCustomerInfoContentState()
     data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
+    object Empty : MainCustomerInfoContentState()
 }
 
 data class MainScreenCustomerInfo(
