@@ -98,16 +98,17 @@ sealed class SwapEvents(
         val toDerivationIndex: Int?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
-        params = mapOf(
-            "Provider" to provider.name,
-            "Commission" to if (commission == FeeType.NORMAL) "Market" else "Fast",
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Send Blockchain" to sendBlockchain,
-            "Receive Blockchain" to receiveBlockchain,
-            "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
-            FEE_TOKEN to feeToken,
-        ),
+        params = buildMap {
+            put("Provider", provider.name)
+            put("Commission", if (commission == FeeType.NORMAL) "Market" else "Fast")
+            put("Send Token", sendToken)
+            put("Receive Token", receiveToken)
+            put("Send Blockchain", sendBlockchain)
+            put("Receive Blockchain", receiveBlockchain)
+            if (fromDerivationIndex != null) put("Account Derivation (from)", fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put("Account Derivation (to)", toDerivationIndex.toString())
+            put(FEE_TOKEN, feeToken)
+        },
     ), AppsFlyerIncludedEvent
 
     class ProviderClicked : SwapEvents("Provider Clicked")
