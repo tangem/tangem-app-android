@@ -1,6 +1,5 @@
 package com.tangem.features.feed.model.news.details.factory
 
-import com.tangem.core.navigation.share.ShareManager
 import com.tangem.features.feed.ui.news.details.state.ArticleUM
 import com.tangem.features.feed.ui.news.details.state.ArticlesStateUM
 import com.tangem.features.feed.ui.news.details.state.NewsDetailsUM
@@ -10,7 +9,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class NewsDetailsStateFactory(
     private val currentStateProvider: Provider<NewsDetailsUM>,
-    private val shareManager: ShareManager,
+    private val onShareClick: (ArticleUM) -> Unit,
     private val onStateUpdate: (NewsDetailsUM) -> Unit,
     private val onRetryClick: () -> Unit,
 ) {
@@ -23,11 +22,7 @@ internal class NewsDetailsStateFactory(
                 articles = articles.toImmutableList(),
                 articlesStateUM = ArticlesStateUM.Content,
                 selectedArticleIndex = selectedIndex,
-                onShareClick = {
-                    currentArticle?.let {
-                        shareManager.shareText(it.newsUrl)
-                    }
-                },
+                onShareClick = { currentArticle?.let(onShareClick) },
             ),
         )
     }
@@ -38,11 +33,7 @@ internal class NewsDetailsStateFactory(
         onStateUpdate(
             currentState.copy(
                 selectedArticleIndex = newIndex,
-                onShareClick = {
-                    currentArticle?.let {
-                        shareManager.shareText(it.newsUrl)
-                    }
-                },
+                onShareClick = { currentArticle?.let(onShareClick) },
             ),
         )
     }
