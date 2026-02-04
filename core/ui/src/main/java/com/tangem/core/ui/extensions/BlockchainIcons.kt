@@ -99,6 +99,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "linea", "linea/test" -> R.drawable.img_linea_22
         "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.img_plasma_22
+        "monad", "monad/test" -> R.drawable.img_monad_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -196,6 +197,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "linea", "linea/test" -> R.drawable.img_linea_22
         "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.img_plasma_22
+        "monad", "monad/test" -> R.drawable.img_monad_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -296,6 +298,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "linea", "linea/test" -> R.drawable.ic_linea_22
         "arbitrum-nova" -> R.drawable.ic_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.ic_plasma_22
+        "monad", "monad/test" -> R.drawable.ic_monad_22
         else -> R.drawable.ic_alert_24
     }
 }

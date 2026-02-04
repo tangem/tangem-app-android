@@ -30,6 +30,10 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 apiKey = value.quiknodePlasmaApiKey,
                 subdomain = value.quiknodePlasmaSubdomain,
             ),
+            quickNodeMonadCredentials = QuickNodeCredentials(
+                apiKey = value.quiknodeMonadApiKey,
+                subdomain = value.quiknodeMonadSubdomain,
+            ),
             infuraProjectId = value.infuraProjectId,
             tronGridApiKey = value.tronGridApiKey,
             nowNodeCredentials = NowNodeCredentials(value.nowNodesApiKey),
@@ -109,6 +113,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 sui = GetBlockAccessToken(jsonRpc = accessTokens.sui?.jsonRPC),
                 telos = GetBlockAccessToken(jsonRpc = accessTokens.telos?.jsonRPC),
                 tezos = GetBlockAccessToken(rest = accessTokens.tezos?.rest),
+                monad = GetBlockAccessToken(rest = accessTokens.monad?.rest),
             )
         }
     }
