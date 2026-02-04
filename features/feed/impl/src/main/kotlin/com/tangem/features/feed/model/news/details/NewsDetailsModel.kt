@@ -108,9 +108,9 @@ internal class NewsDetailsModel @Inject constructor(
     private val stateFactory by lazy(LazyThreadSafetyMode.NONE) {
         NewsDetailsStateFactory(
             currentStateProvider = Provider { _state.value },
-            shareManager = shareManager,
             onStateUpdate = { newState -> _state.update { newState } },
             onRetryClick = ::onRetryClicked,
+            onShareClick = ::onShareClick,
         )
     }
 
@@ -147,6 +147,11 @@ internal class NewsDetailsModel @Inject constructor(
             ),
         )
         urlOpener.openUrl(relatedArticle.url)
+    }
+
+    private fun onShareClick(article: ArticleUM) {
+        shareManager.shareText(article.newsUrl)
+        analyticsEventHandler.send(NewsDetailsAnalyticsEvent.NewsShareButtonClick(article.id))
     }
 
     private fun onArticleIndexChanged(newIndex: Int) {
