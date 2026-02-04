@@ -3,6 +3,7 @@ package com.tangem.core.analytics.models.event
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.getReferralParams
 
 sealed class OnboardingAnalyticsEvent(
     category: String,
@@ -55,6 +56,7 @@ sealed class OnboardingAnalyticsEvent(
             creationType: WalletCreationType = WalletCreationType.NewSeed,
             seedPhraseLength: Int? = null,
             passPhraseState: AnalyticsParam.EmptyFull,
+            referralId: String?,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
@@ -64,6 +66,7 @@ sealed class OnboardingAnalyticsEvent(
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
+                putAll(getReferralParams(referralId))
             },
         ), AppsFlyerIncludedEvent
 
