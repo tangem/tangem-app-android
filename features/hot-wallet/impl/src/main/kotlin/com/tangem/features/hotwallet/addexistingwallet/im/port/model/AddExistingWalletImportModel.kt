@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -41,6 +42,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val saveUserWalletUseCase: SaveWalletUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
@@ -122,6 +124,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                                 } else {
                                     AnalyticsParam.EmptyFull.Full
                                 },
+                                referralId = appsFlyerStore.get()?.refcode,
                             ),
                         )
                         params.callbacks.onWalletImported(userWallet.walletId)
