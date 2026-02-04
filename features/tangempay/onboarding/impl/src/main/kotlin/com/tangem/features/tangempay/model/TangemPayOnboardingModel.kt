@@ -116,37 +116,41 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
-        // if user came from deeplink or banner in settings and already is a paera customer -> exclude this wallet
-        val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings ||
-            params is TangemPayOnboardingComponent.Params.Deeplink
-        modelScope.launch {
-            val eligibleWalletsIds = eligibilityManager
-                .getEligibleWallets(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
-                .map { it.walletId }
-            if (eligibleWalletsIds.isEmpty()) {
-                back()
-                return@launch
+        if (params is TangemPayOnboardingComponent.Params.Deeplink) {
+            modelScope.launch {
+                openWalletSelectorIfNeeds(
+                    walletsIds = eligibilityManager.getPossibleWalletsIds(shouldExcludePaeraCustomers = true),
+                )
             }
-            when (params) {
-                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
-                    checkCustomerInfo(params.userWalletId)
+        } else {
+            // if user came from banner in settings and already is a paera customer -> exclude this wallet
+            val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
+            modelScope.launch {
+                val eligibleWalletsIds = eligibilityManager
+                    .getEligibleWallets(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
+                    .map { it.walletId }
+                if (eligibleWalletsIds.isEmpty()) {
+                    back()
+                    return@launch
                 }
-                is TangemPayOnboardingComponent.Params.FromBannerOnMain,
-                is TangemPayOnboardingComponent.Params.Deeplink,
-                is TangemPayOnboardingComponent.Params.FromBannerInSettings,
-                -> {
-                    openWalletSelectorIfNeeds(eligibleWalletsIds)
+                when (params) {
+                    is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
+                        checkCustomerInfo(params.userWalletId)
+                    }
+                    else -> {
+                        openWalletSelectorIfNeeds(eligibleWalletsIds)
+                    }
                 }
             }
         }
     }
 
-    private fun openWalletSelectorIfNeeds(eligibleWalletsIds: List<UserWalletId>) {
-        if (eligibleWalletsIds.size == 1) {
-            checkCustomerInfo(userWalletId = eligibleWalletsIds[0])
+    private fun openWalletSelectorIfNeeds(walletsIds: List<UserWalletId>) {
+        if (walletsIds.size == 1) {
+            checkCustomerInfo(userWalletId = walletsIds[0])
         } else {
             analytics.send(TangemPayAnalyticsEvents.ChooseWalletPopup())
-            bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(eligibleWalletsIds))
+            bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(walletsIds))
         }
     }
 
