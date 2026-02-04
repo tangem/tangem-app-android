@@ -88,6 +88,9 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                     closeOnClick = clickIntents::onOnboardingBannerCloseClick,
                 ),
             )
+            is MainCustomerInfoContentState.Empty -> stateController.update(
+                transformer = TangemPayHiddenStateTransformer(userWalletId),
+            )
         }
     }
 
