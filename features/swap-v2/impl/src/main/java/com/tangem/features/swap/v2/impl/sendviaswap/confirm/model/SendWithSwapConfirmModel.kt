@@ -448,6 +448,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
         val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
+        val fromDerivationIndex = confirmData.fromAccount?.derivationIndex?.value
 
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.TransactionScreenOpened(
@@ -455,6 +456,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 feeType = feeType,
                 fromToken = fromCurrency,
                 toToken = toCurrency,
+                fromDerivationIndex = fromDerivationIndex,
             ),
         )
         analyticsEventHandler.send(
