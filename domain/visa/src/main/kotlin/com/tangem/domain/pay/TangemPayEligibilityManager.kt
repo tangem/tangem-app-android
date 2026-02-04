@@ -6,5 +6,6 @@ interface TangemPayEligibilityManager {
 
     suspend fun getEligibleWallets(shouldExcludePaeraCustomers: Boolean): List<UserWallet>
     suspend fun getTangemPayAvailability(): Boolean
+    suspend fun isPaeraCustomerForAnyWallet(): Boolean
     fun reset()
 }
