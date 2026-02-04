@@ -70,4 +70,20 @@ internal sealed class NewsDetailsAnalyticsEvent(
             ERROR_MESSAGE to message,
         ),
     )
+
+    data class NewsShareButtonClick(
+        private val newsId: Int,
+    ) : NewsDetailsAnalyticsEvent(
+        event = "News Share Button Clicked",
+        params = mapOf(
+            "News Id" to newsId.toString(),
+        ),
+    ), OneTimePerSessionEvent {
+        override val oneTimeEventId: String = event
+        override val throttleSeconds: Long = THROTTLE_SECONDS
+    }
+
+    private companion object {
+        const val THROTTLE_SECONDS = 10L
+    }
 }
