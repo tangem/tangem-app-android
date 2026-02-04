@@ -45,6 +45,10 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             .also { isEligible -> if (!isEligible) reset() }
     }
 
+    override suspend fun isPaeraCustomerForAnyWallet(): Boolean {
+        return getUserWalletsData().any { it.isPaeraCustomer }
+    }
+
     private suspend fun getUserWalletsData(): List<UserWalletData> {
         cachedEligibleWallets?.let { return it }
 
