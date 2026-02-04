@@ -22,16 +22,18 @@ internal sealed class SendWithSwapAnalyticEvents(
         val feeType: AnalyticsParam.FeeType,
         val fromToken: CryptoCurrency,
         val toToken: CryptoCurrency,
+        val fromDerivationIndex: Int?,
     ) : SendWithSwapAnalyticEvents(
         event = "Send With Swap In Progress Screen Opened",
-        params = mapOf(
-            PROVIDER to providerName,
-            FEE_TYPE to if (feeType is AnalyticsParam.FeeType.Normal) "Market" else "Fast",
-            SEND_TOKEN to fromToken.symbol,
-            RECEIVE_TOKEN to toToken.symbol,
-            SEND_BLOCKCHAIN to fromToken.network.name,
-            RECEIVE_BLOCKCHAIN to toToken.network.name,
-        ),
+        params = buildMap {
+            put(PROVIDER, providerName)
+            put(FEE_TYPE, if (feeType is AnalyticsParam.FeeType.Normal) "Market" else "Fast")
+            put(SEND_TOKEN, fromToken.symbol)
+            put(RECEIVE_TOKEN, toToken.symbol)
+            put(SEND_BLOCKCHAIN, fromToken.network.name)
+            put(RECEIVE_BLOCKCHAIN, toToken.network.name)
+            if (fromDerivationIndex != null) put("Account Derivation (from)", fromDerivationIndex.toString())
+        },
     ), AppsFlyerIncludedEvent
 
     data class NoticeCanNotSwapToken(
