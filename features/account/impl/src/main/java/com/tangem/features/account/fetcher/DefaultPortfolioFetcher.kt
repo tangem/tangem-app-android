@@ -78,6 +78,7 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
     }
 
     private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWalletId, PortfolioBalance>> {
+        if (wallets.isEmpty()) return flowOf(emptyMap())
         val balanceFlows = wallets.map { walletAccountsBalancesFlow(it) }
         return combine(balanceFlows) { pairs -> pairs.toMap() }
     }
