@@ -96,11 +96,11 @@ internal class AddTokenModel @Inject constructor(
                     return@launch
                 }
 
-            val status = getAccountCurrencyStatusUseCase.invokeSync(
+            val status = getAccountCurrencyStatusUseCase(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
                 network = cryptoCurrency.network,
-            ).getOrNull()
+            ).firstOrNull()
             if (status == null) {
                 processError(error = null)
             } else {
