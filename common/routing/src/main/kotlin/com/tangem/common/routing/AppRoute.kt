@@ -138,6 +138,7 @@ sealed class AppRoute(val path: String) : Route {
         enum class Source {
             STORIES,
             SETTINGS,
+            ACCOUNT,
         }
     }
 
