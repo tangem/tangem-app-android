@@ -130,7 +130,11 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                         "Start activation promoCode ${promoCode.mask()} address ${bitcoinAddress.mask()}",
                     )
 
-                    activatePromoCode(bitcoinAddress = bitcoinAddress, promoCode = promoCode)
+                    activatePromoCode(
+                        userWallet = userWallet,
+                        bitcoinAddress = bitcoinAddress,
+                        promoCode = promoCode,
+                    )
                 } else {
                     uiMessageSender.send(GlobalLoadingMessage(false))
                     delay(DEFAULT_MESSAGE_SENDER_DELAY)
@@ -141,9 +145,13 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
         }
     }
 
-    private suspend fun activatePromoCode(bitcoinAddress: String, promoCode: String) {
+    private suspend fun activatePromoCode(userWallet: UserWallet, bitcoinAddress: String, promoCode: String) {
         uiMessageSender.send(GlobalLoadingMessage(true))
-        activateBitcoinPromocodeUseCase(bitcoinAddress, promoCode).onRight {
+        activateBitcoinPromocodeUseCase(
+            userWalletId = userWallet.walletId,
+            address = bitcoinAddress,
+            promoCode = promoCode,
+        ).onRight {
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
             uiMessageSender.send(GlobalLoadingMessage(false))
             delay(DEFAULT_MESSAGE_SENDER_DELAY)

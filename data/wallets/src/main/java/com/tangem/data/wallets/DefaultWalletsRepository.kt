@@ -435,6 +435,7 @@ internal class DefaultWalletsRepository(
         }
 
     override suspend fun activatePromoCode(
+        userWalletId: UserWalletId,
         promoCode: String,
         bitcoinAddress: String,
     ): Either<ActivatePromoCodeError, String> = withContext(dispatchers.io) {
@@ -442,6 +443,7 @@ internal class DefaultWalletsRepository(
             body = PromocodeActivationBody(
                 promoCode = promoCode,
                 address = bitcoinAddress,
+                walletId = userWalletId.stringValue,
             ),
         ).fold(
             onSuccess = { it.status.right() },
