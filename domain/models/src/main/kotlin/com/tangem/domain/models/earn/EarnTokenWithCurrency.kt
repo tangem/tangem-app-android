@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class EarnTokenWithCurrency(
+    val networkName: String,
     val earnToken: EarnToken,
     val cryptoCurrency: CryptoCurrency,
 )
