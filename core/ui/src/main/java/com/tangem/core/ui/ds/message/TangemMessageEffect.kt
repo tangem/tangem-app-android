@@ -1,18 +1,24 @@
 package com.tangem.core.ui.ds.message
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,6 +27,7 @@ import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.utils.toPx
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.ImmutableList
@@ -29,15 +36,15 @@ import kotlinx.collections.immutable.persistentListOf
 /**
  * Different visual effects for [Tangem message component].
  */
-enum class TangemMessageEffect {
+enum class TangemMessageEffect(val isAnimatable: Boolean) {
     /** Magic effect with vibrant colors */
-    Magic,
+    Magic(true),
     /** Card effect with bright colors */
-    Card,
+    Card(true),
     /** Warning effect with alert colors */
-    Warning,
+    Warning(false),
     /** No special effect */
-    None,
+    None(false),
     ;
 
     /** Gets the color gradient based on the effect type and [isInDarkTheme] */
@@ -223,10 +230,18 @@ enum class TangemMessageEffect {
 
 /** Applies a message effect background to the [Modifier] based on the provided [messageEffect] and [radius] */
 @Composable
-internal fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect, radius: Dp): Modifier {
+internal fun Modifier.messageEffectBackground(
+    messageEffect: TangemMessageEffect,
+    radius: Dp,
+    contentColor: Color,
+): Modifier {
     val isInDarkTheme = LocalIsInDarkTheme.current
     val borderGradientColors = remember { messageEffect.getBorderGradient(isInDarkTheme) }
     val gradientColors = remember { messageEffect.getColorGradient(isInDarkTheme) }
+
+    val angle by rememberAnimationAngle(messageEffect.isAnimatable)
+    val brush = Brush.sweepGradient(messageEffect.getColorGradient(isInDarkTheme))
+    val padding = 1.dp.toPx()
 
     return this
         .clip(RoundedCornerShape(radius))
@@ -255,12 +270,37 @@ internal fun Modifier.messageEffectBackground(messageEffect: TangemMessageEffect
             blurRadius = 25.dp
         }
         .conditionalCompose(gradientColors.isNotEmpty()) {
-            border(
-                width = 0.dp,
-                brush = Brush.sweepGradient(messageEffect.getColorGradient(isInDarkTheme)),
-                shape = RoundedCornerShape(radius),
-            )
+            drawWithContent {
+                rotate(angle) {
+                    drawCircle(
+                        brush = brush,
+                        radius = size.width,
+                        blendMode = BlendMode.SrcIn,
+                    )
+                }
+                drawRect(
+                    color = contentColor,
+                    topLeft = Offset(padding, padding),
+                    size = Size(size.width - 2 * padding, size.height - 2 * padding),
+                )
+                drawContent()
+            }
         }
+}
+
+@Composable
+private fun rememberAnimationAngle(isAnimatable: Boolean) = if (isAnimatable) {
+    val infiniteTransition = rememberInfiniteTransition()
+    infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+    )
+} else {
+    remember { mutableFloatStateOf(0f) }
 }
 
 // region Preview
@@ -281,6 +321,7 @@ private fun TangemMessageEffect_Preview() {
                         .messageEffectBackground(
                             messageEffect = messageEffect,
                             radius = 16.dp,
+                            contentColor = TangemTheme.colors2.surface.level1,
                         )
                         .fillMaxWidth()
                         .height(height = 100.dp),

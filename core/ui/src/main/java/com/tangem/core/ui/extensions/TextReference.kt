@@ -384,6 +384,13 @@ fun TextReference.orMaskWithStars(maskWithStars: Boolean): TextReference {
     return if (maskWithStars) stringReference(THREE_STARS) else this
 }
 
+/**
+ * Returns the TextReference itself if it's not null, otherwise returns an empty TextReference.
+ */
+fun TextReference?.orEmpty(): TextReference {
+    return this ?: TextReference.EMPTY
+}
+
 @ReadOnlyComposable
 @Composable
 private fun createStyledText(

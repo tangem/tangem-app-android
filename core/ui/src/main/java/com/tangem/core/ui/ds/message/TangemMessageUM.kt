@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds.message
 
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.ds.button.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -17,11 +18,14 @@ import kotlinx.collections.immutable.persistentListOf
  * @param onCloseClick   Lambda to be invoked when the close button is clicked (optional
  */
 data class TangemMessageUM(
+    val id: String,
     val title: TextReference,
     val subtitle: TextReference,
-    val messageEffect: TangemMessageEffect,
-    val isCentered: Boolean,
+    val messageEffect: TangemMessageEffect = TangemMessageEffect.None,
+    val iconUM: TangemIconUM? = null,
+    val isCentered: Boolean = false,
     val buttonsUM: ImmutableList<TangemMessageButtonUM> = persistentListOf(),
+    val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
 )
 
