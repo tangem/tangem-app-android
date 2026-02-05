@@ -14,7 +14,7 @@ internal sealed class WalletSettingsItemUM {
 
     data class WithItems(
         override val id: String,
-        val description: TextReference,
+        val description: TextReference?,
         val blocks: ImmutableList<BlockUM>,
     ) : WalletSettingsItemUM()
 
