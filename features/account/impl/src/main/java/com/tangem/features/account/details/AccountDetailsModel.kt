@@ -19,6 +19,7 @@ import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
@@ -65,15 +66,19 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun onManageTokensClick(account: Account) {
         val route = AppRoute.ManageTokens(
-            source = AppRoute.ManageTokens.Source.SETTINGS,
+            source = AppRoute.ManageTokens.Source.ACCOUNT,
             portfolioId = PortfolioId(account.accountId),
         )
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonManageTokens())
+        analyticsEventHandler.send(
+            AccountSettingsAnalyticEvents.ButtonManageTokens(account.derivationIndex?.value),
+        )
         router.push(route)
     }
 
     private fun onArchiveAccountClick() {
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonArchiveAccount())
+        val accountDerivation = params.account.derivationIndex?.value
+        val event = AccountSettingsAnalyticEvents.ButtonArchiveAccount(accountDerivation)
+        analyticsEventHandler.send(event)
         confirmArchiveDialog()
     }
 
@@ -81,7 +86,9 @@ internal class AccountDetailsModel @Inject constructor(
         val secondAction = EventMessageAction(
             title = resourceReference(R.string.common_cancel),
             onClick = {
-                analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation())
+                val accountDerivation = params.account.derivationIndex?.value
+                val event = AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation(accountDerivation)
+                analyticsEventHandler.send(event)
             },
         )
         val firstAction = EventMessageAction(
@@ -100,7 +107,9 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation())
+        val accountDerivation = params.account.derivationIndex?.value
+        val event = AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation(accountDerivation)
+        analyticsEventHandler.send(event)
         uiState.update { it.toggleProgress(true) }
         archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
@@ -119,6 +128,7 @@ internal class AccountDetailsModel @Inject constructor(
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = AccountSettingsAnalyticEvents.Source.ARCHIVE,
             error = error.tag,
+            accountDerivation = params.account.derivationIndex?.value,
         )
         analyticsEventHandler.send(event)
         val titleRes: Int
