@@ -9,7 +9,7 @@ class GetTopEarnTokensUseCase(
     private val repository: EarnRepository,
 ) {
 
-    operator fun invoke(): Flow<EarnTopToken> {
+    operator fun invoke(): Flow<EarnTopToken?> {
         return repository.observeTopEarnTokens().distinctUntilChanged()
     }
 }

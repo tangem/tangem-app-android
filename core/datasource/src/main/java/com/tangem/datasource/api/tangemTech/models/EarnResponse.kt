@@ -24,6 +24,7 @@ data class EarnTokenResponse(
     @Json(name = "symbol") val symbol: String,
     @Json(name = "name") val name: String,
     @Json(name = "address") val address: String,
+    @Json(name = "decimalCount") val decimalCount: Int? = null,
 )
 
 @JsonClass(generateAdapter = true)

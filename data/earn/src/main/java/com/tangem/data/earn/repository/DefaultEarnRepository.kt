@@ -2,6 +2,7 @@ package com.tangem.data.earn.repository
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.earn.converter.EarnTokenConverter
@@ -35,11 +36,15 @@ internal class DefaultEarnRepository(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val cryptoCurrencyFactory: CryptoCurrencyFactory,
     private val earnNetworksStore: EarnNetworksStore,
     private val earnTopTokensStore: EarnTopTokensStore,
     private val earnErrorResolver: EarnErrorResolver,
+    private val excludedBlockchains: ExcludedBlockchains,
 ) : EarnRepository {
+
+    private val cryptoCurrencyFactory: CryptoCurrencyFactory by lazy {
+        CryptoCurrencyFactory(excludedBlockchains = excludedBlockchains)
+    }
 
     override fun getEarnTokensBatchFlow(context: EarnTokensBatchingContext, batchSize: Int): EarnTokensBatchFlow {
         val batchFetcher = EarnTokensBatchFetcher(
@@ -73,7 +78,7 @@ internal class DefaultEarnRepository(
         }
     }
 
-    override fun observeEarnNetworks(): Flow<EarnNetworks> {
+    override fun observeEarnNetworks(): Flow<EarnNetworks?> {
         return earnNetworksStore.get()
     }
 
@@ -100,6 +105,7 @@ internal class DefaultEarnRepository(
                     EarnTokenWithCurrency(
                         earnToken = earnToken,
                         cryptoCurrency = cryptoCurrency,
+                        networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
                     )
                 }
             }
@@ -110,7 +116,7 @@ internal class DefaultEarnRepository(
         }
     }
 
-    override fun observeTopEarnTokens(): Flow<EarnTopToken> {
+    override fun observeTopEarnTokens(): Flow<EarnTopToken?> {
         return earnTopTokensStore.get()
     }
 
@@ -150,7 +156,7 @@ internal fun createCryptoCurrencyForEarnToken(
             rawId = CryptoCurrency.RawID(earnToken.token.id),
             name = earnToken.token.name,
             symbol = earnToken.token.symbol,
-            decimals = blockchain.decimals(),
+            decimals = earnToken.token.decimalCount ?: blockchain.decimals(),
             contractAddress = earnToken.token.address,
         )
     }
