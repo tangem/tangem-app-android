@@ -3,6 +3,7 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.appsflyer.deeplink.DeepLink
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -18,6 +19,7 @@ import kotlin.contracts.contract
 @Singleton
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
+    private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase,
     dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -69,6 +71,8 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
             mutex.withLock {
+                setShouldShowMobileWalletPromoUseCase()
+                    .onLeft { Timber.e(it) }
                 appsFlyerStore.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
                 )
