@@ -268,6 +268,7 @@ class DefaultWalletsRepositoryTest {
     @Test
     fun `GIVEN valid data WHEN activatePromoCode THEN returns Right with status and calls API`() = runTest {
         // GIVEN
+        val walletId = UserWalletId("1234567890abcdef")
         val promoCode = "PROMO123"
         val address = "bc1qexampleaddress"
         coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
@@ -275,7 +276,11 @@ class DefaultWalletsRepositoryTest {
         )
 
         // WHEN
-        val result = repository.activatePromoCode(promoCode = promoCode, bitcoinAddress = address)
+        val result = repository.activatePromoCode(
+            userWalletId = walletId,
+            promoCode = promoCode,
+            bitcoinAddress = address
+        )
 
         // THEN
         var right: String? = null
@@ -294,13 +299,14 @@ class DefaultWalletsRepositoryTest {
     @Test
     fun `GIVEN NOT_FOUND error WHEN activatePromoCode THEN returns Left InvalidPromoCode`() = runTest {
         // GIVEN
+        val walletId = UserWalletId("1234567890abcdef")
         coEvery { tangemTechApi.activatePromoCode(any()) } returns
             ApiResponse.Error(
                 HttpException(code = HttpException.Code.NOT_FOUND, message = null, errorBody = null),
             ) as ApiResponse<PromocodeActivationResponse>
 
         // WHEN
-        val result = repository.activatePromoCode(promoCode = "PROMO", bitcoinAddress = "addr")
+        val result = repository.activatePromoCode(userWalletId = walletId, promoCode = "PROMO", bitcoinAddress = "addr")
 
         // THEN
         var error: ActivatePromoCodeError? = null
@@ -311,13 +317,14 @@ class DefaultWalletsRepositoryTest {
     @Test
     fun `GIVEN CONFLICT error WHEN activatePromoCode THEN returns Left PromocodeAlreadyUsed`() = runTest {
         // GIVEN
+        val walletId = UserWalletId("1234567890abcdef")
         coEvery { tangemTechApi.activatePromoCode(any()) } returns
             ApiResponse.Error(
                 HttpException(code = HttpException.Code.CONFLICT, message = null, errorBody = null),
             ) as ApiResponse<PromocodeActivationResponse>
 
         // WHEN
-        val result = repository.activatePromoCode(promoCode = "PROMO", bitcoinAddress = "addr")
+        val result = repository.activatePromoCode(userWalletId = walletId, promoCode = "PROMO", bitcoinAddress = "addr")
 
         // THEN
         var error: ActivatePromoCodeError? = null
