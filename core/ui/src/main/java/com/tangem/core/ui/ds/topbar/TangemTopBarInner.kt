@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.conditionalCompose
@@ -37,16 +38,20 @@ internal fun TangemTopBarInner(
     onEndContentClick: (() -> Unit)? = null,
     isGhostButtons: Boolean = false,
 ) {
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getTop(density = this).toDp() }
     Box(
         modifier = modifier
-            .height(TangemTheme.dimens2.x16)
+            .height(TangemTheme.dimens2.x16 + statusBarHeight)
             .fillMaxWidth()
+            .padding(top = statusBarHeight)
             .padding(TangemTheme.dimens2.x4, TangemTheme.dimens2.x3),
     ) {
         val iconModifier = Modifier
             .size(TangemTheme.dimens2.x10)
             .clip(RoundedCornerShape(TangemTheme.dimens2.x25))
-            .background(TangemTheme.colors2.button.backgroundSecondary)
+            .conditionalCompose(isGhostButtons) {
+                background(TangemTheme.colors2.button.backgroundSecondary)
+            }
 
         AnimatedVisibility(
             visible = startContent != null,
