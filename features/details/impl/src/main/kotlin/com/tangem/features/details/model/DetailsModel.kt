@@ -23,6 +23,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -63,6 +64,7 @@ internal class DetailsModel @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val appStateHolder: ReduxStateHolder,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
+    private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -134,14 +136,20 @@ internal class DetailsModel @Inject constructor(
                 ?: error("Selected wallet is null")
 
             val metaInfo = getWalletMetaInfoUseCase(selectedUserWallet.walletId).getOrNull() ?: return@launch
+            val visaCustomerId = getTangemPayCustomerIdUseCase(selectedUserWallet.walletId).getOrNull()
 
             val feedbackType = when {
-                userWallets.all { it is UserWallet.Cold && it.scanResponse.card.isVisa } ->
-                    FeedbackEmailType.Visa.DirectUserRequest(metaInfo)
+                userWallets.all {
+                    it is UserWallet.Cold && it.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()
+                } ->
+                    FeedbackEmailType.Visa.DirectUserRequest(
+                        walletMetaInfo = metaInfo,
+                        customerId = requireNotNull(visaCustomerId),
+                    )
                 userWallets.all { it !is UserWallet.Cold || it.scanResponse.card.isVisa.not() } ->
                     FeedbackEmailType.DirectUserRequest(metaInfo)
                 else -> {
-                    showFeedbackEmailTypeOptionBS(metaInfo)
+                    showFeedbackEmailTypeOptionBS(selectedWalletMetaInfo = metaInfo, visaCustomerId = visaCustomerId)
                     return@launch
                 }
             }
@@ -158,16 +166,16 @@ internal class DetailsModel @Inject constructor(
         }
     }
 
-    private fun showFeedbackEmailTypeOptionBS(selectedWalletMetaInfo: WalletMetaInfo) {
-        state.update {
-            it.copy(
+    private fun showFeedbackEmailTypeOptionBS(selectedWalletMetaInfo: WalletMetaInfo, visaCustomerId: String?) {
+        state.update { current ->
+            current.copy(
                 selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig(
                     isShown = true,
                     onDismissRequest = {
                         state.update {
-                            it.copy(
+                            current.copy(
                                 selectFeedbackEmailTypeBSConfig =
-                                it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                                current.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
                             )
                         }
                     },
@@ -176,6 +184,7 @@ internal class DetailsModel @Inject constructor(
                             onEmailFeedbackTypeOptionSelected(
                                 selectedWalletMetaInfo = selectedWalletMetaInfo,
                                 option = option,
+                                visaCustomerId = visaCustomerId,
                             )
 
                             state.update {
@@ -194,6 +203,7 @@ internal class DetailsModel @Inject constructor(
     private fun onEmailFeedbackTypeOptionSelected(
         selectedWalletMetaInfo: WalletMetaInfo,
         option: SelectEmailFeedbackTypeBS.Option,
+        visaCustomerId: String?,
     ) {
         modelScope.launch {
             val feedbackType = when (option) {
@@ -211,14 +221,15 @@ internal class DetailsModel @Inject constructor(
                     }
                 }
                 SelectEmailFeedbackTypeBS.Option.Visa -> {
-                    if (selectedWalletMetaInfo.isVisa == true) {
-                        FeedbackEmailType.Visa.DirectUserRequest(selectedWalletMetaInfo)
+                    if (selectedWalletMetaInfo.isVisa == true && !visaCustomerId.isNullOrEmpty()) {
+                        FeedbackEmailType.Visa.DirectUserRequest(selectedWalletMetaInfo, visaCustomerId)
                     } else {
                         val userWallet = getWalletsUseCase.invokeSync()
                             .firstOrNull { it is UserWallet.Cold && it.scanResponse.card.isVisa }
                             ?: return@launch
                         val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
-                        FeedbackEmailType.Visa.DirectUserRequest(metaInfo)
+                        val customerId = getTangemPayCustomerIdUseCase(userWallet.walletId).getOrNull() ?: return@launch
+                        FeedbackEmailType.Visa.DirectUserRequest(metaInfo, customerId)
                     }
                 }
             }

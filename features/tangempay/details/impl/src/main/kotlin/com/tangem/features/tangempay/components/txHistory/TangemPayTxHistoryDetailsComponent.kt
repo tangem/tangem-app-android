@@ -32,6 +32,7 @@ internal class TangemPayTxHistoryDetailsComponent(
         val transaction: TangemPayTxHistoryItem,
         val isBalanceHidden: Boolean,
         val userWalletId: UserWalletId,
+        val customerId: String,
         val onDismiss: () -> Unit,
     )
 }

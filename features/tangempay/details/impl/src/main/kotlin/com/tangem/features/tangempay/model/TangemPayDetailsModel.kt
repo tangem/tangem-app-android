@@ -371,6 +371,7 @@ internal class TangemPayDetailsModel @Inject constructor(
             sendFeedbackEmailUseCase.invoke(
                 type = FeedbackEmailType.Visa.FeatureIsBeta(
                     walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
+                    customerId = params.config.customerId,
                 ),
             )
         }

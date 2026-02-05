@@ -34,7 +34,11 @@ class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
+            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(
+                walletMetaInfo = type.walletMetaInfo,
+                customerId = type.customerId,
+                visaTxDetails = type.visaTxDetails,
+            )
             is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
@@ -48,6 +52,7 @@ class EmailMessageBodyResolver(
     private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(type: FeedbackEmailType.Visa.FailedIssueCard) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
@@ -58,6 +63,7 @@ class EmailMessageBodyResolver(
         addDelimiter()
         addTangemPayTxInfo(type.item)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
@@ -66,6 +72,7 @@ class EmailMessageBodyResolver(
     private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.Visa) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo?.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
@@ -82,6 +89,7 @@ class EmailMessageBodyResolver(
     ) {
         addUserWalletMetaInfo(type.walletMetaInfo)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
 
         val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
@@ -107,9 +115,11 @@ class EmailMessageBodyResolver(
     private suspend fun FeedbackDataBuilder.addVisaRequestBody(
         walletMetaInfo: WalletMetaInfo,
         visaTxDetails: VisaTxDetails,
+        customerId: String,
     ) {
         addUserRequestBody(walletMetaInfo)
         addDelimiter()
+        addCustomerId(customerId = customerId)
         addVisaTxInfo(visaTxDetails)
     }
 

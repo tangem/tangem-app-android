@@ -4,6 +4,7 @@ import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
+import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
@@ -11,6 +12,7 @@ import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
+import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.security.DeviceSecurityInfoProvider
@@ -64,6 +66,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPayWithdrawUseCase(impl: DefaultTangemPayWithdrawUseCase): TangemPayWithdrawUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetTangemPayCustomerIdUseCase(impl: DefaultGetTangemPayCustomerIdUseCase): GetTangemPayCustomerIdUseCase
 
     @Binds
     @Singleton
