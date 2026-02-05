@@ -2,6 +2,7 @@ package com.tangem.features.swap.v2.impl.sendviaswap.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
@@ -32,7 +33,7 @@ internal sealed class SendWithSwapAnalyticEvents(
             put(RECEIVE_TOKEN, toToken.symbol)
             put(SEND_BLOCKCHAIN, fromToken.network.name)
             put(RECEIVE_BLOCKCHAIN, toToken.network.name)
-            if (fromDerivationIndex != null) put("Account Derivation (from)", fromDerivationIndex.toString())
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
         },
     ), AppsFlyerIncludedEvent
 
