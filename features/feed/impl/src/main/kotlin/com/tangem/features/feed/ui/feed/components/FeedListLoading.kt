@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.feed
+package com.tangem.features.feed.ui.feed.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,6 +14,8 @@ import com.tangem.common.ui.news.TrendingLoadingArticle
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
@@ -94,7 +96,10 @@ internal fun NewsLoadingBlock() {
 
 @Composable
 private fun ChartsLoading(modifier: Modifier = Modifier) {
-    BlockCard(modifier) {
+    BlockCard(
+        modifier = modifier,
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
