@@ -25,6 +25,7 @@ import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents
@@ -69,10 +70,13 @@ internal class AccountCreateEditModel @Inject constructor(
         field = MutableStateFlow(value = getInitialState())
 
     init {
-        if (params is AccountCreateEditComponent.Params.Create) {
-            updateDerivationInfo(userWalletId = params.userWalletId)
-        } else {
-            analyticsEventHandler.send(AccountSettingsAnalyticEvents.AccountEditScreenOpened())
+        when (params) {
+            is AccountCreateEditComponent.Params.Create -> updateDerivationInfo(userWalletId = params.userWalletId)
+            is AccountCreateEditComponent.Params.Edit -> {
+                val derivationIndex = params.account.derivationIndex?.value
+                val event = AccountSettingsAnalyticEvents.AccountEditScreenOpened(derivationIndex)
+                analyticsEventHandler.send(event)
+            }
         }
     }
 
@@ -116,7 +120,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val event = AccountSettingsAnalyticEvents.ButtonAddNewAccount(
             name = name,
             icon = icon,
-            derivationIndex = derivationIndex.value,
+            accountDerivation = derivationIndex.value,
         )
         analyticsEventHandler.send(event)
 
@@ -130,7 +134,7 @@ internal class AccountCreateEditModel @Inject constructor(
         uiState.value = uiState.value.toggleProgress(showProgress = false)
 
         result
-            .onLeft(::handleAddAccountError)
+            .onLeft { error -> handleAddAccountError(error, derivationIndex.value) }
             .onRight {
                 analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.AccountCreated())
                 showMessage(R.string.account_create_success_message)
@@ -138,9 +142,10 @@ internal class AccountCreateEditModel @Inject constructor(
             }
     }
 
-    private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
+    private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error, derivationIndex: Int) {
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = params.toAnalyticSource(),
+            accountDerivation = derivationIndex,
             error = when (error) {
                 is AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet -> error.cause.tag
                 is AddCryptoPortfolioUseCase.Error.DataOperationFailed -> error.cause.message.orEmpty()
@@ -165,7 +170,8 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon))
+        val derivationIndex = params.account.derivationIndex?.value
+        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon, derivationIndex))
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = updateCryptoPortfolioUseCase(
@@ -176,16 +182,17 @@ internal class AccountCreateEditModel @Inject constructor(
         uiState.value = uiState.value.toggleProgress(showProgress = false)
 
         result
-            .onLeft(::handleEditAccountError)
+            .onLeft { error -> handleEditAccountError(error, params.account.derivationIndex?.value) }
             .onRight {
                 showMessage(R.string.account_edit_success_message)
                 router.pop()
             }
     }
 
-    private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
+    private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error, derivationIndex: Int?) {
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = params.toAnalyticSource(),
+            accountDerivation = derivationIndex,
             error = when (error) {
                 is UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet -> error.cause.tag
                 is UpdateCryptoPortfolioUseCase.Error.DataOperationFailed -> error.cause.message.orEmpty()

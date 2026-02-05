@@ -147,6 +147,7 @@ internal class ChildFactory @Inject constructor(
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
+                    AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
                 }
 
                 val mode = when (val portfolio = route.portfolioId) {

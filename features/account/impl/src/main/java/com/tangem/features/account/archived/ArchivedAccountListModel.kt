@@ -13,9 +13,9 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
-import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.archived.entity.AccountArchivedUM
@@ -53,7 +53,6 @@ internal class ArchivedAccountListModel @Inject constructor(
     private val getArchivedAccountsJob = JobHolder()
 
     init {
-        analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.ArchivedAccountsScreenOpened())
         getArchivedAccounts()
     }
 
@@ -69,14 +68,16 @@ internal class ArchivedAccountListModel @Inject constructor(
                         umBuilder.mapContent(
                             accounts = content,
                             onCloseClick = onCloseClick,
-                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
+                            onRecoverClick = { recoverCryptoPortfolio(account = it) },
                         )
                     },
                     ifContent = { content ->
+                        val event = WalletSettingsAccountAnalyticEvents.ArchivedAccountsScreenOpened(content.size)
+                        analyticsEventHandler.send(event)
                         umBuilder.mapContent(
                             accounts = content,
                             onCloseClick = onCloseClick,
-                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
+                            onRecoverClick = { recoverCryptoPortfolio(account = it) },
                         )
                     },
                     ifError = { error ->
@@ -97,13 +98,15 @@ internal class ArchivedAccountListModel @Inject constructor(
             .saveIn(getArchivedAccountsJob)
     }
 
-    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
-        analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.ButtonRecoverAccount())
-        uiState.update { it.toggleProgress(accountId, isLoading = true) }
+    private fun recoverCryptoPortfolio(account: ArchivedAccount) = modelScope.launch {
+        analyticsEventHandler.send(
+            WalletSettingsAccountAnalyticEvents.ButtonRecoverAccount(account.derivationIndex.value),
+        )
+        uiState.update { it.toggleProgress(account.accountId, isLoading = true) }
         val result = withContext(dispatchers.default) {
-            recoverCryptoPortfolioUseCase(accountId)
+            recoverCryptoPortfolioUseCase(account.accountId)
         }
-        uiState.update { it.toggleProgress(accountId, isLoading = false) }
+        uiState.update { it.toggleProgress(account.accountId, isLoading = false) }
         result
             .onLeft(::handleRecoverError)
             .onRight {
