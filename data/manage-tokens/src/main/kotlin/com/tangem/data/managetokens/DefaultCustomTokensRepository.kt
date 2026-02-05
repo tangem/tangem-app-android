@@ -57,6 +57,8 @@ internal class DefaultCustomTokensRepository(
                 Blockchain.Binance,
                 Blockchain.BinanceTestnet,
                 Blockchain.Kaspa,
+                Blockchain.TerraV1,
+                Blockchain.TerraV2,
                 -> true
                 Blockchain.Cardano,
                 Blockchain.Sui,
