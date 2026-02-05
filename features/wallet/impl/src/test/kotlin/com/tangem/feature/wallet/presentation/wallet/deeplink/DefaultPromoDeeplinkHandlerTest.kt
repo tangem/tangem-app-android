@@ -102,7 +102,7 @@ class DefaultPromoDeeplinkHandlerTest {
         }
         val btcCoin = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id)
         coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoin)
-        coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Right("ok")
+        coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qxyz", promoCode) } returns Either.Right("ok")
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
@@ -251,7 +251,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
         val btcCoin = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id)
         coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoin)
-        coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Right("ok")
+        coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qxyz", promoCode) } returns Either.Right("ok")
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
@@ -369,7 +369,7 @@ class DefaultPromoDeeplinkHandlerTest {
         coEvery { multiNetworkStatusSupplier.invoke(any()) } returns flowOf(setOf(btcStatus))
         val btcCurrency = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id)
         coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCurrency)
-        coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qxyz", promoCode) } returns Either.Left(error)
+        coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qxyz", promoCode) } returns Either.Left(error)
         val dispatcherProvider = testDispatcherProvider(testScheduler)
 
         DefaultPromoDeeplinkHandler(
@@ -506,7 +506,7 @@ class DefaultPromoDeeplinkHandlerTest {
                 btcCoinCustom,
                 btcCoinCard,
             )
-            coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) } returns Either.Right("ok")
+            coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcustom", promoCode) } returns Either.Right("ok")
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
@@ -530,8 +530,8 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
 
-            coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) }
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) }
+            coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcustom", promoCode) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcard", promoCode) }
         }
 
     @Test
@@ -560,7 +560,7 @@ class DefaultPromoDeeplinkHandlerTest {
             val btcCoinCard = buildCryptoCurrency(rawNetworkId = Blockchain.Bitcoin.id, derivationPath = dpCard)
             coEvery { multiWalletCryptoCurrenciesSupplier.getSyncOrNull(any()) } returns setOf(btcCoinCard)
 
-            coEvery { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) } returns Either.Right("ok")
+            coEvery { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcard", promoCode) } returns Either.Right("ok")
 
             val dispatcherProvider = testDispatcherProvider(testScheduler)
 
@@ -584,8 +584,8 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_activation_success))
 
-            coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke("bc1qcard", promoCode) }
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke("bc1qcustom", promoCode) }
+            coVerify(exactly = 1) { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcard", promoCode) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), "bc1qcustom", promoCode) }
 
             verify(
                 exactly = 1,
@@ -644,7 +644,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(),any(), any()) }
 
             verify(
                 exactly = 1,
@@ -703,7 +703,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any(), any()) }
 
             verify(
                 exactly = 1,
@@ -758,7 +758,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any(), any()) }
 
             verify(
                 exactly = 1,
@@ -813,7 +813,7 @@ class DefaultPromoDeeplinkHandlerTest {
             Truth.assertThat(sent.title).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address_title))
             Truth.assertThat(sent.message).isEqualTo(resourceReference(R.string.bitcoin_promo_no_address))
 
-            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any()) }
+            coVerify(exactly = 0) { activateBitcoinPromocodeUseCase.invoke(any(), any(), any()) }
 
             verify(
                 exactly = 1,
