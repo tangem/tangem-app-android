@@ -6,6 +6,7 @@ import arrow.core.raise.either
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.ethereum.tokenmethods.TransferERC20TokenCallData
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
@@ -89,6 +90,7 @@ internal class TokenFeeCalculator(
         }
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     suspend fun calculateTokenFee(
         walletManager: EthereumWalletManager,
         tokenForPayFeeStatus: CryptoCurrencyStatus,
@@ -119,8 +121,17 @@ internal class TokenFeeCalculator(
             )
 
             val feeTransferGasLimit = when (feeTransferGasLimitResult) {
-                is Result.Failure -> raise(GaslessError.DataError(feeTransferGasLimitResult.error))
                 is Result.Success -> feeTransferGasLimitResult.data
+                is Result.Failure -> {
+                    // If there is a dust on the balance, the gas limit estimation will fail with code
+                    if (feeTransferGasLimitResult.error is BlockchainSdkError.WrappedThrowable) {
+                        val cause = feeTransferGasLimitResult.error.cause
+                        if (cause is BlockchainSdkError.Ethereum.Api && cause.code == INSUFFICIENT_FUNDS_ERROR_CODE) {
+                            raise(GaslessError.NotEnoughFunds)
+                        }
+                    }
+                    raise(GaslessError.DataError(feeTransferGasLimitResult.error))
+                }
             }.increaseByPercent(PERCENT_TO_INCREASE_TRANSFER_GASLIMIT)
 
             val baseGas = gaslessTransactionRepository.getBaseGasForTransaction()
@@ -205,6 +216,10 @@ internal class TokenFeeCalculator(
         const val GAS_PRICE_MULTIPLIER = 1.5
         const val PERCENT_TO_INCREASE_TOKEN_PRICE = 1
         const val PERCENT_TO_INCREASE_TRANSFER_GASLIMIT = 10
+
+        // This error code is returned by blockchain node when there is a dust on the balance
+        // that is not enough to cover the fee, but estimation also fails because of it
+        const val INSUFFICIENT_FUNDS_ERROR_CODE = 9003
 
         /**
          * Increases BigDecimal value by specified percentage.
