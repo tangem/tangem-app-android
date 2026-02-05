@@ -79,6 +79,8 @@ internal interface WalletWarningsClickIntents {
 
     fun onSupportClick()
 
+    fun onBackupErrorClick()
+
     fun onNoteMigrationButtonClick(url: String)
 
     fun onSeedPhraseNotificationConfirm()
@@ -329,6 +331,15 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
+        }
+    }
+
+    override fun onBackupErrorClick() {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.BackupProblem(walletMetaInfo = metaInfo))
         }
     }
 
