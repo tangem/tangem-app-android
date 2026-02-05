@@ -1,5 +1,7 @@
 package com.tangem.data.earn.repository.batch
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.earn.converter.EarnTokenConverter
 import com.tangem.data.earn.repository.DefaultEarnRepository.Companion.FIRST_PAGE
@@ -88,6 +90,7 @@ internal class EarnTokensBatchFetcher(
                 EarnTokenWithCurrency(
                     earnToken = earnToken,
                     cryptoCurrency = cryptoCurrency,
+                    networkName = Blockchain.fromNetworkId(dto.networkId)?.fullName.orEmpty(),
                 )
             }
         }
