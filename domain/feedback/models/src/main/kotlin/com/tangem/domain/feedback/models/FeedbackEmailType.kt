@@ -60,31 +60,50 @@ sealed interface FeedbackEmailType {
     }
 
     sealed class Visa : FeedbackEmailType {
+        abstract val customerId: String
 
-        data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class DirectUserRequest(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
-        data class Activation(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class Activation(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
         data class Dispute(
             val visaTxDetails: VisaTxDetails,
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
         ) : Visa()
 
-        data class FailedIssueCard(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class FailedIssueCard(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
         data class DisputeV2(
             val item: TangemPayTxHistoryItem,
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
         ) : Visa()
 
         data class Withdrawal(
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
             val providerName: String,
             val txId: String,
         ) : Visa()
 
-        data class FeatureIsBeta(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class FeatureIsBeta(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
-        data class KycRejected(override val walletMetaInfo: WalletMetaInfo, val customerId: String) : Visa()
+        data class KycRejected(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
     }
 }
