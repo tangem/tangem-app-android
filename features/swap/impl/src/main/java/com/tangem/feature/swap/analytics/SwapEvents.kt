@@ -2,6 +2,8 @@ package com.tangem.feature.swap.analytics
 
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
@@ -105,8 +107,8 @@ sealed class SwapEvents(
             put("Receive Token", receiveToken)
             put("Send Blockchain", sendBlockchain)
             put("Receive Blockchain", receiveBlockchain)
-            if (fromDerivationIndex != null) put("Account Derivation (from)", fromDerivationIndex.toString())
-            if (toDerivationIndex != null) put("Account Derivation (to)", toDerivationIndex.toString())
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(FEE_TOKEN, feeToken)
         },
     ), AppsFlyerIncludedEvent
