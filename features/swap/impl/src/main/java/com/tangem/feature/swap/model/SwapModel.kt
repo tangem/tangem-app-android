@@ -56,6 +56,7 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
+import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -156,6 +157,7 @@ internal class SwapModel @Inject constructor(
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -1995,16 +1997,20 @@ internal class SwapModel @Inject constructor(
             uiState = uiState,
             error = SwapTransactionState.Error.TangemPayWithdrawalError(txId.orEmpty()),
             onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-            onSupportClick = ::onTangemPaySupportClick,
+            onSupportClick = {
+                val customerId = getTangemPayCustomerIdUseCase(userWallet.walletId).getOrNull() ?: "Unknown"
+                onTangemPaySupportClick(customerId = customerId, txId = txId)
+            },
             isReverseSwapPossible = isReverseSwapPossible(),
         )
     }
 
-    private fun onTangemPaySupportClick(txId: String?) {
+    private fun onTangemPaySupportClick(customerId: String, txId: String?) {
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
             val email = FeedbackEmailType.Visa.Withdrawal(
                 walletMetaInfo = metaInfo,
+                customerId = customerId,
                 providerName = dataState.selectedProvider?.name.orEmpty(),
                 txId = txId.orEmpty(),
             )
