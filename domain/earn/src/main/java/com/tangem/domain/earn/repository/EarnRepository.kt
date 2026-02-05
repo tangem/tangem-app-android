@@ -15,12 +15,12 @@ interface EarnRepository {
      */
     suspend fun fetchEarnNetworks(type: String)
 
-    fun observeEarnNetworks(): Flow<EarnNetworks>
+    fun observeEarnNetworks(): Flow<EarnNetworks?>
 
     /**
      * Fetch top N earn tokens by isForEarn = true and hold it in runtime store.
      */
     suspend fun fetchTopEarnTokens(limit: Int)
 
-    fun observeTopEarnTokens(): Flow<EarnTopToken>
+    fun observeTopEarnTokens(): Flow<EarnTopToken?>
 }
