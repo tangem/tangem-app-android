@@ -18,8 +18,10 @@ dependencies {
 
     /** Data modules */
     implementation(projects.data.common)
+    implementation(deps.androidx.datastore)
 
     /** Domain modules */
+    implementation(projects.domain.common)
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
