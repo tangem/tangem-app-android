@@ -468,9 +468,14 @@
   <string name="domain_receive_assets_onboarding_network_name">%s réseau</string>
   <string name="domain_receive_assets_onboarding_title">Envoyez des fonds en utilisant uniquement</string>
   <string name="earn_best_opportunities">Meilleures opportunités</string>
+  <string name="earn_clear_filter">Effacer le filtre</string>
   <string name="earn_filter_all_networks">Tous les réseaux</string>
   <string name="earn_filter_all_types">Tous les types</string>
+  <string name="earn_filter_by">Filtrer par</string>
+  <string name="earn_filter_my_networks">Mes réseaux</string>
+  <string name="earn_filter_networks">Réseaux</string>
   <string name="earn_mostly_used">Principalement utilisé</string>
+  <string name="earn_no_results">Pas de résultat</string>
   <string name="earn_title">Gagner</string>
   <string name="email_preface_wc_error">Bonjour équipe de support, j’ai rencontré une erreur avec le code : %s</string>
   <string name="email_subject_wc_error">Erreur WalletConnect</string>
@@ -823,6 +828,7 @@
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
   <string name="markets_tooltip_title">Ajouter des jetons</string>
+  <string name="markets_tooltip_v2_title">Ajouter plus de tokens</string>
   <string name="markets_yield_supply_banner_description">Optimisez vos actifs tout en leur fournissant un accès instantané. %s</string>
   <string name="markets_yield_supply_banner_title">Activer le mode rendement</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Vous devez effectuer la mise à jour %1$s afin de créer un portefeuille mobile.</string>
@@ -1849,6 +1855,7 @@
   <string name="warning_button_refresh">Rafraîchir</string>
   <string name="warning_clore_migration_button">Lancer la migration</string>
   <string name="warning_clore_migration_copy_button">Copier</string>
+  <string name="warning_clore_migration_description">Pour conserver l\'accès à vos fonds, lancez la migration conformément aux directives officielles de Clore.</string>
   <string name="warning_clore_migration_error_signing_not_supported">La signature des messages n\'est pas prise en charge pour ce réseau.</string>
   <string name="warning_clore_migration_error_wallet_manager_not_found">Impossible de signer le message. Veuillez réessayer.</string>
   <string name="warning_clore_migration_message">Selon la documentation officielle de Clore, toutes les pièces reçues avant le 21 décembre seront migrées vers Clore (token ERC-20) ; les pièces reçues après cette date ne le seront pas. Une solution de transfert arrive — restez à l\'écoute.</string>

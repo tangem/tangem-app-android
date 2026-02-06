@@ -9,26 +9,6 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class AppSettingsDialogsFactory {
 
-    fun createDeleteSavedWalletsAlert(onDelete: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
-        return Dialog.Alert(
-            title = resourceReference(R.string.common_attention),
-            description = resourceReference(R.string.app_settings_off_saved_wallet_alert_message),
-            confirmText = resourceReference(R.string.common_delete),
-            onConfirm = onDelete,
-            onDismiss = onDismiss,
-        )
-    }
-
-    fun createDeleteSavedAccessCodesAlert(onDelete: () -> Unit, onDismiss: () -> Unit): Dialog.Alert {
-        return Dialog.Alert(
-            title = resourceReference(R.string.common_attention),
-            description = resourceReference(R.string.app_settings_off_saved_access_code_alert_message),
-            confirmText = resourceReference(R.string.common_delete),
-            onConfirm = onDelete,
-            onDismiss = onDismiss,
-        )
-    }
-
     fun createThemeModeSelectorDialog(
         selectedModeIndex: Int,
         onSelect: (AppThemeMode) -> Unit,
