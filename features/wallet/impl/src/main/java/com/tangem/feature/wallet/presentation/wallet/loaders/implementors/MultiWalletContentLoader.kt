@@ -9,7 +9,6 @@ import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -21,7 +20,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 
 @Suppress("LongParameterList")
@@ -40,14 +38,12 @@ internal class MultiWalletContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
 ) : WalletContentLoader(id = userWallet.walletId) {
@@ -90,13 +86,6 @@ internal class MultiWalletContentLoader(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
                 getStoryContentUseCase = getStoryContentUseCase,
-            ).let(::add)
-
-            WalletDropDownItemsSubscriber(
-                stateHolder = stateHolder,
-                shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
-                clickIntents = clickIntents,
-                hotWalletFeatureToggles = hotWalletFeatureToggles,
             ).let(::add)
 
             if (tangemPayFeatureToggles.isTangemPayEnabled) {

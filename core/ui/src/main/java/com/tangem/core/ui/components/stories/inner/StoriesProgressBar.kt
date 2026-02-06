@@ -8,16 +8,20 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SwapStoriesScreenTestTags
 import kotlinx.coroutines.delay
 
 private const val STORIES_ANIMATION_SPEED_ZERO_DURATION = 3000L
@@ -99,6 +103,7 @@ fun StoriesProgressBar(
                         .clip(RoundedCornerShape(2.dp))
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
+                        .testTag(SwapStoriesScreenTestTags.PROGRESS_BAR_ITEM)
                         .let { modifier ->
                             when (index) {
                                 currentStep -> modifier.fillMaxWidth(progress.value)

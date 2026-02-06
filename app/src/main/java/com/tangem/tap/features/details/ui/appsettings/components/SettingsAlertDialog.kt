@@ -43,12 +43,12 @@ private fun AlertDialogPreview(@PreviewParameter(AlertDialogProvider::class) dia
     }
 }
 
-private class AlertDialogProvider : CollectionPreviewParameterProvider<Dialog.Alert>(
+private class AlertDialogProvider : CollectionPreviewParameterProvider<Dialog>(
     collection = buildList {
         val dialogsFactory = AppSettingsDialogsFactory()
 
-        add(dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}))
-        add(dialogsFactory.createDeleteSavedWalletsAlert({}, {}))
+        add(dialogsFactory.createThemeModeSelectorDialog(selectedModeIndex = 0, onSelect = {}, onDismiss = {}))
+        add(dialogsFactory.createDisableBiometricAuthenticationAlert(onDisable = {}, onDismiss = {}))
     },
 )
 // endregion Preview
