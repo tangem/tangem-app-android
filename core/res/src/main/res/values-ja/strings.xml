@@ -86,6 +86,8 @@
   <string name="address_qr_code_message_format">このアドレスには%3$s ネットワークから%1$s (%2$s) のみを送信してください。他のトークンやネットワークを使用すると、資金を失う可能性があります。</string>
   <string name="address_type_default">デフォルト</string>
   <string name="address_type_legacy">レガシー</string>
+  <string name="alert_authentication_error_message">デバイスの生体認証をリセットするか、サポートにお問い合わせください</string>
+  <string name="alert_authentication_error_title">認証エラー</string>
   <string name="alert_button_how_to_scan">スキャン方法</string>
   <string name="alert_button_request_support">サポートをリクエストする</string>
   <string name="alert_button_try_again">もう一度やり直してください</string>
@@ -523,7 +525,7 @@
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
-  <string name="express_provider_great_rate">最適な選択</string>
+  <string name="express_provider_great_rate">お得なレート</string>
   <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
@@ -724,7 +726,7 @@
   <string name="markets_loading_no_data_title">データなし</string>
   <string name="markets_pulse_common_title">マーケット動向</string>
   <string name="markets_quick_actions">クイックアクション</string>
-  <string name="markets_search_header_title">マーケットから探す</string>
+  <string name="markets_search_header_title">トークンを探す</string>
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
   <string name="markets_search_show_tokens">トークンを表示</string>
@@ -741,8 +743,8 @@
   <string name="markets_sort_by_experienced_buyers_title">経験豊富な買い手</string>
   <string name="markets_sort_by_rating_title">時価総額</string>
   <string name="markets_sort_by_title">並べ替え</string>
-  <string name="markets_sort_by_top_gainers_title">上昇率上位</string>
-  <string name="markets_sort_by_top_losers_title">下落率上位</string>
+  <string name="markets_sort_by_top_gainers_title">値上がり</string>
+  <string name="markets_sort_by_top_losers_title">値下がり</string>
   <string name="markets_sort_by_trending_title">トレンド</string>
   <string name="markets_sort_by_yield_mode_title">利息モード</string>
   <string name="markets_staking_banner_description_placeholder">ステーキングは暗号資産で報酬を受け取る最も簡単な方法です。 %s</string>
@@ -770,7 +772,7 @@
   <string name="markets_token_details_exchanges_title">取引所</string>
   <string name="markets_token_details_experienced_buyers">経験豊富な買い手</string>
   <string name="markets_token_details_experienced_buyers_description">少なくとも100の発信取引を持つネット・バイヤー</string>
-  <string name="markets_token_details_experienced_buyers_full">経験豊富な買い手</string>
+  <string name="markets_token_details_experienced_buyers_full">アクティブ投資家数</string>
   <string name="markets_token_details_fully_diluted_valuation">完全希薄化後評価額</string>
   <string name="markets_token_details_fully_diluted_valuation_description">現在流通していないものも含め、存在する可能性のあるすべてのコインが流通している場合の暗号資産の理論上の合計価値</string>
   <string name="markets_token_details_fully_diluted_valuation_full">完全希薄化後評価額</string>
@@ -895,7 +897,7 @@
   <string name="notification_visa_waitlist_promo_text">事前申し込み受付中。他にない特別なカードを、いち早く体験しよう。</string>
   <string name="notification_visa_waitlist_promo_title">Tangem Visaカード</string>
   <string name="notification_yield_promo_button">利用規約</string>
-  <string name="notification_yield_promo_text">100ドル以上を入金し、30日間保持すると、10ドルを受け取れます。</string>
+  <string name="notification_yield_promo_text">$100以上を入金して30日間保有すると、$10を受け取れます</string>
   <string name="notification_yield_promo_title">Yield Mode キャンペーンに参加しよう！</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
@@ -1011,7 +1013,7 @@
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
-  <string name="onramp_offer_type_fastet">最速</string>
+  <string name="onramp_offer_type_fastet">最短処理</string>
   <string name="onramp_pay_with">支払う</string>
   <string name="onramp_payment_method_subtitle">支払方法</string>
   <string name="onramp_provider_max_amount">最大 %s まで使用可能</string>
@@ -1598,7 +1600,7 @@
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
   <string name="token_swap_promotion_button">今すぐスワップ</string>
-  <string name="tokens_list_hot_crypto_header">ホットな暗号資産🔥</string>
+  <string name="tokens_list_hot_crypto_header">市場トレンド🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">買付できません</string>
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
@@ -1825,7 +1827,18 @@
   <string name="warning_button_ok">はい、わかりました!</string>
   <string name="warning_button_really_cool">すごくクールだ！</string>
   <string name="warning_button_refresh">リフレッシュ</string>
+  <string name="warning_clore_migration_button">移行を開始</string>
+  <string name="warning_clore_migration_copy_button">コピー</string>
+  <string name="warning_clore_migration_description">資金へのアクセスを維持するため、Cloreの公式ガイドラインに従って移行を開始してください。</string>
+  <string name="warning_clore_migration_error_signing_not_supported">このネットワークではメッセージ署名はサポートされていません</string>
+  <string name="warning_clore_migration_error_wallet_manager_not_found">メッセージに署名できません。もう一度お試しください。</string>
   <string name="warning_clore_migration_message">Cloreの公式ドキュメントによると、12月21日以前に受け取ったすべてのコインは Clore（ERC-20トークン）へ移行されますが、同日以降に受け取ったコインは移行されません。送金（移行）ソリューションは現在準備中です。続報をお待ちください。</string>
+  <string name="warning_clore_migration_message_label">メッセージ</string>
+  <string name="warning_clore_migration_open_portal_button">Claim Portalを開く</string>
+  <string name="warning_clore_migration_sheet_description">Cloreトークンを引き続き使用するには、Claim Portalの案内に従ってトークン移行を完了する必要があります。</string>
+  <string name="warning_clore_migration_sheet_title">Cloreネットワーク移行</string>
+  <string name="warning_clore_migration_sign_button">署名する</string>
+  <string name="warning_clore_migration_signature_label">署名</string>
   <string name="warning_clore_migration_title">Cloreネットワークの移行</string>
   <string name="warning_demo_mode_message">現在デモモードです</string>
   <string name="warning_demo_mode_title">デモモードが有効になっています</string>
