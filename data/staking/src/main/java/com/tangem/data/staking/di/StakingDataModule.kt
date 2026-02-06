@@ -5,7 +5,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.staking.*
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
-import com.tangem.data.staking.store.StakingBalancesStore
+import com.tangem.data.staking.store.P2PEthPoolBalancesStore
+import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
@@ -16,6 +17,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
@@ -55,7 +57,7 @@ internal object StakingDataModule {
     fun provideStakingRepository(
         stakeKitRepository: StakeKitRepository,
         p2pEthPoolRepository: P2PEthPoolRepository,
-        stakingBalancesStore: StakingBalancesStore,
+        stakeKitBalancesStore: StakeKitBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
@@ -64,7 +66,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
             p2pEthPoolRepository = p2pEthPoolRepository,
-            stakingBalanceStoreV2 = stakingBalancesStore,
+            stakingBalanceStoreV2 = stakeKitBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
             walletManagersFacade = walletManagersFacade,
@@ -75,13 +77,13 @@ internal object StakingDataModule {
     @Provides
     @Singleton
     fun provideP2PEthPoolRepository(
-        p2pApi: P2PEthPoolApi,
+        p2pEthPoolApi: P2PEthPoolApi,
         p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         dispatchers: CoroutineDispatcherProvider,
         stakingFeatureToggles: StakingFeatureToggles,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
-            p2pApi = p2pApi,
+            p2pEthPoolApi = p2pEthPoolApi,
             p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             dispatchers = dispatchers,
             stakingFeatureToggles = stakingFeatureToggles,
@@ -136,11 +138,15 @@ internal object StakingDataModule {
     @Provides
     @Singleton
     fun provideStakingCleaner(
-        stakingBalancesStore: StakingBalancesStore,
+        stakingIdFactory: StakingIdFactory,
+        stakeKitBalancesStore: StakeKitBalancesStore,
+        p2pEthPoolBalancesStore: P2PEthPoolBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): StakingCleaner {
         return DefaultStakingCleaner(
-            stakingBalancesStore = stakingBalancesStore,
+            stakingIdFactory = stakingIdFactory,
+            stakeKitBalancesStore = stakeKitBalancesStore,
+            p2pEthPoolBalancesStore = p2pEthPoolBalancesStore,
             dispatchers = dispatchers,
         )
     }
