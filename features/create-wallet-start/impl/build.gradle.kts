@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.models)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.wallets.models)
 
     /** Core modules */
     implementation(projects.core.configToggles)
