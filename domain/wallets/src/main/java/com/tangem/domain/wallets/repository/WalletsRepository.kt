@@ -75,5 +75,9 @@ interface WalletsRepository {
     @Throws
     suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>)
 
-    suspend fun activatePromoCode(promoCode: String, bitcoinAddress: String): Either<ActivatePromoCodeError, String>
+    suspend fun activatePromoCode(
+        userWalletId: UserWalletId,
+        promoCode: String,
+        bitcoinAddress: String,
+    ): Either<ActivatePromoCodeError, String>
 }

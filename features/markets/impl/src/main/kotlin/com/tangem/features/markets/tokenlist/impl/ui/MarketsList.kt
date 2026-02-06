@@ -81,10 +81,10 @@ internal fun MarketsList(
                     end = TangemTheme.dimens.spacing16,
                     bottom = 8.dp,
                 )
-                .onGloballyPositioned {
-                    if (it.size.height > 0) {
+                .onGloballyPositioned { layoutCoordinates ->
+                    if (layoutCoordinates.size.height > 0) {
                         with(density) {
-                            onHeaderSizeChange(it.size.height.toDp())
+                            onHeaderSizeChange(layoutCoordinates.size.height.toDp())
                         }
                     }
                 }
@@ -312,23 +312,23 @@ private fun ItemsList(
     val searchLazyListState = rememberLazyListState()
     val mainLazyListState = rememberLazyListState()
 
-    val mainScrolled by remember {
+    val isMainScrolled by remember {
         derivedStateOf {
             mainLazyListState.firstVisibleItemScrollOffset > 0
         }
     }
 
-    val searchScrolledState by remember {
+    val isSearchScrolled by remember {
         derivedStateOf {
             searchLazyListState.firstVisibleItemScrollOffset > 0
         }
     }
 
-    LaunchedEffect(mainScrolled, isInSearchMode, searchScrolledState) {
+    LaunchedEffect(isMainScrolled, isInSearchMode, isSearchScrolled) {
         scrolledState.value = if (isInSearchMode) {
-            searchScrolledState
+            isSearchScrolled
         } else {
-            mainScrolled
+            isMainScrolled
         }
     }
 
@@ -392,8 +392,8 @@ private fun Preview() {
                                 item.copy(id = CryptoCurrency.RawID(index.toString()))
                             }
                             .toImmutableList(),
-                        showUnder100kTokensNotification = false,
-                        showUnder100kTokensNotificationWasHidden = false,
+                        shouldShowUnder100kTokensNotification = false,
+                        wasUnder100kTokensNotificationHidden = false,
                         loadMore = {},
                         visibleIdsChanged = {},
                         onShowTokensUnder100kClicked = {},

@@ -16,6 +16,7 @@ import java.math.BigDecimal
  * @property privacyPolicy  privacy policy link
  * @property isRecommended  flag that indicates if this provider is recommended
  * @property slippage       provider slippage
+ * @property isExchangeOnlyWithinSingleAddress  flag that indicates if exchange is only allowed within a single address
  *
  * Uses to store transaction data in datastore, when extends - should always add default value
  * to support backward compatibility
@@ -40,4 +41,6 @@ data class ExpressProvider(
     val isRecommended: Boolean = false,
     @Json(name = "slippage")
     val slippage: BigDecimal?,
+    @Json(name = "exchangeOnlyWithinSingleAddress")
+    val isExchangeOnlyWithinSingleAddress: Boolean = false,
 )

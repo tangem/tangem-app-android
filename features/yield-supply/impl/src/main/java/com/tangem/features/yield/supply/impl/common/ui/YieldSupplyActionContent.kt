@@ -156,6 +156,7 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                 ),
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = false,
             ),
         )
 }

@@ -90,12 +90,15 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         params = FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = model::loadFee,
+            onLoadFeeExtended = model::loadFeeExtended,
             feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
             feeDisplaySource = FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
+            bottomSheetShown = model::onFeeBottomSheetShown,
         ),
         onResult = model::onFeeResult,
     )
@@ -106,7 +109,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = model.primaryCurrencyStatus,
-            feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = SendNotificationsComponent.Params.NotificationData(
@@ -120,6 +122,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = model.primaryFeePaidCurrencyStatus,
             ),
         ),
     )
@@ -177,7 +180,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val swapDirection: SwapDirection,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
-        val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>, // doesn't change if select gasless fee
         val accountFlow: StateFlow<Account.CryptoPortfolio?>,
         val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,

@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -20,7 +19,6 @@ import com.tangem.core.ui.components.rows.SelectorRowItem
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
 import com.tangem.feature.swap.domain.models.ui.FeeType
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.FeeItemState
@@ -90,8 +88,7 @@ private fun FooterBlock(readMore: TextReference, onReadMoreClick: () -> Unit) {
             .padding(
                 vertical = TangemTheme.dimens.spacing8,
                 horizontal = TangemTheme.dimens.spacing16,
-            )
-            .testTag(SelectNetworkFeeBottomSheetTestTags.READ_MORE_TEXT),
+            ),
         style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Start),
         onClick = click,
     )

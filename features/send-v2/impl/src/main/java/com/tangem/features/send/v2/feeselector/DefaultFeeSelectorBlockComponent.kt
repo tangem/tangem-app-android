@@ -14,9 +14,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.conditional
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
-import com.tangem.features.send.v2.feeselector.model.FeeSelectorModel
+import com.tangem.features.send.v2.feeselector.model.FeeSelectorBlockModel
 import com.tangem.features.send.v2.feeselector.ui.FeeSelectorBlockContent
 import com.tangem.utils.extensions.isSingleItem
 import dagger.assisted.Assisted
@@ -31,9 +32,10 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
     @Assisted private val params: FeeSelectorParams.FeeSelectorBlockParams,
     @Assisted onResult: (feeSelectorUM: FeeSelectorUM) -> Unit,
     private val feeSelectorComponentFactory: FeeSelectorComponent.Factory,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : FeeSelectorBlockComponent, AppComponentContext by appComponentContext {
 
-    private val model: FeeSelectorModel = getOrCreateModel(params = params)
+    private val model: FeeSelectorBlockModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.feeSelectorBottomSheet,
@@ -45,6 +47,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                 params = FeeSelectorParams.FeeSelectorDetailsParams(
                     state = model.uiState.value,
                     onLoadFee = params.onLoadFee,
+                    onLoadFeeExtended = params.onLoadFeeExtended,
                     feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
                     cryptoCurrencyStatus = params.cryptoCurrencyStatus,
                     callback = model,
@@ -52,6 +55,8 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
                     analyticsCategoryName = params.analyticsCategoryName,
                     analyticsSendSource = params.analyticsSendSource,
+                    userWalletId = params.userWalletId,
+                    shouldShowOnlySpeedOption = model.shouldShowOnlySpeedOption,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
@@ -61,6 +66,10 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
     )
 
     init {
+        bottomSheetSlot.subscribe {
+            params.bottomSheetShown(it.child != null)
+        }
+
         model.uiState
             .onEach { onResult(it) }
             .launchIn(componentScope)
@@ -77,11 +86,14 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
 
         val isScreenSource = params.feeDisplaySource == FeeSelectorParams.FeeDisplaySource.Screen
         val isNotSingleFee = (state as? FeeSelectorUM.Content)?.feeItems?.isSingleItem() == false
+        val isGaslessAvailable = state is FeeSelectorUM.Content &&
+            (state as FeeSelectorUM.Content).feeExtraInfo.transactionFeeExtended != null
         FeeSelectorBlockContent(
             state = state,
             onReadMoreClick = model::onReadMoreClicked,
+            isGaslessFeatureEnabled = sendFeatureToggles.isGaslessTransactionsEnabled,
             modifier = modifier
-                .conditional(isScreenSource && isNotSingleFee) {
+                .conditional(isScreenSource && (isNotSingleFee || isGaslessAvailable)) {
                     Modifier.clickable {
                         model.showFeeSelector()
                     }

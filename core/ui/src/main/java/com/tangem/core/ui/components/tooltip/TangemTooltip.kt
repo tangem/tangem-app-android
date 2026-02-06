@@ -1,29 +1,39 @@
 package com.tangem.core.ui.components.tooltip
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.coroutines.launch
 
+/**
+ * A Tangem-themed tooltip component that displays a tooltip with the provided text when the content is clicked.
+ *
+ * @param text The text to be displayed inside the tooltip.
+ * @param modifier The modifier to be applied to the tooltip component.
+ * @param enabled If false, the tooltip will not be shown when the content is clicked.
+ * @param content The content that triggers the tooltip when clicked.
+ */
 @Composable
 fun TangemTooltip(
-    text: String,
+    text: TextReference,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     content: @Composable (Modifier) -> Unit,
@@ -33,30 +43,10 @@ fun TangemTooltip(
         enabled = enabled,
         tooltipContent = {
             Text(
-                modifier = Modifier.background(TangemTheme.colors.icon.secondary),
-                text = text,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary2,
-            )
-        },
-        content = content,
-    )
-}
-
-@Composable
-fun TangemTooltip(
-    text: AnnotatedString,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    content: @Composable (Modifier) -> Unit,
-) {
-    InternalTangemTooltip(
-        modifier = modifier,
-        enabled = enabled,
-        tooltipContent = {
-            Text(
-                modifier = Modifier.background(TangemTheme.colors.icon.secondary),
-                text = text,
+                modifier = Modifier
+                    .background(TangemTheme.colors.icon.secondary)
+                    .padding(horizontal = 6.dp, vertical = 8.dp),
+                text = text.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary2,
             )
@@ -75,16 +65,22 @@ private fun InternalTangemTooltip(
 ) {
     val tooltipState = rememberTooltipState(isPersistent = true)
     val coroutineScope = rememberCoroutineScope()
+
+    val windowSize = LocalWindowSize.current.width
+
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(spacingBetweenTooltipAndAnchor = 8.dp),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            positioning = TooltipAnchorPosition.Above,
+            spacingBetweenTooltipAndAnchor = 8.dp,
+        ),
         state = tooltipState,
         modifier = modifier,
         tooltip = {
             PlainTooltip(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                caretSize = DpSize(width = 14.dp, height = 8.dp),
+                modifier = Modifier.padding(end = 12.dp),
+                shape = RoundedCornerShape(14.dp),
+                caretShape = TooltipDefaults.caretShape(),
+                maxWidth = windowSize - 24.dp,
                 contentColor = TangemTheme.colors.text.primary2,
                 containerColor = TangemTheme.colors.icon.secondary,
                 content = { tooltipContent() },
@@ -103,24 +99,23 @@ private fun InternalTangemTooltip(
     )
 }
 
-@Preview
+// region Preview
 @Composable
+@Preview(showBackground = true, widthDp = 360, heightDp = 720)
+@Preview(showBackground = true, widthDp = 360, heightDp = 720, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TangemTooltip_Preview() {
     TangemThemePreview {
         Box(
             modifier = Modifier
-                .size(500.dp)
-                .background(TangemTheme.colors.background.secondary),
-            contentAlignment = Alignment.Center,
+                .fillMaxSize()
+                .background(TangemTheme.colors.background.tertiary),
         ) {
             TangemTooltip(
-                modifier = Modifier
-                    .background(TangemTheme.colors.background.secondary)
-                    .size(64.dp),
-                text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed venenatis.",
+                modifier = Modifier,
+                text = stringReference("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed venenatis."),
                 content = { contentModifier ->
                     Icon(
-                        modifier = contentModifier.size(64.dp),
+                        modifier = contentModifier,
                         painter = painterResource(R.drawable.ic_token_info_24),
                         tint = TangemTheme.colors.icon.informative,
                         contentDescription = null,

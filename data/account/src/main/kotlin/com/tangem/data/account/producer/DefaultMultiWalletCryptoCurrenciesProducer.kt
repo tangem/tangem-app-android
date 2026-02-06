@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.*
  */
 internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constructor(
     @Assisted val params: MultiWalletCryptoCurrenciesProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val userWalletsStore: UserWalletsStore,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,

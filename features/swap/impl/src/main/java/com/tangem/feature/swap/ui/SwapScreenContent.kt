@@ -49,7 +49,11 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
 @Composable
-internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modifier) {
+internal fun SwapScreenContent(
+    state: SwapStateHolder,
+    modifier: Modifier = Modifier,
+    feeBlock: @Composable ((Modifier) -> Unit)? = null,
+) {
     val keyboard by keyboardAsState()
 
     Box(
@@ -74,7 +78,11 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
             ProviderItemBlock(state = state.providerState)
 
-            FeeItemBlock(state = state.fee)
+            if (feeBlock != null) {
+                feeBlock(Modifier.fillMaxWidth())
+            } else {
+                FeeItemBlock(state = state.fee)
+            }
 
             if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 
@@ -362,21 +370,42 @@ private fun SwapNotifications(notifications: List<NotificationUM>) {
 
 @Composable
 private fun MainButton(state: SwapStateHolder) {
-    if (state.isInsufficientFunds) {
-        PrimaryButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(id = R.string.swapping_insufficient_funds),
-            enabled = false,
-            onClick = state.swapButton.onClick,
-        )
-    } else {
-        PrimaryButtonIconEnd(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(id = R.string.swapping_swap_action),
-            iconResId = state.swapButton.walletInteractionIcon,
-            enabled = state.swapButton.isEnabled,
-            onClick = state.swapButton.onClick,
-        )
+    when {
+        state.isInsufficientFunds -> {
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResourceSafe(id = R.string.swapping_insufficient_funds),
+                enabled = false,
+                onClick = state.swapButton.onClick,
+            )
+        }
+
+        state.swapButton.isHoldToConfirm -> {
+            HoldToConfirmButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResourceSafe(
+                    R.string.common_hold_to,
+                    stringResourceSafe(id = R.string.swapping_swap_action),
+                ),
+                enabled = state.swapButton.isEnabled,
+                onConfirm = state.swapButton.onClick,
+                isLoading = state.swapButton.isInProgress,
+            )
+        }
+
+        else -> {
+            PrimaryButtonIconEnd(
+                modifier = Modifier.fillMaxWidth(),
+                text = if (state.swapButton.isInProgress) {
+                    stringResourceSafe(id = R.string.swapping_swap_action_in_progress)
+                } else {
+                    stringResourceSafe(id = R.string.swapping_swap_action)
+                },
+                iconResId = state.swapButton.walletInteractionIcon,
+                enabled = state.swapButton.isEnabled,
+                onClick = state.swapButton.onClick,
+            )
+        }
     }
 }
 

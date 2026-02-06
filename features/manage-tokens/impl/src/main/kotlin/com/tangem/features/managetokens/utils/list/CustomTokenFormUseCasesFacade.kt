@@ -7,6 +7,7 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
@@ -14,11 +15,12 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,54 +29,52 @@ import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
-    @Assisted private val mode: AddCustomTokenMode,
+    @Assisted private val userWalletId: UserWalletId,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
-    suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
-        is AddCustomTokenMode.Account -> either {
-            val accountId = getAccountId(currency)
+    suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> {
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            either {
+                val accountId = getAccountId(currency)
 
-            manageCryptoCurrenciesUseCase(accountId = accountId, add = currency).bind()
-        }
-        is AddCustomTokenMode.Wallet -> {
-            addCryptoCurrenciesUseCase.invoke(
-                userWalletId = mode.userWalletId,
-                currency = currency,
-            )
+                manageCryptoCurrenciesUseCase(accountId = accountId, add = currency).bind()
+            }
+        } else {
+            addCryptoCurrenciesUseCase.invoke(userWalletId = userWalletId, currency = currency)
         }
     }
 
-    suspend fun derivePublicKeysUseCase(currencies: List<CryptoCurrency>): Either<Throwable, Unit> = when (mode) {
-        is AddCustomTokenMode.Account -> Unit.right()
-        is AddCustomTokenMode.Wallet -> derivePublicKeysUseCase.invoke(
-            userWalletId = mode.userWalletId,
-            currencies = currencies,
-        )
+    suspend fun derivePublicKeysUseCase(currencies: List<CryptoCurrency>): Either<Throwable, Unit> {
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            Unit.right()
+        } else {
+            derivePublicKeysUseCase.invoke(userWalletId = userWalletId, currencies = currencies)
+        }
     }
 
     suspend fun checkIsCurrencyNotAddedUseCase(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         contractAddress: String?,
-    ): Either<Throwable, Boolean> = when (mode) {
-        is AddCustomTokenMode.Account -> {
-            getAccountCurrencyStatusUseCase.invokeSync(
-                userWalletId = mode.accountId.userWalletId,
-                networkId = networkId,
-                derivationPath = derivationPath,
-                contractAddress = contractAddress,
-            )
-                .fold(ifEmpty = { true }, ifSome = { false })
-                .right()
-        }
-        is AddCustomTokenMode.Wallet -> checkIsCurrencyNotAddedUseCase.invoke(
-            userWalletId = mode.userWalletId,
+    ): Either<Throwable, Boolean> = if (accountsFeatureToggles.isFeatureEnabled) {
+        getAccountCurrencyStatusUseCase.invokeSync(
+            userWalletId = userWalletId,
+            networkId = networkId,
+            derivationPath = derivationPath,
+            contractAddress = contractAddress,
+        )
+            .fold(ifEmpty = { true }, ifSome = { false })
+            .right()
+    } else {
+        checkIsCurrencyNotAddedUseCase.invoke(
+            userWalletId = userWalletId,
             networkId = networkId,
             derivationPath = derivationPath,
             contractAddress = contractAddress,
@@ -83,15 +83,15 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
 
     private suspend fun Raise<Throwable>.getAccountId(currency: CryptoCurrency): AccountId {
         val accountList = singleAccountListSupplier.getSyncOrNull(
-            params = SingleAccountListProducer.Params(userWalletId = mode.userWalletId),
+            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
         )
 
         ensureNotNull(accountList) {
-            IllegalStateException("Account list not found: ${mode.userWalletId}")
+            IllegalStateException("Account list not found: $userWalletId")
         }
 
         if (accountList.activeAccounts == 1) {
-            return AccountId.forMainCryptoPortfolio(userWalletId = mode.userWalletId)
+            return AccountId.forMainCryptoPortfolio(userWalletId = userWalletId)
         }
 
         val currencyAccountIndex = currency.getAccountIndex().bind()
@@ -102,7 +102,7 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
             cryptoPortfolioAccount?.derivationIndex?.value == currencyAccountIndex
         }
 
-        return account?.accountId ?: AccountId.forMainCryptoPortfolio(userWalletId = mode.userWalletId)
+        return account?.accountId ?: AccountId.forMainCryptoPortfolio(userWalletId = userWalletId)
     }
 
     private fun CryptoCurrency.getAccountIndex(): Either<Throwable, Int> = either {
@@ -124,15 +124,20 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         val accountNodeRecognizer = AccountNodeRecognizer(blockchain)
         val index = accountNodeRecognizer.recognize(derivationPathValue)?.toInt()
 
-        ensureNotNull(index) {
-            val exception = IllegalStateException("Token has unrecognized derivation path: ${currency.id}")
-            Timber.e(exception)
-            exception
+        if (index == null) {
+            Timber.e(
+                "%s%s",
+                "Unable to determine account index for derivation path: $derivationPathValue. ",
+                "Use main account index instead.",
+            )
+            DerivationIndex.Main.value
+        } else {
+            index
         }
     }
 
     @AssistedFactory
     interface Factory {
-        fun create(mode: AddCustomTokenMode): CustomTokenFormUseCasesFacade
+        fun create(userWalletId: UserWalletId): CustomTokenFormUseCasesFacade
     }
 }

@@ -18,11 +18,13 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -58,6 +60,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -95,6 +98,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
             ),
         )
 
@@ -157,11 +161,17 @@ internal class YieldSupplyApproveModel @Inject constructor(
                     )
                     params.callback.onTransactionProgress(false)
                 },
-                ifRight = {
+                ifRight = { txHash ->
+                    yieldSupplyPendingTracker.addPending(
+                        userWalletId = userWallet.walletId,
+                        cryptoCurrency = cryptoCurrency,
+                        txIds = listOf(txHash),
+                    )
                     val event = AnalyticsParam.TxSentFrom.Earning(
                         blockchain = cryptoCurrency.network.name,
                         token = cryptoCurrency.symbol,
                         feeType = AnalyticsParam.FeeType.Normal,
+                        feeToken = feeCryptoCurrencyStatus.currency.symbol,
                     )
                     analyticsEventHandler.send(
                         Basic.TransactionSent(

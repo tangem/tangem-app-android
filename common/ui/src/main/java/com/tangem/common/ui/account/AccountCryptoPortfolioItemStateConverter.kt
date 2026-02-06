@@ -19,7 +19,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 
 class AccountCryptoPortfolioItemStateConverter(
@@ -41,14 +40,11 @@ class AccountCryptoPortfolioItemStateConverter(
     private fun Account.CryptoPortfolio.mapToContentState(
         fiatBalance: TotalFiatBalance.Loaded,
     ): TokenItemState.Content {
-        val subtitle2State = when (fiatBalance.amount.isZero()) {
-            true -> null
-            false -> priceChangeLce?.fold(
-                ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
-                ifError = { null },
-                ifContent = { priceChange -> priceChange.toSubtitle2State() },
-            )
-        }
+        val subtitle2State = priceChangeLce?.fold(
+            ifLoading = { priceChange -> priceChange?.toSubtitle2State() ?: Subtitle2State.Loading },
+            ifError = { null },
+            ifContent = { priceChange -> priceChange.toSubtitle2State() },
+        )
         return TokenItemState.Content(
             id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(this),
@@ -120,7 +116,7 @@ class AccountCryptoPortfolioItemStateConverter(
         )
     }
 
-    private fun AccountId.toItemId() = this.userWalletId.stringValue + this.value
+    private fun AccountId.toItemId() = this.value
 
     private fun BigDecimal.getPriceChangeType(): PriceChangeType = PriceChangeConverter.fromBigDecimal(value = this)
 

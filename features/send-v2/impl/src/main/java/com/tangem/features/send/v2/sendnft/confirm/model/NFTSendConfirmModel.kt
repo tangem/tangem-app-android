@@ -334,7 +334,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
-            networkId = cryptoCurrency.network.id,
             currency = cryptoCurrency,
         ).getOrElse { "" }
         _uiState.update(NFTSendConfirmSentStateTransformer(txData, txUrl))
@@ -351,6 +350,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     isIgnoreReduce = false,
                     fee = confirmData.fee,
                     feeError = confirmData.feeError,
+                    feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus, // TODO change when gasless implement
                 ),
             )
         }

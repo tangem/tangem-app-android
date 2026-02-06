@@ -69,7 +69,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
     private val updateFetcher: BatchUpdateFetcher<TKey, TData, TUpdate>? = null,
 ) : BatchListSource<TKey, TData, TUpdate> {
 
-    override val state = MutableStateFlow(BatchListState<TKey, TData>(emptyList(), PaginationStatus.None))
+    override val state = MutableStateFlow(BatchListState<TKey, TData>(emptyList(), PaginationStatus.None, null))
     override val updateResults = MutableSharedFlow<Pair<TUpdate, BatchUpdateResult<TKey, TData>>>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -254,6 +254,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                     } else {
                         PaginationStatus.Paginating(res)
                     },
+                    totalCount = res.total,
                 )
             }
             is BatchFetchResult.Error -> {
@@ -262,6 +263,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
                     status = PaginationStatus.InitialLoadingError(
                         throwable = res.throwable,
                     ),
+                    totalCount = null,
                 )
             }
         }

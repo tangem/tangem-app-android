@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 
 /**
  * Use case for fetching all staking options from all providers
- * Fetches both StakeKit yields and P2P vaults
+ * Fetches both StakeKit yields and P2PEthPool vaults
  */
 class FetchStakingOptionsUseCase(
     private val stakeKitRepository: StakeKitRepository,
-    private val p2pRepository: P2PEthPoolRepository,
+    private val p2pEthPoolRepository: P2PEthPoolRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
     suspend operator fun invoke(): Either<StakingError, Unit> {
@@ -25,7 +25,7 @@ class FetchStakingOptionsUseCase(
                 block = {
                     coroutineScope {
                         launch { stakeKitRepository.fetchYields() }
-                        launch { p2pRepository.fetchVaults() }
+                        launch { p2pEthPoolRepository.fetchVaults() }
                     }
                 },
                 catch = { stakingErrorResolver.resolve(it) },

@@ -282,11 +282,13 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         dispatchers: CoroutineDispatcherProvider,
+        currencyChecksRepository: CurrencyChecksRepository,
     ): GetBalanceNotEnoughForFeeWarningUseCase {
         return GetBalanceNotEnoughForFeeWarningUseCase(
             currenciesRepository = currenciesRepository,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             dispatchers = dispatchers,
+            currencyChecksRepository = currencyChecksRepository,
         )
     }
 
@@ -294,9 +296,8 @@ internal object TokensDomainModule {
     @Singleton
     fun provideIsAmountSubtractAvailableUseCase(
         currenciesRepository: CurrenciesRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): IsAmountSubtractAvailableUseCase {
-        return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
+        return IsAmountSubtractAvailableUseCase(currenciesRepository)
     }
 
     @Provides

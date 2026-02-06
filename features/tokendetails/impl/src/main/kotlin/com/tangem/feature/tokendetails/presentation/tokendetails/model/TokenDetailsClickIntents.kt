@@ -24,8 +24,6 @@ interface TokenDetailsClickIntents {
 
     fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onDismissDialog()
-
     fun onHideClick()
 
     fun onHideConfirmed()
@@ -42,13 +40,7 @@ interface TokenDetailsClickIntents {
 
     fun onAddressTypeSelected(addressModel: AddressModel)
 
-    fun onDismissBottomSheet()
-
     fun onCloseRentInfoNotification()
-
-    fun onExpressTransactionClick(txId: String)
-
-    fun onGoToProviderClick(url: String)
 
     fun onSwapPromoDismiss(promoId: PromoId)
 
@@ -72,6 +64,14 @@ interface TokenDetailsClickIntents {
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
 
+    fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
+
+    fun onOpenUrlClick(url: String)
+
+    fun onConfirmDisposeExpressStatus()
+
+    fun onDisposeExpressStatus()
+
     fun onYieldInfoClick()
 
     // region Clore migration
@@ -84,6 +84,13 @@ interface TokenDetailsClickIntents {
     fun onOpenCloreClaimPortal()
 
     // endregion Clore migration
+}
+
+interface ExpressTransactionsClickIntents {
+
+    fun onExpressTransactionClick(txId: String)
+
+    fun onGoToProviderClick(url: String)
 
     fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
 
@@ -92,4 +99,89 @@ interface TokenDetailsClickIntents {
     fun onConfirmDisposeExpressStatus()
 
     fun onDisposeExpressStatus()
+
+    fun onDismissBottomSheet()
+
+    fun onDismissDialog()
+}
+
+@Suppress("TooManyFunctions")
+internal class EmptyTokenDetailsClickIntents : TokenDetailsClickIntents {
+    override fun onRefreshSwipe(isRefreshing: Boolean) { /* no op */ }
+
+    override fun onBackClick() { /* no op */ }
+
+    override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
+
+    override fun onStakeBannerClick() { /* no op */ }
+
+    override fun onReloadClick() { /* no op */ }
+
+    override fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onGenerateExtendedKey() { /* no op */ }
+
+    override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) { /* no op */ }
+
+    override fun onHideClick() { /* no op */ }
+
+    override fun onHideConfirmed() { /* no op */ }
+
+    override fun onExploreClick() { /* no op */ }
+
+    override fun onAddressTypeSelected(addressModel: AddressModel) { /* no op */ }
+
+    override fun onTransactionClick(txHash: String) { /* no op */ }
+
+    override fun onCloseRentInfoNotification() { /* no op */ }
+
+    override fun onSwapPromoDismiss(promoId: PromoId) { /* no op */ }
+
+    override fun onSwapPromoClick(promoId: PromoId) { /* no op */ }
+
+    override fun onRetryIncompleteTransactionClick() { /* no op */ }
+
+    override fun onOpenTrustlineClick() { /* no op */ }
+
+    override fun onDismissIncompleteTransactionClick() { /* no op */ }
+
+    override fun onConfirmDismissIncompleteTransactionClick() { /* no op */ }
+
+    override fun onAssociateClick() { /* no op */ }
+
+    override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) { /* no op */ }
+
+    override fun onYieldInfoClick() { /* no op */ }
+
+    override fun onCopyAddress(): TextReference? {
+        /* no op */
+        return null
+    }
+
+    override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) { /* no op */ }
+
+    override fun onOpenUrlClick(url: String) { /* no op */ }
+
+    override fun onConfirmDisposeExpressStatus() { /* no op */ }
+
+    override fun onDisposeExpressStatus() { /* no op */ }
+
+    // region Clore migration
+    // TODO: Remove after 2025-04-01 when Clore migration ends ([REDACTED_TASK_KEY])
+
+    override fun onCloreMigrationClick() { /* no op */ }
+
+    override fun onCloreSignMessage(message: String) { /* no op */ }
+
+    override fun onOpenCloreClaimPortal() { /* no op */ }
+
+    // endregion Clore migration
 }

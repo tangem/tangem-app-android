@@ -16,6 +16,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransactionUM
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
@@ -62,6 +63,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                         }
                     },
                     feeErrorNotification = feeErrorNotification,
+                    isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
                 ),
                 feeSelectorUM = when (value.feeState) {
                     WcTransactionFeeState.None -> FeeSelectorUM.Loading

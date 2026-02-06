@@ -8,6 +8,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -17,6 +18,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.express.ExpressTransactionsComponentProvider
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -28,6 +30,7 @@ internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val expressTransactionsComponentProvider: ExpressTransactionsComponentProvider,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
@@ -52,6 +55,21 @@ internal class TangemPayDetailsComponent(
         params = TangemPayCardDetailsBlockComponent.Params(params = params),
     )
 
+    private val expressTransactionsComponent by lazy {
+        expressTransactionsComponentProvider.create(
+            appComponentContext = child("expressTransactionsComponent"),
+            userWalletId = params.userWalletId,
+            cryptoCurrency = model.cryptoCurrency,
+        )
+    }
+
+    init {
+        lifecycle.subscribe(
+            onPause = model::onPause,
+            onResume = model::onResume,
+        )
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -62,6 +80,7 @@ internal class TangemPayDetailsComponent(
             state = state,
             txHistoryComponent = txHistoryComponent,
             cardDetailsBlockComponent = cardDetailsBlockComponent,
+            expressTransactionsComponent = expressTransactionsComponent,
             modifier = modifier,
         )
         bottomSheet.child?.instance?.BottomSheet()
@@ -86,6 +105,7 @@ internal class TangemPayDetailsComponent(
                     transaction = navigation.transaction,
                     isBalanceHidden = navigation.isBalanceHidden,
                     userWalletId = params.userWalletId,
+                    customerId = params.config.customerId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )

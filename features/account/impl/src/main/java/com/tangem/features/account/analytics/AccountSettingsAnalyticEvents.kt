@@ -1,6 +1,7 @@
 package com.tangem.features.account.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.AccountCreateEditComponent
@@ -15,20 +16,48 @@ sealed class AccountSettingsAnalyticEvents(
         event = "Account Settings Screen Opened",
     )
 
-    class ButtonManageTokens : AccountSettingsAnalyticEvents(
+    class ButtonManageTokens(
+        accountDerivation: Int?,
+    ) : AccountSettingsAnalyticEvents(
         event = "Button - Manage Tokens",
+        params = buildMap {
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
-    class ButtonArchiveAccount : AccountSettingsAnalyticEvents(
+    class ButtonArchiveAccount(
+        accountDerivation: Int?,
+    ) : AccountSettingsAnalyticEvents(
         event = "Button - Archive Account",
+        params = buildMap {
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
-    class ButtonArchiveAccountConfirmation : AccountSettingsAnalyticEvents(
+    class ButtonArchiveAccountConfirmation(
+        accountDerivation: Int?,
+    ) : AccountSettingsAnalyticEvents(
         event = "Button - Archive Account Confirmation",
+        params = buildMap {
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
-    class ButtonCancelAccountArchivation : AccountSettingsAnalyticEvents(
+    class ButtonCancelAccountArchivation(
+        accountDerivation: Int?,
+    ) : AccountSettingsAnalyticEvents(
         event = "Button - Cancel Account Archivation",
+        params = buildMap {
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
     class AccountArchived : AccountSettingsAnalyticEvents(
@@ -39,13 +68,21 @@ sealed class AccountSettingsAnalyticEvents(
         event = "Button - Edit",
     )
 
-    class AccountEditScreenOpened : AccountSettingsAnalyticEvents(
+    class AccountEditScreenOpened(
+        accountDerivation: Int?,
+    ) : AccountSettingsAnalyticEvents(
         event = "Account Edit Screen Opened",
+        params = buildMap {
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
     class ButtonSave(
         val name: AccountName,
         val icon: CryptoPortfolioIcon,
+        accountDerivation: Int?,
     ) : AccountSettingsAnalyticEvents(
         event = "Button - Save",
         params = buildMap {
@@ -56,13 +93,16 @@ sealed class AccountSettingsAnalyticEvents(
             put("Name", accountName)
             put("Color", icon.color.name)
             put("Icon", icon.value.name)
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
         },
     )
 
     class ButtonAddNewAccount(
         val name: AccountName,
         val icon: CryptoPortfolioIcon,
-        val derivationIndex: Int,
+        accountDerivation: Int?,
     ) : AccountSettingsAnalyticEvents(
         event = "Button - Add New Account",
         params = buildMap {
@@ -73,17 +113,24 @@ sealed class AccountSettingsAnalyticEvents(
             put("Name", accountName)
             put("Color", icon.color.name)
             put("Icon", icon.value.name)
-            put("Derivation", derivationIndex.toString())
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
         },
     )
 
     class AccountError(
         val source: Source,
         val error: String,
+        accountDerivation: Int?,
     ) : AccountSettingsAnalyticEvents(
         event = "Account Error",
         params = buildMap {
             put("Error", error)
+            put("Source", source.value)
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
         },
     )
 

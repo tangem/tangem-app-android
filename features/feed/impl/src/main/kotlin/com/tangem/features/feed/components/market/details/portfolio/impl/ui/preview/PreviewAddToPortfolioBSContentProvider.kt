@@ -1,0 +1,86 @@
+package com.tangem.features.feed.components.market.details.portfolio.impl.ui.preview
+
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.rows.model.BlockchainRowUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.AddToPortfolioBSContentUM
+import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.SelectNetworkUM
+import com.tangem.features.feed.impl.R
+import kotlinx.collections.immutable.persistentListOf
+
+internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider<AddToPortfolioBSContentUM> {
+
+    private val blockchainRow = BlockchainRowUM(
+        id = "1",
+        name = "Etherium 3",
+        type = "TEST",
+        iconResId = R.drawable.ic_eth_16,
+        isMainNetwork = false,
+        isSelected = false,
+    )
+
+    val userWallet = UserWalletItemUM(
+        id = "1",
+        name = stringReference("Wallet 1"),
+        information = UserWalletItemUM.Information.Loaded(TextReference.Str("3 cards")),
+        balance = UserWalletItemUM.Balance.Loading,
+        isEnabled = true,
+        endIcon = UserWalletItemUM.EndIcon.Arrow,
+        onClick = {},
+    )
+
+    override val values: Sequence<AddToPortfolioBSContentUM>
+        get() = sequenceOf(
+            AddToPortfolioBSContentUM(
+                selectedWallet = userWallet,
+                selectNetworkUM = SelectNetworkUM(
+                    tokenId = "etherium",
+                    tokenName = "Etherium",
+                    tokenCurrencySymbol = "ETH",
+                    networks = persistentListOf(
+                        blockchainRow.copy(
+                            type = "MAIN",
+                            isMainNetwork = true,
+                            isSelected = true,
+                        ),
+                        blockchainRow,
+                        blockchainRow,
+                    ),
+                    onNetworkSwitchClick = { _, _ -> },
+                    iconUrl = null,
+                ),
+                isScanCardNotificationVisible = true,
+                isWalletBlockVisible = true,
+                isContinueButtonEnabled = true,
+                onContinueButtonClick = {},
+                walletSelectorConfig = TangemBottomSheetConfig.Empty,
+            ),
+            AddToPortfolioBSContentUM(
+                selectedWallet = userWallet,
+                selectNetworkUM = SelectNetworkUM(
+                    tokenId = "etherium",
+                    tokenName = "Etherium Etherium Etherium Etherium",
+                    tokenCurrencySymbol = "ETH",
+                    networks = persistentListOf(
+                        blockchainRow.copy(
+                            type = "MAIN",
+                            isMainNetwork = true,
+                            isSelected = true,
+                        ).copy(name = "Etherium Etherium Etherium Etherium"),
+                        *Array(25) { blockchainRow },
+                    ),
+
+                    onNetworkSwitchClick = { _, _ -> },
+                    iconUrl = null,
+                ),
+                isScanCardNotificationVisible = true,
+                isWalletBlockVisible = false,
+                isContinueButtonEnabled = false,
+                onContinueButtonClick = {},
+                walletSelectorConfig = TangemBottomSheetConfig.Empty,
+            ),
+        )
+}

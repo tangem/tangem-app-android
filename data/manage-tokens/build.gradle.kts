@@ -13,6 +13,8 @@ android {
 }
 
 dependencies {
+    /** Libs */
+    implementation(projects.libs.crypto)
 
     /** Project - Domain */
     implementation(projects.domain.account)

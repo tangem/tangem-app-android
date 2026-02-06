@@ -16,6 +16,9 @@ import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
 import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
+import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.feed.entry.components.FeedEntryRoute
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
@@ -38,15 +41,11 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerOnMain
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerInSettings
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
-import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
-import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
+import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -118,9 +117,10 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
-    private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
-    private val yieldSupplyActiveComponentFactory: YieldSupplyActiveComponent.Factory,
+    private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val feedFeatureToggle: FeedFeatureToggle,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -147,6 +147,7 @@ internal class ChildFactory @Inject constructor(
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
+                    AppRoute.ManageTokens.Source.ACCOUNT -> ManageTokensSource.ACCOUNT
                 }
 
                 val mode = when (val portfolio = route.portfolioId) {
@@ -205,21 +206,39 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
-                createComponentChild(
-                    context = context,
-                    params = MarketsTokenDetailsComponent.Params(
-                        token = route.token,
-                        appCurrency = route.appCurrency,
-                        shouldShowPortfolio = route.shouldShowPortfolio,
-                        analyticsParams = route.analyticsParams?.let { params ->
-                            MarketsTokenDetailsComponent.AnalyticsParams(
-                                blockchain = params.blockchain,
-                                source = params.source,
-                            )
-                        },
-                    ),
-                    componentFactory = marketsTokenDetailsComponentFactory,
-                )
+                if (feedFeatureToggle.isFeedEnabled) {
+                    createComponentChild(
+                        context = context,
+                        params = FeedEntryRoute.MarketTokenDetails(
+                            token = route.token,
+                            appCurrency = route.appCurrency,
+                            shouldShowPortfolio = route.shouldShowPortfolio,
+                            analyticsParams = route.analyticsParams?.let { params ->
+                                FeedEntryRoute.MarketTokenDetails.AnalyticsParams(
+                                    blockchain = params.blockchain,
+                                    source = params.source,
+                                )
+                            },
+                        ),
+                        componentFactory = feedEntryComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        context = context,
+                        params = MarketsTokenDetailsComponent.Params(
+                            token = route.token,
+                            appCurrency = route.appCurrency,
+                            shouldShowPortfolio = route.shouldShowPortfolio,
+                            analyticsParams = route.analyticsParams?.let { params ->
+                                MarketsTokenDetailsComponent.AnalyticsParams(
+                                    blockchain = params.blockchain,
+                                    source = params.source,
+                                )
+                            },
+                        ),
+                        componentFactory = marketsTokenDetailsComponentFactory,
+                    )
+                }
             }
             is AppRoute.Onramp -> {
                 createComponentChild(
@@ -312,7 +331,7 @@ internal class ChildFactory @Inject constructor(
                     params = StakingComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
-                        yieldId = route.yieldId,
+                        integrationId = route.integrationId,
                     ),
                     componentFactory = stakingComponentFactory,
                 )
@@ -673,9 +692,7 @@ internal class ChildFactory @Inject constructor(
                             deeplink = mode.deeplink,
                         )
                         is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
-                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain(
-                            userWalletId = mode.userWalletId,
-                        )
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )
@@ -687,25 +704,25 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = kycComponentFactory,
                 )
             }
-            is AppRoute.YieldSupplyPromo -> {
+            is AppRoute.YieldSupplyEntry -> {
                 createComponentChild(
                     context = context,
-                    params = YieldSupplyPromoComponent.Params(
-                        userWalletId = route.userWalletId,
-                        currency = route.cryptoCurrency,
-                        apy = route.apy,
-                    ),
-                    componentFactory = yieldSupplyPromoComponentFactory,
-                )
-            }
-            is AppRoute.YieldSupplyActive -> {
-                createComponentChild(
-                    context = context,
-                    params = YieldSupplyActiveComponent.Params(
+                    params = YieldSupplyEntryComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.cryptoCurrency,
+                        apy = route.apy,
                     ),
-                    componentFactory = yieldSupplyActiveComponentFactory,
+                    componentFactory = yieldSupplyEntryComponentFactory,
+                )
+            }
+            is AppRoute.NewsDetails -> {
+                createComponentChild(
+                    context = context,
+                    params = FeedEntryRoute.NewsDetail(
+                        articleId = route.newsId,
+                        preselectedArticlesId = listOf(route.newsId),
+                    ),
+                    componentFactory = feedEntryComponentFactory,
                 )
             }
         }

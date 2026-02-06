@@ -8,4 +8,6 @@ interface SwapAmountUpdateTrigger {
     suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean)
 
     suspend fun triggerQuoteReload()
+
+    suspend fun triggerAutoUpdateEnabled(isEnabled: Boolean)
 }

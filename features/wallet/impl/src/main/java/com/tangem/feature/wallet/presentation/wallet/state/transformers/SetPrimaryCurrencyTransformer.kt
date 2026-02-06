@@ -24,10 +24,6 @@ internal class SetPrimaryCurrencyTransformer(
                     marketPriceBlockState = prevState.marketPriceBlockState.toLoadedState(),
                 )
             }
-            is WalletState.Visa -> {
-                Timber.w("Impossible to load primary currency status for VISA wallet")
-                prevState
-            }
             is WalletState.SingleCurrency.Locked -> {
                 Timber.w("Impossible to load primary currency status for locked wallet")
                 prevState

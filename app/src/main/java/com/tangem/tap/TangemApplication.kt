@@ -42,6 +42,7 @@ import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
+import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -334,15 +335,23 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         ExceptionHandler.append(blockchainExceptionHandler)
 
         if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
-            BlockchainSdkRetrofitBuilder.interceptors = listOf(
-                createNetworkLoggingInterceptor(),
-                ChuckerInterceptor(this),
-            )
+            BlockchainSdkRetrofitBuilder.interceptors = buildList {
+                if (BuildConfig.MOCK_DATA_SOURCE) {
+                    add(WireMockRedirectInterceptor())
+                }
+                add(createNetworkLoggingInterceptor())
+                add(ChuckerInterceptor(this@TangemApplication))
+            }
 
             TangemApiServiceSettings.addInterceptors(
-                createNetworkLoggingInterceptor(),
-                ChuckerInterceptor(this),
-                NetworkLogsSaveInterceptor(appLogsStore),
+                *buildList {
+                    if (BuildConfig.MOCK_DATA_SOURCE) {
+                        add(WireMockRedirectInterceptor())
+                    }
+                    add(createNetworkLoggingInterceptor())
+                    add(ChuckerInterceptor(this@TangemApplication))
+                    add(NetworkLogsSaveInterceptor(appLogsStore))
+                }.toTypedArray(),
             )
         }
 
@@ -360,7 +369,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private fun createReduxStore(): Store<AppState> {
         return Store(
-            reducer = { action, state -> appReducer(action, state) },
+            reducer = { action, state -> appReducer(action, requireNotNull(state)) },
             middleware = AppState.getMiddleware(),
             state = AppState(
                 daggerGraphState = DaggerGraphState(

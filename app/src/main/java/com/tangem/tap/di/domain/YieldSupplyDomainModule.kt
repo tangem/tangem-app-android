@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.blockaid.BlockAidGasEstimate
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
@@ -14,6 +15,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Suppress("TooManyFunctions")
@@ -203,6 +206,16 @@ internal object YieldSupplyDomainModule {
 
     @Provides
     @Singleton
+    fun provideYieldSupplyEnterStatusFlowUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyEnterStatusFlowUseCase {
+        return YieldSupplyEnterStatusFlowUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideYieldSupplyGetShouldShowMainPromoUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyGetShouldShowMainPromoUseCase {
@@ -233,5 +246,19 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyGetAvailabilityUseCase {
         return YieldSupplyGetAvailabilityUseCase(yieldSupplyRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyPendingProcessorUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): YieldSupplyPendingTracker {
+        return YieldSupplyPendingTracker(
+            yieldSupplyRepository = yieldSupplyRepository,
+            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            coroutineScope = CoroutineScope(SupervisorJob() + dispatcherProvider.io),
+        )
     }
 }
