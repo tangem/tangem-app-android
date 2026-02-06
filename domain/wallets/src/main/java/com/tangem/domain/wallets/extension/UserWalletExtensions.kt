@@ -36,7 +36,7 @@ val UserWallet.isAccountsSupported
         is UserWallet.Hot -> true
         is UserWallet.Cold -> {
             with(this.cardTypesResolver) {
-                isMultiwalletAllowed() && !isWhiteWallet()
+                isMultiwalletAllowed() && scanResponse.card.settings.isHDWalletAllowed
             }
         }
     }

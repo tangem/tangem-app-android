@@ -8,7 +8,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.FeeState
@@ -18,7 +18,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.getRewardSchedu
 import com.tangem.utils.transformer.Transformer
 
 internal class SetConfirmationStateLoadingTransformer(
-    private val yield: Yield,
+    private val integration: StakingIntegration,
     private val appCurrency: AppCurrency,
     private val cryptoCurrency: CryptoCurrency,
 ) : Transformer<StakingUiState> {
@@ -48,7 +48,7 @@ internal class SetConfirmationStateLoadingTransformer(
             )
         }
         val rewardSchedule = getRewardScheduleText(
-            rewardSchedule = yield.metadata.rewardSchedule,
+            rewardSchedule = integration.rewardSchedule,
             networkId = cryptoCurrency.network.rawId,
             decapitalize = true,
         )

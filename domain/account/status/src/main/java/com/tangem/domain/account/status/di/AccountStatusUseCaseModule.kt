@@ -5,11 +5,13 @@ import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
+import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
+import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -98,9 +100,7 @@ internal object AccountStatusUseCaseModule {
         derivationsRepository: DerivationsRepository,
         walletManagersFacade: WalletManagersFacade,
         cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
-        networksCleaner: NetworksCleaner,
-        stakingCleaner: StakingCleaner,
+        cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
         expressServiceFetcher: ExpressServiceFetcher,
         dispatchers: CoroutineDispatcherProvider,
     ): ManageCryptoCurrenciesUseCase {
@@ -111,9 +111,7 @@ internal object AccountStatusUseCaseModule {
             derivationsRepository = derivationsRepository,
             walletManagersFacade = walletManagersFacade,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
-            networksCleaner = networksCleaner,
-            stakingCleaner = stakingCleaner,
+            cryptoCurrencyMetadataCleaner = cryptoCurrencyMetadataCleaner,
             expressServiceFetcher = expressServiceFetcher,
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             dispatchers = dispatchers,
@@ -154,6 +152,22 @@ internal object AccountStatusUseCaseModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ToggleTokenListGroupingUseCaseV2 {
         return ToggleTokenListGroupingUseCaseV2(
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCryptoCurrencyMetadataCleaner(
+        networksCleaner: NetworksCleaner,
+        stakingCleaner: StakingCleaner,
+        nftCleaner: NFTCleaner,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CryptoCurrencyMetadataCleaner {
+        return CryptoCurrencyMetadataCleaner(
+            networksCleaner = networksCleaner,
+            stakingCleaner = stakingCleaner,
+            nftCleaner = nftCleaner,
             dispatchers = dispatchers,
         )
     }

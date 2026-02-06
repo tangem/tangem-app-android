@@ -4,9 +4,9 @@ import androidx.paging.PagingData
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemFlowConverter
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
@@ -21,13 +21,7 @@ internal class SetTxHistoryItemsTransformer(
             is WalletState.SingleCurrency.Content -> prevState.copy(
                 txHistoryState = prevState.txHistoryState.toContentState(),
             )
-            is WalletState.Visa.Content -> prevState.copy(
-                txHistoryState = prevState.txHistoryState.toContentState(),
-            )
-            is WalletState.SingleCurrency.Locked,
-            is WalletState.Visa.Locked,
-            is WalletState.Visa.AccessTokenLocked,
-            -> {
+            is WalletState.SingleCurrency.Locked -> {
                 Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
             }
