@@ -4,27 +4,20 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
  * Use case that checks if wallet need backup cards
  *
- * @property userWalletsListManager user wallets list manager
+ * @property userWalletsListRepository repository for getting user wallets
  */
 class IsNeedToBackupUseCase(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewRepository: Boolean,
 ) {
 
     operator fun invoke(id: UserWalletId): Flow<Boolean> {
-        val userWalletsFlow = if (useNewRepository) {
-            userWalletsListRepository.userWallets
-        } else {
-            userWalletsListManager.userWallets
-        }
+        val userWalletsFlow = userWalletsListRepository.userWallets
 
         return userWalletsFlow
             .map { wallets ->
