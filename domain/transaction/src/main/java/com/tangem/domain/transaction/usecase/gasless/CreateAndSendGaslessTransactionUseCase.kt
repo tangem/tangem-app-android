@@ -282,9 +282,12 @@ class CreateAndSendGaslessTransactionUseCase(
         val feeInTokenCurrency = txFee.transactionFee.normal as? Fee.Ethereum.TokenCurrency
             ?: error("Fee must be in token currency")
 
+        val maxTokenFeeAmount = feeInTokenCurrency.amount
+        val maxTokenFee = maxTokenFeeAmount.value?.movePointRight(maxTokenFeeAmount.decimals)?.toBigInteger()
+            ?: error("Max token fee amount is null")
         return GaslessTransactionData.Fee(
             feeToken = tokenForFee.contractAddress,
-            maxTokenFee = feeInTokenCurrency.gasLimit,
+            maxTokenFee = maxTokenFee,
             coinPriceInToken = feeInTokenCurrency.coinPriceInToken,
             feeTransferGasLimit = feeInTokenCurrency.feeTransferGasLimit,
             baseGas = feeInTokenCurrency.baseGas,

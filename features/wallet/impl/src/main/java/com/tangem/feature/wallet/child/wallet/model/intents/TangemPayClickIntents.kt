@@ -51,9 +51,9 @@ internal interface TangemPayIntents {
 
     fun onIssuingCardClicked()
 
-    fun onIssuingFailedClicked()
+    fun onIssuingFailedClicked(customerId: String)
 
-    fun onPaySupportClick()
+    fun onPaySupportClick(customerId: String)
 
     fun onOnboardingBannerClick(userWalletId: UserWalletId)
 
@@ -203,7 +203,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(issuingBottomSheet)
     }
 
-    override fun onIssuingFailedClicked() {
+    override fun onIssuingFailedClicked(customerId: String) {
         val issuingBottomSheet = bottomSheetMessage {
             infoBlock {
                 icon(com.tangem.core.ui.R.drawable.ic_alert_24) {
@@ -216,7 +216,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             secondaryButton {
                 text = resourceReference(R.string.tangempay_go_to_support)
                 onClick {
-                    onPaySupportClick()
+                    onPaySupportClick(customerId)
                     closeBs()
                 }
             }
@@ -225,7 +225,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         uiMessageSender.send(issuingBottomSheet)
     }
 
-    override fun onPaySupportClick() {
+    override fun onPaySupportClick(customerId: String) {
         modelScope.launch {
             val cardInfo = getWalletMetainfoUseCase.invoke(
                 userWalletId = stateHolder.getSelectedWalletId(),
@@ -234,6 +234,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
             sendFeedbackEmailUseCase(
                 FeedbackEmailType.Visa.FailedIssueCard(
                     walletMetaInfo = cardInfo,
+                    customerId = customerId,
                 ),
             )
         }

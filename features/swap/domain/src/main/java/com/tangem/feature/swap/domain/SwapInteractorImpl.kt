@@ -1648,7 +1648,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         }
                     }
                 } else {
-                    IncludeFeeInAmount.Excluded
+                    val fee = txFeeSealedState.txFee.fee.amount.value ?: BigDecimal.ZERO
+                    getIncludeFeeInAmountForNative(
+                        networkId = networkId,
+                        amount = amount,
+                        reduceBalanceBy = reduceBalanceBy,
+                        fromToken = fromToken.currency,
+                        feeValue = fee,
+                    )
                 }
             }
             is TxFeeSealedState.Legacy -> {

@@ -105,6 +105,7 @@ internal class TangemPayDetailsComponent(
                     transaction = navigation.transaction,
                     isBalanceHidden = navigation.isBalanceHidden,
                     userWalletId = params.userWalletId,
+                    customerId = params.config.customerId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
