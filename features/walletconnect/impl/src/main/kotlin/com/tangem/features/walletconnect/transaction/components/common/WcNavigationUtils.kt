@@ -57,6 +57,7 @@ internal fun getWcCommonScreen(
                     feeDisplaySource = FeeDisplaySource.BottomSheet,
                     analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
                     analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.WalletConnect,
+                    userWalletId = model.userWallet.walletId,
                 ),
             )
         }

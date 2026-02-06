@@ -14,6 +14,9 @@ android {
 }
 
 dependencies {
+    /** Libs */
+    implementation(projects.libs.crypto)
+
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.pagination)

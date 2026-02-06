@@ -30,8 +30,8 @@ internal fun MarketTokenDetailsChart(
 
     val chartState = rememberMarketChartState(
         dataProducer = state.dataProducer,
-        colorMapper = {
-            when (it) {
+        colorMapper = { chartType ->
+            when (chartType) {
                 MarketChartLook.Type.Growing -> growingColor
                 MarketChartLook.Type.Falling -> fallingColor
                 MarketChartLook.Type.Neutral -> neutralColor

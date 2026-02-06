@@ -3,9 +3,12 @@ package com.tangem.tap.common.analytics.appsflyer
 import com.appsflyer.deeplink.DeepLink
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
+import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import arrow.core.right
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -22,9 +25,13 @@ import org.junit.jupiter.params.ParameterizedTest
 class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerStore: AppsFlyerStore = mockk(relaxUnitFun = true)
+    private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase = mockk {
+        coEvery { this@mockk.invoke() } returns Unit.right()
+    }
     private val handler = AppsFlyerReferralParamsHandler(
         appsFlyerStore = appsFlyerStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        setShouldShowMobileWalletPromoUseCase = setShouldShowMobileWalletPromoUseCase,
     )
 
     @AfterEach
@@ -43,6 +50,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
             if (model.shouldStore) {
                 val value = AppsFlyerConversionData(refcode = SUCCESS_REFCODE, campaign = SUCCESS_CAMPAIGN)
+
                 coVerify { appsFlyerStore.storeIfAbsent(value = value) }
             } else {
                 coVerify(inverse = true) { appsFlyerStore.storeIfAbsent(value = any()) }

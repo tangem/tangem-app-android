@@ -2,6 +2,7 @@ package com.tangem.data.account.fetcher
 
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.common.account.WalletAccountsFetcher
@@ -23,6 +24,8 @@ import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -50,6 +53,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
     private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
@@ -71,7 +75,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
             throw fetchResult.error
         }
 
-        return updatedResponse
+        val migratedResponse = mainAccountTokensMigration.migrate(userWalletId).getOrNull() ?: updatedResponse
+        return migratedResponse
+    }
+
+    override fun get(userWalletId: UserWalletId): Flow<GetWalletAccountsResponse> {
+        return getAccountsResponseStore(userWalletId = userWalletId).data.filterNotNull()
     }
 
     override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
@@ -82,6 +91,15 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         val store = getAccountsResponseStore(userWalletId = userWalletId)
 
         store.updateData { response }
+    }
+
+    override suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?,
+    ) {
+        val store = getAccountsResponseStore(userWalletId = userWalletId)
+
+        store.updateData { transform(it) }
     }
 
     override suspend fun push(
@@ -203,7 +221,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         store(userWalletId = userWalletId, response = response)
 
-        push(userWalletId = userWalletId, accounts = response.accounts)
+        val isFailed = push(userWalletId = userWalletId, accounts = response.accounts) == null
+        if (isFailed) {
+            // Clear ETags if push failed to avoid different state in the cache and API
+            eTagsStore.clear(userWalletId, ETagsStore.Key.WalletAccounts)
+        }
+
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
 
         return response

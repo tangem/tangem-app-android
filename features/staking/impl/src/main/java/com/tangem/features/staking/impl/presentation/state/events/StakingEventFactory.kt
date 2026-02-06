@@ -57,4 +57,13 @@ internal class StakingEventFactory(
             ),
         )
     }
+
+    fun createNetworkFeeUpdatedAlert(onConfirm: () -> Unit) {
+        val alert = StakingEvent.ShowAlert(
+            alert = StakingAlertUM.NetworkFeeUpdated(
+                onConfirmClick = onConfirm,
+            ),
+        )
+        stateController.updateEvent(alert)
+    }
 }

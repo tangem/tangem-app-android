@@ -10,6 +10,8 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import io.mockk.mockk
@@ -29,6 +31,34 @@ class SendConfirmationNotificationsTransformerV2Test {
     private val cryptoCurrency: CryptoCurrency = mockk(relaxed = true)
     private val appCurrency = AppCurrency(name = "US Dollar", code = "USD", symbol = "$")
     private val analyticsCategoryName = "test_category"
+
+    val cryptoCurrencyStatus = CryptoCurrencyStatus(
+        currency = CryptoCurrency.Coin(
+            id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
+            network = Network(
+                id = Network.ID(
+                    value = "bitcoin",
+                    derivationPath = Network.DerivationPath.None,
+                ),
+                backendId = "bitcoin",
+                name = "Bitcoin",
+                currencySymbol = "BTC",
+                derivationPath = Network.DerivationPath.None,
+                isTestnet = false,
+                standardType = Network.StandardType.Unspecified("bitcoin"),
+                hasFiatFeeRate = false,
+                canHandleTokens = false,
+                transactionExtrasType = Network.TransactionExtrasType.NONE,
+                nameResolvingType = Network.NameResolvingType.NONE,
+            ),
+            name = "Bitcoin",
+            symbol = "BTC",
+            decimals = 8,
+            iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/medium/bitcoin.png",
+            isCustom = false,
+        ),
+        value = CryptoCurrencyStatus.Loading,
+    )
 
     @Test
     fun `GIVEN non content state WHEN transform THEN returns original state`() = runTest {
@@ -247,6 +277,7 @@ class SendConfirmationNotificationsTransformerV2Test {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = false,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
@@ -330,6 +361,7 @@ class SendConfirmationNotificationsTransformerV2Test {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = false,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
@@ -401,6 +433,7 @@ class SendConfirmationNotificationsTransformerV2Test {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = false,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),
@@ -484,6 +517,7 @@ class SendConfirmationNotificationsTransformerV2Test {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = false,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeFiatRateUM = FeeFiatRateUM(
                 rate = BigDecimal("50000"),

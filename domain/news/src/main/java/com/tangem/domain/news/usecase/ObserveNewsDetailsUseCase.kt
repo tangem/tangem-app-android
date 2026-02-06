@@ -1,5 +1,6 @@
 package com.tangem.domain.news.usecase
 
+import arrow.core.Either
 import com.tangem.domain.models.news.DetailedArticle
 import com.tangem.domain.news.repository.NewsRepository
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,6 @@ class ObserveNewsDetailsUseCase(
     /**
      * Prefetches the given article ids (can be called with current + next ids for pager preloading).
      */
-    suspend fun prefetch(newsIds: Collection<Int>, language: String?) {
+    suspend fun prefetch(newsIds: Collection<Int>, language: String?): Either<Map<Int, Throwable>, Unit> =
         repository.fetchDetailedArticles(newsIds, language)
-    }
 }

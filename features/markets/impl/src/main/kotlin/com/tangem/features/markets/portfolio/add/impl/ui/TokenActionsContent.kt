@@ -63,12 +63,12 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
                 .background(TangemTheme.colors.background.action),
         ) {
-            state.quickActions.actions.fastForEach {
-                key(it.title) {
+            state.quickActions.actions.fastForEach { action ->
+                key(action.title) {
                     ActionRow(
-                        state = it,
-                        onClick = { state.quickActions.onQuickActionClick(it) },
-                        onLongClick = { state.quickActions.onQuickActionLongClick(it) },
+                        state = action,
+                        onClick = { state.quickActions.onQuickActionClick(action) },
+                        onLongClick = { state.quickActions.onQuickActionLongClick(action) },
                     )
                 }
             }
@@ -77,7 +77,7 @@ internal fun TokenActionsContent(state: TokenActionsUM, modifier: Modifier = Mod
         SpacerH16()
 
         SecondaryButton(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(R.string.common_later),
             onClick = state.onLaterClick,
         )
@@ -102,7 +102,7 @@ private fun ActionRow(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
-                onLongClick = onLongClickInternal.takeIf { state.longClickAvailable },
+                onLongClick = onLongClickInternal.takeIf { state.isLongClickAvailable },
                 onClick = {
                     hapticManager.perform(TangemHapticEffect.View.SegmentTick)
                     onClick()
@@ -123,7 +123,7 @@ private fun ActionRow(
                 .size(36.dp)
                 .drawWithContent {
                     drawContent()
-                    if (state is QuickActionUM.Exchange && state.showBadge) {
+                    if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
                         drawBadge(containerColor = containerColor, offset = 4.dp)
                     }
                 },
@@ -191,7 +191,7 @@ private class TokenActionsContentPreviewProvider : PreviewParameterProvider<Toke
                 quickActions = PortfolioTokenUM.QuickActions(
                     actions = persistentListOf(
                         QuickActionUM.Buy,
-                        QuickActionUM.Exchange(showBadge = true),
+                        QuickActionUM.Exchange(shouldShowBadge = true),
                         QuickActionUM.Receive,
                     ),
                     onQuickActionClick = {},

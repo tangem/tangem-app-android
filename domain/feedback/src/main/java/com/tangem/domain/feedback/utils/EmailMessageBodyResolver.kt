@@ -13,7 +13,7 @@ import com.tangem.domain.visa.model.VisaTxDetails
  *
 [REDACTED_AUTHOR]
  */
-internal class EmailMessageBodyResolver(
+class EmailMessageBodyResolver(
     private val feedbackRepository: FeedbackRepository,
 ) {
 
@@ -28,17 +28,23 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
             is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
             is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.BackupProblem -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CardAttestationFailed,
             is FeedbackEmailType.BiometricsAuthenticationFailed,
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
+            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(
+                walletMetaInfo = type.walletMetaInfo,
+                customerId = type.customerId,
+                visaTxDetails = type.visaTxDetails,
+            )
             is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
             is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
+            is FeedbackEmailType.Visa.KycRejected -> addTangemPayKycRejectedRequestBody(type)
         }
 
         return build()
@@ -47,6 +53,7 @@ internal class EmailMessageBodyResolver(
     private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(type: FeedbackEmailType.Visa.FailedIssueCard) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
@@ -57,6 +64,7 @@ internal class EmailMessageBodyResolver(
         addDelimiter()
         addTangemPayTxInfo(type.item)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
@@ -65,9 +73,16 @@ internal class EmailMessageBodyResolver(
     private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.Visa) {
         addTangemPayPhoneInfoBody(type)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
         type.walletMetaInfo?.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
         }
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayKycRejectedRequestBody(type: FeedbackEmailType.Visa.KycRejected) {
+        addTangemPayPhoneInfoBody(type)
+        addDelimiter()
+        addCustomerId(customerId = type.customerId)
     }
 
     private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(
@@ -75,6 +90,7 @@ internal class EmailMessageBodyResolver(
     ) {
         addUserWalletMetaInfo(type.walletMetaInfo)
         addDelimiter()
+        addCustomerId(customerId = type.customerId)
 
         val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
         val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
@@ -100,9 +116,11 @@ internal class EmailMessageBodyResolver(
     private suspend fun FeedbackDataBuilder.addVisaRequestBody(
         walletMetaInfo: WalletMetaInfo,
         visaTxDetails: VisaTxDetails,
+        customerId: String,
     ) {
         addUserRequestBody(walletMetaInfo)
         addDelimiter()
+        addCustomerId(customerId = customerId)
         addVisaTxInfo(visaTxDetails)
     }
 

@@ -5,12 +5,18 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.FeeRepository
+import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
+import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -21,7 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object TransactionDomainModule {
@@ -264,6 +270,128 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
     ): SendLargeSolanaTransactionUseCase {
         return SendLargeSolanaTransactionUseCase(cardSdkConfigRepository, walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAvailableFeeTokensUseCase(
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): GetAvailableFeeTokensUseCase {
+        return GetAvailableFeeTokensUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForGaslessUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getFeeUseCase: GetFeeUseCase,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): GetFeeForGaslessUseCase {
+        return GetFeeForGaslessUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            getFeeUseCase = getFeeUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeeForTokenUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): GetFeeForTokenUseCase {
+        return GetFeeForTokenUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsGaslessFeeSupportedForNetwork(
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): IsGaslessFeeSupportedForNetwork {
+        return IsGaslessFeeSupportedForNetwork(currencyChecksRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateAndSendGaslessTransactionUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        getSingCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+    ): CreateAndSendGaslessTransactionUseCase {
+        return CreateAndSendGaslessTransactionUseCase(
+            walletManagersFacade = walletManagersFacade,
+            getSingleCryptoCurrencyStatusUseCase = getSingCryptoCurrencyStatusUseCase,
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            getHotWalletSigner = tangemHotWalletSignerFactory::create,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForTokenUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): EstimateFeeForTokenUseCase {
+        return EstimateFeeForTokenUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideEstimateFeeForGaslessTxUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        gaslessTransactionRepository: GaslessTransactionRepository,
+        currenciesRepository: CurrenciesRepository,
+        getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+        estimateFeeUseCase: EstimateFeeUseCase,
+        currencyChecksRepository: CurrencyChecksRepository,
+    ): EstimateFeeForGaslessTxUseCase {
+        return EstimateFeeForGaslessTxUseCase(
+            gaslessTransactionRepository = gaslessTransactionRepository,
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig,
+            currenciesRepository = currenciesRepository,
+            getMultiCryptoCurrencyStatusUseCase = getMultiCryptoCurrencyStatusUseCase,
+            estimateFeeUseCase = estimateFeeUseCase,
+            currencyChecksRepository = currencyChecksRepository,
+        )
     }
 
     @Provides

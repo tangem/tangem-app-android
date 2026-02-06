@@ -34,8 +34,17 @@ sealed class WcAnalyticEvents(
         ),
     )
 
-    class PairButtonConnect : WcAnalyticEvents(
+    class PairButtonConnect(
+        dAppName: String,
+        accountDerivation: Int?,
+    ) : WcAnalyticEvents(
         event = "Button - Connect",
+        params = buildMap {
+            put(AnalyticsParam.DAPP_NAME, dAppName)
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     )
 
     class PairRequested(
@@ -114,6 +123,7 @@ sealed class WcAnalyticEvents(
         rawRequest: WcSdkSessionRequest,
         network: Network,
         emulationStatus: EmulationStatus?,
+        accountDerivation: Int?,
         securityStatus: CheckDAppResult,
     ) : WcAnalyticEvents(
         event = "Signature Request Received",
@@ -124,6 +134,7 @@ sealed class WcAnalyticEvents(
             AnalyticsParam.BLOCKCHAIN to network.name,
             AnalyticsParam.EMULATION_STATUS to emulationStatus?.status,
             AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
+            AnalyticsParam.ACCOUNT_DERIVATION to accountDerivation?.toString(),
         ).mapNotNullValues { it.value },
     ) {
         enum class EmulationStatus(val status: String) {
@@ -137,15 +148,19 @@ sealed class WcAnalyticEvents(
         rawRequest: WcSdkSessionRequest,
         network: Network,
         securityStatus: CheckDAppResult,
+        accountDerivation: Int?,
     ) : WcAnalyticEvents(
         event = "Signature Request Handled",
-        params = mapOf(
-            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.BLOCKCHAIN to network.name,
-            AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
-        ),
+        params = buildMap {
+            put(AnalyticsParam.DAPP_NAME, rawRequest.dAppMetaData.name)
+            put(AnalyticsParam.DAPP_URL, rawRequest.dAppMetaData.url)
+            put(AnalyticsParam.METHOD_NAME, rawRequest.request.method)
+            put(AnalyticsParam.BLOCKCHAIN, network.name)
+            put(AnalyticsParam.TYPE, securityStatus.toAnalyticVerificationStatus())
+            accountDerivation?.let {
+                put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString())
+            }
+        },
     ), AppsFlyerIncludedEvent
 
     class SignatureRequestFailed(
@@ -153,16 +168,18 @@ sealed class WcAnalyticEvents(
         network: Network,
         errorCode: String,
         errorMessage: String,
+        accountDerivation: Int?,
     ) : WcAnalyticEvents(
         event = "Signature Request Failed",
-        params = mapOf(
-            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.BLOCKCHAIN to network.name,
-            AnalyticsParam.ERROR_CODE to errorCode,
-            AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
-        ),
+        params = buildMap {
+            put(AnalyticsParam.DAPP_NAME, rawRequest.dAppMetaData.name)
+            put(AnalyticsParam.DAPP_URL, rawRequest.dAppMetaData.url)
+            put(AnalyticsParam.METHOD_NAME, rawRequest.request.method)
+            put(AnalyticsParam.BLOCKCHAIN, network.name)
+            put(AnalyticsParam.ERROR_CODE, errorCode)
+            put(AnalyticsParam.ERROR_DESCRIPTION, errorMessage)
+            accountDerivation?.let { put(AnalyticsParam.ACCOUNT_DERIVATION, it.toString()) }
+        },
     )
 
     class SignatureRequestReceivedFailed(
@@ -280,22 +297,3 @@ fun CheckDAppResult.toAnalyticVerificationStatus(): String = when (this) {
     UNSAFE -> DAppVerificationStatus.Risky
     FAILED_TO_VERIFY -> DAppVerificationStatus.Unknown
 }.status
-
-sealed class WcAnalyticAccountEvents(
-    event: String,
-    params: Map<String, String> = emptyMap(),
-) : AnalyticsEvent(category = WC_CATEGORY_ACCOUNT_NAME, event = event, params = params) {
-
-    data class PairButtonConnect(
-        private val accountDerivation: Int,
-    ) : WcAnalyticAccountEvents(
-        event = "Button - Connect",
-        params = mapOf(
-            "Account Derivation" to accountDerivation.toString(),
-        ),
-    )
-
-    companion object {
-        const val WC_CATEGORY_ACCOUNT_NAME = "WalletConnect - Account"
-    }
-}

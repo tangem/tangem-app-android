@@ -48,16 +48,12 @@
         "version": "5.31.0"
     },
     {
-        "name": "TANGEM_PAY_ENTRYPOINT_ENABLED",
-        "version": "undefined"
-    },
-    {
-        "name": "NEW_TOKEN_RECEIVE_ENABLED",
-        "version": "5.28.0"
-    },
-    {
         "name": "YIELD_SUPPLY_FEATURE_ENABLED",
         "version": "5.30.0"
+    },
+    {
+        "name": "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
+        "version": "5.33.0"
     },
     {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
@@ -65,10 +61,26 @@
     },
     {
         "name": "ACCOUNTS_FEATURE_ENABLED",
-        "version": "undefined"
+        "version": "5.33.0"
     },
     {
         "name": "FEED_ENABLED",
+        "version": "5.33.0"
+    },
+    {
+        "name": "APP_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "GASLESS_TRANSACTIONS_ENABLED",
+        "version": "5.33.0"
+    },
+    {
+        "name": "SWAP_MARKET_LIST_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "EARN_BLOCK_ENABLED",
         "version": "undefined"
     }
 ]
