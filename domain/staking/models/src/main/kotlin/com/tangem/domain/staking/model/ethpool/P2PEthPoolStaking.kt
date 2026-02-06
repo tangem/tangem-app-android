@@ -61,7 +61,7 @@ data class P2PEthPoolStaking(
 }
 
 /**
- * Detailed vault information for P2P staking
+ * Detailed vault information for P2PEthPool staking
  */
 data class P2PEthPoolVaultDetails(
     val vaultAddress: String,

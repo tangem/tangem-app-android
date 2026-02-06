@@ -82,7 +82,7 @@ fun PortfolioSelectRow(
 
 @Immutable
 data class PortfolioSelectUM(
-    val icon: CryptoPortfolioIconUM?,
+    val icon: AccountIconUM.CryptoPortfolio?,
     val name: TextReference,
     val isAccountMode: Boolean,
     val isMultiChoice: Boolean,
