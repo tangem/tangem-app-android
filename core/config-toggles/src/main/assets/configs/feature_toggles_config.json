@@ -82,5 +82,9 @@
     {
         "name": "EARN_BLOCK_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
+        "version": "undefined"
     }
 ]
