@@ -109,7 +109,7 @@ internal class WalletStateController @Inject constructor() {
             event = consumedEvent(),
             isHidingMode = false,
             showMarketsOnboarding = false,
-            onDismissMarketsOnboarding = {},
+            onDismissMarketsTooltip = {},
             isNewMarketEnabled = false,
         )
     }
