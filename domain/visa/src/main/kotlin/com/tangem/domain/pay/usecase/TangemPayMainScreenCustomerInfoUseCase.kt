@@ -68,17 +68,21 @@ class TangemPayMainScreenCustomerInfoUseCase(
     }
 
     private suspend fun showOnboardingBannerIfEligible(userWalletId: UserWalletId) {
+        if (eligibilityManager.isPaeraCustomerForAnyWallet()) {
+            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
+            return
+        }
         val isEligible = eligibilityManager
             .getEligibleWallets(shouldExcludePaeraCustomers = false)
             .any { it.walletId == userWalletId }
         if (isEligible) {
             if (onboardingRepository.getHideMainOnboardingBanner(userWalletId)) {
-                updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
             } else {
                 updateState(userWalletId, MainCustomerInfoContentState.OnboardingBanner.right())
             }
         } else {
-            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+            updateState(userWalletId, MainCustomerInfoContentState.Empty.right())
         }
     }
 

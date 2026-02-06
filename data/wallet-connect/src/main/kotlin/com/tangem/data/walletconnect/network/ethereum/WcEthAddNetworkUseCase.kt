@@ -69,7 +69,7 @@ internal class WcEthAddNetworkUseCase @AssistedInject constructor(
             ?: return illegalState()
         // find and add all derivation
         val networkToAddCAIP10 = networksConverter
-            .allAddressForChain(networkToAddCAIP2.raw, wallet)
+            .allAddressForChain(networkToAddCAIP2.raw, wallet, session.account)
             .map { address -> CAIP10(networkToAddCAIP2, address).raw }
         val newNamespaces = namespaces.copy(
             chains = namespaces.chains.plus(networkToAddCAIP2.raw),
@@ -134,7 +134,11 @@ internal class WcEthAddSwitchCommonDelegate @AssistedInject constructor(
         if (generalNetwork == null) {
             return HandleMethodError.TangemUnsupportedNetwork(caip2.raw).left()
         }
-        val addedNetwork = networksConverter.mainOrAnyWalletNetworkForRequest(caip2.raw, wallet)
+        val addedNetwork = networksConverter.mainOrAnyWalletNetworkForRequest(
+            rawChainId = caip2.raw,
+            wallet = wallet,
+            account = context.session.account,
+        )
         if (addedNetwork == null) {
             return HandleMethodError.NotAddedNetwork(generalNetwork.name).left()
         }
