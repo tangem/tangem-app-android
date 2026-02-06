@@ -37,6 +37,7 @@ internal class TangemPayTxHistoryItemsConverter(
         val localDate = spend.date.withZone(DateTimeZone.getDefault())
         val amountPrefix = when {
             spend.amount.isZero() -> ""
+            spend.status == TangemPayTxHistoryItem.Status.REVERSED -> StringsSigns.MINUS
             spend.status == TangemPayTxHistoryItem.Status.DECLINED || spend.amount.isPositive() -> StringsSigns.MINUS
             else -> StringsSigns.PLUS
         }
