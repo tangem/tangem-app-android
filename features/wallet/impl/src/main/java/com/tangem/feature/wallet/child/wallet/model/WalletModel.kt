@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
@@ -105,6 +106,7 @@ internal class WalletModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val feedFeatureToggle: FeedFeatureToggle,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
+    private val appsFlyerStore: AppsFlyerStore,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -235,6 +237,7 @@ internal class WalletModel @Inject constructor(
                                 accountsCount = accountsCount,
                                 theme = theme.value,
                                 isImported = selectedWallet.isImported(),
+                                referralId = appsFlyerStore.get()?.refcode,
                             ),
                         )
                     }
