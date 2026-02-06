@@ -37,6 +37,7 @@ internal class AddTokenModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val checkCurrencyUnsupportedDelegate: CheckCurrencyUnsupportedDelegate,
 ) : Model() {
 
     private val params = paramsContainer.require<AddTokenComponent.Params>()
@@ -69,26 +70,37 @@ internal class AddTokenModel @Inject constructor(
     private fun onAddClick(selectedNetwork: SelectedNetwork, selectedPortfolio: SelectedPortfolio) =
         modelScope.launch(dispatchers.default) {
             val um = uiState.value ?: return@launch
+
+            val cryptoCurrency = selectedNetwork.cryptoCurrency
+            val account = selectedPortfolio.account.account.account
+            val accountId = account.accountId
+            val isMainNetwork = selectedNetwork.selectedNetwork.contractAddress == null
+
+            val unsupportedCurrency = checkCurrencyUnsupportedDelegate.checkCurrencyUnsupportedState(
+                userWalletId = accountId.userWalletId,
+                rawNetworkId = selectedNetwork.selectedNetwork.networkId,
+                isMainNetwork = isMainNetwork,
+            )
+
+            if (unsupportedCurrency != null) return@launch
+
             uiState.value = um.toggleProgress(true)
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
 
-            val cryptoCurrency = selectedNetwork.cryptoCurrency
-            val account = selectedPortfolio.account.account.account
-            val accountId = account.accountId
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
-                .onLeft {
-                    processError(error = it)
+                .onLeft { error ->
+                    processError(error = error)
                     uiState.value = um.toggleProgress(false)
                     return@launch
                 }
 
-            val status = getAccountCurrencyStatusUseCase.invokeSync(
+            val status = getAccountCurrencyStatusUseCase(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
                 network = cryptoCurrency.network,
-            ).getOrNull()
+            ).firstOrNull()
             if (status == null) {
                 processError(error = null)
             } else {
@@ -96,6 +108,7 @@ internal class AddTokenModel @Inject constructor(
                     is Account.CryptoPortfolio -> if (!account.isMainAccount) {
                         analyticsEventHandler.send(analyticsEventBuilder.addToNotMainAccount())
                     }
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
                 params.callbacks.onTokenAdded(status.status)
             }

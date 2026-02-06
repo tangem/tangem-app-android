@@ -31,11 +31,11 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
         val tokenItemState = remember(state.tokenItemState) {
             when (state.tokenItemState) {
                 is TokenItemState.Content -> state.tokenItemState.copy(
-                    onItemClick = {
+                    onItemClick = { cryptoCurrency ->
                         val onClick = state.tokenItemState.onItemClick
                         if (onClick != null) {
                             hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                            onClick.invoke(it)
+                            onClick.invoke(cryptoCurrency)
                         }
                     },
                 )
@@ -73,10 +73,10 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
 @Composable
 private fun Preview(@PreviewParameter(PortfolioTokenUMProvider::class) tokenUM: PortfolioTokenUM) {
     TangemThemePreview {
-        var quickActionsShown by remember { mutableStateOf(value = false) }
+        var areQuickActionsShown by remember { mutableStateOf(value = false) }
 
         val onItemClick = {
-            quickActionsShown = quickActionsShown.not()
+            areQuickActionsShown = areQuickActionsShown.not()
         }
 
         PortfolioItem(
@@ -87,7 +87,7 @@ private fun Preview(@PreviewParameter(PortfolioTokenUMProvider::class) tokenUM: 
                     is TokenItemState.Unreachable -> tokenUM.tokenItemState.copy(onItemClick = { onItemClick() })
                     else -> tokenUM.tokenItemState
                 },
-                isQuickActionsShown = quickActionsShown,
+                isQuickActionsShown = areQuickActionsShown,
             ),
             lastInList = true,
         )
@@ -111,7 +111,8 @@ private class PortfolioTokenUMProvider : CollectionPreviewParameterProvider<Port
         tokenUM.copy(
             tokenItemState = tokenUM.tokenItemState.copy(
                 fiatAmountState = contentFiatAmount.copy(text = DASH_SIGN),
-                subtitle2State = (tokenUM.tokenItemState.subtitle2State as TokenItemState.Subtitle2State.TextContent)
+                subtitle2State = (tokenUM.tokenItemState.subtitle2State as? TokenItemState.Subtitle2State.TextContent
+                    ?: error("subtitle2State must be TextContent for preview"))
                     .copy(text = DASH_SIGN),
             ),
         ),
@@ -148,6 +149,7 @@ private class PortfolioTokenUMProvider : CollectionPreviewParameterProvider<Port
 
     companion object {
         val tokenUM = PreviewMyPortfolioUMProvider().sampleToken
-        val contentFiatAmount = tokenUM.tokenItemState.fiatAmountState as TokenFiatAmountState.Content
+        val contentFiatAmount = tokenUM.tokenItemState.fiatAmountState as? TokenFiatAmountState.Content
+            ?: error("fiatAmountState must be Content for preview")
     }
 }
