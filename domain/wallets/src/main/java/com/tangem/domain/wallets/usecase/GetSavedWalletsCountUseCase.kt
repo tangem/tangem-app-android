@@ -5,9 +5,12 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.legacy.isLockedSync
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class GetSavedWalletsCountUseCase(
@@ -16,9 +19,14 @@ class GetSavedWalletsCountUseCase(
     private val useNewRepository: Boolean,
 ) {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<List<UserWallet>> {
         if (useNewRepository) {
-            return userWalletsListRepository.userWallets.map { requireNotNull(it) }
+            return flowOf(Unit)
+                .flatMapLatest {
+                    userWalletsListRepository.load()
+                    userWalletsListRepository.userWallets.map { wallets -> requireNotNull(wallets) }
+                }
         }
 
         return userWalletsListManager.savedWalletsCount
