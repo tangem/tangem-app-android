@@ -1,6 +1,7 @@
 package com.tangem.features.account.details
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -18,6 +19,7 @@ import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
@@ -64,15 +66,19 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun onManageTokensClick(account: Account) {
         val route = AppRoute.ManageTokens(
-            source = AppRoute.ManageTokens.Source.SETTINGS,
+            source = AppRoute.ManageTokens.Source.ACCOUNT,
             portfolioId = PortfolioId(account.accountId),
         )
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonManageTokens())
+        analyticsEventHandler.send(
+            AccountSettingsAnalyticEvents.ButtonManageTokens(account.derivationIndex?.value),
+        )
         router.push(route)
     }
 
     private fun onArchiveAccountClick() {
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonArchiveAccount())
+        val accountDerivation = params.account.derivationIndex?.value
+        val event = AccountSettingsAnalyticEvents.ButtonArchiveAccount(accountDerivation)
+        analyticsEventHandler.send(event)
         confirmArchiveDialog()
     }
 
@@ -80,7 +86,9 @@ internal class AccountDetailsModel @Inject constructor(
         val secondAction = EventMessageAction(
             title = resourceReference(R.string.common_cancel),
             onClick = {
-                analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation())
+                val accountDerivation = params.account.derivationIndex?.value
+                val event = AccountSettingsAnalyticEvents.ButtonCancelAccountArchivation(accountDerivation)
+                analyticsEventHandler.send(event)
             },
         )
         val firstAction = EventMessageAction(
@@ -99,7 +107,9 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
-        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation())
+        val accountDerivation = params.account.derivationIndex?.value
+        val event = AccountSettingsAnalyticEvents.ButtonArchiveAccountConfirmation(accountDerivation)
+        analyticsEventHandler.send(event)
         uiState.update { it.toggleProgress(true) }
         archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
@@ -118,17 +128,24 @@ internal class AccountDetailsModel @Inject constructor(
         val event = AccountSettingsAnalyticEvents.AccountError(
             source = AccountSettingsAnalyticEvents.Source.ARCHIVE,
             error = error.tag,
+            accountDerivation = params.account.derivationIndex?.value,
         )
         analyticsEventHandler.send(event)
-        val titleRes = R.string.common_something_went_wrong
-        val messageRes = when (error) {
+        val titleRes: Int
+        val messageRes: Int
+        when (error) {
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountListRequirementsNotMet,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountNotFound,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountsNotCreated,
             is ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed,
-            -> R.string.account_generic_error_dialog_message
-            is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus,
-            -> R.string.account_could_not_archive_referral_program_message
+            -> {
+                titleRes = R.string.common_something_went_wrong
+                messageRes = R.string.account_generic_error_dialog_message
+            }
+            is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus -> {
+                titleRes = R.string.account_could_not_archive_referral_program_title
+                messageRes = R.string.account_could_not_archive_referral_program_message
+            }
         }
 
         val dialogMessage = DialogMessage(
@@ -147,12 +164,13 @@ internal class AccountDetailsModel @Inject constructor(
                     isLoading = false,
                 )
             }
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
             ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
-            accountIcon = account.portfolioIcon.toUM(),
+            accountIcon = CryptoPortfolioIconConverter.convert(account.portfolioIcon),
             onCloseClick = { router.pop() },
             onAccountEditClick = { onEditAccountClick(account) },
             onManageTokensClick = { onManageTokensClick(account) },
