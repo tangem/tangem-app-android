@@ -98,6 +98,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
+            bottomSheetShown = model::onFeeBottomSheetShown,
         ),
         onResult = model::onFeeResult,
     )
