@@ -47,8 +47,9 @@ internal class WcSolanaNetwork(
         val session = sessionsManager.findSessionByTopic(request.topic)
             ?: return HandleMethodError.UnknownSession.left()
         val wallet = session.wallet
+        val account = session.account
         val chainId = request.chainId.orEmpty()
-        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
+        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet, account)
         suspend fun anyAddress() = anyExistNetwork()
             ?.let { network -> networksConverter.getAddressForWC(wallet.walletId, network).orEmpty() }
             .orEmpty()
@@ -63,12 +64,13 @@ internal class WcSolanaNetwork(
             ?: anyExistNetwork()
             ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
+        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet, account).size
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
             network = walletNetwork,
             accountAddress = accountAddress,
-            networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet).size,
+            networkDerivationsCount = networkDerivationsCount,
         )
         return when (method) {
             is WcSolanaMethod.SignMessage -> factories.messageSign.create(context, method)
