@@ -43,7 +43,7 @@ internal class TokenListStateConverter(
     private val shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
-    private val yieldSupplyPromoBannerKeyConverter = YieldSupplyPromoBannerKeyConverter(
+    private val yieldSupplyPromoBannerConverter = YieldSupplyPromoBannerConverter(
         yieldModuleApyMap,
         shouldShowMainPromo,
     )
@@ -72,7 +72,7 @@ internal class TokenListStateConverter(
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
-        yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKeyConverter.convert(params),
+        promoCryptoCurrencyStatus = yieldSupplyPromoBannerConverter.convert(params),
         stakingApyMap = stakingAvailabilityMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },

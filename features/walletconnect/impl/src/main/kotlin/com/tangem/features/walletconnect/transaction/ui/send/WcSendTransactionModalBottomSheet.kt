@@ -144,6 +144,7 @@ internal fun WcSendTransactionModalBottomSheet(
                 enabled = state.sendEnabled,
                 walletInteractionIcon = state.walletInteractionIcon,
                 validationResult = state.transactionValidationResult,
+                isHoldToConfirmEnabled = state.isHoldToConfirmEnabled,
             )
         },
     )

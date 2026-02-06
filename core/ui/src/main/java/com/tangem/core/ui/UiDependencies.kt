@@ -16,4 +16,6 @@ interface UiDependencies {
     val globalSnackbarHostState: SnackbarHostState
 
     val eventMessageHandler: EventMessageHandler
+
+    val designFeatureToggles: DesignFeatureToggles
 }
