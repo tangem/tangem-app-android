@@ -24,6 +24,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.promo.models.StoryContent
@@ -60,7 +61,7 @@ import kotlin.math.min
 /**
  * State builder creates a specific states for SwapScreen
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 internal class StateBuilder(
     private val userWalletProvider: Provider<UserWallet>,
     private val actions: UiActions,
@@ -68,7 +69,11 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
+
+    private val isHoldToConfirmEnabled: Boolean =
+        holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWalletProvider().isHotWallet
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
@@ -127,7 +132,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = {},
             ),
             onRefresh = {},
@@ -187,7 +192,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = { },
             ),
             changeCardsButtonState = ChangeCardsButtonState.DISABLED,
@@ -253,7 +258,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = {},
             ),
             providerState = ProviderState.Loading(),
@@ -376,7 +381,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = getSwapButtonEnabled(notifications),
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -505,7 +510,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = actions.onSwapClick,
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
@@ -603,7 +608,7 @@ internal class StateBuilder(
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 isEnabled = false,
-                isHoldToConfirm = userWalletProvider().isHotWallet,
+                isHoldToConfirm = isHoldToConfirmEnabled,
                 onClick = { },
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
