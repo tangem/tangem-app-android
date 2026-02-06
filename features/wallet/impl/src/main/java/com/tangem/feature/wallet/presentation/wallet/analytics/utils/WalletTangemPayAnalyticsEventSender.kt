@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -25,8 +26,10 @@ internal class WalletTangemPayAnalyticsEventSender @Inject constructor(
         // TODO: TangemPay refactor analytics
         // when statement copied from TangemPayUpdateInfoStateTransformer. Be careful when editing
         val event = when {
-            customerInfo.orderStatus == OrderStatus.CANCELED -> return // ignore cancelled state on analytics
-            !customerInfo.info.isKycApproved -> return // ignore kyc not approved state on analytics
+            // ignore cancelled state on analytics
+            customerInfo.orderStatus == OrderStatus.CANCELED -> return
+            // ignore kyc not approved state on analytics
+            customerInfo.info.kycStatus != CustomerInfo.KycStatus.APPROVED -> return
             cardInfo != null && productInstance != null -> return
             else -> TangemPayAnalyticsEvents.IssuingBannerDisplayed()
         }
