@@ -18,6 +18,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -64,6 +65,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -248,6 +250,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                                 } else {
                                     AnalyticsParam.EmptyFull.Full
                                 },
+                                referralId = appsFlyerStore.get()?.refcode,
                             ),
                         )
 

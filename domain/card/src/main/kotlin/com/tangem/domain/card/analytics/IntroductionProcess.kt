@@ -2,6 +2,7 @@ package com.tangem.domain.card.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.getReferralParams
 
 sealed class IntroductionProcess(
     event: String,
@@ -13,7 +14,14 @@ sealed class IntroductionProcess(
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
-    class CreateWalletIntroScreenOpened : IntroductionProcess("Create Wallet Intro Screen Opened")
+    class CreateWalletIntroScreenOpened(
+        referralId: String?,
+    ) : IntroductionProcess(
+        event = "Create Wallet Intro Screen Opened",
+        params = buildMap {
+            putAll(getReferralParams(referralId))
+        },
+    )
 
     class ButtonScanCard(
         val source: AnalyticsParam.ScreensSources,
