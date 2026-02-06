@@ -18,6 +18,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -96,6 +97,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapAlertFactory: SwapAlertFactory,
     private val appRouter: AppRouter,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     swapTransactionSenderFactory: SwapTransactionSender.Factory,
     paramsContainer: ParamsContainer,
 ) : Model(), FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
@@ -502,7 +504,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             val confirmUM = state.confirmUM
             val isContent = confirmUM is ConfirmUM.Content
             val isReadyToSend = isContent && !confirmUM.isTransactionInProcess
-            val isHoldToConfirm = params.userWallet.isHotWallet && isContent
+            val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
+                params.userWallet.isHotWallet && isContent
             params.callback.onResult(
                 route = SendWithSwapRoute.Confirm,
                 sendWithSwapUM = state.copy(
