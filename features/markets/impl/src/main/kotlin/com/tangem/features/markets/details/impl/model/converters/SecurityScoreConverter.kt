@@ -31,21 +31,20 @@ internal class SecurityScoreConverter(
                     SecurityScoreBottomSheetContent(
                         title = resourceReference(R.string.markets_token_details_security_score),
                         description = resourceReference(R.string.markets_token_details_security_score_description),
-                        providers = value.securityScoreProviderData.map {
+                        providers = value.securityScoreProviderData.map { provider ->
                             SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
-                                name = it.providerName,
-                                lastAuditDate = it.lastAuditDate?.let { date ->
+                                name = provider.providerName,
+                                lastAuditDate = provider.lastAuditDate?.let { date ->
                                     MarketsDateTimeFormatters.formatAsDate(date.millis)
                                 },
-                                score = it.securityScore,
-                                urlData = it.urlData?.let {
-                                        urlData ->
+                                score = provider.securityScore,
+                                urlData = provider.urlData?.let { urlData ->
                                     SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                                         fullUrl = urlData.fullUrl,
                                         rootHost = urlData.rootHost,
                                     )
                                 },
-                                iconUrl = it.iconUrl,
+                                iconUrl = provider.iconUrl,
                             )
                         },
                         onProviderLinkClick = onSecurityScoreProviderLinkClick,
