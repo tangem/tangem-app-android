@@ -248,7 +248,7 @@ internal class AccessCodeModel @Inject constructor(
             auth = HotAuth.Password(accessCode.toCharArray()),
         )
 
-        if (walletsRepository.requireAccessCode().not()) {
+        if (walletsRepository.requireAccessCode().not() && canUseBiometryUseCase()) {
             updatedHotWalletId = tangemHotSdk.changeAuth(
                 unlockHotWallet = unlockHotWallet,
                 auth = HotAuth.Biometry,
