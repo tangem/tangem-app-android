@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    api(projects.common)
 
     /** Compose */
     implementation(deps.compose.material3)

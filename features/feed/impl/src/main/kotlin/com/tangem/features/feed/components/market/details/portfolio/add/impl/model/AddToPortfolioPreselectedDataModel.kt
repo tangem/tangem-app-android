@@ -112,8 +112,10 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             // suspend until all required data is selected
             val (selectedNetworkValue, selectedPortfolioValue) = allRequireForAdd.first()
 
-            val isTokenAlreadyAdded = selectedPortfolioValue.account.addedMarketNetworks
-                .any { it.networkId == selectedNetworkValue.selectedNetwork.networkId }
+            val isTokenAlreadyAdded = getAccountCurrencyStatusUseCase.invokeSync(
+                userWalletId = selectedPortfolioValue.userWallet.walletId,
+                currency = selectedNetworkValue.cryptoCurrency,
+            ).isSome()
 
             if (isTokenAlreadyAdded) {
                 finishSuccessFlow(
@@ -165,7 +167,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     ): AvailableToAddData? {
         val portfolioData = portfolioFetcher.data.firstOrNull() ?: return null
 
-        val availableToOpenWallets = portfolioData.balances.mapNotNull { (walletId, balance) ->
+        val availableToAddInWallets = portfolioData.balances.mapNotNull { (walletId, balance) ->
             val wallet = balance.userWallet
             val accounts = balance.accountsBalance.accountStatuses
 
@@ -206,9 +208,9 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             )
         }.toMap()
 
-        if (availableToOpenWallets.isEmpty()) return null
+        if (availableToAddInWallets.isEmpty()) return null
 
-        return AvailableToAddData(availableToAddWallets = availableToOpenWallets)
+        return AvailableToAddData(availableToAddWallets = availableToAddInWallets)
     }
 
     private suspend fun createCryptoCurrency(

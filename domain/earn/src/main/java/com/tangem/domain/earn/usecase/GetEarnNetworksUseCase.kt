@@ -1,5 +1,6 @@
 package com.tangem.domain.earn.usecase
 
+import arrow.core.Either
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.models.earn.EarnNetwork
@@ -27,11 +28,11 @@ class GetEarnNetworksUseCase(
             earnRepository.observeEarnNetworks(),
             observeMyNetworkIds(),
         ) { earn, myNetworkIds ->
-            earn.map { earnNetworks ->
+            earn?.map { earnNetworks ->
                 earnNetworks.map { network ->
                     network.copy(isAdded = network.networkId in myNetworkIds)
                 }
-            }
+            } ?: Either.Right(emptyList())
         }.distinctUntilChanged()
     }
 

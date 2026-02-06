@@ -5,6 +5,7 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.earn.state.EarnListUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -17,6 +18,7 @@ internal data class FeedListUM(
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
     val globalState: GlobalFeedState = GlobalFeedState.Content,
+    val earnListUM: EarnListUM?,
 )
 
 internal data class FeedListCallbacks(
@@ -28,6 +30,7 @@ internal data class FeedListCallbacks(
     val onSortTypeClick: (sortBy: SortByTypeUM) -> Unit,
     val onSliderScroll: () -> Unit,
     val onSliderEndReached: () -> Unit,
+    val onOpenEarnPageClick: () -> Unit,
 )
 
 internal data class FeedListSearchBar(

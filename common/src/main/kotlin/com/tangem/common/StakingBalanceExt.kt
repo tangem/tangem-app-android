@@ -1,4 +1,4 @@
-package com.tangem.domain.staking.utils
+package com.tangem.common
 
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.StakingBalance
