@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
 [REDACTED_AUTHOR]
@@ -32,7 +33,7 @@ object Analytics : GlobalAnalyticsEventHandler {
 
     private val handlers = mutableMapOf<String, AnalyticsHandler>()
     private val paramsInterceptors = ConcurrentHashMap<String, ParamsInterceptor>()
-    private val oneEventsPerSession = ConcurrentHashMap<String, Boolean>()
+    private val throttledEventsState = ConcurrentHashMap<String, Long>()
     private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
     private val analyticsMutex = Mutex()
 
@@ -87,9 +88,7 @@ object Analytics : GlobalAnalyticsEventHandler {
 
     override fun send(event: AnalyticsEvent) {
         analyticsScope.launch {
-            if (event is OneTimePerSessionEvent &&
-                oneEventsPerSession.putIfAbsent(event.oneTimeEventId, true) != null
-            ) {
+            if (event is OneTimePerSessionEvent && !shouldSendThrottledEvent(event)) {
                 return@launch
             }
             event.params = applyParamsInterceptors(event)
@@ -135,6 +134,21 @@ object Analytics : GlobalAnalyticsEventHandler {
                 .forEach { it.intercept(interceptedParams) }
         }
         return interceptedParams
+    }
+
+    private fun shouldSendThrottledEvent(event: OneTimePerSessionEvent): Boolean {
+        val now = System.currentTimeMillis()
+        val id = event.oneTimeEventId
+        return when (val throttleMs = event.throttleSeconds?.let(TimeUnit.SECONDS::toMillis)) {
+            null -> throttledEventsState.putIfAbsent(id, now) == null
+            else -> throttledEventsState.compute(id) { _, lastSendTime ->
+                when {
+                    lastSendTime == null -> now
+                    now - lastSendTime >= throttleMs -> now
+                    else -> lastSendTime
+                }
+            } == now
+        }
     }
 
     private fun createScope(): CoroutineScope {
