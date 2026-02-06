@@ -23,6 +23,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.InputNumberFormatter
@@ -160,6 +161,7 @@ internal class SwapModel @Inject constructor(
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerStore: AppsFlyerStore,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -192,6 +194,7 @@ internal class SwapModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         isAccountsModeProvider = Provider { isAccountsMode },
         iGaslessFeeSupportedForNetwork = iGaslessFeeSupportedForNetwork,
+        holdToConfirmButtonFeatureToggles = holdToConfirmButtonFeatureToggles,
     )
 
     private val inputNumberFormatter =
