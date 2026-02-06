@@ -6,14 +6,11 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 
 internal class DefaultAuthProvider(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val shouldUseNewListRepository: Boolean = false,
     private val environmentConfigStorage: EnvironmentConfigStorage,
 ) : AuthProvider {
 
@@ -71,18 +68,10 @@ internal class DefaultAuthProvider(
     }
 
     private suspend fun getWallets(): List<UserWallet> {
-        return if (shouldUseNewListRepository) {
-            userWalletsListRepository.userWalletsSync()
-        } else {
-            userWalletsListManager.userWalletsSync
-        }
+        return userWalletsListRepository.userWalletsSync()
     }
 
     private suspend fun getSelectedWallet(): UserWallet? {
-        return if (shouldUseNewListRepository) {
-            userWalletsListRepository.selectedUserWalletSync()
-        } else {
-            userWalletsListManager.selectedUserWalletSync
-        }
+        return userWalletsListRepository.selectedUserWalletSync()
     }
 }

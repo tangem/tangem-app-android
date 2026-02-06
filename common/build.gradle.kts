@@ -13,6 +13,10 @@ android {
 dependencies {
 
     implementation(projects.core.utils)
+    api(projects.domain.models)
+    api(projects.domain.appCurrency.models)
+    api(projects.domain.staking.models)
+    api(projects.libs.crypto)
 
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))
