@@ -1462,10 +1462,12 @@
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
   <string name="tangem_pay_status_pending">保留中</string>
+  <string name="tangem_pay_status_reversed">取消済み</string>
   <string name="tangem_pay_terms_fees_limits">利用規約・手数料・利用制限</string>
   <string name="tangem_pay_terms_limits">利用規約と上限条件</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
   <string name="tangem_pay_transaction_fee_notification_text">この手数料は、送金処理にかかるコストをカバーするためのものです。</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">この取引は加盟店により一部または全額取り消されました</string>
   <string name="tangem_pay_unfreeze_card_alert_body">資金は引き続き使用できます。いつでも一時停止できます。</string>
   <string name="tangem_pay_unfreeze_card_alert_title">カードの一時停止を解除しますか?</string>
   <string name="tangem_pay_unfreeze_card_failed">カードの凍結解除に失敗しました。しばらくしてからもう一度お試しください。</string>
