@@ -16,14 +16,16 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.increaseGasLimitBy
-import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyPendingTracker
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -62,6 +64,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val appsFlyerStore: AppsFlyerStore,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -99,6 +102,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
+                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
             ),
         )
 
@@ -169,18 +173,18 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                     params.callback.onTransactionProgress(false)
                 },
-                ifRight = {
-                    onStopEarningTransactionSuccess()
+                ifRight = { txData ->
+                    onStopEarningTransactionSuccess(txData)
                 },
             )
         }
     }
 
-    private suspend fun onStopEarningTransactionSuccess() {
-        yieldSupplyRepository.saveTokenProtocolStatus(
-            userWallet.walletId,
-            cryptoCurrency,
-            YieldSupplyEnterStatus.Exit,
+    private suspend fun onStopEarningTransactionSuccess(txId: String) {
+        yieldSupplyRepository.saveTokenProtocolPendingStatus(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = cryptoCurrency,
+            yieldSupplyPendingStatus = YieldSupplyPendingStatus.Exit(listOf(txId)),
         )
         analytics.send(
             YieldSupplyAnalytics.FundsWithdrawn(
@@ -193,6 +197,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             blockchain = cryptoCurrency.network.name,
             token = cryptoCurrency.symbol,
             feeType = AnalyticsParam.FeeType.Normal,
+            feeToken = feeCryptoCurrencyStatus.currency.symbol,
         )
         analytics.send(
             Basic.TransactionSent(
@@ -206,6 +211,11 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
 
         modelScope.launch {
+            yieldSupplyPendingTracker.addPending(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+                txIds = listOf(txId),
+            )
             params.callback.onStopEarningTransactionSent()
         }
     }
