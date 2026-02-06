@@ -59,6 +59,10 @@ sealed interface FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
     }
 
+    data object BiometricsAuthenticationFailed : FeedbackEmailType {
+        override val walletMetaInfo: WalletMetaInfo? = null
+    }
+
     sealed class Visa : FeedbackEmailType {
         abstract val customerId: String
 
