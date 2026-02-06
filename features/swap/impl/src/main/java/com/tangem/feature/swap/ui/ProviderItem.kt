@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -99,7 +100,7 @@ private fun ProviderContentState(
     isSelected: Boolean = false,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing12)
@@ -120,8 +121,10 @@ private fun ProviderContentState(
 
             Column(
                 modifier = Modifier
+                    .heightIn(min = TangemTheme.dimens.size40)
                     .padding(start = TangemTheme.dimens.spacing12)
                     .testTag(SwapTokenScreenTestTags.PROVIDERS_BLOCK),
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row {
                     if (state.namePrefix == ProviderState.PrefixType.PROVIDED_BY) {
@@ -158,7 +161,6 @@ private fun ProviderContentState(
                 }
                 Row(
                     modifier = Modifier.padding(
-                        top = TangemTheme.dimens.spacing6,
                         end = TangemTheme.dimens.spacing56,
                     ),
                 ) {
@@ -205,7 +207,7 @@ private fun ProviderUnavailableState(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             val (alpha, colorFilter) = GRAY_SCALE_ALPHA to GrayscaleColorFilter
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -228,7 +230,10 @@ private fun ProviderUnavailableState(
             )
 
             Column(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .heightIn(min = TangemTheme.dimens.size40)
+                    .padding(start = TangemTheme.dimens.spacing12),
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row {
                     AnimatedContent(targetState = state.name, label = "") { name ->
@@ -247,12 +252,16 @@ private fun ProviderUnavailableState(
                         )
                     }
                 }
-                AnimatedContent(targetState = state.alertText, label = "") { alertText ->
+                AnimatedContent(
+                    targetState = state.alertText,
+                    contentAlignment = Alignment.BottomStart,
+                    label = "",
+                ) { alertText ->
                     Text(
                         text = alertText.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
+                        modifier = Modifier,
                     )
                 }
             }
