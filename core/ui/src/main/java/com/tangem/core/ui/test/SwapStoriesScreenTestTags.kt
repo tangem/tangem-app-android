@@ -3,4 +3,7 @@ package com.tangem.core.ui.test
 object SwapStoriesScreenTestTags {
     const val SCREEN_CONTAINER = "SWAP_STORIES_SCREEN_CONTAINER"
     const val CLOSE_BUTTON = "SWAP_STORIES_SCREEN_CLOSE_BUTTON"
+    const val PROGRESS_BAR_ITEM = "SWAP_STORIES_SCREEN_PROGRESS_BAR_ITEM"
+    const val TITLE = "SWAP_STORIES_SCREEN_TITLE"
+    const val SUBTITLE = "SWAP_STORIES_SCREEN_SUBTITLE"
 }

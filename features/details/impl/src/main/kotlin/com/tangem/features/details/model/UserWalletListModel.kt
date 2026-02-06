@@ -13,7 +13,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
@@ -32,7 +31,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class UserWalletListModel @Inject constructor(
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
-    shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val router: Router,
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -47,7 +45,7 @@ internal class UserWalletListModel @Inject constructor(
         messageSender = messageSender,
         onlyMultiCurrency = false,
         isAuthMode = false,
-        isClickableIfLocked = hotWalletFeatureToggles.isHotWalletEnabled,
+        isClickableIfLocked = true,
         onWalletClick = ::onWalletClicked,
     )
 
@@ -67,67 +65,48 @@ internal class UserWalletListModel @Inject constructor(
 
             combine(
                 flow = userWalletsFlow,
-                flow2 = shouldSaveUserWalletsUseCase(),
-                flow3 = isWalletSavingInProgress,
-            ) { userWallets, shouldSaveUserWallets, isWalletSavingInProgress ->
-                updateState(userWallets, shouldSaveUserWallets, isWalletSavingInProgress)
+                flow2 = isWalletSavingInProgress,
+            ) { userWallets, isWalletSavingInProgress ->
+                updateState(userWallets, isWalletSavingInProgress)
             }.collect()
         }
     }
 
-    private fun updateState(
-        userWallets: ImmutableList<UserWalletItemUM>,
-        shouldSaveUserWallets: Boolean,
-        isWalletSavingInProgress: Boolean,
-    ) = state.update { value ->
-        value.copy(
-            userWallets = userWallets,
-            isWalletSavingInProgress = isWalletSavingInProgress,
-            addNewWalletText = when {
-                shouldSaveUserWallets || hotWalletFeatureToggles.isHotWalletEnabled -> {
-                    resourceReference(R.string.user_wallet_list_add_button)
-                }
-                else -> resourceReference(R.string.scan_card_settings_button)
-            },
-        )
-    }
+    private fun updateState(userWallets: ImmutableList<UserWalletItemUM>, isWalletSavingInProgress: Boolean) =
+        state.update { value ->
+            value.copy(
+                userWallets = userWallets,
+                isWalletSavingInProgress = isWalletSavingInProgress,
+                addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
+            )
+        }
 
     private fun onAddNewWalletClick() {
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
+        analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
 
-            if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
-                withProgress(isWalletSavingInProgress) {
-                    userWalletSaver.scanAndSaveUserWallet(modelScope)
-                }
-            } else {
-                router.push(AppRoute.CreateWalletSelection)
-            }
-        } else {
+        if (hotWalletFeatureToggles.isWalletCreationRestrictionEnabled) {
             withProgress(isWalletSavingInProgress) {
                 userWalletSaver.scanAndSaveUserWallet(modelScope)
             }
+        } else {
+            router.push(AppRoute.CreateWalletSelection)
         }
     }
 
     private fun onWalletClicked(userWalletId: UserWalletId) {
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            modelScope.launch {
-                unlockWalletUseCase(userWalletId)
-                    .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
-                    .onLeft { error ->
-                        Timber.e("Failed to unlock wallet $userWalletId: $error")
-                        error.handle(
-                            onUserCancelled = {},
-                            isFromUnlockAll = false,
-                            onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
-                            analyticsEventHandler = analyticsEventHandler,
-                            showMessage = messageSender::send,
-                        )
-                    }
-            }
-        } else {
-            router.push(AppRoute.WalletSettings(userWalletId))
+        modelScope.launch {
+            unlockWalletUseCase(userWalletId)
+                .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
+                .onLeft { error ->
+                    Timber.e("Failed to unlock wallet $userWalletId: $error")
+                    error.handle(
+                        onUserCancelled = {},
+                        isFromUnlockAll = false,
+                        onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
+                        analyticsEventHandler = analyticsEventHandler,
+                        showMessage = messageSender::send,
+                    )
+                }
         }
     }
 }

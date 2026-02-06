@@ -38,15 +38,6 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
     return when (action) {
         is DetailsAction.AppSettings.SwitchPrivacySetting -> state.copy(
             appSettingsState = when (action.setting) {
-                AppSetting.SaveWallets -> state.appSettingsState.copy(
-                    isInProgress = true,
-                    saveWallets = action.enable,
-                )
-                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
-                    isInProgress = true,
-                    saveWallets = true, // User can't enable access codes saving without wallets saving
-                    saveAccessCodes = action.enable,
-                )
                 AppSetting.RequireAccessCode -> state.appSettingsState.copy(
                     isInProgress = true,
                     requireAccessCode = action.enable,
@@ -64,14 +55,6 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         )
         is DetailsAction.AppSettings.SwitchPrivacySetting.Failure -> state.copy(
             appSettingsState = when (action.setting) {
-                AppSetting.SaveWallets -> state.appSettingsState.copy(
-                    isInProgress = false,
-                    saveWallets = action.prevState,
-                )
-                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
-                    isInProgress = false,
-                    saveAccessCodes = action.prevState,
-                )
                 AppSetting.RequireAccessCode -> state.appSettingsState.copy(
                     isInProgress = false,
                     requireAccessCode = action.prevState,
@@ -105,9 +88,6 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         // state should be copied to avoid concurrent modifications from different sources
         is DetailsAction.AppSettings.Prepare -> state.copy(
             appSettingsState = state.appSettingsState.copy(
-                saveWallets = action.state.saveWallets,
-                saveAccessCodes = action.state.saveAccessCodes,
-                isBiometricsAvailable = action.state.isBiometricsAvailable,
                 isHidingEnabled = action.state.isHidingEnabled,
                 selectedAppCurrency = action.state.selectedAppCurrency,
                 selectedThemeMode = action.state.selectedThemeMode,
