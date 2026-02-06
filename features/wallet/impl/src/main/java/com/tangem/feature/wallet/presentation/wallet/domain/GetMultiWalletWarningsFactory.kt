@@ -182,7 +182,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
-            element = WalletNotification.Critical.BackupError { clickIntents.onSupportClick() },
+            element = WalletNotification.Critical.BackupError { clickIntents.onBackupErrorClick() },
             condition = !backupValidator.isValidBackupStatus(userWallet.scanResponse.card) || userWallet.hasBackupError,
         )
 
