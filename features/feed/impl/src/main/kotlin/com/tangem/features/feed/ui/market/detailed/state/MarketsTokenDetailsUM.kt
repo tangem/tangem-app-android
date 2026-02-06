@@ -28,6 +28,7 @@ internal data class MarketsTokenDetailsUM(
     val shouldShowPriceSubtitle: Boolean,
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
     val relatedNews: RelatedNews,
+    val onShareClick: () -> Unit,
 ) {
 
     data class ChartState(
