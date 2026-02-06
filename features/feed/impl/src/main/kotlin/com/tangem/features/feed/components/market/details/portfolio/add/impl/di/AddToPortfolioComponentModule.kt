@@ -2,7 +2,9 @@ package com.tangem.features.feed.components.market.details.portfolio.add.impl.di
 
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.DefaultAddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.impl.DefaultAddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.ui.DefaultAddToPortfolioManager
 import dagger.Binds
 import dagger.Module
@@ -18,4 +20,9 @@ internal interface AddToPortfolioComponentModule {
 
     @Binds
     fun bindAddToPortfolioManagerFactory(factory: DefaultAddToPortfolioManager.Factory): AddToPortfolioManager.Factory
+
+    @Binds
+    fun bindAddToPortfolioPreselectedDataComponent(
+        factory: DefaultAddToPortfolioPreselectedDataComponent.Factory,
+    ): AddToPortfolioPreselectedDataComponent.Factory
 }
