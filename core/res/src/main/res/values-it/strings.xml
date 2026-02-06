@@ -87,10 +87,12 @@
   <string name="tangem_pay_status_completed">Completato</string>
   <string name="tangem_pay_status_declined">Rifiutato</string>
   <string name="tangem_pay_status_pending">In sospeso</string>
+  <string name="tangem_pay_status_reversed">Stornata</string>
   <string name="tangem_pay_terms_fees_limits">Termini, commissioni e limiti</string>
   <string name="tangem_pay_terms_limits">Termini e limiti</string>
   <string name="tangem_pay_transaction_declined_notification_text">La banca ha rifiutato questa richiesta di transazione.</string>
   <string name="tangem_pay_transaction_fee_notification_text">Questa commissione copre il costo della gestione del tuo trasferimento.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">La transazione è stata parzialmente o totalmente stornata dal commerciante</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Continua a usare i tuoi soldi. Puoi congelarli in qualsiasi momento.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Sbloccare la tua carta?</string>
   <string name="tangem_pay_unfreeze_card_failed">Impossibile sbloccare la carta. Riprova più tardi.</string>
