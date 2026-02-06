@@ -30,9 +30,11 @@ import com.tangem.features.feed.components.market.details.portfolio.add.AddToPor
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
+import com.tangem.utils.extensions.isZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import java.math.BigDecimal
 
 @Suppress("UnusedPrivateMember")
 internal class DefaultSwapComponent @AssistedInject constructor(
@@ -104,10 +106,15 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
             val fromCryptoCurrency by remember { derivedStateOf { dataState.fromCryptoCurrency } }
             val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
-            val amount by remember { derivedStateOf { dataState.amount } }
+            val shouldHideBlock by remember {
+                derivedStateOf {
+                    dataState.amount.isNullOrBlank() || BigDecimal(dataState.amount).isZero() ||
+                        model.uiState.isInsufficientFunds
+                }
+            }
 
-            LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, amount.isNullOrBlank()) {
-                if (amount.isNullOrBlank()) {
+            LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
+                if (shouldHideBlock) {
                     slotNavigation.dismiss()
                     return@LaunchedEffect
                 }
