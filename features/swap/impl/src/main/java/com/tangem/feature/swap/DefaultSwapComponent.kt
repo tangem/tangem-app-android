@@ -107,10 +107,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             val fromCryptoCurrency by remember { derivedStateOf { dataState.fromCryptoCurrency } }
             val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
             val shouldHideBlock by remember {
-                derivedStateOf {
-                    dataState.amount.isNullOrBlank() || BigDecimal(dataState.amount).isZero() ||
-                        model.uiState.isInsufficientFunds
-                }
+                derivedStateOf { toBigDecimalOrZero(dataState.amount).isZero() || model.uiState.isInsufficientFunds }
             }
 
             LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
@@ -206,6 +203,10 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 shouldSkipTokenActionsScreen = true,
             ),
         )
+    }
+
+    private fun toBigDecimalOrZero(bigDecimalString: String?): BigDecimal {
+        return bigDecimalString?.replace(",", ".")?.toBigDecimalOrNull() ?: BigDecimal.ZERO
     }
 
     @AssistedFactory
