@@ -39,12 +39,17 @@ internal class WcEthNetwork(
         val name = toWcMethodName(request) ?: return error("Unknown method name")
         val session = sessionsManager.findSessionByTopic(request.topic)
             ?: return HandleMethodError.UnknownSession.left()
+        val account = session.account
         val wallet = session.wallet
         val chainId = request.chainId.orEmpty()
         val method: WcEthMethod = name.toMethod(request)
             .getOrElse { return error(it.message.orEmpty()) }
             ?: return error("Failed to parse $name")
-        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
+        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(
+            rawChainId = chainId,
+            wallet = wallet,
+            account = account,
+        )
 
         val accountAddress = when (method) {
             is WcEthMethod.MessageSign -> method.account
@@ -69,12 +74,13 @@ internal class WcEthNetwork(
             -> anyExistNetwork()
         } ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
+        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet, account).size
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
             network = walletNetwork,
             accountAddress = accountAddress,
-            networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet).size,
+            networkDerivationsCount = networkDerivationsCount,
         )
         return when (method) {
             is WcEthMethod.MessageSign -> factories.messageSign.create(context, method)
