@@ -17,10 +17,19 @@ import kotlinx.serialization.Serializable
 data class EarnToken(
     val apy: String,
     val networkId: String,
-    val rewardType: String,
-    val type: String,
+    val rewardType: EarnRewardType,
+    val type: EarnType,
     val tokenId: String,
     val tokenSymbol: String,
     val tokenName: String,
     val tokenAddress: String,
+    val decimalCount: Int?,
 )
+
+enum class EarnRewardType {
+    APR, APY
+}
+
+enum class EarnType {
+    STAKING, YIELD
+}
