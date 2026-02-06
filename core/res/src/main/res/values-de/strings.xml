@@ -86,6 +86,8 @@
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
   <string name="address_type_default">Standard</string>
   <string name="address_type_legacy">Altbestand</string>
+  <string name="alert_authentication_error_message">Bei der biometrischen Authentifizierung ist ein Fehler aufgetreten. Bitte setzen Sie die Biometrie auf Ihrem Gerät zurück oder kontaktieren Sie den Support.</string>
+  <string name="alert_authentication_error_title">Authentifizierungsfehler</string>
   <string name="alert_button_how_to_scan">So scannt man</string>
   <string name="alert_button_request_support">Hilfe anfordern</string>
   <string name="alert_button_try_again">Erneut versuchen</string>
@@ -299,6 +301,7 @@
   <string name="common_go_to_token">Zum Token</string>
   <string name="common_got_it">Verstanden</string>
   <string name="common_hide">Ausblenden</string>
+  <string name="common_hold_to">Halten bis %s</string>
   <string name="common_hour">Stunde</string>
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
@@ -374,6 +377,7 @@
   <string name="common_swap">Tauschen</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Tippen und halten</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_to">An</string>
@@ -463,6 +467,11 @@
   <string name="domain_receive_assets_onboarding_description">Das Senden von Vermögenswerten in anderen Netzwerken führt zu dauerhaftem Verlust.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s Netzwerk</string>
   <string name="domain_receive_assets_onboarding_title">Sende Geld nur mit</string>
+  <string name="earn_best_opportunities">Beste Gelegenheiten</string>
+  <string name="earn_filter_all_networks">Alle Netzwerke</string>
+  <string name="earn_filter_all_types">Alle Arten</string>
+  <string name="earn_mostly_used">Meist verwendet</string>
+  <string name="earn_title">Verdienen</string>
   <string name="email_preface_wc_error">Hallo Support-Team, ich habe einen Fehler mit dem Code %s festgestellt.</string>
   <string name="email_subject_wc_error">WalletConnect-Fehler</string>
   <string name="error_wrong_wallet_tapped">Du hast eine Karte oder Ring aus einer anderen Wallet verwendet. Tippe auf die Karte oder Ring, die dieser Wallet zugeordnet ist.</string>
@@ -613,6 +622,7 @@
   <string name="hw_backup_need_title">Zuerst die Sicherung abschließen</string>
   <string name="hw_backup_no_backup">Unvollständig</string>
   <string name="hw_backup_section_other_title">Andere Methoden</string>
+  <string name="hw_backup_seed_code_description">Bewahre Deine Wiederherstellungsphrase an einem sicheren Ort auf und halte diese geheim, um Dein Guthaben zu schützen. Richte außerdem einen 8 stelligen Zugangscode für zusätzliche Sicherheit ein.</string>
   <string name="hw_backup_seed_description">Speicher Deinen Wiederherstellungssatz an einem sicheren Ort und halte diesen stets geheim, um Dein Geld zu schützen.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
   <string name="hw_backup_to_secure_description">Um Deine Wallet mit einem Zugangscode zu sichern, schließe den Sicherungsvorgang ab.</string>
@@ -1463,6 +1473,9 @@
   <string name="tangem_pay_freeze_card_freeze">Einfrieren</string>
   <string name="tangem_pay_freeze_card_success">Ihre Karte ist eingefroren.</string>
   <string name="tangem_pay_get_help">Hilfe erhalten</string>
+  <string name="tangem_pay_history_item_spend_mc_declined_reason">Grund: %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s · %s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Andere</string>
   <string name="tangem_pay_rooted_device_subtitle">Nicht nutzbar auf gerooteten Geräten</string>
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
@@ -1834,7 +1847,18 @@
   <string name="warning_button_ok">OK, habe ich verstanden!</string>
   <string name="warning_button_really_cool">Echt toll!</string>
   <string name="warning_button_refresh">Aktualisieren</string>
+  <string name="warning_clore_migration_button">Migration starten</string>
+  <string name="warning_clore_migration_copy_button">Kopie</string>
+  <string name="warning_clore_migration_description">Um weiterhin Zugriff auf Deine Gelder zu haben, beginne die Migration gemäß den offiziellen Clore-Richtlinien.</string>
+  <string name="warning_clore_migration_error_signing_not_supported">Die Nachrichtensignatur wird für dieses Netzwerk nicht unterstützt.</string>
+  <string name="warning_clore_migration_error_wallet_manager_not_found">Nachricht konnte nicht signiert werden. Bitte versuche es erneut.</string>
   <string name="warning_clore_migration_message">Laut der offiziellen Dokumentation von Clore werden alle Münzen, die vor dem 21. Dezember erhalten wurden, in Clore (ERC-20 Token) migriert; Münzen, die nach diesem Datum erhalten wurden, nicht. Eine Lösung für den Transfer ist in Arbeit — bleibt dran.</string>
+  <string name="warning_clore_migration_message_label">Nachricht</string>
+  <string name="warning_clore_migration_open_portal_button">Claim-Portal öffnen</string>
+  <string name="warning_clore_migration_sheet_description">Um Deine Clore-Token weiterhin nutzen zu können, musst Du die Token-Migration gemäß den Informationen im Claim Portal durchführen.</string>
+  <string name="warning_clore_migration_sheet_title">Clore-Netzwerkmigration</string>
+  <string name="warning_clore_migration_sign_button">signieren</string>
+  <string name="warning_clore_migration_signature_label">Unterschrift</string>
   <string name="warning_clore_migration_title">Migration des Clore-Netzwerks</string>
   <string name="warning_demo_mode_message">Du befindest sich derzeit im Demo-Modus</string>
   <string name="warning_demo_mode_title">Demo-Modus aktiv</string>
