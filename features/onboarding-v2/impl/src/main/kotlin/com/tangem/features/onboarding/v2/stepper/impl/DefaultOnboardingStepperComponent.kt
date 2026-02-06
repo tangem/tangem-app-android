@@ -13,6 +13,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.features.onboarding.v2.stepper.api.OnboardingStepperComponent
 import com.tangem.features.onboarding.v2.stepper.impl.ui.OnboardingStepper
 import dagger.assisted.Assisted
@@ -27,6 +28,7 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
 ) : OnboardingStepperComponent, AppComponentContext by context {
 
     override val state = instanceKeeper.getOrCreateSimple { MutableStateFlow(params.initState) }
@@ -41,11 +43,13 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
         componentScope.launch {
             val cardInfo = getWalletMetaInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
+            val userWalletId = cardInfo.userWalletId ?: return@launch
+            val visaCustomerId = getTangemPayCustomerIdUseCase(userWalletId).getOrNull()
             sendFeedbackEmailUseCase(
-                if (params.scanResponse.card.isVisa) {
-                    FeedbackEmailType.Visa.Activation(cardInfo)
+                if (params.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()) {
+                    FeedbackEmailType.Visa.Activation(walletMetaInfo = cardInfo, customerId = visaCustomerId)
                 } else {
-                    FeedbackEmailType.DirectUserRequest(cardInfo)
+                    FeedbackEmailType.DirectUserRequest(walletMetaInfo = cardInfo)
                 },
             )
         }
