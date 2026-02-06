@@ -25,7 +25,6 @@ interface TangemPayApi {
 
     @GET("v1/customer/wallets/{customer_wallet_id}")
     suspend fun checkCustomerWalletId(
-        @Header("X-API-KEY") authHeader: String,
         @Path("customer_wallet_id") customerWalletId: String,
     ): ApiResponse<CheckCustomerWalletResponse>
 
