@@ -18,12 +18,21 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.res.getStringSafe
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -57,13 +66,14 @@ import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resume
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 internal class DefaultTangemSdkManager(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val resources: Resources,
@@ -71,6 +81,11 @@ internal class DefaultTangemSdkManager(
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val uiMessageSender: UiMessageSender,
+    private val appFinisher: AppFinisher,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    dispatchers: CoroutineDispatcherProvider,
 ) : TangemSdkManager {
 
     private val awaitInitializationMutex = Mutex()
@@ -98,6 +113,8 @@ internal class DefaultTangemSdkManager(
 
     override val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = tangemSdk.config.userCodeRequestPolicy
+
+    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
 
     override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
         return try {
@@ -413,15 +430,44 @@ internal class DefaultTangemSdkManager(
                     break
                 } else {
                     if (attemps++ >= MAX_INITIALIZE_ATTEMPTS) {
-                        error("Can't initialize authentication manager after $MAX_INITIALIZE_ATTEMPTS attempts")
+                        analyticsExceptionHandler.sendException(
+                            ExceptionAnalyticsEvent(
+                                exception = IllegalStateException(
+                                    "Can't initialize authentication manager after $MAX_INITIALIZE_ATTEMPTS attempts",
+                                ),
+                            ),
+                        )
+                        showAlert()
                     } else {
-                        delay(timeMillis = 200)
+                        delay(timeMillis = 400)
                     }
                 }
             } while (true)
 
             tangemSdk.authenticationManager
         }
+    }
+
+    private fun showAlert() {
+        uiMessageSender.send(
+            message = DialogMessage(
+                message = resourceReference(id = R.string.alert_authentication_error_message),
+                title = resourceReference(id = R.string.alert_authentication_error_title),
+                isDismissable = false,
+                dismissOnFirstAction = false,
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.alert_button_request_support),
+                        onClick = {
+                            coroutineScope.launch {
+                                sendFeedbackEmailUseCase(FeedbackEmailType.BiometricsAuthenticationFailed)
+                            }
+                        },
+                    )
+                },
+                secondActionBuilder = { cancelAction(onClick = appFinisher::finish) },
+            ),
+        )
     }
 
     // region Twin-specific

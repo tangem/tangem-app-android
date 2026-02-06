@@ -18,6 +18,7 @@ dependencies {
 
     /** Core */
     implementation(projects.core.configToggles)
+    implementation(projects.core.datasource)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.navigation)

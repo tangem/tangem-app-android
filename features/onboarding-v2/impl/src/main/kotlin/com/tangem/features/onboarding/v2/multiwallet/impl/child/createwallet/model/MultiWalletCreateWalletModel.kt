@@ -9,13 +9,14 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
@@ -45,6 +46,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -109,6 +111,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                     analyticsHandler.send(
                         event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
                             passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                            referralId = appsFlyerStore.get()?.refcode,
                         ),
                     )
 

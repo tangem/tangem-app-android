@@ -6,6 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.getReferralParams
 
 sealed class YieldSupplyAnalytics(
     event: String,
@@ -103,22 +104,26 @@ sealed class YieldSupplyAnalytics(
     data class FundsEarned(
         val token: String,
         val blockchain: String,
+        val referralId: String?,
     ) : YieldSupplyAnalytics(
         event = "Funds Earned",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
+            *getReferralParams(referralId).toTypedArray(),
         ),
     ), AppsFlyerIncludedEvent
 
     data class FundsWithdrawn(
         val token: String,
         val blockchain: String,
+        val referralId: String?,
     ) : YieldSupplyAnalytics(
         event = "Funds Withdrawn",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
+            *getReferralParams(referralId).toTypedArray(),
         ),
     ), AppsFlyerIncludedEvent
 
