@@ -13,7 +13,6 @@ import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +25,6 @@ import java.io.File
  *
  * @property appLogsStore           app logs store
  * @property userWalletsListManager user wallets list manager
- * @property shouldUseNewUserWalletsRepository flag to use new user wallets repository
  * @property userWalletsListRepository   user wallets repository
  * @property walletManagersStore    wallet managers store
  * @property emailSender            email sender
@@ -37,9 +35,7 @@ import java.io.File
 @Suppress("LongParameterList")
 internal class DefaultFeedbackRepository(
     private val appLogsStore: AppLogsStore,
-    private val shouldUseNewUserWalletsRepository: Boolean,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersStore: WalletManagersStore,
     private val emailSender: EmailSender,
     private val appVersionProvider: AppVersionProvider,
@@ -126,18 +122,10 @@ internal class DefaultFeedbackRepository(
     }
 
     private suspend fun getUserWalletById(userWalletId: UserWalletId): UserWallet? {
-        return if (shouldUseNewUserWalletsRepository) {
-            userWalletsListRepository.userWalletsSync().find { it.walletId == userWalletId }
-        } else {
-            userWalletsListManager.userWalletsSync.find { it.walletId == userWalletId }
-        }
+        return userWalletsListRepository.userWalletsSync().find { it.walletId == userWalletId }
     }
 
     private fun totalUserWallets(): Int {
-        return if (shouldUseNewUserWalletsRepository) {
-            userWalletsListRepository.userWallets.value?.size ?: 0
-        } else {
-            userWalletsListManager.walletsCount
-        }
+        return userWalletsListRepository.userWallets.value?.size ?: 0
     }
 }
