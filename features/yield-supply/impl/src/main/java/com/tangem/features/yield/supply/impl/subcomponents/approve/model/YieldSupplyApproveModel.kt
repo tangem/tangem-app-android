@@ -10,6 +10,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -62,6 +63,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
     private val yieldSupplyPendingTracker: YieldSupplyPendingTracker,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyApproveComponent.Params = paramsContainer.require()
@@ -98,7 +100,8 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
-                isHoldToConfirmEnabled = params.userWallet.isHotWallet,
+                isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
+                    params.userWallet.isHotWallet,
             ),
         )
 
