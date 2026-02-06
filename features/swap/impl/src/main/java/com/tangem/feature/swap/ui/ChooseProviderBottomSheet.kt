@@ -3,8 +3,10 @@ package com.tangem.feature.swap.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +18,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -32,13 +37,20 @@ import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(
+    TangemModalBottomSheet<ChooseProviderBottomSheetConfig>(
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
-        titleText = resourceReference(R.string.express_choose_providers_title),
-    ) { content: ChooseProviderBottomSheetConfig ->
-        ChooseProviderBottomSheetContent(content = content)
-    }
+        title = {
+            TangemModalBottomSheetTitle(
+                title = resourceReference(R.string.express_choose_providers_title),
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = config.onDismissRequest,
+            )
+        },
+        content = { content ->
+            ChooseProviderBottomSheetContent(content = content)
+        },
+    )
 }
 
 @Suppress("LongMethod")
@@ -50,10 +62,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
-                .padding(
-                    top = 10.dp,
-                    bottom = 16.dp,
-                )
+                .padding(bottom = 14.dp)
                 .padding(horizontal = TangemTheme.dimens.spacing56),
             textAlign = TextAlign.Center,
         )
@@ -76,31 +85,30 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
                     start = 16.dp,
                     end = 16.dp,
                     bottom = 14.dp,
-                )
-                .background(
-                    color = TangemTheme.colors.background.action,
-                    shape = TangemTheme.shapes.roundedCornersXMedium,
-                )
-                .clip(shape = TangemTheme.shapes.roundedCornersXMedium),
+                ),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             content.providers.forEach { provider ->
                 val isSelected = provider.id == content.selectedProviderId
                 ProviderItem(
                     state = provider,
-                    isSelected = isSelected,
+                    isSelected = false,
                     modifier = Modifier
+                        .selectedBorder(isSelected = isSelected)
+                        .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                        .background(color = TangemTheme.colors.background.action)
                         .clickable(
                             enabled = provider.onProviderClick != null,
                             onClick = { provider.onProviderClick?.invoke(provider.id) },
                         )
                         .padding(
-                            top = TangemTheme.dimens.spacing12,
-                            bottom = TangemTheme.dimens.spacing12,
-                            end = TangemTheme.dimens.spacing12,
+                            vertical = 16.dp,
+                            horizontal = 2.dp,
                         ),
                 )
             }
         }
+        SpacerH(6.dp)
         Icon(
             painterResource(id = R.drawable.ic_lightning_16),
             contentDescription = null,
@@ -111,7 +119,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.icon.informative,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing6, bottom = TangemTheme.dimens.spacing16)
+                .padding(top = 4.dp, bottom = 32.dp)
                 .padding(horizontal = TangemTheme.dimens.spacing56),
             textAlign = TextAlign.Center,
         )

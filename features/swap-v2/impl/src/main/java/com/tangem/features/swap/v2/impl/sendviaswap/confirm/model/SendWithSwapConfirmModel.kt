@@ -45,6 +45,7 @@ import com.tangem.features.send.v2.api.subcomponents.destination.entity.Destinat
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
+import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
@@ -90,6 +91,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
+    private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val swapAlertFactory: SwapAlertFactory,
     private val appRouter: AppRouter,
@@ -208,6 +210,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     override fun onAmountReduceTo(reduceTo: BigDecimal) {
         modelScope.launch {
             swapAmountReduceTrigger.triggerReduceTo(reduceTo = reduceTo)
+        }
+    }
+
+    fun onFeeBottomSheetShown(isShown: Boolean) {
+        modelScope.launch {
+            swapAmountUpdateTrigger.triggerAutoUpdateEnabled(isEnabled = !isShown)
         }
     }
 
@@ -448,6 +456,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
         val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
+        val fromDerivationIndex = confirmData.fromAccount?.derivationIndex?.value
 
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.TransactionScreenOpened(
@@ -455,6 +464,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 feeType = feeType,
                 fromToken = fromCurrency,
                 toToken = toCurrency,
+                fromDerivationIndex = fromDerivationIndex,
             ),
         )
         analyticsEventHandler.send(

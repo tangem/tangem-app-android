@@ -55,7 +55,7 @@ internal class FeedbackDataBuilder {
     }
 
     fun addCustomerId(customerId: String) {
-        builder.appendKeyValue("ID: ", customerId)
+        builder.appendKeyValue("Tangem Pay Customer ID", customerId)
     }
 
     fun addUserWalletMetaInfo(walletMetaInfo: WalletMetaInfo) {
