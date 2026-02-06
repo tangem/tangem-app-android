@@ -8,7 +8,7 @@ internal sealed class CustomTokenAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(
-    category = "Manage Tokens / Custom",
+    category = "Manage Tokens / Custom Token",
     event = event,
     params = params,
 ) {

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TangemPayDetailsConfig(
+    val customerId: String,
     val cardId: String,
     val isPinSet: Boolean,
     val cardFrozenState: TangemPayCardFrozenState,

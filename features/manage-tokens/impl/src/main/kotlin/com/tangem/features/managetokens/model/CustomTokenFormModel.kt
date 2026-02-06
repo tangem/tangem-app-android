@@ -55,7 +55,8 @@ internal class CustomTokenFormModel @Inject constructor(
 
     private val params: CustomTokenFormComponent.Params = paramsContainer.require()
     private var createdCurrency: CryptoCurrency? = null
-    private var useCasesFacade: CustomTokenFormUseCasesFacade = customTokenFormUseCasesFacadeFactory.create(params.mode)
+    private val useCasesFacade: CustomTokenFormUseCasesFacade =
+        customTokenFormUseCasesFacadeFactory.create(params.mode.userWalletId)
     private val customCurrencyValidator = CustomCurrencyValidator(
         userWalletId = params.mode.userWalletId,
         useCasesFacade = useCasesFacade,
