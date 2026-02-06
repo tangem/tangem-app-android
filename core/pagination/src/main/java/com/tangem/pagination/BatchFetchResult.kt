@@ -14,11 +14,13 @@ sealed class BatchFetchResult<out TData> {
      * @param data fetched data.
      * @param empty indicates that data is empty and [BatchListSource] shouldn't create new batch for this result
      * @param last indicates if this is the last batch for the request.
+     * @param total total number of items available on the server.
      */
     data class Success<TData>(
         val data: TData,
         val empty: Boolean,
         val last: Boolean,
+        val total: Int? = null,
     ) : BatchFetchResult<TData>()
 
     /**
