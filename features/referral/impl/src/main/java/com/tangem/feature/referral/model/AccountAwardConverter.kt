@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.model
 
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
@@ -62,7 +63,7 @@ internal class AccountAwardConverter(
             isBalanceHidden = isBalanceHidden,
             tokenState = tokenState,
             accountSelectUM = PortfolioSelectUM(
-                icon = cryptoPortfolio.account.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(cryptoPortfolio.account.icon),
                 name = cryptoPortfolio.account.accountName.toUM().value,
                 isAccountMode = true,
                 onClick = onAccountClick,
