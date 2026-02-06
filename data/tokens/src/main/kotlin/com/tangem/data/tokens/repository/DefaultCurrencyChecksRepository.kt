@@ -1,10 +1,8 @@
 package com.tangem.data.tokens.repository
 
+import com.tangem.blockchain.blockchains.ethereum.eip1559.isGaslessTxSupported
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.FeeResourceAmountProvider
-import com.tangem.blockchain.common.MinimumSendAmountProvider
-import com.tangem.blockchain.common.ReserveAmountProvider
-import com.tangem.blockchain.common.UtxoAmountLimitProvider
+import com.tangem.blockchain.common.*
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -17,6 +15,7 @@ import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
@@ -26,6 +25,7 @@ import java.math.BigDecimal
 internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
+    private val sendFeatureToggles: SendFeatureToggles,
 ) : CurrencyChecksRepository {
 
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
@@ -64,6 +64,12 @@ internal class DefaultCurrencyChecksRepository(
 
             if (manager is MinimumSendAmountProvider) manager.getMinimumSendAmount() else null
         }
+    }
+
+    override fun isNetworkSupportedForGaslessTx(network: Network): Boolean {
+        if (!sendFeatureToggles.isGaslessTransactionsEnabled) return false
+        val blockchain = Blockchain.fromId(network.rawId)
+        return blockchain.isGaslessTxSupported
     }
 
     override suspend fun getFeeResourceAmount(userWalletId: UserWalletId, network: Network): CurrencyAmount? {
