@@ -17,65 +17,32 @@ import java.util.UUID
 
 internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfolioUM> {
 
-    override val values: Sequence<MyPortfolioUM>
-        get() = sequenceOf(
-            MyPortfolioUM.Tokens(
-                tokens = persistentListOf(sampleToken, sampleToken),
-                buttonState = MyPortfolioUM.Tokens.AddButtonState.Available,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                onAddClick = {},
-            ),
-            MyPortfolioUM.Tokens(
-                tokens = persistentListOf(sampleToken, sampleToken.copy(isQuickActionsShown = true)),
-                buttonState = MyPortfolioUM.Tokens.AddButtonState.Unavailable,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                onAddClick = {},
-            ),
-            MyPortfolioUM.Tokens(
-                tokens = persistentListOf(sampleToken.copy(isQuickActionsShown = true), sampleToken),
-                buttonState = MyPortfolioUM.Tokens.AddButtonState.Loading,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                tokenReceiveBSConfig = TangemBottomSheetConfig.Empty,
-                onAddClick = {},
-            ),
-            MyPortfolioUM.AddFirstToken(
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                onAddClick = {},
-            ),
-            MyPortfolioUM.Content(
-                items = persistentListOf(
-                    walletPortfolioHeader,
-                    accountToken,
-                    accountToken,
+    val sampleToken
+        get() = PortfolioTokenUM(
+            tokenItemState = TokenItemState.Content(
+                id = UUID.randomUUID().toString(),
+                iconState = CurrencyIconState.Locked,
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "My wallet")),
+                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
+                subtitleState = TokenItemState.SubtitleState.TextContent(
+                    value = stringReference(value = "XRP Ledger token"),
                 ),
-                buttonState = Tokens.AddButtonState.Available,
-                onAddClick = {},
+                onItemClick = {},
+                onItemLongClick = {},
             ),
-            MyPortfolioUM.Content(
-                items = persistentListOf(
-                    walletHeader,
-                    accountHeader,
-                    accountToken,
-                    accountToken,
+            isQuickActionsShown = false,
+            quickActions = PortfolioTokenUM.QuickActions(
+                actions = persistentListOf(
+                    QuickActionUM.Buy,
+                    QuickActionUM.Exchange(shouldShowBadge = true),
+                    QuickActionUM.Receive,
                 ),
-                buttonState = Tokens.AddButtonState.Available,
-                onAddClick = {},
+                onQuickActionClick = {},
+                onQuickActionLongClick = {},
             ),
-            MyPortfolioUM.Content(
-                items = persistentListOf(
-                    walletHeader,
-                    accountHeader,
-                    accountToken.copy(isQuickActionsShown = true),
-                    accountToken,
-                ),
-                buttonState = Tokens.AddButtonState.Available,
-                onAddClick = {},
-            ),
-            MyPortfolioUM.Loading,
-            MyPortfolioUM.Unavailable,
-            MyPortfolioUM.UnavailableForWallet,
+            isBalanceHidden = false,
+            walletId = UserWalletId(""),
         )
 
     val walletHeader
@@ -120,31 +87,61 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             ),
         )
 
-    val sampleToken
-        get() = PortfolioTokenUM(
-            tokenItemState = TokenItemState.Content(
-                id = UUID.randomUUID().toString(),
-                iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "My wallet")),
-                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
-                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
-                subtitleState = TokenItemState.SubtitleState.TextContent(
-                    value = stringReference(value = "XRP Ledger token"),
-                ),
-                onItemClick = {},
-                onItemLongClick = {},
+    override val values: Sequence<MyPortfolioUM>
+        get() = sequenceOf(
+            MyPortfolioUM.Tokens(
+                tokens = persistentListOf(sampleToken, sampleToken),
+                buttonState = MyPortfolioUM.Tokens.AddButtonState.Available,
+                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
+                onAddClick = {},
             ),
-            isQuickActionsShown = false,
-            quickActions = PortfolioTokenUM.QuickActions(
-                actions = persistentListOf(
-                    QuickActionUM.Buy,
-                    QuickActionUM.Exchange(showBadge = true),
-                    QuickActionUM.Receive,
-                ),
-                onQuickActionClick = {},
-                onQuickActionLongClick = {},
+            MyPortfolioUM.Tokens(
+                tokens = persistentListOf(sampleToken, sampleToken.copy(isQuickActionsShown = true)),
+                buttonState = MyPortfolioUM.Tokens.AddButtonState.Unavailable,
+                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
+                onAddClick = {},
             ),
-            isBalanceHidden = false,
-            walletId = UserWalletId(""),
+            MyPortfolioUM.Tokens(
+                tokens = persistentListOf(sampleToken.copy(isQuickActionsShown = true), sampleToken),
+                buttonState = MyPortfolioUM.Tokens.AddButtonState.Loading,
+                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.AddFirstToken(
+                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.Content(
+                items = persistentListOf(
+                    walletPortfolioHeader,
+                    accountToken,
+                    accountToken,
+                ),
+                buttonState = Tokens.AddButtonState.Available,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.Content(
+                items = persistentListOf(
+                    walletHeader,
+                    accountHeader,
+                    accountToken,
+                    accountToken,
+                ),
+                buttonState = Tokens.AddButtonState.Available,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.Content(
+                items = persistentListOf(
+                    walletHeader,
+                    accountHeader,
+                    accountToken.copy(isQuickActionsShown = true),
+                    accountToken,
+                ),
+                buttonState = Tokens.AddButtonState.Available,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.Loading,
+            MyPortfolioUM.Unavailable,
+            MyPortfolioUM.UnavailableForWallet,
         )
 }
