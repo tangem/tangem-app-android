@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -23,7 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
@@ -103,10 +107,10 @@ private fun Content(
             .fillMaxSize(),
     ) {
         TopBar(
-            modifier = Modifier.onGloballyPositioned {
-                if (it.size.height > 0) {
+            modifier = Modifier.onGloballyPositioned { coordinates ->
+                if (coordinates.size.height > 0) {
                     with(density) {
-                        onHeaderSizeChange(it.size.height.toDp())
+                        onHeaderSizeChange(coordinates.size.height.toDp())
                     }
                 }
             },
@@ -170,7 +174,7 @@ private fun TopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showPriceSubtitle by remember {
+    val shouldShowPriceSubtitle by remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex > 1
         }
@@ -179,7 +183,7 @@ private fun TopBar(
     TangemTopAppBar(
         modifier = modifier,
         title = tokenName,
-        subtitle = if (showPriceSubtitle) tokenPrice else null,
+        subtitle = if (shouldShowPriceSubtitle) tokenPrice else null,
         startButton = TopAppBarButtonUM.Back(
             onBackClicked = onBackClick,
             enabled = isBackButtonEnabled,
@@ -236,8 +240,8 @@ private fun TokenPriceText(
 
     val color = remember(generalColor) { Animatable(generalColor) }
 
-    EventEffect(triggerPriceChange) {
-        val nextColor = when (it) {
+    EventEffect(triggerPriceChange) { changeType ->
+        val nextColor = when (changeType) {
             PriceChangeType.UP,
             -> growColor
             PriceChangeType.DOWN -> fallColor
@@ -248,10 +252,11 @@ private fun TokenPriceText(
         color.animateTo(generalColor, tween(durationMillis = 500))
     }
 
-    ResizableText(
+    Text(
         text = price,
         modifier = modifier,
         color = color.value,
+        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.head.fontSize),
         maxLines = 1,
         style = TangemTheme.typography.head,
     )
