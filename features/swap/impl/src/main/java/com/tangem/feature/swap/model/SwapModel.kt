@@ -26,6 +26,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.InputNumberFormatter
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
@@ -56,6 +57,7 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
+import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
@@ -156,6 +158,8 @@ internal class SwapModel @Inject constructor(
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -1106,7 +1110,7 @@ internal class SwapModel @Inject constructor(
             }
     }
 
-    private fun sendSuccessEvent() {
+    private suspend fun sendSuccessEvent() {
         val provider = dataState.selectedProvider ?: return
         val fee = (getSelectedFee() as? TxFee.Legacy)?.feeType ?: FeeType.NORMAL
         val fromCurrency = dataState.fromCryptoCurrency?.currency ?: return
@@ -1125,6 +1129,7 @@ internal class SwapModel @Inject constructor(
                 feeToken = getFeeToken().symbol,
                 fromDerivationIndex = fromDerivationIndex,
                 toDerivationIndex = toDerivationIndex,
+                referralId = appsFlyerStore.get()?.refcode,
             ),
         )
     }
@@ -1995,16 +2000,20 @@ internal class SwapModel @Inject constructor(
             uiState = uiState,
             error = SwapTransactionState.Error.TangemPayWithdrawalError(txId.orEmpty()),
             onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-            onSupportClick = ::onTangemPaySupportClick,
+            onSupportClick = {
+                val customerId = getTangemPayCustomerIdUseCase(userWallet.walletId).getOrNull() ?: "Unknown"
+                onTangemPaySupportClick(customerId = customerId, txId = txId)
+            },
             isReverseSwapPossible = isReverseSwapPossible(),
         )
     }
 
-    private fun onTangemPaySupportClick(txId: String?) {
+    private fun onTangemPaySupportClick(customerId: String, txId: String?) {
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
             val email = FeedbackEmailType.Visa.Withdrawal(
                 walletMetaInfo = metaInfo,
+                customerId = customerId,
                 providerName = dataState.selectedProvider?.name.orEmpty(),
                 txId = txId.orEmpty(),
             )
@@ -2161,6 +2170,10 @@ internal class SwapModel @Inject constructor(
             val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
+            if (selectedProvider.type != ExchangeProviderType.CEX) {
+                return Either.Left(GetFeeError.GaslessError.NetworkIsNotSupported)
+            }
+
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
                 return Either.Left(GetFeeError.UnknownError)
             }
@@ -2190,9 +2203,14 @@ internal class SwapModel @Inject constructor(
             state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
-            if (newState is FeeSelectorUM.Content &&
+            val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
                 dataState.fromCryptoCurrency?.currency?.id == newState.feeExtraInfo.feeCryptoCurrencyStatus.currency.id
-            ) {
+
+            // If fee currency is coin, we need to reload quotes to update fee related warnings (e.g. insufficient funds)
+            val isCoinFeeSelected = newState is FeeSelectorUM.Content &&
+                newState.feeExtraInfo.feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin
+
+            if (isFeeCurrencySameAsFromCurrency || isCoinFeeSelected) {
                 // block swap button until fee is loaded
                 uiState = uiState.copy(
                     swapButton = uiState.swapButton.copy(

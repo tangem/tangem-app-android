@@ -86,6 +86,8 @@
   <string name="address_qr_code_message_format">Отправляйте только %1$s (%2$s) в сети %3$s на этот адрес. Использование другой сети может привести к утрате средств.</string>
   <string name="address_type_default">По умолчанию</string>
   <string name="address_type_legacy">Устаревший</string>
+  <string name="alert_authentication_error_message">Произошла ошибка при работе с биометрией. Пожалуйста, попробуйте обновить биометрию на вашем устройстве или обратитесь в службу поддержки.</string>
+  <string name="alert_authentication_error_title">Ошибка аутентификации</string>
   <string name="alert_button_how_to_scan">Как сканировать</string>
   <string name="alert_button_request_support">Обратиться в поддержку</string>
   <string name="alert_button_try_again">Попробовать снова</string>
@@ -308,6 +310,7 @@
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_got_it">Понятно</string>
   <string name="common_hide">Скрыть</string>
+  <string name="common_hold_to">Удерживайте, чтобы %s</string>
   <string name="common_hour">час</string>
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
@@ -385,6 +388,7 @@
   <string name="common_swap">Обменять</string>
   <string name="common_tangem">Tangem</string>
   <string name="common_tangem_wallet">Tangem Wallet</string>
+  <string name="common_tap_and_hold_hint">Нажмите и удерживайте</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_to">На</string>
@@ -476,6 +480,14 @@
   <string name="domain_receive_assets_onboarding_description">Отправка средств в другой сети может повлечь потерю средств.</string>
   <string name="domain_receive_assets_onboarding_network_name">%s сеть</string>
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
+  <string name="earn_best_opportunities">Лучшие возможности</string>
+  <string name="earn_clear_filter">Очистить фильтр</string>
+  <string name="earn_filter_all_networks">Все сети</string>
+  <string name="earn_filter_all_types">Все типы</string>
+  <string name="earn_filter_by">Фильтровать по</string>
+  <string name="earn_filter_networks">Сети</string>
+  <string name="earn_mostly_used">Часто используемые</string>
+  <string name="earn_no_results">Нет результата</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Вы использовали карту или кольцо от другого кошелька. Приложите карту или кольцо, связанную с этим кошельком.</string>
@@ -850,7 +862,7 @@
     <item quantity="other">%dмин назад</item>
   </plurals>
   <string name="news_quick_recap">Резюме</string>
-  <string name="news_related_news">Связанные новости</string>
+  <string name="news_related_news">Новости</string>
   <string name="news_related_tokens">Связанные токены</string>
   <string name="news_sources">Связанные новости</string>
   <string name="news_stay_in_the_loop">Будьте в курсе</string>
@@ -1805,6 +1817,7 @@
   <string name="warning_button_refresh">Обновить</string>
   <string name="warning_clore_migration_button">Начать миграцию</string>
   <string name="warning_clore_migration_copy_button">Копировать</string>
+  <string name="warning_clore_migration_description">Чтобы сохранить доступ к своим средствам, начните миграцию в соответствии с официальными рекомендациями Clore.</string>
   <string name="warning_clore_migration_error_signing_not_supported">Подписание сообщений не поддерживается в этой сети</string>
   <string name="warning_clore_migration_error_wallet_manager_not_found">Невозможно подписать сообщение. Пожалуйста, попробуй позже.</string>
   <string name="warning_clore_migration_message">Согласно официальной документации Clore, все монеты, полученные до 21 декабря, будут мигрированы в токен Clore (ERC-20); монеты, полученные после этой даты, — нет. Решение для перевода находится в разработке — следите за обновлениями.</string>
