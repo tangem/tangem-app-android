@@ -207,7 +207,7 @@ interface TangemTechApi {
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
 
     // region Earn
-    @GET("v1/earn/yield/markets")
+    @GET("v1/earn/markets")
     suspend fun getEarnTokens(
         @Query("isForEarn") isForEarn: Boolean?,
         @Query("page") page: String? = null,
