@@ -9,7 +9,6 @@ import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -21,7 +20,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.TangemPayMainSubscriber
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import javax.inject.Inject
 
@@ -38,7 +36,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
@@ -46,7 +43,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
 ) {
@@ -65,13 +61,11 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             applyTokenListSortingUseCase = applyTokenListSortingUseCase,
             getStoryContentUseCase = getStoryContentUseCase,
-            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
             currenciesRepository = currenciesRepository,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
-            hotWalletFeatureToggles = hotWalletFeatureToggles,
             tangemPayFeatureToggles = tangemPayFeatureToggles,
             tangemPayMainSubscriberFactory = tangemPayMainSubscriberFactory,
             yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
