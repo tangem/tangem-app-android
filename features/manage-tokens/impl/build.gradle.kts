@@ -12,6 +12,9 @@ android {
 }
 
 dependencies {
+    /* Tangem libraries */
+    implementation(tangemDeps.card.core)
+
     /* Project - API */
     implementation(projects.features.manageTokens.api)
     implementation(projects.features.swapV2.api)
