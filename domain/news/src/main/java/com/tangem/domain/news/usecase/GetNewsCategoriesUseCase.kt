@@ -1,5 +1,6 @@
 package com.tangem.domain.news.usecase
 
+import arrow.core.Either
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.news.repository.NewsRepository
 
@@ -15,7 +16,7 @@ class GetNewsCategoriesUseCase(
     /**
      * Fetches categories from the repository.
      */
-    suspend operator fun invoke(): List<ArticleCategory> {
-        return repository.getCategories()
+    suspend operator fun invoke(): Either<Throwable, List<ArticleCategory>> = Either.catch {
+        repository.getCategories()
     }
 }

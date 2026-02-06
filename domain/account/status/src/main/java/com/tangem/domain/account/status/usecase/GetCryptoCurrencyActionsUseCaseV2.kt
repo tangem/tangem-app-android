@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -29,7 +30,11 @@ class GetCryptoCurrencyActionsUseCaseV2(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(accountId: AccountId, currency: CryptoCurrency): Flow<TokenActionsState> {
+    operator fun invoke(
+        accountId: AccountId,
+        currency: CryptoCurrency,
+        yieldSupplyAvailability: YieldSupplyAvailability = YieldSupplyAvailability.Unavailable,
+    ): Flow<TokenActionsState> {
         return singleAccountStatusListSupplier(
             params = SingleAccountStatusListProducer.Params(userWalletId = accountId.userWalletId),
         )
@@ -44,6 +49,7 @@ class GetCryptoCurrencyActionsUseCaseV2(
                     val actionsFlow = getCryptoCurrencyActionsUseCase(
                         userWallet = userWallet,
                         cryptoCurrencyStatus = accountCurrencyStatus.status,
+                        yieldSupplyAvailability = yieldSupplyAvailability,
                     )
 
                     emitAll(actionsFlow)

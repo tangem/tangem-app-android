@@ -6,7 +6,7 @@ import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.models.staking.PendingActionConstraints
 import com.tangem.domain.models.staking.RewardBlockType
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.StakingTarget
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
@@ -35,10 +35,10 @@ internal data class BalanceState(
     val fiatAmount: BigDecimal?,
     val formattedFiatAmount: TextReference,
     val rawCurrencyId: String?,
-    val validator: Yield.Validator?,
+    val target: StakingTarget?,
     val pendingActions: ImmutableList<PendingAction>,
     val isPending: Boolean,
-    val validatorAddress: String?,
+    val targetAddress: String?,
 )
 
 @Immutable

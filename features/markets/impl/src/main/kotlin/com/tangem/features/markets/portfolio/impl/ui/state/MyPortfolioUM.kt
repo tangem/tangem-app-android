@@ -13,7 +13,6 @@ internal sealed class MyPortfolioUM {
         override val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val tokens: ImmutableList<PortfolioTokenUM>,
         val buttonState: AddButtonState,
-        val tokenReceiveBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM() {
 

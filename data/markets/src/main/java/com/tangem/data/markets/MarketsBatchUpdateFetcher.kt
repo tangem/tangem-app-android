@@ -79,13 +79,13 @@ internal class MarketsBatchUpdateFetcher(
                         currenciesIds = currenciesIds,
                         fields = setOf(QuotesFetcher.Field.ALL_PRICES),
                     )
-                        .getOrElse {
-                            val exception = if (it is QuotesFetcher.Error.ApiOperationError) {
-                                onApiResponseError(it.apiError)
+                        .getOrElse { error ->
+                            val exception = if (error is QuotesFetcher.Error.ApiOperationError) {
+                                onApiResponseError(error.apiError)
 
-                                it.apiError
+                                error.apiError
                             } else {
-                                error("Cause: $it")
+                                error("Cause: $error")
                             }
 
                             throw exception
@@ -116,11 +116,11 @@ internal class MarketsBatchUpdateFetcher(
 
         Batch(
             key = batchToUpdate.key,
-            data = batchToUpdate.data.map {
-                it.copy(
+            data = batchToUpdate.data.map { tokenMarket ->
+                tokenMarket.copy(
                     tokenCharts = TokenMarketChartsConverter.convert(
-                        chartsToCopy = it.tokenCharts,
-                        tokenId = it.id,
+                        chartsToCopy = tokenMarket.tokenCharts,
+                        tokenId = tokenMarket.id,
                         interval = updateRequest.interval,
                         value = update,
                     ),

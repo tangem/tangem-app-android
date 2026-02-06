@@ -5,13 +5,13 @@ import arrow.core.none
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.Account
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.mapNotNull
  */
 internal class DefaultSingleAccountProducer @AssistedInject constructor(
     @Assisted val params: SingleAccountProducer.Params,
+    override val flowProducerTools: FlowProducerTools,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountProducer {
@@ -44,7 +45,6 @@ internal class DefaultSingleAccountProducer @AssistedInject constructor(
                     it is Account.CryptoPortfolio && params.accountId == it.accountId
                 } as? Account.CryptoPortfolio
             }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 

@@ -20,18 +20,4 @@ class ManageTrendingNewsUseCase(private val repository: NewsRepository) {
             .observeTrendingNews()
             .distinctUntilChanged()
     }
-
-    /**
-     * Marks a single article as viewed/unviewed.
-     */
-    suspend fun markAsViewed(articleId: Int, viewed: Boolean = true) {
-        repository.updateTrendingNewsViewed(listOf(articleId), viewed)
-    }
-
-    /**
-     * Marks multiple articles at once (useful for bulk updates).
-     */
-    suspend fun markAsViewed(articleIds: Collection<Int>, viewed: Boolean = true) {
-        repository.updateTrendingNewsViewed(articleIds, viewed)
-    }
 }

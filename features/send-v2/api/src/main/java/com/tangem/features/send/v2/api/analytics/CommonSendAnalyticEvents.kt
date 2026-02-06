@@ -44,11 +44,45 @@ sealed class CommonSendAnalyticEvents(
     data class FeeScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val blockchain: String,
+        val token: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Fee Screen Opened",
         params = mapOf(
             SOURCE to source.analyticsName,
+            BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
+        ),
+    )
+
+    data class FeeSummaryScreenOpened(
+        val categoryName: String,
+        val source: CommonSendSource,
+        val blockchain: String,
+        val token: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Fee Summary Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+            BLOCKCHAIN to blockchain,
+            TOKEN_PARAM to token,
+        ),
+    )
+
+    data class FeeTokenScreenOpened(
+        val categoryName: String,
+        val source: CommonSendSource,
+        val availableTokens: String,
+        val blockchain: String,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Fee Token Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+            "Available Fee" to availableTokens,
+            BLOCKCHAIN to blockchain,
         ),
     )
 
@@ -175,6 +209,7 @@ sealed class CommonSendAnalyticEvents(
 
     companion object {
         const val SEND_CATEGORY = "Token / Send"
+        const val SWAP_CATEGORY = "Swap"
         const val NFT_SEND_CATEGORY = "NFT"
     }
 
@@ -187,6 +222,7 @@ sealed class CommonSendAnalyticEvents(
 
     enum class CommonSendSource(val analyticsName: String) {
         Send("Send"),
+        Swap("Swap"),
         SendWithSwap("Send&Swap"),
         WalletConnect("WalletConnect"),
         NFT("NFT"),

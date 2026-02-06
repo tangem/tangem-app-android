@@ -101,6 +101,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 isLoading = state.isLoading,
                 walletInteractionIcon = state.walletInteractionIcon,
                 validationResult = null,
+                isHoldToConfirmEnabled = state.isHoldToConfirmEnabled,
             )
         },
     )
