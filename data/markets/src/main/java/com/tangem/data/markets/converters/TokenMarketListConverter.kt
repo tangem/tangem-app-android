@@ -31,7 +31,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, To
                 symbol = token.symbol,
                 marketRating = token.marketRating,
                 marketCap = token.marketCap,
-                isUnderMarketCapLimit = token.isUnderMarketCapLimit ?: false,
+                isUnderMarketCapLimit = token.isUnderMarketCapLimit == true,
                 imageHost = imageHost,
                 tokenQuotesShort = TokenQuotesShort(
                     currentPrice = token.currentPrice,
