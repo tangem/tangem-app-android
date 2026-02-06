@@ -23,7 +23,7 @@ data class TokenMarketInfo(
     @Serializable
     data class Network(
         val networkId: String,
-        val exchangeable: Boolean,
+        val isExchangeable: Boolean,
         val contractAddress: String?,
         val decimalCount: Int?,
     )
