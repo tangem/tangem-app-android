@@ -2200,6 +2200,11 @@ internal class SwapModel @Inject constructor(
                 return
             }
 
+            if (newState is FeeSelectorUM.Error) {
+                state.value = newState.copy(isHidden = true)
+                return
+            }
+
             state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
