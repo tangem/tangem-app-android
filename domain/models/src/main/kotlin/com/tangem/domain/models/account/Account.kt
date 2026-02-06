@@ -186,3 +186,9 @@ sealed interface Account {
         }
     }
 }
+
+val Account.derivationIndex: DerivationIndex?
+    get() = when (this) {
+        is Account.CryptoPortfolio -> derivationIndex
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
+    }

@@ -20,6 +20,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -63,6 +64,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
@@ -130,9 +132,13 @@ internal class CreateWalletStartModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(
-            event = IntroductionProcess.CreateWalletIntroScreenOpened(),
-        )
+        modelScope.launch {
+            analyticsEventHandler.send(
+                event = IntroductionProcess.CreateWalletIntroScreenOpened(
+                    referralId = appsFlyerStore.get()?.refcode,
+                ),
+            )
+        }
     }
 
     private fun onScanClick() {
