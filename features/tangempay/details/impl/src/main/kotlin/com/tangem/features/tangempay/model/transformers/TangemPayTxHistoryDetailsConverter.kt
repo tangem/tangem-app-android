@@ -110,10 +110,11 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend -> {
                 val amountPrefix = when {
                     this.amount.isZero() -> ""
-                    this.status == TangemPayTxHistoryItem.Status.DECLINED -> ""
-                    else -> StringsSigns.MINUS
+                    this.status == TangemPayTxHistoryItem.Status.DECLINED ||
+                        this.amount.isPositive() -> StringsSigns.MINUS
+                    else -> StringsSigns.PLUS
                 }
-                val amount = this.amount.format {
+                val amount = this.amount.abs().format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
                         fiatCurrencySymbol = this@extractAmount.currency.symbol,
@@ -164,12 +165,19 @@ internal object TangemPayTxHistoryDetailsConverter :
                 val localCurrency = this.localCurrency
                 val localAmount = this.localAmount
                 if (localCurrency != null && localAmount != null && localCurrency != currency) {
-                    localAmount.format {
+                    val amountPrefix = when {
+                        localAmount.isZero() -> ""
+                        this.status == TangemPayTxHistoryItem.Status.DECLINED ||
+                            localAmount.isPositive() -> StringsSigns.MINUS
+                        else -> StringsSigns.PLUS
+                    }
+                    val amount = localAmount.abs().format {
                         fiat(
                             fiatCurrencyCode = localCurrency.currencyCode,
                             fiatCurrencySymbol = localCurrency.symbol,
                         ).price()
                     }
+                    amountPrefix + amount
                 } else {
                     null
                 }

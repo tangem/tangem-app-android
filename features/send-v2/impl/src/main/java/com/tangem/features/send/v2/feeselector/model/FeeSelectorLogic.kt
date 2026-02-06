@@ -37,6 +37,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -67,6 +68,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
         params.onLoadFeeExtended != null &&
         isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) &&
         params.cryptoCurrencyStatus.currency is CryptoCurrency.Token
+
+    val shouldShowOnlySpeedOption: StateFlow<Boolean>
+        field = MutableStateFlow(params.shouldShowOnlySpeedOption)
 
     init {
         initAppCurrency()
@@ -253,12 +257,14 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                     is GetFeeError.GaslessError.NotEnoughFunds -> error.left()
                     is GetFeeError.GaslessError -> {
                         // Something wrong with gasless fee, fallback to basic fee
+                        shouldShowOnlySpeedOption.value = true
                         params.onLoadFee().map { LoadedFeeResult.Basic(it) }
                     }
                     else -> error.left()
                 }
             },
             ifRight = { fee ->
+                shouldShowOnlySpeedOption.value = false
                 populateExtendedFee(fee)
             },
         )

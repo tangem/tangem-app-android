@@ -38,6 +38,8 @@ internal class FeeSelectorBlockModel @Inject constructor(
         modelScope = modelScope,
     )
 
+    val shouldShowOnlySpeedOption: Boolean
+        get() = feeSelectorLogic.shouldShowOnlySpeedOption.value
     val feeSelectorBottomSheet = SlotNavigation<Unit>()
     val uiState: StateFlow<FeeSelectorUM>
         field = feeSelectorLogic.uiState
