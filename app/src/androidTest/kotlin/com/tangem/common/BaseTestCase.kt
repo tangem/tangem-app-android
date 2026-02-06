@@ -84,6 +84,7 @@ abstract class BaseTestCase : TestCase(
      * – and only after that the activity should be launched.
      */
     protected fun setupHooks(
+        additionalBeforeAppLaunchSection: () -> Unit = {},
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
@@ -91,6 +92,7 @@ abstract class BaseTestCase : TestCase(
         // Setup WireMock redirect for CI with local WireMock instances
         val wiremockUrl = InstrumentationRegistry.getArguments().getString(WIREMOCK_BASE_URL_ARG)
         WireMockRedirectInterceptor.overriddenBaseUrl = wiremockUrl
+        additionalBeforeAppLaunchSection()
         hiltRule.inject()
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
