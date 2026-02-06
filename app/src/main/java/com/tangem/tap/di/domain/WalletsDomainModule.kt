@@ -398,4 +398,12 @@ internal object WalletsDomainModule {
     fun provideSyncWalletWithRemoteUseCase(walletsRepository: WalletsRepository): SyncWalletWithRemoteUseCase {
         return SyncWalletWithRemoteUseCase(walletsRepository = walletsRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideApplyUserWalletListSortingUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): ApplyUserWalletListSortingUseCase {
+        return ApplyUserWalletListSortingUseCase(userWalletsListRepository = userWalletsListRepository)
+    }
 }
