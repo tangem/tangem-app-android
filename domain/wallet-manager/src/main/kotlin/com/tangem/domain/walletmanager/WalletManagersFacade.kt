@@ -228,6 +228,13 @@ interface WalletManagersFacade {
         id: String? = null,
     ): BigDecimal
 
+    @Throws(IllegalStateException::class)
+    suspend fun getNativeTokenBalance(
+        userWalletId: UserWalletId,
+        networkId: String,
+        derivationPath: String?,
+    ): BigDecimal
+
     /**
      * Get requirements for asset(currency)
      * @return null if there's no requirement, otherwise [AssetRequirementsCondition].

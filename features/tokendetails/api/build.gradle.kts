@@ -14,6 +14,9 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Domain models */
     api(projects.domain.models)
     implementation(projects.domain.tokens.models)
@@ -21,4 +24,9 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.runtime)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.foundation)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
 }
