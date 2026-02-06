@@ -4,6 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
@@ -23,6 +24,7 @@ class DefaultMultiAccountStatusListProducerTest {
     private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
+    private val flowProducerTools: FlowProducerTools = mockk()
 
     private val userWalletId1 = UserWalletId("001")
     private val userWallet1 = mockk<UserWallet> {
@@ -39,6 +41,7 @@ class DefaultMultiAccountStatusListProducerTest {
         accountsCRUDRepository = accountsCRUDRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         dispatchers = dispatchers,
+        flowProducerTools = flowProducerTools,
     )
 
     @AfterEach

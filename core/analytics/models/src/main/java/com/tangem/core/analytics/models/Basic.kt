@@ -87,6 +87,7 @@ sealed class Basic(
                     sentFrom.feeType?.value?.let {
                         this[AnalyticsParam.Key.FEE_TYPE] = it
                     }
+                    this[AnalyticsParam.Key.FEE_TOKEN] = sentFrom.feeToken
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
                     this[AnalyticsParam.Key.PERMISSION_TYPE] = sentFrom.permissionType

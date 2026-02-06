@@ -6,7 +6,6 @@ import com.tangem.core.ui.utils.DateTimeFormatters.dateMMMdd
 import com.tangem.core.ui.utils.DateTimeFormatters.dateTimeFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters.dateYYYY
 import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormatterBuilder
@@ -18,7 +17,7 @@ object DateTimeFormatters {
     /**
      * Determine if the time is in 12-hour format ("10:00 PM") for the current locale.
      */
-    val is12HourFormat by lazy {
+    private val is12HourFormat by lazy {
         /**
          * Two SS means, SHORT style for date and time.
          * If pattern contains "a", it means time is in 12 hour format.
@@ -103,17 +102,15 @@ object DateTimeFormatters {
      * Local full date formatter (e.g., "dd MMMM, HH:mm")
      */
     val localFullDate: DateTimeFormatter by lazy {
+        val locale = Locale.getDefault()
+        val datePattern = DateFormat.getBestDateTimePattern(locale, "dd MMMM")
+        val timeSkeleton = if (is12HourFormat) "h:mm a" else "HH:mm"
+        val timePattern = DateFormat.getBestDateTimePattern(locale, timeSkeleton)
+        val fullPattern = "$datePattern, $timePattern"
         DateTimeFormatterBuilder()
-            .appendDayOfMonth(2)
-            .appendLiteral(' ')
-            .appendMonthOfYearText()
-            .appendLiteral(", ")
-            .appendHourOfDay(2)
-            .appendLiteral(':')
-            .appendMinuteOfHour(2)
+            .appendPattern(fullPattern)
             .toFormatter()
-            .withLocale(Locale.getDefault())
-            .withZone(DateTimeZone.getDefault())
+            .withLocale(locale)
     }
 
     fun formatDate(date: DateTime, formatter: DateTimeFormatter = dateFormatter): String {

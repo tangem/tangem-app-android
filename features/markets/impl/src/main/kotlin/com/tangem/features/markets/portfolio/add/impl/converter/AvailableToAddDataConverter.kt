@@ -30,7 +30,14 @@ internal class AvailableToAddDataConverter @Inject constructor(
     ): AvailableToAddData {
         suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
             val currencies = availableNetworks
-                .mapNotNull { createCryptoCurrency(wallet, it, marketParams, this.account) }
+                .mapNotNull { network ->
+                    createCryptoCurrency(
+                        userWallet = wallet,
+                        network = network,
+                        marketParams = marketParams,
+                        account = this.account,
+                    )
+                }
 
             if (currencies.isEmpty()) return null
 
@@ -63,7 +70,6 @@ internal class AvailableToAddDataConverter @Inject constructor(
                     val availableToAddAccount = accountStatus.getAvailableToAddAccount(wallet) ?: return@mapNotNull null
                     accountStatus.account.accountId to availableToAddAccount
                 }
-                .filter { (_, account) -> account.availableToAddNetworks.isNotEmpty() }
                 .toMap()
             return AvailableToAddWallet(
                 userWallet = wallet,
@@ -74,9 +80,9 @@ internal class AvailableToAddDataConverter @Inject constructor(
         }
 
         val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet> = balances
-            .map {
-                val (walletId, _) = it
-                val availableToAddWallet = getAvailableToAddWallet(it)
+            .map { entry ->
+                val (walletId, _) = entry
+                val availableToAddWallet = getAvailableToAddWallet(entry)
                 walletId to availableToAddWallet
             }
             .filter { (_, wallet) -> wallet.availableToAddAccounts.isNotEmpty() }
@@ -101,6 +107,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
     ): CryptoCurrency? {
         val derivationIndex = when (account) {
             is Account.CryptoPortfolio -> account.derivationIndex
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,

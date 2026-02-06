@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,14 +44,31 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
                 isFlickering = state.isFlickering,
             )
         }
+        is TokenFiatAmountState.Icon -> {
+            IconAmount(modifier = modifier, state = state)
+        }
         is TokenFiatAmountState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = 4.dp)
         }
         is TokenFiatAmountState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
         }
+        is TokenFiatAmountState.Empty -> {
+            // Empty box for proper measurements
+            Box(modifier)
+        }
         null -> Unit
     }
+}
+
+@Composable
+private fun IconAmount(state: TokenFiatAmountState.Icon, modifier: Modifier = Modifier) {
+    Icon(
+        modifier = modifier,
+        painter = rememberVectorPainter(image = ImageVector.vectorResource(state.iconRes)),
+        tint = state.tint.color(),
+        contentDescription = null,
+    )
 }
 
 @Composable
@@ -76,11 +94,7 @@ private fun ContentFiatAmount(
                     Icon(
                         modifier = Modifier.size(12.dp),
                         painter = rememberVectorPainter(image = ImageVector.vectorResource(icon.iconRes)),
-                        tint = when (icon.tint) {
-                            IconTint.Accent -> TangemTheme.colors.icon.accent
-                            IconTint.Warning -> TangemTheme.colors.icon.attention
-                            IconTint.Inactive -> TangemTheme.colors.icon.inactive
-                        },
+                        tint = icon.tint.color(),
                         contentDescription = null,
                     )
                 }
@@ -89,6 +103,14 @@ private fun ContentFiatAmount(
 
         FiatAmountText(text = text, isFlickering = isAmountFlickering)
     }
+}
+
+@Composable
+private fun IconTint.color() = when (this) {
+    IconTint.Accent -> TangemTheme.colors.icon.accent
+    IconTint.Warning -> TangemTheme.colors.icon.attention
+    IconTint.Inactive -> TangemTheme.colors.icon.inactive
+    IconTint.Informative -> TangemTheme.colors.icon.informative
 }
 
 @Composable
