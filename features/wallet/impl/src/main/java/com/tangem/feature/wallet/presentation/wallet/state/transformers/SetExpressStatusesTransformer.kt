@@ -49,10 +49,6 @@ internal class SetExpressStatusesTransformer(
                 Timber.w("Impossible to load express statuses for locked wallet")
                 prevState
             }
-            is WalletState.Visa -> {
-                Timber.w("Impossible to load express statuses for visa wallet")
-                prevState
-            }
             is WalletState.MultiCurrency -> {
                 Timber.w("Impossible to load express statuses for multi-currency wallet")
                 prevState

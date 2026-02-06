@@ -4,6 +4,8 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
@@ -81,6 +83,12 @@ class DeepLinkFactoryTest {
     private val cardSdkProvider = mockk<CardSdkProvider>(relaxed = true) {
         every { sdk.uiVisibility() } returns MutableStateFlow(false)
     }
+
+    private val newsDeeplink = mockk<NewsDetailsDeepLinkHandler.Factory>(relaxed = true) {
+        every { create(any(), any()) } returns mockk()
+    }
+    private val feedFeatureToggle = mockk<FeedFeatureToggle>()
+
     private val mockedUri = mockk<Uri>(relaxed = true)
     private val isFromOnNewIntent: Boolean = false
 
@@ -103,6 +111,8 @@ class DeepLinkFactoryTest {
         swapDeepLink = swapDeepLinkFactory,
         promoDeepLink = promoDeepLinkFactory,
         onboardVisaDeepLink = onboardVisaDeepLink,
+        newsDetailsDeepLink = newsDeeplink,
+        feedFeatureToggle = feedFeatureToggle,
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
