@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
@@ -53,7 +54,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*

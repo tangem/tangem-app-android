@@ -13,6 +13,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
@@ -31,6 +32,8 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.utils.encryptionKey
 import com.tangem.tap.domain.userWalletList.utils.lock
+import com.tangem.tap.domain.userWalletList.utils.publicInformation
+import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
 import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import com.tangem.utils.Provider
@@ -38,10 +41,12 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultUserWalletsListRepository(
@@ -382,6 +387,44 @@ internal class DefaultUserWalletsListRepository(
         val userWallets = userWalletsSync()
         val unsecuredWalletIds = userWalletEncryptionKeysRepository.getAllUnsecured().map { it.walletId }.toSet()
         return userWallets.any { it.walletId !in unsecuredWalletIds }
+    }
+
+    override suspend fun transform(action: UserWalletTransformAction) {
+        val wallets = userWalletsSync()
+        val walletsMap = wallets.associateBy { it.walletId }
+        val transformedWallets = action.transform(wallets)
+        val transformedWalletsMap = transformedWallets.associateBy { it.walletId }
+
+        require(walletsMap.keys == transformedWalletsMap.keys) {
+            "The transformation action must not change the set of wallet IDs." +
+                "Original IDs: ${walletsMap.keys}, Transformed IDs: ${transformedWalletsMap.keys}"
+        }
+
+        updateWallets { transformedWallets }
+
+        withContext(NonCancellable) {
+            if (savePersistentInformation()) {
+                publicInformationRepository.transform {
+                    transformedWallets.map { wallet -> wallet.publicInformation }
+                }
+
+                val changedSensitiveInfoWallets = wallets.filter { wallet ->
+                    val transformedWallet = transformedWalletsMap[wallet.walletId]
+                    transformedWallet != null && transformedWallet.sensitiveInformation != wallet.sensitiveInformation
+                }
+
+                changedSensitiveInfoWallets.forEach { wallet ->
+                    if (wallet.isLocked.not()) {
+                        sensitiveInformationRepository.save(wallet, wallet.encryptionKey)
+                    }
+
+                    checkForUpgradeAndDeleteHotWalletIfNeeded(
+                        newUserWallet = wallet,
+                        oldUserWallet = walletsMap[wallet.walletId] ?: error("This should never happen"),
+                    )
+                }
+            }
+        }
     }
 
     private suspend fun checkForUpgradeAndDeleteHotWalletIfNeeded(
