@@ -5,8 +5,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.newSingleThreadContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,8 +24,10 @@ import javax.inject.Inject
 internal class WalletScreenContentLoader @Inject constructor(
     private val factory: WalletContentLoaderFactory,
     private val storage: WalletLoaderStorage,
-    private val dispatchers: CoroutineDispatcherProvider,
 ) {
+
+    private val singleBackgroundDispatcher: CloseableCoroutineDispatcher =
+        newSingleThreadContext(name = "Background Main")
 
     /**
      * Load content by [UserWallet]
@@ -64,6 +67,7 @@ internal class WalletScreenContentLoader @Inject constructor(
     fun cancelAll() {
         Timber.d("All content loading is canceled")
         storage.clear()
+        singleBackgroundDispatcher.close()
     }
 
     private fun loadInternal(
@@ -86,7 +90,7 @@ internal class WalletScreenContentLoader @Inject constructor(
         Timber.d("${userWallet.walletId} content loading is ${if (isRefresh) "re" else ""}started")
 
         loader.subscribers
-            .map { it.subscribe(coroutineScope, dispatchers) }
+            .map { it.subscribe(coroutineScope, singleBackgroundDispatcher) }
             .let { storage.set(userWallet.walletId, it) }
     }
 }

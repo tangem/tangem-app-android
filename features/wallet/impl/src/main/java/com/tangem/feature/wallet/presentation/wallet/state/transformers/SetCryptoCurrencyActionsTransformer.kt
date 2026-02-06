@@ -2,12 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
@@ -30,10 +30,6 @@ internal class SetCryptoCurrencyActionsTransformer(
             }
             is WalletState.MultiCurrency -> {
                 Timber.w("Impossible to load crypto currency actions for multi-currency wallet")
-                prevState
-            }
-            is WalletState.Visa -> {
-                Timber.w("Impossible to load crypto currency actions for VISA wallet")
                 prevState
             }
         }

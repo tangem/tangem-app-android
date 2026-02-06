@@ -2,7 +2,6 @@ package com.tangem.core.ui.components.bottomsheets.sheet
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue.Expanded
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -134,7 +133,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewBottomSheet(
         sheetState = SheetState(
             skipPartiallyExpanded = skipPartiallyExpanded,
             initialValue = Expanded,
-            density = LocalDensity.current,
+            positionalThreshold = { 0f },
+            velocityThreshold = { 0f },
         ),
         onBack = null,
         containerColor = containerColor,
@@ -181,30 +181,16 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         }
     }
 
-    if (onBack != null) {
-        ModalBottomSheetWithBackHandling(
-            modifier = modifier.statusBarsPadding(),
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = containerColor,
-            shape = TangemTheme.shapes.bottomSheetLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
-            onBack = onBack,
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    } else {
-        ModalBottomSheet(
-            modifier = modifier.statusBarsPadding(),
-            onDismissRequest = config.onDismissRequest,
-            sheetState = sheetState,
-            containerColor = containerColor,
-            shape = TangemTheme.shapes.bottomSheetLarge,
-            contentWindowInsets = { WindowInsetsZero },
-            dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
-            content = bsContent,
-            scrimColor = TangemTheme.colors.overlay.secondary,
-        )
-    }
+    ModalBottomSheetWithBackHandling(
+        modifier = modifier.statusBarsPadding(),
+        onDismissRequest = config.onDismissRequest,
+        sheetState = sheetState,
+        containerColor = containerColor,
+        shape = TangemTheme.shapes.bottomSheetLarge,
+        contentWindowInsets = { WindowInsetsZero },
+        dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
+        onBack = onBack,
+        content = bsContent,
+        scrimColor = TangemTheme.colors.overlay.secondary,
+    )
 }

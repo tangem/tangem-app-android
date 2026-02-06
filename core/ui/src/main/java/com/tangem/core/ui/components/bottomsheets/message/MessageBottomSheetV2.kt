@@ -27,6 +27,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.components.icons.HighlightedIcon
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -109,7 +110,7 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TangemTheme.dimens.spacing8),
-                text = body.resolveReference(),
+                text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -124,7 +125,6 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
     }
 }
 
-@Suppress("CanBeNonNullable")
 @Composable
 private fun BottomSheetIconContainer(
     icon: MessageBottomSheetUMV2.Icon?,

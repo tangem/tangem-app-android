@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -24,6 +25,7 @@ internal class WcPortfolioNameDelegate @AssistedInject constructor(
     fun createAccountTitleUM(value: WcSession): AccountTitleUM? {
         val account = when (val account = value.account) {
             is Account.CryptoPortfolio -> account
+            is Account.Payment -> TODO("[REDACTED_JIRA]")
             null -> null
         }
 
@@ -31,7 +33,7 @@ internal class WcPortfolioNameDelegate @AssistedInject constructor(
             AccountTitleUM.Account(
                 prefixText = TextReference.EMPTY,
                 name = account.accountName.toUM().value,
-                icon = account.icon.toUM(),
+                icon = CryptoPortfolioIconConverter.convert(account.icon),
             )
         } else {
             AccountTitleUM.Text(stringReference(value.wallet.name))
