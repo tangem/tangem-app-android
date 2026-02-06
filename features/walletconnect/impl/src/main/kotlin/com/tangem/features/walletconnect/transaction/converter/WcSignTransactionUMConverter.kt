@@ -10,6 +10,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionItemUM
 import com.tangem.features.walletconnect.transaction.entity.sign.WcSignTransactionUM
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
@@ -19,6 +20,7 @@ internal class WcSignTransactionUMConverter @Inject constructor(
     private val appInfoContentUMConverter: WcTransactionAppInfoContentUMConverter,
     private val networkInfoUMConverter: WcNetworkInfoUMConverter,
     private val requestBlockUMConverter: WcTransactionRequestBlockUMConverter,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) : Converter<WcSignTransactionUMConverter.Input, WcSignTransactionUM> {
 
     override fun convert(value: Input) = WcSignTransactionUM(
@@ -36,7 +38,8 @@ internal class WcSignTransactionUMConverter @Inject constructor(
             isLoading = value.signState.domainStep == WcSignStep.Signing,
             address = WcAddressConverter.convert(value.context.derivationState),
             walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
-            isHoldToConfirmEnabled = value.context.session.wallet.isHotWallet,
+            isHoldToConfirmEnabled = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
+                value.context.session.wallet.isHotWallet,
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             requestBlockUMConverter.convert(
