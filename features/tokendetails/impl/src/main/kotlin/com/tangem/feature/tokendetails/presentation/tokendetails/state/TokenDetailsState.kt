@@ -1,10 +1,10 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
+import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList

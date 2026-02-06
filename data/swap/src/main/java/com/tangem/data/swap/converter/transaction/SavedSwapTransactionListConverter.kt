@@ -17,6 +17,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.swap.models.SwapTransactionListModel
+import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import com.tangem.utils.converter.Converter
 
 internal class SavedSwapTransactionListConverter(
@@ -132,7 +133,7 @@ internal class SavedSwapTransactionListConverter(
                 blockchain = blockchain,
                 extraDerivationPath = token.derivationPath,
                 userWallet = userWallet,
-                accountIndex = token.accountId?.toIntOrNull()?.let { DerivationIndex(it).getOrNull() },
+                accountIndex = token.getDerivationIndex(),
             )
         }
     }
@@ -150,6 +151,10 @@ internal class SavedSwapTransactionListConverter(
     }
 
     private fun UserTokensResponse.Token.getDerivationIndex(): DerivationIndex? {
-        return accountId?.toIntOrNull()?.let { DerivationIndex(it).getOrNull() }
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        val accountNodeRecognizer = AccountNodeRecognizer(blockchain)
+        return derivationPath
+            ?.let { accountNodeRecognizer.recognize(it) }
+            ?.let { DerivationIndex(it.toInt()).getOrNull() }
     }
 }

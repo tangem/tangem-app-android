@@ -54,8 +54,8 @@ fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier):
 @Composable
 fun Modifier.conditionalCompose(
     condition: Boolean,
-    modifier: @Composable Modifier.() -> Modifier = { Modifier },
     otherModifier: @Composable Modifier.() -> Modifier = { this },
+    modifier: @Composable Modifier.() -> Modifier = { Modifier },
 ): Modifier {
     return if (condition) {
         then(modifier(Modifier))

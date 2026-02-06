@@ -13,11 +13,8 @@ internal class RemoveNFTCollectionsTransformer(
             nftState = WalletNFTItemUM.Hidden,
         )
         is WalletState.SingleCurrency.Content,
-        is WalletState.Visa.Content,
         is WalletState.MultiCurrency.Locked,
         is WalletState.SingleCurrency.Locked,
-        is WalletState.Visa.Locked,
-        is WalletState.Visa.AccessTokenLocked,
         -> prevState
     }
 }

@@ -50,14 +50,15 @@ internal fun PortfolioQuickActions(
         visible = isVisible,
         enter = expandVertically(expandFrom = Alignment.Top),
         exit = shrinkVertically(shrinkTowards = Alignment.Top),
+        modifier = modifier,
     ) {
-        Column(modifier = modifier) {
+        Column(modifier = Modifier) {
             actions.fastForEach { action ->
                 LineSeparator()
                 QuickActionItem(
                     state = action,
                     onClick = { onActionClick(action) },
-                    onLongClick = { onActionLongClick(action) }.takeIf { action.longClickAvailable },
+                    onLongClick = { onActionLongClick(action) }.takeIf { action.isLongClickAvailable },
                 )
             }
         }
@@ -174,7 +175,7 @@ private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
             .size(TangemTheme.dimens.size32)
             .drawWithContent {
                 drawContent()
-                if (state is QuickActionUM.Exchange && state.showBadge) {
+                if (state is QuickActionUM.Exchange && state.shouldShowBadge) {
                     drawBadge(containerColor = containerColor, offset = 4.dp)
                 }
             },
@@ -215,7 +216,7 @@ private fun Preview() {
                 PortfolioQuickActions(
                     actions = persistentListOf(
                         QuickActionUM.Buy,
-                        QuickActionUM.Exchange(showBadge = true),
+                        QuickActionUM.Exchange(shouldShowBadge = true),
                         QuickActionUM.Receive,
                     ),
                     isVisible = isVisible,
@@ -236,7 +237,7 @@ private fun PreviewRtl() {
             PortfolioQuickActions(
                 actions = persistentListOf(
                     QuickActionUM.Buy,
-                    QuickActionUM.Exchange(showBadge = true),
+                    QuickActionUM.Exchange(shouldShowBadge = true),
                     QuickActionUM.Receive,
                 ),
                 isVisible = true,

@@ -29,7 +29,12 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
     }
 
     val networkFeeBlock: KNode = child {
-        hasTestTag(BaseBlockTestTags.BLOCK)
+        hasTestTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK)
+        useUnmergedTree = true
+    }
+
+    val selectFeeIcon: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON)
         useUnmergedTree = true
     }
 

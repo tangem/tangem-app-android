@@ -48,12 +48,12 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
                     PriceChangeInterval.MONTH,
                 ),
                 initialSelectedItem = PriceChangeInterval.H24,
-                onClick = {
-                    currentInterval = it
-                    state.onIntervalChanged(it)
+                onClick = { interval ->
+                    currentInterval = interval
+                    state.onIntervalChanged(interval)
                 },
                 modifier = Modifier.width(IntrinsicSize.Min),
-            ) {
+            ) { interval ->
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -65,7 +65,7 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
-                        text = it.getText().resolveReference(),
+                        text = interval.getText().resolveReference(),
                         style = TangemTheme.typography.caption1,
                         color = TangemTheme.colors.text.primary1,
                     )
@@ -82,10 +82,10 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
 
             GridItems(
                 items = infoPoints,
-                itemContent = {
+                itemContent = { infoPoint ->
                     InfoPoint(
                         modifier = Modifier.align(Alignment.CenterStart),
-                        infoPointUM = it,
+                        infoPointUM = infoPoint,
                     )
                 },
             )

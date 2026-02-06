@@ -10,6 +10,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -146,7 +147,7 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
                         title = resourceReference(R.string.accounts_migration_alert_title),
                         message = resourceReference(
                             R.string.accounts_migration_alert_message,
-                            wrappedList(fromAccount, toAccount),
+                            wrappedList(fromAccount.toUM().value, toAccount.toUM().value),
                         ),
                         firstActionBuilder = {
                             EventMessageAction(

@@ -144,7 +144,7 @@ internal class ItemsBuilder @Inject constructor() {
         onCardSettingsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
-        description = resourceReference(R.string.settings_card_settings_footer),
+        description = null,
         blocks = buildList {
             val isHotWallet = userWallet is UserWallet.Hot
             if (isHotWallet) {

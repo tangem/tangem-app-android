@@ -28,14 +28,3 @@ data class NewsRelatedTokenDto(
     @Json(name = "symbol") val symbol: String,
     @Json(name = "name") val name: String,
 )
-
-@JsonClass(generateAdapter = true)
-data class NewsOriginalArticleDto(
-    @Json(name = "id") val id: Int,
-    @Json(name = "title") val title: String,
-    @Json(name = "sourceName") val sourceName: String,
-    @Json(name = "language") val language: String,
-    @Json(name = "publishedAt") val publishedAt: String,
-    @Json(name = "url") val url: String,
-    @Json(name = "imageUrl") val imageUrl: String? = null,
-)
