@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.utils)
     implementation(projects.libs.crypto)
+    implementation(projects.common)
 
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)
