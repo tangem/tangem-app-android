@@ -31,6 +31,7 @@ class EmailMessageBodyResolver(
             is FeedbackEmailType.BackupProblem -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CardAttestationFailed,
+            is FeedbackEmailType.BiometricsAuthenticationFailed,
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
