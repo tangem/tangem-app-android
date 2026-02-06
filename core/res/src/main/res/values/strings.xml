@@ -86,7 +86,7 @@
   <string name="address_qr_code_message_format">Send only %1$s (%2$s) from %3$s network to this address. Using other tokens and networks may result in loss of funds.</string>
   <string name="address_type_default">Default</string>
   <string name="address_type_legacy">Legacy</string>
-  <string name="alert_authentication_error_message">Try to reset biometrics on your device or contact support</string>
+  <string name="alert_authentication_error_message">Something went wrong with biometrics. Please try resetting biometrics on your device or contact support.</string>
   <string name="alert_authentication_error_title">Authentication error</string>
   <string name="alert_button_how_to_scan">How to scan</string>
   <string name="alert_button_request_support">Request support</string>
@@ -468,9 +468,13 @@
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="earn_best_opportunities">Best opportunities</string>
+  <string name="earn_clear_filter">Clear filter</string>
   <string name="earn_filter_all_networks">All networks</string>
   <string name="earn_filter_all_types">All types</string>
+  <string name="earn_filter_by">Filter by</string>
+  <string name="earn_filter_networks">Networks</string>
   <string name="earn_mostly_used">Mostly used</string>
+  <string name="earn_no_results">No results</string>
   <string name="earn_title">Earn</string>
   <string name="email_preface_wc_error">Hi support team, I\'ve encountered an error with code: %s</string>
   <string name="email_subject_wc_error">WalletConnect error</string>
@@ -839,7 +843,7 @@
     <item quantity="other">%d minutes ago</item>
   </plurals>
   <string name="news_quick_recap">Quick recap</string>
-  <string name="news_related_news">Related News</string>
+  <string name="news_related_news">News</string>
   <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
