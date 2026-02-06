@@ -8,10 +8,12 @@ package com.tangem.pagination
  *
  * @property data list of loaded batches.
  * @property status current status of the pagination.
+ * @property totalCount total number of items available on the server.
  *
  * @see BatchListSource
  */
 data class BatchListState<TKey, TData>(
     val data: List<Batch<TKey, TData>>,
     val status: PaginationStatus<TData>,
+    val totalCount: Int? = null,
 )
