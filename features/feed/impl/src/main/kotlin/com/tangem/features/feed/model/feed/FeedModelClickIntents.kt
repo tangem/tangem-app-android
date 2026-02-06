@@ -27,4 +27,6 @@ internal interface FeedModelClickIntents {
         paginationConfig: NewsListConfig? = null,
     )
     fun onOpenAllNews()
+
+    fun onOpenEarnPage()
 }

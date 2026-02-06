@@ -20,7 +20,10 @@ import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
-import com.tangem.datasource.local.preferences.utils.*
+import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
@@ -53,21 +56,6 @@ internal class DefaultWalletsRepository(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override suspend fun shouldSaveUserWalletsSync(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
-    }
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override fun shouldSaveUserWallets(): Flow<Boolean> {
-        return appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
-    }
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override suspend fun saveShouldSaveUserWallets(item: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
-    }
 
     override suspend fun useBiometricAuthentication(): Boolean {
         val shouldUseBiometricAuth = appPreferencesStore.getSyncOrNull(
