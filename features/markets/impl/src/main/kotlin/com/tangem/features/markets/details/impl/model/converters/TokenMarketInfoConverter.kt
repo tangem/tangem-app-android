@@ -64,9 +64,9 @@ internal class TokenMarketInfoConverter(
             insights = insights,
             securityScore = securityScore,
             metrics = value.metrics?.let { metricsConverter.convert(it) },
-            pricePerformance = value.pricePerformance?.let {
+            pricePerformance = value.pricePerformance?.let { performance ->
                 pricePerformanceConverter.convert(
-                    value = it,
+                    value = performance,
                     currentPrice = value.quotes.currentPrice,
                 )
             },

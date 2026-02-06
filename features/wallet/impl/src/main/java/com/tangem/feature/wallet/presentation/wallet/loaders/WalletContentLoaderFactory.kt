@@ -19,7 +19,6 @@ internal class WalletContentLoaderFactory @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
     private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
-    private val visaWalletContentLoaderFactory: VisaWalletContentLoaderFactory,
 ) {
 
     fun create(
@@ -41,9 +40,6 @@ internal class WalletContentLoaderFactory @Inject constructor(
                 } else {
                     singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
                 }
-            }
-            userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isVisaWallet() -> {
-                visaWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
             }
             userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {

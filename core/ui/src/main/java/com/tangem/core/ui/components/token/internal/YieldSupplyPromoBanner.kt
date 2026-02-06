@@ -43,7 +43,7 @@ internal fun YieldSupplyPromoBanner(state: PromoBannerState.Content, modifier: M
     LaunchedEffect(state) {
         state.onPromoShown()
     }
-    val bgColor = TangemTheme.colors.control.unchecked
+    val bgColor = TangemTheme.colors.control.default
     Column(modifier = modifier) {
         Row(
             modifier = Modifier

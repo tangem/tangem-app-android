@@ -4,6 +4,8 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationUM
@@ -27,6 +29,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -37,8 +40,11 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForGaslessUseCase
+import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -68,6 +74,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
 
 internal interface SendComponentCallback :
     SendAmountComponent.ModelCallback,
@@ -95,6 +102,8 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
+    private val getFeeForTokenUseCase: GetFeeForTokenUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
@@ -245,10 +254,10 @@ internal class SendModel @Inject constructor(
         showAlertError()
     }
 
-    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+    suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        val transferTransaction = if (predefinedValues is PredefinedValues.Content.Deeplink) {
+        return if (predefinedValues is PredefinedValues.Content.Deeplink) {
             val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
             createTransferTransactionUseCase(
                 amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus) ?: error("Invalid amount"),
@@ -271,15 +280,37 @@ internal class SendModel @Inject constructor(
                 userWalletId = userWallet.walletId,
                 network = cryptoCurrency.network,
             )
-        }.getOrElse {
-            return GetFeeError.DataError(it).left()
         }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val transferTransaction = prepareTransferTransaction()
+            .getOrElse { return GetFeeError.DataError(it).left() }
 
         return getFeeUseCase(
             transactionData = transferTransaction,
             userWallet = userWallet,
             network = params.currency.network,
         )
+    }
+
+    suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
+        val transferTransaction = prepareTransferTransaction()
+            .getOrElse { return GetFeeError.DataError(it).left() }
+
+        return if (maybeToken == null) {
+            getFeeForGaslessUseCase(
+                transactionData = transferTransaction,
+                userWallet = userWallet,
+                network = params.currency.network,
+            )
+        } else {
+            getFeeForTokenUseCase(
+                transactionData = transferTransaction,
+                userWallet = userWallet,
+                token = maybeToken.currency,
+            )
+        }
     }
 
     fun showAlertError() {
@@ -334,14 +365,14 @@ internal class SendModel @Inject constructor(
                             userWalletId = params.userWalletId,
                             currency = cryptoCurrency,
                         ).onEach { (account, cryptoCurrencyStatus) ->
+                            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
+                            accountFlow.value = account
+
                             cryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
                             feeCryptoCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
                                 userWalletId = params.userWalletId,
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                             ).getOrNull() ?: cryptoCurrencyStatus
-
-                            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
-                            accountFlow.value = account
 
                             if (params.amount != null) {
                                 router.replaceAll(Confirm)
@@ -421,6 +452,17 @@ internal class SendModel @Inject constructor(
                 isSingleWalletWithTokens = false,
             )
             else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = params.userWalletId)
+        }
+    }
+
+    fun getSelectedFeeToken(): CryptoCurrency {
+        val feeUMV2 = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+        val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+        val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            feeUMV2.feeExtraInfo.feeCryptoCurrencyStatus.currency
+        } else {
+            feeCryptoCurrencyStatusFlow.value.currency
         }
     }
 

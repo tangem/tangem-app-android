@@ -75,7 +75,7 @@ class UserTokensSaver(
             val conversionData = appsFlyerStore.get()
 
             val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
-                walletName = userWallet.name,
+                walletName = userWallet.name.takeIf { it.isNotBlank() },
                 walletType = WalletType.from(userWallet),
                 refcode = conversionData?.refcode,
                 campaign = conversionData?.campaign,

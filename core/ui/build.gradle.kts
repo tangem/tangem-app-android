@@ -61,6 +61,16 @@ dependencies {
     api(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.markdown)
+    implementation(deps.haze) {
+        exclude(module = "activity-compose")
+        exclude(module = "activity")
+        exclude(module = "activity-ktx")
+    }
+    implementation(deps.haze.materials) {
+        exclude(module = "activity-compose")
+        exclude(module = "activity")
+        exclude(module = "activity-ktx")
+    }
 
     /** Tests */
     testImplementation(deps.test.junit)

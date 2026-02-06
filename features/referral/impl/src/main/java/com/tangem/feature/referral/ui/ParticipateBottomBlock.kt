@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tangem.common.ui.account.AccountIcon
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.PrimaryButtonIconStart
@@ -31,6 +33,7 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -290,35 +293,48 @@ private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
             color = TangemTheme.colors.stroke.primary,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
+
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                modifier = Modifier.weight(1f),
                 text = stringResourceSafe(R.string.account_for_rewards),
-                style = TangemTheme.typography.body1,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
                 color = TangemTheme.colors.text.secondary,
+                maxLines = 1,
+                style = TangemTheme.typography.body1,
             )
+
             SpacerW12()
-            val icon = accountAward.accountSelectUM.icon
-            if (icon != null) {
-                AccountIcon(
-                    name = accountAward.accountSelectUM.name,
-                    icon = icon,
-                    size = AccountIconSize.Small,
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val icon = accountAward.accountSelectUM.icon
+                if (icon != null) {
+                    AccountIcon(
+                        name = accountAward.accountSelectUM.name,
+                        icon = icon,
+                        size = AccountIconSize.Small,
+                    )
+                }
+
+                Text(
+                    text = accountAward.accountSelectUM.name.resolveReference(),
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    color = TangemTheme.colors.text.primary1,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 12.sp,
+                        maxFontSize = TangemTheme.typography.body1.fontSize,
+                    ),
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    style = TangemTheme.typography.body1,
                 )
             }
-            Text(
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 4.dp),
-                text = accountAward.accountSelectUM.name.resolveReference(),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
         }
     }
 }
@@ -465,6 +481,22 @@ private class ParticipateBottomBlockDataProvider : CollectionPreviewParameterPro
             purchasedWalletCount = 0,
             expectedAwards = null,
             accountAward = accountReward,
+        ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 0,
+            expectedAwards = null,
+            accountAward = accountReward.copy(
+                accountSelectUM = account.copy(name = stringReference("A")),
+            ),
+        ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 0,
+            expectedAwards = null,
+            accountAward = accountReward.copy(
+                accountSelectUM = account.copy(
+                    name = stringReference("Very looooooooong account name"),
+                ),
+            ),
         ),
     ),
 )

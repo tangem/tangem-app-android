@@ -9,15 +9,13 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
-import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.archived.entity.AccountArchivedUM
@@ -55,7 +53,6 @@ internal class ArchivedAccountListModel @Inject constructor(
     private val getArchivedAccountsJob = JobHolder()
 
     init {
-        analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.ArchivedAccountsScreenOpened())
         getArchivedAccounts()
     }
 
@@ -71,14 +68,16 @@ internal class ArchivedAccountListModel @Inject constructor(
                         umBuilder.mapContent(
                             accounts = content,
                             onCloseClick = onCloseClick,
-                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
+                            onRecoverClick = { recoverCryptoPortfolio(account = it) },
                         )
                     },
                     ifContent = { content ->
+                        val event = WalletSettingsAccountAnalyticEvents.ArchivedAccountsScreenOpened(content.size)
+                        analyticsEventHandler.send(event)
                         umBuilder.mapContent(
                             accounts = content,
                             onCloseClick = onCloseClick,
-                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
+                            onRecoverClick = { recoverCryptoPortfolio(account = it) },
                         )
                     },
                     ifError = { error ->
@@ -99,13 +98,15 @@ internal class ArchivedAccountListModel @Inject constructor(
             .saveIn(getArchivedAccountsJob)
     }
 
-    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
-        analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.ButtonRecoverAccount())
-        uiState.update { it.toggleProgress(accountId, isLoading = true) }
+    private fun recoverCryptoPortfolio(account: ArchivedAccount) = modelScope.launch {
+        analyticsEventHandler.send(
+            WalletSettingsAccountAnalyticEvents.ButtonRecoverAccount(account.derivationIndex.value),
+        )
+        uiState.update { it.toggleProgress(account.accountId, isLoading = true) }
         val result = withContext(dispatchers.default) {
-            recoverCryptoPortfolioUseCase(accountId)
+            recoverCryptoPortfolioUseCase(account.accountId)
         }
-        uiState.update { it.toggleProgress(accountId, isLoading = false) }
+        uiState.update { it.toggleProgress(account.accountId, isLoading = false) }
         result
             .onLeft(::handleRecoverError)
             .onRight {
@@ -125,11 +126,8 @@ internal class ArchivedAccountListModel @Inject constructor(
 
             messageSender.send(
                 DialogMessage(
-                    title = resourceReference(R.string.common_something_went_wrong),
-                    message = resourceReference(
-                        id = R.string.account_recover_limit_dialog_description,
-                        formatArgs = wrappedList(AccountList.MAX_ACCOUNTS_COUNT.toString()),
-                    ),
+                    title = resourceReference(R.string.account_recover_limit_dialog_title),
+                    message = resourceReference(R.string.account_archived_recover_error_message),
                     firstActionBuilder = { firstAction },
                 ),
             )
@@ -139,7 +137,11 @@ internal class ArchivedAccountListModel @Inject constructor(
 
         val featureError = AccountFeatureError.ArchivedAccountList.FailedToRecoverAccount(cause = error)
         logError(error = featureError)
-        messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_generic_error_dialog_message),
+        )
+        messageSender.send(dialogMessage)
     }
 
     private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {

@@ -295,11 +295,11 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
 
                 Button(
                     onClick = {
-                        prices = prices.map {
+                        prices = prices.map { priceInfo ->
                             if (Random.nextBoolean()) {
-                                it.first.inc() to PriceChangeType.UP
+                                priceInfo.first.inc() to PriceChangeType.UP
                             } else {
-                                it.first.dec() to PriceChangeType.DOWN
+                                priceInfo.first.dec() to PriceChangeType.DOWN
                             }
                         }
                         state1 = state1.copy(

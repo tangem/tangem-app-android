@@ -34,5 +34,6 @@ data class NavigationButton(
     val isEnabled: Boolean = true,
     val isDimmed: Boolean = false,
     val isHapticClick: Boolean = false,
+    val isHoldToConfirm: Boolean = false,
     val onClick: () -> Unit,
 )
