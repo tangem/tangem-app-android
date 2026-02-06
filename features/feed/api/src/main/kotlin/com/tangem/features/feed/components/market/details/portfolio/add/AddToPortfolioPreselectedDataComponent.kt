@@ -5,6 +5,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
 interface AddToPortfolioPreselectedDataComponent : ComposableBottomSheetComponent {
 
@@ -22,6 +23,7 @@ interface AddToPortfolioPreselectedDataComponent : ComposableBottomSheetComponen
         fun onSuccess(addedToken: CryptoCurrency, walletId: UserWalletId)
     }
 
+    @Serializable
     data class TokenToAdd(
         val network: TokenMarketInfo.Network,
         val id: CryptoCurrency.RawID,
