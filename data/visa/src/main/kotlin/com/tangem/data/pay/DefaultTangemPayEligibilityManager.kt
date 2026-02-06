@@ -3,13 +3,13 @@ package com.tangem.data.pay
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
@@ -23,7 +23,6 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
@@ -42,9 +41,19 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
+    override suspend fun getPossibleWalletsIds(shouldExcludePaeraCustomers: Boolean): List<UserWalletId> {
+        return getPossibleWalletsForTangemPay().addPaeraCustomersData().mapNotNull {
+            if (!it.isPaeraCustomer || !shouldExcludePaeraCustomers) it.userWallet.walletId else null
+        }
+    }
+
     override suspend fun getTangemPayAvailability(): Boolean {
         return onboardingRepository.checkCustomerEligibility()
             .also { isEligible -> if (!isEligible) reset() }
+    }
+
+    override suspend fun isPaeraCustomerForAnyWallet(): Boolean {
+        return getUserWalletsData().any { it.isPaeraCustomer }
     }
 
     private suspend fun getUserWalletsData(): List<UserWalletData> {
@@ -56,9 +65,13 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
 
             coroutineScope {
                 val deferred = async {
-                    getPossibleWalletsForTangemPay()
-                        .addPaeraCustomersData()
-                        .also { cachedEligibleWallets = it }
+                    if (!checkTangemPayEligibility()) {
+                        emptyList()
+                    } else {
+                        getPossibleWalletsForTangemPay()
+                            .addPaeraCustomersData()
+                            .also { cachedEligibleWallets = it }
+                    }
                 }
                 eligibleWalletsDeferred = deferred
                 try {
@@ -70,11 +83,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
         }
     }
 
-    private suspend fun getPossibleWalletsForTangemPay(): List<UserWallet> {
-        if (!checkTangemPayEligibility()) {
-            return emptyList()
-        }
-
+    private fun getPossibleWalletsForTangemPay(): List<UserWallet> {
         val wallets = if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWallets.value
         } else {
@@ -128,8 +137,6 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private suspend fun checkTangemPayEligibility(): Boolean {
-        if (!tangemPayFeatureToggles.isEntryPointsEnabled) return true
-
         return onboardingRepository.getCustomerEligibility() || onboardingRepository.checkCustomerEligibility()
     }
 

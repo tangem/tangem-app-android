@@ -12,8 +12,8 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.staking.model.stakekit.AddressArgument
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
+import com.tangem.domain.staking.model.common.StakingAmountRequirement
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isTron
@@ -26,7 +26,7 @@ import java.math.RoundingMode
 internal class AmountRequirementStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxAmount: EnterAmountBoundary,
-    private val yield: Yield,
+    private val integration: StakingIntegration,
     private val actionType: StakingActionCommonType,
 ) : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
@@ -96,11 +96,11 @@ internal class AmountRequirementStateTransformer(
 
         return when (actionType) {
             is StakingActionCommonType.Enter -> {
-                val enterRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
+                val enterRequirements = integration.enterArgs?.amountRequirement
                 enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
             }
             is StakingActionCommonType.Exit -> {
-                val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT)
+                val exitRequirements = integration.exitArgs?.amountRequirement
                 exitRequirements?.getError(amountDecimal, R.string.staking_unstake_amount_requirement_error)
             }
             else -> null
@@ -118,7 +118,7 @@ internal class AmountRequirementStateTransformer(
         return isEnterOrExit && isTron && !isIntegerOnly
     }
 
-    private fun AddressArgument.getError(amount: BigDecimal, @StringRes errorTextRes: Int): TextReference? {
+    private fun StakingAmountRequirement.getError(amount: BigDecimal, @StringRes errorTextRes: Int): TextReference? {
         val isExceedsMinRequirement = minimum?.compareTo(amount) == 1
         val isExceedsMaxRequirement = if (maximum?.isPositive() == true) {
             maximum?.compareTo(amount) == -1
@@ -142,7 +142,7 @@ internal class AmountRequirementStateTransformer(
         return resourceReference(
             errorTextRes,
             wrappedList(errorText),
-        ).takeIf { required && (isExceedsMinRequirement || isExceedsMaxRequirement) }
+        ).takeIf { isRequired && (isExceedsMinRequirement || isExceedsMaxRequirement) }
     }
 
     data class Data(
