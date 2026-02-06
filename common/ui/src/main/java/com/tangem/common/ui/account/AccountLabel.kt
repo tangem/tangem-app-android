@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 fun AccountLabel(
     name: TextReference,
-    icon: CryptoPortfolioIconUM,
+    icon: AccountIconUM,
     iconSize: AccountIconSize,
     modifier: Modifier = Modifier,
     nameStyle: TextStyle = TangemTheme.typography.subtitle2,
