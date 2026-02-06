@@ -124,6 +124,14 @@ interface UserWalletsListRepository {
     suspend fun clearPersistentData()
 
     /**
+     * Transforms user wallets list according to the provided action.
+     *
+     * @param action The transformation action to apply.
+     * @throws IllegalArgumentException if the transformation action is invalid (e.g. reordering with missing or extra wallet IDs).
+     */
+    suspend fun transform(action: UserWalletTransformAction)
+
+    /**
      * Checks if there are any secured wallets (wallets that are not locked with [LockMethod.NoLock]).
      */
     suspend fun hasSecuredWallets(): Boolean
