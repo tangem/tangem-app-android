@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -86,6 +87,7 @@ sealed class SwapEvents(
         val receiveToken: String,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
+        val referralId: String?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = mapOf(
@@ -96,6 +98,7 @@ sealed class SwapEvents(
             "Send Blockchain" to sendBlockchain,
             "Receive Blockchain" to receiveBlockchain,
             "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
+            *getReferralParams(referralId).toTypedArray(),
         ),
     ), AppsFlyerIncludedEvent
 
