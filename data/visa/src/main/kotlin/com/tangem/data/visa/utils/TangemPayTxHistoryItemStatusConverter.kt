@@ -10,6 +10,7 @@ internal object TangemPayTxHistoryItemStatusConverter : Converter<String, Tangem
             "RESERVED" -> TangemPayTxHistoryItem.Status.RESERVED
             "COMPLETED" -> TangemPayTxHistoryItem.Status.COMPLETED
             "DECLINED" -> TangemPayTxHistoryItem.Status.DECLINED
+            "REVERSED" -> TangemPayTxHistoryItem.Status.REVERSED
             else -> TangemPayTxHistoryItem.Status.UNKNOWN
         }
     }
