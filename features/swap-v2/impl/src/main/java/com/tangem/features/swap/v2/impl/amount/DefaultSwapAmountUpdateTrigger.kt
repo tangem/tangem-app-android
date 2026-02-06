@@ -17,6 +17,8 @@ interface SwapAmountUpdateListener {
     val updateAmountTriggerFlow: Flow<Pair<String, Boolean>>
 
     val reloadQuotesTriggerFlow: Flow<Unit>
+
+    val autoUpdateTriggerFlow: Flow<Boolean>
 }
 
 /**
@@ -59,12 +61,19 @@ internal class DefaultSwapAmountUpdateTrigger @Inject constructor() :
     override val reloadQuotesTriggerFlow: Flow<Unit>
         field = MutableSharedFlow<Unit>()
 
+    override val autoUpdateTriggerFlow: Flow<Boolean>
+        field = MutableSharedFlow<Boolean>()
+
     override suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean) {
         updateAmountTriggerFlow.emit(amountValue to isEnterInFiatSelected)
     }
 
     override suspend fun triggerQuoteReload() {
         reloadQuotesTriggerFlow.emit(Unit)
+    }
+
+    override suspend fun triggerAutoUpdateEnabled(isEnabled: Boolean) {
+        autoUpdateTriggerFlow.emit(isEnabled)
     }
 
     override suspend fun triggerReduceBy(reduceBy: ReduceByData) {

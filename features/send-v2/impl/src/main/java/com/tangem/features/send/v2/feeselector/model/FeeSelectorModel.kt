@@ -130,6 +130,7 @@ internal class FeeSelectorModel @Inject constructor(
 
     fun getInitialRoute(): FeeSelectorRoute {
         return when {
+            params.shouldShowOnlySpeedOption -> FeeSelectorRoute.ChooseSpeed
             feeSelectorLogic.isGaslessEnabled -> FeeSelectorRoute.NetworkFee
             else -> FeeSelectorRoute.ChooseSpeed
         }
