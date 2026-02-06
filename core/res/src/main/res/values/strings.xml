@@ -469,6 +469,7 @@
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_clear_filter">Clear filter</string>
+  <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
   <string name="earn_filter_all_networks">All networks</string>
   <string name="earn_filter_all_types">All types</string>
   <string name="earn_filter_by">Filter by</string>
