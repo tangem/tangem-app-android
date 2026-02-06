@@ -3,13 +3,18 @@ package com.tangem.features.feed.ui.feed.preview
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.earn.state.EarnListItemUM
+import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
 import kotlinx.collections.immutable.*
 
@@ -34,6 +39,7 @@ internal object FeedListPreviewDataProvider {
                 onSortTypeClick = {},
                 onSliderScroll = {},
                 onSliderEndReached = {},
+                onOpenEarnPageClick = {},
             ),
             news = NewsUM(
                 content = articles.filter { it.isTrending.not() }.toImmutableList(),
@@ -44,6 +50,9 @@ internal object FeedListPreviewDataProvider {
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),
                 currentSortByType = SortByTypeUM.TopGainers,
+            ),
+            earnListUM = EarnListUM.Content(
+                items = createEarnListItemsUM(),
             ),
         )
     }
@@ -249,5 +258,26 @@ internal object FeedListPreviewDataProvider {
             stakingRate = stringReference("APY 12.34%"),
             updateTimestamp = 0,
         )
+    }
+
+    private fun createEarnListItemsUM(): ImmutableList<EarnListItemUM> {
+        return List(5) {
+            EarnListItemUM(
+                network = stringReference("Ethereum"),
+                symbol = stringReference("USDT"),
+                tokenName = stringReference("TETHER"),
+                currencyIconState = CurrencyIconState.TokenIcon(
+                    url = null,
+                    topBadgeIconResId = R.drawable.img_eth_22,
+                    fallbackTint = TangemColorPalette.Black,
+                    fallbackBackground = TangemColorPalette.Meadow,
+                    isGrayscale = false,
+                    shouldShowCustomBadge = false,
+                ),
+                earnValue = stringReference("APY 6.54%"),
+                earnType = stringReference("Yield"),
+                onItemClick = {},
+            )
+        }.toPersistentList()
     }
 }
