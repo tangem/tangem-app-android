@@ -13,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
+import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -98,6 +99,7 @@ sealed class SwapEvents(
         val feeToken: String,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
+        val referralId: String?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = buildMap {
@@ -110,6 +112,7 @@ sealed class SwapEvents(
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
             if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(FEE_TOKEN, feeToken)
+            putAll(getReferralParams(referralId))
         },
     ), AppsFlyerIncludedEvent
 
