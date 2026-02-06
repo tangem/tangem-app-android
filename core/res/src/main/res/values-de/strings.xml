@@ -1488,7 +1488,7 @@
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.Questa commissione copre il costo della gestione del tuo trasferimento.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.</string>
   <string name="tangem_pay_transaction_reversed_notification_text">Die Transaktion wurde vom Händler teilweise oder vollständig storniert</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Karte entsperren?</string>
