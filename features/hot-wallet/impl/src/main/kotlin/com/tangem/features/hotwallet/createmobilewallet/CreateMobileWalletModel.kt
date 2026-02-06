@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -44,6 +45,7 @@ internal class CreateMobileWalletModel @Inject constructor(
     private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model() {
 
     private val params: CreateMobileWalletComponent.Params = paramsContainer.require()
@@ -100,6 +102,7 @@ internal class CreateMobileWalletModel @Inject constructor(
                         creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.NewSeed,
                         seedPhraseLength = SEED_PHRASE_LENGTH,
                         passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                        referralId = appsFlyerStore.get()?.refcode,
                     ),
                 )
 

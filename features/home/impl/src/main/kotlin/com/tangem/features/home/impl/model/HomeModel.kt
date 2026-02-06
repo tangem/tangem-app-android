@@ -41,7 +41,9 @@ import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.home.impl.ui.state.HomeUM
 import com.tangem.features.home.impl.ui.state.Stories
 import com.tangem.features.home.impl.ui.state.getRestrictedStories
+import com.tangem.feature.referral.domain.ShouldShowMobileWalletPromoUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.Debouncer
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -70,8 +72,11 @@ internal class HomeModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val reduxStateHolder: ReduxStateHolder,
+    private val shouldShowMobileWalletPromoUseCase: ShouldShowMobileWalletPromoUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
+
+    private val debouncer = Debouncer()
 
     val params = paramsContainer.require<HomeComponent.Params>()
 
@@ -141,7 +146,16 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onGetStartedClick() {
-        router.push(AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.ColdWallet))
+        debouncer.debounce(modelScope) {
+            modelScope.launch {
+                val mode = if (shouldShowMobileWalletPromoUseCase()) {
+                    AppRoute.CreateWalletStart.Mode.HotWallet
+                } else {
+                    AppRoute.CreateWalletStart.Mode.ColdWallet
+                }
+                router.push(AppRoute.CreateWalletStart(mode = mode))
+            }
+        }
     }
 
     private fun scanCard() {
