@@ -1,11 +1,12 @@
 package com.tangem.domain.models.staking
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 /**
- * Staking balance facade covering StakeKit and P2P balances
+ * Staking balance facade covering StakeKit and P2PEthPool balances
  */
 @Serializable
 sealed interface StakingBalance {
@@ -21,6 +22,9 @@ sealed interface StakingBalance {
     @Serializable
     sealed interface Data : StakingBalance {
 
+        /** Provider-agnostic list of balance entries for UI display */
+        val entries: List<StakingBalanceEntry>
+
         @Serializable
         data class StakeKit(
             override val stakingId: StakingID,
@@ -28,45 +32,41 @@ sealed interface StakingBalance {
             val balance: YieldBalanceItem,
         ) : Data {
 
-            override val totalStaked: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.STAKED }
-                    .sumOf { it.amount }
+            override val totalStaked: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.STAKED }
+                .sumOf { it.amount }
 
-            override val totalRewards: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.REWARDS }
-                    .sumOf { it.amount }
+            override val totalRewards: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.REWARDS }
+                .sumOf { it.amount }
 
-            override val unstakingAmount: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.UNSTAKING || it.type == BalanceType.UNLOCKING }
-                    .sumOf { it.amount }
+            override val unstakingAmount: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.UNSTAKING || it.type == BalanceType.UNLOCKING }
+                .sumOf { it.amount }
 
-            override val withdrawableAmount: BigDecimal
-                get() = balance.items
-                    .filter { it.type == BalanceType.UNSTAKED }
-                    .sumOf { it.amount }
+            override val withdrawableAmount: SerializedBigDecimal = balance.items
+                .filter { it.type == BalanceType.UNSTAKED }
+                .sumOf { it.amount }
+
+            override val entries: List<StakingBalanceEntry> = balance.items.toStakingBalanceEntries()
         }
 
         @Serializable
-        data class P2P(
+        data class P2PEthPool(
             override val stakingId: StakingID,
             override val source: StatusSource,
-            val account: P2PStakingAccount,
+            val accounts: List<P2PEthPoolStakingAccount>,
         ) : Data {
 
-            override val totalStaked: BigDecimal
-                get() = account.stake.assets
+            override val totalStaked: SerializedBigDecimal = accounts.sumOf { it.stake.assets }
 
-            override val totalRewards: BigDecimal
-                get() = account.stake.totalEarnedAssets
+            override val totalRewards: SerializedBigDecimal = accounts.sumOf { it.stake.totalEarnedAssets }
 
-            override val unstakingAmount: BigDecimal
-                get() = account.exitQueue.total
+            override val unstakingAmount: SerializedBigDecimal = accounts.sumOf { it.exitQueue.total }
 
-            override val withdrawableAmount: BigDecimal
-                get() = account.availableToWithdraw
+            override val withdrawableAmount: SerializedBigDecimal = accounts.sumOf { it.availableToWithdraw }
+
+            override val entries: List<StakingBalanceEntry> = accounts.flatMap { it.toStakingBalanceEntries() }
         }
     }
 
@@ -93,7 +93,7 @@ sealed interface StakingBalance {
     fun copySealed(source: StatusSource): StakingBalance {
         return when (this) {
             is Data.StakeKit -> copy(source = source)
-            is Data.P2P -> copy(source = source)
+            is Data.P2PEthPool -> copy(source = source)
             is Empty -> copy(source = source)
             is Error -> this
         }
