@@ -31,5 +31,9 @@ object TangemBlogUrlBuilder {
         data object WhatWalletToChoose : Post {
             override val path: String = "mobile-wallet"
         }
+
+        data object WhatIsTransactionFee : Post {
+            override val path: String = "what-is-a-transaction-fee-and-why-do-we-need-it"
+        }
     }
 }
