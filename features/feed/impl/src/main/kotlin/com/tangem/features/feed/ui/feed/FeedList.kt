@@ -147,10 +147,8 @@ private fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
         )
 
         EarnBlock(
-            onSeeAllClick = {
-                // TODO handle in [REDACTED_TASK_KEY]
-            },
-            earnListUM = null, // TODO in [REDACTED_TASK_KEY]
+            onSeeAllClick = state.feedListCallbacks.onOpenEarnPageClick,
+            earnListUM = state.earnListUM,
         )
 
         MarketPulseBlock(

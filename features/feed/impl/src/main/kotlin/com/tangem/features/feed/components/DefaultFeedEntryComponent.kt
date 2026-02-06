@@ -22,6 +22,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
+import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -130,6 +131,14 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
 
         override fun onOpenAllNews() {
             innerRouter.push(FeedEntryChildFactory.Child.NewsList)
+        }
+
+        override fun onOpenEarnPage() {
+            innerRouter.push(
+                FeedEntryChildFactory.Child.Earn(
+                    params = DefaultEarnComponent.Params(onBackClick = { onChildBack() }),
+                ),
+            )
         }
     }
 

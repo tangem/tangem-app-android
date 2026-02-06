@@ -10,6 +10,7 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -21,6 +22,7 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
+    private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
 ) {
 
     @Serializable
@@ -100,6 +102,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
                     params = DefaultFeedComponent.FeedParams(feedClickIntents = feedEntryClickIntents),
+                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
                 )
             }
             is Child.Earn -> {

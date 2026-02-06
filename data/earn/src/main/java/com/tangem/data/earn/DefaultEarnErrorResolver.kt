@@ -14,7 +14,7 @@ internal class DefaultEarnErrorResolver : EarnErrorResolver {
                     message = throwable.message.orEmpty(),
                 )
             }
-            else -> EarnError.NotHttpError
+            else -> EarnError.NotHttpError()
         }
     }
 }
