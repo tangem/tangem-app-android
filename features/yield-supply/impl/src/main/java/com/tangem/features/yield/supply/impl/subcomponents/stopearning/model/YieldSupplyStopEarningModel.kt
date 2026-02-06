@@ -11,6 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -61,6 +62,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -160,7 +162,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                                 yieldSupplyAlertFactory.onFailedTxEmailClick(
                                     userWallet = params.userWallet,
                                     cryptoCurrency = cryptoCurrency,
-                                    errorMessage = error.toString(),
+                                    errorMessage = errorMessage,
                                 )
                             }
                         },
@@ -184,6 +186,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             YieldSupplyAnalytics.FundsWithdrawn(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
+                referralId = appsFlyerStore.get()?.refcode,
             ),
         )
         val event = AnalyticsParam.TxSentFrom.Earning(
