@@ -7,4 +7,5 @@ import com.squareup.moshi.JsonClass
 data class PromocodeActivationBody(
     @Json(name = "promoCode") val promoCode: String,
     @Json(name = "address") val address: String,
+    @Json(name = "walletId") val walletId: String,
 )

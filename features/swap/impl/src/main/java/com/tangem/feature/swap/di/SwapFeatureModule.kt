@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.di
 
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.feature.swap.DefaultSwapComponent
 import com.tangem.feature.swap.DefaultSwapFeatureToggles
 import com.tangem.features.swap.SwapComponent
@@ -17,8 +18,8 @@ internal object SwapFeatureModule {
 
     @Provides
     @Singleton
-    fun provideSwapFeatureToggles(): SwapFeatureToggles {
-        return DefaultSwapFeatureToggles()
+    fun provideSwapFeatureToggles(featureTogglesManager: FeatureTogglesManager): SwapFeatureToggles {
+        return DefaultSwapFeatureToggles(featureTogglesManager)
     }
 }
 
