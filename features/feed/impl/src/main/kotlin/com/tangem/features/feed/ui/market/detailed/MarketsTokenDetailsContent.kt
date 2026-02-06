@@ -42,6 +42,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.components.*
+import com.tangem.core.ui.R as CoreR
 import com.tangem.features.feed.ui.market.detailed.preview.MarketsTokenDetailsPreview
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
@@ -150,6 +151,7 @@ internal fun MarketsTokenDetailsTopBar(
     tokenPrice: String,
     isBackButtonEnabled: Boolean,
     onBackClick: () -> Unit,
+    onShareClick: () -> Unit,
 ) {
     TangemTopAppBar(
         modifier = Modifier.drawBehind { drawRect(backgroundColor) },
@@ -158,6 +160,10 @@ internal fun MarketsTokenDetailsTopBar(
         startButton = TopAppBarButtonUM.Back(
             onBackClicked = onBackClick,
             enabled = isBackButtonEnabled,
+        ),
+        endButton = TopAppBarButtonUM.Icon(
+            iconRes = CoreR.drawable.ic_share_24,
+            onClicked = onShareClick,
         ),
     )
 }
