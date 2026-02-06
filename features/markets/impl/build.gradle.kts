@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
