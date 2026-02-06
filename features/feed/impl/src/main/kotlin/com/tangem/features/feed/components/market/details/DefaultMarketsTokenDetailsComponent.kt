@@ -95,6 +95,7 @@ internal class DefaultMarketsTokenDetailsComponent(
             tokenName = state.tokenName,
             tokenPrice = state.priceText,
             backgroundColor = background,
+            onShareClick = state.onShareClick,
         )
     }
 

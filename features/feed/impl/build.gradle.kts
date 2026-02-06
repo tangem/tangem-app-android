@@ -54,6 +54,7 @@ dependencies {
     implementation(projects.domain.news)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.earn)
 
     // FIXME [REDACTED_TASK_KEY]
     // Remove the "Buy" and "Sell" actions from the redux middleware.
