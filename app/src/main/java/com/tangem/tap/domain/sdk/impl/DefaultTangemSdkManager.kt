@@ -438,6 +438,7 @@ internal class DefaultTangemSdkManager(
                             ),
                         )
                         showAlert()
+                        break
                     } else {
                         delay(timeMillis = 400)
                     }
