@@ -49,6 +49,7 @@ internal object MarketsTokenDetailsPreview {
             onFirstVisible = {},
             onScroll = {},
         ),
+        onShareClick = {},
     )
 
     val contentState = MarketsTokenDetailsUM(
@@ -141,5 +142,6 @@ internal object MarketsTokenDetailsPreview {
             onFirstVisible = {},
             onScroll = {},
         ),
+        onShareClick = {},
     )
 }
