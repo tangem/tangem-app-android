@@ -40,7 +40,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
                     item = params.transaction,
                     isBalanceHidden = params.isBalanceHidden,
                     onExplorerClick = ::openExplorer,
-                    onDisputeClick = ::dispute,
+                    onDisputeClick = { dispute(customerId = params.customerId) },
                     onDismiss = ::dismiss,
                 ),
             ),
@@ -64,7 +64,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
         txHash?.let(urlOpener::openUrlExternalBrowser)
     }
 
-    private fun dispute() {
+    private fun dispute(customerId: String) {
         analytics.send(TangemPayAnalyticsEvents.SupportOnTransactionPopupClicked())
         modelScope.launch {
             val walletMetaInfo = getWalletMetaInfoUseCase.invoke(params.userWalletId).getOrNull() ?: return@launch
@@ -73,6 +73,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
                 FeedbackEmailType.Visa.DisputeV2(
                     item = params.transaction,
                     walletMetaInfo = walletMetaInfo,
+                    customerId = customerId,
                 ),
             )
         }
