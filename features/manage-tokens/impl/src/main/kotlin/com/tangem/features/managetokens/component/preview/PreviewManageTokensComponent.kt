@@ -169,6 +169,7 @@ internal class PreviewManageTokensComponent(
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
+            currencySymbol = "N$networkIndex",
             iconResId = R.drawable.ic_eth_16,
             isMainNetwork = networkIndex == 0,
             isSelected = false,

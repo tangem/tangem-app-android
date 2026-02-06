@@ -29,6 +29,7 @@ import kotlinx.collections.immutable.ImmutableList
  * @param txHistoryItems transactions
  * @param modifier       modifier
  */
+@Suppress("CanBeNonNullable")
 fun LazyListScope.txHistoryItems(
     state: TxHistoryState,
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,

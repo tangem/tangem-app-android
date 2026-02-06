@@ -30,7 +30,6 @@ internal class WalletLoadingStateFactory(
                 userWallet.createStateByWalletType(
                     multiCurrencyCreator = { createLoadingMultiCurrencyContent(userWallet) },
                     singleCurrencyCreator = { createLoadingSingleCurrencyContent(userWallet) },
-                    visaWalletCreator = { createLoadingVisaWalletContent(userWallet) },
                 )
             }
             is UserWallet.Hot -> {
@@ -92,22 +91,6 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun createLoadingVisaWalletContent(userWallet: UserWallet.Cold): WalletState.Visa.Content {
-        return WalletState.Visa.Content(
-            pullToRefreshConfig = createPullToRefreshConfig(),
-            walletCardState = userWallet.toLoadingWalletCardState(),
-            buttons = createVisaDimmedButtons(),
-            warnings = persistentListOf(),
-            bottomSheetConfig = null,
-            balancesAndLimitBlockState = BalancesAndLimitsBlockState.Loading,
-            txHistoryState = TxHistoryState.Content(
-                contentItems = MutableStateFlow(
-                    value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
-                ),
-            ),
-        )
-    }
-
     private fun createPullToRefreshConfig(): PullToRefreshConfig {
         return PullToRefreshConfig(
             onRefresh = { clickIntents.onRefreshSwipe(it.value) },
@@ -151,18 +134,6 @@ internal class WalletLoadingStateFactory(
                 dimContent = false,
                 onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
             ),
-        )
-    }
-
-    private fun createVisaDimmedButtons(): PersistentList<WalletManageButton> {
-        return persistentListOf(
-            WalletManageButton.Receive(
-                enabled = true,
-                dimContent = true,
-                onClick = {},
-                onLongClick = null,
-            ),
-            WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
         )
     }
 

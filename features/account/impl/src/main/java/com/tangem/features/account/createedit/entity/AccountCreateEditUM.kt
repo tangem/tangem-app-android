@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.AccountIconUM
 import com.tangem.common.ui.account.AccountNameUM
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import kotlinx.collections.immutable.ImmutableList
@@ -18,7 +18,7 @@ internal data class AccountCreateEditUM(
 
     data class Account(
         val name: AccountNameUM,
-        val portfolioIcon: CryptoPortfolioIconUM,
+        val portfolioIcon: AccountIconUM.CryptoPortfolio,
         val derivationInfo: DerivationInfo,
         val inputPlaceholder: TextReference,
         val onNameChange: (AccountNameUM) -> Unit,

@@ -2,6 +2,7 @@ package com.tangem.datasource.api.ethpool.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 /**
  * Response for GET /api/v1/staking/pool/{network}/vaults
@@ -15,7 +16,7 @@ data class P2PEthPoolVaultsResponse(
 )
 
 /**
- * Network identifier in P2P API
+ * Network identifier in P2PEthPool API
  */
 @JsonClass(generateAdapter = false)
 enum class P2PEthPoolNetworkDTO {
@@ -33,15 +34,15 @@ data class P2PEthPoolVaultDTO(
     @Json(name = "displayName")
     val displayName: String,
     @Json(name = "apy")
-    val apy: Double,
+    val apy: BigDecimal,
     @Json(name = "baseApy")
-    val baseApy: Double,
+    val baseApy: BigDecimal,
     @Json(name = "capacity")
-    val capacity: Double,
+    val capacity: BigDecimal,
     @Json(name = "totalAssets")
-    val totalAssets: Double,
+    val totalAssets: BigDecimal,
     @Json(name = "feePercent")
-    val feePercent: Double,
+    val feePercent: BigDecimal,
     @Json(name = "isPrivate")
     val isPrivate: Boolean,
     @Json(name = "isGenesis")

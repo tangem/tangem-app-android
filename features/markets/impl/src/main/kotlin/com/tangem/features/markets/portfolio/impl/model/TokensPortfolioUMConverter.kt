@@ -50,9 +50,6 @@ internal class TokensPortfolioUMConverter(
             buttonState = addButtonState,
             addToPortfolioBSConfig = bsConfig,
             onAddClick = onAddClick,
-            tokenReceiveBSConfig = (currentState() as? MyPortfolioUM.Tokens)
-                ?.tokenReceiveBSConfig
-                ?: TangemBottomSheetConfig.Empty,
         )
     }
 
@@ -93,10 +90,10 @@ internal class TokensPortfolioUMConverter(
 
     private fun toggleQuickActions(cryptoData: PortfolioData.CryptoCurrencyData) {
         updateTokens { tokenList ->
-            tokenList.map {
-                it.copy(
-                    isQuickActionsShown = if (it.matchWith(cryptoData)) {
-                        !it.isQuickActionsShown
+            tokenList.map { token ->
+                token.copy(
+                    isQuickActionsShown = if (token.matchWith(cryptoData)) {
+                        !token.isQuickActionsShown
                     } else {
                         false
                     },
