@@ -29,7 +29,6 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
@@ -69,7 +68,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
@@ -254,16 +252,14 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private suspend fun trackSignInEvent() {
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            val userWallets = userWalletsListRepository.userWalletsSync()
-            val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
-            trackingContextProxy.addContext(selectedWallet)
-            analyticsEventHandler.send(
-                event = Basic.SignedIn(
-                    signInType = Basic.SignedIn.SignInType.NoSecurity,
-                    walletsCount = userWallets.size,
-                ),
-            )
-        }
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
+        trackingContextProxy.addContext(selectedWallet)
+        analyticsEventHandler.send(
+            event = Basic.SignedIn(
+                signInType = Basic.SignedIn.SignInType.NoSecurity,
+                walletsCount = userWallets.size,
+            ),
+        )
     }
 }
