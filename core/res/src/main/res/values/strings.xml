@@ -469,7 +469,13 @@
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_filter_all_networks">All networks</string>
+  <string name="earn_filter_my_networks">My networks</string>
   <string name="earn_filter_all_types">All types</string>
+  <string name="earn_filter_networks">Networks</string>
+  <string name="earn_clear_filter">Clear filter</string>
+  <string name="earn_filter_by">Filter by</string>
+  <string name="earn_no_results">No results</string>
+  <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
   <string name="earn_mostly_used">Mostly used</string>
   <string name="earn_title">Earn</string>
   <string name="email_preface_wc_error">Hi support team, I\'ve encountered an error with code: %s</string>
