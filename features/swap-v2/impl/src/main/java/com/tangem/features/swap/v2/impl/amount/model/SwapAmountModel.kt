@@ -132,6 +132,7 @@ internal class SwapAmountModel @Inject constructor(
         subscribeOnAmountIgnoreReduceTriggerUpdates()
         subscribeOnReloadQuotesTriggerUpdates()
         subscribeOnBalanceHiddenUpdates()
+        subscribeOnAutoupdateEnabling()
     }
 
     fun onStart() {
@@ -479,6 +480,19 @@ internal class SwapAmountModel @Inject constructor(
     private fun subscribeOnReloadQuotesTriggerUpdates() {
         swapAmountUpdateListener.reloadQuotesTriggerFlow
             .onEach { startLoadingQuotesTask(isSilentReload = true) }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnAutoupdateEnabling() {
+        swapAmountUpdateListener.autoUpdateTriggerFlow
+            .distinctUntilChanged()
+            .onEach { isEnabled ->
+                if (isEnabled) {
+                    startLoadingQuotesTask(isSilentReload = true)
+                } else {
+                    quoteTaskScheduler.cancelTask()
+                }
+            }
             .launchIn(modelScope)
     }
 
