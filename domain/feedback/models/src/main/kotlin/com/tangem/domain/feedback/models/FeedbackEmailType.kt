@@ -18,6 +18,9 @@ sealed interface FeedbackEmailType {
     /** User rate the app as "can be better" */
     data class RateCanBeBetter(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
+    /** User has problem with backup */
+    data class BackupProblem(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
+
     /** User has problem with scanning */
     data object ScanningProblem : FeedbackEmailType {
         override val walletMetaInfo: WalletMetaInfo? = null
@@ -61,29 +64,50 @@ sealed interface FeedbackEmailType {
     }
 
     sealed class Visa : FeedbackEmailType {
+        abstract val customerId: String
 
-        data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class DirectUserRequest(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
-        data class Activation(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class Activation(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
         data class Dispute(
             val visaTxDetails: VisaTxDetails,
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
         ) : Visa()
 
-        data class FailedIssueCard(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class FailedIssueCard(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
 
         data class DisputeV2(
             val item: TangemPayTxHistoryItem,
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
         ) : Visa()
 
         data class Withdrawal(
             override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
             val providerName: String,
             val txId: String,
         ) : Visa()
 
-        data class FeatureIsBeta(override val walletMetaInfo: WalletMetaInfo) : Visa()
+        data class FeatureIsBeta(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
+
+        data class KycRejected(
+            override val walletMetaInfo: WalletMetaInfo,
+            override val customerId: String,
+        ) : Visa()
     }
 }
