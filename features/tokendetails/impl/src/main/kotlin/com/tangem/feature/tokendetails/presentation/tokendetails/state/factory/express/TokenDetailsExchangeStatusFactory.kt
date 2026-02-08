@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swap.SwapTransactionStatusStore
@@ -20,6 +19,7 @@ import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
 import com.tangem.utils.Provider
@@ -32,9 +32,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
-internal class ExchangeStatusFactory @AssistedInject constructor(
+internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
@@ -46,7 +47,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted private val currentStateProvider: Provider<ExpressTransactionsBlockState>,
+    @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
 ) {
@@ -70,7 +71,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                     ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) }
                     ?.toSet()
                     ?.getQuotesOrEmpty()
-                    ?: emptySet()
+                    .orEmpty()
 
                 getExchangeStatusState(
                     savedTransactions = savedTransactions,
@@ -81,7 +82,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
     suspend fun removeTransactionOnBottomSheetClosed(isForceDispose: Boolean = false) {
         val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetSlot?.config?.content as? ExpressStatusBottomSheetConfig ?: return
+        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExchangeUM ?: return
 
         val shouldDispose = selectedTx.activeStatus?.isAutoDisposable == true || isForceDispose
@@ -249,9 +250,13 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(): Set<QuoteStatus> {
         val rawIds = mapNotNull { it.rawCurrencyId }.toSet()
 
-        return runCatching { quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds) }
-            .getOrNull()
-            .orEmpty()
+        return try {
+            quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = rawIds).orEmpty()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (ignore: Exception) {
+            emptySet()
+        }
     }
 
     @AssistedFactory
@@ -259,9 +264,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         fun create(
             clickIntents: ExpressTransactionsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
-            currentStateProvider: Provider<ExpressTransactionsBlockState>,
+            currentStateProvider: Provider<TokenDetailsState>,
             userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
-        ): ExchangeStatusFactory
+        ): TokenDetailsExchangeStatusFactory
     }
 }
