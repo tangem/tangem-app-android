@@ -27,6 +27,7 @@ internal class EmptyExpressTransactionsComponent(
     private fun getInitialState(): ExpressTransactionsBlockState {
         return ExpressTransactionsBlockState(
             transactions = persistentListOf(),
+            transactionsToDisplay = persistentListOf(),
             bottomSheetSlot = null,
             dialogSlot = null,
         )
