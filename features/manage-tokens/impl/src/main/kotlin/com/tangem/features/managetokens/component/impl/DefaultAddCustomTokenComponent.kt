@@ -239,7 +239,6 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             val event = CustomTokenAnalyticsEvent.AddTokenToAnotherAccount(
                 currencySymbol = currency.symbol,
                 derivationPath = currency.network.derivationPath.value.orEmpty(),
-                source = params.source,
             )
             analyticsEventHandler.send(event)
         }
