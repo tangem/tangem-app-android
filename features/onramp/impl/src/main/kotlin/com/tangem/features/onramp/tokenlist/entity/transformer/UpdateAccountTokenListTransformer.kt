@@ -40,12 +40,15 @@ internal class UpdateAccountTokenListTransformer(
         .createUnavailableItemConverterV2(appCurrency = appCurrency, unavailableErrorText = unavailableErrorText)
 
     override fun transform(prevState: TokenListUM): TokenListUM {
+        val totalTokensCount = accountList.sumOf { it.currencyList.size }
+
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
             tokensListData = if (isAccountsMode) {
                 TokenListUMData.AccountList(
                     tokensList = accountListItemConverter.convertList(accountList).toPersistentList(),
+                    totalTokensCount = totalTokensCount,
                 )
             } else {
                 val tokensList = accountList.flatMap { (_, currencyList) ->
@@ -66,6 +69,7 @@ internal class UpdateAccountTokenListTransformer(
                                 text = resourceReference(R.string.exchange_tokens_available_tokens_header),
                             ),
                         ) + tokensList,
+                        totalTokensCount = totalTokensCount,
                     )
                 } else {
                     TokenListUMData.EmptyList
