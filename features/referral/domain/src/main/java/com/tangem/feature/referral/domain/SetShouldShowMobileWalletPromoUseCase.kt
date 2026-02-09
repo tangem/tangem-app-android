@@ -9,10 +9,10 @@ class SetShouldShowMobileWalletPromoUseCase @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
-    suspend operator fun invoke(): Either<Throwable, Unit> = Either.catch {
+    suspend operator fun invoke(shouldShowPromo: Boolean): Either<Throwable, Unit> = Either.catch {
         val wallets = userWalletsListRepository.userWallets.value
         if (wallets.isNullOrEmpty()) {
-            mobileWalletPromoRepository.setShouldShowMobileWalletPromo(true)
+            mobileWalletPromoRepository.setShouldShowMobileWalletPromo(shouldShowPromo)
         }
     }
 }
