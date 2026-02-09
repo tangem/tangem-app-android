@@ -19,6 +19,12 @@ internal class SetLoadingAccountTokenListTransformer(
     private val accountListItemConverter = LoadingAccountTokenItemConverter(appCurrency)
 
     override fun transform(prevState: TokenListUM): TokenListUM {
+        val totalTokensCount = accountList.sumOf { account ->
+            when (account) {
+                is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().size
+            }
+        }
+
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
@@ -27,6 +33,7 @@ internal class SetLoadingAccountTokenListTransformer(
                     tokensList = accountListItemConverter.convertList(
                         accountList.filterIsInstance<AccountStatus.CryptoPortfolio>(),
                     ).toPersistentList(),
+                    totalTokensCount = totalTokensCount,
                 )
             } else {
                 TokenListUMData.TokenList(
@@ -37,6 +44,7 @@ internal class SetLoadingAccountTokenListTransformer(
                             )
                         }
                     }.toPersistentList(),
+                    totalTokensCount = totalTokensCount,
                 )
             },
             warning = null,

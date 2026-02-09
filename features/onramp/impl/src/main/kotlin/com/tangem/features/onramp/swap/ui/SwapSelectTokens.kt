@@ -8,23 +8,32 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
+import com.tangem.features.onramp.swap.availablepairs.market.state.SwapMarketState
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+
+private const val LOAD_MORE_BUFFER = 25
 
 /**
  * Swap select tokens
@@ -49,8 +58,8 @@ internal fun SwapSelectTokens(
     BackHandler(onBack = state.onBackClick)
 
     val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
-
     val lazyListState = rememberLazyListState()
+
     LazyColumn(
         modifier = modifier
             .nestedScroll(nestedScrollConnection)
@@ -60,62 +69,146 @@ internal fun SwapSelectTokens(
         state = lazyListState,
         contentPadding = PaddingValues(bottom = 8.dp),
     ) {
-        stickyHeader(key = "header") {
-            AppBarWithBackButton(
-                onBackClick = state.onBackClick,
-                text = stringResourceSafe(id = R.string.common_swap),
-                iconRes = R.drawable.ic_close_24,
-                containerColor = TangemTheme.colors.background.secondary,
-            )
-        }
+        swapSelectTokensContent(
+            state = state,
+            selectFromTokenListComponent = selectFromTokenListComponent,
+            selectFromTokenListState = selectFromTokenListState,
+            selectToTokenListComponent = selectToTokenListComponent,
+            selectToTokenListState = selectToTokenListState,
+        )
+    }
 
-        item(key = "exchange_from", contentType = "exchange_from") {
-            ExchangeCard(
-                state = state.exchangeFrom,
-                isBalanceHidden = state.isBalanceHidden,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 8.dp, bottom = 12.dp)
-                    .animateItem(),
-            )
-        }
+    ScrollToTopEffect(state = state, lazyListState = lazyListState)
 
-        if (state.exchangeFrom is ExchangeCardUM.Empty) {
-            with(selectFromTokenListComponent) {
-                content(
-                    uiState = selectFromTokenListState,
-                    modifier = Modifier,
-                )
-            }
-        }
+    MarketsHandlers(
+        state = state,
+        selectToTokenListState = selectToTokenListState,
+        lazyListState = lazyListState,
+    )
+}
 
-        if (state.exchangeFrom is ExchangeCardUM.Filled) {
-            item(key = "exchange_to", contentType = "exchange_to") {
-                if (selectToTokenListState.warning != NotificationUM.Warning.SwapNoAvailablePair) {
-                    ExchangeCard(
-                        state = state.exchangeTo,
-                        isBalanceHidden = state.isBalanceHidden,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 12.dp)
-                            .animateItem(),
-                    )
-                }
-            }
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.swapSelectTokensContent(
+    state: SwapSelectTokensUM,
+    selectFromTokenListComponent: OnrampTokenListComponent,
+    selectFromTokenListState: TokenListUM,
+    selectToTokenListComponent: AvailableSwapPairsComponent,
+    selectToTokenListState: TokenListUM,
+) {
+    stickyHeader(key = "header") {
+        AppBarWithBackButton(
+            onBackClick = state.onBackClick,
+            text = stringResourceSafe(id = R.string.common_swap),
+            iconRes = R.drawable.ic_close_24,
+            containerColor = TangemTheme.colors.background.secondary,
+        )
+    }
 
-            if (state.exchangeTo is ExchangeCardUM.Empty) {
-                with(selectToTokenListComponent) {
-                    content(
-                        uiState = selectToTokenListState,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
-            }
+    item(key = "exchange_from", contentType = "exchange_from") {
+        ExchangeCard(
+            state = state.exchangeFrom,
+            isBalanceHidden = state.isBalanceHidden,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 12.dp)
+                .animateItem(),
+        )
+    }
+
+    if (state.exchangeFrom is ExchangeCardUM.Empty) {
+        with(selectFromTokenListComponent) {
+            content(uiState = selectFromTokenListState, modifier = Modifier)
         }
     }
 
-    // scroll to top after "from" token selection
+    if (state.exchangeFrom is ExchangeCardUM.Filled) {
+        exchangeToSection(
+            state = state,
+            selectToTokenListComponent = selectToTokenListComponent,
+            selectToTokenListState = selectToTokenListState,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+private fun LazyListScope.exchangeToSection(
+    state: SwapSelectTokensUM,
+    selectToTokenListComponent: AvailableSwapPairsComponent,
+    selectToTokenListState: TokenListUM,
+) {
+    item(key = "exchange_to", contentType = "exchange_to") {
+        if (selectToTokenListState.warning != NotificationUM.Warning.SwapNoAvailablePair) {
+            ExchangeCard(
+                state = state.exchangeTo,
+                isBalanceHidden = state.isBalanceHidden,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp)
+                    .animateItem(),
+            )
+        }
+    }
+
+    if (state.exchangeTo is ExchangeCardUM.Empty) {
+        with(selectToTokenListComponent) {
+            content(uiState = selectToTokenListState, modifier = Modifier.padding(horizontal = 16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ScrollToTopEffect(state: SwapSelectTokensUM, lazyListState: LazyListState) {
     LaunchedEffect(state.exchangeFrom !is ExchangeCardUM.Empty) {
         lazyListState.scrollToItem(index = 0)
+    }
+}
+
+@Composable
+private fun MarketsHandlers(
+    state: SwapSelectTokensUM,
+    selectToTokenListState: TokenListUM,
+    lazyListState: LazyListState,
+) {
+    // Markets for "to" token list
+    if (state.exchangeFrom is ExchangeCardUM.Filled && state.exchangeTo is ExchangeCardUM.Empty) {
+        MarketsPaginationHandler(
+            marketsState = selectToTokenListState.marketsState,
+            lazyListState = lazyListState,
+        )
+    }
+}
+
+@Composable
+private fun MarketsPaginationHandler(marketsState: SwapMarketState?, lazyListState: LazyListState) {
+    (marketsState as? SwapMarketState.Content)?.let { content ->
+        VisibleItemsTracker(lazyListState = lazyListState, marketState = content)
+
+        InfiniteListHandler(
+            listState = lazyListState,
+            buffer = LOAD_MORE_BUFFER,
+            triggerLoadMoreCheckOnItemsCountChange = true,
+            onLoadMore = remember(content) {
+                {
+                    content.loadMore()
+                    true
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapMarketState.Content) {
+    val visibleItems by remember {
+        derivedStateOf {
+            lazyListState.layoutInfo.visibleItemsInfo
+                .mapNotNull { itemInfo ->
+                    marketState.items.find { it.getComposeKey() == itemInfo.key }?.id
+                }
+        }
+    }
+
+    LaunchedEffect(visibleItems) {
+        marketState.visibleIdsChanged(visibleItems)
     }
 }
