@@ -46,7 +46,7 @@ internal interface WalletContentClickIntents {
 
     fun onOrganizeTokensClick()
 
-    fun onDismissMarketsOnboarding()
+    fun onDismissMarketsTooltip()
 
     fun onTokenItemClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
 
@@ -112,7 +112,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
-    override fun onDismissMarketsOnboarding() {
+    override fun onDismissMarketsTooltip() {
         stateHolder.update { it.copy(showMarketsOnboarding = false) }
         modelScope.launch {
             shouldShowMarketsTooltipUseCase(isShown = true)
