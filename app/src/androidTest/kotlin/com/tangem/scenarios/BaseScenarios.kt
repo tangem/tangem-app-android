@@ -65,8 +65,8 @@ fun BaseTestCase.openMainScreen(
     step("Assert 'Main' screen is displayed") {
         onMainScreen { screenContainer.assertIsDisplayed() }
     }
-    step("Click on 'Market Tooltip' screen") {
-        onMarketsTooltipScreen { contentContainer.clickWithAssertion() }
+    step("Dismiss Market Tooltip by clicking close button") {
+        onMarketsTooltipScreen { closeButton.clickWithAssertion() }
     }
 }
 
