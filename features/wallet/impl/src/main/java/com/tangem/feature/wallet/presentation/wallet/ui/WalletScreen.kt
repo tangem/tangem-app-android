@@ -409,19 +409,22 @@ private inline fun BaseScaffoldWithMarkets(
                             visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
                                 state.showMarketsOnboarding,
                             onDismissRequest = {
-                                coroutineScope.launch { bottomSheetState.partialExpand() }
-                                state.onDismissMarketsOnboarding()
+                                if (!state.showMarketsOnboarding) {
+                                    coroutineScope.launch { bottomSheetState.partialExpand() }
+                                }
                             },
                         )
 
                         MarketsTooltip(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = 24.dp)
-                                .fillMaxWidth(fraction = 0.7f),
+                                .padding(bottom = 8.dp)
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth(),
                             isVisible = state.showMarketsOnboarding,
                             availableHeight = maxHeight,
                             bottomSheetState = bottomSheetState,
+                            onCloseClick = state.onDismissMarketsTooltip,
                         )
                     }
                 },
@@ -443,7 +446,7 @@ private inline fun BaseScaffoldWithMarkets(
 
         LaunchedEffect(state.showMarketsOnboarding, bottomSheetState.targetValue) {
             if (state.showMarketsOnboarding && bottomSheetState.targetValue == TangemSheetValue.Expanded) {
-                state.onDismissMarketsOnboarding()
+                state.onDismissMarketsTooltip()
             }
         }
     }
@@ -454,6 +457,7 @@ private fun MarketsTooltip(
     availableHeight: Dp,
     bottomSheetState: TangemSheetState,
     isVisible: Boolean,
+    onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -494,7 +498,7 @@ private fun MarketsTooltip(
         ) + fadeIn(),
         exit = fadeOut(),
     ) {
-        MarketsTooltipContent()
+        MarketsTooltipContent(onCloseClick = onCloseClick)
     }
 }
 
@@ -527,12 +531,12 @@ internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MarketsTooltipContent(modifier: Modifier = Modifier) {
-    val backgroundColor = TangemTheme.colors.background.action
-    val cornerRadius = CornerRadius(x = 14.dp.toPx())
+private fun MarketsTooltipContent(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
+    val backgroundColor = TangemTheme.colors.background.primary
+    val cornerRadius = CornerRadius(x = 16.dp.toPx())
     val tipDpSize = DpSize(width = 20.dp, height = 8.dp)
 
-    Column(
+    Row(
         modifier = modifier
             .padding(bottom = tipDpSize.height)
             .drawBehind {
@@ -555,18 +559,42 @@ private fun MarketsTooltipContent(modifier: Modifier = Modifier) {
                 drawPath(color = backgroundColor, path = tipPath)
             }
             .padding(all = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(space = 4.dp),
-        horizontalAlignment = Alignment.Start,
+        horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
+        verticalAlignment = Alignment.Top,
     ) {
-        Text(
-            text = stringResourceSafe(id = R.string.markets_tooltip_title),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.primary1,
+        Icon(
+            modifier = Modifier.size(size = 18.dp),
+            painter = painterResource(id = R.drawable.ic_plus_18),
+            tint = Color.Unspecified,
+            contentDescription = null,
         )
-        Text(
-            text = stringResourceSafe(id = R.string.markets_tooltip_message),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.secondary,
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(space = 2.dp),
+        ) {
+            Text(
+                text = stringResourceSafe(id = R.string.markets_tooltip_v2_title),
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            Text(
+                text = stringResourceSafe(id = R.string.markets_tooltip_message),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        }
+        Icon(
+            modifier = Modifier
+                .size(size = 16.dp)
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    onClick = onCloseClick,
+                )
+                .testTag(MarketTooltipTestTags.CLOSE_BUTTON),
+            painter = painterResource(id = R.drawable.ic_close_24),
+            tint = TangemTheme.colors.icon.informative,
+            contentDescription = null,
         )
     }
 }
