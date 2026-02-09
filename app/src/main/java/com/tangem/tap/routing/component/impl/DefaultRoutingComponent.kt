@@ -141,9 +141,15 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private fun initializeInitialNavigation() {
         if (initialStack.isNullOrEmpty()) {
             componentScope.launch {
-                rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
                 val initialRoute = resolveInitialRoute()
-                router.replaceAll(initialRoute)
+                if (rootDetectedWarningComponent.shouldShowWarning()) {
+                    launch(dispatchers.main) {
+                        rootDetectedWarningComponent.tryToShowWarningAndWaitContinuation()
+                        router.replaceAll(initialRoute)
+                    }
+                } else {
+                    router.replaceAll(initialRoute)
+                }
             }
         }
     }
