@@ -26,7 +26,7 @@ class AppsFlyerReferralParamsHandlerTest {
 
     private val appsFlyerStore: AppsFlyerStore = mockk(relaxUnitFun = true)
     private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase = mockk {
-        coEvery { this@mockk.invoke() } returns Unit.right()
+        coEvery { this@mockk.invoke(true) } returns Unit.right()
     }
     private val handler = AppsFlyerReferralParamsHandler(
         appsFlyerStore = appsFlyerStore,
