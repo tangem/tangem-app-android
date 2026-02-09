@@ -26,6 +26,8 @@ internal class SetNoAvailablePairsTransformerV2(
         .createUnavailableItemConverterV2(appCurrency = appCurrency, unavailableErrorText = unavailableErrorText)
 
     override fun transform(prevState: TokenListUM): TokenListUM {
+        val totalTokensCount = accountList.values.sumOf { it.size }
+
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
@@ -45,6 +47,7 @@ internal class SetNoAvailablePairsTransformerV2(
                                 .toPersistentList(),
                         )
                     }.toPersistentList(),
+                    totalTokensCount = totalTokensCount,
                 )
             } else {
                 TokenListUMData.TokenList(
@@ -52,6 +55,7 @@ internal class SetNoAvailablePairsTransformerV2(
                         unavailableConverter.convertList(cryptoCurrencies)
                             .map(TokensListItemUM::Token)
                     }.toPersistentList(),
+                    totalTokensCount = totalTokensCount,
                 )
             },
             isBalanceHidden = isBalanceHidden,

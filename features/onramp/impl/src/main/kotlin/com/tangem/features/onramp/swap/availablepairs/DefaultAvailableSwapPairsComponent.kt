@@ -7,7 +7,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.onramp.swap.availablepairs.model.AvailableSwapPairsModel
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
-import com.tangem.features.onramp.tokenlist.ui.onrampTokenList
+import com.tangem.features.onramp.tokenlist.ui.onrampSwapTokenList
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -25,7 +25,7 @@ internal class DefaultAvailableSwapPairsComponent @AssistedInject constructor(
         get() = model.state
 
     override fun LazyListScope.content(uiState: TokenListUM, modifier: Modifier) {
-        onrampTokenList(state = uiState)
+        onrampSwapTokenList(state = uiState)
     }
 
     @AssistedFactory
