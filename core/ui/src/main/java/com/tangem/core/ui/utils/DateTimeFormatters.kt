@@ -103,7 +103,7 @@ object DateTimeFormatters {
      */
     val localFullDate: DateTimeFormatter by lazy {
         val locale = Locale.getDefault()
-        val datePattern = DateFormat.getBestDateTimePattern(locale, "dd MMMM")
+        val datePattern = DateFormat.getBestDateTimePattern(locale, "d MMMM")
         val timeSkeleton = if (is12HourFormat) "h:mm a" else "HH:mm"
         val timePattern = DateFormat.getBestDateTimePattern(locale, timeSkeleton)
         val fullPattern = "$datePattern, $timePattern"
