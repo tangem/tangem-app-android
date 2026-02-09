@@ -23,6 +23,7 @@ internal class SetNothingToFoundStateTransformerV2(
                         text = emptySearchMessageReference,
                     ),
                 ),
+                totalTokensCount = 0,
             ),
             isBalanceHidden = isBalanceHidden,
         )
