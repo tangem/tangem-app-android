@@ -8,18 +8,28 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.popToFirst
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.data.common.currency.getCoinId
+import com.tangem.data.common.currency.getTokenId
+import com.tangem.data.common.currency.isCustomCoin
+import com.tangem.data.common.currency.isCustomToken
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetHotCryptoUseCase
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
@@ -70,6 +80,7 @@ internal class HotCryptoModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     val portfolioSelectorController: PortfolioSelectorController,
+    private val networkFactory: NetworkFactory,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : Model(), OnrampAddTokenComponent.Callbacks by callbackDelegate {
 
@@ -172,8 +183,13 @@ internal class HotCryptoModel @Inject constructor(
 
             if (isSingleAccount) {
                 val account = hotCryptoPortfolioData.wallet.accounts.first().account
-                val tokenToAdd = AddHotCryptoData(
+                val cryptoCurrency = updateCryptoCurrency(
                     cryptoCurrency = currency.cryptoCurrency,
+                    userWallet = userWallet,
+                    account = account,
+                )
+                val tokenToAdd = AddHotCryptoData(
+                    cryptoCurrency = requireNotNull(cryptoCurrency),
                     userWallet = userWallet,
                     account = account,
                     isMorePortfolioAvailable = false,
@@ -188,8 +204,13 @@ internal class HotCryptoModel @Inject constructor(
                     .selectedAccountWithData(requireNotNull(portfolioFetcher))
                     .filterNotNull()
                     .map { (_, selectedAccount) ->
-                        AddHotCryptoData(
+                        val cryptoCurrency = updateCryptoCurrency(
                             cryptoCurrency = currency.cryptoCurrency,
+                            userWallet = userWallet,
+                            account = selectedAccount,
+                        )
+                        AddHotCryptoData(
+                            cryptoCurrency = requireNotNull(cryptoCurrency),
                             userWallet = userWallet,
                             account = selectedAccount,
                             isMorePortfolioAvailable = true,
@@ -249,6 +270,47 @@ internal class HotCryptoModel @Inject constructor(
                 ?.none { it.currency.id.rawCurrencyId == hotCrypto.cryptoCurrency.id.rawCurrencyId } == true
 
             return@isEnabled isNotAddedHotCrypto
+        }
+    }
+
+    // todo account move to common module
+    private fun updateCryptoCurrency(
+        cryptoCurrency: CryptoCurrency,
+        userWallet: UserWallet,
+        account: AccountStatus,
+    ): CryptoCurrency? {
+        val derivationIndex = account.account.derivationIndex ?: return null
+        val blockchain = cryptoCurrency.network.toBlockchain()
+
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = null,
+            accountIndex = derivationIndex,
+            userWallet = userWallet,
+        ) ?: return null
+
+        return when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> {
+                val id = getCoinId(network, network.toBlockchain().toCoinId())
+                cryptoCurrency.copy(
+                    id = id,
+                    network = network,
+                    isCustom = isCustomCoin(network),
+                )
+            }
+
+            is CryptoCurrency.Token -> {
+                val id = getTokenId(
+                    network = network,
+                    rawTokenId = cryptoCurrency.id.rawCurrencyId,
+                    contractAddress = cryptoCurrency.contractAddress,
+                )
+                cryptoCurrency.copy(
+                    id = id,
+                    network = network,
+                    isCustom = isCustomToken(id, network),
+                )
+            }
         }
     }
 }
