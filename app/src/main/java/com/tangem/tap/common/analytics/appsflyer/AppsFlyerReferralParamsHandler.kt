@@ -71,7 +71,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
     private fun storeConversionData(refcode: String, campaign: String?) {
         coroutineScope.launch {
             mutex.withLock {
-                setShouldShowMobileWalletPromoUseCase()
+                setShouldShowMobileWalletPromoUseCase(true)
                     .onLeft { Timber.e(it) }
                 appsFlyerStore.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
