@@ -146,6 +146,17 @@ internal class WalletModel @Inject constructor(
 
     fun onResume() {
         suggestToEnableBiometrics()
+        suggestToOpenMarketsOnResume()
+    }
+
+    private fun suggestToOpenMarketsOnResume() {
+        modelScope.launch {
+            if (shouldShowMarketsTooltipUseCase()) {
+                stateHolder.update {
+                    it.copy(showMarketsOnboarding = true)
+                }
+            }
+        }
     }
 
     private fun updateMarketToggle() {
@@ -203,8 +214,6 @@ internal class WalletModel @Inject constructor(
                     it.copy(showMarketsOnboarding = true)
                 }
             }
-
-            shouldShowMarketsTooltipUseCase(isShown = true)
         }
     }
 
