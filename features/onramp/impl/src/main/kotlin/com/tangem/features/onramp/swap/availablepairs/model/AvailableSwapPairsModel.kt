@@ -18,6 +18,7 @@ import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -30,10 +31,13 @@ import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetErrorWarningTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetLoadingTokenItemsTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetNoAvailablePairsTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetNoAvailablePairsTransformerV2
+import com.tangem.features.onramp.swap.availablepairs.market.SwapMarketsListBatchFlowManager
+import com.tangem.features.onramp.swap.availablepairs.market.state.SwapMarketState
 import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
 import com.tangem.features.onramp.swap.entity.AccountCurrencyUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
@@ -43,6 +47,7 @@ import com.tangem.features.onramp.tokenlist.entity.transformer.*
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.*
@@ -64,6 +69,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
@@ -76,6 +83,22 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val accountListFlow = getAccountListUseCaseFlow()
     private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, AvailablePairsState>>(emptyMap())
 
+    private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = getSelectedAppCurrencyUseCase.invokeOrDefault()
+        .stateIn(scope = modelScope, started = SharingStarted.Eagerly, initialValue = AppCurrency.Default)
+    private val searchQueryStateForMarkets = MutableStateFlow("")
+    private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+
+    private val searchMarketsListManager by lazy {
+        SwapMarketsListBatchFlowManager(
+            getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
+            currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
+            currentSearchText = Provider { searchQueryStateForMarkets.value },
+            modelScope = modelScope,
+            dispatchers = dispatchers,
+        )
+    }
+
     init {
         if (accountsFeatureToggles.isFeatureEnabled) {
             subscribeOnUpdateStateV2()
@@ -85,6 +108,11 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
         initializeSearchBarCallbacks()
         subscribeOnAvailablePairsUpdates()
+
+        if (swapFeatureToggles.isMarketListFeatureEnabled) {
+            subscribeOnMarketsUpdates()
+            subscribeOnVisibleMarketItems()
+        }
     }
 
     private fun getTokenListUseCaseFlow(): SharedFlow<List<CryptoCurrencyStatus>> {
@@ -421,6 +449,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
             tokenListUMController.update(transformer = UpdateSearchQueryTransformer(newQuery))
 
             searchManager.update(newQuery)
+
+            searchQueryStateForMarkets.value = newQuery
         }
     }
 
@@ -481,5 +511,60 @@ internal class AvailableSwapPairsModel @Inject constructor(
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
             network = currency.network.backendId,
         )
+    }
+
+    @Suppress("LongMethod")
+    private fun subscribeOnMarketsUpdates() {
+        combine(
+            flow = searchQueryStateForMarkets
+                .onEach { searchQuery ->
+                    if (searchQuery.isNotEmpty()) {
+                        searchMarketsListManager.reload(searchQuery)
+                    }
+                },
+            flow2 = searchMarketsListManager.uiItems,
+            flow3 = searchMarketsListManager.isInInitialLoadingErrorState,
+            flow4 = searchMarketsListManager.isSearchNotFoundState,
+            flow5 = searchMarketsListManager.totalCount,
+        ) { searchQuery, uiItems, isError, isSearchNotFound, total ->
+            when {
+                searchQuery.isEmpty() -> {
+                    visibleMarketItemIds.value = emptyList()
+                    null
+                }
+                isError -> SwapMarketState.LoadingError(
+                    onRetryClicked = { searchMarketsListManager.reload(searchQuery) },
+                )
+                isSearchNotFound -> SwapMarketState.SearchNothingFound
+                uiItems.isEmpty() -> SwapMarketState.Loading
+                else -> SwapMarketState.Content(
+                    items = uiItems,
+                    loadMore = { searchMarketsListManager.loadMore() },
+                    onItemClick = {},
+                    visibleIdsChanged = { visibleMarketItemIds.value = it },
+                    total = total ?: uiItems.size,
+                )
+            }
+        }
+            .distinctUntilChanged()
+            .onEach { marketsState ->
+                tokenListUMController.update { it.copy(marketsState = marketsState) }
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnVisibleMarketItems() {
+        modelScope.launch {
+            visibleMarketItemIds.mapNotNull { rawIds ->
+                if (rawIds.isNotEmpty()) {
+                    searchMarketsListManager.getBatchKeysByItemIds(rawIds)
+                } else {
+                    null
+                }
+            }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
+                searchMarketsListManager.loadCharts(visibleBatchKeys)
+            }
+        }
     }
 }
