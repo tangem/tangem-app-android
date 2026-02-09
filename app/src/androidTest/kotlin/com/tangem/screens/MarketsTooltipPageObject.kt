@@ -13,6 +13,10 @@ class MarketsTooltipPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val contentContainer: KNode = child {
         hasTestTag(MarketTooltipTestTags.CONTAINER)
     }
+
+    val closeButton: KNode = child {
+        hasTestTag(MarketTooltipTestTags.CLOSE_BUTTON)
+    }
 }
 
 internal fun BaseTestCase.onMarketsTooltipScreen(function: MarketsTooltipPageObject.() -> Unit) =
