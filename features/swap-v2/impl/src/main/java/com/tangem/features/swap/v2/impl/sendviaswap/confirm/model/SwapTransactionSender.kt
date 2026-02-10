@@ -104,6 +104,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             fromAmount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
+            toExtraId = confirmData.enteredMemo,
             expressProvider = provider,
             rateType = rateType,
             expressOperationType = expressOperationType,
