@@ -21,12 +21,12 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.ds.badge.TangemBadge
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
-internal fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifier) {
+fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier = Modifier) {
     when (titleUM) {
         is TangemTokenRowUM.TitleUM.Content -> ContentTitle(titleUM = titleUM, modifier = modifier)
         TangemTokenRowUM.TitleUM.Loading -> TextShimmer(
@@ -42,7 +42,7 @@ internal fun TokenRowTitle(titleUM: TangemTokenRowUM.TitleUM, modifier: Modifier
 private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens2.x4),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens2.x1),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         /*
@@ -50,7 +50,7 @@ private fun ContentTitle(titleUM: TangemTokenRowUM.TitleUM.Content, modifier: Mo
          * So we need to use [weight] to avoid displacement.
          */
         Text(
-            text = titleUM.text.resolveReference(),
+            text = titleUM.text.resolveAnnotatedReference(),
             modifier = Modifier.weight(weight = 1f, fill = false),
             color = if (titleUM.isAvailable) {
                 TangemTheme.colors2.text.neutral.primary
