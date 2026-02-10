@@ -10,7 +10,9 @@ import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openSwapScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -218,7 +220,6 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapSelectNetworkFeeBottomSheet { title.assertIsDisplayed() }
             }
             step("Assert 'Market' item is displayed") {
-                printSemanticTree(rootIndex = 1, useUnmergedTree = true)
                 onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.assertIsDisplayed() }
             }
             step("Assert 'Fast' item is displayed") {
@@ -283,10 +284,138 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Assert token symbol: '$swapTokenSymbol' is displayed") {
-                onSwapTokenScreen { tokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
             }
             step("Assert token symbol: '$receiveTokenSymbol' is displayed") {
-                onSwapTokenScreen { tokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("575")
+    @DisplayName("Swap: check UI")
+    @Test
+    fun checkSwapUiTest() {
+        val swapTokenSymbol = "POL"
+        val receiveTokenSymbol = "ETH"
+        val newReceiveToken = "POL (ex-MATIC)"
+        val tokenTitle = "Polygon"
+        val inputAmount = "1"
+
+        setupHooks().run {
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'Close' button is displayed") {
+                onSwapTokenScreen { closeButton.assertIsDisplayed() }
+            }
+            step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
+                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
+                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+            }
+            step("Click on 'Select token' icon") {
+                onSwapTokenScreen { changeTokenIcon.performClick() }
+            }
+            step("Select new receive token: $newReceiveToken") {
+                onSwapChooseTokenScreen { tokenWithTitle(newReceiveToken).performClick() }
+            }
+            step("Assert new receive token symbol: '$swapTokenSymbol' is displayed") {
+                onSwapTokenScreen { receiveTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert input amount = '$inputAmount'") {
+                onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
+            }
+            step("Press 'Delete' button on keyboard") {
+                device.uiDevice.pressDelete()
+                waitForIdle()
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Assert 'You receive' block is displayed") {
+                onSwapTokenScreen { youReceiveBlock }
+            }
+            step("Assert send token fiat amount is displayed") {
+                onSwapTokenScreen { swapFiatAmount.assertIsDisplayed() }
+            }
+            step("Assert receive token fiat amount is displayed") {
+                onSwapTokenScreen { receiveFiatAmount.assertIsDisplayed() }
+            }
+            step("Assert 'Swap tokens on screen' button is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        swapTokensOnscreenButton.assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert 'Swap' button is disabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("5162")
+    @DisplayName("Swap: check swap tokens switch")
+    @Test
+    fun checkSwapTokensSwitchTest() {
+        val swapTokenSymbol = "POL"
+        val receiveTokenSymbol = "ETH"
+        val tokenTitle = "Polygon"
+
+        setupHooks().run {
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert swap token symbol: '$swapTokenSymbol' is displayed") {
+                onSwapTokenScreen { swapTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert receive token symbol: '$receiveTokenSymbol' is displayed") {
+                onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+            }
+            step("Click on 'Swap tokens on screen' button") {
+                onSwapTokenScreen { swapTokensOnscreenButton.performClick() }
+                waitForIdle()
+            }
+            step("Assert new swap token symbol: '$receiveTokenSymbol' is displayed") {
+                onSwapTokenScreen { swapTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
+            }
+            step("Assert new receive token symbol: '$swapTokenSymbol' is displayed") {
+                onSwapTokenScreen { receiveTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
             }
         }
     }
