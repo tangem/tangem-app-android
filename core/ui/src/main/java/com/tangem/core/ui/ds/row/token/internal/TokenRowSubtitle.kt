@@ -65,9 +65,9 @@ private fun SubtitleContent(subtitleUM: TangemTokenRowUM.SubtitleUM.Content, mod
             ),
         )
 
-        when (subtitleUM.priceChangeUM) {
+        when (val priceChangeUM = subtitleUM.priceChangeUM) {
             is PriceChangeState.Content -> TokenRowPriceChangeContent(
-                priceChangeState = subtitleUM.priceChangeUM,
+                priceChangeState = priceChangeUM,
                 isFlickering = subtitleUM.isFlickering,
                 isAvailable = subtitleUM.isAvailable,
             )
