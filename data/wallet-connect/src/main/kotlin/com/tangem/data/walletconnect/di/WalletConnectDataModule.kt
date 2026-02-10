@@ -19,12 +19,12 @@ import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
@@ -51,10 +51,9 @@ internal object WalletConnectDataModule {
     @Provides
     @Singleton
     fun providesWalletConnectRepository(
-        userWalletsStore: UserWalletsStore,
-        dispatchers: CoroutineDispatcherProvider,
+        userWalletsListRepository: UserWalletsListRepository,
     ): WalletConnectRepository {
-        return DefaultWalletConnectRepository(userWalletsStore, dispatchers)
+        return DefaultWalletConnectRepository(userWalletsListRepository)
     }
 
     @Provides
