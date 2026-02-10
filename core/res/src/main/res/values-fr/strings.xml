@@ -1487,10 +1487,12 @@
   <string name="tangem_pay_status_completed">Terminé</string>
   <string name="tangem_pay_status_declined">Refusé</string>
   <string name="tangem_pay_status_pending">En attente</string>
+  <string name="tangem_pay_status_reversed">Annulée</string>
   <string name="tangem_pay_terms_fees_limits">Conditions, frais et limites</string>
   <string name="tangem_pay_terms_limits">Conditions et limites</string>
   <string name="tangem_pay_transaction_declined_notification_text">La banque a rejeté cette demande de transaction.</string>
   <string name="tangem_pay_transaction_fee_notification_text">Ces frais couvrent le coût du traitement de votre virement.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">La transaction a été partiellement ou totalement annulée par le commerçant</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Continuez à utiliser votre argent. Vous pouvez le geler à tout moment.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Dégeler votre carte ?</string>
   <string name="tangem_pay_unfreeze_card_failed">Échec du dégel de la carte. Réessayez plus tard.</string>

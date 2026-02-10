@@ -76,6 +76,10 @@
         "version": "undefined"
     },
     {
+        "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
         "version": "undefined"
     }
