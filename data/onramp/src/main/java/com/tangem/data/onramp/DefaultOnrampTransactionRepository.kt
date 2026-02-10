@@ -100,7 +100,7 @@ internal class DefaultOnrampTransactionRepository(
 
                     mutablePreferences.setObjectSet<OnrampTransactionDTO>(
                         key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
-                        value = stored ?: emptySet(),
+                        value = stored.orEmpty(),
                     )
                 }
             }
