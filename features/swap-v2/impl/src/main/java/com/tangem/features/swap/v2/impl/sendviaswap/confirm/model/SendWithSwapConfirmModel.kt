@@ -142,6 +142,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 reduceAmountBy = amountState?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
                 isIgnoreReduce = amountState?.isIgnoreReduce == true,
                 enteredDestination = destinationUM?.addressTextField?.actualAddress,
+                enteredMemo = destinationUM?.memoTextField?.value,
                 fee = feeSelectorUM?.selectedFeeItem?.fee.takeIf { isQuoteContent },
                 feeError = (uiState.value.feeSelectorUM as? FeeSelectorUM.Error)?.error.takeIf { isQuoteContent },
                 fromCryptoCurrencyStatus = amountUM?.swapDirection?.withSwapDirection(
