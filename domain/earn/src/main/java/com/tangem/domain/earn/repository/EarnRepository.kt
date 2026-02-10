@@ -13,7 +13,7 @@ interface EarnRepository {
     /**
      * Load all networks for Earn and store it in data store.
      */
-    suspend fun fetchEarnNetworks(type: String)
+    suspend fun fetchEarnNetworks()
 
     fun observeEarnNetworks(): Flow<EarnNetworks?>
 
