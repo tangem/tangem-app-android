@@ -19,6 +19,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -118,6 +119,7 @@ internal class SendConfirmModel @Inject constructor(
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
+    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -597,7 +599,8 @@ internal class SendConfirmModel @Inject constructor(
         val confirmUM = uiState.value.confirmUM
         val isContent = confirmUM is ConfirmUM.Content
         val isReadyToSend = isContent && !confirmUM.isSending
-        val isHoldToConfirm = userWallet.isHotWallet && isContent
+        val isHoldToConfirm = holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled &&
+            userWallet.isHotWallet && isContent
         return NavigationButton(
             textReference = getPrimaryButtonText(confirmUM, isHoldToConfirm),
             iconRes = walletInterationIcon(userWallet),
