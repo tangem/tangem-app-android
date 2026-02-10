@@ -13,15 +13,19 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
+import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.utils.UserWalletSaver
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -38,6 +42,8 @@ internal class UserWalletListModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val unlockWalletUseCase: UnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val walletFeatureToggles: WalletFeatureToggles,
+    private val applyUserWalletListSortingUseCase: ApplyUserWalletListSortingUseCase,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -55,6 +61,11 @@ internal class UserWalletListModel @Inject constructor(
             isWalletSavingInProgress = false,
             addNewWalletText = TextReference.EMPTY,
             onAddNewWalletClick = ::onAddNewWalletClick,
+            walletReorderUM = WalletReorderUM(
+                isDragEnabled = false,
+                onMove = ::onWalletReorder,
+                onDragStopped = ::onWalletDragStopped,
+            ),
         ),
     )
 
@@ -78,6 +89,11 @@ internal class UserWalletListModel @Inject constructor(
                 userWallets = userWallets,
                 isWalletSavingInProgress = isWalletSavingInProgress,
                 addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
+                walletReorderUM = WalletReorderUM(
+                    isDragEnabled = walletFeatureToggles.isWalletReorderFeatureEnabled && userWallets.size > 1,
+                    onMove = ::onWalletReorder,
+                    onDragStopped = ::onWalletDragStopped,
+                ),
             )
         }
 
@@ -106,6 +122,25 @@ internal class UserWalletListModel @Inject constructor(
                         analyticsEventHandler = analyticsEventHandler,
                         showMessage = messageSender::send,
                     )
+                }
+        }
+    }
+
+    private fun onWalletReorder(fromIndex: Int, toIndex: Int) {
+        state.update { prevState ->
+            val wallets = prevState.userWallets.toMutableList()
+            wallets.add(toIndex, wallets.removeAt(fromIndex))
+            prevState.copy(userWallets = wallets.toPersistentList())
+        }
+    }
+
+    private fun onWalletDragStopped() {
+        val userWalletIds = state.value.userWallets.map { UserWalletId(it.id) }
+
+        modelScope.launch {
+            applyUserWalletListSortingUseCase(userWalletIds)
+                .onLeft { error ->
+                    Timber.e("Failed to apply wallet list sorting: $error")
                 }
         }
     }
