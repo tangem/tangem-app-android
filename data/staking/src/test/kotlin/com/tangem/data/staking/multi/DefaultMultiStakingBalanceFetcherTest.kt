@@ -14,7 +14,7 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultMultiStakingBalanceFetcherTest {
 
-    private val userWalletsStore: UserWalletsStore = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val stakeKitBalancesStore: StakeKitBalancesStore = mockk(relaxUnitFun = true)
     private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore = mockk(relaxUnitFun = true)
@@ -42,7 +42,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
     private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore = mockk()
 
     private val fetcher = DefaultMultiStakingBalanceFetcher(
-        userWalletsStore = userWalletsStore,
+        userWalletsListRepository = userWalletsListRepository,
         stakingYieldsStore = stakingYieldsStore,
         stakeKitBalancesStore = stakeKitBalancesStore,
         p2PEthPoolBalancesStore = p2PEthPoolBalancesStore,
@@ -54,7 +54,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsStore, stakingYieldsStore, stakeKitBalancesStore, stakeKitApi)
+        clearMocks(userWalletsListRepository, stakingYieldsStore, stakeKitBalancesStore, stakeKitApi)
     }
 
     @Test
@@ -62,7 +62,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         val yields = listOf(MockYieldDTOFactory.create(tonId), MockYieldDTOFactory.create(solanaId))
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns yields
@@ -80,7 +80,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getMultipleYieldBalances(requests)
@@ -97,7 +97,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         val yields = listOf(MockYieldDTOFactory.create(tonId))
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns yields
@@ -112,7 +112,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(solanaId))
@@ -129,13 +129,13 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         val userWallet = MockUserWalletFactory.create().copy(isMultiCurrency = false)
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         // Actual
         val actual = fetcher.invoke(params)
 
         // Assert
-        coVerifyOrder { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        coVerifyOrder { userWalletsListRepository.getSyncOrNull(params.userWalletId) }
 
         coVerify(inverse = true) {
             stakeKitBalancesStore.refresh(userWalletId = any(), stakingIds = any())
@@ -155,13 +155,13 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns null
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns null
 
         // Actual
         val actual = fetcher.invoke(params)
 
         // Assert
-        coVerifyOrder { userWalletsStore.getSyncOrNull(params.userWalletId) }
+        coVerifyOrder { userWalletsListRepository.getSyncOrNull(params.userWalletId) }
 
         coVerify(inverse = true) {
             stakeKitBalancesStore.refresh(userWalletId = any(), stakingIds = any())
@@ -181,7 +181,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns null
 
         // Actual
@@ -189,7 +189,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(params.userWalletId, tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitBalancesStore.storeError(userWalletId, tonAndSolanaIds)
@@ -210,7 +210,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns emptyList()
 
         // Actual
@@ -218,7 +218,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitBalancesStore.storeError(userWalletId, tonAndSolanaIds)
@@ -239,7 +239,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         val yields = listOf(
             MockYieldDTOFactory.create(tonId).copy(id = null),
@@ -252,7 +252,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitBalancesStore.storeError(userWalletId, tonAndSolanaIds)
@@ -273,7 +273,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         val yields = listOf(MockYieldDTOFactory.create(StakingID(integrationId = "polygon", address = "0x1")))
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns yields
@@ -283,7 +283,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitBalancesStore.storeError(userWalletId, tonAndSolanaIds)
@@ -310,7 +310,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
         // Arrange
         val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
-        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
 
         val yields = listOf(MockYieldDTOFactory.create(tonId), MockYieldDTOFactory.create(solanaId))
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns yields
@@ -328,7 +328,7 @@ internal class DefaultMultiStakingBalanceFetcherTest {
 
         // Assert
         coVerifyOrder {
-            userWalletsStore.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.getSyncOrNull(params.userWalletId)
             stakeKitBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getMultipleYieldBalances(requests)

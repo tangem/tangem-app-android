@@ -25,7 +25,7 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -52,7 +52,7 @@ internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
@@ -406,14 +406,14 @@ internal class DefaultSwapRepository(
         )
     }
 
-    override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
+    override suspend fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
 
         return requireNotNull(
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
-                userWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull),
+                userWallet = requireNotNull(userWalletsListRepository.selectedUserWalletSync()),
             ),
         )
     }
