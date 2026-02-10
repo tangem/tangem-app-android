@@ -2,6 +2,7 @@ package com.tangem.common.extensions
 
 import androidx.test.uiautomator.By
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.wallet.R
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
@@ -74,8 +75,17 @@ fun BaseTestCase.stopApp(packageName: String) {
 }
 
 fun BaseTestCase.launchApp(packageName: String) {
-    device.apps.waitForAppLaunchAndReady(packageName = packageName)
     device.apps.launch(packageName)
+    device.apps.waitForAppLaunchAndReady(packageName = packageName)
+}
+
+fun BaseTestCase.restartApp(packageName: String) {
+    device.uiDevice.pressHome()
+    device.apps.kill(packageName)
+    waitForIdle()
+    device.apps.launch(packageName)
+    device.apps.waitForAppLaunchAndReady(timeout = WAIT_UNTIL_TIMEOUT_LONG, packageName = packageName)
+    waitForIdle()
 }
 
 enum class SwipeDirection {
