@@ -3,7 +3,7 @@ package com.tangem.feature.referral.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.data.DefaultMobileWalletPromoRepository
 import com.tangem.feature.referral.data.ExternalReferralRepository
@@ -26,15 +26,15 @@ class ReferralRepositoryModule {
     fun provideReferralRepository(
         tangemTechApi: TangemTechApi,
         referralConverter: ReferralConverter,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
+        dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
     ): ReferralRepository {
         return ReferralRepositoryImpl(
             referralApi = tangemTechApi,
             referralConverter = referralConverter,
-            coroutineDispatcher = coroutineDispatcherProvider,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
+            dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
         )
     }
@@ -44,15 +44,15 @@ class ReferralRepositoryModule {
     fun provideExternalReferralRepository(
         tangemTechApi: TangemTechApi,
         referralConverter: ReferralConverter,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
+        dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
     ): ExternalReferralRepository {
         return ReferralRepositoryImpl(
             referralApi = tangemTechApi,
             referralConverter = referralConverter,
-            coroutineDispatcher = coroutineDispatcherProvider,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
+            dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
         )
     }
