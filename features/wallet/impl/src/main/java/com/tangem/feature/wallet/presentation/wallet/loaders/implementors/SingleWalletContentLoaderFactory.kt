@@ -11,12 +11,10 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import javax.inject.Inject
 
 @ModelScoped
@@ -33,10 +31,8 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
@@ -56,8 +52,6 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
             getOnrampTransactionsUseCase = getOnrampTransactionsUseCase,
             onrampRemoveTransactionUseCase = onrampRemoveTransactionUseCase,
-            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
-            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 }
