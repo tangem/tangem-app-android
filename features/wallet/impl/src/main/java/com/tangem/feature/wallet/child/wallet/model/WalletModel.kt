@@ -487,11 +487,31 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.ReloadWallets -> {
                 reloadWarnings(action)
             }
+            is WalletsUpdateActionResolver.Action.ReorderWallets -> reorderWallets(action)
             WalletsUpdateActionResolver.Action.EmptyWallets -> {
                 Timber.w("Wallets list is empty!")
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
+            }
+        }
+    }
+
+    private fun reorderWallets(action: WalletsUpdateActionResolver.Action.ReorderWallets) {
+        val currentWalletId = stateHolder.getSelectedWalletId()
+        val currentIndex = stateHolder.getWalletIndexByWalletId(userWalletId = currentWalletId)
+
+        stateHolder.update(
+            transformer = ReorderWalletsTransformer(
+                wallets = action.wallets,
+            ),
+        )
+
+        val newIndex = stateHolder.getWalletIndexByWalletId(userWalletId = currentWalletId)
+
+        if (currentIndex != null && newIndex != null && currentIndex != newIndex) {
+            scrollToWallet(prevIndex = currentIndex, newIndex = newIndex) {
+                stateHolder.update { it.copy(selectedWalletIndex = newIndex) }
             }
         }
     }
