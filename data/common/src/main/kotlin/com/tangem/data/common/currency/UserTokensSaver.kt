@@ -11,8 +11,8 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,7 +24,7 @@ import timber.log.Timber
 @Suppress("LongParameterList")
 class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
@@ -59,7 +59,7 @@ class UserTokensSaver(
         useEnricher: Boolean = true,
         onFailSend: () -> Unit = {},
     ) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
 
         if (userWallet == null) {
             Timber.e("UserWallet with id $userWalletId not found. Cannot push tokens.")

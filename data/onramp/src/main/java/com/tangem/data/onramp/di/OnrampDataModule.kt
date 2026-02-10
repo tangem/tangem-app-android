@@ -28,8 +28,8 @@ import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -105,7 +105,7 @@ internal object OnrampDataModule {
     fun provideHotCryptoRepository(
         excludedBlockchains: ExcludedBlockchains,
         hotCryptoResponseStore: HotCryptoResponseStore,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         tangemTechApi: TangemTechApi,
         appCurrencyResponseStore: AppCurrencyResponseStore,
         dispatchers: CoroutineDispatcherProvider,
@@ -117,7 +117,7 @@ internal object OnrampDataModule {
         return DefaultHotCryptoRepository(
             excludedBlockchains = excludedBlockchains,
             hotCryptoResponseStore = hotCryptoResponseStore,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             tangemTechApi = tangemTechApi,
             appCurrencyResponseStore = appCurrencyResponseStore,
             dispatchers = dispatchers,
