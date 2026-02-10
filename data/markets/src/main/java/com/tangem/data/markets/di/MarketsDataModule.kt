@@ -8,7 +8,7 @@ import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -26,7 +26,7 @@ internal object MarketsDataModule {
     fun provideMarketsTokenRepository(
         marketsApi: TangemTechMarketsApi,
         quotesFetcher: QuotesFetcher,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
         cacheRegistry: CacheRegistry,
@@ -37,7 +37,7 @@ internal object MarketsDataModule {
             marketsApi = marketsApi,
             quotesFetcher = quotesFetcher,
             dispatcherProvider = dispatchers,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             analyticsEventHandler = analyticsEventHandler,
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
