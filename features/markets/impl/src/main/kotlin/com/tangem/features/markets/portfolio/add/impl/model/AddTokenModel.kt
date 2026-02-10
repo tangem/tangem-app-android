@@ -120,7 +120,9 @@ internal class AddTokenModel @Inject constructor(
         selectedPortfolio: SelectedPortfolio,
     ): Boolean = coldWalletAndHasMissedDerivationsUseCase.invoke(
         userWalletId = selectedPortfolio.userWallet.walletId,
-        networksWithDerivationPath = mapOf(selectedNetwork.selectedNetwork.networkId to null),
+        networksWithDerivationPath = mapOf(
+            selectedNetwork.selectedNetwork.networkId to selectedNetwork.cryptoCurrency.network.derivationPath.value,
+        ),
     )
 
     private fun processError(error: Throwable?) {
