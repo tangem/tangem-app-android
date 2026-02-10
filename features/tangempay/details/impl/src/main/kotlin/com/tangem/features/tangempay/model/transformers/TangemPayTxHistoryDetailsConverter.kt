@@ -110,6 +110,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend -> {
                 val amountPrefix = when {
                     this.amount.isZero() -> ""
+                    this.status == TangemPayTxHistoryItem.Status.REVERSED -> StringsSigns.MINUS
                     this.status == TangemPayTxHistoryItem.Status.DECLINED ||
                         this.amount.isPositive() -> StringsSigns.MINUS
                     else -> StringsSigns.PLUS
@@ -205,6 +206,10 @@ internal object TangemPayTxHistoryDetailsConverter :
                     text = resourceReference(R.string.tangem_pay_status_declined),
                     style = LabelStyle.WARNING,
                 )
+                TangemPayTxHistoryItem.Status.REVERSED -> LabelUM(
+                    text = resourceReference(R.string.tangem_pay_status_reversed),
+                    style = LabelStyle.REGULAR,
+                )
                 TangemPayTxHistoryItem.Status.RESERVED,
                 TangemPayTxHistoryItem.Status.UNKNOWN,
                 -> null
@@ -227,24 +232,33 @@ internal object TangemPayTxHistoryDetailsConverter :
                 containerColor = null,
             )
             is TangemPayTxHistoryItem.Spend -> when (this.status) {
-                TangemPayTxHistoryItem.Status.DECLINED ->
-                    TangemPayTxHistoryDetailsUM.NotificationState(
-                        config = NotificationConfig(
-                            title = if (declinedReason.isNullOrEmpty()) {
-                                resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
-                            } else {
-                                resourceReference(
-                                    id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
-                                    formatArgs = wrappedList(requireNotNull(declinedReason)),
-                                )
-                            },
-                            subtitle = TextReference.EMPTY,
-                            iconResId = R.drawable.ic_token_info_24,
-                        ),
-                        titleColor = themedColor { TangemTheme.colors.text.warning },
-                        iconTint = themedColor { TangemTheme.colors.icon.warning },
-                        containerColor = themedColor { TangemColorPalette.Amaranth.copy(alpha = 0.1F) },
-                    )
+                TangemPayTxHistoryItem.Status.DECLINED -> TangemPayTxHistoryDetailsUM.NotificationState(
+                    config = NotificationConfig(
+                        title = if (declinedReason.isNullOrEmpty()) {
+                            resourceReference(R.string.tangem_pay_transaction_declined_notification_text)
+                        } else {
+                            resourceReference(
+                                id = R.string.tangem_pay_history_item_spend_mc_declined_reason,
+                                formatArgs = wrappedList(requireNotNull(declinedReason)),
+                            )
+                        },
+                        subtitle = TextReference.EMPTY,
+                        iconResId = R.drawable.ic_token_info_24,
+                    ),
+                    titleColor = themedColor { TangemTheme.colors.text.warning },
+                    iconTint = themedColor { TangemTheme.colors.icon.warning },
+                    containerColor = themedColor { TangemColorPalette.Amaranth.copy(alpha = 0.1F) },
+                )
+                TangemPayTxHistoryItem.Status.REVERSED -> TangemPayTxHistoryDetailsUM.NotificationState(
+                    config = NotificationConfig(
+                        title = resourceReference(R.string.tangem_pay_transaction_reversed_notification_text),
+                        subtitle = TextReference.EMPTY,
+                        iconResId = R.drawable.ic_token_info_24,
+                    ),
+                    titleColor = themedColor { TangemTheme.colors.text.tertiary },
+                    iconTint = themedColor { TangemTheme.colors.icon.secondary },
+                    containerColor = null,
+                )
                 TangemPayTxHistoryItem.Status.PENDING,
                 TangemPayTxHistoryItem.Status.COMPLETED,
                 TangemPayTxHistoryItem.Status.RESERVED,
