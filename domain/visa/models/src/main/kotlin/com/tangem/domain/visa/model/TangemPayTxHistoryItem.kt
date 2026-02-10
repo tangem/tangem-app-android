@@ -72,6 +72,7 @@ sealed class TangemPayTxHistoryItem {
         RESERVED,
         COMPLETED,
         DECLINED,
+        REVERSED,
         UNKNOWN,
     }
 }
