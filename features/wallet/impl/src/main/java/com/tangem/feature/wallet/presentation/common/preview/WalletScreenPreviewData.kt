@@ -222,7 +222,7 @@ internal object WalletScreenPreviewData {
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
-        onDismissMarketsOnboarding = {},
+        onDismissMarketsTooltip = {},
         isNewMarketEnabled = false,
     )
 
