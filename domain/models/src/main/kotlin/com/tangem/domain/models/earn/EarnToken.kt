@@ -22,7 +22,7 @@ data class EarnToken(
     val tokenId: String,
     val tokenSymbol: String,
     val tokenName: String,
-    val tokenAddress: String,
+    val tokenAddress: String?,
     val decimalCount: Int?,
 )
 

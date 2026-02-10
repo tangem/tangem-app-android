@@ -100,7 +100,7 @@ internal class EarnTokensBatchFetcher(
             page = page.toString(),
             limit = limit,
             type = params.type,
-            network = params.network,
+            networks = params.networks,
         ).getOrThrow()
 
         val userWallet = userWalletsListRepository.selectedUserWallet.value
