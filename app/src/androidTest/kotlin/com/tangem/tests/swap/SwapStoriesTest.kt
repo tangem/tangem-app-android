@@ -135,7 +135,7 @@ class SwapStoriesTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Assert 'Swap' button has badge") {
+            step("Assert 'Swap' button has not badge") {
                 onMainScreen { swapButton.assertHasBadge(false) }
             }
             step("Open 'Swap' screen") {
@@ -191,7 +191,7 @@ class SwapStoriesTest : BaseTestCase() {
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
             }
-            step("Assert 'Swap' button has badge") {
+            step("Assert 'Swap' button has not badge") {
                 onTokenDetailsScreen { swapButton().assertHasBadge(false) }
             }
             step("Open 'Swap' screen") {
@@ -216,7 +216,7 @@ class SwapStoriesTest : BaseTestCase() {
         }
     }
 
-    @AllureId("5471")
+    @AllureId("5470")
     @DisplayName("Check unavailable swap stories on 'Markets' token details screen")
     @Test
     fun checkUnavailableSwapStoriesOnMarketsTokenDetailsScreen() {
@@ -245,7 +245,7 @@ class SwapStoriesTest : BaseTestCase() {
             step("Open 'Markets' token details screen for token '$tokenName'") {
                 openMarketTokenDetailsScreen(blockchainName = tokenName, tokenName = tokenName)
             }
-            step("Assert 'Swap' button has badge") {
+            step("Assert 'Swap' button has not badge") {
                 waitForIdle()
                 onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertIsDisplayed() }
                 onMarketsTokenDetailsScreen { swapPortfolioQuickActionButton.assertContentDescriptionEquals(badgeHidden) }
