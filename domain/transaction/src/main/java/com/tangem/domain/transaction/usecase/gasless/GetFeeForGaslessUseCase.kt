@@ -1,6 +1,7 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
@@ -128,25 +129,32 @@ class GetFeeForGaslessUseCase(
         } ?: raiseIllegalStateError("native currency not found for network ${network.id}")
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
-        return if (nativeBalance >= feeValue) {
+        val nativeCoinSelectedResult =
             TransactionFeeExtended(transactionFee = initialFee, feeTokenId = nativeCurrencyStatus.currency.id)
+        return if (nativeBalance >= feeValue) {
+            nativeCoinSelectedResult
         } else {
             findTokensToPayFee(
                 walletManager = walletManager,
                 initialTxFee = initialFee,
                 nativeCurrencyStatus = nativeCurrencyStatus,
                 networkCurrenciesStatuses = networkCurrenciesStatuses,
-            )
+            ).getOrElse { error ->
+                when (error) {
+                    GaslessError.NotEnoughFunds -> nativeCoinSelectedResult
+                    else -> raise(error)
+                }
+            }
         }
     }
 
     @Suppress("NullableToStringCall")
-    private suspend fun Raise<GetFeeError>.findTokensToPayFee(
+    private suspend fun findTokensToPayFee(
         walletManager: EthereumWalletManager,
         initialTxFee: TransactionFee,
         nativeCurrencyStatus: CryptoCurrencyStatus,
         networkCurrenciesStatuses: List<CryptoCurrencyStatus>,
-    ): TransactionFeeExtended {
+    ): Either<GetFeeError, TransactionFeeExtended> = either {
         val initialFee = initialTxFee.normal as? Fee.Ethereum
             ?: raiseIllegalStateError(
                 error = "only Fee.Ethereum supported, but was ${initialTxFee.normal::class.qualifiedName}",
@@ -178,6 +186,6 @@ class GetFeeForGaslessUseCase(
             tokenForPayFeeStatus = tokenForPayFeeStatus,
             nativeCurrencyStatus = nativeCurrencyStatus,
             initialFee = initialFee,
-        ).bind()
+        )
     }
 }
