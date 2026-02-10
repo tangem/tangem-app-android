@@ -40,6 +40,7 @@ class EnvironmentConfigModel(
     @Json(name = "p2pApiKey") val p2pApiKey: P2PKeys?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
+    @Json(name = "dwellirApiKey") val dwellirApiKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
     @Json(name = "alephiumTangemApiKey") val alephiumTangemApiKey: String?,
     @Json(name = "moralisApiKey") val moralisApiKey: String?,
