@@ -17,6 +17,8 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
@@ -43,6 +45,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.collections.isNotEmpty
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -52,14 +55,23 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
 ) : Model() {
 
     private val params: ChooseManagedTokensComponent.Params = paramsContainer.require()
+
+    private val manageTokensMode = if (accountsFeatureToggles.isFeatureEnabled) {
+        val accountId = AccountId.forMainCryptoPortfolio(userWalletId = params.userWalletId)
+        ManageTokensMode.Account(accountId = accountId)
+    } else {
+        ManageTokensMode.Wallet(params.userWalletId)
+    }
+
     private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
-        .create(mode = ManageTokensMode.Wallet(params.userWalletId))
+        .create(mode = manageTokensMode)
 
     private val manageTokensListManager = manageTokensListManagerFactory.create(
         scope = modelScope,

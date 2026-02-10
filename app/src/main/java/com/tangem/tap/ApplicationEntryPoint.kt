@@ -40,9 +40,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -91,8 +89,6 @@ interface ApplicationEntryPoint {
     fun getWalletsRepository(): WalletsRepository
 
     fun getOneTimeEventFilter(): OneTimeEventFilter
-
-    fun getGeneralUserWalletsListManager(): UserWalletsListManager
 
     fun getWasTwinsOnboardingShownUseCase(): WasTwinsOnboardingShownUseCase
 
@@ -150,8 +146,6 @@ interface ApplicationEntryPoint {
     fun getUserWalletsListRepository(): UserWalletsListRepository
 
     fun getTangemHotSdk(): TangemHotSdk
-
-    fun getHotWalletFeatureToggles(): HotWalletFeatureToggles
 
     fun getWcInitializeUseCase(): WcInitializeUseCase
 

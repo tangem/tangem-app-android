@@ -5,4 +5,7 @@ package com.tangem.features.wallet.featuretoggles
  *
 [REDACTED_AUTHOR]
  */
-interface WalletFeatureToggles
+interface WalletFeatureToggles {
+
+    val isWalletReorderFeatureEnabled: Boolean
+}
