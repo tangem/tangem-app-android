@@ -13,6 +13,7 @@ internal data class ConfirmData(
     val reduceAmountBy: BigDecimal,
     val isIgnoreReduce: Boolean,
     val enteredDestination: String?,
+    val enteredMemo: String?,
     val fee: Fee?,
     val feeError: GetFeeError?,
     val fromCryptoCurrencyStatus: CryptoCurrencyStatus?,

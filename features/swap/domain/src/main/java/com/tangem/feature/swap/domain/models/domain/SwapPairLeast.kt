@@ -53,6 +53,8 @@ data class SwapProvider(
     val isRecommended: Boolean = false,
     @Json(name = "slippage")
     val slippage: BigDecimal?,
+    @Json(name = "isExtraIdSupported")
+    val isExtraIdSupported: Boolean = false,
 )
 
 @JsonClass(generateAdapter = false)

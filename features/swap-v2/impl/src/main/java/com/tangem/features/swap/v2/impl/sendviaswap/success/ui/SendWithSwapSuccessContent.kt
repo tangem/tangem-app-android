@@ -125,7 +125,10 @@ private fun SuccessContent(sendWithSwapUM: SendWithSwapUM, modifier: Modifier = 
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
         )
-        DestinationBlock(destinationUM.addressTextField)
+        DestinationBlock(
+            address = destinationUM.addressTextField,
+            memo = destinationUM.memoTextField,
+        )
         FeeBlock(feeSelectorUM = feeSelectorUM)
         Spacer(Modifier.height(16.dp))
     }
@@ -247,7 +250,11 @@ private fun FeeBlock(feeSelectorUM: FeeSelectorUM.Content) {
 }
 
 @Composable
-private fun DestinationBlock(address: DestinationTextFieldUM.RecipientAddress, modifier: Modifier = Modifier) {
+private fun DestinationBlock(
+    address: DestinationTextFieldUM.RecipientAddress,
+    memo: DestinationTextFieldUM.RecipientMemo?,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -279,6 +286,14 @@ private fun DestinationBlock(address: DestinationTextFieldUM.RecipientAddress, m
                     .background(TangemTheme.colors.background.tertiary),
             )
         }
+        if (memo != null && memo.value.isNotBlank()) {
+            Text(
+                text = stringResourceSafe(R.string.send_memo, memo.value),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+            )
+        }
     }
 }
 
@@ -304,7 +319,17 @@ private fun SendWithSwapSuccessContent_Preview() {
                         isValuePasted = false,
                         blockchainAddress = "0x391316d97a07027a0702c8A002c8A0C25d8470",
                     ),
-                    memoTextField = null,
+                    memoTextField = DestinationTextFieldUM.RecipientMemo(
+                        value = "123123123",
+                        keyboardOptions = KeyboardOptions(),
+                        placeholder = TextReference.EMPTY,
+                        label = resourceReference(R.string.send_recipient),
+                        isError = false,
+                        error = null,
+                        isValuePasted = false,
+                        isEnabled = true,
+                        disabledText = TextReference.EMPTY,
+                    ),
                     recent = persistentListOf(),
                     wallets = persistentListOf(),
                     networkName = "Polygon",
