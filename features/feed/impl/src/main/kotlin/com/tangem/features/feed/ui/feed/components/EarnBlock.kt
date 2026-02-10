@@ -45,10 +45,13 @@ internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM?, modif
             modifier = Modifier.padding(horizontal = 16.dp),
             colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
         ) {
-            AnimatedContent(targetState = earnListUM) { earnListState ->
-                when (earnListState) {
-                    is EarnListUM.Content -> EarnContentBlock(items = earnListState.items)
-                    is EarnListUM.Error -> EarnErrorBlock(onRetryClick = earnListState.onRetryClicked)
+            AnimatedContent(
+                targetState = earnListUM,
+                contentKey = { it::class.java },
+            ) { earnListUM ->
+                when (earnListUM) {
+                    is EarnListUM.Content -> EarnContentBlock(items = earnListUM.items)
+                    is EarnListUM.Error -> EarnErrorBlock(onRetryClick = earnListUM.onRetryClicked)
                     EarnListUM.Loading -> EarnListPlaceholder(placeholderCount = PLACEHOLDER_ITEM_COUNT)
                 }
             }
