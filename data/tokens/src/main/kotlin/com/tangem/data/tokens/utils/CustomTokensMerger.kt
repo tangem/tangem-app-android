@@ -104,8 +104,8 @@ internal class CustomTokensMerger(
                         networkIds = token.networkId,
                     ).bind()
                 },
-                onError = {
-                    Timber.e(it, "Unable to fetch token:\n$token")
+                onError = { error ->
+                    Timber.e(error, "Unable to fetch token:\n$token")
                     null
                 },
             )
