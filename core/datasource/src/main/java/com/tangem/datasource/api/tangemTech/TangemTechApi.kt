@@ -213,10 +213,10 @@ interface TangemTechApi {
         @Query("page") page: String? = null,
         @Query("limit") limit: Int? = null,
         @Query("type") type: String? = null,
-        @Query("network") network: String? = null,
+        @Query("networkIds") networks: List<String>? = null,
     ): ApiResponse<EarnListResponse>
 
     @GET("v1/earn/networks")
-    suspend fun getEarnNetworks(@Query("type") type: String): ApiResponse<EarnNetworkListResponse>
+    suspend fun getEarnNetworks(@Query("type") type: String? = null): ApiResponse<EarnNetworkListResponse>
     // endregion
 }
