@@ -17,6 +17,7 @@ import java.math.BigDecimal
  * @property isRecommended  flag that indicates if this provider is recommended
  * @property slippage       provider slippage
  * @property isExchangeOnlyWithinSingleAddress  flag that indicates if exchange is only allowed within a single address
+ * @property isExtraIdSupported  flag that indicates if provider supports transaction extras (memo, destination tag)
  *
  * Uses to store transaction data in datastore, when extends - should always add default value
  * to support backward compatibility
@@ -43,4 +44,6 @@ data class ExpressProvider(
     val slippage: BigDecimal?,
     @Json(name = "exchangeOnlyWithinSingleAddress")
     val isExchangeOnlyWithinSingleAddress: Boolean = false,
+    @Json(name = "isExtraIdSupported")
+    val isExtraIdSupported: Boolean = false,
 )

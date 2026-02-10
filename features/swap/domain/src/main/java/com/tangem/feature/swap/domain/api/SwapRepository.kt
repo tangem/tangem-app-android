@@ -68,6 +68,7 @@ interface SwapRepository {
         expressOperationType: ExpressOperationType,
         refundAddress: String? = null, // for cex only
         refundExtraId: String? = null, // for cex only
+        toExtraId: String? = null, // for networks with memo only
     ): Either<ExpressDataError, SwapDataModel>
 
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])
