@@ -24,8 +24,8 @@ import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
@@ -47,7 +47,7 @@ typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotifica
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
@@ -151,7 +151,7 @@ internal class DefaultWalletsRepository(
     }
 
     private suspend fun fetchSeedPhraseNotificationStatus(userWalletId: UserWalletId) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
 
         if (userWallet != null && userWallet !is UserWallet.Cold) {
             updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
@@ -323,7 +323,7 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setWalletName(walletId: UserWalletId, walletName: String) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = walletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = walletId)
 
         tangemTechApi.updateWallet(
             walletId = walletId.stringValue,
@@ -332,7 +332,7 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun upgradeWallet(walletId: UserWalletId) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncStrict(key = walletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
 
         tangemTechApi.updateWallet(
             walletId = walletId.stringValue,
