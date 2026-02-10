@@ -65,6 +65,11 @@ internal class MarketDetailsAnalyticsEvent(
                 "Provider" to provider,
             ),
         )
+
+        fun shareClicked() = MarketDetailsAnalyticsEvent(
+            event = "Button - Share",
+            params = mapOf("Token" to token.symbol),
+        )
     }
 
     enum class IntervalType(val source: String) {
