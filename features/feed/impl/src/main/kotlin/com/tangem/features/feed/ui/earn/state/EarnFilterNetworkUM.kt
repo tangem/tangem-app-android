@@ -23,7 +23,7 @@ internal sealed class EarnFilterNetworkUM {
         val id: String,
         override val text: TextReference,
         val symbol: TextReference,
-        val iconUrl: String?,
+        val iconRes: Int,
         override val isSelected: Boolean,
     ) : EarnFilterNetworkUM()
 }

@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.earn.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,14 +14,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
-import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.inputrow.InputRowChecked
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.rows.RowContentContainer
@@ -165,12 +167,10 @@ private fun LazyListScope.specificNetworksList(
                     .heightIn(52.dp)
                     .padding(horizontal = 12.dp),
                 icon = {
-                    CoinIcon(
+                    Image(
                         modifier = Modifier.size(22.dp),
-                        url = item.iconUrl,
-                        alpha = 1f,
-                        colorFilter = null,
-                        fallbackResId = R.drawable.ic_custom_token_44,
+                        imageVector = ImageVector.vectorResource(item.iconRes),
+                        contentDescription = item.symbol.resolveReference(),
                     )
                 },
                 text = {
@@ -225,14 +225,14 @@ private fun Preview() {
                                 id = "ethereum",
                                 text = stringReference("Ethereum"),
                                 symbol = stringReference("ETH"),
-                                iconUrl = null,
+                                iconRes = R.drawable.img_btc_22,
                                 isSelected = false,
                             ),
                             EarnFilterNetworkUM.Network(
                                 id = "polygon",
                                 text = stringReference("Polygon"),
                                 symbol = stringReference("MATIC"),
-                                iconUrl = null,
+                                iconRes = R.drawable.img_btc_22,
                                 isSelected = false,
                             ),
                         ),
