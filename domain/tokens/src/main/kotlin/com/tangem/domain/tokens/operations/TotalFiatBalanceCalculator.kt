@@ -2,13 +2,13 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.tokenlist.TokenList
-import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
