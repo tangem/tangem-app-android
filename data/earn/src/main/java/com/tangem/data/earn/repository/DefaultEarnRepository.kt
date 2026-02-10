@@ -62,13 +62,16 @@ internal class DefaultEarnRepository(
         ).toBatchFlow()
     }
 
-    override suspend fun fetchEarnNetworks(type: String) {
+    override suspend fun fetchEarnNetworks() {
         runCatching(dispatchers.io) {
-            val response = tangemTechApi.getEarnNetworks(type = type).getOrThrow()
+            val response = tangemTechApi.getEarnNetworks().getOrThrow()
             val items = response.items.map { dto ->
+                val blockchain = Blockchain.fromNetworkId(dto.networkId)
                 EarnNetwork(
                     networkId = dto.networkId,
                     isAdded = false,
+                    fullName = blockchain?.fullName.orEmpty(),
+                    symbol = blockchain?.currency.orEmpty(),
                 )
             }
             earnNetworksStore.store(Either.Right(items))
@@ -136,7 +139,8 @@ internal fun createCryptoCurrencyForEarnToken(
     cryptoCurrencyFactory: CryptoCurrencyFactory,
 ): CryptoCurrency? {
     val blockchain = Blockchain.fromNetworkId(earnToken.networkId) ?: Blockchain.Unknown
-    return if (earnToken.token.address.isEmpty()) {
+    val address = earnToken.token.address
+    return if (address == null) {
         cryptoCurrencyFactory.createCoin(
             blockchain = blockchain,
             extraDerivationPath = null,
@@ -157,7 +161,7 @@ internal fun createCryptoCurrencyForEarnToken(
             name = earnToken.token.name,
             symbol = earnToken.token.symbol,
             decimals = earnToken.token.decimalCount ?: blockchain.decimals(),
-            contractAddress = earnToken.token.address,
+            contractAddress = address,
         )
     }
 }

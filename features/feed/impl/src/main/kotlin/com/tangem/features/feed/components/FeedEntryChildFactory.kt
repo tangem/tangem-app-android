@@ -109,6 +109,7 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultEarnComponent(
                     appComponentContext = appComponentContext,
                     params = child.params,
+                    addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
                 )
             }
         }
