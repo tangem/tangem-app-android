@@ -12,10 +12,10 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -36,7 +36,7 @@ import org.junit.jupiter.params.ParameterizedTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultCardCryptoCurrencyFactoryTest {
 
-    private val userWalletsStore: UserWalletsStore = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val userTokensResponseStore: UserTokensResponseStore = mockk()
     private val excludedBlockchains = ExcludedBlockchains()
     private val accountsFeatureToggles = mockk<AccountsFeatureToggles>()
@@ -45,7 +45,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val factory = DefaultCardCryptoCurrencyFactory(
         demoConfig = DemoConfig,
         excludedBlockchains = excludedBlockchains,
-        userWalletsStore = userWalletsStore,
+        userWalletsListRepository = userWalletsListRepository,
         userTokensResponseStore = userTokensResponseStore,
         responseCryptoCurrenciesFactory = ResponseCryptoCurrenciesFactory(
             networkFactory = NetworkFactory(excludedBlockchains = excludedBlockchains),
@@ -63,7 +63,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
     @BeforeEach
     fun init() {
-        clearMocks(userWalletsStore, userTokensResponseStore, accountsFeatureToggles, walletAccountsFetcher, iconUri)
+        clearMocks(userWalletsListRepository, userTokensResponseStore, accountsFeatureToggles, walletAccountsFetcher, iconUri)
 
         mockkStatic(Uri::class)
         every { Uri.parse(any()) } returns iconUri
@@ -82,7 +82,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             val network = ethereum.network
 
             every { accountsFeatureToggles.isFeatureEnabled } returns false
-            coEvery { userWalletsStore.getSyncStrict(key = userWallet.walletId) } returns userWallet
+            coEvery { userWalletsListRepository.getSyncStrict(id = userWallet.walletId) } returns userWallet
             coEvery { userTokensResponseStore.getSyncOrNull(userWallet.walletId) } returns userTokensResponse
 
             // Act
@@ -94,7 +94,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             Truth.assertThat(actual).isEqualTo(expected)
 
             coVerifyOrder {
-                userWalletsStore.getSyncStrict(key = userWallet.walletId)
+                userWalletsListRepository.getSyncStrict(id = userWallet.walletId)
                 userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
             }
         }
@@ -131,7 +131,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             // Arrange
             val userWallet = createSingleWallet()
 
-            coEvery { userWalletsStore.getSyncStrict(key = userWallet.walletId) } returns userWallet
+            coEvery { userWalletsListRepository.getSyncStrict(id = userWallet.walletId) } returns userWallet
 
             // Act
             val actual = factory.create(userWalletId = userWallet.walletId, network = model.network)
@@ -142,7 +142,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             Truth.assertThat(actual).isEqualTo(expected)
 
             coVerifyOrder {
-                userWalletsStore.getSyncStrict(key = userWallet.walletId)
+                userWalletsListRepository.getSyncStrict(id = userWallet.walletId)
                 userWallet.scanResponse.cardTypesResolver.getBlockchain()
             }
 
@@ -169,7 +169,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             // Arrange
             val userWallet = MockUserWalletFactory.createSingleWalletWithToken()
 
-            coEvery { userWalletsStore.getSyncStrict(key = userWallet.walletId) } returns userWallet
+            coEvery { userWalletsListRepository.getSyncStrict(id = userWallet.walletId) } returns userWallet
 
             // Act
             val actual = factory.create(userWalletId = userWallet.walletId, network = model.network)
@@ -186,7 +186,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             Truth.assertThat(actual).isEqualTo(expected)
 
             coVerifyOrder {
-                userWalletsStore.getSyncStrict(key = userWallet.walletId)
+                userWalletsListRepository.getSyncStrict(id = userWallet.walletId)
                 userWallet.scanResponse.cardTypesResolver.getBlockchain()
             }
 
