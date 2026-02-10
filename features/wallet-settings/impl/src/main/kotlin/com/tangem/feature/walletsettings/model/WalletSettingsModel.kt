@@ -237,7 +237,7 @@ internal class WalletSettingsModel @Inject constructor(
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
-                        portfolioId = if (isAccountsFeatureEnabled) {
+                        portfolioId = if (accountsFeatureToggles.isFeatureEnabled) {
                             PortfolioId(
                                 accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
                             )
