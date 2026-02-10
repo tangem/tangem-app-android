@@ -330,10 +330,12 @@
   <string name="tangem_pay_status_completed">已完成</string>
   <string name="tangem_pay_status_declined">已拒絕</string>
   <string name="tangem_pay_status_pending">處理中</string>
+  <string name="tangem_pay_status_reversed">已撤銷</string>
   <string name="tangem_pay_terms_fees_limits">條款、費用與限制</string>
   <string name="tangem_pay_terms_limits">條款與限制</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行拒絕了此交易請求。</string>
   <string name="tangem_pay_transaction_fee_notification_text">此費用用於支付處理您轉帳的成本。</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">該交易已被商家部分或全額撤銷</string>
   <string name="tangem_pay_unfreeze_card_alert_body">繼續使用您的資金。您可以隨時凍結。</string>
   <string name="tangem_pay_unfreeze_card_alert_title">解凍您的卡片？</string>
   <string name="tangem_pay_unfreeze_card_failed">無法解凍卡片。請稍後再試。</string>
