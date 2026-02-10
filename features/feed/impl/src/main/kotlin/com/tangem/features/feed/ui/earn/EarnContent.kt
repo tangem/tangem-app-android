@@ -5,14 +5,13 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,53 +19,49 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SmallButtonShimmer
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.feed.ui.earn.components.EarnFilterByNetworkBottomSheet
-import com.tangem.features.feed.ui.earn.components.EarnFilterByTypeBottomSheet
-import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
-import com.tangem.features.feed.ui.earn.components.EarnListItem
-import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
-import com.tangem.features.feed.ui.earn.state.EarnBestOpportunitiesUM
-import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
-import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
-import com.tangem.features.feed.ui.earn.state.EarnListItemUM
-import com.tangem.features.feed.ui.earn.state.EarnListUM
-import com.tangem.features.feed.ui.earn.state.EarnUM
+import com.tangem.features.feed.ui.earn.components.*
+import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
+
+private const val EARN_LOAD_MORE_BUFFER = 3
 
 @Composable
 internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val listState = rememberLazyListState()
 
     EarnFilterByTypeBottomSheet(config = state.filterByTypeBottomSheet)
     EarnFilterByNetworkBottomSheet(config = state.filterByNetworkBottomSheet)
 
+    if (state.bestOpportunities is EarnBestOpportunitiesUM.Content) {
+        PaginationHandler(
+            listState = listState,
+            state = state.bestOpportunities,
+        )
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .background(background),
@@ -109,7 +104,10 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MostlyUsedContent(state: EarnListUM) {
-    AnimatedContent(state) { st ->
+    AnimatedContent(
+        targetState = state,
+        contentKey = { it::class.java },
+    ) { st ->
         when (st) {
             is EarnListUM.Loading -> {
                 MostlyUsedPlaceholder()
@@ -174,9 +172,11 @@ private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
+                modifier = Modifier.weight(weight = 1f, fill = false),
                 text = item.tokenName.resolveReference(),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle2,
+                overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
             SpacerW(4.dp)
@@ -207,34 +207,15 @@ private fun BestOpportunitiesFilters(
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
 ) {
-    AnimatedContent(state) { st ->
-        when (st) {
-            is EarnBestOpportunitiesUM.Loading -> {
-                FilterButtonsShimmer()
-            }
-            is EarnBestOpportunitiesUM.EmptyFiltered,
-            is EarnBestOpportunitiesUM.Content,
-            -> {
-                FilterButtons(
-                    selectedNetworkFilterText = selectedNetworkFilterText,
-                    selectedTypeFilterText = selectedTypeFilterText,
-                    isEnabled = true,
-                    onNetworkFilterClick = onNetworkFilterClick,
-                    onTypeFilterClick = onTypeFilterClick,
-                )
-            }
-            is EarnBestOpportunitiesUM.Empty,
-            is EarnBestOpportunitiesUM.Error,
-            -> {
-                FilterButtons(
-                    selectedNetworkFilterText = selectedNetworkFilterText,
-                    selectedTypeFilterText = selectedTypeFilterText,
-                    isEnabled = false,
-                    onNetworkFilterClick = onNetworkFilterClick,
-                    onTypeFilterClick = onTypeFilterClick,
-                )
-            }
-        }
+    when (state) {
+        is EarnBestOpportunitiesUM.Loading -> FilterButtonsShimmer()
+        else -> FilterButtons(
+            selectedNetworkFilterText = selectedNetworkFilterText,
+            selectedTypeFilterText = selectedTypeFilterText,
+            isEnabled = state is EarnBestOpportunitiesUM.Content || state is EarnBestOpportunitiesUM.EmptyFiltered,
+            onNetworkFilterClick = onNetworkFilterClick,
+            onTypeFilterClick = onTypeFilterClick,
+        )
     }
 }
 
@@ -424,10 +405,25 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(start = 20.dp, end = 16.dp),
         text = title,
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
+    )
+}
+
+@Composable
+private fun PaginationHandler(listState: LazyListState, state: EarnBestOpportunitiesUM.Content) {
+    InfiniteListHandler(
+        listState = listState,
+        buffer = EARN_LOAD_MORE_BUFFER,
+        triggerLoadMoreCheckOnItemsCountChange = true,
+        onLoadMore = remember(state) {
+            {
+                state.onLoadMore()
+                true
+            }
+        },
     )
 }
 
@@ -465,6 +461,7 @@ private fun EarnContentPreview() {
                                 network = "Ethereum Network",
                             ),
                         ),
+                        onLoadMore = {},
                     ),
                 ),
             )
