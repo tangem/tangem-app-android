@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
  * Config of request earn tokens.
  *
  * @param type of Earn (ex: yield, staking).
- * @param network networkId.
+ * @param networks list of networkId.
  * @param isForEarn flag to load mostly used tokens.
  */
 @Serializable
 data class EarnTokensListConfig(
-    val type: String,
-    val network: String,
+    val type: String?,
+    val networks: List<String>?,
     val isForEarn: Boolean,
 )
