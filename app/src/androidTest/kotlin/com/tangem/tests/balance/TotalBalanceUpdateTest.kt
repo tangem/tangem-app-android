@@ -90,7 +90,6 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             }
             step("Click on 'Add' button") {
                 onDialog { addButton.clickWithAssertion() }
-                onDialog { addButton.clickWithAssertion() } //TODO: [REDACTED_JIRA]
             }
             step("Assert 'Continue' is not displayed") {
                 onDialog { addButton.assertIsNotDisplayed() }
