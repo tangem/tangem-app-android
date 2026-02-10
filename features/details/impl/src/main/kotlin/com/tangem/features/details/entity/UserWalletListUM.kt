@@ -11,4 +11,11 @@ internal data class UserWalletListUM(
     val isWalletSavingInProgress: Boolean,
     val addNewWalletText: TextReference,
     val onAddNewWalletClick: () -> Unit,
+    val walletReorderUM: WalletReorderUM,
+)
+
+internal data class WalletReorderUM(
+    val isDragEnabled: Boolean,
+    val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
+    val onDragStopped: () -> Unit,
 )
