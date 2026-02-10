@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.TangemBadgeSize.*
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -48,6 +49,7 @@ fun TangemBadge(badgeUM: TangemBadgeUM, modifier: Modifier = Modifier) {
         color = badgeUM.color,
         type = badgeUM.type,
         iconPosition = badgeUM.iconPosition,
+        onClick = badgeUM.onClick,
         modifier = modifier,
     )
 }
@@ -64,6 +66,7 @@ fun TangemBadge(badgeUM: TangemBadgeUM, modifier: Modifier = Modifier) {
  * @param color         [TangemBadgeColor] defining the color scheme of the badge.
  * @param type          [TangemBadgeType] defining the style of the badge.
  * @param iconPosition  [TangemBadgeIconPosition] defining icon position of the badge.
+ * @param onClick       Lambda to be invoked when the badge is clicked (optional).
  *
 [REDACTED_AUTHOR]
  */
@@ -77,6 +80,7 @@ fun TangemBadge(
     color: TangemBadgeColor = TangemBadgeColor.Gray,
     type: TangemBadgeType = TangemBadgeType.Solid,
     iconPosition: TangemBadgeIconPosition = TangemBadgeIconPosition.Start,
+    onClick: (() -> Unit)? = null,
 ) {
     val iconColor = getIconColor(type = type, color = color)
     Row(
@@ -86,7 +90,8 @@ fun TangemBadge(
             .heightIn(min = size.toHeightDp())
             .clip(shape.toShape(size))
             .getBackgroundColor(type = type, color = color, shape = shape.toShape(size))
-            .padding(size.toPaddingDp(position = iconPosition)),
+            .padding(size.toPaddingDp(position = iconPosition))
+            .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() }),
     ) {
         AnimatedVisibility(
             visible = iconRes != null && iconPosition == TangemBadgeIconPosition.Start,
