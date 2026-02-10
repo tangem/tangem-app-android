@@ -31,6 +31,8 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.feeselector.model.transformers.*
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -62,6 +64,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
 ) : FeeSelectorIntents {
 
     private var appCurrency: AppCurrency = AppCurrency.Default
+    private val loadFeeJobHolder = JobHolder()
     val uiState = MutableStateFlow(params.state)
 
     val isGaslessEnabled = sendFeatureToggles.isGaslessTransactionsEnabled &&
@@ -113,7 +116,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                         )
                     },
                 )
-        }
+        }.saveIn(loadFeeJobHolder)
     }
 
     private fun isFeeApproximate(amountType: AmountType): Boolean {

@@ -4,6 +4,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.repositories.LegacySettingsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -17,18 +18,21 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class DefaultHotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
     private val walletsRepository: WalletsRepository,
+    private val legacySettingsRepository: LegacySettingsRepository,
     dispatchers: CoroutineDispatcherProvider,
 ) : HotWalletAccessor {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
-    private var contextualUnlockHotWallet: ConcurrentHashMap<HotWalletId, UnlockHotWallet?> = ConcurrentHashMap()
+    private val contextualUnlockHotWallet: ConcurrentHashMap<HotWalletId, UnlockHotWallet?> = ConcurrentHashMap()
 
     override suspend fun signHashes(hotWalletId: HotWalletId, dataToSign: List<DataToSign>): List<SignedData> =
         hotSdkRequest(hotWalletId) { unlock ->
@@ -82,7 +86,7 @@ class DefaultHotWalletAccessor @Inject constructor(
     }
 
     private suspend fun <T> hotSdkRequest(hotWalletId: HotWalletId, block: suspend (unlock: UnlockHotWallet) -> T): T {
-        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+        val isAccessCodeRequired = isAccessCodeRequired()
 
         val auth = when (hotWalletId.authType) {
             HotWalletId.AuthType.NoPassword -> HotAuth.NoAuth
@@ -134,7 +138,7 @@ class DefaultHotWalletAccessor @Inject constructor(
     }
 
     private suspend fun updateBiometryAuthIfNeeded(hotWalletId: HotWalletId, originalAuth: HotAuth) {
-        val isAccessCodeRequired = walletsRepository.requireAccessCode()
+        val isAccessCodeRequired = isAccessCodeRequired()
         val isUseBiometricAuthenticationEnabled = walletsRepository.useBiometricAuthentication()
 
         if (originalAuth is HotAuth.Password && isUseBiometricAuthenticationEnabled && isAccessCodeRequired.not()) {
@@ -167,7 +171,7 @@ class DefaultHotWalletAccessor @Inject constructor(
     ): T = runSuspendCatching {
         block(auth)
     }.getOrElse { exception ->
-        if (auth is HotAuth.Biometry && exception.isBiometryError()) {
+        if (auth is HotAuth.Biometry && (exception.isBiometryError() || exception.isBiometryReset())) {
             val shouldRetryBiometry = exception is TangemSdkError.AuthenticationCanceled
 
             // fallback to password if biometry fails
@@ -213,6 +217,14 @@ class DefaultHotWalletAccessor @Inject constructor(
 
         return hotWalletPasswordRequester.requestPassword(attemptRequest).toAuth()
             ?: throw TangemSdkError.UserCancelled()
+    }
+
+    private suspend fun isAccessCodeRequired(): Boolean {
+        return walletsRepository.requireAccessCode() || legacySettingsRepository.canUseBiometryStrict().not()
+    }
+
+    private fun Throwable.isBiometryReset(): Boolean {
+        return this is IllegalStateException
     }
 
     private fun Throwable.isBiometryError(): Boolean {

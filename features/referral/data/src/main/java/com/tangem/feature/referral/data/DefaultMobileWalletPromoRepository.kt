@@ -14,9 +14,9 @@ internal class DefaultMobileWalletPromoRepository @Inject constructor(
         return appPreferencesStore.getSyncOrDefault(key = SHOULD_SHOW_MOBILE_WALLET_PROMO_KEY, default = false)
     }
 
-    override suspend fun setShouldShowMobileWalletPromo(value: Boolean) {
+    override suspend fun setShouldShowMobileWalletPromo(shouldShowPromo: Boolean) {
         appPreferencesStore.editData { preferences ->
-            preferences[SHOULD_SHOW_MOBILE_WALLET_PROMO_KEY] = value
+            preferences[SHOULD_SHOW_MOBILE_WALLET_PROMO_KEY] = shouldShowPromo
         }
     }
 
