@@ -51,9 +51,9 @@ internal class ManageTokensUpdateFetcher @Inject constructor() :
 
                         update {
                             BatchUpdateResult.Success(
-                                data = mapNotNull {
-                                    if (it.key == toUpdate[index].key) {
-                                        Batch(it.key, updatedItems)
+                                data = mapNotNull { batch ->
+                                    if (batch.key == toUpdate[index].key) {
+                                        Batch(batch.key, updatedItems)
                                     } else {
                                         null
                                     }
