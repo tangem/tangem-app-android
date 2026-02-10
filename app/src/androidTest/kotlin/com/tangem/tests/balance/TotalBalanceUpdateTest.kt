@@ -57,7 +57,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
         val tokenTitle = "XRP"
         val scenarioName = "quotes_api"
         val scenarioState = "Ripple"
-        val updatedBalance = "$3,307.18"
+        val updatedBalance = "$3,320.47"
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
@@ -85,14 +85,18 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             step("Click on 'Add to portfolio' button") {
                 onMarketsScreen { addToPortfolioButton.clickWithAssertion() }
             }
-            step("Toggle the main network switch") {
-                onMarketsScreen { mainNetworkSwitch.performClick() }
+            step("Click on main network") {
+                onMarketsScreen { mainNetworkSuffix.performClick() }
             }
-            step("Click on 'Continue' button") {
-                onDialog { continueButton.clickWithAssertion() }
+            step("Click on 'Add' button") {
+                onDialog { addButton.clickWithAssertion() }
+                onDialog { addButton.clickWithAssertion() } //TODO: [REDACTED_JIRA]
             }
             step("Assert 'Continue' is not displayed") {
-                onDialog { continueButton.assertIsNotDisplayed() }
+                onDialog { addButton.assertIsNotDisplayed() }
+            }
+            step("Click on 'Later' button") {
+                onDialog { laterButton.clickWithAssertion() }
             }
             step("Go back to 'Markets: tokens list'") {
                 waitForIdle()
