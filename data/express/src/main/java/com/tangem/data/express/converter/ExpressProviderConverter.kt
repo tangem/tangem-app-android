@@ -20,6 +20,7 @@ internal class ExpressProviderConverter : Converter<ExchangeProvider, ExpressPro
             isRecommended = value.isRecommended,
             slippage = value.slippage,
             isExchangeOnlyWithinSingleAddress = value.isExchangeOnlyWithinSingleAddress,
+            isExtraIdSupported = value.isExtraIdSupported,
         )
     }
 
