@@ -11,8 +11,8 @@ import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -31,7 +31,7 @@ internal object ManageTokensDataModule {
     @Singleton
     fun provideManageTokensRepository(
         tangemTechApi: TangemTechApi,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
         userTokensResponseStore: UserTokensResponseStore,
         userTokensSaver: UserTokensSaver,
@@ -45,7 +45,7 @@ internal object ManageTokensDataModule {
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi = tangemTechApi,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             manageTokensUpdateFetcher = manageTokensUpdateFetcher,
             userTokensResponseStore = userTokensResponseStore,
             userTokenSaver = userTokensSaver,
@@ -63,7 +63,7 @@ internal object ManageTokensDataModule {
     @Singleton
     fun provideCustomTokensRepository(
         tangemTechApi: TangemTechApi,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         userTokensResponseStore: UserTokensResponseStore,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
@@ -73,7 +73,7 @@ internal object ManageTokensDataModule {
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             userTokensResponseStore = userTokensResponseStore,
             walletManagersFacade = walletManagersFacade,
             excludedBlockchains = excludedBlockchains,
