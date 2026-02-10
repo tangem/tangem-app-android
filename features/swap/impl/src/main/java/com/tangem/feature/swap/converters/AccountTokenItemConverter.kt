@@ -1,15 +1,18 @@
 package com.tangem.feature.swap.converters
 
+import com.tangem.common.getTotalCryptoAmount
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter
-import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
-import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -108,7 +111,9 @@ internal class AccountTokenItemConverter(
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 TokenItemState.Subtitle2State.TextContent(
-                    text = status.getFormattedCryptoAmount(),
+                    text = status.getTotalCryptoAmount().format {
+                        crypto(cryptoCurrency = status.currency)
+                    },
                     isFlickering = status.value.isFlickering(),
                 )
             }
@@ -132,7 +137,12 @@ internal class AccountTokenItemConverter(
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 TokenItemState.FiatAmountState.TextContent(
-                    text = status.getFormattedFiatAmount(appCurrency = appCurrency),
+                    text = status.getTotalFiatAmount().format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
                     isAvailable = isAvailable,
                     isFlickering = status.value.isFlickering(),
                 )

@@ -13,6 +13,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.domain.common.wallets.UserWalletTransformAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
@@ -30,19 +31,20 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
-import com.tangem.tap.domain.userWalletList.utils.encryptionKey
-import com.tangem.tap.domain.userWalletList.utils.lock
-import com.tangem.tap.domain.userWalletList.utils.toUserWallets
-import com.tangem.tap.domain.userWalletList.utils.updateWith
+import com.tangem.tap.domain.userWalletList.utils.*
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultUserWalletsListRepository(
@@ -64,7 +66,16 @@ internal class DefaultUserWalletsListRepository(
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
     override val selectedUserWallet = MutableStateFlow<UserWallet?>(null)
+
     private val mutex = Mutex()
+
+    override fun getSyncOrNull(id: UserWalletId): UserWallet? {
+        return userWallets.value?.find { it.walletId == id }
+    }
+
+    override fun getSyncStrict(id: UserWalletId): UserWallet {
+        return requireNotNull(getSyncOrNull(id)) { "Unable to find user wallet with provided ID: $id" }
+    }
 
     override suspend fun load() {
         mutex.withLock {
@@ -97,6 +108,13 @@ internal class DefaultUserWalletsListRepository(
                         loadedWallets
                     }
                 }
+        }
+    }
+
+    override fun loadAndGet(): Flow<List<UserWallet>> = flow {
+        load()
+        userWallets.collect {
+            emit(requireNotNull(it))
         }
     }
 
@@ -295,8 +313,7 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
-                    val res = tangemSdkManagerProvider().scanProduct()
-                    when (res) {
+                    when (val res = tangemSdkManagerProvider().scanProduct()) {
                         is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
                         is CompletionResult.Success -> res.data
                     }
@@ -395,6 +412,44 @@ internal class DefaultUserWalletsListRepository(
         return userWallets.any { it.walletId !in unsecuredWalletIds }
     }
 
+    override suspend fun transform(action: UserWalletTransformAction) {
+        val wallets = userWalletsSync()
+        val walletsMap = wallets.associateBy { it.walletId }
+        val transformedWallets = action.transform(wallets)
+        val transformedWalletsMap = transformedWallets.associateBy { it.walletId }
+
+        require(walletsMap.keys == transformedWalletsMap.keys) {
+            "The transformation action must not change the set of wallet IDs." +
+                "Original IDs: ${walletsMap.keys}, Transformed IDs: ${transformedWalletsMap.keys}"
+        }
+
+        updateWallets { transformedWallets }
+
+        withContext(NonCancellable) {
+            if (savePersistentInformation()) {
+                publicInformationRepository.transform {
+                    transformedWallets.map { wallet -> wallet.publicInformation }
+                }
+
+                val changedSensitiveInfoWallets = wallets.filter { wallet ->
+                    val transformedWallet = transformedWalletsMap[wallet.walletId]
+                    transformedWallet != null && transformedWallet.sensitiveInformation != wallet.sensitiveInformation
+                }
+
+                changedSensitiveInfoWallets.forEach { wallet ->
+                    if (wallet.isLocked.not()) {
+                        sensitiveInformationRepository.save(wallet, wallet.encryptionKey)
+                    }
+
+                    checkForUpgradeAndDeleteHotWalletIfNeeded(
+                        newUserWallet = wallet,
+                        oldUserWallet = walletsMap[wallet.walletId] ?: error("This should never happen"),
+                    )
+                }
+            }
+        }
+    }
+
     private suspend fun checkForUpgradeAndDeleteHotWalletIfNeeded(
         newUserWallet: UserWallet,
         oldUserWallet: UserWallet,
@@ -435,9 +490,7 @@ internal class DefaultUserWalletsListRepository(
             authMode = true, // In auth mode user wallet can be deleted after 30 failed attempts
             hasBiometry = hasBiometry(),
         )
-        val result = passwordRequester.requestPassword(attemptRequest)
-
-        return when (result) {
+        return when (val result = passwordRequester.requestPassword(attemptRequest)) {
             HotWalletPasswordRequester.Result.Dismiss -> {
                 passwordRequester.dismiss()
                 UnlockWalletError.UserCancelled.left()

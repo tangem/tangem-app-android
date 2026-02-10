@@ -38,6 +38,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BaseSearchBarTestTags
+import com.tangem.core.ui.test.SearchBarTestTags
 
 @Composable
 fun SearchBar(
@@ -126,7 +127,9 @@ private fun DecorationBox(
         contentPadding = PaddingValues(all = TangemTheme.dimens.spacing12),
         leadingIcon = {
             Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size20),
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size20)
+                    .testTag(SearchBarTestTags.ICON),
                 painter = painterResource(id = R.drawable.ic_search_24),
                 tint = TangemTheme.colors.icon.informative,
                 contentDescription = null,
@@ -137,6 +140,7 @@ private fun DecorationBox(
                 state = state,
                 focusManager = focusManager,
                 keyboardController = keyboardController,
+                modifier = Modifier.testTag(SearchBarTestTags.CLEAR_BUTTON),
             )
         },
         placeholder = {
@@ -146,6 +150,7 @@ private fun DecorationBox(
                 style = TangemTheme.typography.body2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag(SearchBarTestTags.PLACEHOLDER_TEXT),
             )
         },
     )
