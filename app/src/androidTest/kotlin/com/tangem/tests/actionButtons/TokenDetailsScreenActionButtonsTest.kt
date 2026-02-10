@@ -119,7 +119,7 @@ class TokenDetailsScreenActionButtonsTest : BaseTestCase() {
                 onSwapTokenScreen { title.assertIsDisplayed() }
             }
             step("Assert token symbol: '$tokenSymbol' is displayed") {
-                onSwapTokenScreen { tokenSymbol(tokenSymbol).assertIsDisplayed() }
+                onSwapTokenScreen { swapTokenSymbol(tokenSymbol).assertIsDisplayed() }
             }
         }
     }
