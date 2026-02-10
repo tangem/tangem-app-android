@@ -48,6 +48,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             privacyPolicy = exchangeProvider.privacyPolicy,
             isRecommended = exchangeProvider.isRecommended,
             slippage = exchangeProvider.slippage,
+            isExtraIdSupported = exchangeProvider.isExtraIdSupported,
         )
     }
 
@@ -67,6 +68,7 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
             privacyPolicy = additionalProvider.privacyPolicy,
             isRecommended = additionalProvider.isRecommended,
             slippage = additionalProvider.slippage,
+            isExtraIdSupported = additionalProvider.isExtraIdSupported,
         )
     }
 
