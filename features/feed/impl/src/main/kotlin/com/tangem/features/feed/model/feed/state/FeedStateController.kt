@@ -1,8 +1,11 @@
 package com.tangem.features.feed.model.feed.state
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.model.feed.state.transformers.FeedListUMTransformer
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlinx.collections.immutable.persistentListOf
@@ -13,7 +16,9 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ModelScoped
-internal class FeedStateController @Inject constructor() {
+internal class FeedStateController @Inject constructor(
+    private val feedFeatureToggle: FeedFeatureToggle,
+) {
 
     private val mutableUiState: MutableStateFlow<FeedListUM> = MutableStateFlow(value = getInitialState())
 
@@ -33,15 +38,11 @@ internal class FeedStateController @Inject constructor() {
         transformers.forEach { mutableUiState.update(function = it::transform) }
     }
 
-    fun clear() {
-        mutableUiState.update { getInitialState() }
-    }
-
     private fun getInitialState(): FeedListUM {
         return FeedListUM(
             currentDate = "",
             feedListSearchBar = FeedListSearchBar(
-                placeholderText = com.tangem.core.ui.extensions.TextReference.EMPTY,
+                placeholderText = TextReference.EMPTY,
                 onBarClick = {},
             ),
             feedListCallbacks = FeedListCallbacks(
@@ -53,6 +54,7 @@ internal class FeedStateController @Inject constructor() {
                 onSortTypeClick = {},
                 onSliderScroll = {},
                 onSliderEndReached = {},
+                onOpenEarnPageClick = {},
             ),
             news = NewsUM(
                 content = persistentListOf(),
@@ -65,6 +67,11 @@ internal class FeedStateController @Inject constructor() {
                 currentSortByType = SortByTypeUM.Trending,
             ),
             globalState = GlobalFeedState.Loading,
+            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
+                EarnListUM.Loading
+            } else {
+                null
+            },
         )
     }
 }
