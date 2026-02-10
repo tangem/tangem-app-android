@@ -7,6 +7,7 @@ import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
+import com.tangem.domain.settings.repositories.LegacySettingsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
@@ -68,10 +69,14 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
-    fun providesCanUseBiometryUseCase(tangemSdkManager: TangemSdkManager): CanUseBiometryUseCase {
-        return CanUseBiometryUseCase(
-            legacySettingsRepository = DefaultLegacySettingsRepository(tangemSdkManager = tangemSdkManager),
-        )
+    fun provideLegacySettingsRepository(tangemSdkManager: TangemSdkManager): LegacySettingsRepository {
+        return DefaultLegacySettingsRepository(tangemSdkManager = tangemSdkManager)
+    }
+
+    @Provides
+    @Singleton
+    fun providesCanUseBiometryUseCase(legacySettingsRepository: LegacySettingsRepository): CanUseBiometryUseCase {
+        return CanUseBiometryUseCase(legacySettingsRepository = legacySettingsRepository)
     }
 
     @Provides
