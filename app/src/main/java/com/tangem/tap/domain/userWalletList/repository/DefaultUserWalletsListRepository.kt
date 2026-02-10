@@ -26,6 +26,7 @@ import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.feature.referral.domain.MobileWalletPromoRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
@@ -60,6 +61,7 @@ internal class DefaultUserWalletsListRepository(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletRepository: HotWalletRepository,
+    private val mobileWalletPromoRepository: MobileWalletPromoRepository,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -144,6 +146,8 @@ internal class DefaultUserWalletsListRepository(
             raise(SaveWalletError.WalletAlreadySaved(messageId = R.string.user_wallet_list_error_wallet_already_saved))
         }
 
+        val isFirstWallet = userWallets.value?.isEmpty() == true
+
         if (savePersistentInformation()) {
             publicInformationRepository.save(userWallet, canOverride)
             if (userWallet.isLocked.not()) {
@@ -164,6 +168,10 @@ internal class DefaultUserWalletsListRepository(
         updateWallets { currentWallets ->
             val wallets = currentWallets.orEmpty()
             wallets.addOrReplace(userWallet) { it.walletId == userWallet.walletId }
+        }
+
+        if (isFirstWallet) {
+            onFirstWalletCreated()
         }
 
         // update the selectedUserWallet state if it is the only wallet
@@ -239,6 +247,9 @@ internal class DefaultUserWalletsListRepository(
                 val newSelected = updatedWallets?.findAvailableUserWallet(
                     currentWallets.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
                 )
+                if (newSelected == null) {
+                    onAllWalletsDeleted()
+                }
                 selectedUserWalletRepository.set(newSelected?.walletId)
                 newSelected
             }
@@ -594,5 +605,15 @@ internal class DefaultUserWalletsListRepository(
 
     private fun trackWalletUpgradeEvent() {
         analyticsEventHandler.send(event = WalletSettingsAnalyticEvents.WalletUpgraded())
+    }
+
+    private suspend fun onFirstWalletCreated() {
+        // reset flag (that is set from AF deeplink) after creating a new wallet
+        mobileWalletPromoRepository.setShouldShowMobileWalletPromo(false)
+    }
+
+    private suspend fun onAllWalletsDeleted() {
+        // reset flag (that is set from AF deeplink) after removing the last wallet
+        mobileWalletPromoRepository.setShouldShowMobileWalletPromo(false)
     }
 }
