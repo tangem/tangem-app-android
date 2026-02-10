@@ -254,7 +254,7 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
                         articleConfigUM = article,
                         onArticleClick = { relatedNews.onArticledClicked(article.id) },
                         modifier = articleModifier
-                            .height(164.dp)
+                            .heightIn(min = 164.dp)
                             .width(216.dp),
                         colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                     )
