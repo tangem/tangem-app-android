@@ -69,12 +69,20 @@ class GetSwapSupportedPairsUseCase(
             .filter { pair ->
                 // Search available to swap currency
                 cryptoCurrencyList.any { currencyStatus ->
-                    // Allowed only on networks without tx extras (e.i. memo and destination tag)
-                    val isExtrasSupported = currencyStatus.network.transactionExtrasType.isTxExtrasSupported()
-                    currencyStatus.id == pair.to.currency.id && !isExtrasSupported
+                    currencyStatus.id == pair.to.currency.id
                 }
             }
-            .map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            .map { pair ->
+                val toCurrency = groupingCurrency(pair)
+                val isTxExtrasSupported = toCurrency.currency.network.transactionExtrasType.isTxExtrasSupported()
+                val filteredProviders = if (isTxExtrasSupported) {
+                    pair.providers.filter { it.isExtraIdSupported }
+                } else {
+                    pair.providers
+                }
+                SwapCryptoCurrency(toCurrency, filteredProviders)
+            }
+            .filter { it.providers.isNotEmpty() }
             .toList()
 
         val unavailableCryptoCurrencies =
