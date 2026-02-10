@@ -13,11 +13,11 @@ import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
 import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.card.common.extensions.supportedBlockchains
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 @Suppress("LongParameterList")
 internal class DefaultCustomTokensRepository(
     private val tangemTechApi: TangemTechApi,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val excludedBlockchains: ExcludedBlockchains,
@@ -96,9 +96,8 @@ internal class DefaultCustomTokensRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Token? = withContext(dispatchers.io) {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "User wallet [$userWalletId] not found while finding token"
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
+
         val network = requireNotNull(
             networkFactory.create(
                 networkId = networkId,
@@ -138,7 +137,7 @@ internal class DefaultCustomTokensRepository(
                     rawId = CryptoCurrency.RawID(coin.id),
                     name = coin.name,
                     symbol = coin.symbol,
-                    decimals = coinNetwork.decimalCount!!.toInt(),
+                    decimals = requireNotNull(coinNetwork.decimalCount).toInt(),
                     contractAddress = tokenAddress,
                 )
             } else {
@@ -152,9 +151,7 @@ internal class DefaultCustomTokensRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Coin {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "User wallet [$userWalletId] not found while creating coin"
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val network = requireNotNull(
             networkFactory.create(
                 networkId = networkId,
@@ -189,9 +186,7 @@ internal class DefaultCustomTokensRepository(
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Validated.All,
     ): CryptoCurrency.Token {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "User wallet [$userWalletId] not found while creating custom token"
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val network = requireNotNull(
             networkFactory.create(
                 networkId = networkId,
@@ -217,6 +212,7 @@ internal class DefaultCustomTokensRepository(
         )
     }
 
+    @Deprecated("Use ManageCryptoCurrenciesUseCase")
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) =
         withContext(dispatchers.io) {
             val cryptoCurrency = when (currency) {
@@ -273,20 +269,15 @@ internal class DefaultCustomTokensRepository(
     }
 
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "User wallet [$userWalletId] not found while getting supported networks"
-        }
-
-        when (userWallet) {
+        when (val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)) {
             is UserWallet.Hot -> {
-                Blockchain.entries.mapNotNull {
-                    // TODO: refactor [REDACTED_JIRA]\
-                    if (it.isTestnet() || it in excludedBlockchains || it in hotWalletExcludedBlockchains) {
-                        return@mapNotNull null
-                    }
+                Blockchain.entries.mapNotNull { blockchain ->
+                    // TODO: refactor [REDACTED_JIRA]
+                    val isExcluded = blockchain in excludedBlockchains || blockchain in hotWalletExcludedBlockchains
+                    if (blockchain.isTestnet() || isExcluded) return@mapNotNull null
 
                     networkFactory.create(
-                        blockchain = it,
+                        blockchain = blockchain,
                         extraDerivationPath = null,
                         userWallet = userWallet,
                     )

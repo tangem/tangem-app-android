@@ -10,6 +10,10 @@ android {
     namespace = "com.tangem.data.wallet"
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(projects.data.common)
 
@@ -47,9 +51,7 @@ dependencies {
     implementation(deps.timber)
 
     /** tests */
+    testImplementation(projects.test.core)
     testImplementation(projects.common.test)
-    testImplementation(deps.test.junit)
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.mockk)
+    testRuntimeOnly(deps.test.junit5.engine)
 }

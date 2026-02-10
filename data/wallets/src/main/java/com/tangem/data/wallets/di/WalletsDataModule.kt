@@ -15,8 +15,8 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
@@ -41,7 +41,7 @@ internal object WalletsDataModule {
     fun providesWalletsRepository(
         appPreferencesStore: AppPreferencesStore,
         tangemTechApi: TangemTechApi,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
         authProvider: AuthProvider,
         walletServerBinder: WalletServerBinder,
@@ -52,7 +52,7 @@ internal object WalletsDataModule {
         return DefaultWalletsRepository(
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
             authProvider = authProvider,
@@ -74,13 +74,13 @@ internal object WalletsDataModule {
     fun provideWalletsPromoRepository(
         appPreferencesStore: AppPreferencesStore,
         tangemTechApi: TangemTechApi,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletsPromoRepository {
         return DefaultWalletsPromoRepository(
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             dispatchers = dispatchers,
         )
     }
