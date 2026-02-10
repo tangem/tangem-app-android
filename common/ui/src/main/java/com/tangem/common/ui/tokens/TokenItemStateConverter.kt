@@ -1,5 +1,7 @@
 package com.tangem.common.ui.tokens
 
+import com.tangem.common.getTotalCryptoAmount
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -25,11 +27,8 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.common.RewardInfo
 import com.tangem.domain.staking.model.common.RewardType
-import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
@@ -156,29 +155,6 @@ class TokenItemStateConverter(
     }
 
     companion object {
-
-        fun CryptoCurrencyStatus.getFormattedFiatAmount(appCurrency: AppCurrency): String {
-            val fiatAmount = value.fiatAmount ?: return DASH_SIGN
-
-            val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
-            val totalAmount = fiatAmount.plus(fiatYieldBalance)
-
-            return totalAmount.format {
-                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
-            }
-        }
-
-        fun CryptoCurrencyStatus.getFormattedCryptoAmount(): String {
-            val cryptoAmount = value.amount ?: return DASH_SIGN
-
-            val totalAmount = cryptoAmount.plus(getStakedBalance())
-
-            return totalAmount.format { crypto(currency) }
-        }
-
-        private fun CryptoCurrencyStatus.getStakedBalance() = (value.stakingBalance as? StakingBalance.Data)
-            ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
-
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
@@ -348,7 +324,9 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.Subtitle2State.TextContent(
-                        text = status.getFormattedCryptoAmount(),
+                        text = status.getTotalCryptoAmount().format {
+                            crypto(status.currency)
+                        },
                         isFlickering = status.value.isFlickering(),
                     )
                 }
@@ -371,7 +349,12 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.FiatAmountState.Content(
-                        text = status.getFormattedFiatAmount(appCurrency = appCurrency),
+                        text = status.getTotalFiatAmount().format {
+                            fiat(
+                                fiatCurrencyCode = appCurrency.code,
+                                fiatCurrencySymbol = appCurrency.symbol,
+                            )
+                        },
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (status.value.yieldSupplyStatus?.isActive == true &&

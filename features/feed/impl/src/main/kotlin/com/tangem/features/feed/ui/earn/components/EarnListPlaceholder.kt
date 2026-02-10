@@ -17,11 +17,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun EarnListPlaceholder(modifier: Modifier = Modifier) {
+internal fun EarnListPlaceholder(modifier: Modifier = Modifier, placeholderCount: Int = PLACEHOLDER_ITEMS_COUNT) {
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
-        repeat(PLACEHOLDER_ITEMS_COUNT) {
+        repeat(placeholderCount) {
             EarnItemPlaceholder()
         }
     }
