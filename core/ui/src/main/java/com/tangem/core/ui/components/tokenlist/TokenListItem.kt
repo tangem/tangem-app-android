@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW4
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
@@ -257,22 +258,26 @@ fun ExpandedPortfolioHeader(
                 }
             }
 
-            val text = when (val fiatAmountState = state.fiatAmountState) {
-                is TokenItemState.FiatAmountState.Content -> fiatAmountState.text
-                is TokenItemState.FiatAmountState.TextContent -> fiatAmountState.text
-                else -> null
+            when (val fiatAmountState = state.fiatAmountState) {
+                is TokenItemState.FiatAmountState.Content -> FiatAmount(
+                    text = fiatAmountState.text,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = balanceTextModifier,
+                )
+                is TokenItemState.FiatAmountState.TextContent -> FiatAmount(
+                    text = fiatAmountState.text,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = balanceTextModifier,
+                )
+                is TokenItemState.FiatAmountState.Loading -> TextShimmer(
+                    style = TangemTheme.typography.caption1,
+                    textSizeHeight = true,
+                    modifier = balanceTextModifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxWidth(fraction = 0.2f),
+                )
+                else -> Unit
             }
-
-            Text(
-                text = text.orEmpty().orMaskWithStars(isBalanceHidden),
-                modifier = balanceTextModifier
-                    .alignByBaseline()
-                    .padding(horizontal = 4.dp),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.caption1,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
         }
 
         if (isCollapsable) {
@@ -284,4 +289,18 @@ fun ExpandedPortfolioHeader(
             )
         }
     }
+}
+
+@Composable
+private fun RowScope.FiatAmount(text: String, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
+    Text(
+        text = text.orMaskWithStars(isBalanceHidden),
+        modifier = modifier
+            .alignByBaseline()
+            .padding(horizontal = 4.dp),
+        color = TangemTheme.colors.text.tertiary,
+        style = TangemTheme.typography.caption1,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+    )
 }
