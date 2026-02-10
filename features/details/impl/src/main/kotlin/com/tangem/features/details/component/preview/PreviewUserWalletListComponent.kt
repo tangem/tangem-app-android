@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
+import com.tangem.features.details.entity.WalletReorderUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.ui.UserWalletListBlock
 import kotlinx.collections.immutable.persistentListOf
@@ -51,6 +52,11 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
             addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
             isWalletSavingInProgress = true,
             onAddNewWalletClick = {},
+            walletReorderUM = WalletReorderUM(
+                isDragEnabled = true,
+                onMove = { _, _ -> },
+                onDragStopped = {},
+            ),
         ),
     )
 
