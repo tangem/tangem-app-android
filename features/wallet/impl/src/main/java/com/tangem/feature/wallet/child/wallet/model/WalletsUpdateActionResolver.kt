@@ -82,6 +82,9 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             isWalletsCountChanged(state, wallets) -> {
                 getChangeWalletsListAction(state, wallets, selectedWallet)
             }
+            isWalletsOrderChanged(state, wallets) -> {
+                Action.ReorderWallets(wallets = wallets)
+            }
             isAnotherWalletSelected(state, selectedWallet) -> {
                 Action.ReinitializeNewWallet(
                     prevWalletId = state.getPrevSelectedWallet().id,
@@ -119,6 +122,13 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         val walletsSize = wallets.size
 
         return prevWalletsSize != walletsSize
+    }
+
+    private fun isWalletsOrderChanged(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        val prevWalletIds = state.wallets.map { it.walletCardState.id }
+        val newWalletIds = wallets.map { it.walletId }
+
+        return prevWalletIds != newWalletIds
     }
 
     private fun getChangeWalletsListAction(
@@ -393,6 +403,15 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         data class ReloadWallets(
             val wallets: List<UserWallet>,
         ) : Action()
+
+        data class ReorderWallets(
+            val wallets: List<UserWallet>,
+        ) : Action() {
+
+            override fun toString(): String {
+                return "ReorderWallets(wallets = ${wallets.joinToString { it.walletId.toString() }})"
+            }
+        }
 
         data object EmptyWallets : Action()
 
