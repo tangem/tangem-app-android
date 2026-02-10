@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.common)
     // endregion
 
     // region Project - Features API

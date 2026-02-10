@@ -6,8 +6,8 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
@@ -18,7 +18,7 @@ import javax.inject.Inject
 /**
  * Factory to create default [GetWalletAccountsResponse].
  *
- * @property userWalletsStore          store to get user wallet information
+ * @property userWalletsListRepository repository to get user wallets
  * @property cryptoPortfolioCF         converter factory to convert crypto portfolio accounts
  * @property userTokensResponseFactory factory to create [UserTokensResponse]
  * @property networkFactory            factory to create network derivation path
@@ -26,14 +26,14 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class DefaultWalletAccountsResponseFactory @Inject constructor(
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
     private val userTokensResponseFactory: UserTokensResponseFactory,
     private val networkFactory: NetworkFactory,
 ) {
 
     fun create(userWalletId: UserWalletId, userTokensResponse: UserTokensResponse?): GetWalletAccountsResponse {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
 
         val accountDTOs = userWallet?.let(::createDefaultAccountDTOs).orEmpty()
         val response = userTokensResponse.orDefault(userWallet = userWallet)

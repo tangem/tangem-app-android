@@ -3,8 +3,8 @@ package com.tangem.domain.account.status.producer
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -20,7 +20,8 @@ import kotlinx.coroutines.flow.flowOn
  * Produces a flow of [AccountStatusList] for multiple user wallets.
  *
  * @property params Parameters for the producer (currently unused).
- * @property accountsCRUDRepository Repository to get the list of user wallets.
+ * @property flowProducerTools Tools for managing the flow producer.
+ * @property userWalletsListRepository Repository to get the list of user wallets.
  * @property singleAccountStatusListSupplier Supplier to get the account status list for a single user wallet.
  * @property dispatchers Coroutine dispatcher provider for managing threading.
  *
@@ -29,7 +30,7 @@ import kotlinx.coroutines.flow.flowOn
 internal class DefaultMultiAccountStatusListProducer @AssistedInject constructor(
     @Assisted val params: Unit,
     override val flowProducerTools: FlowProducerTools,
-    private val accountsCRUDRepository: AccountsCRUDRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiAccountStatusListProducer {
@@ -38,7 +39,7 @@ internal class DefaultMultiAccountStatusListProducer @AssistedInject constructor
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<List<AccountStatusList>> {
-        return accountsCRUDRepository.getUserWallets()
+        return userWalletsListRepository.loadAndGet()
             .flatMapLatest { userWallets ->
                 val flows = userWallets.map {
                     singleAccountStatusListSupplier(

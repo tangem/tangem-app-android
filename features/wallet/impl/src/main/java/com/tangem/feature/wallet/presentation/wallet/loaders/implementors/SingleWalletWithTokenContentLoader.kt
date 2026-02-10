@@ -4,7 +4,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.staking.usecase.StakingAvailabilityListUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -15,8 +14,10 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletActionButtonsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletWithTokenListSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
 
 @Deprecated("Use SingleWalletWithTokenContentLoaderV2 instead")
 @Suppress("LongParameterList")
@@ -31,11 +32,9 @@ internal class SingleWalletWithTokenContentLoader(
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val tokenListStore: MultiWalletTokenListStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -65,12 +64,6 @@ internal class SingleWalletWithTokenContentLoader(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
                 getStoryContentUseCase = getStoryContentUseCase,
-            ).let(::add)
-            WalletDropDownItemsSubscriber(
-                stateHolder = stateHolder,
-                shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
-                clickIntents = clickIntents,
-                hotWalletFeatureToggles = hotWalletFeatureToggles,
             ).let(::add)
         }
     }

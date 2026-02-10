@@ -2,9 +2,9 @@ package com.tangem.data.account.fetcher
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.fetcher.MultiAccountListFetcher
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.assertEitherLeft
@@ -19,9 +19,12 @@ import org.junit.jupiter.api.TestInstance
 class DefaultMultiAccountListFetcherTest {
 
     private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
-    private val userWalletsStore: UserWalletsStore = mockk(relaxUnitFun = true)
+    private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
 
-    private val fetcher = DefaultMultiAccountListFetcher(singleAccountListFetcher, userWalletsStore)
+    private val fetcher = DefaultMultiAccountListFetcher(
+        singleAccountListFetcher = singleAccountListFetcher,
+        userWalletsListRepository = userWalletsListRepository,
+    )
 
     private val userWalletId1 = UserWalletId("011")
     private val userWalletId2 = UserWalletId("012")
@@ -35,7 +38,7 @@ class DefaultMultiAccountListFetcherTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(singleAccountListFetcher, userWalletsStore)
+        clearMocks(singleAccountListFetcher, userWalletsListRepository)
     }
 
     @Test
@@ -98,7 +101,7 @@ class DefaultMultiAccountListFetcherTest {
         // Arrange
         val params = MultiAccountListFetcher.Params.All
 
-        every { userWalletsStore.userWalletsSync } returns listOf(userWallets.first())
+        every { userWalletsListRepository.userWallets.value } returns listOf(userWallets.first())
 
         coEvery {
             singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId1))
@@ -111,7 +114,7 @@ class DefaultMultiAccountListFetcherTest {
         assertEitherRight(actual)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWalletsSync
+            userWalletsListRepository.userWallets.value
             singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId1))
         }
     }
@@ -121,7 +124,7 @@ class DefaultMultiAccountListFetcherTest {
         // Arrange
         val params = MultiAccountListFetcher.Params.All
 
-        every { userWalletsStore.userWalletsSync } returns userWallets
+        every { userWalletsListRepository.userWallets.value } returns userWallets
 
         val exception = Exception("Fetch failed")
         coEvery {
@@ -145,7 +148,7 @@ class DefaultMultiAccountListFetcherTest {
         assertEitherLeft(actual, expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWalletsSync
+            userWalletsListRepository.userWallets.value
             singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId1))
             singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId2))
         }
