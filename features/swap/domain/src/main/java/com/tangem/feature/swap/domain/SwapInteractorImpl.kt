@@ -1338,7 +1338,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             }
     }
 
-    override fun getNativeToken(networkId: String): CryptoCurrency {
+    override suspend fun getNativeToken(networkId: String): CryptoCurrency {
         return repository.getNativeTokenForNetwork(networkId)
     }
 
@@ -2553,7 +2553,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
             val areAllQuotesFound = cachedQuotes?.all { quote -> quote.value !is QuoteStatus.Empty } == true
 
-            if (areAllQuotesFound) return@runSuspendCatching cachedQuotes.orEmpty()
+            if (areAllQuotesFound) return@runSuspendCatching cachedQuotes
 
             val currenciesIds = if (cachedQuotes.isNullOrEmpty()) {
                 this@getQuotesOrEmpty
@@ -2612,11 +2612,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 sealed class TxFeeSealedState {
     class Legacy(val txFeeState: TxFeeState, val selectedFee: FeeType) : TxFeeSealedState()
     class Component(val txFee: TxFee.FeeComponent) : TxFeeSealedState()
-
-    fun getTxFeeStateOrNull() = when (this) {
-        is Component -> null
-        is Legacy -> txFeeState
-    }
 }
 
 sealed class TransactionFeeResult {
