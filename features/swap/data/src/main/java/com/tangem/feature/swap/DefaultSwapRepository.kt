@@ -286,6 +286,7 @@ internal class DefaultSwapRepository(
         expressOperationType: ExpressOperationType,
         refundAddress: String?, // for cex only
         refundExtraId: String?, // for cex only
+        toExtraId: String?, // for networks with memo only
     ): Either<ExpressDataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -311,6 +312,7 @@ internal class DefaultSwapRepository(
                         userWallet = userWallet,
                         appPreferencesStore = appPreferencesStore,
                     ),
+                    toExtraId = toExtraId,
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
