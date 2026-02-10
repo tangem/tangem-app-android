@@ -23,13 +23,14 @@ dependencies {
     implementation(projects.data.common)
 
     /** Project - Domain */
-    implementation(projects.domain.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
-    implementation(projects.domain.nft)
-    implementation(projects.domain.walletManager)
     implementation(projects.domain.card)
+    implementation(projects.domain.common)
+    implementation(projects.domain.models)
+    implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.wallets.models)
 
     /** Project - Utils */
     implementation(projects.core.utils)

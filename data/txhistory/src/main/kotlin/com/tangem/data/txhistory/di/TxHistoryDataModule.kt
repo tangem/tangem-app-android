@@ -4,7 +4,7 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.DefaultTxHistoryRepository
 import com.tangem.data.txhistory.repository.RefactoredTxHistoryRepository
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepository
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -24,15 +24,15 @@ internal object TxHistoryDataModule {
     fun provideTxHistoryRepository(
         cacheRegistry: CacheRegistry,
         walletManagersFacade: WalletManagersFacade,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         txHistoryItemsStore: TxHistoryItemsStore,
         dispatchers: CoroutineDispatcherProvider,
     ): TxHistoryRepository = DefaultTxHistoryRepository(
-        cacheRegistry,
-        walletManagersFacade,
-        userWalletsStore,
-        txHistoryItemsStore,
-        dispatchers,
+        cacheRegistry = cacheRegistry,
+        walletManagersFacade = walletManagersFacade,
+        userWalletsListRepository = userWalletsListRepository,
+        txHistoryItemsStore = txHistoryItemsStore,
+        dispatchers = dispatchers,
     )
 
     @Provides
