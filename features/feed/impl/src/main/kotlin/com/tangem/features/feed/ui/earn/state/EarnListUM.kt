@@ -17,7 +17,10 @@ internal sealed interface EarnBestOpportunitiesUM {
     data object Loading : EarnBestOpportunitiesUM
     data object Empty : EarnBestOpportunitiesUM
     data class EmptyFiltered(val onClearFilterClick: () -> Unit) : EarnBestOpportunitiesUM
-    data class Content(val items: ImmutableList<EarnListItemUM>) : EarnBestOpportunitiesUM
+    data class Content(
+        val items: ImmutableList<EarnListItemUM>,
+        val onLoadMore: () -> Unit,
+    ) : EarnBestOpportunitiesUM
     data class Error(val onRetryClicked: () -> Unit) : EarnBestOpportunitiesUM
 }
 
