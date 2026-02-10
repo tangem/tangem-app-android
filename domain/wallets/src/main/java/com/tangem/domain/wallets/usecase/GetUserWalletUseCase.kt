@@ -10,24 +10,17 @@ import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.GetUserWalletError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
 
 class GetUserWalletUseCase(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewListRepository: Boolean,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId): Either<GetUserWalletError, UserWallet> = either {
-        val userWallets = if (useNewListRepository) {
-            userWalletsListRepository.requireUserWalletsSync()
-        } else {
-            userWalletsListManager.userWalletsSync
-        }
+        val userWallets = userWalletsListRepository.requireUserWalletsSync()
 
         ensureNotNull(userWallets.firstOrNull { it.walletId == userWalletId }) {
             raise(GetUserWalletError.UserWalletNotFound)
@@ -36,11 +29,7 @@ class GetUserWalletUseCase(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun invokeFlow(userWalletId: UserWalletId): EitherFlow<GetUserWalletError, UserWallet> {
-        val flow = if (useNewListRepository) {
-            userWalletsListRepository.userWallets.map { requireNotNull(it) }
-        } else {
-            userWalletsListManager.userWallets
-        }
+        val flow = userWalletsListRepository.userWallets.map { requireNotNull(it) }
 
         return flow.transformLatest { userWallets ->
             userWallets.firstOrNull { it.walletId == userWalletId }

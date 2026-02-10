@@ -9,10 +9,7 @@ import androidx.work.WorkManager
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.LockTimerWorker.Companion.TAG
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import kotlinx.coroutines.CoroutineScope
@@ -22,16 +19,13 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 
 @Suppress("LongParameterList")
 internal class LockUserWalletsTimer(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val duration: Duration = with(Duration) { 5.minutes },
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val coroutineScope: CoroutineScope,
     private val clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase,
 ) : LifecycleOwner by context as LifecycleOwner,
@@ -59,9 +53,7 @@ internal class LockUserWalletsTimer(
             )
 
             if (shouldOpenWelcomeScreenOnResume) {
-                if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                    clearAllHotWalletContextualUnlockUseCase.invoke()
-                }
+                clearAllHotWalletContextualUnlockUseCase.invoke()
                 store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
@@ -115,38 +107,18 @@ internal class LockUserWalletsTimer(
      * This job used only when app is foreground when background use [JobScheduler]
      */
     private fun createDelayJob(): Job = coroutineScope.launch {
-        val startTime = System.currentTimeMillis()
-
         delay(duration)
 
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            val userWallets = userWalletsListRepository.userWalletsSync()
-            if (userWallets.isNotEmpty()) {
-                userWalletsListRepository.lockAllWallets()
-                    .onLeft {
-                        start()
-                    }
-                    .onRight {
-                        clearAllHotWalletContextualUnlockUseCase.invoke()
-                        store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
-                    }
-            }
-        } else {
-            val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
-
-            if (userWalletsListManager.hasUserWallets) {
-                val currentTime = System.currentTimeMillis()
-
-                Timber.i(
-                    """
-                        Finished
-                        |- Millis passed: ${currentTime - startTime}
-                    """.trimIndent(),
-                )
-
-                userWalletsListManager.lock()
-                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
-            }
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        if (userWallets.isNotEmpty()) {
+            userWalletsListRepository.lockAllWallets()
+                .onLeft {
+                    start()
+                }
+                .onRight {
+                    clearAllHotWalletContextualUnlockUseCase.invoke()
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
+                }
         }
     }
 }

@@ -1,14 +1,17 @@
 package com.tangem.feature.referral.model
 
+import com.tangem.common.getTotalCryptoAmount
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
-import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
-import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -35,10 +38,17 @@ internal class AccountAwardConverter(
                 iconState = CryptoCurrencyToIconStateConverter().convert(currency),
                 titleState = TokenItemState.TitleState.Content(stringReference(currency.name)),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(
-                    text = accountAwardToken.getFormattedFiatAmount(appCurrency = appCurrency),
+                    text = accountAwardToken.getTotalFiatAmount().format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
                 ),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(
-                    text = accountAwardToken.getFormattedCryptoAmount(),
+                    text = accountAwardToken.getTotalCryptoAmount().format {
+                        crypto(cryptoCurrency = currency)
+                    },
                     isFlickering = accountAwardToken.value.isFlickering(),
                 ),
                 subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(currency.symbol)),

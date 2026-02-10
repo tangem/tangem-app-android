@@ -2,9 +2,9 @@ package com.tangem.data.account.fetcher
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.fetcher.MultiAccountListFetcher
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.coroutineScope
@@ -17,13 +17,13 @@ import javax.inject.Inject
  * Implementation of [MultiAccountListFetcher]
  *
  * @property singleAccountListFetcher instance of [SingleAccountListFetcher] to fetch accounts for a single wallet
- * @property userWalletsStore         instance of [UserWalletsStore] to get all user wallets
+ * @property userWalletsListRepository repository for getting user wallets
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultMultiAccountListFetcher @Inject constructor(
     private val singleAccountListFetcher: SingleAccountListFetcher,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : MultiAccountListFetcher {
 
     override suspend fun invoke(params: MultiAccountListFetcher.Params): Either<Throwable, Unit> = either {
@@ -58,7 +58,9 @@ internal class DefaultMultiAccountListFetcher @Inject constructor(
                 }
             }
             MultiAccountListFetcher.Params.All -> {
-                val userWalletsIds = userWalletsStore.userWalletsSync.map(UserWallet::walletId).toSet()
+                val userWalletsIds = userWalletsListRepository.userWallets.value.orEmpty()
+                    .map(UserWallet::walletId)
+                    .toSet()
 
                 invoke(params = MultiAccountListFetcher.Params.Set(ids = userWalletsIds)).bind()
             }

@@ -4,7 +4,7 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -20,7 +20,8 @@ import kotlinx.coroutines.flow.*
  * Default implementation of [MultiWalletCryptoCurrenciesProducer]
  *
  * @property params                          params
- * @property userWalletsStore                UserWallet's store
+ * @property flowProducerTools               tools for producing flows
+ * @property userWalletsListRepository       repository for getting user wallets
  * @property userTokensResponseStore         store of `UserTokensResponse`
  * @property responseCryptoCurrenciesFactory factory for creating [CryptoCurrency] from `UserTokensResponse`
  * @property dispatchers                     dispatchers
@@ -30,7 +31,7 @@ import kotlinx.coroutines.flow.*
 internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constructor(
     @Assisted val params: MultiWalletCryptoCurrenciesProducer.Params,
     override val flowProducerTools: FlowProducerTools,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -39,7 +40,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
     override val fallback: Option<Set<CryptoCurrency>> = emptySet<CryptoCurrency>().some()
 
     override fun produce(): Flow<Set<CryptoCurrency>> {
-        val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
             error("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
