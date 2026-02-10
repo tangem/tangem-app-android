@@ -254,7 +254,7 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private suspend fun canUnlockWithBiometrics(): Boolean {
-        return canUseBiometryUseCase() && walletsRepository.useBiometricAuthentication()
+        return canUseBiometryUseCase.strict() && walletsRepository.useBiometricAuthentication()
     }
 
     suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
