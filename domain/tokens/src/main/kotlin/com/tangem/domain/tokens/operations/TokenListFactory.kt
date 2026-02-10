@@ -2,16 +2,14 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.common.getTotalFiatAmount
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
-import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.utils.extensions.orZero
-import java.math.BigDecimal
 
 /**
  * This factory creates a [TokenList] based on the provided list of [CryptoCurrencyStatus], [TokensGroupType],
@@ -103,7 +101,7 @@ object TokenListFactory {
                 if (hasLoading) return this
 
                 sortedByDescending { group ->
-                    group.currencies.sumOf { it.calculateBalance() }
+                    group.currencies.sumOf { it.getTotalFiatAmount().orZero() }
                 }
             }
         }
@@ -117,16 +115,8 @@ object TokenListFactory {
 
                 if (hasLoading) return this
 
-                sortedByDescending { it.calculateBalance() }
+                sortedByDescending { it.getTotalFiatAmount().orZero() }
             }
         }
-    }
-
-    private fun CryptoCurrencyStatus.calculateBalance(): BigDecimal {
-        val stakingBalance = value.stakingBalance as? StakingBalance.Data
-        val totalStakingBalance = stakingBalance?.getTotalWithRewardsStakingBalance(currency.network.rawId).orZero()
-        val totalFiatStakingBalance = totalStakingBalance.multiply(value.fiatRate.orZero())
-
-        return value.fiatAmount?.plus(totalFiatStakingBalance).orZero()
     }
 }

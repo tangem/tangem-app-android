@@ -411,10 +411,8 @@ internal class SendAmountModel @Inject constructor(
         // Allowed only in multicurrency wallets
         val isMultiCurrency = userWallet?.isMultiCurrency == true
 
-        // Allowed only on networks without tx extras (e.i. memo and destination tag)
-        val isExtrasSupported = cryptoCurrencyStatus.currency.network.transactionExtrasType.isTxExtrasSupported()
         isSendWithSwapAvailable.update {
-            isAvailableForSwap && isMultiCurrency && !isExtrasSupported
+            isAvailableForSwap && isMultiCurrency
         }
     }
 }
