@@ -1,44 +1,36 @@
 package com.tangem.data.wallets.derivations
 
-import android.annotation.SuppressLint
+import arrow.core.right
 import com.google.common.truth.Truth
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.common.CompletionResult
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.data.common.network.NetworkFactory
-import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
-import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.card.configs.GenericCardConfig
-import com.tangem.domain.card.configs.MultiWalletCardConfig
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.operations.derivation.DerivationTaskResponse
-import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class DefaultDerivationsRepositoryTest {
 
-    private val tangemSdkManager = mockk<TangemSdkManager>()
-    private val userWalletsStore = mockk<UserWalletsStore>()
+    private val userWalletsListRepository = mockk<UserWalletsListRepository>()
+    private val coldDerivationsRepository: ColdMapDerivationsRepository = mockk()
+
     private val repository = DefaultDerivationsRepository(
-        userWalletsStore = userWalletsStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        userWalletsListRepository = userWalletsListRepository,
         hotDerivationsRepository = mockk(),
-        coldDerivationsRepository = DefaultColdMapDerivationsRepository(
-            tangemSdkManager = tangemSdkManager,
-            networkFactory = NetworkFactory(excludedBlockchains = ExcludedBlockchains()),
-            dispatchers = TestingCoroutineDispatcherProvider(),
-        ),
+        coldDerivationsRepository = coldDerivationsRepository,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private val defaultUserWalletId = UserWalletId("011")
@@ -51,127 +43,94 @@ internal class DefaultDerivationsRepositoryTest {
         hasBackupError = false,
     )
 
+    @AfterEach
+    fun tearDown() {
+        clearMocks(userWalletsListRepository, coldDerivationsRepository)
+    }
+
     @Test
     fun `error if userWalletId not found`() = runTest {
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } throws IllegalStateException()
+        val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } throws IllegalStateException()
 
         runCatching {
-            repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = emptyList())
+            repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = currencies)
         }
             .onSuccess { error("Should throws exception") }
             .onFailure { Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java) }
 
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
+        coVerify(exactly = 1) { userWalletsListRepository.getSyncStrict(defaultUserWalletId) }
+        coVerify(inverse = true) {
+            coldDerivationsRepository.derivePublicKeysByNetworks(any(), any())
+            userWalletsListRepository.saveWithoutLock(any(), any())
+        }
     }
 
-    @SuppressLint("CheckResult")
-    @Test
-    fun `success if card is not supported derivations`() = runTest {
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns defaultUserWallet
-
-        repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = emptyList())
-
-        runCatching { }
-            .onSuccess { Truth.assertThat(it) }
-            .onFailure {
-                error("Should returns success")
-            }
-
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
-    }
-
-    @SuppressLint("CheckResult")
     @Test
     fun `success if currencies is empty`() = runTest {
-        val userWallet = defaultUserWallet.copy(
-            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
-        )
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns userWallet
+        repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = emptyList())
 
-        runCatching { repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = emptyList()) }
-            .onSuccess { Truth.assertThat(it) }
-            .onFailure { error("Should returns success") }
-
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
-    }
-
-    @SuppressLint("CheckResult")
-    @Test
-    fun `success if card already has derivations`() = runTest {
-        val userWallet = defaultUserWallet.copy(
-            scanResponse = MockScanResponseFactory.create(
-                cardConfig = MultiWalletCardConfig,
-                derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
-            ),
-        )
-
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns userWallet
-
-        runCatching {
-            repository.derivePublicKeys(
-                userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
-            )
+        coVerify(inverse = true) {
+            userWalletsListRepository.getSyncStrict(any())
+            coldDerivationsRepository.derivePublicKeysByNetworks(any(), any())
+            userWalletsListRepository.saveWithoutLock(any(), any())
         }
-            .onSuccess { Truth.assertThat(it) }
-            .onFailure { error("Should returns success") }
-
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(inverse = true) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
     }
 
     @Test
-    fun `error if tangemSdkManager throws exception`() = runTest {
-        val userWallet = defaultUserWallet.copy(
-            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
-        )
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns userWallet
-        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } throws ScanCardException.UserCancelled()
+    fun `error if coldDerivationsRepository throws exception`() = runTest {
+        val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+
+        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } returns defaultUserWallet
+        coEvery {
+            coldDerivationsRepository.derivePublicKeysByNetworks(
+                userWallet = defaultUserWallet,
+                networks = any(),
+            )
+        } throws IllegalStateException()
 
         runCatching {
-            repository.derivePublicKeys(
-                userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
-            )
+            repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = currencies)
         }
             .onSuccess { error("Should throws exception") }
-            .onFailure { Truth.assertThat(it).isInstanceOf(ScanCardException.UserCancelled::class.java) }
+            .onFailure { Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java) }
 
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(inverse = true) { userWalletsStore.update(defaultUserWalletId, any()) }
-    }
-
-    @SuppressLint("CheckResult")
-    @Test
-    fun `success case`() = runTest {
-        val userWallet = defaultUserWallet.copy(
-            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
-        )
-        coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns userWallet
-        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } returns CompletionResult.Success(
-            DerivationTaskResponse(DerivedKeysMocks.ethereumDerivedKeys),
-        )
-        coEvery { userWalletsStore.update(defaultUserWalletId, any()) } returns CompletionResult.Success(userWallet)
-
-        runCatching {
-            repository.derivePublicKeys(
-                userWalletId = defaultUserWalletId,
-                currencies = MockCryptoCurrencyFactory(userWallet).ethereum.let(::listOf),
+        coVerifyOrder {
+            userWalletsListRepository.getSyncStrict(defaultUserWalletId)
+            coldDerivationsRepository.derivePublicKeysByNetworks(
+                userWallet = defaultUserWallet,
+                networks = currencies.map(CryptoCurrency.Coin::network),
             )
         }
-            .onSuccess { Truth.assertThat(it) }
-            .onFailure { error("Should returns success but $it") }
 
-        coVerify(exactly = 1) { userWalletsStore.getSyncStrict(defaultUserWalletId) }
-        coVerify(exactly = 1) { tangemSdkManager.derivePublicKeys(null, any(), any()) }
-        coVerify(exactly = 1) { userWalletsStore.update(defaultUserWalletId, any()) }
+        coVerify(inverse = true) { userWalletsListRepository.saveWithoutLock(any(), any()) }
+    }
+
+    @Test
+    fun `success case`() = runTest {
+        val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+        val updatedWallet = defaultUserWallet.copy(cardsInWallet = setOf("AC01"))
+
+        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } returns defaultUserWallet
+        coEvery {
+            coldDerivationsRepository.derivePublicKeysByNetworks(
+                userWallet = defaultUserWallet,
+                networks = currencies.map(CryptoCurrency.Coin::network),
+            )
+        } returns updatedWallet
+        coEvery {
+            userWalletsListRepository.saveWithoutLock(updatedWallet, true)
+        } returns updatedWallet.right()
+
+        repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = currencies)
+
+        coVerifyOrder {
+            userWalletsListRepository.getSyncStrict(defaultUserWalletId)
+            coldDerivationsRepository.derivePublicKeysByNetworks(
+                userWallet = defaultUserWallet,
+                networks = currencies.map(CryptoCurrency.Coin::network),
+            )
+            userWalletsListRepository.saveWithoutLock(updatedWallet, true)
+        }
     }
 }
