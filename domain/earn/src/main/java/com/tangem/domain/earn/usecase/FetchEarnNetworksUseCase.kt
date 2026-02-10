@@ -7,9 +7,9 @@ class FetchEarnNetworksUseCase(
     private val repository: EarnRepository,
 ) {
 
-    suspend operator fun invoke(type: String): Either<Throwable, Unit> {
+    suspend operator fun invoke(): Either<Throwable, Unit> {
         return Either.catch {
-            repository.fetchEarnNetworks(type = type)
+            repository.fetchEarnNetworks()
         }
     }
 }

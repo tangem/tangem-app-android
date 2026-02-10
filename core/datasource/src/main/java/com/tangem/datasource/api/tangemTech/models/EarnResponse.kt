@@ -23,7 +23,7 @@ data class EarnTokenResponse(
     @Json(name = "id") val id: String,
     @Json(name = "symbol") val symbol: String,
     @Json(name = "name") val name: String,
-    @Json(name = "address") val address: String,
+    @Json(name = "address") val address: String? = null,
     @Json(name = "decimalCount") val decimalCount: Int? = null,
 )
 
