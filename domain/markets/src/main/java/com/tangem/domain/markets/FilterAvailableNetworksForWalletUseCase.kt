@@ -7,12 +7,9 @@ import com.tangem.domain.card.common.extensions.supportedBlockchains
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 class FilterAvailableNetworksForWalletUseCase(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val shouldUseNewRepository: Boolean,
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
 
@@ -24,9 +21,9 @@ class FilterAvailableNetworksForWalletUseCase(
         userWalletId: UserWalletId,
         networks: Set<TokenMarketInfo.Network>,
     ): Set<TokenMarketInfo.Network> {
-        val userWallet = getWallets().firstOrNull {
-            it.walletId == userWalletId
-        } ?: return networks.toSet()
+        val userWallet = userWalletsListRepository.requireUserWalletsSync()
+            .firstOrNull { it.walletId == userWalletId }
+            ?: return networks.toSet()
 
         val supportedBlockchains = userWallet.supportedBlockchains(
             excludedBlockchains = excludedBlockchains,
@@ -36,11 +33,5 @@ class FilterAvailableNetworksForWalletUseCase(
             val blockchain = Blockchain.fromNetworkId(network.networkId)
             supportedBlockchains.contains(blockchain)
         }.toSet()
-    }
-
-    private fun getWallets() = if (shouldUseNewRepository) {
-        userWalletsListRepository.requireUserWalletsSync()
-    } else {
-        userWalletsListManager.userWalletsSync
     }
 }

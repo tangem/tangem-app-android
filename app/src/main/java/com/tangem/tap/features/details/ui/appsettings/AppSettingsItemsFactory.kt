@@ -19,21 +19,6 @@ internal class AppSettingsItemsFactory {
         )
     }
 
-    fun createSaveWalletsSwitch(
-        isChecked: Boolean,
-        isEnabled: Boolean,
-        onCheckedChange: (Boolean) -> Unit,
-    ): Item.Switch {
-        return Item.Switch(
-            id = ID_SAVE_WALLETS_SWITCH,
-            title = resourceReference(R.string.app_settings_saved_wallet),
-            description = resourceReference(R.string.app_settings_saved_wallet_footer),
-            isEnabled = isEnabled,
-            isChecked = isChecked,
-            onCheckedChange = onCheckedChange,
-        )
-    }
-
     fun createUseBiometricsSwitch(
         isChecked: Boolean,
         isEnabled: Boolean,
@@ -127,7 +112,6 @@ internal class AppSettingsItemsFactory {
 
     companion object {
         const val ID_ENROLL_BIOMETRICS_CARD = "enroll_biometrics_card"
-        const val ID_SAVE_WALLETS_SWITCH = "save_wallets_switch"
         const val ID_SAVE_ACCESS_CODES_SWITCH = "save_access_codes_switch"
         const val ID_FLIP_TO_HIDE_BALANCE_SWITCH = "flip_to_hide_balance_switch"
         const val ID_SELECT_APP_CURRENCY_BUTTON = "select_app_currency_button"

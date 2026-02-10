@@ -77,6 +77,21 @@ internal class DefaultUserWalletsPublicInformationRepository(
         }
     }
 
+    override suspend fun transform(
+        block: (List<UserWalletPublicInformation>?) -> List<UserWalletPublicInformation>?,
+    ): CompletionResult<Unit> {
+        return withContext(Dispatchers.IO) {
+            getAll().flatMap { currentInfo ->
+                val transformed = block(currentInfo)
+                if (transformed != null) {
+                    save(transformed)
+                } else {
+                    CompletionResult.Success(Unit)
+                }
+            }
+        }
+    }
+
     @JvmName("saveWithPublicInformation")
     private suspend fun save(publicInformation: List<UserWalletPublicInformation>): CompletionResult<Unit> = catching {
         withContext(Dispatchers.IO) {
