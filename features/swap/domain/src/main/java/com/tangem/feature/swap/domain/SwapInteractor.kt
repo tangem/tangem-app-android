@@ -60,12 +60,16 @@ interface SwapInteractor {
     /**
      * Starts swap transaction, perform sign transaction
      *
-     * @param networkId network for tokens
-     * @param swapStateData tx data to swap, contains data to sign
-     * @param currencyToSend [Currency]
-     * @param currencyToGet [Currency]
+     * @param swapProvider swap provider to use
+     * @param swapData tx data to swap, contains data to sign
+     * @param currencyToSend crypto currency to send
+     * @param currencyToGet  crypto currency to get
+     * @param fromAccount account from which swap will be made
+     * @param toAccount account to which receive token
      * @param amountToSwap amount to swap
+     * @param includeFeeInAmount flag to include fee in amount
      * @param fee for tx (can be null only for tangem pay withdrawal)
+     * @param expressOperationType type of express operation
 
      * @return [SwapTransactionState]
      */
@@ -119,7 +123,7 @@ interface SwapInteractor {
         isReverseFromTo: Boolean,
     ): AccountSwapCurrency?
 
-    fun getNativeToken(networkId: String): CryptoCurrency
+    suspend fun getNativeToken(networkId: String): CryptoCurrency
 
     @Suppress("LongParameterList")
     suspend fun storeSwapTransaction(
