@@ -208,6 +208,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         toCryptoCurrency: CryptoCurrency,
         fromAmount: String,
         toAddress: String,
+        toExtraId: String?,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
@@ -247,6 +248,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 userWallet = userWallet,
                 appPreferencesStore = appPreferencesStore,
             ),
+            toExtraId = toExtraId,
         ).getOrThrow()
 
         if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
