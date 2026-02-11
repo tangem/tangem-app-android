@@ -62,12 +62,12 @@ internal class TokenDetailsStakingInfoConverter(
 
         val hasPendingBalances = when (stakingBalance) {
             is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.isNotEmpty()
-            is StakingBalance.Data.P2P -> !stakingBalance.unstakingAmount.isNullOrZero()
+            is StakingBalance.Data.P2PEthPool -> !stakingBalance.unstakingAmount.isNullOrZero()
             null -> false
         }
         val pendingAmount = when (stakingBalance) {
             is StakingBalance.Data.StakeKit -> stakingBalance.balance.items.sumOf { it.amount }
-            is StakingBalance.Data.P2P -> stakingBalance.unstakingAmount
+            is StakingBalance.Data.P2PEthPool -> stakingBalance.unstakingAmount
             null -> BigDecimal.ZERO
         }
 
@@ -98,7 +98,7 @@ internal class TokenDetailsStakingInfoConverter(
                 stakingAmount = stakingCryptoAmount,
                 rewardAmount = when (stakingBalance) {
                     is StakingBalance.Data.StakeKit -> stakingBalance.getRewardStakingBalance()
-                    is StakingBalance.Data.P2P -> stakingBalance.totalRewards
+                    is StakingBalance.Data.P2PEthPool -> stakingBalance.totalRewards
                     else -> BigDecimal.ZERO
                 },
             )
@@ -174,17 +174,44 @@ internal class TokenDetailsStakingInfoConverter(
 
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
         val blockchainId = status.currency.network.rawId
+        val isCoin = status.currency.id.isCoin
+        val stakingBalance = status.value.stakingBalance
+
         val rewardBlockType = when {
-            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
+            stakingBalance is StakingBalance.Data.P2PEthPool -> {
+                if (stakingBalance.totalRewards.isNullOrZero()) {
+                    RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
+                } else {
+                    RewardBlockType.EthereumEarnedRewards
+                }
+            }
+            isStakingRewardUnavailable(blockchainId, isCoin) -> {
+                RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
+            }
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
             else -> RewardBlockType.Rewards
         }
 
         return when (rewardBlockType) {
             RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
+            RewardBlockType.CardanoNoRewards -> resourceReference(R.string.staking_cardano_details_rewards_info_text)
             RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
             RewardBlockType.RewardUnavailable.SolanaRewardUnavailable,
             -> TextReference.EMPTY
+            RewardBlockType.EthereumEarnedRewards -> {
+                val cryptoRewardAmount = (stakingBalance as? StakingBalance.Data.P2PEthPool)?.totalRewards
+                resourceReference(
+                    R.string.staking_details_autocompound_rewards_earned,
+                    wrappedList(
+                        cryptoRewardAmount.format {
+                            crypto(
+                                symbol = status.currency.symbol,
+                                decimals = status.currency.decimals,
+                            )
+                        },
+                    ),
+                )
+            }
             RewardBlockType.RewardsRequirementsError,
             RewardBlockType.Rewards,
             -> resourceReference(
