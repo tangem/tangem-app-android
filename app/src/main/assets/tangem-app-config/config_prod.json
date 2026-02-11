@@ -1,0 +1,197 @@
+{
+	"amplitudeApiKey": "PLACEHOLDER",
+	"appsFlyer": {
+		"appsFlyerDevKey": "PLACEHOLDER",
+		"appsFlyerAppID": "PLACEHOLDER"
+	},
+	"blockchairApiKeys": [
+		"PLACEHOLDER"
+	],
+	"blockchairAuthorizationToken": "PLACEHOLDER",
+	"blockcypherTokens": [
+		"PLACEHOLDER"
+	],
+	"bscQuiknodeApiKey": "PLACEHOLDER",
+	"bscQuiknodeSubdomain": "PLACEHOLDER",
+	"getBlockAccessTokens": {
+		"avalanche": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"ethereum": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"ethereumClassic":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"fantom": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"rsk":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"bsc": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"polygon":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"xdai": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"cronos":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"solana":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"ton":  {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"tron":  {
+			"rest": "PLACEHOLDER"
+		},
+		"cosmos-hub": {
+			"rest": "PLACEHOLDER"
+		},
+		"near": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"xrp": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"cardano": {
+			"rosetta": "PLACEHOLDER"
+		},
+		"dogecoin": {
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"litecoin": {
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"dash": {
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"bitcoin": {
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"aptos": {
+			"rest": "PLACEHOLDER"
+		},
+		"algorand": {
+			"rest": "PLACEHOLDER"
+		},
+		"polygon-zkevm": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"zksync": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"base": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"blast": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"filecoin": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"arbitrum-one": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"bitcoinCash": {
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"kusama": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"moonbeam": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"optimism": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"polkadot": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"shibarium": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"sui": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"telos": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"tezos": {
+			"rest": "PLACEHOLDER"
+		},
+        "monad": {
+            "rest": "PLACEHOLDER"
+		},
+        "stellar": {
+            "rest": "PLACEHOLDER"
+		}
+	},
+	"kaspaSecondaryApiUrl": "PLACEHOLDER",
+	"infuraProjectId": "PLACEHOLDER",
+	"mercuryoSecret": "PLACEHOLDER",
+	"mercuryoWidgetId": "PLACEHOLDER",
+	"moonPayApiKey": "PLACEHOLDER",
+	"moonPayApiSecretKey": "PLACEHOLDER",
+	"nowNodesApiKey": "PLACEHOLDER",
+	"tonCenterApiKey": {
+		"mainnet": "PLACEHOLDER",
+		"testnet": "PLACEHOLDER"
+	},
+	"quiknodeApiKey": "PLACEHOLDER",
+	"quiknodeSubdomain": "PLACEHOLDER",
+	"quiknodePlasmaApiKey": "PLACEHOLDER",
+	"quiknodePlasmaSubdomain": "PLACEHOLDER",
+	"quiknodeMonadApiKey": "PLACEHOLDER",
+	"quiknodeMonadSubdomain": "PLACEHOLDER",
+	"quiknodeStellarApiKey": "PLACEHOLDER",
+	"quiknodeStellarSubdomain": "PLACEHOLDER",
+	"tronGridApiKey": "PLACEHOLDER",
+	"walletConnectProjectId": "PLACEHOLDER",
+	"chiaFireAcademyApiKey": "PLACEHOLDER",
+	"chiaTangemApiKey": "PLACEHOLDER",
+	"express": {
+		"apiKey": "PLACEHOLDER",
+		"signVerifierPublicKey": "PLACEHOLDER"
+	},
+	"devExpress": {
+		"apiKey": "PLACEHOLDER",
+		"signVerifierPublicKey": "PLACEHOLDER"
+	},
+	"hederaArkhiaKey": "PLACEHOLDER",
+	"polygonScanApiKey": "PLACEHOLDER",
+	"koinosProApiKey": "PLACEHOLDER",
+	"stakeKitApiKey": "PLACEHOLDER",
+	"bittensorDwellirKey": "PLACEHOLDER",
+	"dwellirApiKey": "PLACEHOLDER",
+	"bittensorOnfinalityKey": "PLACEHOLDER",
+	"alephiumTangemApiKey": "PLACEHOLDER",
+	"moralisApiKey": "PLACEHOLDER",
+	"blockaidApiKey": "PLACEHOLDER",
+	"tangemApiKey": "PLACEHOLDER",
+	"tangemApiKeyDev": "PLACEHOLDER",
+	"tangemApiKeyStage": "PLACEHOLDER",
+	"etherscanApiKey": "PLACEHOLDER",
+	"yieldModuleApiKey": "PLACEHOLDER",
+	"yieldModuleApiKeyDev": "PLACEHOLDER",
+	"blinkApiKey": "PLACEHOLDER",
+	"tatumApiKey": "PLACEHOLDER",
+	"bffStaticToken": "PLACEHOLDER",
+	"bffStaticTokenDev": "PLACEHOLDER",
+	"p2pApiKey": {
+        "mainnet": "PLACEHOLDER",
+        "hoodi": "PLACEHOLDER"
+    },
+	"gaslessTxApiKey": "PLACEHOLDER",
+	"gaslessTxApiKeyDev": "PLACEHOLDER"
+}
