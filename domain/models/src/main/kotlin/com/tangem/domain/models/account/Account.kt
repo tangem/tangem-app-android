@@ -109,7 +109,7 @@ sealed interface Account {
                         raise(AccountNameError(cause = it))
                     }
 
-                    val derivationIndex = DerivationIndex(value = derivationIndex).getOrElse {
+                    val index = DerivationIndex(value = derivationIndex).getOrElse {
                         raise(DerivationIndexError(cause = it))
                     }
 
@@ -117,7 +117,7 @@ sealed interface Account {
                         accountId = accountId,
                         accountName = accountName,
                         icon = icon,
-                        derivationIndex = derivationIndex,
+                        derivationIndex = index,
                         cryptoCurrencies = cryptoCurrencies,
                     )
                 }
@@ -175,11 +175,12 @@ sealed interface Account {
         }
     }
 
-    class Payment : Account {
-        override val accountId: AccountId
-            get() = TODO("Not yet implemented")
-        override val accountName: AccountName
-            get() = TODO("Not yet implemented")
+    @Serializable
+    data class Payment(
+        override val accountId: AccountId,
+        override val accountName: AccountName,
+        val cryptoCurrencies: List<CryptoCurrency>,
+    ) : Account {
 
         init {
             error("Not yet implemented")
@@ -190,5 +191,5 @@ sealed interface Account {
 val Account.derivationIndex: DerivationIndex?
     get() = when (this) {
         is Account.CryptoPortfolio -> derivationIndex
-        is Account.Payment -> TODO("[REDACTED_JIRA]")
+        is Account.Payment -> null
     }
