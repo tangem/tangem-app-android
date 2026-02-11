@@ -21,6 +21,7 @@ import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -287,7 +288,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     ): TokenListUMTransformer {
         val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
-        val filterByQueryAccountList = accountList
+        val filterByQueryAccountList: Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountList
             .associate { accountStatus ->
                 when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> {
@@ -300,6 +301,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
                         accountStatus.account to statuses
                     }
+                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                 }
             }
             .filterValues { it.isNotEmpty() }
@@ -360,7 +362,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
             onRefresh = {
                 modelScope.launch {
                     if (networkInfo != null) {
-                        accountList.filterIsInstance<AccountStatus.CryptoPortfolio>()
+                        accountList.filterCryptoPortfolio()
                             .forEach { (_, currencies) ->
                                 updateAvailablePairs(networkInfo, currencies.flattenCurrencies())
                             }
@@ -384,7 +386,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                         val accountList = accountListFlow.firstOrNull() ?: return@collectLatest
                         updateAvailablePairs(
                             networkInfo = networkInfo,
-                            statuses = accountList.filterIsInstance<AccountStatus.CryptoPortfolio>()
+                            statuses = accountList.filterCryptoPortfolio()
                                 .flatMap { accountStatus ->
                                     accountStatus.flattenCurrencies()
                                 }.toSet().toList(),

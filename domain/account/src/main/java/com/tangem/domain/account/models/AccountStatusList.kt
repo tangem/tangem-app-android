@@ -5,6 +5,7 @@ import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
@@ -33,13 +34,16 @@ data class AccountStatusList(
 ) {
 
     val mainAccount: AccountStatus.CryptoPortfolio
-        get() = accountStatuses.first { accountStatus ->
-            when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
+        get() = accountStatuses
+            .filterCryptoPortfolio()
+            .first { accountStatus ->
+                when (accountStatus) {
+                    is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
+                }
             }
-        } as AccountStatus.CryptoPortfolio
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
+        .filterCryptoPortfolio()
         .map { accountStatus -> accountStatus.flattenCurrencies() }
         .flatten()
 
