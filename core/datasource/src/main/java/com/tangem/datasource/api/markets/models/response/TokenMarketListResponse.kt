@@ -27,7 +27,15 @@ data class TokenMarketListResponse(
         @Json(name = "is_under_market_cap_limit") val isUnderMarketCapLimit: Boolean?,
         @Json(name = "staking_opportunities") val stakingOpportunities: List<StakingOpportunities>?,
         @Json(name = "max_yield_apy") val maxYieldApy: BigDecimal?,
+        @Json(name = "networks") val networks: List<Network>? = null,
     ) {
+
+        @JsonClass(generateAdapter = true)
+        data class Network(
+            @Json(name = "network_id") val networkId: String,
+            @Json(name = "contract_address") val contractAddress: String?,
+            @Json(name = "decimal_count") val decimalCount: Int?,
+        )
 
         @JsonClass(generateAdapter = true)
         data class PriceChangePercentage(
