@@ -50,8 +50,7 @@ import kotlinx.collections.immutable.ImmutableList
  *
  */
 internal fun LazyListScope.onrampSwapTokenList(state: TokenListUM) {
-    val isSearchMode = state.searchBarUM.query.isNotEmpty() && state.marketsState != null
-    if (isSearchMode) {
+    if (state.marketsState != null) {
         onrampTokenListWithMarkets(state = state)
     } else {
         onrampTokenList(state = state)
@@ -91,7 +90,10 @@ private fun LazyListScope.onrampTokenListWithMarkets(state: TokenListUM) {
         state.tokensListData.totalTokensCount != 0
 
     if (hasAssets) {
-        assetsTitle(count = state.tokensListData.totalTokensCount)
+        assetsTitle(
+            count = state.tokensListData.totalTokensCount,
+            showCount = state.marketsState?.shouldAssetsCount == true,
+        )
 
         tokensList(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
 
@@ -159,13 +161,15 @@ private fun LazyListScope.searchBarItem(searchBarUM: SearchBarUM, modifier: Modi
     }
 }
 
-private fun LazyListScope.assetsTitle(count: Int) {
+private fun LazyListScope.assetsTitle(count: Int, showCount: Boolean) {
     item(key = "assets_title") {
         Text(
             text = buildAnnotatedString {
                 append(stringResourceSafe(R.string.swap_your_assets_title))
-                withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-                    append(" $count")
+                if (showCount) {
+                    withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                        append(" $count")
+                    }
                 }
             },
             style = TangemTheme.typography.h3,
