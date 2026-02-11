@@ -158,7 +158,7 @@ internal class SendConfirmComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
-        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val accountFlow: StateFlow<Account?>,
         val isAccountModeFlow: StateFlow<Boolean>,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
