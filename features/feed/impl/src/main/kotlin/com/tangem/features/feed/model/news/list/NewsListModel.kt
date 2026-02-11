@@ -127,19 +127,17 @@ internal class NewsListModel @Inject constructor(
     }
 
     private fun onCategoryClick(categoryId: Int) {
-        val newCategoryId = if (state.value.selectedCategoryId == categoryId) {
-            DEFAULT_ALL_NEWS_CATEGORIES_ID
-        } else {
-            categoryId
+        if (state.value.selectedCategoryId == categoryId) {
+            return
         }
-        if (newCategoryId != DEFAULT_ALL_NEWS_CATEGORIES_ID) {
-            analyticsEventHandler.send(NewsListAnalyticsEvent.NewsCategoriesClick(newCategoryId))
+        if (categoryId != DEFAULT_ALL_NEWS_CATEGORIES_ID) {
+            analyticsEventHandler.send(NewsListAnalyticsEvent.NewsCategoriesClick(categoryId))
         }
-        selectedCategoryId.value = newCategoryId
+        selectedCategoryId.value = categoryId
         _state.update { currentState ->
             currentState.copy(
-                selectedCategoryId = newCategoryId,
-                filters = updateFilterChips(newCategoryId),
+                selectedCategoryId = categoryId,
+                filters = updateFilterChips(categoryId),
             )
         }
         batchFlowManager.reload()
