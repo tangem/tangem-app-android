@@ -23,6 +23,7 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -104,6 +105,9 @@ internal class WcSendTransactionModel @Inject constructor(
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
     private val securityStatusState =
         MutableStateFlow<Lce<Throwable, BlockAidTransactionCheck.Result>>(Lce.Loading(partialContent = null))
+
+    val userWallet
+        get() = useCase.wallet
 
     init {
         @Suppress("UnusedPrivateMember")
@@ -423,6 +427,7 @@ internal class WcSendTransactionModel @Inject constructor(
                     rawRequest = useCase.rawSdkRequest,
                     network = useCase.network,
                     securityStatus = securityStatusState.value.toCheckDAppResult(),
+                    accountDerivation = useCase.session.account?.derivationIndex?.value,
                 )
                 analytics.send(event)
                 showSuccessSignMessage()
@@ -462,6 +467,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 network = useCase.network,
                 emulationStatus = emulationStatus,
                 securityStatus = securityCheck.toCheckDAppResult(),
+                accountDerivation = useCase.session.account?.derivationIndex?.value,
             ),
         )
 
