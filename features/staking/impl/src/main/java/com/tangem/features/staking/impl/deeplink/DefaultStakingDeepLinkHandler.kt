@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.deeplink
 
-import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.deeplink.DeeplinkConst.NETWORK_ID_KEY
@@ -8,7 +7,6 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TOKEN_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
-import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -28,7 +26,6 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
     private val appRouter: AppRouter,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val getYieldUseCase: GetYieldUseCase,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
 ) : StakingDeepLinkHandler {
 
@@ -73,19 +70,13 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 return@launch
             }
 
-            val isStakingEnabled = getStakingAvailabilityUseCase.invokeSync(
+            val availability = getStakingAvailabilityUseCase.invokeSync(
                 userWalletId = selectedUserWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrNull()
 
-            if (isStakingEnabled !is StakingAvailability.Available) {
-                return@launch
-            }
-
-            val yield = getYieldUseCase.invoke(
-                cryptoCurrencyId = cryptoCurrency.id,
-                symbol = cryptoCurrency.symbol,
-            ).getOrElse {
+            val option = (availability as? StakingAvailability.Available)?.option
+            if (option == null) {
                 Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
                 return@launch
             }
@@ -94,7 +85,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
                 AppRoute.Staking(
                     userWalletId = selectedUserWalletId,
                     cryptoCurrency = cryptoCurrency,
-                    yieldId = yield.id,
+                    integrationId = option.integrationId,
                 ),
             )
         }
