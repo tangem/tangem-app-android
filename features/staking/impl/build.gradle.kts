@@ -24,6 +24,7 @@ dependencies {
     implementation(deps.lifecycle.compose)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.moshi)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)

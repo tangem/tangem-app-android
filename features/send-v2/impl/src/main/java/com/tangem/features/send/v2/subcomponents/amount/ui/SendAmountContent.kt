@@ -75,7 +75,7 @@ private fun SendConvertTokenButton(onConvertToAnother: () -> Unit) {
                 tint = TangemTheme.colors.icon.informative,
                 modifier = Modifier
                     .size(20.dp)
-                    .background(TangemTheme.colors.control.unchecked, CircleShape)
+                    .background(TangemTheme.colors.control.default, CircleShape)
                     .padding(2.dp),
             )
             Text(

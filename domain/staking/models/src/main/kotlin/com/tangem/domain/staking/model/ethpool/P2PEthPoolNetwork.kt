@@ -61,7 +61,7 @@ enum class P2PEthPoolNetwork(
         }
 
         /**
-         * Check if chain ID is supported for P2P staking
+         * Check if chain ID is supported for P2PEthPool staking
          *
          * @param chainId Ethereum chain ID
          * @return true if supported, false otherwise

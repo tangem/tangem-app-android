@@ -64,7 +64,7 @@ internal class AssociateNetworksDelegate(
             }
     }
 
-    @Suppress("ComplexCondition")
+    @Suppress("CyclomaticComplexMethod")
     private suspend fun mapNetworksForPortfolio(
         wallet: UserWallet,
         account: Account?,
@@ -112,7 +112,9 @@ internal class AssociateNetworksDelegate(
         if (unknownRequired.isNotEmpty()) {
             throw WcPairError.UnsupportedBlockchains(unknownRequired, sessionProposal.name)
         }
-        if (unknownOptional.isNotEmpty() && required.isEmpty() && available.isEmpty() && missingRequired.isEmpty()) {
+        val isUnknownOptional = unknownOptional.isNotEmpty() && required.isEmpty() &&
+            available.isEmpty() && missingRequired.isEmpty() && notAdded.isEmpty()
+        if (isUnknownOptional) {
             throw WcPairError.UnsupportedBlockchains(unknownOptional, sessionProposal.name)
         }
         return ProposalNetwork(

@@ -30,10 +30,14 @@ class RootDetectedWarningComponent @AssistedInject constructor(
 
     private val isShown = instanceKeeper.getOrCreateSimple { MutableStateFlow(false) }
 
+    suspend fun shouldShowWarning(): Boolean {
+        return settingsRepository.isRootDetectedWarningShown().not() && securityInfoProvider.isSecurityExposed()
+    }
+
     suspend fun tryToShowWarningAndWaitContinuation() {
         if (isShown.value) return
 
-        if (settingsRepository.isRootDetectedWarningShown().not() && securityInfoProvider.isSecurityExposed()) {
+        if (shouldShowWarning()) {
             isShown.value = true
         }
 

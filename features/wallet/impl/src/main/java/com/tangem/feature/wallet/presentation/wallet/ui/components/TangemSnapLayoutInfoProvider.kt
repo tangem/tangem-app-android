@@ -5,7 +5,6 @@ import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.splineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.snapping.SnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.unit.Density
@@ -23,7 +22,7 @@ import kotlin.math.sign
  * This position should be considered with regard to the start edge of the item and the placement
  * within the viewport.
  *
- * @return A [SnapLayoutInfoProvider] that can be used with [SnapFlingBehavior]
+ * @return A [SnapLayoutInfoProvider] that can be used with snap fling behavior
  */
 @Suppress("FunctionNaming")
 @ExperimentalFoundationApi

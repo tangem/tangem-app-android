@@ -21,7 +21,7 @@ internal fun TokenQuotes.getFormattedPercentByInterval(interval: PriceChangeInte
         PriceChangeInterval.ALL_TIME -> allTimeChangePercent
     }
 
-    return percent?.format { percent() } ?: ""
+    return percent?.format { percent() }.orEmpty()
 }
 
 internal fun TokenQuotes.getPercentByInterval(interval: PriceChangeInterval): BigDecimal? {

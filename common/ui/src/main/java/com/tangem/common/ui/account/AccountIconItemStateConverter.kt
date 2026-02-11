@@ -20,5 +20,6 @@ object AccountIconItemStateConverter : Converter<Account, CurrencyIconState.Cryp
                 isGrayscale = false,
             )
         }
+        is Account.Payment -> TODO("[REDACTED_JIRA]")
     }
 }
