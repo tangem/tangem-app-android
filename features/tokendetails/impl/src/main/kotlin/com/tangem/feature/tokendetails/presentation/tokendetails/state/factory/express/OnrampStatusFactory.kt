@@ -15,7 +15,7 @@ import com.tangem.domain.onramp.OnrampUpdateTransactionStatusUseCase
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
 import com.tangem.utils.Provider
@@ -37,7 +37,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted private val clickIntents: TokenDetailsClickIntents,
+    @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
     @Assisted private val userWallet: UserWallet,
 ) {
@@ -157,7 +157,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             currentStateProvider: Provider<TokenDetailsState>,
             cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
             appCurrencyProvider: Provider<AppCurrency>,
-            clickIntents: TokenDetailsClickIntents,
+            clickIntents: ExpressTransactionsClickIntents,
             cryptoCurrency: CryptoCurrency,
             userWallet: UserWallet,
         ): OnrampStatusFactory
