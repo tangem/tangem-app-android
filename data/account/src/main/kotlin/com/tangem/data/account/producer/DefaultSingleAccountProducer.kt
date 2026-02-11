@@ -33,10 +33,10 @@ internal class DefaultSingleAccountProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleAccountProducer {
 
-    override val fallback: Option<Account.CryptoPortfolio>
+    override val fallback: Option<Account>
         get() = none()
 
-    override fun produce(): Flow<Account.CryptoPortfolio> {
+    override fun produce(): Flow<Account> {
         return singleAccountListSupplier(
             params = SingleAccountListProducer.Params(userWalletId = params.accountId.userWalletId),
         )
