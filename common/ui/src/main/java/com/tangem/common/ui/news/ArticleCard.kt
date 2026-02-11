@@ -1,33 +1,37 @@
 package com.tangem.common.ui.news
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.utils.StringsSigns
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
@@ -39,70 +43,137 @@ fun ArticleCard(
     modifier: Modifier = Modifier,
     colors: CardColors = TangemBlockCardColors,
 ) {
-    BlockCard(
-        modifier = modifier,
-        onClick = onArticleClick,
-        colors = colors,
+    if (articleConfigUM.isTrending) {
+        TrendingArticle(
+            articleConfigUM = articleConfigUM,
+            modifier = modifier,
+            onArticleClick = onArticleClick,
+            colors = colors,
+        )
+    } else {
+        DefaultArticle(
+            articleConfigUM = articleConfigUM,
+            modifier = modifier,
+            onArticleClick = onArticleClick,
+            colors = colors,
+        )
+    }
+}
+
+@Composable
+private fun TrendingArticle(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    colors: CardColors,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(colors.containerColor)
+            .clickable { onArticleClick() },
     ) {
-        if (articleConfigUM.isTrending) {
-            TrendingArticle(articleConfigUM = articleConfigUM)
-        } else {
-            DefaultArticle(articleConfigUM = articleConfigUM)
+        Image(
+            modifier = Modifier.matchParentSize(),
+            painter = painterResource(R.drawable.bg_trending_article),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+        )
+        Column(
+            modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                text = stringResourceSafe(R.string.feed_trending_now),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.icon.accent,
+            )
+
+            SpacerH(12.dp)
+
+            Text(
+                text = articleConfigUM.title,
+                color = if (articleConfigUM.isViewed) {
+                    TangemTheme.colors.text.tertiary
+                } else {
+                    TangemTheme.colors.text.primary1
+                },
+                style = TangemTheme.typography.h3,
+                textAlign = TextAlign.Center,
+            )
+
+            SpacerH(8.dp)
+
+            ArticleInfo(
+                score = articleConfigUM.score,
+                createdAt = articleConfigUM.createdAt.resolveReference(),
+            )
+
+            SpacerH(32.dp)
+
+            Tags(
+                modifier = Modifier.padding(horizontal = 46.dp),
+                tags = articleConfigUM.tags.toImmutableList(),
+            )
         }
     }
 }
 
 @Composable
-private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
-    Column(
-        modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+fun ShowMoreArticlesCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    BlockCard(
+        modifier = modifier,
+        onClick = onClick,
+        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
     ) {
-        Text(
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .background(
-                    color = TangemTheme.colors.icon.accent.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp),
-                )
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            text = stringResourceSafe(R.string.feed_trending_now),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.icon.accent,
-        )
+                .fillMaxSize()
+                .padding(vertical = 31.dp, horizontal = 12.dp),
+        ) {
+            Image(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_show_more_news_48),
+                contentDescription = stringResourceSafe(R.string.common_show_more),
+            )
 
-        SpacerH(12.dp)
+            SpacerH(16.dp)
 
-        Text(
-            text = articleConfigUM.title,
-            color = if (articleConfigUM.isViewed) {
-                TangemTheme.colors.text.tertiary
-            } else {
-                TangemTheme.colors.text.primary1
-            },
-            style = TangemTheme.typography.h3,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-        )
+            Text(
+                text = stringResourceSafe(R.string.news_all_news),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
 
-        SpacerH(8.dp)
-
-        ArticleInfo(
-            score = articleConfigUM.score,
-            createdAt = articleConfigUM.createdAt.resolveReference(),
-        )
-
-        SpacerH(32.dp)
-
-        Tags(
-            modifier = Modifier.padding(horizontal = 46.dp),
-            tags = articleConfigUM.tags.toImmutableList(),
-        )
+            Text(
+                text = stringResourceSafe(R.string.news_stay_in_the_loop),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
     }
 }
 
 @Composable
-private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
-    Column(modifier = Modifier.padding(12.dp)) {
+private fun DefaultArticle(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    colors: CardColors,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(colors.containerColor)
+            .clickable { onArticleClick() }
+            .padding(12.dp),
+    ) {
         ArticleInfo(
             score = articleConfigUM.score,
             createdAt = articleConfigUM.createdAt.resolveReference(),
@@ -124,28 +195,9 @@ private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
 
         SpacerH(16.dp)
 
-        Tags(tags = articleConfigUM.tags.toImmutableList())
-    }
-}
+        SpacerHMax()
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
-    val expandIndicator = remember {
-        ContextualFlowRowOverflow.expandIndicator {
-            val remainingItems = tags.size - shownItemCount
-            Label(state = LabelUM(TextReference.Str("${StringsSigns.PLUS}$remainingItems")))
-        }
-    }
-    ContextualFlowRow(
-        itemCount = tags.size,
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        maxLines = 1,
-        overflow = expandIndicator,
-    ) { index ->
-        Label(state = tags[index])
+        Tags(tags = articleConfigUM.tags.toImmutableList())
     }
 }
 
