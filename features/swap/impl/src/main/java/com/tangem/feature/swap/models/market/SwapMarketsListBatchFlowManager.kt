@@ -184,6 +184,7 @@ internal class SwapMarketsListBatchFlowManager(
                         },
                         priceChangeInterval = TokenMarketListConfig.Interval.H24,
                         order = TokenMarketListConfig.Order.ByRating,
+                        shouldNetworks = true,
                     ),
                 ),
             )
@@ -234,6 +235,13 @@ internal class SwapMarketsListBatchFlowManager(
             .filter { d -> d.data.any { ids.contains(it.id) } }
             .map { it.key }
             .toSet()
+    }
+
+    fun getTokenMarketById(id: CryptoCurrency.RawID): TokenMarket? {
+        return batchFlow.state.value.data
+            .asSequence()
+            .flatMap { it.data }
+            .firstOrNull { it.id == id }
     }
 
     private data class ResultBatches(
