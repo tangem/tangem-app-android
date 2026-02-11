@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.model.transformers
 
 import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.account.models.AccountList
@@ -64,12 +65,13 @@ internal class WcSessionsAccountModeTransformer(
                 }
                 val accountIcon = when (account) {
                     is Account.CryptoPortfolio -> account.icon
+                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val accountTitle = AccountTitleUM.Account(
                     prefixText = TextReference.EMPTY,
                     name = account.accountName.toUM().value,
-                    icon = accountIcon.toUM(),
+                    icon = CryptoPortfolioIconConverter.convert(accountIcon),
                 )
 
                 val accountConnections = WcConnectionsItem.PortfolioConnections(
