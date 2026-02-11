@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import com.tangem.core.decompose.di.ModelScoped
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ModelScoped
 internal class StakingStateController @Inject constructor(
     urlOpener: UrlOpener,
 ) {

@@ -3,10 +3,13 @@ package com.tangem.features.hotwallet.forgetwallet.ui
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -89,7 +92,13 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
 @Composable
 private fun CheckboxItem(checked: Boolean, onCheckedChange: () -> Unit, text: String, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = { onCheckedChange() },
+            )
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {

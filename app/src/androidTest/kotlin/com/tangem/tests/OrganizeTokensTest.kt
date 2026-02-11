@@ -113,8 +113,8 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
-                    tokenWithTitleAndPosition(bitcoinTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(ethereumTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(bitcoinTitle, 0).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
                 }
             }
         }
@@ -200,10 +200,10 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
-                    tokenWithTitleAndPosition(bitcoinTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(ethereumTitle, 2).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 3).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polExMaticTitle, 4).assertIsDisplayed()
+                    tokenWithTitleAndPosition(bitcoinTitle, 0).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polExMaticTitle, 3).assertIsDisplayed()
                 }
             }
             step("Click 'By Balance' button") {
@@ -213,10 +213,10 @@ class OrganizeTokensTest : BaseTestCase() {
             }
             step("Check positions of tokens by balance on 'Organize tokens' screen") {
                 onOrganizeTokensScreen {
-                    tokenWithTitleAndPosition(ethereumTitle, 1).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polExMaticTitle, 2).assertIsDisplayed()
-                    tokenWithTitleAndPosition(polygonTitle, 3).assertIsDisplayed()
-                    tokenWithTitleAndPosition(bitcoinTitle, 4).assertIsDisplayed()
+                    tokenWithTitleAndPosition(ethereumTitle, 0).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polExMaticTitle, 1).assertIsDisplayed()
+                    tokenWithTitleAndPosition(polygonTitle, 2).assertIsDisplayed()
+                    tokenWithTitleAndPosition(bitcoinTitle, 3).assertIsDisplayed()
                 }
             }
             step("Click 'Apply' button") {

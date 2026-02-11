@@ -25,7 +25,6 @@
     <ID>BooleanPropertyNaming:WalletScreen.kt$var visible by remember { mutableStateOf(value = false) }</ID>
     <ID>BooleanPropertyNaming:WalletScreenState.kt$WalletScreenState$val showMarketsOnboarding: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletWithFundsChecker.kt$WalletWithFundsChecker$val prevStatus = statusByWalletId.get(userWalletId)</ID>
-    <ID>CanBeNonNullable:WalletScreen.kt$bottomSheetConfig: TangemBottomSheetConfig?</ID>
     <ID>IgnoredReturnValue:MultiWalletTokenListStore.kt$MultiWalletTokenListStore$remove(userWalletId)</ID>
     <ID>MaxChainedCallsOnSameLine:HasSingleWalletSignedHashesUseCase.kt$HasSingleWalletSignedHashesUseCase$userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes</ID>
     <ID>MultilineLambdaItParameter:BasicTokenListSubscriber.kt$BasicTokenListSubscriber${ it.getOrElse { e -&gt; Timber.e("Failed to load app currency: $e") AppCurrency.Default } }</ID>
@@ -47,11 +46,7 @@
     <ID>MultilineLambdaItParameter:SingleWalletExpressStatusesSubscriber.kt$SingleWalletExpressStatusesSubscriber${ Timber.e("Unable to get primary currency status: $it") return@onEach }</ID>
     <ID>MultilineLambdaItParameter:TokenListAnalyticsSender.kt$TokenListAnalyticsSender${ val status = it.value if (status is CryptoCurrencyStatus.Loaded) { sendTokenBalancesForSpecificBlockchains(it, status) } }</ID>
     <ID>MultilineLambdaItParameter:TokenListStateConverter.kt$TokenListStateConverter${ if (isExtend) { clickIntents.onAccountCollapseClick(it) } else { clickIntents.onAccountExpandClick(it) } }</ID>
-    <ID>MultilineLambdaItParameter:TxHistorySubscriber.kt$TxHistorySubscriber${ SetTxHistoryCountErrorTransformer( userWallet = userWallet, error = it, pendingTransactions = status.value.pendingTransactions, clickIntents = clickIntents, ) }</ID>
-    <ID>MultilineLambdaItParameter:TxHistorySubscriber.kt$TxHistorySubscriber${ SetTxHistoryCountTransformer( userWalletId = userWallet.walletId, transactionsCount = it, clickIntents = clickIntents, ) }</ID>
     <ID>MultilineLambdaItParameter:TxHistorySubscriber.kt$TxHistorySubscriber${ SetTxHistoryItemsErrorTransformer( userWalletId = userWallet.walletId, error = it, clickIntents = clickIntents, ) }</ID>
-    <ID>MultilineLambdaItParameter:TxHistorySubscriberV2.kt$TxHistorySubscriberV2${ SetTxHistoryCountErrorTransformer( userWallet = userWallet, error = it, pendingTransactions = status.value.pendingTransactions, clickIntents = clickIntents, ) }</ID>
-    <ID>MultilineLambdaItParameter:TxHistorySubscriberV2.kt$TxHistorySubscriberV2${ SetTxHistoryCountTransformer( userWalletId = userWallet.walletId, transactionsCount = it, clickIntents = clickIntents, ) }</ID>
     <ID>MultilineLambdaItParameter:TxHistorySubscriberV2.kt$TxHistorySubscriberV2${ SetTxHistoryItemsErrorTransformer( userWalletId = userWallet.walletId, error = it, clickIntents = clickIntents, ) }</ID>
     <ID>MultilineLambdaItParameter:UpdateMultiWalletActionsTransformer.kt$UpdateMultiWalletActionsTransformer${ when (it) { is WalletManageButton.Buy -&gt; { it.copy( enabled = buyStatus.isContent(), dimContent = !buyStatus.isContent(), ) } is WalletManageButton.Sell -&gt; { it.copy( enabled = sellStatus.isContent(), dimContent = !sellStatus.isContent(), ) } is WalletManageButton.Swap -&gt; { it.copy( enabled = swapStatus.isContent(), dimContent = !swapStatus.isContent(), ) } else -&gt; it } }</ID>
     <ID>MultilineLambdaItParameter:UseCaseExt.kt${ Timber.e("Impossible to get primary currency status $it") null }</ID>
@@ -83,7 +78,6 @@
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ Timber.e( """ Unable to get user wallet |- ID: $userWalletId |- Exception: $it """.trimIndent(), ) null }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>
-    <ID>NamedArguments:BasicAccountListSubscriber.kt$BasicAccountListSubscriber$updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)</ID>
     <ID>NamedArguments:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)</ID>
     <ID>NamedArguments:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$addWarningNotifications(cardTypesResolver, flattenCurrencies, isNeedToBackup, clickIntents)</ID>
     <ID>NamedArguments:TangemSnapFlingBehavior.kt$HighVelocityApproachAnimation$animateDecay(offset, animationState, decayAnimationSpec, onAnimationStep)</ID>

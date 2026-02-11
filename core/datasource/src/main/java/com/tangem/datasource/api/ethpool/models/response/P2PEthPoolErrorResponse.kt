@@ -4,9 +4,9 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * Error response structure for P2P.org API
+ * Error response structure for P2P.org eth pooled API
  *
- * All P2P API endpoints return errors in this format
+ * All P2PEthPool API endpoints return errors in this format
  */
 @JsonClass(generateAdapter = true)
 data class P2PEthPoolErrorResponse(
