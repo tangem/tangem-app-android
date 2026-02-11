@@ -43,7 +43,8 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetTokenMarketInfoUseCase
+import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -73,7 +74,6 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
-import com.tangem.feature.swap.converters.TokenMarketInfoToParamsConverter
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -156,7 +156,6 @@ internal class SwapModel @Inject constructor(
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     swapFeatureToggles: SwapFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
-    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
@@ -2061,22 +2060,24 @@ internal class SwapModel @Inject constructor(
 
     private fun addToPortfolioItem(item: MarketsListItemUM) {
         modelScope.launch {
-            val tokenInfo = getTokenMarketInfoUseCase(
-                selectedAppCurrencyFlow.value,
-                item.id,
-                item.currencySymbol,
-            ).getOrNull() ?: return@launch
+            val tokenMarket = searchMarketsListManager.getTokenMarketById(item.id) ?: return@launch
 
-            val converter = TokenMarketInfoToParamsConverter()
-            val param = converter.convert(tokenInfo)
+            val param = tokenMarket.toSerializableParam()
             val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
 
-            val networks = tokenInfo.networks?.filter { network ->
+            val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
                     blockchainId = network.networkId,
                     excludedBlockchains = excludedBlockchains,
                     hotExcludedBlockchains = hotWalletExcludedBlockchains,
                     hasOnlyHotWallets = hasOnlyHotWallets,
+                )
+            }?.map { network ->
+                TokenMarketInfo.Network(
+                    networkId = network.networkId,
+                    isExchangeable = false,
+                    contractAddress = network.contractAddress,
+                    decimalCount = network.decimalCount,
                 )
             }.orEmpty()
 
