@@ -200,6 +200,60 @@ internal class StateBuilder(
         )
     }
 
+    fun createSwapNotSupportedState(
+        uiStateHolder: SwapStateHolder,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
+    ): SwapStateHolder {
+        if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
+        return uiStateHolder.copy(
+            sendCardData = SwapCardState.SwapCardData(
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                amountTextFieldValue = null,
+                amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                token = fromToken,
+                tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
+                coinId = uiStateHolder.sendCardData.coinId,
+                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
+                tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
+                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                balance = fromToken.getFormattedAmount(isNeedSymbol = false),
+                networkIconRes = getActiveIconRes(fromToken.currency.network.rawId),
+                isBalanceHidden = isBalanceHiddenProvider(),
+            ),
+            receiveCardData = SwapCardState.SwapCardData(
+                type = TransactionCardType.ReadOnly(
+                    accountTitleUM = getToCardAccountTitle(toAccount),
+                ),
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
+                amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
+                token = toToken,
+                tokenIconUrl = toToken.currency.iconUrl,
+                coinId = toToken.currency.network.backendId,
+                isNotNativeToken = toToken.currency is CryptoCurrency.Token,
+                tokenCurrency = toToken.currency.symbol,
+                canSelectAnotherToken = true,
+                balance = toToken.getFormattedAmount(isNeedSymbol = false),
+                networkIconRes = getActiveIconRes(toToken.currency.network.rawId),
+                isBalanceHidden = isBalanceHiddenProvider(),
+            ),
+            notifications = notificationsFactory.getSwapNotSupportedNotifications(toToken.currency.name),
+            fee = FeeItemState.Empty,
+            swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                isEnabled = false,
+                isHoldToConfirm = isHoldToConfirmEnabled,
+                onClick = { },
+            ),
+            changeCardsButtonState = ChangeCardsButtonState.DISABLED,
+            providerState = ProviderState.Empty(),
+            priceImpact = PriceImpact.Empty(),
+        )
+    }
+
     @Suppress("LongParameterList")
     fun createQuotesLoadingState(
         uiStateHolder: SwapStateHolder,
@@ -438,6 +492,7 @@ internal class StateBuilder(
                 notification is SwapNotificationUM.Warning.ExpressError ||
                 notification is SwapNotificationUM.Warning.ExpressGeneralError ||
                 notification is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
+                notification is SwapNotificationUM.Warning.SwapNotSupported ||
                 notification is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
                 notification is SwapNotificationUM.Info.PermissionNeeded
         }
