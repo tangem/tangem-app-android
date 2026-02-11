@@ -14,6 +14,7 @@ import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.market.state.SwapMarketState
@@ -24,7 +25,7 @@ internal fun LazyListScope.swapMarketsListItems(state: SwapMarketState) {
         val totalCount = (state as? SwapMarketState.Content)?.total
         Text(
             text = buildAnnotatedString {
-                append(stringResourceSafe(R.string.markets_common_title))
+                append(state.marketsTitle.resolveReference())
                 if (totalCount != null) {
                     withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
                         append(" $totalCount")
