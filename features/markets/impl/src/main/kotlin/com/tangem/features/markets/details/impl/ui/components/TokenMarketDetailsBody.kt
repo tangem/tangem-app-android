@@ -16,6 +16,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
 
+@Suppress("CanBeNonNullable")
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
     isAccountEnabled: Boolean,

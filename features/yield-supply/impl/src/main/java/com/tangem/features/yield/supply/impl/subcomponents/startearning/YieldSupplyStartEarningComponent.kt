@@ -17,6 +17,7 @@ import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -25,6 +26,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.core.ui.R as CoreR
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -106,22 +108,36 @@ internal class YieldSupplyStartEarningComponent(
     override fun Footer() {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        val icon = if (state.isPrimaryButtonEnabled) {
-            walletInterationIcon(model.userWallet)
-        } else {
-            null
-        }
+        val modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
 
-        PrimaryButtonIconEnd(
-            text = stringResourceSafe(R.string.yield_module_start_earning),
-            onClick = model::onClick,
-            enabled = state.isPrimaryButtonEnabled,
-            iconResId = icon,
-            showProgress = state.isTransactionSending,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        )
+        if (state.isHoldToConfirmEnabled) {
+            HoldToConfirmButton(
+                text = stringResourceSafe(
+                    CoreR.string.common_hold_to,
+                    stringResourceSafe(R.string.yield_module_start_earning),
+                ),
+                onConfirm = model::onClick,
+                enabled = state.isPrimaryButtonEnabled,
+                isLoading = state.isTransactionSending,
+                modifier = modifier,
+            )
+        } else {
+            val icon = if (state.isPrimaryButtonEnabled) {
+                walletInterationIcon(model.userWallet)
+            } else {
+                null
+            }
+            PrimaryButtonIconEnd(
+                text = stringResourceSafe(R.string.yield_module_start_earning),
+                onClick = model::onClick,
+                enabled = state.isPrimaryButtonEnabled,
+                iconResId = icon,
+                showProgress = state.isTransactionSending,
+                modifier = modifier,
+            )
+        }
     }
 
     data class Params(

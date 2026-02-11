@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.domain.account.status)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.data.common)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -67,6 +68,10 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.coil)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.blockchain)
+    implementation(projects.libs.blockchainSdk)
 
     /** Other */
     implementation(deps.decompose.ext.compose)

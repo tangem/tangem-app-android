@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.utils.ProviderSuspend
 
@@ -23,7 +23,7 @@ internal class P2PEthPool(
     private fun getInitialEnvironment(): ApiEnvironment {
         return when (BuildConfig.BUILD_TYPE) {
             MOCKED_BUILD_TYPE -> ApiEnvironment.MOCK
-            else -> if (P2PStakingConfig.USE_TESTNET) ApiEnvironment.DEV else ApiEnvironment.PROD
+            else -> if (P2PEthPoolStakingConfig.USE_TESTNET) ApiEnvironment.DEV else ApiEnvironment.PROD
         }
     }
 

@@ -1,5 +1,7 @@
 package com.tangem.data.quotes.di
 
+import com.tangem.domain.quotes.multi.MultiQuoteStatusProducer
+import com.tangem.domain.quotes.multi.MultiQuoteStatusSupplier
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import dagger.Module
@@ -18,6 +20,15 @@ internal object QuoteStatusSupplierModule {
         return object : SingleQuoteStatusSupplier(
             factory = factory,
             keyCreator = { "single_quote_${it.rawCurrencyId.value}" },
+        ) {}
+    }
+
+    @Provides
+    @Singleton
+    fun provideMultiQuoteStatusSupplier(factory: MultiQuoteStatusProducer.Factory): MultiQuoteStatusSupplier {
+        return object : MultiQuoteStatusSupplier(
+            factory = factory,
+            keyCreator = { "multi_quote_status_supplier" },
         ) {}
     }
 }

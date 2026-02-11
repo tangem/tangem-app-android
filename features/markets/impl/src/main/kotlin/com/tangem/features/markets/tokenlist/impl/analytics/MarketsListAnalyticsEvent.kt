@@ -6,7 +6,7 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 
 internal sealed class MarketsListAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Markets", event = event, params = params) {
 
     class BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
@@ -39,10 +39,10 @@ internal sealed class MarketsListAnalyticsEvent(
 
     class YieldModeMoreInfoClicked : MarketsListAnalyticsEvent(event = "Yield Mode More Info")
 
-    data class TokenSearched(val tokenFound: Boolean) : MarketsListAnalyticsEvent(
+    data class TokenSearched(val wasTokenFound: Boolean) : MarketsListAnalyticsEvent(
         event = "Token Searched",
         params = mapOf(
-            "Result" to if (tokenFound) "Yes" else "No",
+            "Result" to if (wasTokenFound) "Yes" else "No",
         ),
     )
 

@@ -83,4 +83,14 @@ internal object NotificationsDomainModule {
     ): GetNetworksAvailableForNotificationsUseCase {
         return GetNetworksAvailableForNotificationsUseCase(pushNotificationsRepository = pushNotificationsRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideClearApplicationIdUseCase(
+        pushNotificationsRepository: PushNotificationsRepository,
+    ): ClearApplicationIdUseCase {
+        return ClearApplicationIdUseCase(
+            pushNotificationsRepository = pushNotificationsRepository,
+        )
+    }
 }

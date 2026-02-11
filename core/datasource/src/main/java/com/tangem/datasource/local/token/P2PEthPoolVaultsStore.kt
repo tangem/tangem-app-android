@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  * (similar to StakingYieldsStore for StakeKit yields)
  *
  * Vault is ETH-specific concept for pooled staking.
- * For other blockchains, P2P may use different structures.
+ * For other blockchains, P2PEthPool may use different structures.
  */
 interface P2PEthPoolVaultsStore {
 
@@ -23,7 +23,7 @@ interface P2PEthPoolVaultsStore {
     suspend fun getSync(): List<P2PEthPoolVault>
 
     /**
-     * Store vaults from P2P API
+     * Store vaults from P2PEthPool API
      */
     suspend fun store(vaults: List<P2PEthPoolVault>)
 }
