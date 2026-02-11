@@ -184,6 +184,7 @@ internal class SwapMarketsListBatchFlowManager(
                         },
                         priceChangeInterval = TokenMarketListConfig.Interval.H24,
                         order = TokenMarketListConfig.Order.ByRating,
+                        shouldNetworks = true,
                     ),
                 ),
             )
