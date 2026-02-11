@@ -96,7 +96,7 @@ internal class SendWithSwapModel @Inject constructor(
             ),
         )
 
-    val accountFlow: StateFlow<Account.CryptoPortfolio?>
+    val accountFlow: StateFlow<Account?>
         field = MutableStateFlow(null)
 
     val isAccountModeFlow: StateFlow<Boolean>

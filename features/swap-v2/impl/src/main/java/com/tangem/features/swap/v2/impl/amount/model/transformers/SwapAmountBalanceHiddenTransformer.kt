@@ -21,7 +21,7 @@ internal class SwapAmountBalanceHiddenTransformer(
     private val swapDirection: SwapDirection,
     private val clickIntents: AmountScreenClickIntents,
     private val isAccountsMode: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account?,
 ) : Transformer<SwapAmountUM> {
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
