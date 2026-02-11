@@ -90,6 +90,7 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
                     blockchain = network.name,
                     token = network.currencySymbol,
                     feeType = null,
+                    feeToken = network.currencySymbol,
                 ),
                 memoType = MemoType.Null,
             ),
@@ -106,15 +107,16 @@ internal class WcEthSendTransactionUseCase @AssistedInject constructor(
         val newState = when (action) {
             is WcEthTxAction.UpdateApprovalAmount -> {
                 val extras = uncompiled.extras as EthereumTransactionExtras
-                val callData = ApprovalERC20TokenCallData(
-                    spenderAddress = uncompiled.sourceAddress,
+                val compiledData = extras.callData?.data ?: return
+                val approvalCallData = ApprovalERC20TokenCallData(compiledData) ?: return
+                val newApprovalCallData = approvalCallData.copy(
                     amount = action.amount?.amount?.let {
                         BlockchainAmount(currencySymbol = it.currencySymbol, decimals = it.decimals, value = it.value)
                     },
                 )
                 approvalAmount = action.amount
                 isIgnoreDAppFee = true
-                uncompiled.copy(extras = extras.copy(callData = callData))
+                uncompiled.copy(extras = extras.copy(callData = newApprovalCallData))
             }
             is WcEthTxAction.UpdateFee -> uncompiled.copy(fee = action.fee)
         }

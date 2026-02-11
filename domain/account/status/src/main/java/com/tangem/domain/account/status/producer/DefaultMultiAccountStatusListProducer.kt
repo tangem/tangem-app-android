@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.flowOn
  */
 internal class DefaultMultiAccountStatusListProducer @AssistedInject constructor(
     @Assisted val params: Unit,
+    override val flowProducerTools: FlowProducerTools,
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,

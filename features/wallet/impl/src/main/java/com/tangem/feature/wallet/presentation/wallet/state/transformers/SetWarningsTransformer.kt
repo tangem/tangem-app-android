@@ -15,11 +15,8 @@ internal class SetWarningsTransformer(
         return when (prevState) {
             is WalletState.MultiCurrency.Content -> prevState.copy(warnings = warnings)
             is WalletState.SingleCurrency.Content -> prevState.copy(warnings = warnings)
-            is WalletState.Visa.Content -> prevState.copy(warnings = warnings)
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
-            is WalletState.Visa.Locked,
-            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.w("Impossible to update notifications for locked wallet")
                 prevState

@@ -6,7 +6,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.utils.converter.Converter
 
 /**
- * Converter from P2P Error Response to Domain StakingError
+ * Converter from P2PEthPool Error Response to Domain StakingError
  */
 @Suppress("MagicNumber")
 internal object P2PEthPoolErrorConverter : Converter<P2PEthPoolErrorResponse, StakingError> {

@@ -20,6 +20,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountE
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.ResettableOneTimeEventSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -79,9 +80,10 @@ internal class NotificationsModel @Inject constructor(
     private val analyticsCategoryName = params.analyticsCategoryName
     private val userWalletId = params.userWalletId
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
-    private val feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus
+    private val feeCryptoCurrencyStatus = params.notificationData.feeCryptoCurrencyStatus
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
+    private val resettableOneTimeEventSender = ResettableOneTimeEventSender(analyticsEventHandler)
 
     private var notificationData = params.notificationData
 
@@ -92,7 +94,10 @@ internal class NotificationsModel @Inject constructor(
 
     init {
         subscribeToNotificationUpdateTrigger()
-        checkIfSubtractAvailable()
+        modelScope.launch {
+            checkIfSubtractAvailable()
+            buildNotifications()
+        }
         incrementNotificationsShowCount()
     }
 
@@ -102,11 +107,14 @@ internal class NotificationsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun checkIfSubtractAvailable() {
-        modelScope.launch {
-            isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, currency).getOrElse { false }
-            buildNotifications()
-        }
+    private suspend fun checkIfSubtractAvailable() {
+        val feeCurrencyId = notificationData.feeCryptoCurrencyStatus.currency.id
+        val fee = notificationData.fee
+        isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(
+            userWalletId = userWalletId,
+            currency = currency,
+            maybeGaslessFee = fee?.let { feeCurrencyId to fee },
+        ).getOrElse { false }
     }
 
     private fun incrementNotificationsShowCount() {
@@ -115,16 +123,19 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
-    private suspend fun updateState(data: NotificationData) {
+    private fun updateState(data: NotificationData) {
         notificationData = data
-        buildNotifications()
+        modelScope.launch {
+            checkIfSubtractAvailable()
+            buildNotifications()
+        }
     }
 
     private suspend fun buildNotifications() = with(notificationData) {
         val feeValue = fee?.amount?.value
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            cryptoCurrencyStatus = getCurrencyStatusForFeePayment(),
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy,
@@ -226,7 +237,7 @@ internal class NotificationsModel @Inject constructor(
             fee = feeValue,
             userWalletId = userWalletId,
             tokenStatus = cryptoCurrencyStatus,
-            coinStatus = feeCryptoCurrencyStatus,
+            feeStatus = notificationData.feeCryptoCurrencyStatus,
         ).getOrNull()
 
         addExceedBalanceNotification(
@@ -241,13 +252,18 @@ internal class NotificationsModel @Inject constructor(
             shouldMergeFeeNetworkName = BlockchainUtils.isArbitrum(currency.network.backendId),
             onClick = ::showTokenDetails,
             onAnalyticsEvent = {
-                analyticsEventHandler.send(
-                    NotificationsAnalyticEvents.NoticeNotEnoughFee(
-                        categoryName = analyticsCategoryName,
-                        token = cryptoCurrencyStatus.currency.symbol,
-                        blockchain = cryptoCurrencyStatus.currency.network.name,
-                    ),
+                val event = NotificationsAnalyticEvents.NoticeNotEnoughFee(
+                    categoryName = analyticsCategoryName,
+                    token = cryptoCurrencyStatus.currency.symbol,
+                    blockchain = cryptoCurrencyStatus.currency.network.name,
                 )
+                resettableOneTimeEventSender.sendEventOnce(
+                    key = EXCEEDS_BALANCE_EVENT,
+                    event = event,
+                )
+            },
+            onResetAnalyticsEvent = {
+                resettableOneTimeEventSender.reset(EXCEEDS_BALANCE_EVENT)
             },
         )
         if (!BlockchainUtils.isCardano(currency.network.rawId)) {
@@ -369,7 +385,17 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
+    private fun getCurrencyStatusForFeePayment(): CryptoCurrencyStatus {
+        val isFeeInTokenCurrency = notificationData.fee is Fee.Ethereum.TokenCurrency
+        return if (isFeeInTokenCurrency) {
+            notificationData.feeCryptoCurrencyStatus
+        } else {
+            cryptoCurrencyStatus
+        }
+    }
+
     companion object {
         const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
+        private const val EXCEEDS_BALANCE_EVENT = "EXCEEDS_BALANCE_EVENT"
     }
 }

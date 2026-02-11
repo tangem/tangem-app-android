@@ -37,6 +37,32 @@ fun TangemThemePreview(
     }
 }
 
+@Composable
+fun TangemThemePreviewRedesign(
+    isDark: Boolean? = null,
+    alwaysShowBottomSheets: Boolean = true,
+    rtl: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    val isDarkTheme = isDark ?: isSystemInDarkTheme()
+
+    CompositionLocalProvider(
+        LocalBottomSheetAlwaysVisible provides alwaysShowBottomSheets,
+        LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+    ) {
+        BoxWithConstraints {
+            TangemTheme(
+                isDark = isDarkTheme,
+                windowSize = rememberWindowSizePreview(maxWidth, maxHeight),
+            ) {
+                TangemThemeRedesign(
+                    content = content,
+                )
+            }
+        }
+    }
+}
+
 /**
  * This is used to make the bottom sheet always visible in the Preview and should be `true` only in the Preview.
  * */

@@ -1,8 +1,13 @@
 @file:Suppress("LongMethod")
+
 package com.tangem.core.ui.res
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.haze.ProvideHaze
+import com.tangem.core.ui.components.haze.hazeSourceTangem
 
 /**
  * Provides additional theming for redesigned components.
@@ -20,12 +25,17 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
         colorScheme = tangemColorScheme(colors = themeColors),
     ) {
         CompositionLocalProvider(
+            LocalRedesignEnabled provides true,
             LocalTangemColors provides themeColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
-            LocalTangemTypography provides TangemTypography(InterFamily),
+            LocalTangemTypography2 provides TangemTypography2(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
-            content()
+            ProvideHaze {
+                Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
+                    content()
+                }
+            }
         }
     }
 }
@@ -97,9 +107,10 @@ private fun lightThemeColors2(): TangemColors2 {
     )
     val button = TangemColors2.Button(
         backgroundPrimary = TangemColorPalette.Dark6,
-        backgroundSecondary = TangemColorPalette.Dark6.copy(alpha = 0.1f),
+        backgroundSecondary = TangemColorPalette.Dark_10,
         backgroundDisabled = TangemColorPalette.Light3,
         backgroundPositive = TangemColorPalette.Azure,
+        backgroundPrimaryInverse = TangemColorPalette.White,
         textSecondary = TangemColorPalette.Dark6,
         textPrimary = TangemColorPalette.Light2,
         textDisabled = text.neutral.tertiary,
@@ -154,6 +165,15 @@ private fun lightThemeColors2(): TangemColors2 {
         borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
         borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
     )
+    val tabs = TangemColors2.Tabs(
+        textPrimary = TangemColorPalette.Light2,
+        textSecondary = TangemColorPalette.Dark4,
+        textTertiary = TangemColorPalette.Black,
+        backgroundPrimary = TangemColorPalette.Dark6,
+        backgroundSecondary = TangemColorPalette.Dark_10,
+        backgroundTertiary = TangemColorPalette.White,
+        backgroundQuaternary = TangemColorPalette.Dark_20,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -166,6 +186,7 @@ private fun lightThemeColors2(): TangemColors2 {
         field = field,
         skeleton = skeleton,
         markers = markers,
+        tabs = tabs,
     )
 }
 
@@ -236,9 +257,10 @@ private fun darkThemeColors2(): TangemColors2 {
     )
     val button = TangemColors2.Button(
         backgroundPrimary = TangemColorPalette.Light1V2,
-        backgroundSecondary = TangemColorPalette.White.copy(alpha = 0.1f),
+        backgroundSecondary = TangemColorPalette.Light_10,
         backgroundDisabled = TangemColorPalette.Dark5,
         backgroundPositive = TangemColorPalette.Azure,
+        backgroundPrimaryInverse = TangemColorPalette.Light_10,
         textSecondary = TangemColorPalette.Light4,
         textPrimary = TangemColorPalette.Dark4,
         textDisabled = text.neutral.secondary,
@@ -293,6 +315,15 @@ private fun darkThemeColors2(): TangemColors2 {
         borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
         borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
     )
+    val tabs = TangemColors2.Tabs(
+        textPrimary = TangemColorPalette.Dark4,
+        textSecondary = TangemColorPalette.Light5,
+        textTertiary = TangemColorPalette.White,
+        backgroundPrimary = TangemColorPalette.Light1,
+        backgroundSecondary = TangemColorPalette.Light_10,
+        backgroundTertiary = TangemColorPalette.Light_10,
+        backgroundQuaternary = TangemColorPalette.Light_10,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -305,5 +336,6 @@ private fun darkThemeColors2(): TangemColors2 {
         field = field,
         skeleton = skeleton,
         markers = markers,
+        tabs = tabs,
     )
 }

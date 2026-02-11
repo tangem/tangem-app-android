@@ -15,6 +15,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
@@ -86,12 +87,14 @@ internal class SendConfirmComponent(
         params = FeeSelectorParams.FeeSelectorBlockParams(
             state = model.uiState.value.feeSelectorUM,
             onLoadFee = params.onLoadFee,
+            onLoadFeeExtended = params.onLoadFeeExtended,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
             analyticsSendSource = params.analyticsSendSource,
+            userWalletId = params.userWallet.walletId,
         ),
         onResult = model::onFeeResult,
     )
@@ -102,7 +105,6 @@ internal class SendConfirmComponent(
             analyticsCategoryName = params.analyticsCategoryName,
             userWalletId = params.userWallet.walletId,
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             callback = model,
             notificationData = NotificationData(
@@ -113,6 +115,7 @@ internal class SendConfirmComponent(
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
                 feeError = model.confirmData.feeError,
+                feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             ),
         ),
     )
@@ -163,6 +166,7 @@ internal class SendConfirmComponent(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
         val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        val onLoadFeeExtended: suspend (CryptoCurrencyStatus?) -> Either<GetFeeError, TransactionFeeExtended>,
         val onSendTransaction: () -> Unit,
     )
 

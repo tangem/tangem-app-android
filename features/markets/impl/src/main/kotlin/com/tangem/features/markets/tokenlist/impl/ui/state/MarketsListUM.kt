@@ -46,8 +46,8 @@ sealed class ListUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
-        val showUnder100kTokensNotification: Boolean,
-        val showUnder100kTokensNotificationWasHidden: Boolean,
+        val shouldShowUnder100kTokensNotification: Boolean,
+        val wasUnder100kTokensNotificationHidden: Boolean,
         val loadMore: () -> Unit,
         val visibleIdsChanged: (List<CryptoCurrency.RawID>) -> Unit,
         val onShowTokensUnder100kClicked: () -> Unit,

@@ -39,17 +39,6 @@ class StakingIntegrationIDTest {
     }
 
     @Test
-    fun `all P2P blockchains are unique`() {
-        // Act
-        val actual = StakingIntegrationID.P2P.entries
-            .distinctBy(StakingIntegrationID.P2P::blockchain)
-
-        // Assert
-        val expected = StakingIntegrationID.P2P.entries.size
-        Truth.assertThat(actual).hasSize(expected)
-    }
-
-    @Test
     fun `all sub blockchains are unique`() {
         // Act
         val actual = StakingIntegrationID.StakeKit.EthereumToken.entries
@@ -151,8 +140,8 @@ class StakingIntegrationIDTest {
                 expected = StakingIntegrationID.StakeKit.Coin.Cardano,
             ),
             CreateModel(
-                currencyId = createCurrencyId(blockchain = StakingIntegrationID.P2P.EthereumPooled.blockchain),
-                expected = StakingIntegrationID.P2P.EthereumPooled,
+                currencyId = createCurrencyId(blockchain = StakingIntegrationID.P2PEthPool.blockchain),
+                expected = StakingIntegrationID.P2PEthPool,
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩polygon-ecosystem-token⚓1234567890"),

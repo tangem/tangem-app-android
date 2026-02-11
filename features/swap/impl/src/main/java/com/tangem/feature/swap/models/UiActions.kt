@@ -24,7 +24,7 @@ data class UiActions(
     val onStoriesClose: (Int) -> Unit,
     val onRetryClick: () -> Unit,
     val onClickFee: () -> Unit,
-    val onSelectFeeType: (TxFee) -> Unit,
+    val onSelectFeeType: (TxFee.Legacy) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
     val onBuyClick: (CryptoCurrency) -> Unit,

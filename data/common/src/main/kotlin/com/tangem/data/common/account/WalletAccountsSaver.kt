@@ -15,6 +15,11 @@ interface WalletAccountsSaver {
     /** Store wallet accounts [response] by [userWalletId] */
     suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse)
 
+    suspend fun update(
+        userWalletId: UserWalletId,
+        transform: (GetWalletAccountsResponse?) -> GetWalletAccountsResponse?,
+    )
+
     /** Push wallet accounts [body] by [userWalletId] */
     @Throws
     suspend fun push(userWalletId: UserWalletId, body: SaveWalletAccountsResponse): GetWalletAccountsResponse?

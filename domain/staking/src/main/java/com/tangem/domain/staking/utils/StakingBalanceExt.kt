@@ -7,7 +7,7 @@ import java.math.BigDecimal
 
 /**
  * Provider-agnostic extension to get total balance including rewards.
- * Works for both StakeKit and P2P providers.
+ * Works for both StakeKit and P2PEthPool providers.
  *
  * Returns sum of all staking-related balances including rewards
  * (staked + unstaking + withdrawable + rewards).
@@ -18,7 +18,7 @@ import java.math.BigDecimal
 fun StakingBalance.Data.getTotalWithRewardsStakingBalance(blockchainId: String): BigDecimal {
     return when (this) {
         is StakingBalance.Data.StakeKit -> getTotalWithRewardsStakingBalanceStakeKit(blockchainId)
-        is StakingBalance.Data.P2P -> {
+        is StakingBalance.Data.P2PEthPool -> {
             val rewards = totalRewards
             if (BlockchainUtils.isIncludeStakingTotalBalance(blockchainId)) {
                 totalStaked + unstakingAmount + withdrawableAmount + rewards
@@ -31,7 +31,7 @@ fun StakingBalance.Data.getTotalWithRewardsStakingBalance(blockchainId: String):
 
 /**
  * Provider-agnostic extension to get total staking balance excluding rewards.
- * Works for both StakeKit and P2P providers.
+ * Works for both StakeKit and P2PEthPool providers.
  *
  * Returns sum of all staking-related balances (staked + unstaking + withdrawable)
  * excluding rewards.
@@ -39,7 +39,7 @@ fun StakingBalance.Data.getTotalWithRewardsStakingBalance(blockchainId: String):
 fun StakingBalance.Data.getTotalStakingBalance(blockchainId: String): BigDecimal {
     return when (this) {
         is StakingBalance.Data.StakeKit -> getTotalStakingBalanceStakeKit(blockchainId)
-        is StakingBalance.Data.P2P -> totalStaked + unstakingAmount + withdrawableAmount
+        is StakingBalance.Data.P2PEthPool -> totalStaked + unstakingAmount + withdrawableAmount
     }
 }
 

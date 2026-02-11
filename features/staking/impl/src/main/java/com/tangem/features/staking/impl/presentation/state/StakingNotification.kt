@@ -4,7 +4,9 @@ import androidx.annotation.StringRes
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
+import com.tangem.domain.staking.model.CooldownPeriod
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.utils.toTextReference
 
 internal object StakingNotification {
 
@@ -89,25 +91,30 @@ internal object StakingNotification {
             subtitle = subtitleText,
         )
 
-        data object StakeEntireBalance : Info(
+        data class StakeEntireBalance(
+            private val reduceAmountValue: TextReference?,
+            private val onReduceClick: () -> Unit,
+        ) : Info(
             title = resourceReference(R.string.common_network_fee_title),
             subtitle = resourceReference(R.string.staking_notification_stake_entire_balance_text),
+            buttonsState = if (reduceAmountValue != null) {
+                NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                    text = reduceAmountValue,
+                    onClick = onReduceClick,
+                )
+            } else {
+                null
+            },
         )
 
         data class Unstake(
-            val cooldownPeriodDays: Int,
+            val cooldownPeriod: CooldownPeriod,
             @StringRes val subtitleRes: Int,
         ) : Info(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
                 subtitleRes,
-                wrappedList(
-                    pluralReference(
-                        id = R.plurals.common_days,
-                        count = cooldownPeriodDays,
-                        formatArgs = wrappedList(cooldownPeriodDays),
-                    ),
-                ),
+                wrappedList(cooldownPeriod.toTextReference()),
             ),
         )
 
