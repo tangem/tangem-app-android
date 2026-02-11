@@ -468,9 +468,12 @@
   <string name="domain_receive_assets_onboarding_network_name">%s Netzwerk</string>
   <string name="domain_receive_assets_onboarding_title">Sende Geld nur mit</string>
   <string name="earn_best_opportunities">Beste Gelegenheiten</string>
+  <string name="earn_clear_filter">Filter löschen</string>
   <string name="earn_filter_all_networks">Alle Netzwerke</string>
   <string name="earn_filter_all_types">Alle Arten</string>
+  <string name="earn_filter_by">Filtern nach</string>
   <string name="earn_mostly_used">Meist verwendet</string>
+  <string name="earn_no_results">Keine Ergebnisse</string>
   <string name="earn_title">Verdienen</string>
   <string name="email_preface_wc_error">Hallo Support-Team, ich habe einen Fehler mit dem Code %s festgestellt.</string>
   <string name="email_subject_wc_error">WalletConnect-Fehler</string>
@@ -1481,10 +1484,12 @@
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
   <string name="tangem_pay_status_pending">Ausstehend</string>
+  <string name="tangem_pay_status_reversed">Storniert</string>
   <string name="tangem_pay_terms_fees_limits">Bedingungen, Gebühren &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
-  <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.Questa commissione copre il costo della gestione del tuo trasferimento.</string>
+  <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">Die Transaktion wurde vom Händler teilweise oder vollständig storniert</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Karte entsperren?</string>
   <string name="tangem_pay_unfreeze_card_failed">Entsperren der Karte fehlgeschlagen. Versuchen Sie es später erneut.</string>

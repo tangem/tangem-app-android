@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,7 +19,6 @@ import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
-import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -128,21 +128,23 @@ private fun AmountBlockV2(
                     .padding(top = 8.dp)
                     .weight(1f),
             ) {
-                ResizableText(
+                Text(
                     text = firstAmount,
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.h2.fontSize),
                     modifier = Modifier.testTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT),
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    ResizableText(
+                    Text(
                         text = secondAmount,
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                         maxLines = 1,
+                        autoSize = TextAutoSize.StepBased(maxFontSize = TangemTheme.typography.body2.fontSize),
                         modifier = Modifier.testTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT),
                     )
                     extraContent()

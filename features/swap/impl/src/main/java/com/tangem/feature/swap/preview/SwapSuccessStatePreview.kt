@@ -2,7 +2,7 @@ package com.tangem.feature.swap.preview
 
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -22,12 +22,12 @@ internal data object SwapSuccessStatePreview {
         fromTitle = AccountTitleUM.Account(
             prefixText = stringReference("From"),
             name = AccountNameUM.DefaultMain.value,
-            icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
         ),
         toTitle = AccountTitleUM.Account(
             prefixText = stringReference("To"),
             name = AccountNameUM.DefaultMain.value,
-            icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
         ),
         fromTokenAmount = TextReference.Str("1 000 DAI"),
         toTokenAmount = TextReference.Str("1 000 MATIC"),

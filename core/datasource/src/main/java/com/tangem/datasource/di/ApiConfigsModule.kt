@@ -60,7 +60,15 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideNewsConfig(authProvider: AuthProvider): ApiConfig = News(authProvider = authProvider)
+    fun provideNewsConfig(
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig = News(
+        appVersionProvider = appVersionProvider,
+        appInfoProvider = appInfoProvider,
+        authProvider = authProvider,
+    )
 
     @Provides
     @IntoSet
@@ -78,13 +86,17 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPay(appVersionProvider)
+    fun provideTangemPayBffConfig(
+        appVersionProvider: AppVersionProvider,
+        environmentConfigStorage: EnvironmentConfigStorage,
+    ): ApiConfig = TangemPay.Bff(appVersionProvider, environmentConfigStorage)
 
     @Provides
     @IntoSet
-    fun provideTangemPayAuthConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPayAuth(
-        appVersionProvider,
-    )
+    fun provideTangemPayAuthConfig(
+        appVersionProvider: AppVersionProvider,
+        environmentConfigStorage: EnvironmentConfigStorage,
+    ): ApiConfig = TangemPay.Auth(appVersionProvider, environmentConfigStorage)
 
     @Provides
     @IntoSet
@@ -96,5 +108,19 @@ internal object ApiConfigsModule {
     @IntoSet
     fun provideMoonPayConfig(): ApiConfig {
         return MoonPay()
+    }
+
+    @Provides
+    @IntoSet
+    fun provideGaslessServiceConfig(
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig {
+        return GaslessTxService(
+            authProvider = authProvider,
+            appVersionProvider = appVersionProvider,
+            appInfoProvider = appInfoProvider,
+        )
     }
 }

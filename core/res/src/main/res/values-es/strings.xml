@@ -1481,10 +1481,12 @@
   <string name="tangem_pay_status_completed">Completado</string>
   <string name="tangem_pay_status_declined">Rechazado</string>
   <string name="tangem_pay_status_pending">Pendiente</string>
+  <string name="tangem_pay_status_reversed">Revertida</string>
   <string name="tangem_pay_terms_fees_limits">Términos, tarifas y límites</string>
   <string name="tangem_pay_terms_limits">Términos y límites</string>
   <string name="tangem_pay_transaction_declined_notification_text">El banco rechazó esta solicitud de transacción.</string>
   <string name="tangem_pay_transaction_fee_notification_text">Esta tarifa cubre el costo de procesar tu transferencia.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">La transacción fue revertida parcial o totalmente por el comerciante</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Sigue usando tu dinero. Puedes congelarlo en cualquier momento.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">¿Descongelar tu tarjeta?</string>
   <string name="tangem_pay_unfreeze_card_failed">No se pudo descongelar la tarjeta. Inténtalo de nuevo más tarde.</string>

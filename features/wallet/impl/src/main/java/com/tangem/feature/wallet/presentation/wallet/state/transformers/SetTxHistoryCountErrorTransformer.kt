@@ -5,8 +5,8 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
@@ -38,15 +38,9 @@ internal class SetTxHistoryCountErrorTransformer(
     override fun transform(prevState: WalletState): WalletState {
         return when (prevState) {
             is WalletState.SingleCurrency.Content -> prevState.copy(txHistoryState = createErrorState())
-            is WalletState.Visa.Content -> prevState.copy(txHistoryState = createErrorState())
             is WalletState.SingleCurrency.Locked,
-            is WalletState.Visa.Locked,
-            is WalletState.Visa.AccessTokenLocked,
+            is WalletState.MultiCurrency,
             -> {
-                Timber.w("Impossible to load transactions history for locked wallet")
-                prevState
-            }
-            is WalletState.MultiCurrency -> {
                 Timber.w("Impossible to load transactions history for multi-currency wallet")
                 prevState
             }

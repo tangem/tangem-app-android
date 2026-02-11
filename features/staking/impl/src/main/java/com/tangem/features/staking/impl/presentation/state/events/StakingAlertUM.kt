@@ -74,4 +74,12 @@ internal sealed class StakingAlertUM : AlertUM {
         )
         override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
     }
+
+    data class NetworkFeeUpdated(
+        override val onConfirmClick: () -> Unit,
+    ) : StakingAlertUM() {
+        override val title: TextReference = resourceReference(R.string.staking_alert_network_fee_updated_title)
+        override val message: TextReference = resourceReference(R.string.staking_alert_network_fee_updated_message)
+        override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
+    }
 }

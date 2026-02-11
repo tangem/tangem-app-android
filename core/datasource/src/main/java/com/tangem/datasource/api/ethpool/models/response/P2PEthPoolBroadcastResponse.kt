@@ -29,7 +29,7 @@ data class P2PEthPoolBroadcastResponse(
 )
 
 /**
- * Transaction status from P2P API
+ * Transaction status from P2PEthPool API
  */
 @JsonClass(generateAdapter = false)
 enum class P2PEthPoolTxStatusDTO {
