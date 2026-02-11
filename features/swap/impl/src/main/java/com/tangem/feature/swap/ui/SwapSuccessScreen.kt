@@ -29,14 +29,16 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.preview.SwapSuccessStatePreview
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
+import com.tangem.features.send.v2.common.ui.FeeBlockSuccess
 
 @Composable
-fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
+fun SwapSuccessScreen(state: SwapSuccessStateHolder, feeSelectorUM: FeeSelectorUM?, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
         containerColor = TangemTheme.colors.background.secondary,
         content = { padding ->
-            SwapSuccessScreenContent(padding = padding, state = state)
+            SwapSuccessScreenContent(padding = padding, feeSelectorUM = feeSelectorUM, state = state)
         },
         topBar = {
             AppBarWithBackButton(
@@ -58,7 +60,11 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: PaddingValues) {
+private fun SwapSuccessScreenContent(
+    state: SwapSuccessStateHolder,
+    feeSelectorUM: FeeSelectorUM?,
+    padding: PaddingValues,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -101,7 +107,10 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
                 .background(TangemTheme.colors.background.action),
         )
         SpacerH16()
-        if (state.fee != TextReference.EMPTY) {
+
+        if (feeSelectorUM != null) {
+            FeeBlockSuccess(feeSelectorUM)
+        } else if (state.fee != null && state.fee != TextReference.EMPTY) {
             InputRowDefault(
                 title = TextReference.Res(R.string.common_network_fee_title),
                 text = state.fee,
@@ -205,7 +214,7 @@ private fun SwapSuccessScreenButtons(
 @Composable
 private fun Preview_Success() {
     TangemThemePreview {
-        SwapSuccessScreen(SwapSuccessStatePreview.state) {}
+        SwapSuccessScreen(SwapSuccessStatePreview.state, null) {}
     }
 }
 // endregion preview

@@ -29,6 +29,7 @@ sealed class TangemPayTxHistoryItem {
         val merchantCategory: String?,
         val status: Status,
         val enrichedMerchantIconUrl: String?,
+        val declinedReason: String?,
     ) : TangemPayTxHistoryItem()
 
     @Serializable
@@ -71,6 +72,7 @@ sealed class TangemPayTxHistoryItem {
         RESERVED,
         COMPLETED,
         DECLINED,
+        REVERSED,
         UNKNOWN,
     }
 }

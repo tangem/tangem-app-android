@@ -23,7 +23,8 @@ import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -45,7 +46,7 @@ class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
     private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
     private val stakingApyMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
-    private val yieldSupplyPromoBannerKey: String? = null,
+    private val promoCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
@@ -74,7 +75,7 @@ class TokenItemStateConverter(
         createPromoBannerState(
             status = status,
             yieldModuleApyMap = yieldModuleApyMap,
-            yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKey,
+            promoCryptoCurrencyStatus = promoCryptoCurrencyStatus,
             onApyLabelClick = onApyLabelClick,
             onYieldPromoCloseClick = onYieldPromoCloseClick,
             onYieldPromoShown = onYieldPromoShown,
@@ -251,9 +252,9 @@ class TokenItemStateConverter(
                     stakingApyMap = stakingApyMap,
                 )
                 val rewardTypeRes = when (stakingInfo.rewardType) {
-                    Yield.RewardType.APR -> R.string.staking_apr_earn_badge
-                    Yield.RewardType.UNKNOWN,
-                    Yield.RewardType.APY,
+                    RewardType.APR -> R.string.staking_apr_earn_badge
+                    RewardType.UNKNOWN,
+                    RewardType.APY,
                     null,
                     -> R.string.yield_module_earn_badge
                 }
@@ -283,12 +284,14 @@ class TokenItemStateConverter(
 
             val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
             val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
+            val p2pEthPoolBalance = stakingBalance as? StakingBalance.Data.P2PEthPool
 
             val rateInfo = when (val stakingOptions = stakingAvailability.option) {
-                is StakingOption.P2P -> {
-                    // P2P or no balance: use preferred validators
-                    // TODO add p2p logic
-                    null
+                is StakingOption.P2PEthPool -> {
+                    RewardInfo(
+                        rate = stakingOptions.apy,
+                        type = RewardType.APY,
+                    )
                 }
                 is StakingOption.StakeKit -> if (stakeKitBalance != null) {
                     val validatorsByAddress = stakingOptions.yield.validators.associateBy { it.address }
@@ -314,7 +317,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.rate,
-                isActive = stakeKitBalance != null, // todo add p2p check
+                isActive = stakeKitBalance != null || p2pEthPoolBalance != null,
                 rewardType = rateInfo?.type,
             )
         }
@@ -401,7 +404,7 @@ class TokenItemStateConverter(
         private fun createPromoBannerState(
             status: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, BigDecimal>,
-            yieldSupplyPromoBannerKey: String?,
+            promoCryptoCurrencyStatus: CryptoCurrencyStatus?,
             onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
             onYieldPromoCloseClick: (() -> Unit)?,
             onYieldPromoShown: ((cryptoCurrency: CryptoCurrency) -> Unit)?,
@@ -411,13 +414,15 @@ class TokenItemStateConverter(
             if (status.value !is CryptoCurrencyStatus.Loaded) {
                 return TokenItemState.PromoBannerState.Empty
             }
-            if (yieldSupplyPromoBannerKey == null || yieldSupplyPromoBannerKey != token.yieldSupplyKey() ||
-                yieldModuleApyMap[token.yieldSupplyKey()] == null
-            ) {
+            if (promoCryptoCurrencyStatus == null || status.currency.id != promoCryptoCurrencyStatus.currency.id) {
                 return TokenItemState.PromoBannerState.Empty
             }
-            val yieldSupplyApy =
-                yieldModuleApyMap[token.yieldSupplyKey()] ?: return TokenItemState.PromoBannerState.Empty
+            val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull { (key, _) ->
+                key.equals(
+                    other = token.yieldSupplyKey(),
+                    ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
+                )
+            }?.value ?: return TokenItemState.PromoBannerState.Empty
 
             return TokenItemState.PromoBannerState.Content(
                 title = resourceReference(
@@ -469,7 +474,7 @@ class TokenItemStateConverter(
     private data class StakingLocalInfo(
         val rate: BigDecimal?,
         val isActive: Boolean,
-        val rewardType: Yield.RewardType?,
+        val rewardType: RewardType?,
     )
 
     private data class EarnApyInfo(
