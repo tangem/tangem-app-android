@@ -184,6 +184,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                 val account = accountStatus.account
                 val accountBalance = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
+                    is AccountStatus.Payment -> accountStatus.totalFiatBalance
                 }
                 val accountItemUM = AccountPortfolioItemUMConverter(
                     onClick = { selectorController.selectAccount(account.accountId) },

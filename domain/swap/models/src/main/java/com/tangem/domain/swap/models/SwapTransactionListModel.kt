@@ -14,8 +14,8 @@ data class SwapTransactionListModel(
     val toCryptoCurrencyId: String,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,
-    val fromAccount: Account.CryptoPortfolio?,
-    val toAccount: Account.CryptoPortfolio?,
+    val fromAccount: Account?,
+    val toAccount: Account?,
     val transactions: List<SwapTransactionModel>,
 )
 

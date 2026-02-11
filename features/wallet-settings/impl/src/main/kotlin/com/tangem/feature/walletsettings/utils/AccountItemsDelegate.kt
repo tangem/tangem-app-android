@@ -22,6 +22,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
@@ -84,11 +85,11 @@ internal class AccountItemsDelegate @Inject constructor(
             return WalletSettingsAccountsUM.Account(state = accountItemUM)
         }
 
-        fun mapAccount(account: AccountStatus): WalletSettingsAccountsUM = when (account) {
+        fun mapAccount(account: AccountStatus.CryptoPortfolio): WalletSettingsAccountsUM = when (account) {
             is AccountStatus.CryptoPortfolio -> account.mapCryptoPortfolio()
         }
 
-        val accounts = accountStatusList.accountStatuses
+        val accounts = accountStatusList.accountStatuses.filterCryptoPortfolio()
 
         val header = WalletSettingsAccountsUM.Header(
             id = "accounts_header",

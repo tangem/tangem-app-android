@@ -45,6 +45,7 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
         val accountsWithHotCrypto = walletAccounts.accountStatuses.map { accountStatus ->
             val account: AccountStatus.CryptoPortfolio = when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus
+                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
             }
             val addedHotCrypto = mapOfAddedCurrencies[account.account].orEmpty()
             HotCryptoPortfolioData.Account(
