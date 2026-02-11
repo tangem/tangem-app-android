@@ -64,6 +64,12 @@ internal class SwapNotificationsFactory(
         )
     }
 
+    fun getSwapNotSupportedNotifications(tokenName: String): ImmutableList<NotificationUM> {
+        return persistentListOf(
+            SwapNotificationUM.Warning.SwapNotSupported(tokenName),
+        )
+    }
+
     fun getQuotesErrorStateNotifications(
         expressDataError: ExpressDataError,
         fromToken: CryptoCurrency,
