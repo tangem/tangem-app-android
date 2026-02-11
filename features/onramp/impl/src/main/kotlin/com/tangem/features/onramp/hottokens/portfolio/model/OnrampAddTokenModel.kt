@@ -10,6 +10,8 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
@@ -47,10 +49,14 @@ internal class OnrampAddTokenModel @Inject constructor(
         params.tokenToAdd
             .distinctUntilChanged()
             .mapLatest { tokenToAdd: AddHotCryptoData ->
-                addTokenJob.cancel()
+                addTokenJob.join()
                 val backendId = tokenToAdd.cryptoCurrency.network.backendId
                 val userWalletId = tokenToAdd.account.accountId.userWalletId
-                val isTangemIconVisible = needColdWalletInteraction(userWalletId, backendId)
+                val isTangemIconVisible = needColdWalletInteraction(
+                    walletId = userWalletId,
+                    backendId = backendId,
+                    cryptoCurrency = tokenToAdd.cryptoCurrency,
+                )
                 uiBuilder.updateContent(
                     tokenToAdd = tokenToAdd,
                     isTangemIconVisible = isTangemIconVisible,
@@ -75,11 +81,13 @@ internal class OnrampAddTokenModel @Inject constructor(
                 return@launch
             }
 
-        val status = getAccountCurrencyStatusUseCase.invokeSync(
+        val status = getAccountCurrencyStatusUseCase(
             userWalletId = accountId.userWalletId,
             currencyId = cryptoCurrency.id,
             network = cryptoCurrency.network,
-        ).getOrNull()
+        )
+            .filter { (_, status) -> status.value !is CryptoCurrencyStatus.Loading }
+            .firstOrNull()
         if (status == null) {
             processError(error = null)
         } else {
@@ -88,11 +96,14 @@ internal class OnrampAddTokenModel @Inject constructor(
         uiState.value = um.toggleProgress(false)
     }
 
-    private suspend fun needColdWalletInteraction(walletId: UserWalletId, backendId: BackendId): Boolean =
-        coldWalletAndHasMissedDerivationsUseCase.invoke(
-            userWalletId = walletId,
-            networksWithDerivationPath = mapOf(backendId to null),
-        )
+    private suspend fun needColdWalletInteraction(
+        walletId: UserWalletId,
+        backendId: BackendId,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean = coldWalletAndHasMissedDerivationsUseCase.invoke(
+        userWalletId = walletId,
+        networksWithDerivationPath = mapOf(backendId to cryptoCurrency.network.derivationPath.value),
+    )
 
     private fun processError(error: Throwable?) {
         val message = error?.message?.let { stringReference(it) }

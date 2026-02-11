@@ -38,6 +38,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
@@ -63,6 +65,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     private val nftRuntimeStores = ConcurrentHashMap<String, NFTRuntimeStore>()
+    private val nftRuntimeStoresMutex = Mutex()
     private val nftPersistenceStores = ConcurrentHashMap<String, NFTPersistenceStore>()
 
     private val collectionIdConverter = NFTSdkCollectionIdentifierConverter
@@ -426,16 +429,17 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private suspend fun getNFTRuntimeStore(userWalletId: UserWalletId, network: Network): NFTRuntimeStore {
         val storeId = (userWalletId to network).formatted()
-        return nftRuntimeStores.getOrPut(storeId) {
-            nftRuntimeStoreFactory.provide(network).also {
-                nftRuntimeStores[storeId] = it
-                val storedCollections = getStoredCollections(userWalletId, network)
-                val storedPrices = getStoredPrices(userWalletId, network)
-                it.initialize(
-                    collections = storedCollections,
-                    prices = storedPrices,
-                )
-            }
+        return nftRuntimeStoresMutex.withLock {
+            nftRuntimeStores[storeId]?.let { return it }
+            val store = nftRuntimeStoreFactory.provide(network)
+            val storedCollections = getStoredCollections(userWalletId, network)
+            val storedPrices = getStoredPrices(userWalletId, network)
+            store.initialize(
+                collections = storedCollections,
+                prices = storedPrices,
+            )
+            nftRuntimeStores[storeId] = store
+            store
         }
     }
 

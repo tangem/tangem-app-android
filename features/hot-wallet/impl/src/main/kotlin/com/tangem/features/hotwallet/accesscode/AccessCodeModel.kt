@@ -31,14 +31,12 @@ import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -66,6 +64,8 @@ internal class AccessCodeModel @Inject constructor(
 ) : Model() {
 
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
+
+    private val settingCodeJobHolder = JobHolder()
 
     internal val uiState: StateFlow<AccessCodeUM>
         field = MutableStateFlow(getInitialState())
@@ -201,38 +201,32 @@ internal class AccessCodeModel @Inject constructor(
         }
     }
 
-    private fun setCode(userWalletId: UserWalletId, accessCode: String) {
+    private suspend fun setCode(userWalletId: UserWalletId, accessCode: String) = coroutineScope {
+        if (settingCodeJobHolder.isActive) {
+            return@coroutineScope
+        }
+
         params.callbacks.onAccessCodeUpdateStarted(params.userWalletId)
 
-        modelScope.launch {
-            val userWallet = getUserWalletUseCase(userWalletId)
-                .getOrElse { error("User wallet with id $userWalletId not found") }
-                .requireHotWallet()
+        val userWallet = getUserWalletUseCase(userWalletId)
+            .getOrElse { error("User wallet with id $userWalletId not found") }
+            .requireHotWallet()
 
-            tryToAskForBiometry()
+        tryToAskForBiometry()
 
-            val settingCodeJob = launch(dispatchers.main) {
-                setCodeOperation(userWallet, accessCode)
-                params.callbacks.onAccessCodeUpdated(params.userWalletId)
-            }
+        val settingCodeJob = launch(dispatchers.main) {
+            setCodeOperation(userWallet, accessCode)
+            params.callbacks.onAccessCodeUpdated(params.userWalletId)
+        }.saveIn(settingCodeJobHolder)
 
-            setLoadingIfLongJob(settingCodeJob)
-        }
+        setLoadingIfLongJob(settingCodeJob)
     }
 
+    /**
+     * Set access code for hot wallet
+     * !!! Be aware that order of operations is important here !!!
+     */
     private suspend fun setCodeOperation(userWallet: UserWallet.Hot, accessCode: String) {
-        userWalletsListRepository.setLock(
-            userWalletId = userWallet.walletId,
-            lockMethod = UserWalletsListRepository.LockMethod.AccessCode(accessCode.toCharArray()),
-        )
-
-        if (walletsRepository.useBiometricAuthentication()) {
-            userWalletsListRepository.setLock(
-                userWalletId = userWallet.walletId,
-                lockMethod = UserWalletsListRepository.LockMethod.Biometric,
-            )
-        }
-
         val unlockHotWallet = getHotWalletContextualUnlockUseCase(userWallet.hotWalletId)
             .getOrNull()
             ?: run {
@@ -243,22 +237,39 @@ internal class AccessCodeModel @Inject constructor(
                 hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
             }
 
-        var updatedHotWalletId = tangemHotSdk.changeAuth(
+        val newHotWalletIdWithPass = tangemHotSdk.changeAuth(
             unlockHotWallet = unlockHotWallet,
             auth = HotAuth.Password(accessCode.toCharArray()),
         )
 
-        if (walletsRepository.requireAccessCode().not()) {
-            updatedHotWalletId = tangemHotSdk.changeAuth(
+        userWalletsListRepository.saveWithoutLock(
+            userWallet.copy(hotWalletId = newHotWalletIdWithPass),
+            canOverride = true,
+        )
+
+        userWalletsListRepository.setLock(
+            userWalletId = userWallet.walletId,
+            lockMethod = UserWalletsListRepository.LockMethod.AccessCode(accessCode.toCharArray()),
+        )
+
+        if (walletsRepository.requireAccessCode().not() && canUseBiometryUseCase.strict()) {
+            val newHotWalletIdWithBiometry = tangemHotSdk.changeAuth(
                 unlockHotWallet = unlockHotWallet,
                 auth = HotAuth.Biometry,
             )
+
+            userWalletsListRepository.saveWithoutLock(
+                userWallet.copy(hotWalletId = newHotWalletIdWithBiometry),
+                canOverride = true,
+            )
         }
 
-        userWalletsListRepository.saveWithoutLock(
-            userWallet.copy(hotWalletId = updatedHotWalletId),
-            canOverride = true,
-        )
+        if (walletsRepository.useBiometricAuthentication()) {
+            userWalletsListRepository.setLock(
+                userWalletId = userWallet.walletId,
+                lockMethod = UserWalletsListRepository.LockMethod.Biometric,
+            )
+        }
 
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
     }
