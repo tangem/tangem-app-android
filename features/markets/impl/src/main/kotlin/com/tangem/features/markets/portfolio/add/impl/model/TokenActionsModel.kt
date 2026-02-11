@@ -48,7 +48,6 @@ internal class TokenActionsModel @Inject constructor(
     private val tokenActionsHandler: TokenActionsHandler =
         tokenActionsIntentsFactory.create(
             currentAppCurrency = Provider { currentAppCurrency.value },
-            updateTokenReceiveBSConfig = { },
             onHandleQuickAction = { handledAction -> handledQuickAction(handledAction) },
         )
 
