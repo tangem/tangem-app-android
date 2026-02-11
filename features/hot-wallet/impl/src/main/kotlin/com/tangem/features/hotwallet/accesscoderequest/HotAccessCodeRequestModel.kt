@@ -219,7 +219,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     }
 
     private suspend fun HotWalletPasswordRequester.AttemptRequest.isBiometryButtonVisible(): Boolean =
-        hasBiometry && canUseBiometryUseCase()
+        hasBiometry && canUseBiometryUseCase.strict()
 
     private fun dismissState() {
         uiState.update {
