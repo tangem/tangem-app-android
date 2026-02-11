@@ -23,7 +23,9 @@ internal class LoadingAccountTokenItemConverter(
             ).convert(TotalFiatBalance.Failed),
             isExpanded = true,
             isCollapsable = false,
-            tokens = currencies.flattenCurrencies().map(LoadingTokenListItemConverter::convert).toPersistentList(),
+            tokens = currencies.flattenCurrencies()
+                .map { LoadingTokenListItemConverter.convert(it.currency) }
+                .toPersistentList(),
         )
     }
 }
