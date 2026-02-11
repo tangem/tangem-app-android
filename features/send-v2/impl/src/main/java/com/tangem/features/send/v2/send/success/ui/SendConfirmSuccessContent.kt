@@ -21,7 +21,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toPx
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
-import com.tangem.features.send.v2.common.ui.FeeBlock
+import com.tangem.features.send.v2.common.ui.FeeBlockSuccess
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.SendUM
@@ -106,7 +106,7 @@ private fun SuccessContent(
             onClick = {},
         )
         destinationBlockComponent.Content(modifier = Modifier)
-        FeeBlock(feeSelectorUM = sendUM.feeSelectorUM)
+        FeeBlockSuccess(feeSelectorUM = sendUM.feeSelectorUM)
         SpacerH(16.dp)
     }
 }
