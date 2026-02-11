@@ -1,8 +1,12 @@
 package com.tangem.features.onramp.swap.availablepairs.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.InputManager
+import com.tangem.core.ui.R as CoreUiR
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -22,6 +26,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
@@ -66,6 +71,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -77,6 +83,7 @@ private typealias AvailablePairsState = Lce<Throwable, List<SwapPairLeast>>
 internal class AvailableSwapPairsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val tokenListUMController: TokenListUMController,
     private val searchManager: InputManager,
@@ -120,16 +127,31 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val searchQueryStateForMarkets = MutableStateFlow("")
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
+    private val defaultMarketsListManager by lazy {
+        SwapMarketsListBatchFlowManager(
+            getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
+            order = TokenMarketListConfig.Order.Trending,
+            currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
+            currentSearchText = Provider { null },
+            modelScope = modelScope,
+            dispatchers = dispatchers,
+        )
+    }
+
     private val searchMarketsListManager by lazy {
         SwapMarketsListBatchFlowManager(
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
+            order = TokenMarketListConfig.Order.ByRating,
             currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
             currentSearchText = Provider { searchQueryStateForMarkets.value },
             modelScope = modelScope,
             dispatchers = dispatchers,
         )
     }
+
+    private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
     init {
         if (accountsFeatureToggles.isFeatureEnabled) {
@@ -298,7 +320,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
         } else {
             UpdateTokenItemsTransformer(
                 appCurrency = appCurrency,
-                onItemClick = params.onTokenClick,
+                onItemClick = ::onPortfolioTokenClick,
                 statuses = filterByQueryTokenList.filterByAvailability(availablePairs = availablePairs),
                 isBalanceHidden = isBalanceHidden,
                 unavailableTokensHeaderReference = resourceReference(
@@ -357,7 +379,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
         } else {
             UpdateAccountTokenListTransformer(
                 appCurrency = appCurrency,
-                onItemClick = params.onTokenClick,
+                onItemClick = ::onPortfolioTokenClick,
                 accountList = filterByQueryAccountList.filterByAvailability(availablePairs = availablePairs),
                 isBalanceHidden = isBalanceHidden,
                 unavailableErrorText = resourceReference(R.string.tokens_list_unavailable_to_swap_source_header),
@@ -543,6 +565,17 @@ internal class AvailableSwapPairsModel @Inject constructor(
         }
     }
 
+    private fun onPortfolioTokenClick(tokenItem: TokenItemState, status: CryptoCurrencyStatus) {
+        analyticsEventHandler.send(
+            AvailableSwapPairsAnalyticsEvent.TokenSelected(
+                token = status.currency.symbol,
+                source = AvailableSwapPairsAnalyticsEvent.TokenSelected.SOURCE_PORTFOLIO,
+                isSearched = state.value.searchBarUM.query.isNotEmpty(),
+            ),
+        )
+        params.onTokenClick(tokenItem, status)
+    }
+
     private fun CryptoCurrencyStatus.toLeastTokenInfo(): LeastTokenInfo {
         return LeastTokenInfo(
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
@@ -550,50 +583,121 @@ internal class AvailableSwapPairsModel @Inject constructor(
         )
     }
 
-    @Suppress("LongMethod")
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribeOnMarketsUpdates() {
-        combine(
-            flow = searchQueryStateForMarkets
-                .onEach { searchQuery ->
-                    if (searchQuery.isNotEmpty()) {
-                        searchMarketsListManager.reload(searchQuery)
-                    }
-                },
-            flow2 = searchMarketsListManager.uiItems,
-            flow3 = searchMarketsListManager.isInInitialLoadingErrorState,
-            flow4 = searchMarketsListManager.isSearchNotFoundState,
-            flow5 = searchMarketsListManager.totalCount,
-        ) { searchQuery, uiItems, isError, isSearchNotFound, total ->
-            when {
-                searchQuery.isEmpty() -> {
+        searchQueryStateForMarkets
+            .map { it.isEmpty() }
+            .distinctUntilChanged()
+            .flatMapLatest { isDefaultMode ->
+                if (isDefaultMode) {
                     visibleMarketItemIds.value = emptyList()
-                    null
+                    createDefaultMarketsFlow()
+                } else {
+                    visibleDefaultMarketItemIds.value = emptyList()
+                    createSearchMarketsFlow()
                 }
+            }
+            .onEach { marketsState ->
+                tokenListUMController.update { it.copy(marketsState = marketsState) }
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+
+        searchQueryStateForMarkets
+            .onEach { searchQuery ->
+                if (searchQuery.isNotEmpty()) {
+                    searchMarketsListManager.reload(searchQuery)
+                }
+            }
+            .launchIn(modelScope)
+
+        params.selectedStatus
+            .filterNotNull()
+            .take(1)
+            .onEach { defaultMarketsListManager.reload() }
+            .launchIn(modelScope)
+    }
+
+    private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
+        val marketsTitle = TextReference.Res(CoreUiR.string.feed_trending_now)
+        return combine(
+            defaultMarketsListManager.uiItems,
+            defaultMarketsListManager.isInInitialLoadingErrorState,
+            defaultMarketsListManager.totalCount,
+        ) { uiItems, isError, total ->
+            when {
                 isError -> SwapMarketState.LoadingError(
-                    onRetryClicked = { searchMarketsListManager.reload(searchQuery) },
+                    onRetryClicked = { defaultMarketsListManager.reload() },
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+                else -> SwapMarketState.Content(
+                    items = uiItems,
+                    loadMore = { defaultMarketsListManager.loadMore() },
+                    onItemClick = { item -> addToPortfolioItem(item) },
+                    visibleIdsChanged = { visibleDefaultMarketItemIds.value = it },
+                    total = total ?: uiItems.size,
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+            }
+        }
+    }
+
+    private fun createSearchMarketsFlow(): Flow<SwapMarketState> {
+        val marketsTitle = TextReference.Res(CoreUiR.string.markets_common_title)
+        return combine(
+            flow = searchMarketsListManager.uiItems,
+            flow2 = searchMarketsListManager.isInInitialLoadingErrorState,
+            flow3 = searchMarketsListManager.isSearchNotFoundState,
+            flow4 = searchMarketsListManager.totalCount,
+        ) { uiItems, isError, isSearchNotFound, total ->
+            when {
+                isError -> SwapMarketState.LoadingError(
+                    onRetryClicked = {
+                        searchMarketsListManager.reload(searchQueryStateForMarkets.value)
+                    },
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
                 )
                 isSearchNotFound -> SwapMarketState.SearchNothingFound
-                uiItems.isEmpty() -> SwapMarketState.Loading
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
+                )
                 else -> SwapMarketState.Content(
                     items = uiItems,
                     loadMore = { searchMarketsListManager.loadMore() },
                     onItemClick = { item -> addToPortfolioItem(item) },
                     visibleIdsChanged = { visibleMarketItemIds.value = it },
                     total = total ?: uiItems.size,
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
                 )
             }
         }
-            .distinctUntilChanged()
-            .onEach { marketsState ->
-                tokenListUMController.update { it.copy(marketsState = marketsState) }
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
     }
 
     private fun onTokenAddedToPortfolio(addedToken: CryptoCurrency) {
         modelScope.launch {
             bottomSheetNavigation.dismiss()
+            analyticsEventHandler.send(
+                AvailableSwapPairsAnalyticsEvent.TokenAdded(
+                    token = addedToken.symbol,
+                    blockchain = addedToken.network.name,
+                ),
+            )
+            analyticsEventHandler.send(
+                AvailableSwapPairsAnalyticsEvent.TokenSelected(
+                    token = addedToken.symbol,
+                    source = AvailableSwapPairsAnalyticsEvent.TokenSelected.SOURCE_MARKETS,
+                    isSearched = state.value.searchBarUM.query.isNotEmpty(),
+                ),
+            )
 
             // Trigger re-fetch of available pairs (clears cache + re-enters collectLatest)
             refreshPairsTrigger.emit(Unit)
@@ -615,7 +719,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
     private fun addToPortfolioItem(item: MarketsListItemUM) {
         modelScope.launch {
-            val tokenMarket = searchMarketsListManager.getTokenMarketById(item.id) ?: return@launch
+            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
+                ?: searchMarketsListManager.getTokenMarketById(item.id)
+                ?: return@launch
 
             val param = tokenMarket.toSerializableParam()
             val hasOnlyHotWallets = allUserWallets.all { it is UserWallet.Hot }
@@ -661,6 +767,17 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 }
             }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
                 searchMarketsListManager.loadCharts(visibleBatchKeys)
+            }
+        }
+        modelScope.launch {
+            visibleDefaultMarketItemIds.mapNotNull { rawIds ->
+                if (rawIds.isNotEmpty()) {
+                    defaultMarketsListManager.getBatchKeysByItemIds(rawIds)
+                } else {
+                    null
+                }
+            }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
+                defaultMarketsListManager.loadCharts(visibleBatchKeys)
             }
         }
     }
