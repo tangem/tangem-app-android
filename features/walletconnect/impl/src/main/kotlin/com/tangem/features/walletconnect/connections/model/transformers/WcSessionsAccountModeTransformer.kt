@@ -48,7 +48,7 @@ internal class WcSessionsAccountModeTransformer(
             )
             items.add(walletHeader)
 
-            accountList.accounts.forEach accountsForEach@{ account ->
+            accountList.accounts.filterIsInstance<Account.CryptoPortfolio>().forEach accountsForEach@{ account ->
                 val accountSessions = sessions.filter { it.account?.accountId == account.accountId }
                 if (accountSessions.isEmpty()) return@accountsForEach
                 val connectedApps = accountSessions.map { dappSession ->
@@ -65,7 +65,6 @@ internal class WcSessionsAccountModeTransformer(
                 }
                 val accountIcon = when (account) {
                     is Account.CryptoPortfolio -> account.icon
-                    is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val accountTitle = AccountTitleUM.Account(
