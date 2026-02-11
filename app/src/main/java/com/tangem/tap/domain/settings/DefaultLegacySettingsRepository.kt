@@ -8,4 +8,8 @@ internal class DefaultLegacySettingsRepository(
 ) : LegacySettingsRepository {
 
     override suspend fun canUseBiometry(): Boolean = tangemSdkManager.checkCanUseBiometry()
+
+    override suspend fun canUseBiometryStrict(): Boolean {
+        return tangemSdkManager.checkCanUseBiometry() && tangemSdkManager.checkNeedEnrollBiometrics().not()
+    }
 }

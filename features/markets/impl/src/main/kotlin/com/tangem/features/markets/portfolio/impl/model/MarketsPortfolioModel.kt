@@ -40,7 +40,6 @@ import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
-import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.operations.attestation.ArtworkSize
@@ -69,16 +68,15 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
+    accountsFeatureToggles: AccountsFeatureToggles,
     newAddToPortfolioManagerFactory: NewAddToPortfolioManager.Factory,
-    private val newMarketsPortfolioDelegateFactory: NewMarketsPortfolioDelegate.Factory,
+    newMarketsPortfolioDelegateFactory: NewMarketsPortfolioDelegate.Factory,
 ) : Model() {
 
-    val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
+    val state: StateFlow<MyPortfolioUM> get() = _state
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
     private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
@@ -99,28 +97,6 @@ internal class MarketsPortfolioModel @Inject constructor(
         override fun onDismiss() = bottomSheetNavigation.dismiss()
     }
 
-    private val tokenActionsHandler = tokenActionsIntentsFactory.create(
-        currentAppCurrency = Provider { currentAppCurrency.value },
-        updateTokenReceiveBSConfig = { updateBlock ->
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
-                updateTokensState {
-                    it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
-                }
-            }
-        },
-        onHandleQuickAction = { handledAction ->
-            analyticsEventHandler.send(
-                analyticsEventBuilder.quickActionClick(
-                    actionUM = handledAction.action,
-                    blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
-                ),
-            )
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-                configureReceiveAddresses(handledAction)
-            }
-        },
-    )
-
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
             maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -130,6 +106,20 @@ internal class MarketsPortfolioModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = AppCurrency.Default,
         )
+
+    private val tokenActionsHandler = tokenActionsIntentsFactory.create(
+        currentAppCurrency = Provider { currentAppCurrency.value },
+        onHandleQuickAction = { handledAction ->
+            val currencyNetwork = handledAction.cryptoCurrencyData.status.currency.network
+            analyticsEventHandler.send(
+                analyticsEventBuilder.quickActionClick(
+                    actionUM = handledAction.action,
+                    blockchainName = currencyNetwork.name,
+                ),
+            )
+            configureReceiveAddresses(handledAction)
+        },
+    )
 
     private val factory = MyPortfolioUMFactory(
         onAddClick = {
@@ -145,8 +135,8 @@ internal class MarketsPortfolioModel @Inject constructor(
             onAddToPortfolioVisibilityChange = ::onAddToPortfolioBSVisibilityChange,
             onWalletSelectorVisibilityChange = ::onWalletSelectorVisibilityChange,
             onNetworkSwitchClick = ::onNetworkSwitchClick,
-            onAnotherWalletSelect = {
-                onWalletSelect(it)
+            onAnotherWalletSelect = { walletId ->
+                onWalletSelect(walletId)
                 // === Analytics ===
                 analyticsEventHandler.send(
                     analyticsEventBuilder.addToPortfolioWalletChanged(),
@@ -186,8 +176,8 @@ internal class MarketsPortfolioModel @Inject constructor(
                 scope = modelScope,
                 token = params.token,
                 tokenActionsHandler = tokenActionsHandler,
-                buttonState = newAddToPortfolioManager.state.map {
-                    when (it) {
+                buttonState = newAddToPortfolioManager.state.map { managerState ->
+                    when (managerState) {
                         is NewAddToPortfolioManager.State.AvailableToAdd -> AddButtonState.Available
                         NewAddToPortfolioManager.State.Init -> AddButtonState.Loading
                         NewAddToPortfolioManager.State.NothingToAdd -> AddButtonState.Unavailable
@@ -230,8 +220,8 @@ internal class MarketsPortfolioModel @Inject constructor(
                 Timber.e("Failed to load selected wallet: $e")
                 error("Failed to load selected wallet")
             }
-            .onEach {
-                selectedMultiWalletIdFlow.value = it.takeIf { it.isMultiCurrency }?.walletId
+            .onEach { wallet ->
+                selectedMultiWalletIdFlow.value = wallet.takeIf { it.isMultiCurrency }?.walletId
             }
             .launchIn(modelScope)
     }
@@ -277,7 +267,10 @@ internal class MarketsPortfolioModel @Inject constructor(
                     portfolioBSVisibilityModel = portfolioBSVisibilityModel,
                     selectedWalletId = selectedWalletId,
                     addToPortfolioData = addToPortfolioData,
-                    needColdWalletInteraction = needColdWalletInteraction(selectedWalletId, addToPortfolioData),
+                    shouldRequireColdWalletInteraction = needColdWalletInteraction(
+                        selectedWalletId,
+                        addToPortfolioData,
+                    ),
                 )
             },
         )
@@ -333,9 +326,9 @@ internal class MarketsPortfolioModel @Inject constructor(
             userWalletId = userWalletId,
             networkId = rawNetworkId,
             isMainNetwork = isMainNetwork,
-        ).getOrElse {
+        ).getOrElse { error ->
             Timber.e(
-                it,
+                error,
                 """
                     Failed to check currency unsupported state
                     |- User wallet ID: $userWalletId
@@ -345,7 +338,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             )
 
             val message = SnackbarMessage(
-                message = it.localizedMessage
+                message = error.localizedMessage
                     ?.let(::stringReference)
                     ?: resourceReference(R.string.common_error),
             )
@@ -401,13 +394,13 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private fun onAddToPortfolioBSVisibilityChange(isShow: Boolean) {
         portfolioBSVisibilityModelFlow.update {
-            it.copy(addToPortfolioBSVisibility = isShow, walletSelectorBSVisibility = false)
+            it.copy(isAddToPortfolioBSVisible = isShow, isWalletSelectorBSVisible = false)
         }
     }
 
     private fun onWalletSelectorVisibilityChange(isShow: Boolean) {
         portfolioBSVisibilityModelFlow.update {
-            it.copy(addToPortfolioBSVisibility = true, walletSelectorBSVisibility = isShow)
+            it.copy(isAddToPortfolioBSVisible = true, isWalletSelectorBSVisible = isShow)
         }
     }
 
@@ -419,8 +412,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
-        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive &&
-            tokenReceiveFeatureToggle.isNewTokenReceiveEnabled
+        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive
         if (isNewReceive) {
             modelScope.launch {
                 val tokenConfig = receiveAddressesFactory.create(
