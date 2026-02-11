@@ -48,10 +48,12 @@ class ToggleTokenListGroupingUseCaseV2(
 
             account.copy(tokenList = account.tokenList.reverseGroupType())
         }
+        val updatedCryptoAccount =
+            updatedAccountList.firstOrNull { it is AccountStatus.CryptoPortfolio } as? AccountStatus.CryptoPortfolio
 
         accountStatusList.copy(
             accountStatuses = updatedAccountList,
-            groupType = when (updatedAccountList.firstOrNull()?.getCryptoTokenList()) {
+            groupType = when (updatedCryptoAccount?.tokenList) {
                 is TokenList.GroupedByNetwork -> TokensGroupType.NETWORK
                 is TokenList.Ungrouped -> TokensGroupType.NONE
                 else -> accountStatusList.groupType
