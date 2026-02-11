@@ -28,7 +28,7 @@ interface AccountsCRUDRepository {
      * Retrieves a specific account by its unique identifier
      *
      * @param accountId the unique identifier of the account
-     * @return an [Option] containing the [Account.CryptoPortfolio] if found, or `Option.None` if not
+     * @return an [Option] containing the [Account] if found, or `Option.None` if not
      */
     suspend fun getAccountSync(accountId: AccountId): Option<Account.CryptoPortfolio>
 

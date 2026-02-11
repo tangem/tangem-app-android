@@ -1,6 +1,7 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
@@ -33,13 +34,23 @@ sealed interface AccountStatus {
         override val account: Account.CryptoPortfolio,
         val tokenList: TokenList,
         val priceChangeLce: Lce<Unit, PriceChange>,
+    ) : AccountStatus {
+        fun flattenCurrencies(): List<CryptoCurrencyStatus> {
+            return tokenList.flattenCurrencies()
+        }
+    }
+
+    @Serializable
+    data class Payment(
+        override val account: Account.Payment,
+        val totalFiatBalance: TotalFiatBalance,
     ) : AccountStatus
+}
 
-    fun flattenCurrencies(): List<CryptoCurrencyStatus> = when (this) {
-        is CryptoPortfolio -> tokenList.flattenCurrencies()
-    }
+fun Iterable<AccountStatus>.filterCryptoPortfolio(): List<AccountStatus.CryptoPortfolio> {
+    return filterIsInstance<AccountStatus.CryptoPortfolio>()
+}
 
-    fun getCryptoTokenList(): TokenList = when (this) {
-        is CryptoPortfolio -> tokenList
-    }
+fun Sequence<AccountStatus>.filterCryptoPortfolio(): Sequence<AccountStatus.CryptoPortfolio> {
+    return filterIsInstance<AccountStatus.CryptoPortfolio>()
 }
