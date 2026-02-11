@@ -75,6 +75,7 @@ internal class DefaultMarketsTokenRepository(
                         offset = request.offset,
                         limit = request.limit,
                         timestamp = if (isFirstBatchFetching) null else requestTimeStamp.get(),
+                        showNetworks = request.params.shouldNetworks,
                     ).getOrThrow()
                 }
 
