@@ -45,7 +45,7 @@ internal class DefaultAddToPortfolioManager @AssistedInject constructor(
                 availableNetworks = availableNetworks,
                 marketParams = token,
             )
-            if (data.availableToAdd) {
+            if (data.isAvailableToAdd) {
                 State.AvailableToAdd(data)
             } else {
                 State.NothingToAdd

@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
@@ -33,7 +33,7 @@ import kotlinx.coroutines.withContext
 @Suppress("LongParameterList")
 internal class ExpressStatusFactory @AssistedInject constructor(
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
-    @Assisted private val clickIntents: TokenDetailsClickIntents,
+    @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
     @Assisted appCurrencyProvider: Provider<AppCurrency>,
     @Assisted userWallet: UserWallet,
@@ -205,7 +205,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     interface Factory {
         @Suppress("LongParameterList")
         fun create(
-            clickIntents: TokenDetailsClickIntents,
+            clickIntents: ExpressTransactionsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
             currentStateProvider: Provider<TokenDetailsState>,
             userWallet: UserWallet,
