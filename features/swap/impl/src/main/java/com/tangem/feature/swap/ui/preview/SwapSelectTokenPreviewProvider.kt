@@ -4,8 +4,10 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.core.ui.R
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenListUMData
@@ -35,6 +37,8 @@ internal class SwapSelectTokenPreviewProvider {
         onItemClick = { },
         visibleIdsChanged = { },
         total = TOTAL_ITEMS,
+        marketsTitle = TextReference.Res(R.string.feed_trending_now),
+        shouldAssetsCount = false,
     )
 
     private fun createPreviewMarketItems() = listOf(
