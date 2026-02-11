@@ -19,7 +19,6 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.*
-import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -41,6 +40,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.Dem
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
@@ -85,7 +85,6 @@ internal class WalletModel @Inject constructor(
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val walletContentFetcher: WalletContentFetcher,
-    private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
@@ -112,12 +111,12 @@ internal class WalletModel @Inject constructor(
 ) : Model() {
 
     val askBiometryModelCallbacks = AskBiometryModelCallbacks()
+    val tangemPayKycRejectedCallbacks = TangemPayKycRejectedCallbacks()
     val askForPushNotificationsModelCallbacks = AskForPushNotificationsCallbacks()
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private val clearNFTCacheJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
     private var needToRefreshWallet = false
@@ -343,7 +342,6 @@ internal class WalletModel @Inject constructor(
                     }
 
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
-                    observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -397,13 +395,6 @@ internal class WalletModel @Inject constructor(
                 ),
             )
         }
-    }
-
-    private fun observeAndClearNFTCacheIfNeedUseCase(selectedWallet: UserWallet) {
-        observeAndClearNFTCacheIfNeedUseCase
-            .invoke(selectedWallet.walletId)
-            .launchIn(modelScope)
-            .saveIn(clearNFTCacheJobHolder)
     }
 
     private fun subscribeTangemPayOnWalletState() {
@@ -786,6 +777,20 @@ internal class WalletModel @Inject constructor(
         override fun onDenied() {
             analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.Off))
             innerWalletRouter.dialogNavigation.dismiss()
+        }
+    }
+
+    inner class TangemPayKycRejectedCallbacks : KycRejectedCallbacks {
+        override fun onClickYourProfile(userWalletId: UserWalletId) {
+            clickIntents.onKycRejectedOpenProfileClicked(userWalletId)
+        }
+
+        override fun onClickGoToSupport(customerId: String) {
+            clickIntents.onKycRejectedGoToSupportClicked(customerId)
+        }
+
+        override fun onClickHideKyc(userWalletId: UserWalletId) {
+            clickIntents.onKycRejectedHideKycClicked(userWalletId)
         }
     }
 

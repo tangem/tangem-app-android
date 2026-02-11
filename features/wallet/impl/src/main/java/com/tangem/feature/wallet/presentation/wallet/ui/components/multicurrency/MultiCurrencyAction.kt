@@ -2,13 +2,13 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.FontSizeRange
-import com.tangem.core.ui.components.ResizableText
+import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.buttons.actions.ActionBaseButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.ActionButtonContent
@@ -19,13 +19,7 @@ import com.tangem.core.ui.res.TangemTheme
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun MultiCurrencyAction(
-    config: ActionButtonConfig,
-    fontSizeValue: TextUnit,
-    fontSizeRange: FontSizeRange,
-    onFontSizeChange: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun MultiCurrencyAction(config: ActionButtonConfig, modifier: Modifier = Modifier) {
     ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius12),
@@ -33,11 +27,12 @@ internal fun MultiCurrencyAction(
             ActionButtonContent(
                 config = config,
                 text = { color ->
-                    ResizableText(
+                    Text(
                         text = config.text.resolveReference(),
-                        fontSizeValue = fontSizeValue,
-                        fontSizeRange = fontSizeRange,
-                        onFontSizeChange = onFontSizeChange,
+                        autoSize = TextAutoSize.StepBased(
+                            minFontSize = 10.sp,
+                            maxFontSize = TangemTheme.typography.button.fontSize,
+                        ),
                         color = color,
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,

@@ -28,7 +28,11 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.audits.AuditLabel
+import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.tooltip.TangemTooltip
+import com.tangem.core.ui.extensions.annotatedReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -38,6 +42,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.FeeSelectorBlockTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.entity.*
 import com.tangem.features.send.v2.impl.R
@@ -50,9 +57,14 @@ private const val READ_MORE_TAG = "READ_MORE"
 @Composable
 internal fun FeeSelectorBlockContent(
     state: FeeSelectorUM,
+    isGaslessFeatureEnabled: Boolean,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (state is FeeSelectorUM.Error && state.isHidden) {
+        return
+    }
+
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
@@ -68,16 +80,25 @@ internal fun FeeSelectorBlockContent(
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick)
+        FeeSelectorDescription(
+            state = state,
+            isGaslessFeatureEnabled = isGaslessFeatureEnabled,
+            onReadMoreClick = onReadMoreClick,
+        )
     }
 }
 
 @Composable
-private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun FeeSelectorDescription(
+    state: FeeSelectorUM,
+    isGaslessFeatureEnabled: Boolean,
+    onReadMoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         FeeSelectorStaticPart(modifier = Modifier.weight(1f), onReadMoreClick = onReadMoreClick)
         when (state) {
-            is FeeSelectorUM.Content -> FeeContent(state)
+            is FeeSelectorUM.Content -> FeeContent(state, isGaslessFeatureEnabled)
             is FeeSelectorUM.Loading -> FeeLoading()
             is FeeSelectorUM.Error -> FeeError()
         }
@@ -122,7 +143,7 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
             }
         }
         TangemTooltip(
-            text = annotatedString,
+            text = annotatedReference(annotatedString),
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing6)
                 .size(TangemTheme.dimens.size16)
@@ -160,9 +181,18 @@ private fun FeeLoading() {
 }
 
 @Composable
-private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
+private fun FeeContent(state: FeeSelectorUM.Content, isGaslessFeatureEnabled: Boolean, modifier: Modifier = Modifier) {
     val fiatRate = state.feeFiatRateUM
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (isGaslessFeatureEnabled) {
+            AuditLabel(
+                state = AuditLabelUM(
+                    text = stringReference(state.selectedFeeItem.fee.amount.currencySymbol),
+                    type = AuditLabelUM.Type.General,
+                ),
+            )
+        }
+
         EllipsisText(
             text = if (state.feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
                 getFiatString(
@@ -187,7 +217,10 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                 .padding(start = TangemTheme.dimens.spacing4)
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
-        if (!state.feeItems.isSingleItem()) {
+
+        val isGaslessAvailable = isGaslessFeatureEnabled && state.feeExtraInfo.transactionFeeExtended != null
+
+        if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
             Icon(
                 modifier = Modifier
                     .size(width = 18.dp, height = 24.dp)
@@ -205,16 +238,58 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
 @Composable
 private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvider::class) state: FeeSelectorUM) {
     TangemThemePreview {
-        FeeSelectorBlockContent(modifier = Modifier.fillMaxWidth(), state = state, onReadMoreClick = {})
+        FeeSelectorBlockContent(
+            modifier = Modifier.fillMaxWidth(),
+            isGaslessFeatureEnabled = true,
+            state = state,
+            onReadMoreClick = {},
+        )
     }
 }
 
 private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
-    private val maxFeeItem = FeeItem.Market(
-        fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Ethereum)),
-    )
-    private val lowFeeItem =
-        FeeItem.Market(Fee.Common(amount = Amount(value = BigDecimal("0.0002876"), blockchain = Blockchain.Ethereum)))
+    private val maxFeeItem
+        get() = FeeItem.Market(
+            fee = Fee.Common(amount = Amount(value = BigDecimal("100000000"), blockchain = Blockchain.Hedera)),
+        )
+    private val lowFeeItem
+        get() = FeeItem.Market(
+            Fee.Common(
+                amount = Amount(
+                    value = BigDecimal("0.0002876"),
+                    blockchain = Blockchain.Ethereum,
+                ),
+            ),
+        )
+
+    val cryptoCurrencyStatus
+        get() = CryptoCurrencyStatus(
+            currency = CryptoCurrency.Coin(
+                id = CryptoCurrency.ID.fromValue("coin⟨BITCOIN⟩bitcoin"),
+                network = Network(
+                    id = Network.ID(
+                        value = "bitcoin",
+                        derivationPath = Network.DerivationPath.None,
+                    ),
+                    backendId = "bitcoin",
+                    name = "Bitcoin",
+                    currencySymbol = "BTC",
+                    derivationPath = Network.DerivationPath.None,
+                    isTestnet = false,
+                    standardType = Network.StandardType.Unspecified("bitcoin"),
+                    hasFiatFeeRate = false,
+                    canHandleTokens = false,
+                    transactionExtrasType = Network.TransactionExtrasType.NONE,
+                    nameResolvingType = Network.NameResolvingType.NONE,
+                ),
+                name = "Bitcoin",
+                symbol = "BTC",
+                decimals = 8,
+                iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/medium/bitcoin.png",
+                isCustom = false,
+            ),
+            value = CryptoCurrencyStatus.Loading,
+        )
 
     override val values: Sequence<FeeSelectorUM> = sequenceOf(
         FeeSelectorUM.Content(
@@ -225,6 +300,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = true,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(
@@ -241,6 +317,7 @@ private class FeeSelectorUMProvider : PreviewParameterProvider<FeeSelectorUM> {
                 isFeeApproximate = false,
                 isFeeConvertibleToFiat = true,
                 isTronToken = false,
+                feeCryptoCurrencyStatus = cryptoCurrencyStatus,
             ),
             feeNonce = FeeNonce.None,
             feeFiatRateUM = FeeFiatRateUM(

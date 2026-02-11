@@ -31,6 +31,7 @@ sealed class ApiConfig {
         YieldSupply,
         MoonPay,
         News,
+        GaslessTxService,
     }
 
     private fun initializeId(): ID {
@@ -39,12 +40,13 @@ sealed class ApiConfig {
             is TangemTech -> ID.TangemTech
             is StakeKit -> ID.StakeKit
             is P2PEthPool -> ID.P2PEthPool
-            is TangemPay -> ID.TangemPay
-            is TangemPayAuth -> ID.TangemPayAuth
+            is TangemPay.Bff -> ID.TangemPay
+            is TangemPay.Auth -> ID.TangemPayAuth
             is BlockAid -> ID.BlockAid
             is YieldSupply -> ID.YieldSupply
             is MoonPay -> ID.MoonPay
             is News -> ID.News
+            is GaslessTxService -> ID.GaslessTxService
         }
     }
 

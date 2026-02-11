@@ -1,67 +1,41 @@
 package com.tangem.features.send.v2.feeselector.ui
 
-import android.content.res.Configuration
-import androidx.annotation.DrawableRes
-import androidx.compose.animation.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.ui.amountScreen.utils.getFiatReference
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
-import com.tangem.core.ui.components.inputrow.InputRowEnter
-import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmountV2
-import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fee
-import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.features.send.v2.api.entity.*
+import com.tangem.features.send.v2.api.entity.FeeItem
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.feeselector.model.FeeSelectorIntents
-import com.tangem.features.send.v2.feeselector.model.StubFeeSelectorIntents
+import com.tangem.features.send.v2.feeselector.route.FeeSelectorRoute
 import com.tangem.features.send.v2.impl.R
-import com.tangem.utils.StringsSigns
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 @Composable
 internal fun FeeSelectorModalBottomSheet(
+    childStack: ChildStack<FeeSelectorRoute, ComposableContentComponent>,
     state: FeeSelectorUM,
     feeSelectorIntents: FeeSelectorIntents,
     feeDisplaySource: FeeSelectorParams.FeeDisplaySource,
     onDismiss: () -> Unit,
+    onBack: () -> Unit,
 ) {
     if (state !is FeeSelectorUM.Content) return
 
@@ -71,426 +45,98 @@ internal fun FeeSelectorModalBottomSheet(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors.background.tertiary,
+        onBack = if (childStack.backStack.isNotEmpty()) onBack else null,
         title = {
-            FeeTitle(feeDisplaySource = feeDisplaySource, onDismiss = onDismiss)
-        },
-        content = {
-            FeeSelectorItems(
-                state = state,
-                feeSelectorIntents = feeSelectorIntents,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
+            FeeTitle(
+                childStack = childStack,
+                feeDisplaySource = feeDisplaySource,
+                onBack = onBack,
             )
         },
-        footer = if (state.selectedFeeItem is FeeItem.Custom) {
-            {
-                PrimaryButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    enabled = state.isPrimaryButtonEnabled,
-                    text = stringResourceSafe(R.string.common_done),
-                    onClick = feeSelectorIntents::onDoneClick,
-                )
+        content = {
+            Content(childStack = childStack)
+        },
+        footer = when {
+            childStack.active.configuration is FeeSelectorRoute.NetworkFee -> {
+                {
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        enabled = state.isPrimaryButtonEnabled,
+                        text = stringResourceSafe(R.string.common_apply),
+                        onClick = feeSelectorIntents::onDoneClick,
+                    )
+                }
             }
-        } else {
-            null
+            childStack.active.configuration is FeeSelectorRoute.ChooseSpeed &&
+                state.selectedFeeItem is FeeItem.Custom -> {
+                {
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        enabled = state.isPrimaryButtonEnabled,
+                        text = stringResourceSafe(R.string.common_done),
+                        onClick = feeSelectorIntents::onDoneClick,
+                    )
+                }
+            }
+            else -> null
         },
     )
 }
 
 @Composable
-private fun FeeTitle(feeDisplaySource: FeeSelectorParams.FeeDisplaySource, onDismiss: () -> Unit) {
-    when (feeDisplaySource) {
-        FeeSelectorParams.FeeDisplaySource.Screen -> {
-            TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.common_network_fee_title),
-                endIconRes = R.drawable.ic_close_24,
-                onEndClick = onDismiss,
-            )
-        }
-        FeeSelectorParams.FeeDisplaySource.BottomSheet -> {
-            TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.common_network_fee_title),
-                startIconRes = R.drawable.ic_back_24,
-                onStartClick = onDismiss,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FeeSelectorItems(
-    state: FeeSelectorUM.Content,
-    feeSelectorIntents: FeeSelectorIntents,
-    modifier: Modifier = Modifier,
+private fun FeeTitle(
+    childStack: ChildStack<FeeSelectorRoute, ComposableContentComponent>,
+    feeDisplaySource: FeeSelectorParams.FeeDisplaySource,
+    onBack: () -> Unit,
 ) {
-    Column(modifier = modifier) {
-        val feeFiatRateUM = state.feeFiatRateUM
-        state.feeItems.fastForEachIndexed { index, item ->
-            val isSelected = item.isSameClass(state.selectedFeeItem)
-            val isLastItem = index == state.feeItems.size - 1
-            val iconTint by animateColorAsState(
-                targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
-                label = "Fee selector icon tint change",
-            )
-            val iconBackgroundColor by animateColorAsState(
-                targetValue = if (isSelected) {
-                    TangemTheme.colors.icon.accent.copy(alpha = 0.1F)
+    Children(
+        stack = childStack,
+        animation = stackAnimation(fade(animationSpec = tween(durationMillis = 100))),
+    ) { current ->
+        when (feeDisplaySource) {
+            FeeSelectorParams.FeeDisplaySource.Screen -> {
+                if (childStack.backStack.isNotEmpty()) {
+                    TangemModalBottomSheetTitle(
+                        title = current.configuration.title,
+                        startIconRes = R.drawable.ic_back_24,
+                        onStartClick = onBack,
+                    )
                 } else {
-                    TangemTheme.colors.background.secondary
-                },
-                label = "Fee selector icon background change",
-            )
-            val itemModifier = Modifier
-                .fillMaxWidth()
-                .selectedBorder(isSelected = isSelected)
-                .clickableSingle(onClick = { feeSelectorIntents.onFeeItemSelected(item) })
-            when (item) {
-                is FeeItem.Custom -> CustomFeeBlock(
-                    modifier = itemModifier,
-                    customFee = item,
-                    isSelected = isSelected,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    onValueChange = feeSelectorIntents::onCustomFeeValueChange,
-                    nonce = state.feeNonce,
-                )
-                else -> RegularFeeItemContent(
-                    modifier = itemModifier,
-                    title = item.title,
-                    iconRes = item.iconRes,
-                    iconBackgroundColor = iconBackgroundColor,
-                    iconTint = iconTint,
-                    preDot = stringReference(
-                        item.fee.amount.value.format {
-                            crypto(
-                                symbol = item.fee.amount.currencySymbol,
-                                decimals = item.fee.amount.decimals,
-                            ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                        },
-                    ),
-                    postDot = if (state.feeExtraInfo.isFeeConvertibleToFiat && feeFiatRateUM != null) {
-                        getFiatReference(
-                            value = item.fee.amount.value,
-                            rate = feeFiatRateUM.rate,
-                            appCurrency = feeFiatRateUM.appCurrency,
-                        )
-                    } else {
-                        null
-                    },
-                    ellipsizeOffset = item.fee.amount.currencySymbol.length,
-                    showDivider = !isSelected && !isLastItem,
+                    TangemModalBottomSheetTitle(
+                        title = current.configuration.title,
+                        endIconRes = R.drawable.ic_close_24,
+                        onEndClick = onBack,
+                    )
+                }
+            }
+            FeeSelectorParams.FeeDisplaySource.BottomSheet -> {
+                TangemModalBottomSheetTitle(
+                    title = current.configuration.title,
+                    startIconRes = R.drawable.ic_back_24,
+                    onStartClick = onBack,
                 )
             }
         }
     }
 }
 
-@Suppress("LongParameterList")
 @Composable
-private fun CustomFeeBlock(
-    customFee: FeeItem.Custom,
-    isSelected: Boolean,
-    iconBackgroundColor: Color,
-    iconTint: Color,
-    onValueChange: (Int, String) -> Unit,
-    nonce: FeeNonce,
+private fun Content(
+    childStack: ChildStack<FeeSelectorRoute, ComposableContentComponent>,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier.padding(all = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(color = iconBackgroundColor, shape = CircleShape)
-                    .padding(6.dp),
-                painter = painterResource(R.drawable.ic_edit_v2_24),
-                tint = iconTint,
-                contentDescription = null,
-            )
-            Text(
-                text = stringResourceSafe(R.string.common_custom),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-            )
-        }
-        AnimatedVisibility(
-            visible = isSelected,
-            label = "Custom Fee Selected Animation",
-            enter = expandVertically().plus(fadeIn()),
-            exit = shrinkVertically().plus(fadeOut()),
-        ) {
-            ExpandedCustomFeeItems(
-                customFeeFields = customFee.customValues,
-                onValueChange = onValueChange,
-                nonce = nonce,
-            )
-        }
+    Children(
+        stack = childStack,
+        animation = stackAnimation(fade(animationSpec = tween(durationMillis = 100))),
+        modifier = modifier
+            .fillMaxSize()
+            .animateContentSize(),
+    ) {
+        it.instance.Content(Modifier.fillMaxSize())
     }
 }
-
-@Composable
-private fun ExpandedCustomFeeItems(
-    customFeeFields: ImmutableList<CustomFeeFieldUM>,
-    onValueChange: (Int, String) -> Unit,
-    nonce: FeeNonce,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        customFeeFields.fastForEachIndexed { index, field ->
-            val isShowDivider = index != customFeeFields.size - 1 || nonce is FeeNonce.Nonce
-            if (field.label != null) {
-                InputRowEnterInfoAmountV2(
-                    text = field.value,
-                    decimals = field.decimals,
-                    symbol = field.symbol,
-                    title = field.title,
-                    titleColor = TangemTheme.colors.text.tertiary,
-                    info = field.label,
-                    description = field.footer,
-                    keyboardOptions = field.keyboardOptions,
-                    keyboardActions = field.keyboardActions,
-                    onValueChange = { onValueChange(index, it) },
-                    showDivider = isShowDivider,
-                    isReadOnly = field.isReadonly,
-                )
-            } else {
-                InputRowEnterInfoAmountV2(
-                    text = field.value,
-                    decimals = field.decimals,
-                    title = field.title,
-                    titleColor = TangemTheme.colors.text.tertiary,
-                    symbol = field.symbol,
-                    description = field.footer,
-                    onValueChange = { onValueChange(index, it) },
-                    keyboardOptions = field.keyboardOptions,
-                    keyboardActions = field.keyboardActions,
-                    showDivider = isShowDivider,
-                )
-            }
-        }
-
-        if (nonce is FeeNonce.Nonce) {
-            InputRowEnter(
-                text = nonce.nonce?.toString().orEmpty(),
-                title = resourceReference(R.string.send_nonce),
-                description = resourceReference(R.string.send_nonce_footer),
-                onValueChange = nonce.onNonceChange,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                placeholder = resourceReference(R.string.send_nonce_hint),
-                titleColor = TangemTheme.colors.text.secondary,
-                showDivider = false,
-                modifier = Modifier
-                    .background(
-                        color = TangemTheme.colors.background.primary,
-                        shape = TangemTheme.shapes.roundedCornersXMedium,
-                    ),
-            )
-        }
-    }
-}
-
-@Composable
-private fun RegularFeeItemContent(
-    title: TextReference,
-    @DrawableRes iconRes: Int,
-    iconBackgroundColor: Color,
-    iconTint: Color,
-    modifier: Modifier = Modifier,
-    preDot: TextReference? = null,
-    postDot: TextReference? = null,
-    ellipsizeOffset: Int? = null,
-    showDivider: Boolean = true,
-) {
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier.padding(all = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(color = iconBackgroundColor, shape = CircleShape)
-                    .padding(6.dp),
-                painter = painterResource(iconRes),
-                tint = iconTint,
-                contentDescription = null,
-            )
-            FeeDescription(
-                title = title,
-                preDot = preDot,
-                postDot = postDot,
-                ellipsizeOffset = ellipsizeOffset,
-            )
-        }
-        if (showDivider) {
-            HorizontalDivider(
-                modifier = Modifier.padding(start = 60.dp, end = 12.dp),
-                color = TangemTheme.colors.stroke.primary,
-                thickness = 0.5.dp,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FeeDescription(
-    title: TextReference,
-    modifier: Modifier = Modifier,
-    preDot: TextReference? = null,
-    postDot: TextReference? = null,
-    ellipsizeOffset: Int? = null,
-) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(
-            text = title.resolveReference(),
-            color = TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.subtitle2,
-        )
-        if (preDot != null) {
-            FeeValueContent(preDot = preDot, postDot = postDot, ellipsizeOffset = ellipsizeOffset)
-        }
-    }
-}
-
-@Composable
-private fun FeeValueContent(preDot: TextReference, postDot: TextReference?, ellipsizeOffset: Int? = null) {
-    val ellipsis = if (ellipsizeOffset == null) {
-        TextEllipsis.End
-    } else {
-        TextEllipsis.OffsetEnd(ellipsizeOffset)
-    }
-    val textColor = TangemTheme.colors.text.tertiary
-    val textStyle = TangemTheme.typography.caption1
-    Row {
-        EllipsisText(
-            text = preDot.resolveReference(),
-            style = textStyle,
-            color = textColor,
-            textAlign = TextAlign.End,
-            ellipsis = ellipsis,
-        )
-        if (postDot != null) {
-            Text(
-                text = StringsSigns.DOT,
-                style = textStyle,
-                color = textColor,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing4),
-            )
-            Text(text = postDot.resolveReference(), style = textStyle, color = textColor)
-        }
-    }
-}
-
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun FeeSelectorBS_Preview(
-    @PreviewParameter(FeeSelectorUMContentProvider::class)
-    state: FeeSelectorUM.Content,
-) {
-    TangemThemePreview {
-        FeeSelectorModalBottomSheet(
-            onDismiss = {},
-            state = state,
-            feeSelectorIntents = StubFeeSelectorIntents(),
-            feeDisplaySource = FeeSelectorParams.FeeDisplaySource.BottomSheet,
-        )
-    }
-}
-
-private class FeeSelectorUMContentProvider : CollectionPreviewParameterProvider<FeeSelectorUM.Content>(
-    collection = listOf(
-        FeeSelectorUM.Content(
-            isPrimaryButtonEnabled = false,
-            feeItems = persistentListOf(
-                FeeItem.Suggested(
-                    title = resourceReference(
-                        id = R.string.wc_fee_suggested,
-                        formatArgs = wrappedList("Tangem"),
-                    ),
-                    fee = Fee.Common(Amount(value = BigDecimal("0.1"), blockchain = Blockchain.Ethereum)),
-                ),
-                FeeItem.Slow(fee = Fee.Common(Amount(value = BigDecimal("0.01"), blockchain = Blockchain.Ethereum))),
-                FeeItem.Market(
-                    fee = Fee.Common(
-                        Amount(
-                            value = BigDecimal("0.02"),
-                            blockchain = Blockchain.Ethereum,
-                        ),
-                    ),
-                ),
-                FeeItem.Fast(fee = Fee.Common(Amount(value = BigDecimal("0.03"), blockchain = Blockchain.Ethereum))),
-                customFeeItem,
-            ),
-            selectedFeeItem = FeeItem.Slow(
-                fee = Fee.Common(
-                    Amount(
-                        value = BigDecimal("0.01"),
-                        blockchain = Blockchain.Ethereum,
-                    ),
-                ),
-            ),
-            feeExtraInfo = FeeExtraInfo(
-                isFeeApproximate = true,
-                isFeeConvertibleToFiat = true,
-                isTronToken = false,
-            ),
-            feeFiatRateUM = FeeFiatRateUM(
-                rate = BigDecimal.TEN,
-                appCurrency = AppCurrency.Default,
-            ),
-            feeNonce = FeeNonce.None,
-            fees = TransactionFee.Single(customFeeItem.fee),
-        ),
-    ),
-)
-
-private val customFeeItem = FeeItem.Custom(
-    fee = Fee.Common(Amount(value = BigDecimal("0.05"), blockchain = Blockchain.Ethereum)),
-    customValues = persistentListOf(
-        CustomFeeFieldUM(
-            value = "0.119806",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = "ETH",
-            decimals = 8,
-            title = resourceReference(R.string.send_max_fee),
-            footer = resourceReference(R.string.send_custom_amount_fee_footer),
-            label = stringReference("~ 0,03 \$"),
-            isReadonly = false,
-        ),
-        CustomFeeFieldUM(
-            value = "40000",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = "GWEI",
-            decimals = 8,
-            title = resourceReference(R.string.send_gas_price),
-            footer = resourceReference(R.string.send_gas_price_footer),
-            label = null,
-            isReadonly = false,
-        ),
-        CustomFeeFieldUM(
-            value = "31400",
-            onValueChange = {},
-            keyboardOptions = KeyboardOptions(),
-            keyboardActions = KeyboardActions(),
-            symbol = null,
-            decimals = 8,
-            title = resourceReference(R.string.send_gas_limit),
-            footer = resourceReference(R.string.send_gas_limit_footer),
-            label = null,
-            isReadonly = false,
-        ),
-    ),
-)

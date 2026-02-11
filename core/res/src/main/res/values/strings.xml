@@ -469,9 +469,11 @@
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="earn_best_opportunities">Best opportunities</string>
   <string name="earn_clear_filter">Clear filter</string>
+  <string name="earn_empty">The list is temporarily empty as it’s being refreshed. Check back in a moment.</string>
   <string name="earn_filter_all_networks">All networks</string>
   <string name="earn_filter_all_types">All types</string>
   <string name="earn_filter_by">Filter by</string>
+  <string name="earn_filter_my_networks">My networks</string>
   <string name="earn_filter_networks">Networks</string>
   <string name="earn_mostly_used">Mostly used</string>
   <string name="earn_no_results">No results</string>
@@ -828,6 +830,7 @@
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
+  <string name="markets_tooltip_v2_title">Add more tokens</string>
   <string name="markets_yield_supply_banner_description">Power up your assets while supplying them with instant access. %s</string>
   <string name="markets_yield_supply_banner_title">Activate Yield Mode</string>
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s  before creating a mobile wallet</string>
@@ -1486,10 +1489,12 @@
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>
+  <string name="tangem_pay_status_reversed">Reversed</string>
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_terms_limits">Terms and Limits</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">The transaction was partially or fully reversed by the merchant</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
   <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>

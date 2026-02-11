@@ -198,7 +198,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsPermissionGranted: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
-        val isAccountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
+        val isAccountsFeatureEnabled = accountItemsDelegate.isAccountsSupported(userWallet)
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true

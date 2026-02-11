@@ -21,7 +21,7 @@ import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "CanBeNonNullable")
 object NotificationsFactory {
 
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(
@@ -314,12 +314,14 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addExceedsBalanceNotification(
         cryptoCurrencyWarning: CryptoCurrencyWarning?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         shouldMergeFeeNetworkName: Boolean,
         onClick: (CryptoCurrency) -> Unit,
         onAnalyticsEvent: (CryptoCurrency) -> Unit,
+        onResetAnalyticsEvent: (CryptoCurrency) -> Unit,
     ) {
         when (cryptoCurrencyWarning) {
             is CryptoCurrencyWarning.BalanceNotEnoughForFee -> {
@@ -357,7 +359,7 @@ object NotificationsFactory {
                 )
                 onAnalyticsEvent(cryptoCurrencyWarning.currency)
             }
-            else -> Unit
+            else -> onResetAnalyticsEvent(cryptoCurrencyStatus.currency)
         }
     }
 

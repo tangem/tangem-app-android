@@ -6,9 +6,7 @@ import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import com.tangem.tap.proxy.redux.DaggerGraphReducer
 import org.rekotlin.Action
 
-@Suppress("CanBeNonNullable")
-fun appReducer(action: Action, state: AppState?): AppState {
-    requireNotNull(state)
+fun appReducer(action: Action, state: AppState): AppState {
     if (action is AppAction.RestoreState) return action.state
 
     return AppState(

@@ -37,20 +37,21 @@ internal fun EntryBottomSheetContent(
     Children(
         stack = stackState.value,
         animation = stackAnimation(slide()),
-    ) {
-        when (it.configuration) {
+        modifier = modifier,
+    ) { child ->
+        when (child.configuration) {
             is MarketsEntryChildFactory.Child.TokenDetails -> {
-                (it.instance as MarketsTokenDetailsComponent).BottomSheetContent(
+                (child.instance as MarketsTokenDetailsComponent).BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = onHeaderSizeChange,
-                    modifier = modifier,
+                    modifier = Modifier,
                 )
             }
             is MarketsEntryChildFactory.Child.TokenList -> {
-                (it.instance as MarketsTokenListComponent).BottomSheetContent(
+                (child.instance as MarketsTokenListComponent).BottomSheetContent(
                     bottomSheetState = bottomSheetState,
                     onHeaderSizeChange = onHeaderSizeChange,
-                    modifier = modifier,
+                    modifier = Modifier,
                 )
             }
         }

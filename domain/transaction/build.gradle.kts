@@ -36,4 +36,9 @@ dependencies {
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
     api(projects.domain.networks)
+
+    testRuntimeOnly(deps.test.junit5.engine)
+    testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }

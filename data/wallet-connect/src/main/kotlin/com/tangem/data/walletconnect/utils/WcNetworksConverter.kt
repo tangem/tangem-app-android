@@ -44,7 +44,11 @@ internal class WcNetworksConverter @Inject constructor(
         requestAddress: String,
     ): Network? {
         val wallet = session.wallet
-        val allCoinNetwork = filterWalletNetworkForRequest(request.chainId.orEmpty(), session.wallet)
+        val allCoinNetwork = filterWalletNetworkForRequest(
+            rawChainId = request.chainId.orEmpty(),
+            wallet = session.wallet,
+            account = session.account,
+        )
 
         val requestNetwork = allCoinNetwork.find { network ->
             val address = getAddressForWC(wallet.walletId, network)
@@ -56,13 +60,13 @@ internal class WcNetworksConverter @Inject constructor(
     /**
      * return network with not custom derivationPath or first custom or any
      */
-    suspend fun mainOrAnyWalletNetworkForRequest(rawChainId: String, wallet: UserWallet): Network? {
-        val networks = filterWalletNetworkForRequest(rawChainId, wallet)
+    suspend fun mainOrAnyWalletNetworkForRequest(rawChainId: String, wallet: UserWallet, account: Account?): Network? {
+        val networks = filterWalletNetworkForRequest(rawChainId, wallet, account)
         return networks.firstOrNull { !isCustomCoin(it) } ?: networks.firstOrNull()
     }
 
-    suspend fun allAddressForChain(rawChainId: String, wallet: UserWallet): List<String> {
-        return filterWalletNetworkForRequest(rawChainId, wallet)
+    suspend fun allAddressForChain(rawChainId: String, wallet: UserWallet, account: Account?): List<String> {
+        return filterWalletNetworkForRequest(rawChainId, wallet, account)
             .mapNotNull { getAddressForWC(wallet.walletId, it)?.lowercase() }
     }
 
@@ -80,13 +84,18 @@ internal class WcNetworksConverter @Inject constructor(
     /**
      * return all exist derivation networks
      */
-    suspend fun filterWalletNetworkForRequest(rawChainId: String, wallet: UserWallet): List<Network> {
-        val walletNetworks = getWalletNetworks(wallet.walletId)
+    suspend fun filterWalletNetworkForRequest(
+        rawChainId: String,
+        wallet: UserWallet,
+        account: Account?,
+    ): List<Network> {
+        val portfolioNetworks = account?.let { getAccountNetworks(it.accountId) }
+            ?: getWalletNetworks(wallet.walletId)
 
         val blockchain = namespaceConverters
             .firstNotNullOfOrNull { it.toBlockchain(rawChainId) } ?: return listOf()
 
-        val allCoinNetwork = walletNetworks.filter { it.rawId == blockchain.id }
+        val allCoinNetwork = portfolioNetworks.filter { it.rawId == blockchain.id }
         return allCoinNetwork
     }
 

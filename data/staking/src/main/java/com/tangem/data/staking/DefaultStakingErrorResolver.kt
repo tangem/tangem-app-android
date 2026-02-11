@@ -29,12 +29,12 @@ internal class DefaultStakingErrorResolver(
             is StakingError.DomainError -> {
                 analyticsEventHandler.send(StakingAnalyticsEvent.DomainError(error))
             }
-            // P2P errors
+            // P2PEthPool errors
             is StakingError.InvalidAmount,
             is StakingError.DataError,
             is StakingError.UnknownError,
             -> {
-                // P2P errors - no specific analytics event yet
+                // P2PEthPool errors - no specific analytics event yet
             }
         }
 

@@ -2,6 +2,8 @@ package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.staking.YieldToken
+import com.tangem.domain.staking.model.common.RewardInfo
+import com.tangem.domain.staking.model.common.RewardType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -138,18 +140,6 @@ data class Yield(
             UNKNOWN,
         }
     }
-
-    enum class RewardType {
-        APY, // compound rate
-        APR, // simple rate
-        UNKNOWN,
-    }
-
-    @Serializable
-    data class RewardInfo(
-        val rate: SerializedBigDecimal,
-        val type: RewardType,
-    )
 }
 
 @Serializable
