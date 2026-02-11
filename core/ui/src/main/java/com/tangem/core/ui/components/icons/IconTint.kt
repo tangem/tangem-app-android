@@ -7,4 +7,5 @@ enum class IconTint {
     Accent,
     Warning,
     Inactive,
+    Informative,
 }

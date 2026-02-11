@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH
@@ -88,6 +89,7 @@ private fun OnrampAmountButtons(state: OnrampV2AmountButtonUMState) {
 
 @Composable
 private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modifier) {
+    val focusManager = LocalFocusManager.current
     Box(
         modifier = modifier
             .sizeIn(minHeight = 24.dp, minWidth = 62.dp)
@@ -95,7 +97,12 @@ private fun AmountButton(button: OnrampAmountButtonUM, modifier: Modifier = Modi
                 color = TangemTheme.colors.field.primary,
                 shape = RoundedCornerShape(16.dp),
             )
-            .clickable(onClick = button.onClick)
+            .clickable(
+                onClick = {
+                    focusManager.clearFocus()
+                    button.onClick()
+                },
+            )
             .padding(vertical = 4.dp, horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {

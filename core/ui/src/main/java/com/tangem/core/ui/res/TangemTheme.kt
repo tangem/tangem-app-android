@@ -1,6 +1,8 @@
 package com.tangem.core.ui.res
 
 import android.app.Activity
+import androidx.compose.foundation.ComposeFoundationFlags
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
@@ -16,6 +18,8 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.LocalSystemBarsIconsController
 import com.tangem.core.ui.components.SystemBarsIconsController
 import com.tangem.core.ui.components.TangemShimmer
+import com.tangem.core.ui.components.powersaving.PowerSavingState
+import com.tangem.core.ui.components.powersaving.rememberPowerSavingState
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
 import com.tangem.core.ui.haptic.DefaultHapticManager
@@ -26,7 +30,9 @@ import com.tangem.core.ui.windowsize.WindowSize
 import com.tangem.core.ui.windowsize.rememberWindowSize
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.valentinilk.shimmer.Shimmer
+import dev.chrisbanes.haze.HazeState
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TangemTheme(
     activity: Activity,
@@ -36,6 +42,9 @@ fun TangemTheme(
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    // TODO Research and implement in redesign [REDACTED_TASK_KEY]
+    ComposeFoundationFlags.isPausableCompositionInPrefetchEnabled = false
+
     val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
     val windowSize = rememberWindowSize(activity = activity)
 
@@ -48,7 +57,13 @@ fun TangemTheme(
         overrideSystemBarColors = overrideSystemBarColors,
         typography = typography,
         dimens = dimens,
-        content = content,
+        content = {
+            if (uiDependencies.designFeatureToggles.isRedesignEnabled) {
+                TangemThemeRedesign { content() }
+            } else {
+                content()
+            }
+        },
     )
 }
 
@@ -108,6 +123,7 @@ fun TangemTheme(
             LocalWindowSize provides windowSize,
             LocalBladeAnimation provides rememberBladeAnimation(),
             LocalSystemBarsIconsController provides systemBarsIconsController,
+            LocalPowerSavingState provides rememberPowerSavingState(),
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -148,10 +164,20 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemTypography.current
 
+    val typography2: TangemTypography2
+        @Composable
+        @ReadOnlyComposable
+        get() = TangemTypography2(InterFamily)
+
     val dimens: TangemDimens
         @Composable
         @ReadOnlyComposable
         get() = LocalTangemDimens.current
+
+    val dimens2: TangemDimens2
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemDimens2.current
 
     val shapes: TangemShapes
         @Composable
@@ -244,7 +270,7 @@ internal fun lightThemeColors(redesign: Boolean = false): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Dark6,
-            unchecked = TangemColorPalette.Light2,
+            default = TangemColorPalette.Light2,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
@@ -298,7 +324,7 @@ internal fun darkThemeColors(): TangemColors {
         ),
         control = TangemColors.Control(
             checked = TangemColorPalette.Azure,
-            unchecked = TangemColorPalette.Dark4,
+            default = TangemColorPalette.Dark4,
             key = TangemColorPalette.White,
         ),
         stroke = TangemColors.Stroke(
@@ -337,8 +363,16 @@ internal val LocalTangemTypography = staticCompositionLocalOf {
     TangemTypography(RobotoFamily)
 }
 
+internal val LocalTangemTypography2 = staticCompositionLocalOf {
+    TangemTypography2(InterFamily)
+}
+
 private val LocalTangemDimens = staticCompositionLocalOf {
     TangemDimens()
+}
+
+private val LocalTangemDimens2 = staticCompositionLocalOf {
+    TangemDimens2()
 }
 
 private val LocalTangemShapes = staticCompositionLocalOf<TangemShapes> {
@@ -377,6 +411,18 @@ val LocalRootBackgroundColor = staticCompositionLocalOf<MutableState<Color>> {
 
 val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
     error("No MainBottomSheetColor provided")
+}
+
+val LocalHazeState = staticCompositionLocalOf<HazeState> {
+    error("No HazeState provided")
+}
+
+val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
+val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
+    error("No PowerSavingState provided")
 }
 
 /**

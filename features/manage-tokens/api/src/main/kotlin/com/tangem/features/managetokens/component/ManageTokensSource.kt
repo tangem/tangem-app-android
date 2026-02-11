@@ -6,7 +6,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 enum class ManageTokensSource(val analyticsName: String) {
     STORIES(analyticsName = "Stories"),
     ONBOARDING(analyticsName = "Onboarding"),
-    SETTINGS(analyticsName = "Settings"),
+    SETTINGS(analyticsName = "Wallet Settings"),
+    ACCOUNT(analyticsName = "Account"),
     SEND_VIA_SWAP(analyticsName = "SendViaSwap"),
 }
 

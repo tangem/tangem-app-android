@@ -21,6 +21,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.account.status)
     implementation(projects.domain.card)
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)

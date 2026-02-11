@@ -16,9 +16,7 @@ interface TangemPayOnboardingComponent : ComposableContentComponent {
             val userWalletId: UserWalletId,
         ) : Params()
 
-        data class FromBannerOnMain(
-            val userWalletId: UserWalletId,
-        ) : Params()
+        data object FromBannerOnMain : Params()
 
         data object FromBannerInSettings : Params()
     }

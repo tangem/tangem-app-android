@@ -1,5 +1,6 @@
 package com.tangem.features.account.archived.entity
 
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.pluralReference
@@ -28,7 +29,7 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
         ArchivedAccountUM(
             accountId = accountId.value,
             accountName = name.toUM().value,
-            accountIconUM = icon.toUM(),
+            accountIconUM = CryptoPortfolioIconConverter.convert(icon),
             isLoading = false,
             tokensInfo = pluralReference(
                 R.plurals.common_tokens_count,

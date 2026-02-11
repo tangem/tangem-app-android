@@ -336,10 +336,14 @@ internal object WalletsDomainModule {
     fun providesUpdateRemoteWalletsInfoUseCase(
         walletsRepository: WalletsRepository,
         userWalletsSyncDelegate: UserWalletsSyncDelegate,
+        userWalletsListRepository: UserWalletsListRepository,
+        generateWalletNameUseCase: GenerateWalletNameUseCase,
     ): UpdateRemoteWalletsInfoUseCase {
         return UpdateRemoteWalletsInfoUseCase(
             walletsRepository = walletsRepository,
             userWalletsSyncDelegate = userWalletsSyncDelegate,
+            generateWalletNameUseCase = generateWalletNameUseCase,
+            userWalletsListRepository = userWalletsListRepository,
         )
     }
 

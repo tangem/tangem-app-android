@@ -75,11 +75,11 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             swapTxType = swapTxType,
         )
 
-        val providers = expressRepository.getProviders(
+        val expressProviders = expressRepository.getFilteredProviders(
             userWallet = userWallet,
             filterProviderTypes = filterProviderTypes,
-        )
-        val expressProviders = providers.associateBy(ExpressProvider::providerId)
+            swapTxType = swapTxType,
+        ).associateBy(ExpressProvider::providerId)
 
         allPairs.map { pair ->
             async {
@@ -125,11 +125,11 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             swapTxType = swapTxType,
         )
 
-        val providers = expressRepository.getProviders(
+        val mappedProviders = expressRepository.getFilteredProviders(
             userWallet = userWallet,
             filterProviderTypes = filterProviderTypes,
-        )
-        val mappedProviders = providers.associateBy(ExpressProvider::providerId)
+            swapTxType = swapTxType,
+        ).associateBy(ExpressProvider::providerId)
 
         allPairs.map { pair ->
             async {
@@ -434,4 +434,20 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 true
             }
         }
+}
+
+private suspend fun ExpressRepository.getFilteredProviders(
+    userWallet: UserWallet,
+    filterProviderTypes: List<ExpressProviderType>,
+    swapTxType: SwapTxType,
+): List<ExpressProvider> {
+    return getProviders(
+        userWallet = userWallet,
+        filterProviderTypes = filterProviderTypes,
+    ).let { allProviders ->
+        when (swapTxType) {
+            SwapTxType.SendWithSwap -> allProviders.filterNot { it.isExchangeOnlyWithinSingleAddress }
+            SwapTxType.Swap -> allProviders
+        }
+    }
 }

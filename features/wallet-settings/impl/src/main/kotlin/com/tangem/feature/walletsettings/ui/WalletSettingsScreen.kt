@@ -167,6 +167,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
 
 @Composable
 private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier = Modifier) {
+    val description = model.description
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.Start,
@@ -190,12 +191,16 @@ private fun ItemsBlock(model: WalletSettingsItemUM.WithItems, modifier: Modifier
             }
         }
 
-        Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
-            text = model.description.resolveReference(),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.caption2,
-        )
+        AnimatedVisibility(visible = description != null) {
+            if (description != null) {
+                Text(
+                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+                    text = description.resolveReference(),
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.caption2,
+                )
+            }
+        }
     }
 }
 
@@ -398,8 +403,6 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
             text = model.description.resolveReference(),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.caption2,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
