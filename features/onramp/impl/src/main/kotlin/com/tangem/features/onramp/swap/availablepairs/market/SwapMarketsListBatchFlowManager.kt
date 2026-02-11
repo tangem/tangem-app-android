@@ -228,6 +228,13 @@ internal class SwapMarketsListBatchFlowManager(
         }
     }
 
+    fun getTokenMarketById(id: CryptoCurrency.RawID): TokenMarket? {
+        return batchFlow.state.value.data
+            .asSequence()
+            .flatMap { it.data }
+            .firstOrNull { it.id == id }
+    }
+
     fun getBatchKeysByItemIds(ids: List<CryptoCurrency.RawID>): Set<Int> {
         val currentData = batchFlow.state.value.data
 
