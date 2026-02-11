@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.features.feed.api)
 
     /** Project - Core */
     implementation(projects.core.analytics)
