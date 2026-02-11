@@ -78,7 +78,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val getUserWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
-    private var quotesJob = JobHolder()
+    private val quotesJob = JobHolder()
     private var userCountry: UserCountry? = null
     private val params = paramsContainer.require<MarketsTokenDetailsComponent.Params>()
     private val analyticsEventBuilder = MarketDetailsAnalyticsEvent.EventBuilder(token = params.token)
@@ -101,34 +101,34 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.linkClicked(linkTitle = link.title))
         },
-        onSecurityScoreInfoClick = {
-            showBottomSheet(it)
+        onSecurityScoreInfoClick = { content ->
+            showBottomSheet(content)
 
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.securityScoreOpened())
         },
-        onSecurityScoreProviderLinkClick = {
-            it.urlData?.fullUrl?.let { url ->
+        onSecurityScoreProviderLinkClick = { provider ->
+            provider.urlData?.fullUrl?.let { url ->
                 urlOpener.openUrl(url)
             }
 
             // === Analytics ===
-            analyticsEventHandler.send(analyticsEventBuilder.securityScoreProviderClicked(it.name))
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreProviderClicked(provider.name))
         },
         // === Analytics ===
-        onPricePerformanceIntervalChanged = {
+        onPricePerformanceIntervalChanged = { interval ->
             analyticsEventHandler.send(
                 analyticsEventBuilder.intervalChanged(
                     intervalType = MarketDetailsAnalyticsEvent.IntervalType.PricePerformance,
-                    interval = it,
+                    interval = interval,
                 ),
             )
         },
-        onInsightsIntervalChanged = {
+        onInsightsIntervalChanged = { interval ->
             analyticsEventHandler.send(
                 analyticsEventBuilder.intervalChanged(
                     intervalType = MarketDetailsAnalyticsEvent.IntervalType.Insights,
-                    interval = it,
+                    interval = interval,
                 ),
             )
         },
@@ -139,8 +139,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     )
 
     private val descriptionConverter = DescriptionConverter(
-        onReadModeClicked = {
-            showBottomSheet(it)
+        onReadModeClicked = { content ->
+            showBottomSheet(content)
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.readMoreClicked())
         },
@@ -162,10 +162,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val chartDataProducer = MarketChartDataProducer.build(dispatcher = dispatchers.default) {
         chartData = MarketChartData.NoData.Loading
 
-        updateLook {
+        updateLook { currentLook ->
             val percentChangeType = params.token.tokenQuotes.h24Percent.percentChangeType()
 
-            it.copy(
+            currentLook.copy(
                 type = percentChangeType.toChartType(),
                 xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(PriceChangeInterval.H24),
                 yAxisFormatter = { value ->
@@ -220,7 +220,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             ),
             selectedInterval = PriceChangeInterval.H24,
             onSelectedIntervalChange = ::onSelectedIntervalChange,
-            markerSet = false,
+            isMarkerSet = false,
             body = MarketsTokenDetailsUM.Body.Loading,
             triggerPriceChange = consumedEvent(),
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -237,11 +237,11 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         currentQuotes = currentQuotes,
         lastUpdatedTimestamp = lastUpdatedTimestamp,
         currentTokenInfo = currentTokenInfo,
-        onPricePerformanceIntervalChanged = {
+        onPricePerformanceIntervalChanged = { interval ->
             analyticsEventHandler.send(
                 analyticsEventBuilder.intervalChanged(
                     intervalType = MarketDetailsAnalyticsEvent.IntervalType.PricePerformance,
-                    interval = it,
+                    interval = interval,
                 ),
             )
         },
@@ -256,7 +256,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         modelScope.launch {
             currentAppCurrency
                 .filter { it != params.appCurrency }
-                .collectLatest {
+                .collectLatest { _ ->
                     initialLoad()
                 }
         }
@@ -286,9 +286,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun loadChart(interval: PriceChangeInterval) {
         modelScope.launch {
-            state.update {
-                it.copy(
-                    chartState = it.chartState.copy(
+            state.update { currentState ->
+                currentState.copy(
+                    chartState = currentState.chartState.copy(
                         status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                     ),
                 )
@@ -306,10 +306,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 preview = false,
             )
 
-            state.update {
-                it.copy(
+            state.update { currentState ->
+                currentState.copy(
                     selectedInterval = interval,
-                    chartState = it.chartState.copy(
+                    chartState = currentState.chartState.copy(
                         status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
                     ),
                 )
@@ -318,15 +318,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             chart
                 .onRight { updateTokenChart(it) }
                 .onLeft {
-                    state.update {
-                        it.copy(
-                            chartState = it.chartState.copy(
+                    state.update { currentState ->
+                        currentState.copy(
+                            chartState = currentState.chartState.copy(
                                 status = MarketsTokenDetailsUM.ChartState.Status.ERROR,
                             ),
-                            body = if (it.body is MarketsTokenDetailsUM.Body.Error) {
+                            body = if (currentState.body is MarketsTokenDetailsUM.Body.Error) {
                                 MarketsTokenDetailsUM.Body.Nothing
                             } else {
-                                it.body
+                                currentState.body
                             },
                         )
                     }
@@ -343,31 +343,31 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 x = tokenChart.timeStamps.map { it.toBigDecimal() }.toImmutableList(),
             ).sorted()
 
-            updateLook {
-                it.copy(
+            updateLook { currentLook ->
+                currentLook.copy(
                     xAxisFormatter = xAxisFormatter,
                     type = state.value.priceChangeType.toChartType(),
                 )
             }
         }
 
-        state.update {
-            it.copy(
-                chartState = it.chartState.copy(
+        state.update { currentState ->
+            currentState.copy(
+                chartState = currentState.chartState.copy(
                     status = MarketsTokenDetailsUM.ChartState.Status.DATA,
                 ),
-                body = if (it.body is MarketsTokenDetailsUM.Body.Nothing) {
+                body = if (currentState.body is MarketsTokenDetailsUM.Body.Nothing) {
                     MarketsTokenDetailsUM.Body.Error(onLoadRetryClick = ::onLoadRetryClicked)
                 } else {
-                    it.body
+                    currentState.body
                 },
             )
         }
     }
 
     private fun loadInfo() {
-        state.update {
-            it.copy(
+        state.update { currentState ->
+            currentState.copy(
                 body = MarketsTokenDetailsUM.Body.Loading,
             )
         }
@@ -382,15 +382,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             tokenMarketInfo.fold(
                 ifRight = { result -> updateInfo(result) },
                 ifLeft = {
-                    state.update {
-                        if (it.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
-                            it.copy(
+                    state.update { currentState ->
+                        if (currentState.chartState.status == MarketsTokenDetailsUM.ChartState.Status.DATA) {
+                            currentState.copy(
                                 body = MarketsTokenDetailsUM.Body.Error(
                                     onLoadRetryClick = ::onLoadRetryClicked,
                                 ),
                             )
                         } else {
-                            it.copy(
+                            currentState.copy(
                                 body = MarketsTokenDetailsUM.Body.Nothing,
                             )
                         }
@@ -408,8 +408,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
         val percent = newInfo.quotes.getPercentByInterval(interval = state.value.selectedInterval)
 
-        state.update {
-            it.copy(
+        state.update { currentState ->
+            currentState.copy(
                 priceText = newInfo.quotes.currentPrice.format {
                     fiat(
                         fiatCurrencySymbol = currentAppCurrency.value.symbol,
@@ -417,7 +417,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ).price()
                 },
                 priceChangePercentText = newInfo.quotes.getFormattedPercentByInterval(
-                    interval = it.selectedInterval,
+                    interval = currentState.selectedInterval,
                 ),
                 priceChangeType = percent.percentChangeType(),
                 body = MarketsTokenDetailsUM.Body.Content(
@@ -427,14 +427,14 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
         }
 
-        val allWalletsIsHot = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
+        val areAllWalletsHot = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
 
-        val networks = newInfo.networks?.filter {
+        val networks = newInfo.networks?.filter { network ->
             BlockchainUtils.isSupportedNetworkId(
-                blockchainId = it.networkId,
+                blockchainId = network.networkId,
                 excludedBlockchains = excludedBlockchains,
                 hotExcludedBlockchains = hotWalletExcludedBlockchains,
-                hasOnlyHotWallets = allWalletsIsHot,
+                hasOnlyHotWallets = areAllWalletsHot,
             )
         }
 
@@ -445,8 +445,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         chartDataProducer.runTransaction {
-            updateLook {
-                it.copy(type = percent.percentChangeType().toChartType())
+            updateLook { currentLook ->
+                currentLook.copy(type = percent.percentChangeType().toChartType())
             }
         }
     }
@@ -481,8 +481,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         val quotes = currentQuotes.value
         val priceChangePercent = quotes.getFormattedPercentByInterval(interval)
 
-        state.update {
-            it.copy(
+        state.update { currentState ->
+            currentState.copy(
                 priceChangePercentText = priceChangePercent,
                 selectedInterval = interval,
                 priceChangeType = quotes.getPercentByInterval(interval)?.percentChangeType()
@@ -502,10 +502,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private fun onMarkerPointSelected(markerTimestamp: BigDecimal?, price: BigDecimal?) {
         val currentState = state.value
 
-        val dateTimeText = markerTimestamp?.let {
+        val dateTimeText = markerTimestamp?.let { timestamp ->
             MarketsDateTimeFormatters.formatDateByIntervalWithMarker(
                 interval = currentState.selectedInterval,
-                markerTimestamp = it,
+                markerTimestamp = timestamp,
             )
         } ?: getDefaultDateTimeString(currentState.selectedInterval)
 
@@ -516,18 +516,18 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             ).price()
         }
 
-        val percent = price?.let {
+        val percent = price?.let { selectedPrice ->
             getChangePercentBetween(
-                previousPrice = it,
+                previousPrice = selectedPrice,
                 currentPrice = currentQuotes.value.currentPrice,
             )
         } ?: currentQuotes.value.getPercentByInterval(currentState.selectedInterval)
 
-        val percentText = percent?.format { percent() } ?: ""
+        val percentText = percent?.format { percent() }.orEmpty()
 
         state.update { stateToUpdate ->
             stateToUpdate.copy(
-                markerSet = markerTimestamp != null,
+                isMarkerSet = markerTimestamp != null,
                 dateTimeText = dateTimeText,
                 priceText = priceText,
                 priceChangePercentText = percentText,
@@ -536,8 +536,8 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         chartDataProducer.runTransaction {
-            updateLook {
-                it.copy(
+            updateLook { currentLook ->
+                currentLook.copy(
                     type = percent.percentChangeType().toChartType(),
                 )
             }
@@ -603,9 +603,9 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 ifLeft = {
                     ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
                 },
-                ifRight = {
+                ifRight = { exchanges ->
                     ExchangesBottomSheetContent.Content(
-                        exchangeItems = ExchangeItemStateConverter.convertList(it).toImmutableList(),
+                        exchangeItems = ExchangeItemStateConverter.convertList(exchanges).toImmutableList(),
                     )
                 },
             )

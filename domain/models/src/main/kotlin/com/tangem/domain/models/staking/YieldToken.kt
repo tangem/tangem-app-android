@@ -12,4 +12,17 @@ data class YieldToken(
     val coinGeckoId: String?,
     val logoURI: String?,
     val isPoints: Boolean?,
-)
+) {
+    companion object {
+        val ETH = YieldToken( // TODO p2p
+            name = "Ethereum",
+            network = NetworkType.ETHEREUM,
+            symbol = "ETH",
+            decimals = 18,
+            address = null,
+            coinGeckoId = "ethereum",
+            logoURI = null,
+            isPoints = false,
+        )
+    }
+}

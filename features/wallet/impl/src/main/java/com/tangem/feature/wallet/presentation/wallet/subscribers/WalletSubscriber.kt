@@ -1,6 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -17,11 +17,11 @@ internal abstract class WalletSubscriber {
 
     protected abstract fun create(coroutineScope: CoroutineScope): Flow<*>
 
-    fun subscribe(coroutineScope: CoroutineScope, dispatchers: CoroutineDispatcherProvider): Job {
+    fun subscribe(coroutineScope: CoroutineScope, dispatchers: CoroutineDispatcher): Job {
         Timber.d("Subscribe on ${this::class.simpleName}")
 
         return create(coroutineScope)
-            .flowOn(dispatchers.main)
+            .flowOn(dispatchers)
             .launchIn(coroutineScope)
     }
 }

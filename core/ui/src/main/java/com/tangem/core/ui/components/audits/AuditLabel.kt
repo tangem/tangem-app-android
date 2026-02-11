@@ -62,6 +62,7 @@ private fun getTextColorByType(type: AuditLabelUM.Type): Color {
         AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention
         AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent
         AuditLabelUM.Type.Info -> TangemTheme.colors.text.primary2
+        AuditLabelUM.Type.General -> TangemTheme.colors.text.secondary
     }
 }
 
@@ -73,6 +74,7 @@ private fun getBackgroundColorByType(type: AuditLabelUM.Type): Color {
         AuditLabelUM.Type.Warning -> TangemTheme.colors.text.attention.copy(alpha = 0.1f)
         AuditLabelUM.Type.Permit -> TangemTheme.colors.text.accent.copy(alpha = 0.1f)
         AuditLabelUM.Type.Info -> TangemTheme.colors.text.accent
+        AuditLabelUM.Type.General -> TangemTheme.colors.control.default
     }
 }
 
@@ -83,6 +85,7 @@ private fun getPaddingByType(type: AuditLabelUM.Type): PaddingValues {
         AuditLabelUM.Type.Prohibition,
         AuditLabelUM.Type.Warning,
         AuditLabelUM.Type.Permit,
+        AuditLabelUM.Type.General,
         -> PaddingValues(horizontal = 4.dp)
         AuditLabelUM.Type.Info -> PaddingValues(horizontal = 6.dp, vertical = 1.dp)
     }
