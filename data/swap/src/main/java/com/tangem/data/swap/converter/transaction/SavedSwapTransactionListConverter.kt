@@ -101,8 +101,8 @@ internal class SavedSwapTransactionListConverter(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         tokenTransactions: List<SwapTransactionDTO>,
     ) = SwapTransactionListDTO(
         userWalletId = userWalletId.stringValue,

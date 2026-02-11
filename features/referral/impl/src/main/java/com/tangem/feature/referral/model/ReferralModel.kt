@@ -127,6 +127,7 @@ internal class ReferralModel @Inject constructor(
 
         val cryptoPortfolio = when (selectedAccount) {
             is AccountStatus.CryptoPortfolio -> selectedAccount
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
 
         val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
