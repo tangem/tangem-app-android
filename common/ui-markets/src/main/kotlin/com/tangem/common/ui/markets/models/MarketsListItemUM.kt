@@ -22,12 +22,20 @@ data class MarketsListItemUM(
     val isUnder100kMarketCap: Boolean,
     val stakingRate: TextReference?,
     val updateTimestamp: Long?,
+    val networks: List<Network>? = null,
 ) {
     val chartType: MarketChartLook.Type = when (trendType) {
         PriceChangeType.UP -> MarketChartLook.Type.Growing
         PriceChangeType.DOWN -> MarketChartLook.Type.Falling
         PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
     }
+
+    @Immutable
+    data class Network(
+        val networkId: String,
+        val contractAddress: String?,
+        val decimalCount: Int?,
+    )
 
     @Immutable
     data class Price(
