@@ -5,7 +5,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.StakingApproval
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
@@ -24,7 +24,7 @@ internal class SetConfirmationStateInitTransformer(
     private val stakingApproval: StakingApproval,
     private val stakingAllowance: BigDecimal,
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    private val yieldArgs: Yield.Args,
+    private val integration: StakingIntegration,
     private val pendingActions: ImmutableList<PendingAction>? = null,
     private val pendingAction: PendingAction? = pendingActions?.firstOrNull(),
 ) : Transformer<StakingUiState> {
@@ -66,7 +66,7 @@ internal class SetConfirmationStateInitTransformer(
     }
 
     private fun getActionType(prevState: StakingUiState): StakingActionCommonType {
-        val isPartialEnterAmountDisabled = yieldArgs.enter.isPartialAmountDisabled
+        val isPartialEnterAmountDisabled = integration.isPartialAmountDisabled
         val isPartialExitAmountDisabled = isPartiallyUnstakeDisabled(prevState)
         return when {
             isEnter -> StakingActionCommonType.Enter(isPartialEnterAmountDisabled)
@@ -87,12 +87,12 @@ internal class SetConfirmationStateInitTransformer(
 
     private fun isPartiallyUnstakeDisabled(state: StakingUiState): Boolean {
         val isSolana = BlockchainUtils.isSolana(state.cryptoCurrencyBlockchainId)
-        val isValidatorPreferred = balanceState?.validator?.preferred == true
+        val isTargetPreferred = balanceState?.target?.isPreferred == true
 
-        return if (isSolana && !isValidatorPreferred) {
+        return if (isSolana && !isTargetPreferred) {
             true
         } else {
-            yieldArgs.exit?.isPartialAmountDisabled == true
+            integration.exitArgs?.isPartialAmountDisabled == true
         }
     }
 }

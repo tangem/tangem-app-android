@@ -2,12 +2,13 @@ package com.tangem.data.markets.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.IS_NOT_HTTP_ERROR
 
 sealed interface MarketsDataAnalyticsEvent {
 
     sealed class List(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Markets", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
@@ -26,7 +27,7 @@ sealed interface MarketsDataAnalyticsEvent {
 
     sealed class Details(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
@@ -81,9 +82,5 @@ sealed interface MarketsDataAnalyticsEvent {
         Network("Network"),
         Custom("Custom"),
         Unknown("Unknown"),
-    }
-
-    private companion object {
-        const val IS_NOT_HTTP_ERROR = "Is not http error"
     }
 }

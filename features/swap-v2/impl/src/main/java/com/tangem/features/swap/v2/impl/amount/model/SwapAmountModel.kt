@@ -58,6 +58,7 @@ import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
@@ -110,6 +111,8 @@ internal class SwapAmountModel @Inject constructor(
 
     private var isShowBestRateAnimation: Boolean = false
 
+    private var autoUpdateSubscriberJob: Job? = null
+
     val uiState: StateFlow<SwapAmountUM>
         field = MutableStateFlow(params.amountUM)
 
@@ -139,10 +142,12 @@ internal class SwapAmountModel @Inject constructor(
             scope = modelScope,
             task = loadQuotesTask(),
         )
+        subscribeOnAutoupdateEnabling()
     }
 
     fun onStop() {
         quoteTaskScheduler.cancelTask()
+        autoUpdateSubscriberJob?.cancel()
     }
 
     override fun onDestroy() {
@@ -479,6 +484,19 @@ internal class SwapAmountModel @Inject constructor(
     private fun subscribeOnReloadQuotesTriggerUpdates() {
         swapAmountUpdateListener.reloadQuotesTriggerFlow
             .onEach { startLoadingQuotesTask(isSilentReload = true) }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeOnAutoupdateEnabling() {
+        autoUpdateSubscriberJob = swapAmountUpdateListener.autoUpdateTriggerFlow
+            .distinctUntilChanged()
+            .onEach { isEnabled ->
+                if (isEnabled) {
+                    startLoadingQuotesTask(isSilentReload = true)
+                } else {
+                    quoteTaskScheduler.cancelTask()
+                }
+            }
             .launchIn(modelScope)
     }
 
