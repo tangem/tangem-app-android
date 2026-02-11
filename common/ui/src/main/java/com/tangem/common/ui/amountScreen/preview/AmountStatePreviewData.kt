@@ -5,7 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
@@ -88,7 +88,7 @@ object AmountStatePreviewData {
     val amountStateV2Accounts = amountState.copy(
         accountTitleUM = AccountTitleUM.Account(
             name = AccountNameUM.DefaultMain.value,
-            icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             prefixText = resourceReference(R.string.common_from),
         ),
         availableBalanceCrypto = stringReference("2 130,81231238 USDT"),
