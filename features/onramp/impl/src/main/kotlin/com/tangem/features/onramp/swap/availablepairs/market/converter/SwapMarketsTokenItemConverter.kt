@@ -44,6 +44,13 @@ internal class SwapMarketsTokenItemConverter(
                 resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
             },
             updateTimestamp = value.updateTimestamp,
+            networks = value.networks?.map { network ->
+                MarketsListItemUM.Network(
+                    networkId = network.networkId,
+                    contractAddress = network.contractAddress,
+                    decimalCount = network.decimalCount,
+                )
+            },
         )
     }
 
