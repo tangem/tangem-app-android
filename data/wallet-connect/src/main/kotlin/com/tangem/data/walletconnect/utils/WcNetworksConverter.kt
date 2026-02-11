@@ -13,6 +13,7 @@ import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -146,10 +147,12 @@ internal class WcNetworksConverter @Inject constructor(
             .filterIsInstance<CryptoCurrency.Coin>().map(CryptoCurrency.Coin::network)
     }
 
-    private suspend fun getAccountStatus(accountId: AccountId): AccountStatus? {
+    private suspend fun getAccountStatus(accountId: AccountId): AccountStatus.CryptoPortfolio? {
         return singleAccountStatusListSupplier.getSyncOrNull(
             SingleAccountStatusListProducer.Params(accountId.userWalletId),
-        )?.accountStatuses?.find { it.account.accountId == accountId }
+        )?.accountStatuses
+            ?.filterCryptoPortfolio()
+            ?.find { it.account.accountId == accountId }
     }
 
     suspend fun getAccountNetworks(accountId: AccountId): List<Network> {
