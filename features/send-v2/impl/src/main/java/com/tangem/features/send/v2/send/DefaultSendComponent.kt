@@ -21,6 +21,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendComponent
