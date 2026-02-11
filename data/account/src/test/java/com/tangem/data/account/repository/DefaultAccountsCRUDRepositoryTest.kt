@@ -19,6 +19,7 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.Account.CryptoPortfolio
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName

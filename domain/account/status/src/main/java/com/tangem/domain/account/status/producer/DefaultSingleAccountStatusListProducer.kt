@@ -294,6 +294,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         return map { accountStatus ->
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
+                is AccountStatus.Payment -> accountStatus.totalFiatBalance
             }
         }
     }
