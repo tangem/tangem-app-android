@@ -56,11 +56,13 @@ internal class PricePerformanceConverter(
     }
 
     private fun TokenMarketInfo.Range.calculateFraction(currentPrice: BigDecimal): Float {
+        val lowValue = low
+        val highValue = high
         return when {
-            low == null || high == null || high == BigDecimal.ZERO || currentPrice < low -> 0f
-            currentPrice > high || low == high -> 1f
+            lowValue == null || highValue == null || highValue == BigDecimal.ZERO || currentPrice < lowValue -> 0f
+            currentPrice > highValue || lowValue == highValue -> 1f
             else -> {
-                (currentPrice - low!!).divide(high!! - low!!, RoundingMode.HALF_UP)
+                (currentPrice - lowValue).divide(highValue - lowValue, RoundingMode.HALF_UP)
                     .setScale(2, RoundingMode.HALF_UP)
                     .toFloat().coerceAtMost(1f)
             }

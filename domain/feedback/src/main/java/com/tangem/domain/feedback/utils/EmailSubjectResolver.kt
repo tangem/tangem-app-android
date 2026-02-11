@@ -25,6 +25,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
                     resources.getStringSafe(R.string.feedback_subject_support_tangem)
                 }
             }
+            is FeedbackEmailType.BackupProblem -> resources.getStringSafe(R.string.feedback_subject_backup_problem)
             is FeedbackEmailType.RateCanBeBetter -> resources.getStringSafe(R.string.feedback_subject_rate_negative)
             is FeedbackEmailType.ScanningProblem -> resources.getStringSafe(R.string.feedback_subject_scan_failed)
             is FeedbackEmailType.TransactionSendingProblem,
@@ -47,6 +48,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             -> "[Visa] [DISPUTE] {auto-filled subject}"
             is FeedbackEmailType.Visa.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
             is FeedbackEmailType.Visa.FeatureIsBeta -> "[VISA] [FEEDBACK]"
+            is FeedbackEmailType.Visa.KycRejected -> "Tangem Pay - [VISA] [KYC REJECTED]"
         }
     }
 }
