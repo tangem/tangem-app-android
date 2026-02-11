@@ -18,6 +18,7 @@ interface TangemTechMarketsApi {
         @Query("order") order: String,
         @Query("search") search: String?,
         @Query("timestamp") timestamp: Long?,
+        @Query("showNetworks") showNetworks: Boolean? = null,
     ): ApiResponse<TokenMarketListResponse>
 
     @GET("v1/coins/{coin_id}")
