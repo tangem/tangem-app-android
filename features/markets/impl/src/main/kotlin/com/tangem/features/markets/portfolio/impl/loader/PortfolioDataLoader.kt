@@ -80,11 +80,11 @@ internal class PortfolioDataLoader @Inject constructor(
                             YieldSupplyAvailability.Unavailable
                         }
                         getCryptoCurrencyActionsUseCase(wallet, status, yieldSupplyAvailability)
-                            .map {
+                            .map { actionStates ->
                                 PortfolioData.CryptoCurrencyData(
                                     userWallet = wallet,
                                     status = status,
-                                    actions = it.states,
+                                    actions = actionStates.states,
                                 )
                             }
                     }
@@ -93,18 +93,18 @@ internal class PortfolioDataLoader @Inject constructor(
                 combine(actionsFlows) { actions ->
                     walletsWithStatuses.mapValues { entry ->
                         entry.value.mapNotNull { status ->
-                            actions.firstOrNull {
-                                it.userWallet == entry.key && it.status == status
+                            actions.firstOrNull { data ->
+                                data.userWallet == entry.key && data.status == status
                             }
                         }
                     }
                 }.onEmpty {
                     emit(
                         walletsWithStatuses.mapValues { (wallet, statuses) ->
-                            statuses.map {
+                            statuses.map { status ->
                                 PortfolioData.CryptoCurrencyData(
                                     userWallet = wallet,
-                                    status = it,
+                                    status = status,
                                     actions = emptyList(),
                                 )
                             }
