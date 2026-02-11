@@ -10,9 +10,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
@@ -51,16 +50,22 @@ fun SearchBar(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
+    var isInitialComposition by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        isInitialComposition = false
+    }
 
     BasicTextField(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size48)
             .onFocusChanged { focusState ->
-                if (focusState.isFocused) {
-                    state.onActiveChange(true)
-                } else {
-                    state.onActiveChange(false)
+                if (!isInitialComposition) {
+                    if (focusState.isFocused) {
+                        state.onActiveChange(true)
+                    } else {
+                        state.onActiveChange(false)
+                    }
                 }
             }
             .focusRequester(focusRequester)
@@ -163,6 +168,7 @@ private fun ClearButton(
                 focusManager.clearFocus()
                 keyboardController?.hide()
                 state.onActiveChange(false)
+                state.onClearClick()
             },
         ) {
             Icon(

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.draganddrop.dragAndDropSource
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -241,16 +240,10 @@ private fun ProviderItem(index: Int, state: ProviderUM, onDrop: (Int, Int) -> Un
             modifier = Modifier
                 .background(color = color, shape = RoundedCornerShape(16.dp))
                 .padding(vertical = 4.dp, horizontal = 8.dp)
-                .dragAndDropSource {
-                    detectTapGestures(
-                        onLongPress = {
-                            startTransfer(
-                                DragAndDropTransferData(
-                                    clipData = ClipData.newPlainText("provider index", index.toString()),
-                                    flags = View.DRAG_FLAG_GLOBAL,
-                                ),
-                            )
-                        },
+                .dragAndDropSource { _ ->
+                    DragAndDropTransferData(
+                        clipData = ClipData.newPlainText("provider index", index.toString()),
+                        flags = View.DRAG_FLAG_GLOBAL,
                     )
                 }
                 .dragAndDropTarget(

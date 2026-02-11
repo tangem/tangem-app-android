@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -31,6 +32,7 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    override val flowProducerTools: FlowProducerTools,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesProducer {
 
@@ -61,7 +63,6 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
                 }
             }
             .onEmpty { emit(emptySet()) }
-            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
