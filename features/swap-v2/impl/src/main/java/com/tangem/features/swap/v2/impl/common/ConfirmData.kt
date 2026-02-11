@@ -18,7 +18,7 @@ internal data class ConfirmData(
     val feeError: GetFeeError?,
     val fromCryptoCurrencyStatus: CryptoCurrencyStatus?,
     val toCryptoCurrencyStatus: CryptoCurrencyStatus?,
-    val fromAccount: Account.CryptoPortfolio?,
+    val fromAccount: Account?,
     val quote: SwapQuoteUM?,
     val rateType: ExpressRateType?,
 )

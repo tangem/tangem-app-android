@@ -60,8 +60,8 @@ internal class DefaultSwapTransactionRepository(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         transaction: SwapTransactionModel,
     ) {
         transaction.status?.let { swapTxList ->
@@ -244,8 +244,8 @@ internal class DefaultSwapTransactionRepository(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAccount: Account.CryptoPortfolio?,
-        toAccount: Account.CryptoPortfolio?,
+        fromAccount: Account?,
+        toAccount: Account?,
         transactions: List<SwapTransactionDTO>,
     ): List<SwapTransactionListDTO> {
         return addOrReplace(
