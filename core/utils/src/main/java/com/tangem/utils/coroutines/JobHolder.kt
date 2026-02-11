@@ -30,6 +30,10 @@ class JobHolder {
         job = null
     }
 
+    suspend fun join() {
+        job?.join()
+    }
+
     fun isEmpty() = job == null
 }
 
