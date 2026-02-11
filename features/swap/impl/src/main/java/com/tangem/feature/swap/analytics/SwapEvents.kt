@@ -2,11 +2,16 @@ package com.tangem.feature.swap.analytics
 
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 import com.tangem.core.analytics.models.getReferralParams
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -20,9 +25,15 @@ sealed class SwapEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(SWAP_CATEGORY, event, params) {
 
-    data class SwapScreenOpened(val token: String) : SwapEvents(
+    data class SwapScreenOpened(
+        val token: String,
+        val blockchain: String,
+    ) : SwapEvents(
         event = "Swap Screen Opened",
-        params = mapOf("Token" to token),
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     ), AppsFlyerIncludedEvent
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
@@ -85,21 +96,24 @@ sealed class SwapEvents(
         val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
+        val feeToken: String,
         val fromDerivationIndex: Int?,
         val toDerivationIndex: Int?,
         val referralId: String?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
-        params = mapOf(
-            "Provider" to provider.name,
-            "Commission" to if (commission == FeeType.NORMAL) "Market" else "Fast",
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Send Blockchain" to sendBlockchain,
-            "Receive Blockchain" to receiveBlockchain,
-            "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
-            *getReferralParams(referralId).toTypedArray(),
-        ),
+        params = buildMap {
+            put("Provider", provider.name)
+            put("Commission", if (commission == FeeType.NORMAL) "Market" else "Fast")
+            put("Send Token", sendToken)
+            put("Receive Token", receiveToken)
+            put("Send Blockchain", sendBlockchain)
+            put("Receive Blockchain", receiveBlockchain)
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
+            put(FEE_TOKEN, feeToken)
+            putAll(getReferralParams(referralId))
+        },
     ), AppsFlyerIncludedEvent
 
     class ProviderClicked : SwapEvents("Provider Clicked")
