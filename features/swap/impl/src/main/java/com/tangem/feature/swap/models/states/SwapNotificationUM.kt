@@ -132,6 +132,18 @@ internal object SwapNotificationUM {
             ),
         )
 
+        data class SwapNotSupported(
+            val tokenName: String,
+        ) : Warning(
+            title = resourceReference(
+                id = com.tangem.feature.swap.presentation.R.string.express_swap_not_supported_title,
+                formatArgs = wrappedList(tokenName),
+            ),
+            subtitle = resourceReference(
+                com.tangem.feature.swap.presentation.R.string.express_swap_not_supported_text,
+            ),
+        )
+
         data class NeedReserveToCreateAccount(
             val receiveAmount: String,
             val receiveToken: String,
