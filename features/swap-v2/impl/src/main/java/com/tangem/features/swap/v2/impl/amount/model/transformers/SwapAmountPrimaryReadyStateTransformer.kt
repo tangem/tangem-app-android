@@ -27,7 +27,7 @@ internal class SwapAmountPrimaryReadyStateTransformer(
     private val isShowBestRateAnimation: Boolean,
     private val isSingleWallet: Boolean,
     private val isAccountsMode: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account?,
 ) : Transformer<SwapAmountUM> {
 
     private val amountFieldConverter = SwapAmountFieldConverter(
