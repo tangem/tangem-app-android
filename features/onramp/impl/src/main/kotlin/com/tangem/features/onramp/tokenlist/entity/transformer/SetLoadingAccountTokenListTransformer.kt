@@ -2,6 +2,8 @@ package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.swap.availablepairs.entity.converters.LoadingAccountTokenItemConverter
 import com.tangem.features.onramp.swap.availablepairs.entity.converters.LoadingTokenListItemConverter
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
@@ -22,6 +24,7 @@ internal class SetLoadingAccountTokenListTransformer(
         val totalTokensCount = accountList.sumOf { account ->
             when (account) {
                 is AccountStatus.CryptoPortfolio -> account.tokenList.flattenCurrencies().size
+                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
             }
         }
 
@@ -31,7 +34,7 @@ internal class SetLoadingAccountTokenListTransformer(
             tokensListData = if (isAccountsMode) {
                 TokenListUMData.AccountList(
                     tokensList = accountListItemConverter.convertList(
-                        accountList.filterIsInstance<AccountStatus.CryptoPortfolio>(),
+                        accountList.filterCryptoPortfolio(),
                     ).toPersistentList(),
                     totalTokensCount = totalTokensCount,
                 )
@@ -40,8 +43,9 @@ internal class SetLoadingAccountTokenListTransformer(
                     tokensList = accountList.flatMap { account ->
                         when (account) {
                             is AccountStatus.CryptoPortfolio -> LoadingTokenListItemConverter.convertList(
-                                account.tokenList.flattenCurrencies(),
+                                account.tokenList.flattenCurrencies().map(CryptoCurrencyStatus::currency),
                             )
+                            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                         }
                     }.toPersistentList(),
                     totalTokensCount = totalTokensCount,
