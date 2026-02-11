@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.common.ui.account.toUM
+import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -271,7 +271,7 @@ private class ListItemWithIconPreviewProvider : CollectionPreviewParameterProvid
             subtitle = "Wallet",
             accountTitleUM = AccountTitleUM.Account(
                 name = AccountNameUM.DefaultMain.value,
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
                 prefixText = stringReference(StringsSigns.DOT),
             ),
         ),

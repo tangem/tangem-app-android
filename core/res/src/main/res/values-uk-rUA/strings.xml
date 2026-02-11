@@ -1480,10 +1480,12 @@
   <string name="tangem_pay_status_completed">Завершено</string>
   <string name="tangem_pay_status_declined">Відхилено</string>
   <string name="tangem_pay_status_pending">В очікуванні</string>
+  <string name="tangem_pay_status_reversed">Скасовано</string>
   <string name="tangem_pay_terms_fees_limits">Умови, комісії та ліміти</string>
   <string name="tangem_pay_terms_limits">Умови та обмеження</string>
   <string name="tangem_pay_transaction_declined_notification_text">Банк відхилив цей запит на транзакцію.</string>
   <string name="tangem_pay_transaction_fee_notification_text">Ця комісія покриває витрати на обробку вашого переказу.</string>
+  <string name="tangem_pay_transaction_reversed_notification_text">Транзакцію було частково або повністю скасовано продавцем</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Продовжуйте користуватися карткою. Заморозити можна в будь-який момент.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Розморозити картку?</string>
   <string name="tangem_pay_unfreeze_card_failed">Не вдалося розморозити картку. Спробуйте пізніше.</string>
