@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
@@ -137,6 +138,7 @@ sealed class AppRoute(val path: String) : Route {
         enum class Source {
             STORIES,
             SETTINGS,
+            ACCOUNT,
         }
     }
 
@@ -209,8 +211,8 @@ sealed class AppRoute(val path: String) : Route {
     data class Staking(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
-        val yieldId: String,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrency.id.value}/$yieldId")
+        val integrationId: StakingIntegrationID,
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrency.id.value}/${integrationId.value}")
 
     @Serializable
     data class PushNotification(
@@ -443,9 +445,7 @@ sealed class AppRoute(val path: String) : Route {
             ) : Mode()
 
             @Serializable
-            data class FromBannerOnMain(
-                val userWalletId: UserWalletId,
-            ) : Mode()
+            data object FromBannerOnMain : Mode()
 
             @Serializable
             data object FromBannerInSettings : Mode()
@@ -456,16 +456,12 @@ sealed class AppRoute(val path: String) : Route {
     data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable
-    data class YieldSupplyPromo(
+    data class YieldSupplyEntry(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
-    ) : AppRoute(path = "/yield_supply_promo/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+    ) : AppRoute(path = "/yield_supply_entry/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
 
     @Serializable
-    data class YieldSupplyActive(
-        val userWalletId: UserWalletId,
-        val cryptoCurrency: CryptoCurrency,
-        val apy: String,
-    ) : AppRoute(path = "/yield_supply_active/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+    data class NewsDetails(val newsId: Int) : AppRoute(path = "/news_details/$newsId")
 }
