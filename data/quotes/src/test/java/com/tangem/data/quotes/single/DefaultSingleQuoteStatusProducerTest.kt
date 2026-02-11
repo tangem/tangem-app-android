@@ -2,6 +2,7 @@ package com.tangem.data.quotes.single
 
 import com.google.common.truth.Truth
 import com.tangem.data.quotes.store.QuotesStatusesStore
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
@@ -26,10 +27,12 @@ internal class DefaultSingleQuoteStatusProducerTest {
     )
 
     private val quotesStore = mockk<QuotesStatusesStore>()
+    private val flowProducerTools: FlowProducerTools = mockk()
 
     private val producer = DefaultSingleQuoteStatusProducer(
         params = params,
         quotesStatusesStore = quotesStore,
+        flowProducerTools = flowProducerTools,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

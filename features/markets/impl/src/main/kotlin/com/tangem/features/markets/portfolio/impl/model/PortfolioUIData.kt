@@ -8,7 +8,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  * @property portfolioBSVisibilityModel portfolio bottom sheet visibility model
  * @property selectedWalletId           selected wallet id
  * @property addToPortfolioData         add to portfolio data
- * @property needColdWalletInteraction  flag that indicates if user has missed derivations and has a cold wallet
+ * @property shouldRequireColdWalletInteraction  flag that indicates if user has missed derivations and has a cold wallet
  *
 [REDACTED_AUTHOR]
  */
@@ -16,5 +16,5 @@ internal data class PortfolioUIData(
     val portfolioBSVisibilityModel: PortfolioBSVisibilityModel,
     val selectedWalletId: UserWalletId?,
     val addToPortfolioData: AddToPortfolioManager.AddToPortfolioData,
-    val needColdWalletInteraction: Boolean,
+    val shouldRequireColdWalletInteraction: Boolean,
 )

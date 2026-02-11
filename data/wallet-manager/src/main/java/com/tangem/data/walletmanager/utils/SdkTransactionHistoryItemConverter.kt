@@ -9,11 +9,13 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryItem as
 internal class SdkTransactionHistoryItemConverter(
     smartContractMethods: Map<String, SmartContractMethod>,
     yieldSupplyAddresses: Set<String>,
+    gaslessFeeAddresses: Set<String>,
 ) : Converter<SdkTransactionHistoryItem, TxInfo> {
 
     private val typeConverter by lazy { SdkTransactionTypeConverter(
         smartContractMethods = smartContractMethods,
         yieldSupplyAddresses = yieldSupplyAddresses,
+        gaslessFeeAddresses = gaslessFeeAddresses,
     ) }
 
     override fun convert(value: SdkTransactionHistoryItem): TxInfo = TxInfo(

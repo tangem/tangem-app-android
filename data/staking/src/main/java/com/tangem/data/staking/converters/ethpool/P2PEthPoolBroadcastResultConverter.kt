@@ -8,7 +8,7 @@ import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 /**
- * Converter from P2P Broadcast Transaction Response to Domain model
+ * Converter from P2PEthPool Broadcast Transaction Response to Domain model
  */
 internal object P2PEthPoolBroadcastResultConverter : Converter<P2PEthPoolBroadcastResponse, P2PEthPoolBroadcastResult> {
 

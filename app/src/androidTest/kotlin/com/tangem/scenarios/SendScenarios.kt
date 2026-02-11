@@ -54,6 +54,10 @@ fun BaseTestCase.checkNetworkFeeBlock(currentFeeAmount: String, withFeeSelector:
         step("Assert select fee icon is displayed") {
             onSendConfirmScreen { selectFeeIcon.assertIsDisplayed() }
         }
+    } else {
+        step("Assert select fee icon is not displayed") {
+            onSendConfirmScreen { selectFeeIcon.assertIsNotDisplayed() }
+        }
     }
 }
 
@@ -137,5 +141,30 @@ fun BaseTestCase.checkRecentAddressItem(address: String, description: String?) {
         onSendAddressScreen {
             recentAddressItem(recipientAddress = address, description = description).assertIsDisplayed()
         }
+    }
+}
+
+fun BaseTestCase.checkCustomFeeTooltip(title: String, tooltip: String) {
+    step("Click on tooltip icon for '$title'") {
+        waitForIdle()
+        onSendSelectNetworkFeeBottomSheet { tooltipIcon(title).performClick() }
+    }
+    step("Check '$title' tooltip text") {
+        onSendSelectNetworkFeeBottomSheet { tooltipText(tooltip).assertIsDisplayed() }
+    }
+    step("Click on tooltip icon again to close tooltip") {
+        onSendSelectNetworkFeeBottomSheet { tooltipIcon(title).performClick() }
+    }
+}
+
+fun BaseTestCase.checkChangesInInputTextField(title: String, newValue: String, addition: String = "") {
+    step("Click on '$title' input text field") {
+        onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(title).performClick() }
+    }
+    step("Type '$newValue' in '$title' input text field") {
+        onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(title).performTextReplacement(newValue) }
+    }
+    step("Assert '$title' value: '$newValue + $addition'") {
+        onSendSelectNetworkFeeBottomSheet { inputTextFieldValue(title).assertTextContains(newValue + addition) }
     }
 }
