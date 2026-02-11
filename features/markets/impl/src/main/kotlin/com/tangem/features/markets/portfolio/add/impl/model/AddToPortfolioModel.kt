@@ -315,6 +315,7 @@ internal class AddToPortfolioModel @Inject constructor(
     ): CryptoCurrency? {
         val accountIndex = when (account.account) {
             is AccountStatus.CryptoPortfolio -> account.account.account.derivationIndex
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
