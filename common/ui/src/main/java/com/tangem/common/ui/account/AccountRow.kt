@@ -41,7 +41,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun AccountRow(
     title: TextReference,
     subtitle: TextReference,
-    icon: CryptoPortfolioIconUM,
+    icon: AccountIconUM.CryptoPortfolio,
     modifier: Modifier = Modifier,
     isReverse: Boolean = false,
 ) {

@@ -1,9 +1,10 @@
 package com.tangem.features.details.ui
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -11,10 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.extensions.TextReference
@@ -24,6 +28,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.component.preview.PreviewUserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
+import com.tangem.features.details.impl.R
 
 @Composable
 internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = Modifier) {
@@ -42,7 +47,6 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
             text = state.addNewWalletText,
             isInProgress = state.isWalletSavingInProgress,
             onClick = state.onAddNewWalletClick,
-            icon = state.addNewWalletIconRes,
         )
     }
 }
@@ -50,7 +54,6 @@ internal fun UserWalletListBlock(state: UserWalletListUM, modifier: Modifier = M
 @Composable
 private fun AddWalletButton(
     text: TextReference,
-    @DrawableRes icon: Int?,
     isInProgress: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -67,22 +70,30 @@ private fun AddWalletButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            if (icon != null) {
-                AnimatedContent(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    targetState = isInProgress,
-                    label = "Add wallet progress",
-                ) { isInProgress ->
-                    if (isInProgress) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
-                            color = TangemTheme.colors.icon.accent,
-                        )
-                    } else {
+            AnimatedContent(
+                modifier = Modifier.size(TangemTheme.dimens.size36),
+                targetState = isInProgress,
+                label = "Add wallet progress",
+            ) { isInProgress ->
+                if (isInProgress) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size24)
+                            .padding(4.dp),
+                        color = TangemTheme.colors.icon.accent,
+                    )
+                } else {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f)),
+                    ) {
                         Icon(
-                            modifier = Modifier.size(TangemTheme.dimens.size24),
-                            painter = painterResource(id = icon),
+                            modifier = Modifier.size(18.dp),
                             tint = TangemTheme.colors.icon.accent,
+                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_plus_24),
                             contentDescription = null,
                         )
                     }

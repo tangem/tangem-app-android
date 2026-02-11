@@ -3,6 +3,7 @@ package com.tangem.data.account.producer
 import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,6 +28,7 @@ class DefaultSingleAccountListProducerTest {
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory = mockk()
 
     private val userWalletId = UserWalletId("011")
+    private val flowProducerTools: FlowProducerTools = mockk()
     private val userWallet = mockk<UserWallet> {
         every { this@mockk.walletId } returns userWalletId
     }
@@ -35,6 +37,7 @@ class DefaultSingleAccountListProducerTest {
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        flowProducerTools = flowProducerTools,
     )
 
     @AfterEach

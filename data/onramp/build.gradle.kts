@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.data.common)
 
     /** Domain modules */
+    implementation(projects.domain.account)
     implementation(projects.domain.onramp)
     implementation(projects.domain.legacy)
     implementation(projects.domain.card)

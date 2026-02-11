@@ -7,16 +7,19 @@ import com.tangem.blockchainsdk.utils.OLD_POLYGON_NAME
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.onramp.converters.HotCryptoCurrencyConverter
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.models.wallet.UserWallet
@@ -54,7 +57,9 @@ internal class DefaultHotCryptoRepository(
     private val userWalletsStore: UserWalletsStore,
     private val tangemTechApi: TangemTechApi,
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val userTokensResponseStore: UserTokensResponseStore,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : HotCryptoRepository {
@@ -100,7 +105,11 @@ internal class DefaultHotCryptoRepository(
     private fun getWalletsWithTokensFlow(): Flow<Map<UserWallet, List<UserTokensResponse.Token>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
             val flows = userWallets.map { userWallet ->
-                userTokensResponseStore.get(userWalletId = userWallet.walletId)
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    walletAccountsFetcher.get(userWalletId = userWallet.walletId).map { it.toUserTokensResponse() }
+                } else {
+                    userTokensResponseStore.get(userWalletId = userWallet.walletId)
+                }
                     .map { userWallet to it?.tokens.orEmpty() }
             }
 
