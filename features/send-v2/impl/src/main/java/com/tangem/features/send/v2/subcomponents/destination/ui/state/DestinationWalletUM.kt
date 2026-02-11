@@ -20,5 +20,5 @@ data class DestinationWalletUM(
     val userWalletId: UserWalletId,
     val address: String,
     val cryptoCurrency: CryptoCurrency,
-    val account: Account.CryptoPortfolio? = null,
+    val account: Account? = null,
 )
