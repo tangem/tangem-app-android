@@ -25,6 +25,7 @@ import com.tangem.features.feed.components.market.details.portfolio.add.*
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -125,9 +126,11 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
                 return@channelFlow
             }
 
+            sendAddTokenOpenedAnalytics(selectedNetworkValue.cryptoCurrency)
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
+            sendSuccessAddedAnalytics(addedToken.currency)
             finishSuccessFlow(addedToken.currency, selectedPortfolioValue.userWallet.walletId)
         }
             .catch { throwable ->
@@ -267,6 +270,25 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
         },
     )
         .filterNotNull()
+
+    private fun sendSuccessAddedAnalytics(cryptoCurrency: CryptoCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.TokenAdded(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+    }
+
+    private fun sendAddTokenOpenedAnalytics(cryptoCurrency: CryptoCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.AddTokenScreenOpened(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                source = params.analyticsParams.source,
+            ),
+        )
+    }
 }
 
 @ModelScoped
