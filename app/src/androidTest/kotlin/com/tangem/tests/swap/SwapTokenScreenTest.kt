@@ -30,7 +30,7 @@ class SwapTokenScreenTest : BaseTestCase() {
     @DisplayName("Swap: network fee")
     @Test
     fun networkFeeTest() {
-        val inputAmount = "100"
+        val inputAmount = "400"
         val tokenTitle = "Polygon"
 
         setupHooks().run {
@@ -99,22 +99,31 @@ class SwapTokenScreenTest : BaseTestCase() {
                 }
             }
             step("Assert receive amount is not equal to '0'") {
-                onSwapTokenScreen { receiveAmount.assert(!hasText("0")) }
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        waitForIdle()
+                        receiveAmount.assert(!hasText("0"))
+                    }
+                }
             }
         }
     }
 
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
     @AllureId("3549")
     @DisplayName("Swap: network error test")
     @Test
     fun networkErrorSwapTest() {
+        val tokenTitle = "Polygon"
+
         setupHooks(
             additionalAfterSection = {
                 enableWiFi()
                 enableMobileData()
             }
         ).run {
-            val tokenTitle = "Polygon"
 
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -142,7 +151,12 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { title.assertIsDisplayed() }
             }
             step("Assert error notification title is displayed") {
-                onSwapTokenScreen { errorNotificationTitle.assertIsDisplayed() }
+                onSwapTokenScreen {
+                    waitForIdle()
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        errorNotificationTitle.assertIsDisplayed()
+                    }
+                }
             }
             step("Assert error notification text is displayed") {
                 onSwapTokenScreen { errorNotificationText.assertIsDisplayed() }
@@ -160,7 +174,8 @@ class SwapTokenScreenTest : BaseTestCase() {
     @DisplayName("Swap: change network fee")
     @Test
     fun changeNetworkFeeTest() {
-        val inputAmount = "100"
+        val inputAmount = "400"
+
         setupHooks().run {
             val tokenTitle = "Polygon"
 
@@ -209,10 +224,20 @@ class SwapTokenScreenTest : BaseTestCase() {
             step("Assert input amount = '$inputAmount'") {
                 onSwapTokenScreen { textInput.assertTextEquals(inputAmount) }
             }
+            step("Assert 'Network fee' block is displayed") {
+                onSwapTokenScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                        networkFeeBlock.assertIsDisplayed()
+                    }
+                }
+            }
+            step("Assert 'Swap' button is enabled") {
+                onSwapTokenScreen { swapButton.assertIsEnabled() }
+            }
             step("Click on 'Network fee' block") {
                 onSwapTokenScreen {
                     flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
-                        selectFeeIcon.clickWithAssertion()
+                        selectFeeIcon.performClick()
                     }
                 }
             }
