@@ -7,6 +7,7 @@ import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency

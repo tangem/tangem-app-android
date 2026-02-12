@@ -1,6 +1,7 @@
 package com.tangem.data.walletconnect
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository

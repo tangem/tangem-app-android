@@ -9,6 +9,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
