@@ -119,7 +119,7 @@ class WalletAccountListFlowFactoryTest {
         val actual = factory.create(userWallet.walletId).let(::getEmittedValues)
 
         // Assert
-        val expected = AccountList.empty(userWalletId = userWallet.walletId, cryptoCurrencies = setOf(currency))
+        val expected = AccountList.empty(userWalletId = userWallet.walletId, cryptoCurrencies = listOf(currency))
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerifySequence {
@@ -144,7 +144,7 @@ class WalletAccountListFlowFactoryTest {
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
-        val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
+        val currencies = cryptoCurrencyFactory.ethereumAndStellar
         every {
             cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = nodl)
         } returns currencies.toList()
