@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -73,7 +74,10 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
         }
 
         item(key = "mostly_used_content") {
-            MostlyUsedContent(state = state.mostlyUsed)
+            MostlyUsedContent(
+                state = state.mostlyUsed,
+                onScroll = state.onSliderScroll,
+            )
         }
 
         item(key = "best_opportunities_header") {
@@ -105,7 +109,7 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MostlyUsedContent(state: EarnListUM) {
+private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
     AnimatedContent(
         targetState = state,
         contentKey = { it::class.java },
@@ -122,11 +126,21 @@ private fun MostlyUsedContent(state: EarnListUM) {
                     ),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(
+                    itemsIndexed(
                         items = st.items,
-                        key = { "${it.tokenName}-${it.network}" },
-                    ) { item ->
+                        key = { _, item -> "${item.tokenName}-${item.network}" },
+                    ) { index, item ->
+                        val cardModifier = Modifier.conditional(
+                            condition = index == FOURTH_ITEM_INDEX,
+                            modifier = {
+                                onFirstVisible(
+                                    minFractionVisible = 0.5f,
+                                    callback = onScroll,
+                                )
+                            },
+                        )
                         MostlyUsedCard(
+                            modifier = cardModifier,
                             item = item,
                             onClick = item.onItemClick,
                         )
@@ -579,6 +593,8 @@ private fun previewEarnUM(
     onBackClick = {},
     onNetworkFilterClick = {},
     onTypeFilterClick = {},
+    onSliderScroll = {},
 )
 
 private const val PLACEHOLDER_ITEMS_COUNT = 8
+private const val FOURTH_ITEM_INDEX = 3

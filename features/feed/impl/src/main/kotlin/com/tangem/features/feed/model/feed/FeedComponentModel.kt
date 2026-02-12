@@ -33,6 +33,7 @@ import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.feed.state.FeedMarketsBatchFlowManager
 import com.tangem.features.feed.model.feed.state.FeedStateController
@@ -172,6 +173,7 @@ internal class FeedComponentModel @Inject constructor(
                             onItemClick = ::handleEarnTokenClick,
                             onRetryClick = ::fetchEarnData,
                             earnResult = earnResult,
+                            analyticsEventHandler = analyticsEventHandler,
                         ),
                     )
                 }
@@ -249,7 +251,7 @@ internal class FeedComponentModel @Inject constructor(
                 onSliderEndReached = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.NewsCarouselEndReached())
                 },
-                onOpenEarnPageClick = params.feedClickIntents::onOpenEarnPage,
+                onOpenEarnPageClick = ::handleEarnPageOpenClicked,
             ),
             news = NewsUM(
                 content = persistentListOf(),
@@ -294,7 +296,6 @@ internal class FeedComponentModel @Inject constructor(
                     onMarketOpenClick = ::handleMarketOpenClicked,
                     onArticleClick = ::handleArticleClicked,
                     onOpenAllNews = ::handleOpenAllNews,
-                    onOpenEarnPageClick = params.feedClickIntents::onOpenEarnPage,
                 ),
             )
         }
@@ -397,6 +398,13 @@ internal class FeedComponentModel @Inject constructor(
     }
 
     private fun handleEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.OpportunitySelected(
+                tokenSymbol = earnTokenWithCurrency.earnToken.tokenSymbol,
+                blockchain = earnTokenWithCurrency.cryptoCurrency.network.name,
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        )
         bottomSheetNavigation.activate(
             FeedBottomSheetRoute.AddToPortfolio(
                 tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
@@ -410,8 +418,16 @@ internal class FeedComponentModel @Inject constructor(
                     name = earnTokenWithCurrency.earnToken.tokenName,
                     symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
                 ),
+                source = AnalyticsParam.ScreensSources.Markets.value,
             ),
         )
+    }
+
+    private fun handleEarnPageOpenClicked() {
+        if (state.value.earnListUM is EarnListUM.Content) {
+            params.feedClickIntents.onOpenEarnPage()
+            analyticsEventHandler.send(FeedAnalyticsEvent.EarnScreenOpened())
+        }
     }
     /* end of clicks area */
 
