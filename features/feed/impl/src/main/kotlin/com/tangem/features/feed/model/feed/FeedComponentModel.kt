@@ -29,7 +29,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
-import com.tangem.features.feed.components.feed.FeedPortfolioRoute
+import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
@@ -89,7 +89,7 @@ internal class FeedComponentModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    val bottomSheetNavigation: SlotNavigation<FeedPortfolioRoute> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
 
     val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
@@ -398,7 +398,7 @@ internal class FeedComponentModel @Inject constructor(
 
     private fun handleEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency) {
         bottomSheetNavigation.activate(
-            FeedPortfolioRoute.AddToPortfolio(
+            FeedBottomSheetRoute.AddToPortfolio(
                 tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
                     network = TokenMarketInfo.Network(
                         networkId = earnTokenWithCurrency.earnToken.networkId,
