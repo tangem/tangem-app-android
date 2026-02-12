@@ -124,7 +124,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         }
     }
 
-    suspend fun needColdWalletInteraction(network: Map<String, Nothing?>): Boolean = when (mode) {
+    suspend fun needColdWalletInteraction(network: Map<String, String?>): Boolean = when (mode) {
         is ManageTokensMode.Account -> coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = mode.accountId.userWalletId,
             networksWithDerivationPath = network,
