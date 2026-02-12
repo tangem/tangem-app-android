@@ -17,6 +17,10 @@ object TangemSiteUrlBuilder {
         return "utm_source=tangem-app&utm_medium=app$utmCampaignPart$utmContent$appInstanceIdPart"
     }
 
+    fun getRefCodeTag(refCode: String?): String {
+        return refCode?.let { "promocode=$it" }.orEmpty()
+    }
+
     suspend fun url(path: String, campaign: String): String {
         val normalizedPath = path.trim('/')
         return "https://tangem.com/$normalizedPath?${getUtmTags(campaign)}"
