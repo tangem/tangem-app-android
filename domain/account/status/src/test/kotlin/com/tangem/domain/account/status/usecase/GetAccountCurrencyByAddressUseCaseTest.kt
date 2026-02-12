@@ -252,7 +252,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             network = currency.network,
             value = NetworkStatus.Unreachable(address = validNetworkAddress),
         )
-        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = setOf(currency))
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = listOf(currency))
 
         every { userWalletsListRepository.userWallets.value } returns listOf(multiUserWallet)
         coEvery {
