@@ -23,7 +23,6 @@ import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -626,10 +625,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
         return when {
-            isHoldToConfirm -> resourceReference(
-                id = com.tangem.core.ui.R.string.common_hold_to,
-                formatArgs = wrappedList(resourceReference(R.string.common_send)),
-            )
+            isHoldToConfirm -> resourceReference(R.string.common_send)
             confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
             confirmUM is ConfirmUM.Content && confirmUM.isSending -> resourceReference(R.string.send_sending)
             else -> resourceReference(R.string.common_send)
