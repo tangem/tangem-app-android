@@ -212,7 +212,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                     name = "Account #$nextIndex",
                     icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
                     derivationIndex = nextIndex,
-                    cryptoCurrencies = emptySet(),
+                    cryptoCurrencies = emptyList(),
                 )
                     .getOrNull()
                     ?: break
