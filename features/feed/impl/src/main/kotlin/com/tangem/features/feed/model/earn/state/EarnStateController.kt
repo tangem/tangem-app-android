@@ -1,9 +1,6 @@
 package com.tangem.features.feed.model.earn.state
 
-import com.tangem.common.R
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.earn.state.transformers.EarnUMTransformer
 import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,12 +31,7 @@ internal class EarnStateController @Inject constructor() {
             mostlyUsed = EarnListUM.Loading,
             bestOpportunities = EarnBestOpportunitiesUM.Loading,
             selectedTypeFilter = EarnFilterTypeUM.All,
-            selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(
-                text = TextReference.Res(R.string.earn_filter_all_networks),
-                isSelected = true,
-            ),
-            filterByTypeBottomSheet = TangemBottomSheetConfig.Empty,
-            filterByNetworkBottomSheet = TangemBottomSheetConfig.Empty,
+            selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
             onBackClick = {},
             onNetworkFilterClick = {},
             onTypeFilterClick = {},
