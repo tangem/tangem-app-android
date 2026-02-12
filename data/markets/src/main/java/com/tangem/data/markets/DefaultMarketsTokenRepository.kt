@@ -21,6 +21,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesRes
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.account.DerivationIndex
