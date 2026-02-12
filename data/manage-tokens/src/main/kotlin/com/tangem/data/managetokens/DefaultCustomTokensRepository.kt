@@ -18,6 +18,7 @@ import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.card.common.extensions.supportedBlockchains
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
