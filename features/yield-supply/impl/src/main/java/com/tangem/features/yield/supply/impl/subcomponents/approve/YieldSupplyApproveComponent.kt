@@ -20,7 +20,6 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
-import com.tangem.core.ui.R as CoreR
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
@@ -82,10 +81,7 @@ internal class YieldSupplyApproveComponent(
 
                 if (state.isHoldToConfirmEnabled) {
                     HoldToConfirmButton(
-                        text = stringResourceSafe(
-                            CoreR.string.common_hold_to,
-                            stringResourceSafe(R.string.common_confirm),
-                        ),
+                        text = stringResourceSafe(R.string.common_confirm),
                         onConfirm = model::onClick,
                         enabled = state.isPrimaryButtonEnabled,
                         isLoading = state.isTransactionSending,
