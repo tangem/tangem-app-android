@@ -14,6 +14,7 @@ import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
+import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -105,8 +106,10 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesOpenBuyTangemCardUseCase(): GenerateBuyTangemCardLinkUseCase {
-        return GenerateBuyTangemCardLinkUseCase()
+    fun providesOpenBuyTangemCardUseCase(
+        walletsPromoRepository: WalletsPromoRepository,
+    ): GenerateBuyTangemCardLinkUseCase {
+        return GenerateBuyTangemCardLinkUseCase(walletsPromoRepository)
     }
 
     @Provides
