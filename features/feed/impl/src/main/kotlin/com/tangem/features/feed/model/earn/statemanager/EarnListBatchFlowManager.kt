@@ -5,6 +5,7 @@ import com.tangem.domain.earn.model.EarnTokensListConfig
 import com.tangem.domain.earn.usecase.GetEarnTokensBatchFlowUseCase
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.features.feed.model.converter.EarnTokenWithCurrencyToListItemUMConverter
+import com.tangem.features.feed.model.earn.analytics.BEST_OPPORTUNITIES_SOURCE
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
@@ -20,12 +21,14 @@ import kotlinx.coroutines.launch
 internal class EarnListBatchFlowManager(
     getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase,
     private val configProvider: Provider<EarnTokensListConfig>,
-    private val onItemClick: (EarnTokenWithCurrency) -> Unit,
+    private val onItemClick: (EarnTokenWithCurrency, source: String) -> Unit,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, EarnTokensListConfig, Nothing>>()
-    private val converter = EarnTokenWithCurrencyToListItemUMConverter(onItemClick = onItemClick)
+    private val converter = EarnTokenWithCurrencyToListItemUMConverter(
+        onItemClick = { onItemClick(it, BEST_OPPORTUNITIES_SOURCE) },
+    )
 
     private val batchFlow = getEarnTokensBatchFlowUseCase(
         context = EarnTokensBatchingContext(
