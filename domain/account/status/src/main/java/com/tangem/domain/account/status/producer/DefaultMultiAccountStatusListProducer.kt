@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
