@@ -1,8 +1,11 @@
 package com.tangem.features.feed.model.feed.state.transformers
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.models.earn.EarnError
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.earn.EarnTopToken
 import com.tangem.features.feed.model.converter.EarnTokenWithCurrencyToListItemUMConverter
+import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.FeedListUM
 import kotlinx.collections.immutable.toPersistentList
@@ -13,6 +16,7 @@ internal class UpdateEarnStateTransformer(
     private val onItemClick: (EarnTokenWithCurrency) -> Unit,
     private val onRetryClick: () -> Unit,
     private val earnResult: EarnTopToken?,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : FeedListUMTransformer {
 
     private val earnTokenWithCurrencyConverter = EarnTokenWithCurrencyToListItemUMConverter(onItemClick = onItemClick)
@@ -25,8 +29,11 @@ internal class UpdateEarnStateTransformer(
             }
             else -> {
                 earnResult.fold(
-                    ifLeft = {
-                        handleErrorState(prevState)
+                    ifLeft = { earnError ->
+                        handleErrorState(
+                            currentState = prevState,
+                            result = earnError,
+                        )
                     },
                     ifRight = { earnTokensWithCurrency ->
                         handleDataState(
@@ -43,7 +50,18 @@ internal class UpdateEarnStateTransformer(
         return currentState.copy(earnListUM = null)
     }
 
-    private fun handleErrorState(currentState: FeedListUM): FeedListUM {
+    private fun handleErrorState(currentState: FeedListUM, result: EarnError): FeedListUM {
+        if (currentState.earnListUM != EarnListUM.Loading) return currentState
+        val (code, message) = when (result) {
+            is EarnError.HttpError -> result.code to result.message
+            is EarnError.NotHttpError -> null to ""
+        }
+        analyticsEventHandler.send(
+            FeedAnalyticsEvent.EarnLoadError(
+                code = code,
+                message = message,
+            ),
+        )
         return currentState.copy(earnListUM = EarnListUM.Error(onRetryClick))
     }
 
