@@ -5,6 +5,8 @@ import arrow.core.raise.either
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 /**
  * Update user wallet by [userWalletId] and return updated wallet.
@@ -29,4 +31,22 @@ suspend fun UserWalletsListRepository.update(
         .bind()
 
     updatedUserWallet
+}
+
+/** Get user wallet by [id] */
+fun UserWalletsListRepository.getSyncOrNull(id: UserWalletId): UserWallet? {
+    return userWallets.value?.find { it.walletId == id }
+}
+
+/** Get user wallet by [id] or throw an exception if it is not found */
+fun UserWalletsListRepository.getSyncStrict(id: UserWalletId): UserWallet {
+    return requireNotNull(getSyncOrNull(id)) { "Unable to find user wallet with provided ID: $id" }
+}
+
+/** Loads user wallets list and selected wallet and returns a flow of the list */
+fun UserWalletsListRepository.loadAndGet(): Flow<List<UserWallet>> = flow {
+    load()
+    userWallets.collect {
+        emit(requireNotNull(it))
+    }
 }

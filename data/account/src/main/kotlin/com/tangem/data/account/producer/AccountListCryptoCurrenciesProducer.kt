@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
