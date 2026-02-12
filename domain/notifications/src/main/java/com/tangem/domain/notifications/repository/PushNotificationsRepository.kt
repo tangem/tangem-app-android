@@ -1,6 +1,7 @@
 package com.tangem.domain.notifications.repository
 
 import arrow.core.Either
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 import com.tangem.domain.notifications.models.NotificationsError
@@ -20,4 +21,6 @@ interface PushNotificationsRepository {
 
     @Throws
     suspend fun getEligibleNetworks(): List<NotificationsEligibleNetwork>
+
+    suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean
 }

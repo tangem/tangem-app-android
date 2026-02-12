@@ -15,10 +15,14 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.notifications.models.ApplicationId
 import com.tangem.domain.notifications.models.NotificationsError
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
+import com.tangem.datasource.local.preferences.utils.getObjectMap
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import kotlinx.coroutines.withContext
@@ -96,4 +100,9 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
             NotificationsEligibleNetworkConverter.convert(it)
         }
     }
+
+    override suspend fun isNotificationsEnabled(userWalletId: UserWalletId): Boolean =
+        appPreferencesStore.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+            .map { it[userWalletId.stringValue] == true }
+            .firstOrNull() == true
 }
