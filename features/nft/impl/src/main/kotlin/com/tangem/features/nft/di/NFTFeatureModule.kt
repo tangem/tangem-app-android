@@ -1,9 +1,6 @@
 package com.tangem.features.nft.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.nft.DefaultNFTFeatureToggles
-import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.common.DefaultNFTComponent
 import com.tangem.features.nft.component.*
@@ -18,7 +15,6 @@ import com.tangem.features.nft.receive.model.NFTReceiveModel
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ClassKey
@@ -27,18 +23,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object NFTFeatureModule {
-
-    @Provides
-    @Singleton
-    fun provideFeatureToggles(featureTogglesManager: FeatureTogglesManager): NFTFeatureToggles {
-        return DefaultNFTFeatureToggles(featureTogglesManager)
-    }
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-internal interface NFTFeatureModuleBinds {
+internal interface NFTFeatureModule {
     @Binds
     @Singleton
     fun bindNFTDetailsInfoComponentFactory(
