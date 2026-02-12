@@ -12,6 +12,7 @@ internal data class EarnUM(
     val onBackClick: () -> Unit,
     val onNetworkFilterClick: () -> Unit,
     val onTypeFilterClick: () -> Unit,
+    val onSliderScroll: () -> Unit,
 ) {
 
     val selectedTypeFilterText: TextReference
