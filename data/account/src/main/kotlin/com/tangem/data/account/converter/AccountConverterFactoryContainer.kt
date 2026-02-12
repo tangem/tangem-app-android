@@ -1,6 +1,7 @@
 package com.tangem.data.account.converter
 
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
 

@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi

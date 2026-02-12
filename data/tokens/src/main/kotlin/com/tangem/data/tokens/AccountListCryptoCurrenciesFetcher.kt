@@ -5,6 +5,7 @@ import arrow.core.right
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset

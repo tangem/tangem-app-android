@@ -17,6 +17,8 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.express.ExpressServiceFetcher
