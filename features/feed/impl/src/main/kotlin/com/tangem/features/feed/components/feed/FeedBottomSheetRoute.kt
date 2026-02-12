@@ -6,7 +6,10 @@ import com.tangem.features.feed.components.market.details.portfolio.add.AddToPor
 
 internal sealed interface FeedBottomSheetRoute {
 
-    data class AddToPortfolio(val tokenToAdd: AddToPortfolioPreselectedDataComponent.TokenToAdd) : FeedBottomSheetRoute
+    data class AddToPortfolio(
+        val tokenToAdd: AddToPortfolioPreselectedDataComponent.TokenToAdd,
+        val source: String,
+    ) : FeedBottomSheetRoute
 
     data class NetworkFilter(val params: EarnNetworkFilterComponent.Params) : FeedBottomSheetRoute
 

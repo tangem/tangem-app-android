@@ -77,6 +77,7 @@ internal class DefaultEarnComponent(
                 params = AddToPortfolioPreselectedDataComponent.Params(
                     tokenToAdd = config.tokenToAdd,
                     callback = earnModel.addToPortfolioCallback,
+                    analyticsParams = AddToPortfolioPreselectedDataComponent.AnalyticsParams(config.source),
                 ),
             )
         }
