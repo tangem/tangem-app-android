@@ -5,12 +5,12 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.domain.card.common.TapWorkarounds.hasOldStyleDerivation
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -22,7 +22,7 @@ internal data class BlockchainToDerive(
 
 // FIXME: May be move to DI, currently unnecessary
 internal class DerivationsFinder(
-    private val userTokensResponseStore: UserTokensResponseStore,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -54,19 +54,19 @@ internal class DerivationsFinder(
         }
 
         // pay attention to this
-        if (!card.hasOldStyleDerivation) {
-            blockchains.removeUnnecessaryBlockchains()
+        return if (!card.hasOldStyleDerivation) {
+            blockchains.removeUnnecessaryBlockchains(derivationStyle)
+        } else {
+            blockchains
         }
-
-        return blockchains
     }
 
     private suspend fun getBlockchains(userWalletId: UserWalletId): MutableSet<BlockchainToDerive> {
-        val responseTokens = userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)?.tokens
-            ?: return hashSetOf()
-
-        return responseTokens.asSequence()
-            .filter { it.contractAddress == null }
+        return walletAccountsFetcher.getSaved(userWalletId)?.accounts.orEmpty()
+            .flatMap { accountDTO ->
+                accountDTO.tokens.orEmpty()
+                    .filter { it.contractAddress == null }
+            }
             .mapNotNull { coin ->
                 val blockchain = Blockchain.fromNetworkId(coin.networkId) ?: return@mapNotNull null
                 val derivationPath = coin.derivationPath?.let(::DerivationPath)
@@ -90,22 +90,29 @@ internal class DerivationsFinder(
 }
 
 private fun MutableSet<BlockchainToDerive>.addEthereumBlockchains(derivationStyle: DerivationStyle?) {
-    val ethereumBlockchains = setOf(Blockchain.Ethereum, Blockchain.EthereumTestnet)
+    val ethereumBlockchains = setOf(Blockchain.Ethereum)
         .mapToBlockchainsWithDerivations(derivationStyle)
 
     addAll(ethereumBlockchains)
 }
 
-private fun MutableSet<BlockchainToDerive>.removeUnnecessaryBlockchains() {
-    val unnecessaryBlockchains = listOf(
-        Blockchain.BSC, Blockchain.BSCTestnet,
-        Blockchain.Polygon, Blockchain.PolygonTestnet,
-        Blockchain.RSK,
-        Blockchain.Fantom, Blockchain.FantomTestnet,
-        Blockchain.Avalanche, Blockchain.AvalancheTestnet,
+private fun Set<BlockchainToDerive>.removeUnnecessaryBlockchains(
+    derivationStyle: DerivationStyle?,
+): Set<BlockchainToDerive> {
+    val defaultEthereum = BlockchainToDerive(
+        blockchain = Blockchain.Ethereum,
+        derivationPath = Blockchain.Ethereum.derivationPath(derivationStyle),
     )
 
-    removeAll { it.blockchain in unnecessaryBlockchains }
+    val addedEthereum = this.firstOrNull { it == defaultEthereum }
+
+    return if (addedEthereum != null) {
+        filterNot { it.derivationPath == defaultEthereum.derivationPath && it.blockchain != Blockchain.Ethereum }
+    } else {
+        // Impossible case because Ethereum was added at the last stage
+        distinctBy(BlockchainToDerive::derivationPath)
+    }
+        .toSet()
 }
 
 private fun MutableSet<BlockchainToDerive>.addSecondCardanoDerivationIfPresent() {
