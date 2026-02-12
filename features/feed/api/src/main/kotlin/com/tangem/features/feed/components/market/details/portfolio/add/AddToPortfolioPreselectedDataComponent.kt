@@ -16,7 +16,10 @@ interface AddToPortfolioPreselectedDataComponent : ComposableBottomSheetComponen
     data class Params(
         val tokenToAdd: TokenToAdd,
         val callback: Callback,
+        val analyticsParams: AnalyticsParams,
     )
+
+    data class AnalyticsParams(val source: String)
 
     interface Callback {
         fun onDismiss()
