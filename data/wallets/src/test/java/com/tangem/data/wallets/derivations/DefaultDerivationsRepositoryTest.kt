@@ -12,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -51,15 +52,21 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `error if userWalletId not found`() = runTest {
         val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
-        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } throws IllegalStateException()
+        val userWalletsFlow = MutableStateFlow<List<UserWallet>?>(null)
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         runCatching {
             repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = currencies)
         }
             .onSuccess { error("Should throws exception") }
-            .onFailure { Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java) }
+            .onFailure {
+                Truth.assertThat(it).isInstanceOf(IllegalArgumentException::class.java)
+                Truth.assertThat(it).hasMessageThat()
+                    .isEqualTo("Unable to find user wallet with provided ID: $defaultUserWalletId")
+            }
 
-        coVerify(exactly = 1) { userWalletsListRepository.getSyncStrict(defaultUserWalletId) }
+        coVerify(exactly = 1) { userWalletsListRepository.userWallets }
         coVerify(inverse = true) {
             coldDerivationsRepository.derivePublicKeysByNetworks(any(), any())
             userWalletsListRepository.saveWithoutLock(any(), any())
@@ -71,7 +78,7 @@ internal class DefaultDerivationsRepositoryTest {
         repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = emptyList())
 
         coVerify(inverse = true) {
-            userWalletsListRepository.getSyncStrict(any())
+            userWalletsListRepository.userWallets
             coldDerivationsRepository.derivePublicKeysByNetworks(any(), any())
             userWalletsListRepository.saveWithoutLock(any(), any())
         }
@@ -80,8 +87,10 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `error if coldDerivationsRepository throws exception`() = runTest {
         val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+        val userWalletsFlow = MutableStateFlow(listOf(defaultUserWallet))
 
-        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } returns defaultUserWallet
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
+
         coEvery {
             coldDerivationsRepository.derivePublicKeysByNetworks(
                 userWallet = defaultUserWallet,
@@ -96,7 +105,7 @@ internal class DefaultDerivationsRepositoryTest {
             .onFailure { Truth.assertThat(it).isInstanceOf(IllegalStateException::class.java) }
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(defaultUserWalletId)
+            userWalletsListRepository.userWallets
             coldDerivationsRepository.derivePublicKeysByNetworks(
                 userWallet = defaultUserWallet,
                 networks = currencies.map(CryptoCurrency.Coin::network),
@@ -109,9 +118,11 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `success case`() = runTest {
         val currencies = MockCryptoCurrencyFactory(defaultUserWallet).ethereum.let(::listOf)
+        val userWalletsFlow = MutableStateFlow(listOf(defaultUserWallet))
         val updatedWallet = defaultUserWallet.copy(cardsInWallet = setOf("AC01"))
 
-        coEvery { userWalletsListRepository.getSyncStrict(defaultUserWalletId) } returns defaultUserWallet
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
+
         coEvery {
             coldDerivationsRepository.derivePublicKeysByNetworks(
                 userWallet = defaultUserWallet,
@@ -125,7 +136,7 @@ internal class DefaultDerivationsRepositoryTest {
         repository.derivePublicKeys(userWalletId = defaultUserWalletId, currencies = currencies)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(defaultUserWalletId)
+            userWalletsListRepository.userWallets
             coldDerivationsRepository.derivePublicKeysByNetworks(
                 userWallet = defaultUserWallet,
                 networks = currencies.map(CryptoCurrency.Coin::network),
