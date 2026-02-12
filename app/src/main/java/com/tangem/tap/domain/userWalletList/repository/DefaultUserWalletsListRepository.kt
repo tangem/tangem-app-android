@@ -38,9 +38,7 @@ import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -68,14 +66,6 @@ internal class DefaultUserWalletsListRepository(
     override val selectedUserWallet = MutableStateFlow<UserWallet?>(null)
 
     private val mutex = Mutex()
-
-    override fun getSyncOrNull(id: UserWalletId): UserWallet? {
-        return userWallets.value?.find { it.walletId == id }
-    }
-
-    override fun getSyncStrict(id: UserWalletId): UserWallet {
-        return requireNotNull(getSyncOrNull(id)) { "Unable to find user wallet with provided ID: $id" }
-    }
 
     override suspend fun load() {
         mutex.withLock {
@@ -108,13 +98,6 @@ internal class DefaultUserWalletsListRepository(
                         loadedWallets
                     }
                 }
-        }
-    }
-
-    override fun loadAndGet(): Flow<List<UserWallet>> = flow {
-        load()
-        userWallets.collect {
-            emit(requireNotNull(it))
         }
     }
 
