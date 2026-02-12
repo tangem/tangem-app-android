@@ -437,7 +437,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val config = TokenReceiveConfig(
-            shouldShowWarning = false,
+            shouldShowWarning = true,
             cryptoCurrency = data.currency,
             userWalletId = data.walletId,
             showMemoDisclaimer = false,
