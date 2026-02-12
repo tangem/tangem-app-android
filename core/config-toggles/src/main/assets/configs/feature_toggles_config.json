@@ -77,6 +77,6 @@
     },
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
-        "version": "undefined"
+        "version": "5.34"
     }
 ]
