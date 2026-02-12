@@ -28,9 +28,8 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.rows.RowContentContainer
 import com.tangem.core.ui.components.rows.RowText
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -106,7 +105,11 @@ private fun LazyListScope.allMyNetworksList(
             showDivider = index != allMyNetworks.lastIndex,
         ) {
             InputRowChecked(
-                text = item.text,
+                text = when (item) {
+                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                    is EarnFilterNetworkUM.Network -> TextReference.Str(item.text)
+                },
                 checked = item.isSelected,
             )
         }
@@ -170,13 +173,13 @@ private fun LazyListScope.specificNetworksList(
                     Image(
                         modifier = Modifier.size(22.dp),
                         imageVector = ImageVector.vectorResource(item.iconRes),
-                        contentDescription = item.symbol.resolveReference(),
+                        contentDescription = item.symbol,
                     )
                 },
                 text = {
                     RowText(
-                        mainText = item.text.resolveReference(),
-                        secondText = item.symbol.resolveReference(),
+                        mainText = item.text,
+                        secondText = item.symbol,
                         accentMainText = true,
                         accentSecondText = false,
                     )
@@ -208,30 +211,20 @@ private fun Preview() {
                     isShown = true,
                     onDismissRequest = {},
                     content = EarnFilterByNetworkBottomSheetContentUM(
-                        selectedNetwork = EarnFilterNetworkUM.AllNetworks(
-                            text = resourceReference(R.string.earn_filter_all_networks),
-                            isSelected = true,
-                        ),
                         networks = persistentListOf(
-                            EarnFilterNetworkUM.AllNetworks(
-                                text = resourceReference(R.string.earn_filter_all_networks),
-                                isSelected = true,
-                            ),
-                            EarnFilterNetworkUM.MyNetworks(
-                                text = stringReference("My network"),
-                                isSelected = false,
-                            ),
+                            EarnFilterNetworkUM.AllNetworks(isSelected = true),
+                            EarnFilterNetworkUM.MyNetworks(isSelected = false),
                             EarnFilterNetworkUM.Network(
                                 id = "ethereum",
-                                text = stringReference("Ethereum"),
-                                symbol = stringReference("ETH"),
+                                text = "Ethereum",
+                                symbol = "ETH",
                                 iconRes = R.drawable.img_btc_22,
                                 isSelected = false,
                             ),
                             EarnFilterNetworkUM.Network(
                                 id = "polygon",
-                                text = stringReference("Polygon"),
-                                symbol = stringReference("MATIC"),
+                                text = "Polygon",
+                                symbol = "MATIC",
                                 iconRes = R.drawable.img_btc_22,
                                 isSelected = false,
                             ),

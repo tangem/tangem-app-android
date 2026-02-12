@@ -5,14 +5,14 @@ import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.common.R
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.earn.model.EarnFilter
+import com.tangem.domain.earn.model.EarnFilterNetwork
+import com.tangem.domain.earn.model.EarnFilterType
 import com.tangem.domain.earn.usecase.*
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -20,17 +20,26 @@ import com.tangem.domain.models.earn.EarnNetworks
 import com.tangem.domain.models.earn.EarnTokenWithCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
-import com.tangem.features.feed.components.feed.FeedPortfolioRoute
+import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
+import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
+import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkConverter
+import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConverter
+import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeConverter
+import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeUMConverter
 import com.tangem.features.feed.model.earn.state.EarnStateController
-import com.tangem.features.feed.model.earn.state.converter.EarnNetworksConverter
-import com.tangem.features.feed.model.earn.state.transformers.*
+import com.tangem.features.feed.model.earn.state.transformers.EarnFilterSelectedStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.UpdateBestOpportunitiesStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.UpdateEarnUMInitialStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateTransformer
 import com.tangem.features.feed.model.earn.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.model.earn.statemanager.EarnListStateManager
-import com.tangem.features.feed.ui.earn.state.*
+import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
+import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
+import com.tangem.features.feed.ui.earn.state.EarnUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -46,13 +55,14 @@ internal class EarnModel @Inject constructor(
     private val getEarnTokensBatchFlowUseCase: GetEarnTokensBatchFlowUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
+    private val getEarnFilterUseCase: GetEarnFilterUseCase,
+    private val setEarnFilterUseCase: SetEarnFilterUseCase,
     private val appRouter: AppRouter,
     private val stateController: EarnStateController,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultEarnComponent.Params>()
     private val earnNetworks = MutableStateFlow<EarnNetworks>(Either.Right(emptyList()))
-    private val earnNetworksConverter: EarnNetworksConverter by lazy { EarnNetworksConverter() }
     private val earnListConfigProvider = Provider {
         createEarnTokensListConfig(
             selectedTypeFilter = stateController.value.selectedTypeFilter,
@@ -61,17 +71,15 @@ internal class EarnModel @Inject constructor(
         )
     }
 
-    private val batchFlowManager by lazy {
-        EarnListBatchFlowManager(
-            getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
-            configProvider = earnListConfigProvider,
-            onItemClick = ::onEarnTokenClick,
-            modelScope = modelScope,
-            dispatchers = dispatchers,
-        )
-    }
+    private val batchFlowManager = EarnListBatchFlowManager(
+        getEarnTokensBatchFlowUseCase = getEarnTokensBatchFlowUseCase,
+        configProvider = earnListConfigProvider,
+        onItemClick = ::onEarnTokenClick,
+        modelScope = modelScope,
+        dispatchers = dispatchers,
+    )
 
-    val bottomSheetNavigation: SlotNavigation<FeedPortfolioRoute> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
 
     val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
@@ -93,6 +101,7 @@ internal class EarnModel @Inject constructor(
         updateInitialState()
         fetchEarnNetworks()
         fetchTopEarnTokens()
+        subscribeOnStoredFilters()
         subscribeOnNetworks()
         subscribeOnBatchFlow()
         subscribeToMostlyUsed()
@@ -117,9 +126,7 @@ internal class EarnModel @Inject constructor(
             )
         }.onEach { bestOpportunitiesState ->
             stateController.update(UpdateBestOpportunitiesStateTransformer(bestOpportunitiesState))
-        }
-            .onStart { batchFlowManager.reload() }
-            .launchIn(modelScope)
+        }.launchIn(modelScope)
     }
 
     private fun subscribeToMostlyUsed() {
@@ -142,6 +149,23 @@ internal class EarnModel @Inject constructor(
         }
     }
 
+    private fun subscribeOnStoredFilters() {
+        modelScope.launch(dispatchers.default) {
+            getEarnFilterUseCase()
+                .collect { filter ->
+                    val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
+                    val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
+                    stateController.update(
+                        EarnFilterSelectedStateTransformer(
+                            filterType = typeFilterUM,
+                            filterNetwork = networkFilterUM,
+                        ),
+                    )
+                    batchFlowManager.reload()
+                }
+        }
+    }
+
     private fun fetchTopEarnTokens() {
         modelScope.launch(dispatchers.default) {
             fetchTopEarnTokensUseCase()
@@ -154,142 +178,73 @@ internal class EarnModel @Inject constructor(
         }
     }
 
-    private fun createTypeFilterBottomSheetConfig(
-        selectedOption: EarnFilterTypeUM,
-        isShown: Boolean = false,
-    ): TangemBottomSheetConfig {
-        return TangemBottomSheetConfig(
-            isShown = isShown,
-            onDismissRequest = ::hideTypeFilterBottomSheet,
-            content = EarnFilterByTypeBottomSheetContentUM(
-                selectedOption = selectedOption,
-                onOptionClick = ::onTypeFilterOptionSelected,
-            ),
-        )
-    }
-
-    private fun createNetworkFilterBottomSheetConfig(
-        selectedNetwork: EarnFilterNetworkUM,
-        isShown: Boolean = false,
-    ): TangemBottomSheetConfig {
-        val filters = buildList {
-            add(
-                EarnFilterNetworkUM.AllNetworks(
-                    text = TextReference.Res(R.string.earn_filter_all_networks),
-                    isSelected = false,
-                ),
-            )
-            add(
-                EarnFilterNetworkUM.MyNetworks(
-                    text = TextReference.Res(R.string.earn_filter_my_networks),
-                    isSelected = false,
-                ),
-            )
-            earnNetworks.value.onRight { networks ->
-                addAll(networks.map(earnNetworksConverter::convert))
-            }
-        }
-
-        val updatedNetworks = filters.map { filter ->
-            val shouldBeSelected = when (filter) {
-                is EarnFilterNetworkUM.AllNetworks -> selectedNetwork is EarnFilterNetworkUM.AllNetworks
-                is EarnFilterNetworkUM.MyNetworks -> selectedNetwork is EarnFilterNetworkUM.MyNetworks
-                is EarnFilterNetworkUM.Network ->
-                    selectedNetwork is EarnFilterNetworkUM.Network && filter.id == selectedNetwork.id
-            }
-
-            if (filter.isSelected != shouldBeSelected) {
-                when (filter) {
-                    is EarnFilterNetworkUM.AllNetworks -> filter.copy(isSelected = shouldBeSelected)
-                    is EarnFilterNetworkUM.MyNetworks -> filter.copy(isSelected = shouldBeSelected)
-                    is EarnFilterNetworkUM.Network -> filter.copy(isSelected = shouldBeSelected)
-                }
-            } else {
-                filter
-            }
-        }
-
-        return TangemBottomSheetConfig(
-            isShown = isShown,
-            onDismissRequest = ::hideNetworkFilterBottomSheet,
-            content = EarnFilterByNetworkBottomSheetContentUM(
-                selectedNetwork = selectedNetwork,
-                networks = persistentListOf(*updatedNetworks.toTypedArray()),
-                onOptionClick = ::onNetworkFilterOptionSelected,
-            ),
-        )
-    }
-
     /* start of clicks area */
     private fun onTypeFilterClick() {
-        stateController.update(
-            EarnTypeFilterStateTransformer(
-                shouldShow = true,
-                filterByTypeBottomSheetConfig = ::createTypeFilterBottomSheetConfig,
-            ),
-        )
-    }
-
-    private fun hideTypeFilterBottomSheet() {
-        stateController.update(
-            EarnTypeFilterStateTransformer(
-                shouldShow = false,
-                filterByTypeBottomSheetConfig = ::createTypeFilterBottomSheetConfig,
+        val currentState = state.value
+        bottomSheetNavigation.activate(
+            FeedBottomSheetRoute.TypeFilter(
+                params = EarnTypeFilterComponent.Params(
+                    selectedFilter = EarnFilterTypeUMConverter().convert(currentState.selectedTypeFilter),
+                    onFilterSelected = ::onTypeFilterOptionSelected,
+                    onDismiss = { bottomSheetNavigation.dismiss() },
+                ),
             ),
         )
     }
 
     private fun onNetworkFilterClick() {
-        stateController.update(
-            EarnNetworkFilterStateTransformer(
-                shouldShow = true,
-                filterByNetworkBottomSheetConfig = ::createNetworkFilterBottomSheetConfig,
+        bottomSheetNavigation.activate(
+            FeedBottomSheetRoute.NetworkFilter(
+                params = EarnNetworkFilterComponent.Params(
+                    allFilters = createNetworkFilters(),
+                    onFilterSelected = ::onNetworkFilterOptionSelected,
+                    onDismiss = { bottomSheetNavigation.dismiss() },
+                ),
             ),
         )
     }
 
-    private fun hideNetworkFilterBottomSheet() {
-        stateController.update(
-            EarnNetworkFilterStateTransformer(
-                shouldShow = false,
-                filterByNetworkBottomSheetConfig = ::createNetworkFilterBottomSheetConfig,
-            ),
-        )
-    }
-
-    private fun onTypeFilterOptionSelected(type: EarnFilterTypeUM) {
-        stateController.update(
-            EarnTypeFilterSelectedStateTransformer(
-                filter = type,
-                filterByTypeBottomSheetConfig = ::createTypeFilterBottomSheetConfig,
-            ),
-        )
-        batchFlowManager.reload()
-    }
-
-    private fun onNetworkFilterOptionSelected(network: EarnFilterNetworkUM) {
-        stateController.update(
-            EarnNetworkFilterSelectedStateTransformer(
-                filter = network,
-                filterByNetworkBottomSheetConfig = ::createNetworkFilterBottomSheetConfig,
-            ),
-        )
-        batchFlowManager.reload()
+    private fun createNetworkFilters(): List<EarnFilterNetwork> {
+        val selectedFilter = state.value.selectedNetworkFilter
+        return buildList {
+            add(
+                EarnFilterNetwork.AllNetworks(
+                    isSelected = selectedFilter is EarnFilterNetworkUM.AllNetworks,
+                ),
+            )
+            add(
+                EarnFilterNetwork.MyNetworks(
+                    isSelected = selectedFilter is EarnFilterNetworkUM.MyNetworks,
+                ),
+            )
+            earnNetworks.value.onRight { networks ->
+                networks.mapTo(this) { network ->
+                    EarnFilterNetwork.Specific(
+                        id = network.networkId,
+                        isSelected = selectedFilter is EarnFilterNetworkUM.Network &&
+                            selectedFilter.id == network.networkId,
+                        symbol = network.symbol,
+                        fullName = network.fullName,
+                    )
+                }
+            }
+        }
     }
 
     private fun onClearFiltersClick() {
-        stateController.update(
-            ClearEarnUMFilterStateTransformer(
-                filterByTypeBottomSheetConfig = ::createTypeFilterBottomSheetConfig,
-                filterByNetworkBottomSheetConfig = ::createNetworkFilterBottomSheetConfig,
-            ),
-        )
-        batchFlowManager.reload()
+        modelScope.launch(dispatchers.default) {
+            setEarnFilterUseCase(
+                EarnFilter(
+                    earnFilterNetwork = EarnFilterNetwork.AllNetworks(isSelected = true),
+                    earnFilterType = EarnFilterType.ALL,
+                ),
+            )
+        }
     }
 
     private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency) {
         bottomSheetNavigation.activate(
-            FeedPortfolioRoute.AddToPortfolio(
+            FeedBottomSheetRoute.AddToPortfolio(
                 tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
                     network = TokenMarketInfo.Network(
                         networkId = earnTokenWithCurrency.earnToken.networkId,
@@ -304,6 +259,30 @@ internal class EarnModel @Inject constructor(
             ),
         )
     }
+
+    private fun onTypeFilterOptionSelected(type: EarnFilterType) {
+        modelScope.launch(dispatchers.default) {
+            setEarnFilterUseCase(
+                EarnFilter(
+                    earnFilterNetwork = EarnFilterNetworkUMConverter().convert(state.value.selectedNetworkFilter),
+                    earnFilterType = type,
+                ),
+            )
+            bottomSheetNavigation.dismiss()
+        }
+    }
+
+    private fun onNetworkFilterOptionSelected(filter: EarnFilterNetwork) {
+        modelScope.launch(dispatchers.default) {
+            setEarnFilterUseCase(
+                EarnFilter(
+                    earnFilterNetwork = filter,
+                    earnFilterType = EarnFilterTypeUMConverter().convert(state.value.selectedTypeFilter),
+                ),
+            )
+        }
+        bottomSheetNavigation.dismiss()
+    }
     /* end of clicks area */
 
     private fun updateInitialState() {
@@ -311,10 +290,6 @@ internal class EarnModel @Inject constructor(
             UpdateEarnUMInitialStateTransformer(
                 onBackClick = params.onBackClick,
                 onNetworkFilterClick = ::onNetworkFilterClick,
-                filterByTypeBottomSheetConfig = createTypeFilterBottomSheetConfig(state.value.selectedTypeFilter),
-                filterByNetworkBottomSheetConfig = createNetworkFilterBottomSheetConfig(
-                    selectedNetwork = state.value.selectedNetworkFilter,
-                ),
                 onTypeFilterClick = ::onTypeFilterClick,
             ),
         )
