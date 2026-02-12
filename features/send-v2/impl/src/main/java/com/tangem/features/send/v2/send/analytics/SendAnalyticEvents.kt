@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TOKEN
@@ -29,14 +30,16 @@ internal sealed class SendAnalyticEvents(
         val isNonceNotEmpty: Boolean,
         private val ensStatus: AnalyticsParam.EmptyFull,
         private val feeToken: String,
-        val derivationIndex: Int?,
+        private val fromDerivationIndex: Int?,
+        private val toDerivationIndex: Int?,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = buildMap {
             put(TOKEN_PARAM, token)
             put(FEE_TYPE, feeType.value)
             put(BLOCKCHAIN, blockchain)
-            if (derivationIndex != null) put(ACCOUNT_DERIVATION_FROM, derivationIndex.toString())
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
             put(NONCE, isNonceNotEmpty.toString().capitalize())
             val ensAddress = when (ensStatus) {
                 AnalyticsParam.EmptyFull.Empty -> false.toString().capitalize()
