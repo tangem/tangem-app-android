@@ -55,9 +55,9 @@ internal class WalletAccountListFlowFactory @Inject constructor(
         val isSingleWalletWithToken = userWallet.requireColdWallet().cardTypesResolver.isSingleWalletWithToken()
 
         val currencies = if (isSingleWalletWithToken) {
-            cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = userWallet).toSet()
+            cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = userWallet)
         } else {
-            setOf(cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet))
+            listOf(cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet))
         }
 
         return AccountList.empty(userWalletId = userWallet.walletId, cryptoCurrencies = currencies)
