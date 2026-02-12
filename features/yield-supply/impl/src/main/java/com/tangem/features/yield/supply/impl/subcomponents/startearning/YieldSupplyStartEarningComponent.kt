@@ -26,7 +26,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.core.ui.R as CoreR
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -114,10 +113,7 @@ internal class YieldSupplyStartEarningComponent(
 
         if (state.isHoldToConfirmEnabled) {
             HoldToConfirmButton(
-                text = stringResourceSafe(
-                    CoreR.string.common_hold_to,
-                    stringResourceSafe(R.string.yield_module_start_earning),
-                ),
+                text = stringResourceSafe(R.string.yield_module_start_earning),
                 onConfirm = model::onClick,
                 enabled = state.isPrimaryButtonEnabled,
                 isLoading = state.isTransactionSending,
