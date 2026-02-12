@@ -222,7 +222,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             val network = currenciesToAdd.values
                 .flatten()
                 .toSet()
-                .associate { it.backendId to null }
+                .associate { network -> network.backendId to network.derivationPath.value }
             val showTangemIcon = useCasesFacade.needColdWalletInteraction(network = network)
             state.update { state ->
                 state.copy(
