@@ -29,10 +29,7 @@ import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
-import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State
-import com.tangem.core.ui.components.token.state.TokenItemState.PromoBannerState
-import com.tangem.core.ui.components.token.state.TokenItemState.TitleState
+import com.tangem.core.ui.components.token.state.TokenItemState.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
@@ -519,15 +516,14 @@ private fun calculateLayoutHeight(
         is TokenItemState.Content,
         is TokenItemState.Loading,
         is TokenItemState.Locked,
-        -> {
-            firstColumnHeight = 2 * layoutPadding + title.height + (cryptoAmount?.height ?: 0)
-            secondColumnHeight = 2 * layoutPadding + (fiatAmount?.height ?: 0) + (priceChange?.height ?: 0)
-        }
-        is TokenItemState.Draggable,
         is TokenItemState.NoAddress,
         is TokenItemState.Unreachable,
         -> {
-            firstColumnHeight = minLayoutHeight
+            firstColumnHeight = 2 * layoutPadding + title.height + (priceChange?.height ?: 0)
+            secondColumnHeight = 2 * layoutPadding + (fiatAmount?.height ?: 0) + (cryptoAmount?.height ?: 0)
+        }
+        is TokenItemState.Draggable -> {
+            firstColumnHeight = 2 * layoutPadding + title.height + (cryptoAmount?.height ?: 0)
             secondColumnHeight = minLayoutHeight
         }
     }
@@ -536,6 +532,7 @@ private fun calculateLayoutHeight(
 }
 
 @Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, fontScale = 2f)
 @Composable
 private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
     TangemThemePreview(isDark = false) {
@@ -679,6 +676,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         ),
         AccountItemPreviewData.accountItem,
         AccountItemPreviewData.accountItem.copy(iconState = AccountItemPreviewData.accountLetterIcon),
+        AccountItemPreviewData.accountItemUnreachable,
     ),
 ) {
 
@@ -764,6 +762,21 @@ object AccountItemPreviewData {
             subtitle2State = Subtitle2State.PriceChangeContent(
                 priceChangePercent = "0,43 %",
                 type = PriceChangeType.UP,
+            ),
+            onItemClick = {},
+            onItemLongClick = {},
+        )
+
+    val accountItemUnreachable: TokenItemState.Unreachable
+        get() = TokenItemState.Unreachable(
+            id = UUID.randomUUID().toString(),
+            iconState = accountResIcon,
+            titleState = TokenItemState.TitleState.Content(
+                text = stringReference(value = "Portfolio"),
+            ),
+            subtitleState = TokenItemState.SubtitleState.TextContent(
+                value = stringReference("24 tokens"),
+                isAvailable = false,
             ),
             onItemClick = {},
             onItemLongClick = {},
