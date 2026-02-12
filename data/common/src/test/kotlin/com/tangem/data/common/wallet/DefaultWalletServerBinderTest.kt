@@ -14,6 +14,7 @@ import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -65,7 +66,9 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Success(Unit)
 
-            coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+            val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
             coEvery { appsFlyerStore.get() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
@@ -74,7 +77,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                userWalletsListRepository.getSyncOrNull(userWalletId)
+                userWalletsListRepository.userWallets
                 appsFlyerStore.get()
                 tangemTechApi.createWallet(requestBody)
             }
@@ -82,15 +85,15 @@ internal class DefaultWalletServerBinderTest {
 
         @Test
         fun `bind will skipped if userWalletsListRepository returns null`() = runTest {
-            coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns null
+            val userWalletsFlow = MutableStateFlow<List<UserWallet>?>(null)
+
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
             val actual = binder.bind(userWalletId = userWalletId)
 
             Truth.assertThat(actual).isEqualTo(null)
 
-            coVerifyOrder {
-                userWalletsListRepository.getSyncOrNull(userWalletId)
-            }
+            coVerifyOrder { userWalletsListRepository.userWallets }
 
             coVerify(inverse = true) {
                 appsFlyerStore.get()
@@ -107,7 +110,9 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Success(Unit)
 
-            coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+            val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
             coEvery { appsFlyerStore.get() } returns null
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
@@ -116,7 +121,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                userWalletsListRepository.getSyncOrNull(userWalletId)
+                userWalletsListRepository.userWallets
                 appsFlyerStore.get()
                 tangemTechApi.createWallet(requestBody)
             }
@@ -133,7 +138,9 @@ internal class DefaultWalletServerBinderTest {
             )
             val apiResponse = ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<Unit>
 
-            coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+            val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
             coEvery { appsFlyerStore.get() } returns conversionData
             coEvery { tangemTechApi.createWallet(requestBody) } returns apiResponse
 
@@ -142,7 +149,7 @@ internal class DefaultWalletServerBinderTest {
             Truth.assertThat(actual).isEqualTo(apiResponse)
 
             coVerifyOrder {
-                userWalletsListRepository.getSyncOrNull(userWalletId)
+                userWalletsListRepository.userWallets
                 appsFlyerStore.get()
                 tangemTechApi.createWallet(requestBody)
             }
