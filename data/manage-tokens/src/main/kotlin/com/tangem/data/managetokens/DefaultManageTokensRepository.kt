@@ -27,6 +27,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.extensions.*
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
