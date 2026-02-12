@@ -4,7 +4,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -16,9 +18,10 @@ import javax.inject.Inject
 @ModelScoped
 internal class SendAnalyticHelper @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
 ) {
 
-    fun sendSuccessAnalytics(
+    suspend fun sendSuccessAnalytics(
         cryptoCurrency: CryptoCurrency,
         sendUM: SendUM,
         feeToken: CryptoCurrency,
@@ -28,11 +31,11 @@ internal class SendAnalyticHelper @Inject constructor(
         val feeSelectorUM = sendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
         val feeTokenSymbol = feeToken.symbol
-        val derivationIndex = when (account) {
-            is Account.CryptoPortfolio -> if (!account.isMainAccount) account.derivationIndex else null
-            is Account.Payment -> null
-            null -> null
-        }
+        val fromDerivationIndex = account?.derivationIndex?.value
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
+        val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
+            .getOrNull()?.account
+        val toDerivationIndex = destinationAccount?.derivationIndex?.value
         analyticsEventHandler.send(
             SendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
@@ -40,7 +43,8 @@ internal class SendAnalyticHelper @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
                 isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
                 ensStatus = getEnsStatus(sendUM),
-                derivationIndex = derivationIndex?.value,
+                fromDerivationIndex = fromDerivationIndex,
+                toDerivationIndex = toDerivationIndex,
                 feeToken = feeTokenSymbol,
             ),
         )
@@ -52,7 +56,7 @@ internal class SendAnalyticHelper @Inject constructor(
                     feeType = feeType,
                     feeToken = feeTokenSymbol,
                 ),
-                memoType = getSendTransactionMemoType(destinationUM?.memoTextField),
+                memoType = getSendTransactionMemoType(destinationUM.memoTextField),
             ),
         )
     }
