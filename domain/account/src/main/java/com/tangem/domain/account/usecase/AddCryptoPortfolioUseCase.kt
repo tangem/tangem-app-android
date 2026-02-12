@@ -81,7 +81,7 @@ class AddCryptoPortfolioUseCase(
             accountName = accountName,
             icon = icon,
             derivationIndex = derivationIndex,
-            cryptoCurrencies = emptySet(),
+            cryptoCurrencies = emptyList(),
         )
     }
 

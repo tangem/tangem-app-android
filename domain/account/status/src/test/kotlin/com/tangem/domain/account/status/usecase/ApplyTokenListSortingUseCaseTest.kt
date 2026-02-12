@@ -65,7 +65,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when getAccountListSync throws exception then error should be received`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptySet())
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptyList())
 
         val exception = IllegalStateException("No internet connection")
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } throws exception
@@ -92,7 +92,7 @@ internal class ApplyTokenListSortingUseCaseTest {
     @Test
     fun `when saveAccountsLocally throws exception then error should be received`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptySet())
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptyList())
 
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
@@ -114,14 +114,16 @@ internal class ApplyTokenListSortingUseCaseTest {
         coVerifyOrder {
             accountsCRUDRepository.getAccountListSync(userWalletId)
             accountsCRUDRepository.saveAccountsLocally(accountList)
-            accountsCRUDRepository.syncTokens(userWalletId = userWalletId)
+        }
+        coVerifyOrder(inverse = true) {
+            accountsCRUDRepository.syncTokens(userWalletId = any())
         }
     }
 
     @Test
     fun `when syncTokens throws exception then error should be received`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptySet())
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = emptyList())
 
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
@@ -156,13 +158,13 @@ internal class ApplyTokenListSortingUseCaseTest {
 
         val accountList = AccountList.empty(
             userWalletId = userWalletId,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         )
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
-        val sortedTokens = setOf(token2, token3, token1)
+        val sortedTokens = listOf(token2, token3, token1)
         val updatedAccountList = AccountList.empty(
             userWalletId = userWalletId,
             cryptoCurrencies = sortedTokens,
@@ -197,13 +199,13 @@ internal class ApplyTokenListSortingUseCaseTest {
 
         val accountList = AccountList.empty(
             userWalletId = userWalletId,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         )
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
-        val sortedTokens = setOf(token2, token3, token1)
+        val sortedTokens = listOf(token2, token3, token1)
         val updatedAccountList = AccountList.empty(
             userWalletId = userWalletId,
             cryptoCurrencies = sortedTokens,
@@ -238,13 +240,13 @@ internal class ApplyTokenListSortingUseCaseTest {
 
         val accountList = AccountList.empty(
             userWalletId = userWalletId,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         )
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
-        val sortedTokens = setOf(token2, token3, token1)
+        val sortedTokens = listOf(token2, token3, token1)
         val updatedAccountList = AccountList.empty(
             userWalletId = userWalletId,
             cryptoCurrencies = sortedTokens,
@@ -279,13 +281,13 @@ internal class ApplyTokenListSortingUseCaseTest {
 
         val accountList = AccountList.empty(
             userWalletId = userWalletId,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
             sortType = TokensSortType.BALANCE,
             groupType = TokensGroupType.NETWORK,
         )
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
 
-        val sortedTokens = setOf(token2, token3, token1)
+        val sortedTokens = listOf(token2, token3, token1)
         val updatedAccountList = AccountList.empty(
             userWalletId = userWalletId,
             cryptoCurrencies = sortedTokens,
@@ -323,13 +325,13 @@ internal class ApplyTokenListSortingUseCaseTest {
             name = "Account 1",
             icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
             derivationIndex = 1,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
         )
             .getOrNull()!!
 
         val accountList = (AccountList.empty(
             userWalletId = userWalletId,
-            cryptoCurrencies = setOf(token1, token2, token3),
+            cryptoCurrencies = listOf(token1, token2, token3),
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         ) + customAccount).getOrNull()!!
@@ -344,7 +346,7 @@ internal class ApplyTokenListSortingUseCaseTest {
         val updatedAccountList = AccountList(
             userWalletId = userWalletId,
             accounts = listOf(
-                accountList.mainAccount.copy(cryptoCurrencies = setOf(token3, token2, token1)),
+                accountList.mainAccount.copy(cryptoCurrencies = listOf(token3, token2, token1)),
                 customAccount, // unchanged due to error
             ),
             totalAccounts = accountList.totalAccounts,
