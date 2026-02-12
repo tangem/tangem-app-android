@@ -6,6 +6,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.BindWalletsByReferralCodeBody
+import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
@@ -21,6 +22,7 @@ internal class DefaultWalletsPromoRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val appsFlyerStore: AppsFlyerStore,
 ) : WalletsPromoRepository {
 
     override suspend fun bindRefcodeWithWallets(conversionData: AppsFlyerConversionData) = withContext(dispatchers.io) {
@@ -47,6 +49,10 @@ internal class DefaultWalletsPromoRepository(
         } else {
             Timber.i("retryBindRefcodeWithWallets: Binding data isn't required")
         }
+    }
+
+    override suspend fun getReferralCodeIfExists(): String? {
+        return appsFlyerStore.get()?.refcode
     }
 
     private suspend fun getSavedBindingData(): ReferralWalletsBindingData? {
