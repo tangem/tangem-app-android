@@ -17,6 +17,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -98,6 +99,10 @@ internal interface WalletWarningsClickIntents {
     fun onFinishWalletActivationClick(isBackupExists: Boolean)
 
     fun onYieldPromoTermsAndConditionsClick()
+
+    fun onUpgradeHotWalletClick(userWalletId: UserWalletId)
+
+    fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -130,6 +135,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
+    private val hotWalletRepository: HotWalletRepository,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -542,6 +548,34 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             ),
         )
         urlOpener.openUrl(YIELD_PROMO_TERMS_LINK)
+    }
+
+    override fun onUpgradeHotWalletClick(userWalletId: UserWalletId) {
+        modelScope.launch(dispatchers.main) {
+            val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
+            if (userWallet is UserWallet.Hot) {
+                hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, false)
+                hotWalletRepository.setShouldShowNextTimeUpgradeBanner(userWalletId, false)
+                appRouter.push(UpgradeWallet(userWalletId))
+            }
+        }
+    }
+
+    override fun onCloseUpgradeBannerClick(userWalletId: UserWalletId) {
+        modelScope.launch(dispatchers.main) {
+            val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
+            if (userWallet is UserWallet.Hot) {
+                val hasHadFirstTopUp = hotWalletRepository.hasHadFirstTopUp(userWalletId)
+                val currentTime = System.currentTimeMillis()
+
+                if (hasHadFirstTopUp) {
+                    hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, false)
+                    hotWalletRepository.setUpgradeBannerClosureTimestamp(userWalletId, currentTime)
+                } else {
+                    hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, true)
+                }
+            }
+        }
     }
 
     private companion object {
