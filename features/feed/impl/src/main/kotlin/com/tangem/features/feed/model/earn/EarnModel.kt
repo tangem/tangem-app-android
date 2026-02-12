@@ -7,9 +7,11 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnFilterNetwork
 import com.tangem.domain.earn.model.EarnFilterType
@@ -24,6 +26,7 @@ import com.tangem.features.feed.components.earn.EarnNetworkFilterComponent
 import com.tangem.features.feed.components.earn.EarnTypeFilterComponent
 import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeConverter
@@ -59,6 +62,7 @@ internal class EarnModel @Inject constructor(
     private val setEarnFilterUseCase: SetEarnFilterUseCase,
     private val appRouter: AppRouter,
     private val stateController: EarnStateController,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<DefaultEarnComponent.Params>()
@@ -115,6 +119,7 @@ internal class EarnModel @Inject constructor(
         ) { items, error, paginationStatus ->
             val hasActiveFilters = state.value.selectedTypeFilter != EarnFilterTypeUM.All ||
                 state.value.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
+            error?.let(::handleBestOpportunitiesErrorAnalytics)
             EarnListStateManager.calculateState(
                 items = items,
                 error = error,
@@ -242,7 +247,14 @@ internal class EarnModel @Inject constructor(
         }
     }
 
-    private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency) {
+    private fun onEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency, source: String) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.OpportunitySelected(
+                tokenSymbol = earnTokenWithCurrency.earnToken.tokenSymbol,
+                blockchain = earnTokenWithCurrency.cryptoCurrency.network.name,
+                source = source,
+            ),
+        )
         bottomSheetNavigation.activate(
             FeedBottomSheetRoute.AddToPortfolio(
                 tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
@@ -256,6 +268,7 @@ internal class EarnModel @Inject constructor(
                     name = earnTokenWithCurrency.earnToken.tokenName,
                     symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
                 ),
+                source = source,
             ),
         )
     }
@@ -283,14 +296,33 @@ internal class EarnModel @Inject constructor(
         }
         bottomSheetNavigation.dismiss()
     }
+
+    private fun onMostlyUsedScrolled() {
+        analyticsEventHandler.send(EarnAnalyticsEvent.MostlyUsedCarouselScrolled())
+    }
     /* end of clicks area */
 
     private fun updateInitialState() {
+        analyticsEventHandler.send(EarnAnalyticsEvent.EarnOpened())
         stateController.update(
             UpdateEarnUMInitialStateTransformer(
                 onBackClick = params.onBackClick,
                 onNetworkFilterClick = ::onNetworkFilterClick,
                 onTypeFilterClick = ::onTypeFilterClick,
+                onScroll = ::onMostlyUsedScrolled,
+            ),
+        )
+    }
+
+    private fun handleBestOpportunitiesErrorAnalytics(error: Throwable) {
+        val (code, message) = when (error) {
+            is ApiResponseError.HttpException -> error.code.numericCode to error.message.orEmpty()
+            else -> null to ""
+        }
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.BestOpportunitiesLoadError(
+                code = code,
+                message = message,
             ),
         )
     }
