@@ -1,6 +1,7 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.assertTextContainsSafe
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -374,7 +375,9 @@ class BuyTokenTest : BaseTestCase() {
                 onSelectProviderBottomSheet { paymentMethodIcon.assertIsDisplayed() }
             }
             step("Assert provider name: '$providerNameMercuryo'") {
-                onSelectProviderBottomSheet { providerName.assertTextContains(providerNameMercuryo) }
+                onSelectProviderBottomSheet {
+                    providerName.assertTextContainsSafe(text = providerNameMercuryo, substring = true)
+                }
             }
         }
     }
