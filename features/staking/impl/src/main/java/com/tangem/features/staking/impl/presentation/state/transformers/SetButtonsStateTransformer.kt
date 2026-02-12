@@ -7,7 +7,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
@@ -50,7 +49,7 @@ internal class SetButtonsStateTransformer(
         val isIconVisible = isConfirmation && !isCompleted && !isHoldToConfirm
         val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
-            textReference = prevState.getButtonText(isHoldToConfirm),
+            textReference = prevState.getButtonText(),
             iconRes = R.drawable.ic_tangem_24.takeIf { prevState.showColdWalletInteractionIcon },
             isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
@@ -92,7 +91,7 @@ internal class SetButtonsStateTransformer(
         else -> true
     }
 
-    private fun StakingUiState.getButtonText(isHoldToConfirm: Boolean): TextReference {
+    private fun StakingUiState.getButtonText(): TextReference {
         return when (currentStep) {
             StakingStep.InitialInfo -> {
                 val initialState = initialInfoState as? StakingStates.InitialInfoState.Data
@@ -103,7 +102,7 @@ internal class SetButtonsStateTransformer(
                 }
             }
             StakingStep.Success -> resourceReference(R.string.common_close)
-            StakingStep.Confirmation -> getConfirmationButtonText(isHoldToConfirm)
+            StakingStep.Confirmation -> getConfirmationButtonText()
             StakingStep.Validators -> resourceReference(R.string.common_continue)
             StakingStep.Amount,
             StakingStep.RestakeValidator,
@@ -112,7 +111,7 @@ internal class SetButtonsStateTransformer(
         }
     }
 
-    private fun StakingUiState.getConfirmationButtonText(isHoldToConfirm: Boolean): TextReference {
+    private fun StakingUiState.getConfirmationButtonText(): TextReference {
         val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
             ?: return resourceReference(R.string.common_close)
         val amountState = amountState as? AmountState.Data
@@ -125,10 +124,8 @@ internal class SetButtonsStateTransformer(
             }
         }
 
-        val baseText = getBaseActionText(confirmationState)
-            ?: return resourceReference(R.string.common_close)
-
-        return baseText.wrapWithHoldToIf(isHoldToConfirm)
+        return getBaseActionText(confirmationState)
+            ?: resourceReference(R.string.common_close)
     }
 
     private fun StakingUiState.getBaseActionText(
@@ -137,12 +134,6 @@ internal class SetButtonsStateTransformer(
         is StakingActionCommonType.Enter -> resourceReference(R.string.common_stake)
         is StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
         is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
-    }
-
-    private fun TextReference.wrapWithHoldToIf(condition: Boolean): TextReference = if (condition) {
-        resourceReference(id = R.string.common_hold_to, formatArgs = wrappedList(this))
-    } else {
-        this
     }
 
     private fun StakingUiState.onPrimaryClick() {
