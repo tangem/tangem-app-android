@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.res.ForceDarkTheme
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -39,6 +40,14 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         config = item.config,
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
+                }
+                is WalletNotification.UpgradeHotWalletPromo -> {
+                    ForceDarkTheme {
+                        Notification(
+                            config = item.config,
+                            modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        )
+                    }
                 }
                 else -> {
                     Notification(
