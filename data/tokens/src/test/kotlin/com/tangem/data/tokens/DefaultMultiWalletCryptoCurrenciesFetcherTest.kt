@@ -24,6 +24,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
 import com.tangem.test.core.assertEither
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -76,10 +77,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
 
         val mockUserWallet = mockk<UserWallet> {
+            every { walletId } returns userWalletId
             every { isMultiCurrency } returns false
         }
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         // Act
         val actual = fetcher(params)
@@ -90,7 +94,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         ).left()
         assertEither(actual, expected)
 
-        verifyOrder { userWalletsListRepository.getSyncStrict(id = params.userWalletId) }
+        verifyOrder { userWalletsListRepository.userWallets }
         coVerify(inverse = true) {
             userTokensResponseStore.getSyncOrNull(any())
         }
@@ -121,7 +125,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             ),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = params.userWalletId) } returns null
         every {
             cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(mockUserWallet)
@@ -145,7 +151,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.getSyncOrNull(userWalletId = params.userWalletId)
             cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(mockUserWallet)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
@@ -169,7 +175,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             data = defaultResponse.copy(group = UserTokensResponse.GroupType.TOKEN),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = params.userWalletId) } returns defaultResponse
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery {
@@ -191,7 +199,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.getSyncOrNull(userWalletId = params.userWalletId)
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
@@ -219,7 +227,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             data = defaultResponse.copy(group = UserTokensResponse.GroupType.TOKEN),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
@@ -240,7 +250,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
             userTokensSaver.store(userWalletId = params.userWalletId, response = apiResponse.data)
@@ -283,7 +293,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             ),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId) } returns null
         coEvery {
@@ -308,7 +320,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
@@ -337,7 +349,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             cause = ApiResponseError.TimeoutException(),
         ) as ApiResponse<UserTokensResponse>
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId) } returns defaultResponse
         coEvery {
@@ -359,7 +373,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = defaultResponse)
@@ -407,7 +421,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             ),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId) } returns null
         coEvery {
@@ -432,7 +448,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(mockUserWallet)
@@ -463,7 +479,9 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             ),
         ) as ApiResponse<UserTokensResponse>
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue) } returns apiResponse
         coEvery { userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId) } returns defaultResponse
         coEvery {
@@ -485,7 +503,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             userTokensSaver.push(userWalletId = params.userWalletId, response = defaultResponse)

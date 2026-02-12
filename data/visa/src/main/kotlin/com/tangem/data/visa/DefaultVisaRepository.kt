@@ -18,6 +18,7 @@ import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
