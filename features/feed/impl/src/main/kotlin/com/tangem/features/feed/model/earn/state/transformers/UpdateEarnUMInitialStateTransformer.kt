@@ -6,6 +6,7 @@ internal class UpdateEarnUMInitialStateTransformer(
     private val onBackClick: () -> Unit,
     private val onNetworkFilterClick: () -> Unit,
     private val onTypeFilterClick: () -> Unit,
+    private val onScroll: () -> Unit,
 ) : EarnUMTransformer {
 
     override fun transform(prevState: EarnUM): EarnUM {
@@ -13,6 +14,7 @@ internal class UpdateEarnUMInitialStateTransformer(
             onBackClick = onBackClick,
             onNetworkFilterClick = onNetworkFilterClick,
             onTypeFilterClick = onTypeFilterClick,
+            onSliderScroll = onScroll,
         )
     }
 }
