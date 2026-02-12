@@ -86,7 +86,7 @@ class ManageCryptoCurrenciesUseCase(
             }
 
             saveAccount(
-                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
+                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total),
             )
 
             derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
@@ -126,7 +126,7 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
+            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total))
 
             parallelUpdatingScope.launch {
                 syncTokens(userWalletId, modifiedCurrencyList)
