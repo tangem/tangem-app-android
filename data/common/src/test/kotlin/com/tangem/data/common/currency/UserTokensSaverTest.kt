@@ -14,6 +14,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -118,8 +119,10 @@ class UserTokensSaverTest {
             val error = ApiResponseError.UnknownException(Exception("API Error"))
             var onFailSendCalled = false
 
+            val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
             every { accountsFeatureToggles.isFeatureEnabled } returns true
-            coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+            every { userWalletsListRepository.userWallets } returns userWalletsFlow
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
             coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
 
@@ -132,6 +135,7 @@ class UserTokensSaverTest {
 
             // THEN
             coVerifyOrder {
+                userWalletsListRepository.userWallets
                 enricher(userWalletId, response)
                 tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
             }
@@ -165,7 +169,9 @@ class UserTokensSaverTest {
             walletType = WalletType.COLD,
         )
 
-        coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { enricher(userWalletId, response) } returns enrichedResponse
         coEvery {
             tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
@@ -177,6 +183,7 @@ class UserTokensSaverTest {
         // THEN
         coVerifyOrder {
             enricher(userWalletId, response)
+            userWalletsListRepository.userWallets
             tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
         }
     }
