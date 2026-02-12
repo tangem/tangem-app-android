@@ -46,6 +46,7 @@ dependencies {
     implementation(deps.arrow.fx)
     implementation(deps.jodatime)
     implementation(deps.timber)
+    implementation(deps.androidx.datastore)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi.kotlin)
     ksp(deps.moshi.kotlin.codegen)

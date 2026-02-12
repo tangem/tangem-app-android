@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class TangemPayUnavailableStateTransformer(
     userWalletId: UserWalletId,
@@ -18,6 +19,18 @@ internal class TangemPayUnavailableStateTransformer(
             )
         } else {
             prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return if (walletUM is WalletUM.Content) {
+            walletUM.copy(
+                tangemPayState = TangemPayState.TemporaryUnavailable(
+                    notification = WalletNotification.Warning.TangemPayUnreachable,
+                ),
+            )
+        } else {
+            walletUM
         }
     }
 }

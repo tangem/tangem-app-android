@@ -63,7 +63,7 @@ private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 @ModelScoped
 internal class WalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val stateHolder: WalletStateController,
+    val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
     private val walletEventSender: WalletEventSender,
     private val walletsUpdateActionResolver: WalletsUpdateActionResolver,

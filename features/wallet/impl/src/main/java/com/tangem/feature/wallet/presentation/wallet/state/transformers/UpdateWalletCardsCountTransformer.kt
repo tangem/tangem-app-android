@@ -6,6 +6,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import timber.log.Timber
 
 internal class UpdateWalletCardsCountTransformer(
@@ -28,6 +29,10 @@ internal class UpdateWalletCardsCountTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun WalletCardState.toUpdatedState(): WalletCardState {

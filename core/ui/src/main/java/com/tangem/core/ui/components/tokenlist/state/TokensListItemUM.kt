@@ -3,6 +3,9 @@ package com.tangem.core.ui.components.tokenlist.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.ds.row.TangemRowUM
+import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -56,4 +59,24 @@ sealed interface TokensListItemUM {
 sealed interface PortfolioTokensListItemUM {
     /** Unique ID */
     val id: Any
+}
+
+@Immutable
+sealed interface TokensListItemUM2 {
+    val tokenRowUM: TangemRowUM
+
+    data class GroupTitle(
+        override val tokenRowUM: TangemHeaderRowUM,
+    ) : TokensListItemUM2
+
+    data class Token(
+        override val tokenRowUM: TangemTokenRowUM,
+    ) : TokensListItemUM2
+
+    data class Portfolio(
+        override val tokenRowUM: TangemTokenRowUM,
+        val tokenList: ImmutableList<TokensListItemUM2>,
+        val isExpanded: Boolean,
+        val isCollapsable: Boolean,
+    ) : TokensListItemUM2
 }

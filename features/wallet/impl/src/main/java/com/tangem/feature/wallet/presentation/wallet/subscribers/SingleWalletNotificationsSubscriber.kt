@@ -8,6 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
@@ -32,7 +33,7 @@ internal class SingleWalletNotificationsSubscriber(
             .onEach { warnings ->
                 val displayedState = stateHolder.getWalletState(userWallet.walletId)
 
-                stateHolder.update(SetWarningsTransformer(userWallet.walletId, warnings))
+                stateHolder.update(SetWarningsTransformer(userWallet.walletId, warnings, persistentListOf()))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)
             }
     }

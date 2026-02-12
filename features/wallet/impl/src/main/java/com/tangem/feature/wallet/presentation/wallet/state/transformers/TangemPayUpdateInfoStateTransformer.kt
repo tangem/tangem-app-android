@@ -7,7 +7,9 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
+import com.tangem.domain.pay.model.CustomerInfo.KycStatus.APPROVED
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
@@ -16,8 +18,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.TangemPayIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.domain.pay.model.CustomerInfo.KycStatus.APPROVED
-import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import java.util.Currency
 
 /**
@@ -39,6 +40,15 @@ internal class TangemPayUpdateInfoStateTransformer(
             prevState.copy(tangemPayState = tangemPayState)
         } else {
             prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        val tangemPayState = createInitialState()
+        return if (walletUM is WalletUM.Content) {
+            walletUM.copy(tangemPayState = tangemPayState)
+        } else {
+            walletUM
         }
     }
 

@@ -15,6 +15,6 @@ internal inline fun UserWallet.createStateByWalletType(
     is UserWallet.Hot -> multiCurrencyCreator()
 }
 
-private fun UserWallet.Cold.isWalletWithTokens(): Boolean {
+internal fun UserWallet.Cold.isWalletWithTokens(): Boolean {
     return isMultiCurrency || scanResponse.cardTypesResolver.isSingleWalletWithToken()
 }

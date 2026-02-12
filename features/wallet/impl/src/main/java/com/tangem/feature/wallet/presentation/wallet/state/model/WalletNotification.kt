@@ -12,7 +12,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
-import org.joda.time.DateTime
 
 /**
  * Wallet notification component state
@@ -226,19 +225,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
-    data class UnlockVisaAccess(val onUnlockClick: () -> Unit) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(id = R.string.visa_unlock_notification_title),
-            subtitle = resourceReference(id = R.string.visa_unlock_notification_subtitle),
-            iconResId = R.drawable.ic_locked_24,
-            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(id = R.string.visa_unlock_notification_button),
-                iconResId = R.drawable.ic_tangem_24,
-                onClick = onUnlockClick,
-            ),
-        ),
-    )
-
     data class RateApp(
         val onLikeClick: () -> Unit,
         val onDislikeClick: () -> Unit,
@@ -254,19 +240,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 secondaryText = resourceReference(id = R.string.warning_button_could_be_better),
                 onSecondaryClick = onDislikeClick,
             ),
-            onCloseClick = onCloseClick,
-        ),
-    )
-
-    data class SwapPromo(
-        val startDateTime: DateTime,
-        val endDateTime: DateTime,
-        val onCloseClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(id = R.string.swap_promo_title),
-            subtitle = resourceReference(id = R.string.swap_promo_text),
-            iconResId = R.drawable.img_okx_dex_logo,
             onCloseClick = onCloseClick,
         ),
     )
@@ -319,23 +292,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.notification_referral_promo_title),
             subtitle = resourceReference(R.string.notification_referral_promo_text),
             iconResId = R.drawable.img_referral_promo,
-            onCloseClick = onCloseClick,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.notification_referral_promo_button),
-                onClick = onClick,
-            ),
-            iconSize = 54.dp,
-        ),
-    )
-
-    data class VisaPresalePromo(
-        val onCloseClick: () -> Unit,
-        val onClick: () -> Unit,
-    ) : WalletNotification(
-        config = NotificationConfig(
-            title = resourceReference(R.string.notification_visa_waitlist_promo_title),
-            subtitle = resourceReference(R.string.notification_visa_waitlist_promo_text),
-            iconResId = R.drawable.img_visa_waitlist_promo,
             onCloseClick = onCloseClick,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.notification_referral_promo_button),

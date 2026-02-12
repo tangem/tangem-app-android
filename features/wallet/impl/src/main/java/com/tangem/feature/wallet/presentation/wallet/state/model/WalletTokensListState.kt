@@ -3,6 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM2
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
@@ -50,4 +53,45 @@ internal sealed class WalletTokensListState {
     }
 
     data class OrganizeTokensButtonConfig(val isEnabled: Boolean, val onClick: () -> Unit)
+}
+
+@Immutable
+internal sealed class WalletTokensListUM {
+
+    abstract val tokenList: ImmutableList<TokensListItemUM2>
+    abstract val organizeButtonUM: TangemButtonUM?
+
+    data object Empty : WalletTokensListUM() {
+        override val tokenList: ImmutableList<TokensListItemUM2.Portfolio> = persistentListOf()
+        override val organizeButtonUM: TangemButtonUM? = null
+    }
+
+    data object Loading : WalletTokensListUM() {
+        override val tokenList: ImmutableList<TokensListItemUM2> = persistentListOf(
+            TokensListItemUM2.Portfolio(
+                TangemTokenRowUM.Loading(id = "0".toString()),
+                persistentListOf(),
+                false,
+                true,
+            ),
+            TokensListItemUM2.Portfolio(
+                TangemTokenRowUM.Loading(id = "1".toString()),
+                persistentListOf(),
+                false,
+                true,
+            ),
+            TokensListItemUM2.Portfolio(
+                TangemTokenRowUM.Loading(id = "2".toString()),
+                persistentListOf(),
+                false,
+                true,
+            ),
+        )
+        override val organizeButtonUM: TangemButtonUM? = null
+    }
+
+    data class Content(
+        override val tokenList: ImmutableList<TokensListItemUM2>,
+        override val organizeButtonUM: TangemButtonUM?,
+    ) : WalletTokensListUM()
 }

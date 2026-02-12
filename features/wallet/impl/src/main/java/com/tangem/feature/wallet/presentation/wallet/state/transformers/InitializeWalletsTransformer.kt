@@ -1,5 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -7,12 +9,13 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState.MultiCurrency.WalletType
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createStateByWalletType
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
@@ -42,6 +45,9 @@ internal class InitializeWalletsTransformer(
                         )
                     }
                 }
+                .toImmutableList(),
+            wallets2 = wallets
+                .map(::createInitState)
                 .toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
             onDismissMarketsTooltip = clickIntents::onDismissMarketsTooltip,
@@ -80,6 +86,31 @@ internal class InitializeWalletsTransformer(
         )
     }
 
+    private fun createInitState(userWallet: UserWallet): WalletUM {
+        return if (userWallet.isLocked) {
+            WalletUM.Locked(
+                walletsBalanceUM = WalletBalanceUM.Loading(
+                    id = userWallet.walletId,
+                    title = stringReference(userWallet.name),
+                ),
+                buttons = createWalletActions(userWallet = userWallet),
+                type = when (userWallet) {
+                    is UserWallet.Cold -> WalletType.Cold
+                    is UserWallet.Hot -> WalletType.Hot
+                },
+                notifications = persistentListOf(
+                    WalletNotificationUM.UnlockWallets(
+                        onClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
+                    ),
+                ),
+            )
+        } else {
+            walletLoadingStateFactory.create2(
+                userWallet = userWallet,
+            )
+        }
+    }
+
     private fun UserWallet.toLockedWalletCardState(): WalletCardState {
         return WalletCardState.LockedContent(
             id = walletId,
@@ -109,5 +140,32 @@ internal class InitializeWalletsTransformer(
             WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
             WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
         )
+    }
+
+    private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
+        val isSingleWallet =
+            userWallet is UserWallet.Cold && !userWallet.isMultiCurrency && !userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+
+        return buildList {
+            add(
+                WalletActionButtons.Buy(
+                    isEnabled = false,
+                    onClick = { },
+                ).buttonUM,
+            )
+            addIf(
+                condition = !isSingleWallet,
+                element = WalletActionButtons.Swap(
+                    isEnabled = false,
+                    onClick = {},
+                ).buttonUM,
+            )
+            add(
+                WalletActionButtons.Sell(
+                    isEnabled = false,
+                    onClick = { },
+                ).buttonUM,
+            )
+        }.toPersistentList()
     }
 }

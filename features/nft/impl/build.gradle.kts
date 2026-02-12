@@ -30,6 +30,7 @@ dependencies {
 
     /** Domain modules */
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)

@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class TangemPayExposedDeviceTransformer(
     userWalletId: UserWalletId,
@@ -12,6 +13,14 @@ internal class TangemPayExposedDeviceTransformer(
             prevState.copy(tangemPayState = TangemPayState.ExposedDevice)
         } else {
             prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return if (walletUM is WalletUM.Content) {
+            walletUM.copy(tangemPayState = TangemPayState.ExposedDevice)
+        } else {
+            walletUM
         }
     }
 }

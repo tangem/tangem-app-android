@@ -85,6 +85,29 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         }
     }
 
+    protected fun updateState2(
+        accountList: AccountStatusList,
+        appCurrency: AppCurrency,
+        expandedAccounts: Set<AccountId>,
+        isAccountMode: Boolean,
+        yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+        shouldShowMainPromo: Boolean = false,
+    ) {
+        stateController.update(
+            SetTokenListTransformer(
+                params = TokenConverterParams.Account(accountList, expandedAccounts),
+                userWallet = userWallet,
+                appCurrency = appCurrency,
+                clickIntents = clickIntents,
+                yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
+                isAccountsModeEnabled = isAccountMode,
+            ),
+        )
+    }
+
     private fun singleAccountTransform(
         maybeTokenList: Lce<TokenListError, TokenList>,
         appCurrency: AppCurrency,
@@ -141,6 +164,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
+                isAccountsModeEnabled = false,
             ),
         )
     }

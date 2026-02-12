@@ -1,13 +1,20 @@
 package com.tangem.common.ui.notifications
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.ds.message.TangemMessage
 import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.res.TangemTheme
@@ -110,4 +117,44 @@ fun LazyListScope.notifications(
             )
         },
     )
+}
+
+fun LazyListScope.stackedNotifications(
+    notifications: ImmutableList<TangemMessageUM>?,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    item {
+        if (!notifications.isNullOrEmpty()) {
+            val notificationsPagerState = rememberPagerState(
+                pageCount = { notifications.size },
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = TangemTheme.dimens2.x2),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+            ) {
+                HorizontalPager(
+                    state = notificationsPagerState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .animateItem(null, null, null),
+                ) { page ->
+                    TangemMessage(
+                        messageUM = notifications[page],
+                        contentColor = contentColor,
+                        modifier = modifier,
+                    )
+                }
+                if (notifications.size > 1) {
+                    PagerIndicator(
+                        pagerState = notificationsPagerState,
+                    )
+                }
+            }
+        }
+    }
 }

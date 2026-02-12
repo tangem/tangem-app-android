@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -20,6 +22,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun TangemPullToRefreshContainer(
     config: PullToRefreshConfig,
     modifier: Modifier = Modifier,
+    indicatorModifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val state = rememberPullToRefreshState()
@@ -32,7 +35,7 @@ fun TangemPullToRefreshContainer(
         modifier = modifier,
         indicator = {
             Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = indicatorModifier.align(Alignment.TopCenter),
                 isRefreshing = config.isRefreshing,
                 state = state,
                 containerColor = TangemTheme.colors.background.tertiary,

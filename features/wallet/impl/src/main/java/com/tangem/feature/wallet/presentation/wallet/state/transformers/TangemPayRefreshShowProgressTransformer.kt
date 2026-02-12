@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class TangemPayRefreshShowProgressTransformer(
     userWalletId: UserWalletId,
@@ -16,6 +17,19 @@ internal class TangemPayRefreshShowProgressTransformer(
             refreshNeededState.notification as? WalletNotification.Warning.TangemPayRefreshNeeded ?: return prevState
 
         return multiContentState.copy(
+            tangemPayState = refreshNeededState.copy(
+                notification = refreshNotification.copy(shouldShowProgress = true),
+            ),
+        )
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        val contentState = walletUM as? WalletUM.Content ?: return walletUM
+        val refreshNeededState = contentState.tangemPayState as? TangemPayState.RefreshNeeded ?: return walletUM
+        val refreshNotification =
+            refreshNeededState.notification as? WalletNotification.Warning.TangemPayRefreshNeeded ?: return walletUM
+
+        return contentState.copy(
             tangemPayState = refreshNeededState.copy(
                 notification = refreshNotification.copy(shouldShowProgress = true),
             ),

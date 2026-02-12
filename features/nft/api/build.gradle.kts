@@ -22,4 +22,8 @@ dependencies {
 
     /* Compose */
     implementation(deps.compose.runtime)
+    implementation(deps.compose.foundation)
+
+    /* Other */
+    implementation(deps.kotlin.immutable.collections)
 }

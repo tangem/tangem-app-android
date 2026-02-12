@@ -14,6 +14,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -23,12 +24,14 @@ import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.markets.entry.MarketsEntryComponent
+import com.tangem.features.nft.component.NFTEntryBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -36,6 +39,7 @@ import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
@@ -49,7 +53,9 @@ internal class WalletComponent @AssistedInject constructor(
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
+    private val nftEntryBlockComponentFactory: NFTEntryBlockComponent.Factory,
     private val feedFeatureToggle: FeedFeatureToggle,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -62,6 +68,17 @@ internal class WalletComponent @AssistedInject constructor(
     }
     private val marketsEntryComponent by lazy {
         marketsEntryComponentFactory.create(child("marketsEntryComponent"))
+    }
+
+    private val nftEntryBlockComponent by lazy {
+        nftEntryBlockComponentFactory.create(
+            context = child("nftEntryBlockComponent"),
+            params = NFTEntryBlockComponent.Params(
+                selectedWallet = model.uiState.mapNotNull {
+                    it.wallets.getOrNull(it.selectedWalletIndex)?.walletCardState?.id
+                },
+            )
+        )
     }
 
     init {
@@ -148,18 +165,34 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
 
-        WalletScreen(
-            state = model.uiState.collectAsStateWithLifecycle().value,
-            bottomSheetContent = {
-                BottomSheetContent(
-                    bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
-                    modifier = modifier,
-                )
-            },
-            bottomSheetHeaderHeightProvider = { headerSize },
-            onBottomSheetStateChange = { bottomSheetState.value = it },
-        )
+        if (designFeatureToggles.isRedesignEnabled) {
+            WalletScreen2(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                nftEntryBlockComponent = nftEntryBlockComponent,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        } else {
+            WalletScreen(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        }
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()

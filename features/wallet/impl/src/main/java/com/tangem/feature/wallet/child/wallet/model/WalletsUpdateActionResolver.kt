@@ -12,6 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletType
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -110,7 +111,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             when (walletState) {
                 is WalletState.MultiCurrency -> {
                     val wallet = wallets.firstOrNull { it.walletId == walletState.walletCardState.id }
-                    walletState.type == WalletState.MultiCurrency.WalletType.Hot && wallet is UserWallet.Cold
+                    walletState.type == WalletType.Hot && wallet is UserWallet.Cold
                 }
                 else -> false
             }
@@ -212,7 +213,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             val previousState = state.wallets.firstOrNull { it.walletCardState.id == wallet.walletId }
                 ?: return@filter false
             wallet is UserWallet.Cold && previousState is WalletState.MultiCurrency &&
-                previousState.type == WalletState.MultiCurrency.WalletType.Hot
+                previousState.type == WalletType.Hot
         }
         return Action.ReinitializeWallets(selectedWallet, walletsToUpdate)
     }

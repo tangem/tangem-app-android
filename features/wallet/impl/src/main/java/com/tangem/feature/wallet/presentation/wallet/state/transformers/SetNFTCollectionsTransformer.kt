@@ -6,6 +6,7 @@ import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.allLoadedCollectionsEmpty
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toPersistentList
 
 internal class SetNFTCollectionsTransformer(
@@ -26,6 +27,19 @@ internal class SetNFTCollectionsTransformer(
         is WalletState.MultiCurrency.Locked,
         is WalletState.SingleCurrency.Locked,
         -> prevState
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return when (walletUM) {
+            is WalletUM.Content -> walletUM.copy(
+                nftState = when {
+                    nftCollections.allLoadedCollectionsEmpty() ->
+                        WalletNFTItemUM.Empty(onItemClick)
+                    else -> createContentNFTItemUM(onItemClick)
+                },
+            )
+            is WalletUM.Locked -> walletUM
+        }
     }
 
     private fun createContentNFTItemUM(onItemClick: () -> Unit): WalletNFTItemUM.Content {

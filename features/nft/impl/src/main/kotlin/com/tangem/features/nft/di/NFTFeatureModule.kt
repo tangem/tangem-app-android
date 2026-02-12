@@ -6,7 +6,9 @@ import com.tangem.features.nft.DefaultNFTFeatureToggles
 import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.common.DefaultNFTComponent
-import com.tangem.features.nft.component.*
+import com.tangem.features.nft.component.NFTComponent
+import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.nft.component.NFTEntryBlockComponent
 import com.tangem.features.nft.details.block.DefaultNFTDetailsBlockComponent
 import com.tangem.features.nft.details.info.DefaultNFTDetailsInfoComponent
 import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
@@ -14,6 +16,8 @@ import com.tangem.features.nft.details.model.NFTDetailsModel
 import com.tangem.features.nft.entity.DefaultNFTSendSuccessTrigger
 import com.tangem.features.nft.entity.NFTSendSuccessListener
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
+import com.tangem.features.nft.mainEntry.DefaultNFTEntryBlockComponent
+import com.tangem.features.nft.mainEntry.model.NFTEntryBlockModel
 import com.tangem.features.nft.receive.model.NFTReceiveModel
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
 import dagger.Binds
@@ -48,6 +52,15 @@ internal interface NFTFeatureModuleBinds {
     @Binds
     @Singleton
     fun bindNFTComponentFactory(impl: DefaultNFTComponent.Factory): NFTComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindNFTEntryBlockComponentFactory(impl: DefaultNFTEntryBlockComponent.Factory): NFTEntryBlockComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTEntryBlockModel::class)
+    fun bindNFTBlockModel(model: NFTEntryBlockModel): Model
 
     @Binds
     @IntoMap

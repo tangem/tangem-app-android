@@ -25,9 +25,6 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
         itemContent = { item ->
             // TODO develop promo banner general component
             when (item) {
-                is WalletNotification.SwapPromo -> {
-                    // Use it on new promo action
-                }
                 is WalletNotification.NoteMigration -> {
                     NoteMigrationNotification(
                         config = item.config,

@@ -7,6 +7,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification.Warning.TangemPayRefreshNeeded
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class TangemPayRefreshNeededStateTransformer(
     userWalletId: UserWalletId,
@@ -30,6 +31,25 @@ internal class TangemPayRefreshNeededStateTransformer(
             prevState.copy(tangemPayState = tangemPayState)
         } else {
             prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        val tangemPayState = TangemPayState.RefreshNeeded(
+            notification = TangemPayRefreshNeeded(
+                tangemIcon = R.drawable.ic_tangem_24,
+                buttonText = when (userWallet) {
+                    is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
+                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
+                },
+                onRefreshClick = onRefreshClick,
+                shouldShowProgress = false,
+            ),
+        )
+        return if (walletUM is WalletUM.Content) {
+            walletUM.copy(tangemPayState = tangemPayState)
+        } else {
+            walletUM
         }
     }
 }

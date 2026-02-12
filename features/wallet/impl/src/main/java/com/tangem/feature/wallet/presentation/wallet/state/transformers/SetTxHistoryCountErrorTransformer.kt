@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
@@ -45,6 +46,10 @@ internal class SetTxHistoryCountErrorTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun createErrorState(): TxHistoryState = when (error) {

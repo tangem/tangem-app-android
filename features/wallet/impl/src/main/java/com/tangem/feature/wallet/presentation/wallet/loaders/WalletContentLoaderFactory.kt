@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,6 +20,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
     private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) {
 
     fun create(
@@ -27,6 +29,7 @@ internal class WalletContentLoaderFactory @Inject constructor(
         isRefresh: Boolean = false,
     ): WalletContentLoader? {
         return when {
+            designFeatureToggles.isRedesignEnabled -> multiWalletContentLoaderV2Factory.create(userWallet)
             userWallet.isMultiCurrency -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {
                     multiWalletContentLoaderV2Factory.create(userWallet)

@@ -50,10 +50,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem()
             is WalletNotification.Critical.BackupError -> MainScreen.BackupError()
             is WalletNotification.NoteMigration -> MainScreen.NotePromo()
-            is WalletNotification.SwapPromo -> NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                program = Program.Empty, // Use it on new promo action
-            )
             is WalletNotification.Sepa -> NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.Sepa,
@@ -71,14 +67,12 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 program = Program.YieldPromo,
             )
             is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
-            is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
             is WalletNotification.UsedOutdatedData,
-            is WalletNotification.UnlockVisaAccess,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
             is WalletNotification.CloreMigration,
             -> null

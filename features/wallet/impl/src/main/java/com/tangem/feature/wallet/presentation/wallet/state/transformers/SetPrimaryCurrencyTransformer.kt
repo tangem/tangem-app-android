@@ -6,6 +6,8 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletBalanceUMTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
 import timber.log.Timber
@@ -31,6 +33,23 @@ internal class SetPrimaryCurrencyTransformer(
             is WalletState.MultiCurrency -> {
                 Timber.w("Impossible to load primary currency status for multi-currency wallet")
                 prevState
+            }
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return when (walletUM) {
+            is WalletUM.Content -> {
+                walletUM.copy(
+                    walletsBalanceUM = SingleWalletBalanceUMTransformer(
+                        status = status.value,
+                        appCurrency = appCurrency,
+                    ).transform(walletUM.walletsBalanceUM),
+                )
+            }
+            is WalletUM.Locked -> {
+                Timber.w("Impossible to load primary currency status for locked wallet")
+                walletUM
             }
         }
     }

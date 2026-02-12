@@ -16,6 +16,10 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetSalePriceConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.StatusSource
@@ -56,6 +60,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val networkFactory: NetworkFactory,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val appPreferencesStore: AppPreferencesStore,
     @ApplicationContext private val context: Context,
 ) : NFTRepository, NFTCleaner {
 
@@ -253,6 +258,34 @@ internal class DefaultNFTRepository @Inject constructor(
                 .onFailure { throwable ->
                     Timber.e(throwable, "Failed to clear NFT data for network $network for wallet: $userWalletId")
                 }
+        }
+    }
+
+    override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .map { it[userWalletId.stringValue] == true }
+
+    override fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .map { map -> map.mapKeys { UserWalletId(it.key) } }
+
+    override suspend fun enableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to true),
+            )
+        }
+    }
+
+    override suspend fun disableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to false),
+            )
         }
     }
 

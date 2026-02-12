@@ -32,4 +32,12 @@ interface NFTRepository {
     suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
 
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
+
+    fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
+
+    fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>>
+
+    suspend fun enableNFT(userWalletId: UserWalletId)
+
+    suspend fun disableNFT(userWalletId: UserWalletId)
 }
