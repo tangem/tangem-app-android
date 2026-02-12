@@ -13,7 +13,11 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coVerifyOrder
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -63,7 +67,9 @@ class DefaultWalletAccountsResponseFactoryTest {
             tokens = emptyList(),
         )
 
-        coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns null
+        val userWalletsFlow = MutableStateFlow<List<UserWallet>?>(null)
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = null,
@@ -89,7 +95,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncOrNull(userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = null,
                 networkFactory = networkFactory,
@@ -105,7 +111,9 @@ class DefaultWalletAccountsResponseFactoryTest {
             every { walletId } returns userWalletId
         }
 
-        coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
@@ -145,7 +153,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.getSyncOrNull(userWalletId)
+            userWalletsListRepository.userWallets
             cryptoPortfolioConverter.convertListBack(accounts)
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = userWallet,
@@ -165,7 +173,9 @@ class DefaultWalletAccountsResponseFactoryTest {
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
-        coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
@@ -206,7 +216,9 @@ class DefaultWalletAccountsResponseFactoryTest {
         val userWallet = mockk<UserWallet>(relaxed = true) {
             every { walletId } returns userWalletId
         }
-        coEvery { userWalletsListRepository.getSyncOrNull(userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         val userTokensResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
