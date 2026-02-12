@@ -298,7 +298,7 @@ internal class ManageTokensModel @Inject constructor(
             val networks = currenciesToAdd.values
                 .flatten()
                 .toSet()
-                .associate { it.backendId to null }
+                .associate { network -> network.backendId to network.derivationPath.value }
             val needToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)
 
             state.update { state ->
