@@ -11,6 +11,7 @@ import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.toSimple
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -65,7 +66,9 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
+                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         every {
             networkFactory.create(
@@ -94,7 +97,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         verifyOrder {
             networksStatusesStore.get(params.userWalletId)
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
@@ -129,7 +132,9 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
+                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
@@ -177,7 +182,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
         verifyOrder {
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
@@ -202,7 +207,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual2).isEqualTo(expected2)
 
         verifyOrder {
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = updatedSimpleStatuses.first().id,
                 derivationPath = updatedSimpleStatuses.first().id.derivationPath,
@@ -230,7 +235,9 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
+                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         every {
             networkFactory.create(
@@ -263,7 +270,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
         verifyOrder {
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
@@ -312,7 +319,9 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         // region every
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
+                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every {
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
@@ -354,7 +363,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual2.first()).isEqualTo(expected2)
 
         verifyOrder {
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
@@ -382,7 +391,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         Truth.assertThat(actual.first()).isEqualTo(expected)
 
         verify { networksStatusesStore.get(params.userWalletId) }
-        verify(inverse = true) { userWalletsListRepository.getSyncOrNull(params.userWalletId) }
+        verify(inverse = true) { userWalletsListRepository.userWallets }
     }
 
     @Test
@@ -398,7 +407,9 @@ internal class DefaultMultiNetworkStatusProducerTest {
         val networksStatusesFlow = flowOf(simpleStatuses)
 
         every { networksStatusesStore.get(params.userWalletId) } returns networksStatusesFlow
-        every { userWalletsListRepository.getSyncOrNull(params.userWalletId) } returns userWallet
+                val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { networkFactory.create(networkId = any(), any(), any()) } returns null
 
         // Act
@@ -411,7 +422,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         verifyOrder {
             networksStatusesStore.get(params.userWalletId)
-            userWalletsListRepository.getSyncOrNull(params.userWalletId)
+            userWalletsListRepository.userWallets
             networkFactory.create(
                 networkId = simpleStatuses.first().id,
                 derivationPath = simpleStatuses.first().id.derivationPath,
