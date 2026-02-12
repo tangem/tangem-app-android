@@ -235,7 +235,7 @@ data class AccountList private constructor(
          */
         fun empty(
             userWalletId: UserWalletId,
-            cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+            cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): AccountList {
