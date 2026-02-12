@@ -383,10 +383,7 @@ private fun MainButton(state: SwapStateHolder) {
         state.swapButton.isHoldToConfirm -> {
             HoldToConfirmButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(
-                    R.string.common_hold_to,
-                    stringResourceSafe(id = R.string.swapping_swap_action),
-                ),
+                text = stringResourceSafe(R.string.swapping_swap_action),
                 enabled = state.swapButton.isEnabled,
                 onConfirm = state.swapButton.onClick,
                 isLoading = state.swapButton.isInProgress,
