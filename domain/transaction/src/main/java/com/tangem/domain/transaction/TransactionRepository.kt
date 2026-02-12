@@ -125,5 +125,5 @@ interface TransactionRepository {
         network: Network,
     ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
 
-    suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto)
+    suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto, userAddress: String?)
 }
