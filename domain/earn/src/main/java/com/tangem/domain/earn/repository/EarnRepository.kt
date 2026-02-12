@@ -1,5 +1,6 @@
 package com.tangem.domain.earn.repository
 
+import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnTokensBatchFlow
 import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.models.earn.EarnNetworks
@@ -23,4 +24,8 @@ interface EarnRepository {
     suspend fun fetchTopEarnTokens(limit: Int)
 
     fun observeTopEarnTokens(): Flow<EarnTopToken?>
+
+    fun observeEarnFilter(): Flow<EarnFilter>
+
+    suspend fun setEarnFilter(filter: EarnFilter)
 }

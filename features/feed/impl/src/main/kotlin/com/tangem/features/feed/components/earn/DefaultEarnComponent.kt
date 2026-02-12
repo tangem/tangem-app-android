@@ -19,7 +19,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.features.feed.components.feed.FeedPortfolioRoute
+import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.ui.earn.EarnContent
@@ -35,7 +35,7 @@ internal class DefaultEarnComponent(
 
     private val bottomSheetSlot = childSlot(
         source = earnModel.bottomSheetNavigation,
-        serializer = FeedPortfolioRoute.serializer(),
+        serializer = null,
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -68,10 +68,10 @@ internal class DefaultEarnComponent(
     }
 
     private fun bottomSheetChild(
-        config: FeedPortfolioRoute,
+        config: FeedBottomSheetRoute,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        is FeedPortfolioRoute.AddToPortfolio -> {
+        is FeedBottomSheetRoute.AddToPortfolio -> {
             addToPortfolioComponentFactory.create(
                 context = childByContext(componentContext),
                 params = AddToPortfolioPreselectedDataComponent.Params(
@@ -80,6 +80,14 @@ internal class DefaultEarnComponent(
                 ),
             )
         }
+        is FeedBottomSheetRoute.NetworkFilter -> EarnNetworkFilterComponent(
+            context = childByContext(componentContext),
+            params = config.params,
+        )
+        is FeedBottomSheetRoute.TypeFilter -> EarnTypeFilterComponent(
+            context = childByContext(componentContext),
+            params = config.params,
+        )
     }
 
     @Serializable
