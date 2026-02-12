@@ -22,6 +22,8 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.common.wallets.loadAndGet
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.HotCryptoCurrency
@@ -89,8 +91,7 @@ internal class DefaultHotCryptoRepository(
             .map { it[userWalletId] }
             .filterNotNull()
             .map { response ->
-                val userWallet = userWalletsListRepository.getSyncOrNull(userWalletId)
-                    ?: error("UserWalletId [$userWalletId] not found")
+                val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
                 HotCryptoCurrencyConverter(
                     userWallet = userWallet,
