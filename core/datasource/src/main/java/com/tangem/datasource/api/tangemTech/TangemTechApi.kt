@@ -203,7 +203,7 @@ interface TangemTechApi {
      * Used when yield operations generate intermediate transactions
      * that should not trigger notifications.
      */
-    @POST("v1/transaction-events")
+    @POST("v2/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
 
     // region Earn
