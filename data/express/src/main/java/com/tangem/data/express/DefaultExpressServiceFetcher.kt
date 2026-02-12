@@ -11,6 +11,7 @@ import com.tangem.datasource.exchangeservice.swap.ExpressUtils.getRefCode
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.core.utils.lceContent

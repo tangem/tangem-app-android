@@ -30,6 +30,7 @@ import com.tangem.data.walletmanager.utils.*
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network

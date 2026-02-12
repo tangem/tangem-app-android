@@ -14,6 +14,7 @@ import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -43,8 +44,13 @@ internal class AccountListCryptoCurrenciesFetcherTest {
     fun `returns failure if wallet is not multi-currency`() = runTest {
         // Arrange
         val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
-        val mockUserWallet = mockk<UserWallet> { every { isMultiCurrency } returns false }
-        every { userWalletsListRepository.getSyncStrict(id = params.userWalletId) } returns mockUserWallet
+        val mockUserWallet = mockk<UserWallet> {
+            every { walletId } returns userWalletId
+            every { isMultiCurrency } returns false
+        }
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         // Act
         val actual = fetcher(params)
@@ -55,7 +61,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         ).left()
         assertEither(actual, expected)
 
-        verify { userWalletsListRepository.getSyncStrict(id = params.userWalletId) }
+        verify { userWalletsListRepository.userWallets }
         coVerify(inverse = true) { walletAccountsFetcher.fetch(any()) }
     }
 
@@ -63,10 +69,15 @@ internal class AccountListCryptoCurrenciesFetcherTest {
     fun `returns accounts if wallet is multi-currency`() = runTest {
         // Arrange
         val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
-        val mockUserWallet = mockk<UserWallet> { every { isMultiCurrency } returns true }
+        val mockUserWallet = mockk<UserWallet> {
+            every { walletId } returns userWalletId
+            every { isMultiCurrency } returns true
+        }
         val response = mockk<GetWalletAccountsResponse>(relaxed = true)
 
-        every { userWalletsListRepository.getSyncStrict(id = params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { walletAccountsFetcher.fetch(userWalletId = params.userWalletId) } returns response
         coEvery { expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet()) } returns Unit.right()
 
@@ -77,7 +88,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         assertEitherRight(actual)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
             expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet())
         }
@@ -87,10 +98,15 @@ internal class AccountListCryptoCurrenciesFetcherTest {
     fun `returns error if walletAccountsFetcher returns error`() = runTest {
         // Arrange
         val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
-        val mockUserWallet = mockk<UserWallet> { every { isMultiCurrency } returns true }
+        val mockUserWallet = mockk<UserWallet> {
+            every { walletId } returns userWalletId
+            every { isMultiCurrency } returns true
+        }
         val error = RuntimeException("fetch error")
 
-        every { userWalletsListRepository.getSyncStrict(id = params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { walletAccountsFetcher.fetch(userWalletId = params.userWalletId) } throws error
 
         // Act
@@ -101,7 +117,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         assertEither(actual, expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.getSyncStrict(id = params.userWalletId)
+            userWalletsListRepository.userWallets
             walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
         }
     }

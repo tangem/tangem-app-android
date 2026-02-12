@@ -18,6 +18,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWallet
