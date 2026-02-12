@@ -45,4 +45,14 @@ object EarnDomainModule {
     fun provideGetEarnTokensBatchFlowUseCase(repository: EarnRepository): GetEarnTokensBatchFlowUseCase {
         return GetEarnTokensBatchFlowUseCase(repository)
     }
+
+    @Provides
+    fun provideGetEarnFilterUseCase(repository: EarnRepository): GetEarnFilterUseCase {
+        return GetEarnFilterUseCase(repository)
+    }
+
+    @Provides
+    fun provideSetEarnFilterUseCase(repository: EarnRepository): SetEarnFilterUseCase {
+        return SetEarnFilterUseCase(repository)
+    }
 }
