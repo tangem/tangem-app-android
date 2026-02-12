@@ -6,7 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class EarnNetworksStore @Inject constructor() :
+internal class EarnNetworksStore @Inject constructor() :
     RuntimeStateStore<EarnNetworks?> by RuntimeStateStore(
         defaultValue = null,
     )
