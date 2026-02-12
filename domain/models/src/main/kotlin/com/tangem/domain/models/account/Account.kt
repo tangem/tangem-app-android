@@ -42,7 +42,7 @@ sealed interface Account {
         override val accountName: AccountName,
         val icon: CryptoPortfolioIcon,
         val derivationIndex: DerivationIndex,
-        val cryptoCurrencies: Set<CryptoCurrency>,
+        val cryptoCurrencies: List<CryptoCurrency>,
     ) : Account {
 
         /** Indicates if the account is the main account */
@@ -60,7 +60,7 @@ sealed interface Account {
         fun copy(
             accountName: AccountName = this.accountName,
             icon: CryptoPortfolioIcon = this.icon,
-            cryptoCurrencies: Set<CryptoCurrency> = this.cryptoCurrencies,
+            cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
         ): CryptoPortfolio {
             return CryptoPortfolio(
                 accountId = this.accountId,
@@ -102,7 +102,7 @@ sealed interface Account {
                 name: String,
                 icon: CryptoPortfolioIcon,
                 derivationIndex: Int,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): Either<Error, CryptoPortfolio> {
                 return either {
                     val accountName = AccountName(value = name).getOrElse {
@@ -138,7 +138,7 @@ sealed interface Account {
                 accountName: AccountName,
                 icon: CryptoPortfolioIcon,
                 derivationIndex: DerivationIndex,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): CryptoPortfolio {
                 return CryptoPortfolio(
                     accountId = accountId,
@@ -157,7 +157,7 @@ sealed interface Account {
              */
             fun createMainAccount(
                 userWalletId: UserWalletId,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): CryptoPortfolio {
                 val derivationIndex = DerivationIndex.Main
 
