@@ -132,6 +132,18 @@ object PreferencesKeys {
 
     val ACCESS_CODE_SKIPPED_STATES_KEY by lazy { stringPreferencesKey(name = "accessCodeSkippedStates") }
 
+    val SHOULD_SHOW_UPGRADE_BANNER_KEY by lazy { stringPreferencesKey(name = "shouldShowUpgradeBanner") }
+
+    val SHOULD_SHOW_NEXT_TIME_UPGRADE_BANNER_KEY by lazy {
+        stringPreferencesKey(name = "shouldShowNextTimeUpgradeBanner")
+    }
+
+    val UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY by lazy { stringPreferencesKey(name = "upgradeBannerClosureTimestamp") }
+
+    val WALLET_CREATION_TIMESTAMP_KEY by lazy { stringPreferencesKey(name = "walletCreationTimestamp") }
+
+    val HAS_HAD_FIRST_TOP_UP_KEY by lazy { stringPreferencesKey(name = "hasHadFirstTopUp") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
