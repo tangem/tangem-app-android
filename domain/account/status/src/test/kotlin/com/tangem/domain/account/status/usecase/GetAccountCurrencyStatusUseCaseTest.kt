@@ -103,7 +103,7 @@ class GetAccountCurrencyStatusUseCaseTest {
 
             val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
                 every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
-                every { this@mockk.cryptoCurrencies } returns setOf(currency)
+                every { this@mockk.cryptoCurrencies } returns listOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
@@ -140,7 +140,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invokeSync returns Some if network is null`() = runTest {
             // Arrange
             val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.cryptoCurrencies } returns setOf(currency)
+                every { this@mockk.cryptoCurrencies } returns listOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
@@ -223,7 +223,7 @@ class GetAccountCurrencyStatusUseCaseTest {
 
             val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
                 every { this@mockk.derivationIndex } returns DerivationIndex(1).getOrNull()!!
-                every { this@mockk.cryptoCurrencies } returns setOf(currency)
+                every { this@mockk.cryptoCurrencies } returns listOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
@@ -257,7 +257,7 @@ class GetAccountCurrencyStatusUseCaseTest {
         fun `invoke returns data if network is null`() = runTest {
             // Arrange
             val account = mockk<Account.CryptoPortfolio>(relaxed = true) {
-                every { this@mockk.cryptoCurrencies } returns setOf(currency)
+                every { this@mockk.cryptoCurrencies } returns listOf(currency)
             }
             val currencyStatus = CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading)
             val accountStatus = AccountStatus.CryptoPortfolio(
