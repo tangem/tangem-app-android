@@ -6,7 +6,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class EarnTopTokensStore @Inject constructor() :
+internal class EarnTopTokensStore @Inject constructor() :
     RuntimeStateStore<EarnTopToken?> by RuntimeStateStore(
         defaultValue = null,
     )
