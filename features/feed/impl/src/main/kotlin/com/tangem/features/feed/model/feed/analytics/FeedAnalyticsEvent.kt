@@ -83,4 +83,20 @@ internal sealed class FeedAnalyticsEvent(
     class AllWidgetsLoadError : FeedAnalyticsEvent(event = "All Widgets Load Error")
 
     class TokenSearchedClicked : FeedAnalyticsEvent(event = "Token Searched Clicked")
+
+    class EarnScreenOpened : FeedAnalyticsEvent(
+        event = "Earn Screen Opened",
+        params = mapOf(SOURCE to AnalyticsParam.ScreensSources.Markets.value),
+    )
+
+    data class EarnLoadError(
+        private val code: Int?,
+        private val message: String,
+    ) : FeedAnalyticsEvent(
+        event = "Earn Load Error",
+        params = mapOf(
+            ERROR_CODE to (code ?: IS_NOT_HTTP_ERROR).toString(),
+            ERROR_MESSAGE to message,
+        ),
+    )
 }

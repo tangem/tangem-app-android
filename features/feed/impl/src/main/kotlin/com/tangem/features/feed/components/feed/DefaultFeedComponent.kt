@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -75,6 +76,9 @@ internal class DefaultFeedComponent(
                 params = Params(
                     tokenToAdd = config.tokenToAdd,
                     callback = feedComponentModel.addToPortfolioCallback,
+                    analyticsParams = AddToPortfolioPreselectedDataComponent.AnalyticsParams(
+                        AnalyticsParam.ScreensSources.Markets.value,
+                    ),
                 ),
             )
         }
