@@ -151,10 +151,12 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 12.dp,
-                        ),
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .background(
+                            color = TangemTheme.colors.background.action,
+                            shape = TangemTheme.shapes.roundedCornersXMedium,
+                        )
+                        .padding(vertical = 32.dp, horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     UnableToLoadData(onRetryClick = st.onRetryClicked)
@@ -496,7 +498,7 @@ private fun EarnContentLoadingPreview() {
         ) {
             EarnContent(
                 state = previewEarnUM(
-                    mostlyUsed = EarnListUM.Loading,
+                    mostlyUsed = EarnListUM.Error(onRetryClicked = {}),
                     bestOpportunities = EarnBestOpportunitiesUM.Loading,
                 ),
             )
