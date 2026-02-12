@@ -76,12 +76,14 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsStore: UserWalletsStore,
         dispatchers: CoroutineDispatcherProvider,
+        appsFlyerStore: AppsFlyerStore,
     ): WalletsPromoRepository {
         return DefaultWalletsPromoRepository(
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
             userWalletsStore = userWalletsStore,
             dispatchers = dispatchers,
+            appsFlyerStore = appsFlyerStore,
         )
     }
 }
