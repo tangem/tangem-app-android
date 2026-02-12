@@ -7,4 +7,6 @@ interface WalletsPromoRepository {
     suspend fun bindRefcodeWithWallets(conversionData: AppsFlyerConversionData)
 
     suspend fun retryBindRefcodeWithWallets()
+
+    suspend fun getReferralCodeIfExists(): String?
 }
