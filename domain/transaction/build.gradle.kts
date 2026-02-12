@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
+    implementation(projects.domain.notifications)
     api(projects.domain.networks)
 
     testRuntimeOnly(deps.test.junit5.engine)
