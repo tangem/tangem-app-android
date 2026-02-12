@@ -35,6 +35,7 @@ import com.tangem.features.feed.model.earn.state.EarnStateController
 import com.tangem.features.feed.model.earn.state.transformers.EarnFilterSelectedStateTransformer
 import com.tangem.features.feed.model.earn.state.transformers.UpdateBestOpportunitiesStateTransformer
 import com.tangem.features.feed.model.earn.state.transformers.UpdateEarnUMInitialStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateLoadingTransformer
 import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateTransformer
 import com.tangem.features.feed.model.earn.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.model.earn.statemanager.EarnListStateManager
@@ -173,6 +174,7 @@ internal class EarnModel @Inject constructor(
 
     private fun fetchTopEarnTokens() {
         modelScope.launch(dispatchers.default) {
+            stateController.update(UpdateMostlyUsedStateLoadingTransformer())
             fetchTopEarnTokensUseCase()
         }
     }
