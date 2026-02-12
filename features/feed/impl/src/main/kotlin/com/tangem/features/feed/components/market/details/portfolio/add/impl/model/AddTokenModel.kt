@@ -52,7 +52,7 @@ internal class AddTokenModel @Inject constructor(
             flow = params.selectedNetwork.distinctUntilChanged(),
             flow2 = params.selectedPortfolio.distinctUntilChanged(),
             transform = { selectedNetwork, selectedPortfolio ->
-                addTokenJob.cancel()
+                addTokenJob.join()
                 val isTangemIconVisible = needColdWalletInteraction(selectedNetwork, selectedPortfolio)
                 uiBuilder.updateContent(
                     selectedPortfolio = selectedPortfolio,
