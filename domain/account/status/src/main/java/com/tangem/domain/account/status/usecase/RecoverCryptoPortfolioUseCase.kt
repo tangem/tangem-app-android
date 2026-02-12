@@ -100,7 +100,7 @@ class RecoverCryptoPortfolioUseCase(
             accountName = this.name,
             icon = this.icon,
             derivationIndex = this.derivationIndex,
-            cryptoCurrencies = emptySet(),
+            cryptoCurrencies = emptyList(),
         )
     }
 

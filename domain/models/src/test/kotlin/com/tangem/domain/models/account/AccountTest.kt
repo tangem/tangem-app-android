@@ -50,8 +50,8 @@ class AccountTest {
     @Test
     fun `CryptoPortfolio tokensCount`() {
         // Arrange
-        val emptyCurrencies = emptySet<CryptoCurrency>()
-        val filledCurrencies = setOf(mockk<CryptoCurrency>())
+        val emptyCurrencies = emptyList<CryptoCurrency>()
+        val filledCurrencies = listOf(mockk<CryptoCurrency>())
 
         // Act
         val actual1 = createCryptoPortfolioStub(currencies = emptyCurrencies)
@@ -68,8 +68,8 @@ class AccountTest {
     @Test
     fun `CryptoPortfolio networksCount`() {
         // Arrange
-        val emptyCurrencies = emptySet<CryptoCurrency>()
-        val filledCurrencies = setOf(
+        val emptyCurrencies = emptyList<CryptoCurrency>()
+        val filledCurrencies = listOf(
             mockk<CryptoCurrency> {
                 every { network } returns mockk()
             },
@@ -102,7 +102,7 @@ class AccountTest {
                 name = name,
                 icon = mockk(),
                 derivationIndex = 0,
-                cryptoCurrencies = emptySet(),
+                cryptoCurrencies = emptyList(),
             )
                 .leftOrNull()!!
 
@@ -123,7 +123,7 @@ class AccountTest {
                 name = "Test Account",
                 icon = CryptoPortfolioIcon.ofMainAccount(userWalletId = UserWalletId("011")),
                 derivationIndex = derivationIndex.value,
-                cryptoCurrencies = emptySet(),
+                cryptoCurrencies = emptyList(),
             )
                 .getOrNull()!!
 
@@ -150,7 +150,7 @@ class AccountTest {
                 accountName = AccountName.DefaultMain,
                 icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
                 derivationIndex = derivationIndex,
-                cryptoCurrencies = emptySet(),
+                cryptoCurrencies = emptyList(),
             )
 
             Truth.assertThat(actual).isEqualTo(expected)
@@ -161,7 +161,7 @@ class AccountTest {
         userWalletId: UserWalletId = UserWalletId("011"),
         name: String = "Test Account",
         derivationIndex: Int = 0,
-        currencies: Set<CryptoCurrency> = emptySet(),
+        currencies: List<CryptoCurrency> = emptyList(),
     ): CryptoPortfolio {
         val accountIndex = DerivationIndex(value = derivationIndex).getOrNull()!!
 
