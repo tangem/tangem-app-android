@@ -88,7 +88,7 @@ internal class DefaultUserWalletsListRepository(
                         .map { wallets.updateWith(it) }
                 }
                 .doOnSuccess { loadedWallets ->
-                    userWallets.update { toUpdate ->
+                    userWallets.update { _ ->
                         val selectedUserWalletId = selectedUserWalletRepository.get()
                         selectedUserWallet.value = loadedWallets.firstOrNull { it.walletId == selectedUserWalletId }
                             ?: loadedWallets.firstOrNull()?.also {
@@ -240,7 +240,7 @@ internal class DefaultUserWalletsListRepository(
         }
     }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     override suspend fun unlock(
         userWalletId: UserWalletId,
         unlockMethod: UserWalletsListRepository.UnlockMethod,
@@ -315,7 +315,13 @@ internal class DefaultUserWalletsListRepository(
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo ->
-                        updateWallets { it?.updateWith(sensitiveInfo) }
+                        updateWallets { wallets ->
+                            // It is necessary to update derivations because when scanning we obtain the missing keys
+                            wallets?.updateWith(
+                                walletIdToSensitiveInformation = sensitiveInfo,
+                                walletIdToDerivedKeys = mapOf(userWallet.walletId to scanResponse.derivedKeys),
+                            )
+                        }
                         trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Card)
                     }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
