@@ -17,6 +17,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
@@ -154,4 +155,6 @@ interface ApplicationEntryPoint {
     fun getABTestsManager(): ABTestsManager
 
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
+
+    fun getWalletAccountsFetcher(): WalletAccountsFetcher
 }
