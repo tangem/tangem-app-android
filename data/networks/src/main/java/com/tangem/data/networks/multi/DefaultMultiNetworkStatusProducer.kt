@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
