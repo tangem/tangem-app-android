@@ -18,10 +18,6 @@ internal class EarnStateController @Inject constructor() {
 
     val value: EarnUM get() = uiState.value
 
-    fun update(function: (EarnUM) -> EarnUM) {
-        mutableUiState.update(function = function)
-    }
-
     fun update(transformer: EarnUMTransformer) {
         mutableUiState.update(function = transformer::transform)
     }
@@ -35,6 +31,7 @@ internal class EarnStateController @Inject constructor() {
             onBackClick = {},
             onNetworkFilterClick = {},
             onTypeFilterClick = {},
+            onSliderScroll = {},
         )
     }
 }
