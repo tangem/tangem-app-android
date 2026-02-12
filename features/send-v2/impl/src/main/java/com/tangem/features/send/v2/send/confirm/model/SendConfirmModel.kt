@@ -24,7 +24,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -35,6 +34,7 @@ import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -435,12 +435,14 @@ internal class SendConfirmModel @Inject constructor(
                 updateTransactionStatus(txData, txHash)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                sendAnalyticHelper.sendSuccessAnalytics(
-                    cryptoCurrency = cryptoCurrency,
-                    sendUM = uiState.value,
-                    account = params.accountFlow.value,
-                    feeToken = feeToken,
-                )
+                modelScope.launch(dispatchers.default) {
+                    sendAnalyticHelper.sendSuccessAnalytics(
+                        cryptoCurrency = cryptoCurrency,
+                        sendUM = uiState.value,
+                        account = params.accountFlow.value,
+                        feeToken = feeToken,
+                    )
+                }
                 params.callback.onResult(uiState.value)
                 params.onSendTransaction()
             },
