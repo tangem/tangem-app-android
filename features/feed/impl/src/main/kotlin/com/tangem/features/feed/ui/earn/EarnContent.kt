@@ -24,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
@@ -37,7 +36,9 @@ import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.feed.ui.earn.components.*
+import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
+import com.tangem.features.feed.ui.earn.components.EarnListItem
+import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
 import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
 
@@ -49,9 +50,6 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     val listState = rememberLazyListState()
-
-    EarnFilterByTypeBottomSheet(config = state.filterByTypeBottomSheet)
-    EarnFilterByNetworkBottomSheet(config = state.filterByNetworkBottomSheet)
 
     if (state.bestOpportunities is EarnBestOpportunitiesUM.Content) {
         PaginationHandler(
@@ -89,7 +87,11 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
             SpacerH(12.dp)
             BestOpportunitiesFilters(
                 state = state.bestOpportunities,
-                selectedNetworkFilterText = state.selectedNetworkFilterText,
+                selectedNetworkFilterText = when (state.selectedNetworkFilter) {
+                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                    is EarnFilterNetworkUM.Network -> TextReference.Str(state.selectedNetworkFilter.text)
+                },
                 selectedTypeFilterText = state.selectedTypeFilterText,
                 onNetworkFilterClick = state.onNetworkFilterClick,
                 onTypeFilterClick = state.onTypeFilterClick,
@@ -573,12 +575,7 @@ private fun previewEarnUM(
     mostlyUsed = mostlyUsed,
     bestOpportunities = bestOpportunities,
     selectedTypeFilter = EarnFilterTypeUM.All,
-    selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(
-        text = resourceReference(R.string.earn_filter_all_networks),
-        isSelected = true,
-    ),
-    filterByTypeBottomSheet = TangemBottomSheetConfig.Empty,
-    filterByNetworkBottomSheet = TangemBottomSheetConfig.Empty,
+    selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
     onBackClick = {},
     onNetworkFilterClick = {},
     onTypeFilterClick = {},
