@@ -7,6 +7,7 @@ import com.squareup.moshi.JsonClass
 data class TransactionEventBody(
     @Json(name = "transactionId") val transactionId: String,
     @Json(name = "operationType") val operationType: OperationType,
+    @Json(name = "userAddress") val userAddress: String? = null,
 )
 
 @JsonClass(generateAdapter = false)
