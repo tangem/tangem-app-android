@@ -31,6 +31,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -246,6 +247,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val appsFlyerClientFactory: AppsFlyerClient.Factory
         get() = entryPoint.getAppsFlyerClientFactory()
 
+    private val walletAccountsFetcher: WalletAccountsFetcher
+        get() = entryPoint.getWalletAccountsFetcher()
+
     // endregion
 
     private val appScope = MainScope()
@@ -349,7 +353,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         }
 
         derivationsFinder = DerivationsFinder(
-            userTokensResponseStore = userTokensResponseStore,
+            walletAccountsFetcher = walletAccountsFetcher,
             dispatchers = dispatchers,
         )
 
