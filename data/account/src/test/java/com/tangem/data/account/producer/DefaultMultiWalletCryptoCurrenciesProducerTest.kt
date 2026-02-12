@@ -59,7 +59,9 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         // Arrange
         val userTokensResponseFlow = flowOf<UserTokensResponse?>(null)
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every { userTokensResponseStore.get(params.userWalletId) } returns userTokensResponseFlow
 
         // Act
@@ -72,7 +74,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual.first()).isEqualTo(expected)
 
         verifyOrder {
-            userWalletsListRepository.getSyncStrict(params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.get(params.userWalletId)
         }
 
@@ -113,7 +115,9 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             cryptoCurrencyFactory.createCoin(Blockchain.Bitcoin),
         )
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every { userTokensResponseStore.get(params.userWalletId) } returns userTokensResponseFlow
 
         every {
@@ -146,7 +150,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
         verifyOrder {
-            userWalletsListRepository.getSyncStrict(params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.get(params.userWalletId)
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
@@ -188,7 +192,9 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
 
         val cryptoCurrencies = emptySet<CryptoCurrency>()
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every { userTokensResponseStore.get(params.userWalletId) } returns userTokensResponseFlow
 
         every {
@@ -213,7 +219,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
         verifyOrder {
-            userWalletsListRepository.getSyncStrict(params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.get(params.userWalletId)
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
@@ -257,7 +263,9 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         }
             .buffer(capacity = 5)
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every { userTokensResponseStore.get(params.userWalletId) } returns userTokensResponseFlow
 
         every {
@@ -279,7 +287,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
         verifyOrder {
-            userWalletsListRepository.getSyncStrict(params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.get(params.userWalletId)
         }
 
@@ -304,7 +312,9 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
     @Test
     fun `flow is empty if store returns empty flow`() = runTest {
         // Arrange
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns userWallet
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
         every { userTokensResponseStore.get(params.userWalletId) } returns emptyFlow()
 
         // Act
@@ -316,7 +326,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual.first()).isEqualTo(expected)
 
         verifyOrder {
-            userWalletsListRepository.getSyncStrict(params.userWalletId)
+            userWalletsListRepository.userWallets
             userTokensResponseStore.get(params.userWalletId)
         }
 
@@ -329,10 +339,13 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
     fun `produce throws exception if UserWallet isn't multi-currency wallet`() = runTest {
         // Arrange
         val mockUserWallet = mockk<UserWallet> {
+            every { walletId } returns userWallet.walletId
             every { isMultiCurrency } returns false
         }
 
-        every { userWalletsListRepository.getSyncStrict(params.userWalletId) } returns mockUserWallet
+        val userWalletsFlow = MutableStateFlow(listOf(mockUserWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
 
         // Act
         val actual = runCatching { producer.produce() }.exceptionOrNull()
@@ -345,7 +358,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         Truth.assertThat(actual).isInstanceOf(expected::class.java)
         Truth.assertThat(actual).hasMessageThat().isEqualTo(expected.message)
 
-        verifyOrder { userWalletsListRepository.getSyncStrict(params.userWalletId) }
+        verifyOrder { userWalletsListRepository.userWallets }
 
         verify(inverse = true) {
             userTokensResponseStore.get(any())
