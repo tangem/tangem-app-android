@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.earn.converter.EarnTokenConverter
+import com.tangem.data.earn.datastore.EarnFilterStore
 import com.tangem.data.earn.datastore.EarnNetworksStore
 import com.tangem.data.earn.datastore.EarnTopTokensStore
 import com.tangem.data.earn.repository.batch.EarnTokensBatchFetcher
@@ -14,6 +15,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.EarnResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.EarnErrorResolver
+import com.tangem.domain.earn.model.EarnFilter
 import com.tangem.domain.earn.model.EarnTokensBatchFlow
 import com.tangem.domain.earn.model.EarnTokensBatchingContext
 import com.tangem.domain.earn.repository.EarnRepository
@@ -38,6 +40,7 @@ internal class DefaultEarnRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val earnNetworksStore: EarnNetworksStore,
     private val earnTopTokensStore: EarnTopTokensStore,
+    private val earnFilterStore: EarnFilterStore,
     private val earnErrorResolver: EarnErrorResolver,
     private val excludedBlockchains: ExcludedBlockchains,
 ) : EarnRepository {
@@ -121,6 +124,14 @@ internal class DefaultEarnRepository(
 
     override fun observeTopEarnTokens(): Flow<EarnTopToken?> {
         return earnTopTokensStore.get()
+    }
+
+    override fun observeEarnFilter(): Flow<EarnFilter> {
+        return earnFilterStore.get()
+    }
+
+    override suspend fun setEarnFilter(filter: EarnFilter) {
+        earnFilterStore.store(filter)
     }
 
     companion object {
