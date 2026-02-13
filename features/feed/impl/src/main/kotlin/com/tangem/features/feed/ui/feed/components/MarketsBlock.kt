@@ -4,12 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -19,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.markets.MarketsListItem
@@ -55,9 +51,13 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
                                 text = stringResourceSafe(R.string.markets_common_title),
                                 style = TangemTheme.typography.h3,
                                 color = TangemTheme.colors.text.primary1,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1,
                             )
                         },
                         onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
+                        shouldShowSeeAll = currentChart is MarketChartUM.Content,
+                        isLoading = currentChart is MarketChartUM.Loading,
                     )
 
                     SpacerH(12.dp)
@@ -88,9 +88,13 @@ internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCall
                     text = stringResourceSafe(R.string.markets_pulse_common_title),
                     style = TangemTheme.typography.h3,
                     color = TangemTheme.colors.text.primary1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
             },
             onSeeAllClick = { onSeeAllClick() },
+            shouldShowSeeAll = true,
+            isLoading = marketChartConfig.marketCharts[marketChartConfig.currentSortByType] is MarketChartUM.Loading,
         )
 
         LazyRow(
