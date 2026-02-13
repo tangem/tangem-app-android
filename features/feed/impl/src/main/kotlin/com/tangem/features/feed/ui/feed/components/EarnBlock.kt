@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
@@ -33,10 +34,13 @@ internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM?, modif
                     text = stringResourceSafe(R.string.markets_earn_common_title),
                     style = TangemTheme.typography.h3,
                     color = TangemTheme.colors.text.primary1,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
             },
             onSeeAllClick = onSeeAllClick,
             isLoading = earnListUM is EarnListUM.Loading,
+            shouldShowSeeAll = earnListUM is EarnListUM.Content,
         )
 
         SpacerH(12.dp)

@@ -91,12 +91,7 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
             SpacerH(12.dp)
             BestOpportunitiesFilters(
                 state = state.bestOpportunities,
-                selectedNetworkFilterText = when (state.selectedNetworkFilter) {
-                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
-                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
-                    is EarnFilterNetworkUM.Network -> TextReference.Str(state.selectedNetworkFilter.text)
-                },
-                selectedTypeFilterText = state.selectedTypeFilterText,
+                earnFilterUM = state.earnFilterUM,
                 onNetworkFilterClick = state.onNetworkFilterClick,
                 onTypeFilterClick = state.onTypeFilterClick,
             )
@@ -220,17 +215,14 @@ private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: 
 @Composable
 private fun BestOpportunitiesFilters(
     state: EarnBestOpportunitiesUM,
-    selectedNetworkFilterText: TextReference,
-    selectedTypeFilterText: TextReference,
+    earnFilterUM: EarnFilterUM,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
 ) {
     when (state) {
         is EarnBestOpportunitiesUM.Loading -> FilterButtonsShimmer()
         else -> FilterButtons(
-            selectedNetworkFilterText = selectedNetworkFilterText,
-            selectedTypeFilterText = selectedTypeFilterText,
-            isEnabled = state is EarnBestOpportunitiesUM.Content || state is EarnBestOpportunitiesUM.EmptyFiltered,
+            earnFilterUM = earnFilterUM,
             onNetworkFilterClick = onNetworkFilterClick,
             onTypeFilterClick = onTypeFilterClick,
         )
@@ -309,9 +301,7 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM)
 
 @Composable
 private fun FilterButtons(
-    selectedNetworkFilterText: TextReference,
-    selectedTypeFilterText: TextReference,
-    isEnabled: Boolean,
+    earnFilterUM: EarnFilterUM,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -321,10 +311,14 @@ private fun FilterButtons(
     ) {
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedNetworkFilterText,
+                text = when (earnFilterUM.selectedNetworkFilter) {
+                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                    is EarnFilterNetworkUM.Network -> TextReference.Str(earnFilterUM.selectedNetworkFilter.text)
+                },
                 onClick = onNetworkFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = isEnabled,
+                isEnabled = earnFilterUM.isNetworkFilterEnabled,
             ),
         )
 
@@ -332,10 +326,10 @@ private fun FilterButtons(
 
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedTypeFilterText,
+                text = earnFilterUM.selectedTypeFilter.text,
                 onClick = onTypeFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = isEnabled,
+                isEnabled = earnFilterUM.isTypeFilterEnabled,
             ),
         )
     }
@@ -590,8 +584,12 @@ private fun previewEarnUM(
 ): EarnUM = EarnUM(
     mostlyUsed = mostlyUsed,
     bestOpportunities = bestOpportunities,
-    selectedTypeFilter = EarnFilterTypeUM.All,
-    selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+    earnFilterUM = EarnFilterUM(
+        selectedTypeFilter = EarnFilterTypeUM.All,
+        selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+        isTypeFilterEnabled = true,
+        isNetworkFilterEnabled = true,
+    ),
     onBackClick = {},
     onNetworkFilterClick = {},
     onTypeFilterClick = {},
