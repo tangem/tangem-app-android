@@ -1,12 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.state
 
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.WalletScreenStateTransformer
@@ -25,7 +23,9 @@ import javax.inject.Singleton
 [REDACTED_AUTHOR]
  */
 @Singleton
-internal class WalletStateController @Inject constructor() {
+internal class WalletStateController @Inject constructor(
+    private val designFeatureToggles: DesignFeatureToggles,
+) {
 
     val uiState: StateFlow<WalletScreenState> get() = mutableUiState
 
@@ -53,6 +53,10 @@ internal class WalletStateController @Inject constructor() {
         return value.wallets.firstOrNull { it.walletCardState.id == userWalletId }
     }
 
+    fun getWalletUM(userWalletId: UserWalletId): WalletUM? {
+        return value.wallets2.firstOrNull { it.walletsBalanceUM.id == userWalletId }
+    }
+
     fun getWalletStateIfSelected(walletId: UserWalletId): WalletState? {
         val selectedWalletId = getSelectedWalletId()
 
@@ -61,16 +65,40 @@ internal class WalletStateController @Inject constructor() {
         }
     }
 
+    fun getWalletUMIfSelected(walletId: UserWalletId): WalletUM? {
+        val selectedWalletId = getSelectedWalletId()
+
+        return value.wallets2.firstOrNull {
+            it.walletsBalanceUM.id == walletId && it.walletsBalanceUM.id == selectedWalletId
+        }
+    }
+
     fun getSelectedWallet(): WalletState {
         return with(value) { wallets[selectedWalletIndex] }
     }
 
+    fun getSelectedWalletUM(): WalletUM {
+        return with(value) { wallets2[selectedWalletIndex] }
+    }
+
     fun getSelectedWalletId(): UserWalletId {
-        return with(value) { wallets[selectedWalletIndex].walletCardState.id }
+        return with(value) {
+            if (designFeatureToggles.isRedesignEnabled) {
+                wallets2[selectedWalletIndex].walletsBalanceUM.id
+            } else {
+                wallets[selectedWalletIndex].walletCardState.id
+            }
+        }
     }
 
     fun getWalletIndexByWalletId(userWalletId: UserWalletId): Int? {
-        return with(value) { wallets.indexOfFirstOrNull { it.walletCardState.id == userWalletId } }
+        return with(value) {
+            if (designFeatureToggles.isRedesignEnabled) {
+                wallets2.indexOfFirstOrNull { it.walletsBalanceUM.id == userWalletId }
+            } else {
+                wallets.indexOfFirstOrNull { it.walletCardState.id == userWalletId }
+            }
+        }
     }
 
     fun showBottomSheet(
@@ -105,6 +133,7 @@ internal class WalletStateController @Inject constructor() {
             topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
             selectedWalletIndex = NOT_INITIALIZED_WALLET_INDEX,
             wallets = persistentListOf(),
+            wallets2 = persistentListOf(),
             onWalletChange = { _, _ -> },
             event = consumedEvent(),
             isHidingMode = false,
