@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.news.ArticleCard
@@ -104,10 +105,14 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                             }
                         },
                         style = TangemTheme.typography.subtitle1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                     )
                 }
             },
             onSeeAllClick = { feedListCallbacks.onOpenAllNews(false) },
+            isLoading = news.newsUMState == NewsUMState.LOADING,
+            shouldShowSeeAll = news.newsUMState == NewsUMState.CONTENT,
         )
         SpacerH(12.dp)
 
@@ -181,10 +186,14 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
                         text = stringResourceSafe(R.string.common_news),
                         style = TangemTheme.typography.h3,
                         color = TangemTheme.colors.text.primary1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                     )
                 }
             },
             onSeeAllClick = {},
+            shouldShowSeeAll = false,
+            isLoading = false,
         )
         SpacerH(12.dp)
         BlockCard(
