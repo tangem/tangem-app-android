@@ -8,7 +8,7 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
     api(projects.core.pagination)
+    implementation(projects.domain.account)
     implementation(projects.domain.common)
-    implementation(projects.domain.networks)
     implementation(deps.kotlin.serialization)
 }
