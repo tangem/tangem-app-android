@@ -401,17 +401,10 @@ private inline fun BaseScaffoldWithMarkets(
                         }
 
                         BottomSheetScrim(
-                            color = if (state.showMarketsOnboarding) {
-                                Color.Black.copy(alpha = .65f)
-                            } else {
-                                Color.Black.copy(alpha = .40f)
-                            },
-                            visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
-                                state.showMarketsOnboarding,
+                            color = Color.Black.copy(alpha = .40f),
+                            visible = bottomSheetState.targetValue == TangemSheetValue.Expanded,
                             onDismissRequest = {
-                                if (!state.showMarketsOnboarding) {
-                                    coroutineScope.launch { bottomSheetState.partialExpand() }
-                                }
+                                coroutineScope.launch { bottomSheetState.partialExpand() }
                             },
                         )
 
