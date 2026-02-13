@@ -227,7 +227,7 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         messageUM = TangemMessageUM(
             id = "DemoCardNotification",
             title = resourceReference(id = R.string.warning_demo_mode_title),
-            subtitle = resourceReference(id = R.string.warning_demo_mode_title),
+            subtitle = resourceReference(id = R.string.warning_demo_mode_message),
             messageEffect = TangemMessageEffect.None,
         ),
         type = WalletNotificationType.Warning,
@@ -400,11 +400,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     text = resourceReference(R.string.notification_one_plus_one_button),
                     type = TangemButtonType.PrimaryInverse,
                     onClick = onCloseClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(R.string.notification_one_plus_one_button),
-                    type = TangemButtonType.Primary,
-                    onClick = onClick,
                 ),
             ),
         ),
