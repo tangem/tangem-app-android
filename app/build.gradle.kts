@@ -265,6 +265,8 @@ dependencies {
     implementation(projects.features.onramp.impl)
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.onboardingV2.impl)
+    implementation(projects.features.onboardingUsedCard.api)
+    implementation(projects.features.onboardingUsedCard.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
     implementation(projects.features.txhistory.api)

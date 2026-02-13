@@ -16,6 +16,7 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
+import com.tangem.features.onboarding.usedcard.UsedCardOnboardingFeatureToggles
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
@@ -49,6 +50,7 @@ internal class LegacyScanProcessor @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val trackingContextProxy: TrackingContextProxy,
+    private val usedCardOnboardingFeatureToggles: UsedCardOnboardingFeatureToggles,
 ) {
 
     suspend fun scan(
@@ -203,6 +205,11 @@ internal class LegacyScanProcessor @Inject constructor(
     ) {
         checkCardWasUsedInApp(
             scanResponse = scanResponse,
+            onProgressStateChange = {
+                mainScope.launch {
+                    onProgressStateChange(it)
+                }
+            },
             onCancel = {
                 mainScope.launch {
                     onProgressStateChange.invoke(false)
@@ -247,6 +254,7 @@ internal class LegacyScanProcessor @Inject constructor(
      */
     private suspend fun checkCardWasUsedInApp(
         scanResponse: ScanResponse,
+        onProgressStateChange: (showProgress: Boolean) -> Unit,
         onCancel: () -> Unit,
         onSuccess: suspend () -> Unit,
     ) {
@@ -260,23 +268,31 @@ internal class LegacyScanProcessor @Inject constructor(
         val tokens = userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
 
         if (scanResponse.card.isAccessCodeSet && tokens == null) {
-            store.dispatchDialogShow(
-                AppDialog.WalletAlreadyWasUsedDialog(
-                    onOk = { mainScope.launch { onSuccess() } },
-                    onSupportClick = {
-                        val cardInfo =
-                            store.inject(DaggerGraphState::getWalletMetaInfoUseCase).invoke(scanResponse).getOrNull()
-                                ?: error("CardInfo must be not null")
+            if (usedCardOnboardingFeatureToggles.isUsedCardOnboardingEnabled) {
+                navigateTo(
+                    route = AppRoute.UsedCardOnboarding(scanResponse = scanResponse),
+                    onProgressStateChange = onProgressStateChange,
+                )
+            } else {
+                store.dispatchDialogShow(
+                    AppDialog.WalletAlreadyWasUsedDialog(
+                        onOk = { mainScope.launch { onSuccess() } },
+                        onSupportClick = {
+                            val cardInfo =
+                                store.inject(DaggerGraphState::getWalletMetaInfoUseCase).invoke(scanResponse)
+                                    .getOrNull()
+                                    ?: error("CardInfo must be not null")
 
-                        scope.launch {
-                            store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
-                                .invoke(type = FeedbackEmailType.PreActivatedWallet(cardInfo))
-                        }
-                        onCancel()
-                    },
-                    onCancel = { onCancel() },
-                ),
-            )
+                            scope.launch {
+                                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                                    .invoke(type = FeedbackEmailType.PreActivatedWallet(cardInfo))
+                            }
+                            onCancel()
+                        },
+                        onCancel = { onCancel() },
+                    ),
+                )
+            }
         } else {
             onSuccess()
         }

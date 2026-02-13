@@ -29,6 +29,7 @@ import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.nft.component.NFTComponent
+import com.tangem.features.onboarding.usedcard.UsedCardOnboardingComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -118,6 +119,7 @@ internal class ChildFactory @Inject constructor(
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val feedFeatureToggle: FeedFeatureToggle,
+    private val usedCardOnboardingComponentFactory: UsedCardOnboardingComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -710,6 +712,15 @@ internal class ChildFactory @Inject constructor(
                         preselectedArticlesId = listOf(route.newsId),
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.UsedCardOnboarding -> {
+                createComponentChild(
+                    context = context,
+                    params = UsedCardOnboardingComponent.Params(
+                        scanResponse = route.scanResponse,
+                    ),
+                    componentFactory = usedCardOnboardingComponentFactory,
                 )
             }
         }

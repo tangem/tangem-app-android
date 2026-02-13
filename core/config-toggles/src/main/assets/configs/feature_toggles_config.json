@@ -59,5 +59,9 @@
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "USED_CARD_ONBOARDING_ENABLED",
+        "version": "undefined"
     }
 ]

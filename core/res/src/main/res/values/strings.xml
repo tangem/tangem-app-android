@@ -966,6 +966,11 @@
   <string name="onboarding_navbar_save_wallet">Save your wallet</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_navbar_upgrade_wallet_biometrics">Biometrics</string>
+  <string name="onboarding_used_card_last_step">Last step</string>
+  <string name="onboarding_used_card_new_card_button">I\'ve just bought it</string>
+  <string name="onboarding_used_card_warning">Tangem never sells wallets along with the pre-generated access code</string>
+  <string name="onboarding_used_card_welcome_back_description">This wallet has already been activated, and we would like to confirm that it was activated by you.</string>
+  <string name="onboarding_used_card_welcome_back_title">Welcome back</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
     <item quantity="one"></item>

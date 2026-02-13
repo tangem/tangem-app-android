@@ -302,6 +302,9 @@ include(":features:yield-supply:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:onboarding-used-card:api")
+include(":features:onboarding-used-card:impl")
 // endregion Feature modules
 
 // region Domain modules
