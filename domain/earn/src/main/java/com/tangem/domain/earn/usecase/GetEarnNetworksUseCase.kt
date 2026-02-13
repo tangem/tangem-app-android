@@ -1,26 +1,26 @@
 package com.tangem.domain.earn.usecase
 
 import arrow.core.Either
-import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.models.earn.EarnNetwork
 import com.tangem.domain.models.earn.EarnNetworks
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 /**
- * Observes earn networks with [EarnNetwork.isAdded] enriched from user's wallets
- * via [multiNetworkStatusSupplier]. Single entry point for all/mine filtering.
+ * Observes earn networks with [EarnNetwork.isAdded] enriched from user's active (non-archived)
+ * accounts via [multiAccountListSupplier]. Single entry point for all/mine filtering.
+ *
+ * Uses [MultiAccountListSupplier] so that only networks from active accounts are considered;
+ * archived accounts are not included in [AccountList.accounts].
  */
 class GetEarnNetworksUseCase(
     private val earnRepository: EarnRepository,
-    private val userWalletsListRepository: UserWalletsListRepository,
-    private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+    private val multiAccountListSupplier: MultiAccountListSupplier,
 ) {
 
     operator fun invoke(): Flow<EarnNetworks> {
@@ -36,24 +36,13 @@ class GetEarnNetworksUseCase(
         }.distinctUntilChanged()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeMyNetworkIds(): Flow<Set<String>> {
-        return userWalletsListRepository.userWallets
-            .map { it.orEmpty() }
-            .flatMapLatest { wallets ->
-                val activeWallets = wallets
-                    .filterNot(UserWallet::isLocked)
-                    .filter(UserWallet::isMultiCurrency)
-                if (activeWallets.isEmpty()) {
-                    flowOf(emptySet())
-                } else {
-                    val flows = activeWallets.map { wallet ->
-                        multiNetworkStatusSupplier(
-                            MultiNetworkStatusProducer.Params(userWalletId = wallet.walletId),
-                        ).map { statuses -> statuses.map { it.network.backendId }.toSet() }
-                    }
-                    combine(flows) { arrays -> arrays.flatMap { it }.toSet() }
-                }
+        return multiAccountListSupplier()
+            .map { accountLists ->
+                accountLists
+                    .flatMap(AccountList::flattenCurrencies)
+                    .map { it.network.backendId }
+                    .toSet()
             }
     }
 }
