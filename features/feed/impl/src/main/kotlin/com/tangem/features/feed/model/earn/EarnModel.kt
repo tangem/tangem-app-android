@@ -70,8 +70,8 @@ internal class EarnModel @Inject constructor(
     private val earnNetworks = MutableStateFlow<EarnNetworks>(Either.Right(emptyList()))
     private val earnListConfigProvider = Provider {
         createEarnTokensListConfig(
-            selectedTypeFilter = stateController.value.selectedTypeFilter,
-            selectedNetworkFilter = stateController.value.selectedNetworkFilter,
+            selectedTypeFilter = stateController.value.earnFilterUM.selectedTypeFilter,
+            selectedNetworkFilter = stateController.value.earnFilterUM.selectedNetworkFilter,
             earnNetworks = earnNetworks.value,
         )
     }
@@ -118,8 +118,8 @@ internal class EarnModel @Inject constructor(
             batchFlowManager.initialLoadingError,
             batchFlowManager.paginationStatus,
         ) { items, error, paginationStatus ->
-            val hasActiveFilters = state.value.selectedTypeFilter != EarnFilterTypeUM.All ||
-                state.value.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
+            val hasActiveFilters = state.value.earnFilterUM.selectedTypeFilter != EarnFilterTypeUM.All ||
+                state.value.earnFilterUM.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
             error?.let(::handleBestOpportunitiesErrorAnalytics)
             EarnListStateManager.calculateState(
                 items = items,
@@ -157,18 +157,21 @@ internal class EarnModel @Inject constructor(
 
     private fun subscribeOnStoredFilters() {
         modelScope.launch(dispatchers.default) {
-            getEarnFilterUseCase()
-                .collect { filter ->
-                    val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
-                    val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
-                    stateController.update(
-                        EarnFilterSelectedStateTransformer(
-                            filterType = typeFilterUM,
-                            filterNetwork = networkFilterUM,
-                        ),
-                    )
-                    batchFlowManager.reload()
-                }
+            combine(
+                getEarnFilterUseCase(),
+                earnNetworks,
+            ) { filter, networks ->
+                val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
+                val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
+                stateController.update(
+                    EarnFilterSelectedStateTransformer(
+                        filterType = typeFilterUM,
+                        filterNetwork = networkFilterUM,
+                        earnNetworks = networks,
+                    ),
+                )
+                batchFlowManager.reload()
+            }.collect()
         }
     }
 
@@ -191,7 +194,7 @@ internal class EarnModel @Inject constructor(
         bottomSheetNavigation.activate(
             FeedBottomSheetRoute.TypeFilter(
                 params = EarnTypeFilterComponent.Params(
-                    selectedFilter = EarnFilterTypeUMConverter().convert(currentState.selectedTypeFilter),
+                    selectedFilter = EarnFilterTypeUMConverter().convert(currentState.earnFilterUM.selectedTypeFilter),
                     onFilterSelected = ::onTypeFilterOptionSelected,
                     onDismiss = { bottomSheetNavigation.dismiss() },
                 ),
@@ -212,7 +215,7 @@ internal class EarnModel @Inject constructor(
     }
 
     private fun createNetworkFilters(): List<EarnFilterNetwork> {
-        val selectedFilter = state.value.selectedNetworkFilter
+        val selectedFilter = state.value.earnFilterUM.selectedNetworkFilter
         return buildList {
             add(
                 EarnFilterNetwork.AllNetworks(
@@ -279,7 +282,9 @@ internal class EarnModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             setEarnFilterUseCase(
                 EarnFilter(
-                    earnFilterNetwork = EarnFilterNetworkUMConverter().convert(state.value.selectedNetworkFilter),
+                    earnFilterNetwork = EarnFilterNetworkUMConverter().convert(
+                        value = state.value.earnFilterUM.selectedNetworkFilter,
+                    ),
                     earnFilterType = type,
                 ),
             )
@@ -292,7 +297,7 @@ internal class EarnModel @Inject constructor(
             setEarnFilterUseCase(
                 EarnFilter(
                     earnFilterNetwork = filter,
-                    earnFilterType = EarnFilterTypeUMConverter().convert(state.value.selectedTypeFilter),
+                    earnFilterType = EarnFilterTypeUMConverter().convert(state.value.earnFilterUM.selectedTypeFilter),
                 ),
             )
         }
