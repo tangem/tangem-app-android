@@ -1,9 +1,11 @@
 package com.tangem.core.ui.format.bigdecimal
 
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
 import com.tangem.utils.StringsSigns.TILDE_SIGN
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -15,8 +17,16 @@ open class BigDecimalFiatFormat(
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
 
-// == Initializers ==
+open class BigDecimalFiatFormatStyled(
+    val fiatCurrencyCode: String,
+    val fiatCurrencySymbol: String,
+    val spanStyleReference: SpanStyleReference,
+    val locale: Locale = Locale.getDefault(),
+) : BigDecimalFormatStyled {
+    override fun invoke(value: BigDecimal): TextReference = defaultAmount(spanStyleReference)(value)
+}
 
+//region  == Initializers ==
 fun BigDecimalFormatScope.fiat(
     fiatCurrencyCode: String,
     fiatCurrencySymbol: String,
@@ -29,7 +39,20 @@ fun BigDecimalFormatScope.fiat(
     )
 }
 
-// == Formatters ==
+fun BigDecimalFormatScope.fiat(
+    fiatCurrencyCode: String,
+    fiatCurrencySymbol: String,
+    spanStyleReference: SpanStyleReference,
+    locale: Locale = Locale.getDefault(),
+): BigDecimalFiatFormatStyled {
+    return BigDecimalFiatFormatStyled(
+        fiatCurrencyCode = fiatCurrencyCode,
+        fiatCurrencySymbol = fiatCurrencySymbol,
+        spanStyleReference = spanStyleReference,
+        locale = locale,
+    )
+}
+// endregion == Formatters ==
 
 /**
  * Formats fiat amount with default precision.
@@ -56,6 +79,38 @@ fun BigDecimalFiatFormat.defaultAmount(): BigDecimalFormat = BigDecimalFormat { 
         formatter.format(value)
             .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
     }
+}
+
+fun BigDecimalFiatFormatStyled.defaultAmount(spanStyleReference: SpanStyleReference) = BigDecimalFormatStyled { value ->
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = formatterCurrency
+        maximumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+        minimumFractionDigits = FIAT_MARKET_DEFAULT_DIGITS
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    val formattingAmount = if (value.isLessThanThreshold()) {
+        FIAT_FORMAT_THRESHOLD
+    } else {
+        value
+    }
+
+    val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+    val formattedAmount = formatter.format(formattingAmount)
+        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+
+    val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+
+    val wholePart = formattedAmount.take(separatorIndex)
+    val fractionalPart = formattedAmount.drop(separatorIndex)
+
+    combinedReference(
+        if (formattingAmount.isLessThanThreshold()) stringReference(CAN_BE_LOWER_SIGN) else TextReference.EMPTY,
+        stringReference(wholePart),
+        styledStringReference(fractionalPart, spanStyleReference),
+    )
 }
 
 /**
