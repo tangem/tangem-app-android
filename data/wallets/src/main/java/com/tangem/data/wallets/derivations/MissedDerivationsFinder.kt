@@ -3,45 +3,80 @@ package com.tangem.data.wallets.derivations
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.KeyWalletPublicKey
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.config.curvesConfig
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
-import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import kotlin.collections.forEach
 
 private typealias DerivationData = Pair<ByteArrayKey, List<DerivationPath>>
 internal typealias Derivations = Map<ByteArrayKey, List<DerivationPath>>
 
 /**
+ * Data class representing a blockchain with its derivation path
+ */
+data class BlockchainToDerive(
+    val blockchain: Blockchain,
+    val derivationPath: DerivationPath,
+)
+
+/**
  * Finder of missed derivations
  *
- * @property userWallet User wallet to find derivations for
+ * @property source Source of derivations data (UserWallet or ScanResponse)
  *
 [REDACTED_AUTHOR]
  */
-internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
+class MissedDerivationsFinder private constructor(private val source: DerivationsSource) {
+
+    /**
+     * Secondary constructor for backward compatibility with UserWallet
+     */
+    constructor(userWallet: UserWallet) : this(DerivationsSource.FromUserWallet(userWallet))
+
+    /**
+     * Secondary constructor for ScanResponse
+     */
+    constructor(scanResponse: ScanResponse) : this(DerivationsSource.FromScanResponse(scanResponse))
 
     /** Find missed derivations for given currencies [currencies] */
     fun find(currencies: List<CryptoCurrency>): Derivations {
         return currencies.map { it.network }.let(::findByNetworks)
     }
 
+    /** Find missed derivations for given [Network] list */
     fun findByNetworks(networks: List<Network>): Derivations {
+        val blockchainsToDerive = networks.mapNotNull { network ->
+            val blockchain = network.toBlockchain()
+            val derivationPath = network.derivationPath.value?.let(::DerivationPath)
+                ?: return@mapNotNull null
+
+            BlockchainToDerive(blockchain, derivationPath)
+        }
+        return findByBlockchainsToDerive(blockchainsToDerive)
+    }
+
+    /** Find missed derivations for given [BlockchainToDerive] list */
+    fun findByBlockchainsToDerive(blockchainsToDerive: Collection<BlockchainToDerive>): Derivations {
+        val enrichedBlockchains = blockchainsToDerive.enrichBlockchains()
+        return findDerivationsInternal(enrichedBlockchains)
+    }
+
+    /**
+     * Common implementation for finding derivations
+     */
+    private fun findDerivationsInternal(items: Collection<BlockchainToDerive>): Derivations {
         return buildMap<ByteArrayKey, MutableList<DerivationPath>> {
-            networks
-                .mapToNewDerivations()
+            items
+                .mapNotNull(::mapToNewDerivation)
                 .forEach { data ->
                     val current = this[data.first]
                     if (current != null) {
                         current.addAll(data.second)
-                        current.distinct()
+                        this[data.first] = current.distinct().toMutableList()
                     } else {
                         this[data.first] = data.second.toMutableList()
                     }
@@ -49,31 +84,17 @@ internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
         }
     }
 
-    private fun List<Network>.mapToNewDerivations(): List<DerivationData> {
-        return mapNotNull { network ->
-            val blockchain = network.toBlockchain()
-            val curve = userWallet.curvesConfig.primaryCurve(blockchain) ?: return@mapNotNull null
+    /**
+     * Maps a single BlockchainToDerive to derivation data (public key -> derivation paths)
+     */
+    private fun mapToNewDerivation(input: BlockchainToDerive): DerivationData? {
+        val curve = source.curvesConfig.primaryCurve(input.blockchain) ?: return null
+        if (!input.blockchain.getSupportedCurves().contains(curve)) return null
 
-            val walletPublicKey = when (userWallet) {
-                is UserWallet.Cold -> {
-                    val wallet = userWallet.scanResponse.card.wallets.firstOrNull { it.curve == curve }
-                    wallet?.publicKey
-                }
-                is UserWallet.Hot -> {
-                    val wallet = userWallet.wallets?.firstOrNull { it.curve == curve }
-                    wallet?.publicKey
-                }
-            }
+        val publicKey = source.getWalletPublicKey(curve) ?: return null
 
-            walletPublicKey?.let {
-                findNewDerivations(curve = curve, publicKey = it, network = network)
-            }
-        }
-    }
-
-    private fun findNewDerivations(curve: EllipticCurve, publicKey: ByteArray, network: Network): DerivationData? {
-        val derivationCandidates = network
-            .getDerivationCandidates(curve)
+        val derivationCandidates = input.blockchain
+            .getDerivationCandidates(input.derivationPath)
             .ifEmpty { return null }
             .filterAlreadyDerivedKeys(publicKey.toMapKey())
             .ifEmpty { return null }
@@ -81,59 +102,63 @@ internal class MissedDerivationsFinder(private val userWallet: UserWallet) {
         return publicKey.toMapKey() to derivationCandidates
     }
 
-    private fun Network.getDerivationCandidates(curve: EllipticCurve): List<DerivationPath> {
-        val blockchain = this.toBlockchain()
-
+    /**
+     * Gets all possible derivation paths for a blockchain
+     */
+    private fun Blockchain.getDerivationCandidates(derivationPath: DerivationPath): List<DerivationPath> {
         return buildList {
-            add(blockchain.getDerivationPath(curve = curve))
-            add(blockchain.getCustomDerivationPath(curve = curve, network = this@getDerivationCandidates))
-            add(blockchain.getCardanoDerivationPathIfNeeded(network = this@getDerivationCandidates))
+            // Default derivation path for blockchain
+            add(getDerivationPath())
+
+            // The specified derivation path (can be either default or custom)
+            add(derivationPath)
+
+            // Extended Cardano derivation path if needed
+            add(getCardanoExtendedDerivationPath(derivationPath))
         }
             .filterNotNull()
             .distinct()
     }
 
-    private fun Blockchain.getDerivationPath(curve: EllipticCurve): DerivationPath? {
-        return if (getSupportedCurves().contains(curve)) {
-            derivationPath(style = userWallet.derivationStyleProvider.getDerivationStyle())
-        } else {
-            null
-        }
+    private fun Blockchain.getDerivationPath(): DerivationPath? {
+        return derivationPath(style = source.derivationStyleProvider.getDerivationStyle())
     }
 
-    private fun Blockchain.getCustomDerivationPath(curve: EllipticCurve, network: Network): DerivationPath? {
-        return if (getSupportedCurves().contains(curve)) {
-            network.derivationPath.value?.let(::DerivationPath)
-        } else {
-            null
-        }
-    }
-
-    private fun Blockchain.getCardanoDerivationPathIfNeeded(network: Network): DerivationPath? {
-        return if (this == Blockchain.Cardano) {
-            network.derivationPath.value?.let {
-                CardanoUtils.extendedDerivationPath(derivationPath = DerivationPath(it))
-            }
-        } else {
-            null
-        }
+    private fun Blockchain.getCardanoExtendedDerivationPath(customDerivationPath: DerivationPath): DerivationPath? {
+        if (this != Blockchain.Cardano) return null
+        return CardanoUtils.extendedDerivationPath(derivationPath = customDerivationPath)
     }
 
     private fun List<DerivationPath>.filterAlreadyDerivedKeys(publicKey: KeyWalletPublicKey): List<DerivationPath> {
-        val alreadyDerivedPaths = getAlreadyDerivedKeys(publicKey)
+        val alreadyDerivedPaths = source.getDerivedKeys(publicKey).keys.toList()
         return filterNot(alreadyDerivedPaths::contains)
     }
 
-    private fun getAlreadyDerivedKeys(publicKey: KeyWalletPublicKey): List<DerivationPath> {
-        val extendedPublicKeysMap = when (userWallet) {
-            is UserWallet.Cold -> userWallet.scanResponse.derivedKeys[publicKey] ?: ExtendedPublicKeysMap(emptyMap())
-            is UserWallet.Hot -> {
-                val wallets = userWallet.wallets ?: return emptyList()
-                wallets.firstOrNull { it.publicKey.contentEquals(publicKey.bytes) }?.derivedKeys
-                    ?: ExtendedPublicKeysMap(emptyMap())
-            }
+    // region Blockchain enrichment logic
+
+    /**
+     * Enriches blockchains collection:
+     * - Adds Ethereum if HD wallet is allowed
+     * - Removes unnecessary blockchains that share derivation path with Ethereum (for cards without old style derivation)
+     */
+    private fun Collection<BlockchainToDerive>.enrichBlockchains(): Collection<BlockchainToDerive> {
+        if (!source.isHDWalletAllowed) return this
+
+        val derivationStyle = source.derivationStyleProvider.getDerivationStyle()
+        val ethereumDerivationPath = Blockchain.Ethereum.derivationPath(derivationStyle) ?: return this
+
+        val withEthereum = this + BlockchainToDerive(Blockchain.Ethereum, ethereumDerivationPath)
+
+        // For cards with old style derivation, keep all blockchains
+        if (source.hasOldStyleDerivation) {
+            return withEthereum.distinct()
         }
 
-        return extendedPublicKeysMap.keys.toList()
+        // For new cards: filter out blockchains with same derivation path as Ethereum (except Ethereum itself)
+        return withEthereum
+            .filter { it.derivationPath != ethereumDerivationPath || it.blockchain == Blockchain.Ethereum }
+            .distinct()
     }
+
+    // endregion
 }
