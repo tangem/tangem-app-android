@@ -1,19 +1,17 @@
 package com.tangem.tap.domain.tasks.product
 
 import com.google.common.truth.Truth
-import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationStyle
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.wallets.derivations.BlockchainToDerive
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -24,19 +22,16 @@ import org.junit.jupiter.api.TestInstance
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DerivationsFinderTest {
+class BlockchainToDeriveFinderTest {
 
     private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
-    private val finder = DerivationsFinder(
+    private val finder = BlockchainToDeriveFinder(
         walletAccountsFetcher = walletAccountsFetcher,
-        dispatchers = TestingCoroutineDispatcherProvider(),
     )
-
-    private val derivationStyleProvider = mockk<DerivationStyleProvider>()
 
     @AfterEach
     fun tearDown() {
-        clearMocks(walletAccountsFetcher, derivationStyleProvider)
+        clearMocks(walletAccountsFetcher)
     }
 
     @Test
@@ -47,7 +42,7 @@ class DerivationsFinderTest {
         }
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = mockk())
+        val actual = finder.find(card)
 
         // Assert
         Truth.assertThat(actual).isEmpty()
@@ -62,29 +57,26 @@ class DerivationsFinderTest {
         }
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = mockk())
+        val actual = finder.find(card)
 
         // Assert
         Truth.assertThat(actual).isEmpty()
     }
 
     @Test
-    fun `GIVEN saved bitcoin THEN return bitcoin and ethereum`() = runTest {
+    fun `GIVEN saved bitcoin THEN return only bitcoin`() = runTest {
         // Arrange
         val card = createCardDTO()
-
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
 
         val response = createResponse(Blockchain.Bitcoin)
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns response
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = setOf(
             createExpected(Blockchain.Bitcoin),
-            createExpected(Blockchain.Ethereum),
         )
 
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
@@ -98,12 +90,10 @@ class DerivationsFinderTest {
         val demoCardId = "AC01000000045754"
         val card = createCardDTO(cardId = demoCardId)
 
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
-
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns null
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = setOf(
@@ -124,12 +114,10 @@ class DerivationsFinderTest {
         val demoCardId = "DE00"
         val card = createCardDTO(cardId = demoCardId)
 
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
-
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns null
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = setOf(
@@ -148,12 +136,10 @@ class DerivationsFinderTest {
         // Arrange
         val card = createCardDTO()
 
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
-
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns null
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = setOf(
@@ -167,26 +153,19 @@ class DerivationsFinderTest {
     }
 
     @Test
-    fun `GIVEN saved cardano THEN return cardano and ethereum`() = runTest {
+    fun `GIVEN saved cardano THEN return only cardano`() = runTest {
         // Arrange
         val card = createCardDTO()
-
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
 
         val response = createResponse(Blockchain.Cardano)
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns response
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = setOf(
             createExpected(Blockchain.Cardano),
-            createExpected(
-                blockchain = Blockchain.Cardano,
-                derivationPath = CardanoUtils.extendedDerivationPath(Blockchain.Cardano.getDerivationPath())
-            ),
-            createExpected(Blockchain.Ethereum),
         )
 
         Truth.assertThat(actual).containsExactlyElementsIn(expected)
@@ -195,53 +174,18 @@ class DerivationsFinderTest {
     }
 
     @Test
-    fun `GIVEN saved eth-like blockchains for v3 config wallet THEN return only unique evm derivations`() = runTest {
+    fun `GIVEN saved eth-like blockchains THEN return all saved blockchains without filtering`() = runTest {
         // Arrange
         val card = createCardDTO()
 
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V3
+        val blockchains = listOf(Blockchain.Ethereum, Blockchain.BSC, Blockchain.Polygon)
 
-        val blockchains = Blockchain.entries
-            .filter { it.isEvm() && !it.isTestnet() }
-            .toTypedArray()
-
-        val response = createResponse(*blockchains)
+        val response = createResponse(*blockchains.toTypedArray())
 
         coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns response
 
         // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
-
-        // Assert
-        val expected = setOf(
-            createExpected(Blockchain.Ethereum),
-            createExpected(Blockchain.EthereumClassic),
-            createExpected(Blockchain.Quai),
-            createExpected(Blockchain.XDC),
-        )
-
-        Truth.assertThat(actual).containsExactlyElementsIn(expected)
-
-        coVerify(exactly = 1) { walletAccountsFetcher.getSaved(userWalletId) }
-    }
-
-    @Test
-    fun `GIVEN card has old style derivation (v1 config) THEN return all eth-like blockchains`() = runTest {
-        // Arrange
-        val oldBatchId = "AC01"
-        val card = createCardDTO(batchId = oldBatchId)
-
-        every { derivationStyleProvider.getDerivationStyle() } returns DerivationStyle.V1
-
-        val blockchains = Blockchain.entries
-            .filter { it.isEvm() && !it.isTestnet() }
-            .toTypedArray()
-
-        val response = createResponse(*blockchains)
-        coEvery { walletAccountsFetcher.getSaved(userWalletId) } returns response
-
-        // Act
-        val actual = finder.findBlockchainsToDerive(card = card, derivationStyleProvider = derivationStyleProvider)
+        val actual = finder.find(card)
 
         // Assert
         val expected = blockchains.mapTo(hashSetOf(), ::createExpected)
@@ -260,6 +204,13 @@ class DerivationsFinderTest {
             every { this@mockk.cardId } returns cardId
             every { this@mockk.batchId } returns batchId
             every { this@mockk.settings.isHDWalletAllowed } returns true
+            every { this@mockk.settings.isKeysImportAllowed } returns true
+            every { this@mockk.firmwareVersion } returns CardDTO.FirmwareVersion(
+                major = 6,
+                minor = 33,
+                patch = 0,
+                type = com.tangem.common.card.FirmwareVersion.FirmwareType.Release,
+            )
             every { this@mockk.wallets } returns listOf(wallet)
         }
     }
@@ -290,7 +241,7 @@ class DerivationsFinderTest {
     }
 
     private fun Blockchain.getDerivationPath(): DerivationPath {
-        return derivationPath(derivationStyleProvider.getDerivationStyle())!!
+        return derivationPath(DerivationStyle.V3)!!
     }
 
     private companion object {
