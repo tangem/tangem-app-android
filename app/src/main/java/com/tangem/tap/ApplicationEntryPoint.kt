@@ -17,7 +17,6 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
-import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
@@ -49,7 +48,6 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -121,8 +119,6 @@ interface ApplicationEntryPoint {
 
     fun getOnboardingRepository(): OnboardingRepository
 
-    fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
-
     fun getExcludedBlockchains(): ExcludedBlockchains
 
     fun getAppLogsStore(): AppLogsStore
@@ -155,6 +151,4 @@ interface ApplicationEntryPoint {
     fun getABTestsManager(): ABTestsManager
 
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
-
-    fun getWalletAccountsFetcher(): WalletAccountsFetcher
 }
