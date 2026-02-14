@@ -31,7 +31,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
-import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -74,10 +73,8 @@ import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
@@ -90,7 +87,6 @@ import timber.log.Timber
 lateinit var store: Store<AppState>
 
 val foregroundActivityObserver = ForegroundActivityObserver
-internal lateinit var derivationsFinder: DerivationsFinder
 
 open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
@@ -191,9 +187,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val onboardingRepository: OnboardingRepository
         get() = entryPoint.getOnboardingRepository()
 
-    private val dispatchers: CoroutineDispatcherProvider
-        get() = entryPoint.getCoroutineDispatcherProvider()
-
     private val excludedBlockchains: ExcludedBlockchains
         get() = entryPoint.getExcludedBlockchains()
 
@@ -246,9 +239,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val appsFlyerClientFactory: AppsFlyerClient.Factory
         get() = entryPoint.getAppsFlyerClientFactory()
-
-    private val walletAccountsFetcher: WalletAccountsFetcher
-        get() = entryPoint.getWalletAccountsFetcher()
 
     // endregion
 
@@ -351,11 +341,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                 }.toTypedArray(),
             )
         }
-
-        derivationsFinder = DerivationsFinder(
-            walletAccountsFetcher = walletAccountsFetcher,
-            dispatchers = dispatchers,
-        )
 
         appStateHolder.mainStore = store
 
