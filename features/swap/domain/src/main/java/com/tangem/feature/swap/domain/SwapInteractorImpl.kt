@@ -36,6 +36,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.tokens.*
@@ -1030,6 +1031,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
         if (isTangemPayWithdrawal) {
+            val networkAddress = currencyToSend.value.networkAddress
             return SwapTransactionState.TangemPayWithdrawalData(
                 cryptoAmount = amount.value,
                 cryptoCurrencyId = requireNotNull(currencyToSend.currency.id.rawCurrencyId),
@@ -1055,6 +1057,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txExternalUrl = exchangeDataCex.externalTxUrl,
                     txExternalId = exchangeDataCex.externalTxId,
                     averageDuration = null,
+                ),
+                exchangeData = TangemPayWithdrawExchangeState(
+                    txId = exchangeDataCex.txId,
+                    fromNetwork = currencyToSend.currency.network.backendId,
+                    fromAddress = networkAddress?.defaultAddress?.value.orEmpty(),
+                    payInAddress = exchangeData.transaction.txTo,
+                    payInExtraId = exchangeDataCex.txExtraId,
                 ),
             )
         }
