@@ -45,7 +45,7 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindTangemPaySwapRepository(repository: DefaultTangemPaySwapRepository): TangemPaySwapRepository
+    fun bindTangemPaySwapRepository(repository: DefaultTangemPayWithdrawRepository): TangemPayWithdrawRepository
 
     @Binds
     @Singleton
