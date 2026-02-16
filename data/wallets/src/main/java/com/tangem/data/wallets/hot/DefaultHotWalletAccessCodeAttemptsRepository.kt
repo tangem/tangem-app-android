@@ -47,18 +47,11 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
             hotWalletId = hotWalletId,
             auth = true,
         )
-        val noAuthAttemptId = HotWalletAccessCodeAttemptsRepository.AttemptId(
-            hotWalletId = hotWalletId,
-            auth = false,
-        )
 
-        appPreferencesStore.editData {
-            it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey()))
-            it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(noAuthAttemptId.attemptIdKey()))
-            it.remove(PreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey()))
-            it.remove(PreferencesKeys.getHotWalletUnlockBootKey(noAuthAttemptId.attemptIdKey()))
-            it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey()))
-            it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(noAuthAttemptId.attemptIdKey()))
+        appPreferencesStore.editData { data ->
+            data.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey()))
+            data.remove(PreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey()))
+            data.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey()))
         }
     }
 
@@ -119,13 +112,21 @@ class DefaultHotWalletAccessCodeAttemptsRepository @Inject constructor(
             }
             else -> {
                 val remaining = remainingSeconds(deadlineElapsed, bootStored)
-                Attempts.WithDelay(count, remaining)
+                val newCount = if (id.auth) {
+                    count
+                } else {
+                    MAX_FAST_FORWARD_ATTEMPTS
+                }
+                Attempts.WithDelay(newCount, remaining)
             }
         }
     }
 
     private fun HotWalletAccessCodeAttemptsRepository.AttemptId.attemptIdKey(): String {
-        return "${hotWalletId.value}_$auth"
+        // Regarding [REDACTED_TASK_KEY], the attempts counter must be shared between modes (auth vs signing).
+        // To provide backward compatibility, we use the same keys but read attempts in auth mode for security reasons.
+        val isAuthMode = true
+        return "${hotWalletId.value}_$isAuthMode"
     }
 
     private fun currentBootCount(): Int = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, 0)
