@@ -7,14 +7,7 @@
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
-    {
-        "name": "STAKING_TON_ENABLED",
-        "version": "5.28.0"
-    },
-    {
-        "name": "STAKING_CARDANO_ENABLED",
-        "version": "5.31.1"
-    },
+
     {
         "name": "STAKING_ETH_ENABLED",
         "version": "undefined"
