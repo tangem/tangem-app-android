@@ -126,7 +126,13 @@ internal class DefaultTangemSdkManager(
             }
 
             if (awaitInitialization) {
-                awaitAuthenticationManagerInitialization().needEnrollBiometrics
+                val manager = awaitAuthenticationManagerInitialization()
+
+                if (manager.isInitialized) {
+                    manager.needEnrollBiometrics
+                } else {
+                    false
+                }
             } else {
                 throw e
             }
@@ -145,7 +151,11 @@ internal class DefaultTangemSdkManager(
             if (awaitInitialization) {
                 val manager = awaitAuthenticationManagerInitialization()
 
-                manager.canAuthenticate || manager.needEnrollBiometrics
+                if (manager.isInitialized) {
+                    manager.canAuthenticate || manager.needEnrollBiometrics
+                } else {
+                    false
+                }
             } else {
                 throw e
             }
