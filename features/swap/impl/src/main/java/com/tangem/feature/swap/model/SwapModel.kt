@@ -1136,6 +1136,7 @@ internal class SwapModel @Inject constructor(
             cryptoAmount = swapTransactionState.cryptoAmount,
             cryptoCurrencyId = swapTransactionState.cryptoCurrencyId,
             receiverCexAddress = swapTransactionState.cexAddress,
+            exchangeData = swapTransactionState.exchangeData,
         )
             .onLeft {
                 startLoadingQuotesFromLastState()
