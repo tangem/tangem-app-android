@@ -169,4 +169,42 @@ class WalletAccountListFlowFactoryTest {
             accountListConverter.convert(any())
         }
     }
+
+    @Test
+    fun `create for multi wallet with empty accounts does not emit`() = runTest {
+        // Arrange
+        val userWallet = mockk<UserWallet> {
+            every { this@mockk.walletId } returns userWalletId
+            every { this@mockk.isMultiCurrency } returns true
+        }
+
+        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
+
+        every { userWalletsListRepository.userWallets } returns userWalletsFlow
+
+        val accountsResponseWithEmptyAccounts = GetWalletAccountsResponse(
+            wallet = GetWalletAccountsResponse.Wallet(
+                group = null,
+                sort = null,
+                totalAccounts = 0,
+                totalArchivedAccounts = 0,
+            ),
+            accounts = emptyList(),
+            unassignedTokens = emptyList(),
+        )
+        every { accountsResponseStoreFactory.create(userWalletId) } returns accountsResponseStore
+        every { accountsResponseStore.data } returns accountsResponseStoreFlow
+        accountsResponseStoreFlow.value = accountsResponseWithEmptyAccounts
+
+        // Act
+        val actual = factory.create(userWalletId).let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual).isEmpty()
+
+        coVerify(inverse = true) {
+            accountListConverterFactory.create(any())
+            accountListConverter.convert(any())
+        }
+    }
 }
