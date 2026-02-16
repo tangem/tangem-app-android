@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain.models.ui
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
@@ -31,6 +32,7 @@ sealed class SwapTransactionState {
         val toAmount: String?,
         val toAmountValue: BigDecimal?,
         val storeData: StoreTransactionData,
+        val exchangeData: TangemPayWithdrawExchangeState,
     ) : SwapTransactionState() {
 
         data class StoreTransactionData(
