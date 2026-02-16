@@ -27,6 +27,7 @@ data class OrderResponse(
             @Json(name = "emboss_name") val embossName: String?,
             @Json(name = "product_instance_id") val productInstanceId: String?,
             @Json(name = "payment_account_id") val paymentAccountId: String?,
+            @Json(name = "transaction_hash") val transactionHash: String?,
         )
     }
 }
