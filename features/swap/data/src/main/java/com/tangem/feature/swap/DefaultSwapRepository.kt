@@ -312,7 +312,7 @@ internal class DefaultSwapRepository(
                         userWallet = userWallet,
                         appPreferencesStore = appPreferencesStore,
                     ),
-                    toExtraId = toExtraId,
+                    toExtraId = toExtraId?.ifEmpty { null },
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
