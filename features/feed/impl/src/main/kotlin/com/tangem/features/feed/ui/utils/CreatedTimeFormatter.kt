@@ -10,10 +10,13 @@ import com.tangem.utils.StringsSigns
 import org.joda.time.DateTime
 
 internal fun mapFormattedDate(createdAt: String): TextReference {
-    val formattedDate = getFormattedDate(
-        createdAt = createdAt,
-        now = DateTime.now(),
-    )
+    val formattedDate = runCatching {
+        getFormattedDate(
+            createdAt = createdAt,
+            now = DateTime.now(),
+        )
+    }.getOrElse { FormattedDate.FullDate("") }
+
     return when (formattedDate) {
         is FormattedDate.FullDate -> TextReference.Str(value = formattedDate.date)
         is FormattedDate.HoursAgo -> TextReference.PluralRes(
