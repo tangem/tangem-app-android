@@ -248,7 +248,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 userWallet = userWallet,
                 appPreferencesStore = appPreferencesStore,
             ),
-            toExtraId = toExtraId,
+            toExtraId = toExtraId?.ifEmpty { null },
         ).getOrThrow()
 
         if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
