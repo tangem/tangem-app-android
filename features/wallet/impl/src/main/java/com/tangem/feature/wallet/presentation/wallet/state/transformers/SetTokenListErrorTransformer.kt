@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import timber.log.Timber
 import java.math.BigDecimal
@@ -49,6 +50,10 @@ internal class SetTokenListErrorTransformer(
             is TokenListError.UnableToSortTokenList,
             -> prevState
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
