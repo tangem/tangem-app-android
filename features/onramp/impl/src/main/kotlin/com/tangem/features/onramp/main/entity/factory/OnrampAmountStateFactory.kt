@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.mainv2.entity.factory
+package com.tangem.features.onramp.main.entity.factory
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
@@ -11,34 +11,34 @@ import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.*
-import com.tangem.features.onramp.mainv2.entity.converter.OnrampV2AmountFieldChangeConverter
+import com.tangem.features.onramp.main.entity.*
+import com.tangem.features.onramp.main.entity.converter.OnrampAmountFieldChangeConverter
 import com.tangem.utils.Provider
 
-internal class OnrampV2AmountStateFactory(
-    private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
+internal class OnrampAmountStateFactory(
+    private val currentStateProvider: Provider<OnrampMainComponentUM>,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val onrampIntents: OnrampV2Intents,
+    private val onrampIntents: OnrampIntents,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
 ) {
 
-    private val onrampAmountFieldChangeConverter: OnrampV2AmountFieldChangeConverter by lazy(
+    private val onrampAmountFieldChangeConverter: OnrampAmountFieldChangeConverter by lazy(
         mode = LazyThreadSafetyMode.NONE,
     ) {
-        OnrampV2AmountFieldChangeConverter(
+        OnrampAmountFieldChangeConverter(
             currentStateProvider = currentStateProvider,
             onrampAmountButtonUMStateFactory = onrampAmountButtonUMStateFactory,
             onrampIntents = onrampIntents,
         )
     }
 
-    fun getOnAmountValueChange(value: String): OnrampV2MainComponentUM {
+    fun getOnAmountValueChange(value: String): OnrampMainComponentUM {
         return onrampAmountFieldChangeConverter.convert(value)
     }
 
-    fun getUpdatedCurrencyState(currency: OnrampCurrency): OnrampV2MainComponentUM {
+    fun getUpdatedCurrencyState(currency: OnrampCurrency): OnrampMainComponentUM {
         val currentState = currentStateProvider()
-        if (currentState !is OnrampV2MainComponentUM.Content) return currentState
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
 
         val amountState = currentState.amountBlockState
 
@@ -72,9 +72,9 @@ internal class OnrampV2AmountStateFactory(
         )
     }
 
-    fun getSecondaryFieldAmountErrorState(quotes: List<OnrampQuote>): OnrampV2MainComponentUM {
+    fun getSecondaryFieldAmountErrorState(quotes: List<OnrampQuote>): OnrampMainComponentUM {
         val currentState = currentStateProvider()
-        if (currentState !is OnrampV2MainComponentUM.Content) return currentState
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
 
         val amountState = currentState.amountBlockState
         if (amountState.amountFieldModel.fiatValue.isEmpty()) return currentState
@@ -91,23 +91,23 @@ internal class OnrampV2AmountStateFactory(
         )
     }
 
-    fun getAmountSecondaryFieldResetState(): OnrampV2MainComponentUM {
+    fun getAmountSecondaryFieldResetState(): OnrampMainComponentUM {
         val currentState = currentStateProvider()
-        if (currentState !is OnrampV2MainComponentUM.Content) return currentState
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
 
         val amountState = currentState.amountBlockState
         if (amountState.secondaryFieldModel is OnrampSecondaryFieldErrorUM.Empty) return currentState
 
         return currentState.copy(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty),
-            onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
+            onrampAmountButtonUMState = OnrampAmountButtonUMState.None,
             errorNotification = null,
             offersBlockState = currentState.offersBlockState,
         )
     }
 
     private fun OnrampQuote.AmountError.toSecondaryFieldUiModel(
-        amountState: OnrampNewAmountBlockUM,
+        amountState: OnrampAmountBlockUM,
     ): OnrampSecondaryFieldErrorUM.Error {
         val amount = error.requiredAmount.format {
             fiat(
