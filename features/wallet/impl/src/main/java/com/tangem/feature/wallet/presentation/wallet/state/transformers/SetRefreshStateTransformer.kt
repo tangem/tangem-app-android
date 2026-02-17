@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
@@ -31,6 +32,10 @@ internal class SetRefreshStateTransformer(
             is WalletState.SingleCurrency.Locked,
             -> prevState
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun PullToRefreshConfig.toUpdatedState(isRefreshing: Boolean): PullToRefreshConfig {
