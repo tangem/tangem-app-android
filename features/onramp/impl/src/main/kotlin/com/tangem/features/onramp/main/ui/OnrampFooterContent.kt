@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.mainv2.ui
+package com.tangem.features.onramp.main.ui
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -20,13 +20,13 @@ import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.onramp.mainv2.entity.OnrampAmountButtonUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOffersBlockUM
-import com.tangem.features.onramp.mainv2.entity.OnrampV2AmountButtonUMState
-import com.tangem.features.onramp.mainv2.entity.OnrampV2MainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
+import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
+import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampOffersBlockUM
 
 @Composable
-internal fun BoxScope.OnrampFooterContent(state: OnrampV2MainComponentUM.Content, modifier: Modifier = Modifier) {
+internal fun BoxScope.OnrampFooterContent(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         modifier = modifier
             .imePadding()
@@ -53,16 +53,16 @@ internal fun BoxScope.OnrampFooterContent(state: OnrampV2MainComponentUM.Content
 }
 
 @Composable
-private fun OnrampAmountButtons(state: OnrampV2AmountButtonUMState) {
+private fun OnrampAmountButtons(state: OnrampAmountButtonUMState) {
     val keyboard by keyboardAsState()
 
     AnimatedVisibility(
-        visible = state is OnrampV2AmountButtonUMState.Loaded,
+        visible = state is OnrampAmountButtonUMState.Loaded,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
         when (state) {
-            is OnrampV2AmountButtonUMState.Loaded -> {
+            is OnrampAmountButtonUMState.Loaded -> {
                 if (keyboard is Keyboard.Opened) {
                     LazyRow(
                         modifier = Modifier.background(color = TangemTheme.colors.button.secondary),
@@ -82,7 +82,7 @@ private fun OnrampAmountButtons(state: OnrampV2AmountButtonUMState) {
                     }
                 }
             }
-            OnrampV2AmountButtonUMState.None -> Unit
+            OnrampAmountButtonUMState.None -> Unit
         }
     }
 }
