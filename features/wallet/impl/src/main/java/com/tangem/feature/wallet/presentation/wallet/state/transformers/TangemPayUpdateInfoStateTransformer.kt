@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.domain.pay.model.CustomerInfo.KycStatus.APPROVED
 import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import java.util.Currency
 
 /**
@@ -40,6 +41,10 @@ internal class TangemPayUpdateInfoStateTransformer(
         } else {
             prevState
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun createInitialState(): TangemPayState {
