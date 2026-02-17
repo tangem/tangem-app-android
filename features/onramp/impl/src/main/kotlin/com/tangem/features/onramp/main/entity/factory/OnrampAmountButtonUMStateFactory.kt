@@ -1,7 +1,7 @@
-package com.tangem.features.onramp.mainv2.entity.factory
+package com.tangem.features.onramp.main.entity.factory
 
-import com.tangem.features.onramp.mainv2.entity.OnrampAmountButtonUM
-import com.tangem.features.onramp.mainv2.entity.OnrampV2AmountButtonUMState
+import com.tangem.features.onramp.main.entity.OnrampAmountButtonUM
+import com.tangem.features.onramp.main.entity.OnrampAmountButtonUMState
 import kotlinx.collections.immutable.toPersistentList
 
 internal class OnrampAmountButtonUMStateFactory {
@@ -12,7 +12,7 @@ internal class OnrampAmountButtonUMStateFactory {
         currencyCode: String,
         currencySymbol: String,
         onAmountValueChanged: (String) -> Unit,
-    ): OnrampV2AmountButtonUMState {
+    ): OnrampAmountButtonUMState {
         return when (currencyCode) {
             USD_CODE, EUR_CODE -> {
                 val buttons = defaultPreselectedAmount.map { value ->
@@ -22,9 +22,9 @@ internal class OnrampAmountButtonUMStateFactory {
                         onClick = { onAmountValueChanged(value.toString()) },
                     )
                 }.toPersistentList()
-                OnrampV2AmountButtonUMState.Loaded(buttons)
+                OnrampAmountButtonUMState.Loaded(buttons)
             }
-            else -> OnrampV2AmountButtonUMState.None
+            else -> OnrampAmountButtonUMState.None
         }
     }
 
