@@ -11,8 +11,10 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
@@ -36,13 +38,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
@@ -136,7 +137,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val reduxStateHolder: ReduxStateHolder,
+    private val getOfframpUrlUseCase: GetOfframpUrlUseCase,
+    private val urlOpener: UrlOpener,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     private val appRouter: AppRouter,
@@ -335,12 +337,13 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         showErrorIfDemoModeOrElse {
             modelScope.launch(dispatchers.main) {
-                reduxStateHolder.dispatch(
-                    action = TradeCryptoAction.Sell(
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
-                    ),
-                )
+                getOfframpUrlUseCase(
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
+                ).onRight { url ->
+                    urlOpener.openUrl(url)
+                    analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+                }
             }
         }
     }
