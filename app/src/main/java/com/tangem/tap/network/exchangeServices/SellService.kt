@@ -21,6 +21,4 @@ interface SellService {
         walletAddress: String,
         isDarkTheme: Boolean,
     ): String?
-
-    fun getSellCryptoReceiptUrl(transactionId: String): String?
 }
