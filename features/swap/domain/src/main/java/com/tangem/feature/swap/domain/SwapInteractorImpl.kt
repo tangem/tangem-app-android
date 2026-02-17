@@ -69,7 +69,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "NullableToStringCall")
 internal class SwapInteractorImpl @AssistedInject constructor(
     private val repository: SwapRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
@@ -119,6 +119,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         get() = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet")
         }
+
+    private fun logI(message: String) = Timber.tag(LOG_TAG).i(message)
+    private fun logE(message: String, error: Throwable? = null) {
+        if (error != null) Timber.tag(LOG_TAG).e(error, message) else Timber.tag(LOG_TAG).e(message)
+    }
 
     override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
         return if (accountsFeatureToggles.isFeatureEnabled) {
@@ -386,6 +391,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
+    @Suppress("LongMethod")
     override suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
@@ -405,6 +411,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                |- amountToSwap: $amountToSwap
                |- selectedFee: $txFeeSealedState
             """.trimIndent(),
+        )
+
+        logI(
+            "findBestQuote CALL " +
+                "amount=$amountToSwap " +
+                "reduceBalanceBy=$reduceBalanceBy " +
+                "providers=${providers.map { it.providerId }}",
         )
 
         return providers.map { provider ->
@@ -1195,6 +1208,21 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         provider: SwapProvider,
         selectedFeeToken: CryptoCurrencyStatus?,
     ): Either<GetFeeError, TransactionFeeExtended> = either {
+        logI(
+            "loadFeeForSwapTransaction EXT ENTER " +
+                "providerId=${provider.providerId} " +
+                "providerType=${provider.type} " +
+                "amount=$amount " +
+                "reduceBalanceBy=$reduceBalanceBy " +
+                "fromCurrencyId=${fromToken.currency.id.value} " +
+                "fromSymbol=${fromToken.currency.symbol} " +
+                "fromNetwork=${fromToken.currency.network.backendId} " +
+                "toCurrencyId=${toToken.currency.id.value} " +
+                "toSymbol=${toToken.currency.symbol} " +
+                "toNetwork=${toToken.currency.network.backendId} " +
+                "selectedFeeTokenId=${selectedFeeToken?.currency?.id?.value} " +
+                "selectedFeeTokenSymbol=${selectedFeeToken?.currency?.symbol}",
+        )
         when (provider.type) {
             ExchangeProviderType.DEX,
             ExchangeProviderType.DEX_BRIDGE,
@@ -1205,7 +1233,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     raise(GetFeeError.UnknownError)
                 }
 
-                return if (selectedFeeToken != null) {
+                val result = if (selectedFeeToken != null) {
+                    logI(
+                        "estimateFeeForTokenUseCase CALL " +
+                            "amountDecimal=$amountDecimal " +
+                            "sendingToken=${fromToken.currency.symbol} " +
+                            "feeToken=${selectedFeeToken.currency.symbol}",
+                    )
                     estimateFeeForTokenUseCase(
                         userWallet = userWallet,
                         feeTokenCurrencyStatus = selectedFeeToken,
@@ -1213,16 +1247,31 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         amount = amountDecimal,
                     )
                 } else {
+                    logI(
+                        "estimateFeeForGaslessTxUseCase CALL " +
+                            "amountDecimal=$amountDecimal " +
+                            "sendingToken=${fromToken.currency.symbol}",
+                    )
                     estimateFeeForGaslessTxUseCase(
                         amount = amountDecimal,
                         userWallet = userWallet,
                         sendingTokenCurrencyStatus = fromToken,
                     )
                 }
+                result.fold(
+                    ifLeft = {
+                        logE("loadFeeForSwapTransaction EXT ERROR: $it")
+                    },
+                    ifRight = {
+                        logI("loadFeeForSwapTransaction EXT RESULT: $it")
+                    },
+                )
+                return result
             }
         }
     }
 
+    @Suppress("LongMethod")
     override suspend fun loadFeeForSwapTransaction(
         fromToken: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
@@ -1232,6 +1281,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         reduceBalanceBy: BigDecimal,
         provider: SwapProvider,
     ): Either<GetFeeError, TransactionFee> = either {
+        logI(
+            "loadFeeForSwapTransaction BASE ENTER " +
+                "providerId=${provider.providerId} " +
+                "providerType=${provider.type} " +
+                "amount=$amount " +
+                "reduceBalanceBy=$reduceBalanceBy " +
+                "fromCurrencyId=${fromToken.currency.id.value} " +
+                "fromSymbol=${fromToken.currency.symbol} " +
+                "toCurrencyId=${toToken.currency.id.value} " +
+                "toSymbol=${toToken.currency.symbol}",
+        )
         return when (provider.type) {
             ExchangeProviderType.DEX,
             ExchangeProviderType.DEX_BRIDGE,
@@ -1246,6 +1306,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 }
                 val swapAmount = SwapAmount(amountBigDecimal, fromToken.currency.decimals)
 
+                logI(
+                    "DEX fee path " +
+                        "fromAddress=$dexFromAddress " +
+                        "toAddress=$dexToAddress " +
+                        "fromAmount=${swapAmount.toStringWithRightOffset()} " +
+                        "decimals=${swapAmount.decimals}",
+                )
                 repository.getExchangeData(
                     userWallet = userWallet,
                     fromContractAddress = fromToken.currency.getContractAddress(),
@@ -1262,14 +1329,27 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     refundAddress = fromToken.value.networkAddress?.defaultAddress?.value,
                     expressOperationType = ExpressOperationType.SWAP,
                 ).map { swapData ->
+                    logI("DEX exchangeData response: $swapData")
                     val networkId = fromToken.currency.network.backendId
                     val transaction = swapData.transaction as ExpressTransactionModel.DEX
+
+                    logI(
+                        "loadFeeForDex CALL " +
+                            "networkId=$networkId " +
+                            "txTo=${transaction.txTo} " +
+                            "txFrom=${transaction.txFrom} " +
+                            "txValue=${transaction.txValue} " +
+                            "gas=${transaction.gas} " +
+                            "otherNativeFeeWei=${transaction.otherNativeFeeWei}",
+                    )
 
                     loadFeeForDex(
                         networkId = networkId,
                         transaction = transaction,
                         fromToken = fromToken,
-                    ).getOrElse { raise(GetFeeError.UnknownError) }
+                    ).getOrElse { raise(GetFeeError.UnknownError) }.apply {
+                        logI("loadFeeForDex RESULT: $this")
+                    }
                 }.mapLeft {
                     GetFeeError.UnknownError
                 }
@@ -1280,13 +1360,28 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     raise(GetFeeError.UnknownError)
                 }
 
-                estimateFeeUseCase.invoke(
+                logI(
+                    "estimateFeeUseCase CALL " +
+                        "amountDecimal=$amountDecimal " +
+                        "token=${fromToken.currency.symbol}",
+                )
+
+                val result = estimateFeeUseCase.invoke(
                     amount = amountDecimal,
                     userWallet = userWallet,
                     cryptoCurrencyStatus = fromToken,
                 ).map {
                     it.patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_SEND)
                 }
+                result.fold(
+                    ifLeft = {
+                        logE("estimateFeeUseCase ERROR: $it")
+                    },
+                    ifRight = {
+                        logI("estimateFeeUseCase RESULT: $it")
+                    },
+                )
+                result
             }
         }
     }
@@ -1448,6 +1543,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: SwapAmount,
         fromTokenStatus: CryptoCurrencyStatus,
     ): TxFeeSealedState {
+        logI(
+            "updateTxFeeStateIfNeededForCEX " +
+                "txFeeState=$txFeeSealedState " +
+                "amount=${amount.value} " +
+                "token=${fromTokenStatus.currency.symbol}",
+        )
         return when (txFeeSealedState) {
             is TxFeeSealedState.Component -> txFeeSealedState
             is TxFeeSealedState.Legacy -> {
@@ -1457,6 +1558,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         userWallet = userWallet,
                         cryptoCurrencyStatus = fromTokenStatus,
                     )
+                    logI("estimateFeeUseCase RESULT: $txFeeResult")
                     val txFee = getFeeForCex(txFeeResult, fromTokenStatus)
 
                     TxFeeSealedState.Legacy(
@@ -2598,6 +2700,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     companion object {
+        const val LOG_TAG = "SwapFeeIssueDebug.SwapInteractorImpl"
         private const val INCREASE_GAS_LIMIT_FOR_DEX = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
         private const val INFINITY_SYMBOL = "∞"
@@ -2610,8 +2713,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 }
 
 sealed class TxFeeSealedState {
-    class Legacy(val txFeeState: TxFeeState, val selectedFee: FeeType) : TxFeeSealedState()
-    class Component(val txFee: TxFee.FeeComponent) : TxFeeSealedState()
+    data class Legacy(val txFeeState: TxFeeState, val selectedFee: FeeType) : TxFeeSealedState()
+    data class Component(val txFee: TxFee.FeeComponent) : TxFeeSealedState()
 
     fun getTxFeeStateOrNull() = when (this) {
         is Component -> null
@@ -2620,8 +2723,8 @@ sealed class TxFeeSealedState {
 }
 
 sealed class TransactionFeeResult {
-    class Loaded(val fee: TransactionFee) : TransactionFeeResult()
-    class LoadedExtended(val fee: TransactionFeeExtended) : TransactionFeeResult()
+    data class Loaded(val fee: TransactionFee) : TransactionFeeResult()
+    data class LoadedExtended(val fee: TransactionFeeExtended) : TransactionFeeResult()
 
     companion object {
         fun from(fee: TransactionFee) = Loaded(fee)
