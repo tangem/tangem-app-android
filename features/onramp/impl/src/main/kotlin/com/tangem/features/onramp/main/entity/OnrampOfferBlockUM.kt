@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.mainv2.entity
+package com.tangem.features.onramp.main.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
