@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.offramp)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo)
