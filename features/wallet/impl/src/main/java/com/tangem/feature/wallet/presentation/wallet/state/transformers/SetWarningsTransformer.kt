@@ -2,14 +2,18 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import timber.log.Timber
 
 internal class SetWarningsTransformer(
     userWalletId: UserWalletId,
     private val warnings: ImmutableList<WalletNotification>,
+    private val notifications: ImmutableList<WalletNotificationUM> = persistentListOf(),
+    private val notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf(),
 ) : WalletStateTransformer(userWalletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -26,6 +30,15 @@ internal class SetWarningsTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return when (walletUM) {
+            is WalletUM.Content -> walletUM.copy(
+                notifications = notifications,
+                notificationsCarousel = notificationsCarousel,
+            )
+            is WalletUM.Locked -> {
+                Timber.w("Impossible to update notifications for locked wallet")
+                walletUM
+            }
+        }
     }
 }
