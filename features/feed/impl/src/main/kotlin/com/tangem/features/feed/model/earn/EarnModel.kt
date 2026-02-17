@@ -101,7 +101,6 @@ internal class EarnModel @Inject constructor(
     init {
         updateInitialState()
         fetchEarnNetworks()
-        fetchTopEarnTokens()
         subscribeOnStoredFilters()
         subscribeOnNetworks()
         subscribeOnBatchFlow()
