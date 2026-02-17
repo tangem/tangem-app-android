@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.mainv2.ui
+package com.tangem.features.onramp.main.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
@@ -33,7 +33,7 @@ import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.*
+import com.tangem.features.onramp.main.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
