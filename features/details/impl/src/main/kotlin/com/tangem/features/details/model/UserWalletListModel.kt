@@ -13,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ApplyUserWalletListSortingUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
@@ -138,10 +139,11 @@ internal class UserWalletListModel @Inject constructor(
         val userWalletIds = state.value.userWallets.map { UserWalletId(it.id) }
 
         modelScope.launch {
-            applyUserWalletListSortingUseCase(userWalletIds)
-                .onLeft { error ->
-                    Timber.e("Failed to apply wallet list sorting: $error")
-                }
+            applyUserWalletListSortingUseCase(userWalletIds).onRight {
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletsReorder())
+            }.onLeft { error ->
+                Timber.e("Failed to apply wallet list sorting: $error")
+            }
         }
     }
 }
