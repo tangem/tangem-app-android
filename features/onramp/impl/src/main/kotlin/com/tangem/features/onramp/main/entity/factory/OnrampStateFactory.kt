@@ -8,7 +8,9 @@ import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -22,16 +24,30 @@ import java.math.BigDecimal
 
 internal class OnrampStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
+    private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
     private val cryptoCurrency: CryptoCurrency,
     private val onrampIntents: OnrampIntents,
 ) {
 
-    fun getInitialState(currency: String, onClose: () -> Unit): OnrampMainComponentUM.InitialLoading {
+    fun getInitialState(
+        currency: String,
+        onClose: () -> Unit,
+        openSettings: () -> Unit,
+    ): OnrampMainComponentUM.InitialLoading {
         return OnrampMainComponentUM.InitialLoading(
-            currency = currency,
-            onClose = onClose,
-            openSettings = onrampIntents::openSettings,
             errorNotification = null,
+            topBarConfig = OnrampMainTopBarUM(
+                title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
+                startButtonUM = TopAppBarButtonUM.Close(
+                    onCloseClick = onClose,
+                    enabled = true,
+                ),
+                endButtonUM = TopAppBarButtonUM.Icon(
+                    iconRes = R.drawable.ic_more_vertical_24,
+                    onClicked = openSettings,
+                    isEnabled = false,
+                ),
+            ),
         )
     }
 
@@ -42,12 +58,19 @@ internal class OnrampStateFactory(
             is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
             is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
+
+        val initialAmountBlockState = getInitialAmountBlockState(currency)
+
         return OnrampMainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
-            buyButtonConfig = state.buyButtonConfig,
-            amountBlockState = getInitialAmountBlockState(currency),
-            providerBlockState = OnrampProviderBlockUM.Empty,
+            amountBlockState = initialAmountBlockState,
+            offersBlockState = OnrampOffersBlockUM.Empty,
             errorNotification = null,
+            onrampAmountButtonUMState = onrampAmountButtonUMStateFactory.createOnrampAmountActionButton(
+                currencyCode = currency.code,
+                currencySymbol = currency.unit,
+                onAmountValueChanged = onrampIntents::onAmountValueChanged,
+            ),
         )
     }
 
@@ -68,21 +91,6 @@ internal class OnrampStateFactory(
         }
     }
 
-    private fun getNoPairsErrorState(): OnrampMainComponentUM {
-        val state = currentStateProvider()
-        val contentState = state as? OnrampMainComponentUM.Content ?: return state
-
-        return contentState.copy(
-            buyButtonConfig = contentState.buyButtonConfig.copy(isEnabled = false),
-            amountBlockState = contentState.amountBlockState.copy(
-                amountFieldModel = contentState.amountBlockState.amountFieldModel.copy(isError = true),
-                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Error(
-                    error = resourceReference(R.string.onramp_no_available_providers),
-                ),
-            ),
-        )
-    }
-
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampMainComponentUM {
         val state = currentStateProvider()
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
@@ -93,14 +101,14 @@ internal class OnrampStateFactory(
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
                 topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
-                buyButtonConfig = state.buyButtonConfig.copy(isEnabled = false),
-                amountBlockState = state.amountBlockState.copy(
-                    secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
-                ),
-                providerBlockState = OnrampProviderBlockUM.Empty,
+                offersBlockState = OnrampOffersBlockUM.Empty,
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
                     errorCode = errorCode,
                     onRefresh = onRefresh,
+                ),
+                onrampAmountButtonUMState = OnrampAmountButtonUMState.None,
+                amountBlockState = state.amountBlockState.copy(
+                    secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
                 ),
             )
             is OnrampMainComponentUM.InitialLoading -> state.copy(
@@ -112,6 +120,22 @@ internal class OnrampStateFactory(
         }
     }
 
+    private fun getNoPairsErrorState(): OnrampMainComponentUM {
+        val state = currentStateProvider()
+        val contentState = state as? OnrampMainComponentUM.Content ?: return state
+
+        return contentState.copy(
+            amountBlockState = contentState.amountBlockState.copy(
+                amountFieldModel = contentState.amountBlockState.amountFieldModel.copy(isError = true),
+                secondaryFieldModel = OnrampSecondaryFieldErrorUM.Error(
+                    error = resourceReference(R.string.onramp_no_available_providers),
+                ),
+            ),
+            onrampAmountButtonUMState = OnrampAmountButtonUMState.None,
+            offersBlockState = OnrampOffersBlockUM.Empty,
+        )
+    }
+
     private fun getInitialAmountBlockState(currency: OnrampCurrency): OnrampAmountBlockUM {
         return OnrampAmountBlockUM(
             currencyUM = OnrampCurrencyUM(
@@ -119,11 +143,12 @@ internal class OnrampStateFactory(
                 iconUrl = currency.image,
                 precision = currency.precision,
                 onClick = onrampIntents::openCurrenciesList,
+                unit = currency.unit,
             ),
             amountFieldModel = AmountFieldModel(
                 value = "",
                 fiatValue = "",
-                onValueChange = { onrampIntents.onAmountValueChanged(value = it, isValuePasted = false) },
+                onValueChange = onrampIntents::onAmountValueChanged,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.None,
                     keyboardType = KeyboardType.Number,
@@ -139,7 +164,7 @@ internal class OnrampStateFactory(
                 isValuePasted = false,
                 onValuePastedTriggerDismiss = {},
             ),
-            secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
+            secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
         )
     }
 
@@ -149,8 +174,4 @@ internal class OnrampStateFactory(
         decimals = currency.precision,
         type = AmountType.FiatType(currency.code),
     )
-
-    companion object {
-        const val PREDEFINED_SEPA_AMOUNT = "100"
-    }
 }
