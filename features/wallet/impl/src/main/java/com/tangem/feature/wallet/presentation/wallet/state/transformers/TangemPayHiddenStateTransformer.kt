@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class TangemPayHiddenStateTransformer(
     userWalletId: UserWalletId,
@@ -14,5 +15,9 @@ internal class TangemPayHiddenStateTransformer(
         } else {
             prevState
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 }

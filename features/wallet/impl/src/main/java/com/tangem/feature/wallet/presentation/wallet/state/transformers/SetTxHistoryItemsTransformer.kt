@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemFlowConverter
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
@@ -30,6 +31,10 @@ internal class SetTxHistoryItemsTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun TxHistoryState.toContentState(): TxHistoryState {
