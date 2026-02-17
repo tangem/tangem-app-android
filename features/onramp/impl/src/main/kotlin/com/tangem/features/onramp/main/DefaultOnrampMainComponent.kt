@@ -8,15 +8,16 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.features.onramp.main.model.OnrampMainComponentModel
-import com.tangem.features.onramp.main.ui.OnrampMainComponentContent
-import com.tangem.features.onramp.providers.SelectProviderComponent
+import com.tangem.features.onramp.main.ui.OnrampMainScreen
 import com.tangem.features.onramp.selectcurrency.SelectCurrencyComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,10 +28,15 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     @Assisted private val params: OnrampMainComponent.Params,
     private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
     private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
-    private val selectProviderComponentFactory: SelectProviderComponent.Factory,
+    private val allOffersComponentFactory: AllOffersComponent.Factory,
 ) : OnrampMainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampMainComponentModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.subscribe(onStop = model::onStop)
+    }
+
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
         serializer = null,
@@ -43,7 +49,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         val state by model.state.collectAsState()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
 
-        OnrampMainComponentContent(modifier = modifier, state = state)
+        OnrampMainScreen(modifier = modifier, state = state)
         bottomSheet.child?.instance?.BottomSheet()
     }
 
@@ -57,7 +63,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
                 country = config.country,
-                isLaunchSepa = params.isLaunchSepa,
+                isLaunchSepa = false,
                 onDismiss = {
                     model.bottomSheetNavigation.dismiss()
                     model.handleOnrampAvailable()
@@ -72,14 +78,14 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 onDismiss = model.bottomSheetNavigation::dismiss,
             ),
         )
-        is OnrampMainBottomSheetConfig.ProvidersList -> selectProviderComponentFactory.create(
+        is OnrampMainBottomSheetConfig.AllOffers -> allOffersComponentFactory.create(
             context = childByContext(componentContext),
-            params = SelectProviderComponent.Params(
-                onProviderClick = model::onProviderSelected,
-                onDismiss = model.bottomSheetNavigation::dismiss,
-                selectedProviderId = config.selectedProviderId,
-                selectedPaymentMethod = config.selectedPaymentMethod,
+            params = AllOffersComponent.Params(
+                userWallet = model.userWallet,
                 cryptoCurrency = params.cryptoCurrency,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+                openRedirectPage = params.openRedirectPage,
+                amountCurrencyCode = config.amountCurrencyCode,
             ),
         )
     }

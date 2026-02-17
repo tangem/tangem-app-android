@@ -1,5 +1,7 @@
 package com.tangem.features.onramp.main.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,61 +19,89 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
-import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
-import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
 import com.tangem.features.onramp.main.entity.OnrampCurrencyUM
+import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampSecondaryFieldErrorUM
 
 @Composable
-internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier = Modifier) {
+internal fun OnrampAmountContent(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .clip(shape = RoundedCornerShape(size = TangemTheme.dimens.radius16))
-            .background(TangemTheme.colors.background.action)
-            .padding(vertical = TangemTheme.dimens.spacing28),
+            .fillMaxWidth()
+            .background(
+                color = TangemTheme.colors.background.action,
+                shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
+            )
+            .padding(vertical = 24.dp, horizontal = 16.dp)
+            .animateContentSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        OnrampCurrencyIcon(currencyUM = state.currencyUM)
-        OnrampAmountField(amountField = state.amountFieldModel)
-        OnrampAmountSecondary(state = state.secondaryFieldModel)
+        OnrampHeaderTitle()
+
+        OnrampAmountField(
+            amountField = state.amountBlockState.amountFieldModel,
+            currencyCode = state.amountBlockState.currencyUM.code,
+        )
+
+        AnimatedVisibility(
+            visible = state.amountBlockState.secondaryFieldModel !is OnrampSecondaryFieldErrorUM.Empty,
+        ) {
+            if (state.amountBlockState.secondaryFieldModel is OnrampSecondaryFieldErrorUM.Error) {
+                OnrampAmountSecondary(state = state.amountBlockState.secondaryFieldModel)
+            }
+        }
+
+        SpacerH(20.dp)
+
+        OnrampCurrencyIcon(currencyUM = state.amountBlockState.currencyUM)
     }
 }
 
 @Composable
-private fun OnrampAmountField(amountField: AmountFieldModel) {
+private fun OnrampHeaderTitle() {
+    Text(
+        text = stringResourceSafe(R.string.onramp_you_will_pay_title),
+        style = TangemTheme.typography.subtitle2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
+@Composable
+private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
     val requester = remember { FocusRequester() }
-    val symbolColor = if (amountField.fiatValue.isBlank()) {
-        TangemTheme.colors.text.disabled
-    } else {
-        TangemTheme.colors.text.primary1
-    }
     AmountTextField(
         value = amountField.fiatValue,
         decimals = amountField.fiatAmount.decimals,
         visualTransformation = AmountVisualTransformation(
             decimals = amountField.fiatAmount.decimals,
-            symbol = amountField.fiatAmount.currencySymbol,
-            currencyCode = amountField.fiatAmount.currencySymbol,
+            symbol = currencyCode,
+            currencyCode = currencyCode,
             decimalFormat = decimalFormat,
-            symbolColor = symbolColor,
+            symbolColor = if (amountField.fiatValue.isBlank()) {
+                TangemTheme.colors.text.disabled
+            } else {
+                TangemTheme.colors.text.primary1
+            },
         ),
         onValueChange = amountField.onValueChange,
         keyboardOptions = amountField.keyboardOptions,
         keyboardActions = amountField.keyboardActions,
-        textStyle = TangemTheme.typography.h2.copy(
+        textStyle = TangemTheme.typography.head.copy(
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
@@ -82,7 +112,8 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
         modifier = Modifier
             .focusRequester(requester)
             .padding(
-                top = TangemTheme.dimens.spacing24,
+                top = TangemTheme.dimens.spacing8,
+                bottom = TangemTheme.dimens.spacing4,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
             )
@@ -96,7 +127,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
 }
 
 @Composable
-private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
+private fun OnrampAmountSecondary(state: OnrampSecondaryFieldErrorUM.Error) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,24 +138,12 @@ private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        when (state) {
-            is OnrampAmountSecondaryFieldUM.Content -> Text(
-                text = state.amount.resolveReference(),
-                style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
-                color = TangemTheme.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-            )
-            is OnrampAmountSecondaryFieldUM.Error -> Text(
-                text = state.error.resolveReference(),
-                color = TangemTheme.colors.text.warning,
-                style = TangemTheme.typography.caption2,
-                textAlign = TextAlign.Center,
-            )
-            is OnrampAmountSecondaryFieldUM.Loading -> TextShimmer(
-                style = TangemTheme.typography.caption2,
-                modifier = Modifier.width(TangemTheme.dimens.size62),
-            )
-        }
+        Text(
+            text = state.error.resolveReference(),
+            color = TangemTheme.colors.text.warning,
+            style = TangemTheme.typography.caption2,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -132,19 +151,26 @@ private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
 private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(TangemTheme.colors.button.secondary)
             .clickable(onClick = currencyUM.onClick)
-            .padding(start = TangemTheme.dimens.spacing24),
+            .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         AsyncImage(
             modifier = Modifier
-                .size(TangemTheme.dimens.size40)
+                .size(20.dp)
                 .clip(CircleShape)
                 .testTag(BuyTokenDetailsScreenTestTags.FIAT_CURRENCY_ICON),
             model = currencyUM.iconUrl,
             contentDescription = null,
+        )
+        Text(
+            text = currencyUM.code,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.body2.copy(fontWeight = FontWeight.SemiBold),
+            textAlign = TextAlign.Center,
         )
         Icon(
             modifier = Modifier
