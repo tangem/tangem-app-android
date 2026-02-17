@@ -35,6 +35,7 @@ import com.tangem.features.feed.model.earn.state.EarnStateController
 import com.tangem.features.feed.model.earn.state.transformers.*
 import com.tangem.features.feed.model.earn.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.model.earn.statemanager.EarnListStateManager
+import com.tangem.features.feed.ui.earn.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnUM
@@ -333,11 +334,13 @@ internal class EarnModel @Inject constructor(
             is ApiResponseError.HttpException -> error.code.numericCode to error.message.orEmpty()
             else -> null to ""
         }
-        analyticsEventHandler.send(
-            EarnAnalyticsEvent.BestOpportunitiesLoadError(
-                code = code,
-                message = message,
-            ),
-        )
+        if (state.value.bestOpportunities !is EarnBestOpportunitiesUM.Error) {
+            analyticsEventHandler.send(
+                EarnAnalyticsEvent.BestOpportunitiesLoadError(
+                    code = code,
+                    message = message,
+                ),
+            )
+        }
     }
 }
