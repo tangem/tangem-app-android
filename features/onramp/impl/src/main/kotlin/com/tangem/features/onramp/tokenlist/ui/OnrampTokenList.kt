@@ -213,7 +213,7 @@ internal fun LazyListScope.portfolioTokensList(portfolio: TokensListItemUM.Portf
 
     portfolioItem(
         portfolio = portfolio,
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier,
         isBalanceHidden = isBalanceHidden,
     )
     if (!isExpanded) return
