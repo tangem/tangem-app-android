@@ -32,11 +32,7 @@ import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConv
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeUMConverter
 import com.tangem.features.feed.model.earn.state.EarnStateController
-import com.tangem.features.feed.model.earn.state.transformers.EarnFilterSelectedStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateBestOpportunitiesStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateEarnUMInitialStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateLoadingTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.*
 import com.tangem.features.feed.model.earn.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.model.earn.statemanager.EarnListStateManager
 import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
@@ -126,7 +122,10 @@ internal class EarnModel @Inject constructor(
                 error = error,
                 paginationStatus = paginationStatus,
                 hasActiveFilters = hasActiveFilters,
-                onRetryClick = { batchFlowManager.reload() },
+                onRetryClick = {
+                    batchFlowManager.reload()
+                    reloadEarnNetworks()
+                },
                 onLoadMore = { batchFlowManager.loadMore() },
                 onClearFiltersClick = ::onClearFiltersClick,
             )
@@ -185,6 +184,14 @@ internal class EarnModel @Inject constructor(
     private fun fetchEarnNetworks() {
         modelScope.launch(dispatchers.default) {
             fetchEarnNetworksUseCase()
+        }
+    }
+
+    private fun reloadEarnNetworks() {
+        modelScope.launch(dispatchers.default) {
+            if (earnNetworks.value.isLeft()) {
+                fetchEarnNetworks()
+            }
         }
     }
 
@@ -289,6 +296,7 @@ internal class EarnModel @Inject constructor(
                 ),
             )
             bottomSheetNavigation.dismiss()
+            reloadEarnNetworks()
         }
     }
 
