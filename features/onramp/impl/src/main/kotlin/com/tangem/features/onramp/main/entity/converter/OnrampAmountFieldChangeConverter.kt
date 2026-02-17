@@ -1,24 +1,24 @@
-package com.tangem.features.onramp.mainv2.entity.converter
+package com.tangem.features.onramp.main.entity.converter
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.features.onramp.mainv2.entity.*
-import com.tangem.features.onramp.mainv2.entity.factory.OnrampAmountButtonUMStateFactory
+import com.tangem.features.onramp.main.entity.*
+import com.tangem.features.onramp.main.entity.factory.OnrampAmountButtonUMStateFactory
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal class OnrampV2AmountFieldChangeConverter(
-    private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
+internal class OnrampAmountFieldChangeConverter(
+    private val currentStateProvider: Provider<OnrampMainComponentUM>,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
-    private val onrampIntents: OnrampV2Intents,
-) : Converter<String, OnrampV2MainComponentUM> {
+    private val onrampIntents: OnrampIntents,
+) : Converter<String, OnrampMainComponentUM> {
 
-    override fun convert(value: String): OnrampV2MainComponentUM {
+    override fun convert(value: String): OnrampMainComponentUM {
         val state = currentStateProvider()
-        if (state !is OnrampV2MainComponentUM.Content) return state
+        if (state !is OnrampMainComponentUM.Content) return state
 
         if (value.isEmpty()) return state.emptyState()
 
@@ -36,13 +36,13 @@ internal class OnrampV2AmountFieldChangeConverter(
                 amountFieldModel = amountFieldModel,
                 secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
             ),
-            onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
+            onrampAmountButtonUMState = OnrampAmountButtonUMState.None,
             offersBlockState = OnrampOffersBlockUM.Loading,
             errorNotification = null,
         )
     }
 
-    private fun OnrampV2MainComponentUM.Content.emptyState(): OnrampV2MainComponentUM.Content {
+    private fun OnrampMainComponentUM.Content.emptyState(): OnrampMainComponentUM.Content {
         val amountFieldModel = amountBlockState.amountFieldModel.copy(
             value = "",
             fiatValue = "",
