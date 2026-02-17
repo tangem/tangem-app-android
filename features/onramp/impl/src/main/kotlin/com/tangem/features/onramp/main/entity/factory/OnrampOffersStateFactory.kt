@@ -1,24 +1,23 @@
-package com.tangem.features.onramp.mainv2.entity.factory
+package com.tangem.features.onramp.main.entity.factory
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.onramp.model.*
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.*
+import com.tangem.features.onramp.main.entity.*
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toPersistentList
 
 internal class OnrampOffersStateFactory(
-    private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
-    private val onrampIntents: OnrampV2Intents,
+    private val currentStateProvider: Provider<OnrampMainComponentUM>,
+    private val onrampIntents: OnrampIntents,
 ) {
 
-    fun getOffersState(offers: List<OnrampOffersBlock>): OnrampV2MainComponentUM {
-        val currentState = currentStateProvider.invoke()
-        return when (currentState) {
-            is OnrampV2MainComponentUM.InitialLoading -> currentState
-            is OnrampV2MainComponentUM.Content -> {
+    fun getOffersState(offers: List<OnrampOffersBlock>): OnrampMainComponentUM {
+        return when (val currentState = currentStateProvider.invoke()) {
+            is OnrampMainComponentUM.InitialLoading -> currentState
+            is OnrampMainComponentUM.Content -> {
                 if (currentState.offersBlockState is OnrampOffersBlockUM.Loading) {
                     return currentState
                 }
