@@ -10,9 +10,9 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.MINUS
 import kotlinx.collections.immutable.toImmutableList
