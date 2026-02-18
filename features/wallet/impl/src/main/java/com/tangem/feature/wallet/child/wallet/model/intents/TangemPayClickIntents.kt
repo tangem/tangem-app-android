@@ -27,7 +27,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogCon
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,7 +63,6 @@ internal interface TangemPayIntents {
 @ModelScoped
 internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
-    private val featureToggles: TangemPayFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
     private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
@@ -77,9 +75,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override suspend fun onPullToRefresh() {
         val userWalletId = stateHolder.getSelectedWalletId()
-        if (!featureToggles.isTangemPayEnabled ||
-            !onboardingRepository.isTangemPayInitialDataProduced(userWalletId)
-        ) {
+        if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
             return
         }
         tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
