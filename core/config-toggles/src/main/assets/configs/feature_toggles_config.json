@@ -25,10 +25,6 @@
         "version": "5.32.0"
     },
     {
-        "name": "TANGEM_PAY_ENABLED",
-        "version": "5.31.0"
-    },
-    {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
         "version": "5.31.0"
     },
