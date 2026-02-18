@@ -20,7 +20,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.TangemPayMainSubscriber
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -43,7 +42,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
 ) {
 
@@ -66,7 +64,6 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             currenciesRepository = currenciesRepository,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             stakingAvailabilityListUseCase = stakingAvailabilityListUseCase,
-            tangemPayFeatureToggles = tangemPayFeatureToggles,
             tangemPayMainSubscriberFactory = tangemPayMainSubscriberFactory,
             yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
         )
