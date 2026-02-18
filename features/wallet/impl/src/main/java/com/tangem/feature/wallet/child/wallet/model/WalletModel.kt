@@ -45,7 +45,6 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -89,7 +88,6 @@ internal class WalletModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val accountsFeatureToggles: AccountsFeatureToggles,
@@ -390,7 +388,6 @@ internal class WalletModel @Inject constructor(
          * Update state each time a user opens/returns to wallet screen
          * and every minute while user stays on the main screen
          */
-        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
 
         combine(
             flow = screenLifecycleProvider.isBackgroundState,
