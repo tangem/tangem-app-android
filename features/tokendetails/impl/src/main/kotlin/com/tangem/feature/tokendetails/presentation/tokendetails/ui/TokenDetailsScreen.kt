@@ -148,10 +148,8 @@ internal fun TokenDetailsScreen(
                     )
                 }
 
-                if (state.isYieldSupplyFeatureEnabled) {
-                    item {
-                        yieldSupplyComponent.Content(modifier = itemModifier)
-                    }
+                item {
+                    yieldSupplyComponent.Content(modifier = itemModifier)
                 }
 
                 expressTransactionsItems(
