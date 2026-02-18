@@ -47,7 +47,6 @@ import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -93,7 +92,6 @@ internal class WalletModel @Inject constructor(
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
@@ -166,10 +164,8 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun updateYieldSupplyApy() {
-        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled) {
-            modelScope.launch(dispatchers.default) {
-                yieldSupplyApyUpdateUseCase()
-            }
+        modelScope.launch(dispatchers.default) {
+            yieldSupplyApyUpdateUseCase()
         }
     }
 
