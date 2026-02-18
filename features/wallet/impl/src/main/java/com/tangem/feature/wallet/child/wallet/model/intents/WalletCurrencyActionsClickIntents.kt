@@ -64,7 +64,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -145,7 +144,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val rampStateManager: RampStateManager,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
@@ -475,9 +473,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        val tokenListState = selectedWallet.tokensListState
-
-        when (tokenListState) {
+        when (val tokenListState = selectedWallet.tokensListState) {
             is WalletTokensListState.ContentState.Content -> checkSwapCryptoAvailability(
                 tokenCount = tokenListState.items.count { it is TokensListItemUM.Token },
             )
@@ -666,8 +662,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun needShowYieldSupplyWarning(cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
-        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+        return needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
     }
 
     private fun navigateToSend(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
