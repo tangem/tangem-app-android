@@ -92,7 +92,6 @@ import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -146,7 +145,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
@@ -195,7 +193,6 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
@@ -425,9 +422,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
-        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            status.value.yieldSupplyStatus?.isActive == true
-        ) {
+        if (status.value.yieldSupplyStatus?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
                 return
             }
@@ -1238,13 +1233,11 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private suspend fun needShowYieldSupplyWarning(): Boolean {
-        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+        return needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
     }
 
     private fun isActiveYieldSupply(): Boolean {
-        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
