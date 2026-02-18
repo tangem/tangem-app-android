@@ -251,7 +251,7 @@ internal enum class Wallet2CobrandImage(
     Sakura(
         cards2ResId = R.drawable.ill_sakura_card2_120_106,
         cards3ResId = R.drawable.ill_sakura_card3_120_106,
-        batchIds = setOf("AF990029", "AF990030", "AF990031"),
+        batchIds = setOf("AF990029", "AF990030", "AF990031", "AF990071", "AF990072", "AF990073"),
     ),
 
     SatoshiFriends(
