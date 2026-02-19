@@ -116,7 +116,6 @@ internal class EarnModel @Inject constructor(
         ) { items, error, paginationStatus ->
             val hasActiveFilters = state.value.earnFilterUM.selectedTypeFilter != EarnFilterTypeUM.All ||
                 state.value.earnFilterUM.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
-            error?.let(::handleBestOpportunitiesErrorAnalytics)
             EarnListStateManager.calculateState(
                 items = items,
                 error = error,
@@ -128,9 +127,10 @@ internal class EarnModel @Inject constructor(
                 },
                 onLoadMore = { batchFlowManager.loadMore() },
                 onClearFiltersClick = ::onClearFiltersClick,
-            )
-        }.onEach { bestOpportunitiesState ->
+            ) to error
+        }.onEach { (bestOpportunitiesState, error) ->
             stateController.update(UpdateBestOpportunitiesStateTransformer(bestOpportunitiesState))
+            error?.let(::handleBestOpportunitiesErrorAnalytics)
         }.launchIn(modelScope)
     }
 
