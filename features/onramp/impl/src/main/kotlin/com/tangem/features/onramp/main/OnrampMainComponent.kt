@@ -15,7 +15,6 @@ internal interface OnrampMainComponent : ComposableContentComponent {
         val source: OnrampSource,
         val openSettings: () -> Unit,
         val openRedirectPage: (quote: OnrampProviderWithQuote.Data) -> Unit,
-        val isLaunchSepa: Boolean,
     )
 
     interface Factory : ComponentFactory<Params, OnrampMainComponent>
