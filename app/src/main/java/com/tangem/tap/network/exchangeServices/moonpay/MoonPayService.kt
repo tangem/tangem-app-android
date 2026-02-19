@@ -177,14 +177,6 @@ class MoonPayService(
         return uri.build().toString()
     }
 
-    override fun getSellCryptoReceiptUrl(transactionId: String): String {
-        return Uri.Builder()
-            .scheme(SCHEME)
-            .authority(URL_SELL)
-            .appendPath("transaction_receipt")
-            .appendQueryParameter("transactionId", transactionId).build().toString()
-    }
-
     private fun createSignature(data: String): String {
         val sha256Hmac = Mac.getInstance("HmacSHA256")
         val secretKey = SecretKeySpec(secretKeyProvider().toByteArray(), "HmacSHA256")
