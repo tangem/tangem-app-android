@@ -19,6 +19,7 @@ import dagger.assisted.AssistedInject
 internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val accountListSubscriberFactory: AccountListSubscriber.Factory,
+    private val tokenListAnalyticsSubscriberFactory: TokenListAnalyticsSubscriber.Factory,
     private val walletNFTListSubscriberV2Factory: WalletNFTListSubscriberV2.Factory,
     private val stateController: WalletStateController,
     private val clickIntents: WalletClickIntents,
@@ -35,6 +36,7 @@ internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
 
     override fun create(): List<WalletSubscriber> = listOfNotNull(
         accountListSubscriberFactory.create(userWallet = userWallet),
+        tokenListAnalyticsSubscriberFactory.create(userWallet = userWallet),
         walletNFTListSubscriberV2Factory.create(userWallet = userWallet),
         checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet),
         MultiWalletWarningsSubscriber(
