@@ -7,7 +7,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState.MultiCurrency.WalletType
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createStateByWalletType
 import kotlinx.collections.immutable.PersistentList
