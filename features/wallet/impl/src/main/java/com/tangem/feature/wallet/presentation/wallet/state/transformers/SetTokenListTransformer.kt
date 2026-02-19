@@ -8,6 +8,7 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
@@ -43,6 +44,10 @@ internal class SetTokenListTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
