@@ -8,8 +8,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -66,12 +64,6 @@ internal fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trend
 @Composable
 private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
     val listState = rememberLazyListState()
-    val articlesReadStatus = remember(news.content) {
-        news.content.map { it.isViewed }
-    }
-    LaunchedEffect(articlesReadStatus) {
-        listState.requestScrollToItem(0)
-    }
     Column {
         Header(
             title = {
@@ -138,7 +130,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
         ) {
             itemsIndexed(
                 items = news.content,
-                key = { _, article -> article.id },
+                key = { index, _ -> index },
                 contentType = { _, _ -> "article" },
             ) { index, article ->
                 val articleModifier = if (index == FOURTH_ITEM_INDEX) {
