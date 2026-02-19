@@ -124,7 +124,7 @@ fun LazyListScope.notifications(
                 contentColor = contentColor,
                 modifier = modifier
                     .padding(top = topPadding)
-                    .animateItem(),
+                    .animateItem(null, null, null),
             )
         },
     )

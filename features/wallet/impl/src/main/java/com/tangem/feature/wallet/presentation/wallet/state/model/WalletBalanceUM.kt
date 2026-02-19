@@ -4,7 +4,17 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
 
-/** Wallet card state */
+/**
+ * Represents the state of the wallet balance in the UI.
+ *
+ * The sealed interface has three implementations:
+ * - [Content]: Represents the state when the wallet balance is successfully loaded.
+ * - [Error]: Represents the state when there was an error loading the wallet balance.
+ * - [Loading]: Represents the state when the wallet balance is currently being loaded.
+ *
+ * @property id The unique identifier of the wallet.
+ * @property name The name of the wallet.
+ */
 @Immutable
 internal sealed interface WalletBalanceUM {
 
@@ -27,7 +37,6 @@ internal sealed interface WalletBalanceUM {
         val balance: TextReference,
         val isBalanceFlickering: Boolean,
         val isZeroBalance: Boolean?,
-
     ) : WalletBalanceUM
 
     /**
