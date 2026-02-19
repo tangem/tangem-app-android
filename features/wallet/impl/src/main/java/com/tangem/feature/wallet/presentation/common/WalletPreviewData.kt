@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.common
 
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.event.consumedEvent
@@ -182,17 +181,6 @@ internal object WalletPreviewData {
         groupedOrganizeTokensState.copy(
             itemsState = OrganizeTokensListState.Ungrouped(
                 items = draggableTokens,
-            ),
-        )
-    }
-
-    val bottomSheet by lazy {
-        TangemBottomSheetConfig(
-            isShown = false,
-            onDismissRequest = {},
-            content = WalletBottomSheetConfig.UnlockWallets(
-                onUnlockClick = {},
-                onScanClick = {},
             ),
         )
     }
