@@ -1,9 +1,8 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.earn.usecase.*
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,15 +18,13 @@ object EarnDomainModule {
     }
 
     @Provides
-    fun provideManageEarnNetworksUseCase(
+    fun provideGetEarnNetworksUseCase(
         earnRepository: EarnRepository,
-        userWalletsListRepository: UserWalletsListRepository,
-        multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+        multiAccountListSupplier: MultiAccountListSupplier,
     ): GetEarnNetworksUseCase {
         return GetEarnNetworksUseCase(
             earnRepository = earnRepository,
-            userWalletsListRepository = userWalletsListRepository,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+            multiAccountListSupplier = multiAccountListSupplier,
         )
     }
 

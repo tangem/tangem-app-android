@@ -1,9 +1,7 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -22,29 +20,31 @@ class SendTest : BaseTestCase() {
     @DisplayName("Send: check fee notification")
     @Test
     fun checkFeeNotificationTest() {
-        val currencyName = "POL (ex-MATIC)"
-        val feeCurrencyName = "Ethereum"
-        val feeCurrencySymbol = "ETH"
-        val scenarioName = "eth_network_balance"
-        val scenarioState = "Empty"
+        val currencyName = "USDC"
+        val feeCurrencyName = "Solana"
+        val feeCurrencySymbol = "SOL"
+        val balanceScenarioName = "solana_balance"
+        val tokensScenarioName = "user_tokens_api"
+        val balanceState = "Empty"
+        val tokensState = "SolanaUSDC"
 
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(balanceScenarioName)
+                resetWireMockScenarioState(tokensScenarioName)
             }
         ).run {
-            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
-                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            step("Set WireMock scenario: '$tokensScenarioName' to state: '$tokensState'") {
+                setWireMockScenarioState(scenarioName = tokensScenarioName, state = tokensState)
             }
-
+            step("Set WireMock scenario: '$balanceScenarioName' to state: '$balanceState'") {
+                setWireMockScenarioState(scenarioName = balanceScenarioName, state = balanceState)
+            }
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
                 synchronizeAddresses()
-            }
-            step("Swipe up") {
-                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: $currencyName") {
                 onMainScreen { tokenWithTitleAndAddress(currencyName).clickWithAssertion() }

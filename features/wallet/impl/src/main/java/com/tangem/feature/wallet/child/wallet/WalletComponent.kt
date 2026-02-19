@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
@@ -14,6 +15,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -23,6 +25,7 @@ import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
@@ -38,6 +41,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -50,6 +54,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
     private val feedFeatureToggle: FeedFeatureToggle,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -148,18 +153,33 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
 
-        WalletScreen(
-            state = model.uiState.collectAsStateWithLifecycle().value,
-            bottomSheetContent = {
-                BottomSheetContent(
-                    bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
-                    modifier = modifier,
-                )
-            },
-            bottomSheetHeaderHeightProvider = { headerSize },
-            onBottomSheetStateChange = { bottomSheetState.value = it },
-        )
+        if (designFeatureToggles.isRedesignEnabled) {
+            WalletScreen2(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        } else {
+            WalletScreen(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        }
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
