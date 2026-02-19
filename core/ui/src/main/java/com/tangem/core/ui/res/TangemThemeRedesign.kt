@@ -122,8 +122,8 @@ private fun lightThemeColors2(): TangemColors2 {
     val surface = TangemColors2.Surface(
         level1 = TangemColorPalette.White,
         level2 = TangemColorPalette.Light1V2,
-        level3 = TangemColorPalette.Light1V2,
-        level4 = TangemColorPalette.White,
+        level3 = TangemColorPalette.White,
+        level4 = TangemColorPalette.Light1V2,
     )
     val controls = TangemColors2.Controls(
         backgroundChecked = TangemColorPalette.Dark6,
@@ -270,8 +270,8 @@ private fun darkThemeColors2(): TangemColors2 {
         borderPrimary = TangemColorPalette.Light4,
     )
     val surface = TangemColors2.Surface(
-        level1 = TangemColorPalette.Dark6,
-        level2 = TangemColorPalette.Black,
+        level1 = TangemColorPalette.Black,
+        level2 = TangemColorPalette.Dark7,
         level3 = TangemColorPalette.Dark6,
         level4 = TangemColorPalette.Dark5,
     )
