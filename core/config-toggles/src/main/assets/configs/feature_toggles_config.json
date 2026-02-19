@@ -7,14 +7,7 @@
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
-    {
-        "name": "STAKING_TON_ENABLED",
-        "version": "5.28.0"
-    },
-    {
-        "name": "STAKING_CARDANO_ENABLED",
-        "version": "5.31.1"
-    },
+
     {
         "name": "STAKING_ETH_ENABLED",
         "version": "undefined"
@@ -30,22 +23,6 @@
     {
         "name": "HOT_WALLET_CREATION_RESTRICTION_ENABLED",
         "version": "5.32.0"
-    },
-    {
-        "name": "TANGEM_PAY_ENABLED",
-        "version": "5.31.0"
-    },
-    {
-        "name": "YIELD_SUPPLY_FEATURE_ENABLED",
-        "version": "5.30.0"
-    },
-    {
-        "name": "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
-        "version": "5.33.0"
-    },
-    {
-        "name": "NEW_ONRAMP_MAIN_ENABLED",
-        "version": "5.31.0"
     },
     {
         "name": "ACCOUNTS_FEATURE_ENABLED",
