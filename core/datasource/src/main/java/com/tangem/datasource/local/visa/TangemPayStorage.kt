@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.visa
 
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 
 @Suppress("TooManyFunctions")
@@ -28,9 +29,9 @@ interface TangemPayStorage {
     suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean)
     suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean?
 
-    suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String)
+    suspend fun storeWithdrawOrder(userWalletId: UserWalletId, data: TangemPayWithdrawState)
 
-    suspend fun getWithdrawOrderId(userWalletId: UserWalletId): String?
+    suspend fun getWithdrawOrder(userWalletId: UserWalletId): TangemPayWithdrawState?
 
     suspend fun deleteWithdrawOrder(userWalletId: UserWalletId)
 
