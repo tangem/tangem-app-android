@@ -47,8 +47,9 @@ internal class WalletAccountListFlowFactory @Inject constructor(
 
         return accountsResponseStoreFactory.create(userWallet.walletId).data
             .filterNotNull()
+            .filter { it.accounts.isNotEmpty() }
             .distinctUntilChanged()
-            .map(converter::convert)
+            .map { converter.convert(it) }
     }
 
     private fun createForSingleWallet(userWallet: UserWallet): AccountList {
