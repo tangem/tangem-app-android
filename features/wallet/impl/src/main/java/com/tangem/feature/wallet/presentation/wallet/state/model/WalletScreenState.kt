@@ -9,6 +9,7 @@ internal data class WalletScreenState(
     val topBarConfig: WalletTopBarConfig,
     val selectedWalletIndex: Int,
     val wallets: ImmutableList<WalletState>,
+    val wallets2: ImmutableList<WalletUM>,
     val onWalletChange: (index: Int, onlyState: Boolean) -> Unit,
     val event: StateEvent<WalletEvent>,
     val isHidingMode: Boolean,
