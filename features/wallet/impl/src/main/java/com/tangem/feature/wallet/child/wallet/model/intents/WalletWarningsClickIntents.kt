@@ -17,7 +17,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.hotwallet.CloseHotWalletUpgradeBannerUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -135,7 +135,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
-    private val hotWalletRepository: HotWalletRepository,
+    private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -554,8 +554,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
             if (userWallet is UserWallet.Hot) {
-                hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, false)
-                hotWalletRepository.setShouldShowNextTimeUpgradeBanner(userWalletId, false)
                 appRouter.push(UpgradeWallet(userWalletId))
             }
         }
@@ -565,15 +563,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             val userWallet = getUserWalletUseCase(userWalletId).getOrNull()
             if (userWallet is UserWallet.Hot) {
-                val hasHadFirstTopUp = hotWalletRepository.hasHadFirstTopUp(userWalletId)
-                val currentTime = System.currentTimeMillis()
-
-                if (hasHadFirstTopUp) {
-                    hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, false)
-                    hotWalletRepository.setUpgradeBannerClosureTimestamp(userWalletId, currentTime)
-                } else {
-                    hotWalletRepository.setShouldShowUpgradeBanner(userWalletId, true)
-                }
+                closeHotWalletUpgradeBannerUseCase(userWalletId)
             }
         }
     }
