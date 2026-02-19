@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
@@ -33,6 +34,10 @@ internal class SetCryptoCurrencyActionsTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun TokenActionsState.toManageButtons(): PersistentList<WalletManageButton> {
