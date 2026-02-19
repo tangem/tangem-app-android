@@ -10,10 +10,13 @@ import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultHotWalletRepository(
     private val appPreferencesStore: AppPreferencesStore,
 ) : HotWalletRepository {
+
+    private val firstTopUpDetectedThisSession = ConcurrentHashMap<String, Unit>()
 
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
     override fun isWalletCreationSupported(): Boolean {
@@ -50,28 +53,12 @@ internal class DefaultHotWalletRepository(
         }
     }
 
-    override fun shouldShowNextTimeUpgradeBanner(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
-        .getObjectMap<Boolean>(PreferencesKeys.SHOULD_SHOW_NEXT_TIME_UPGRADE_BANNER_KEY)
-        .map { it[userWalletId.stringValue] == true }
-
-    override suspend fun setShouldShowNextTimeUpgradeBanner(userWalletId: UserWalletId, shouldShow: Boolean) {
-        appPreferencesStore.editData { mutablePreferences ->
-            mutablePreferences.setObjectMap(
-                key = PreferencesKeys.SHOULD_SHOW_NEXT_TIME_UPGRADE_BANNER_KEY,
-                value = mutablePreferences.getObjectMap<Boolean>(
-                    PreferencesKeys.SHOULD_SHOW_NEXT_TIME_UPGRADE_BANNER_KEY,
-                )
-                    .plus(userWalletId.stringValue to shouldShow),
-            )
-        }
-    }
-
     override suspend fun getUpgradeBannerClosureTimestamp(userWalletId: UserWalletId): Long? {
         return appPreferencesStore
             .getObjectMapSync<Long>(PreferencesKeys.UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY)[userWalletId.stringValue]
     }
 
-    override suspend fun setUpgradeBannerClosureTimestamp(userWalletId: UserWalletId, timestamp: Long) {
+    override suspend fun setUpgradeBannerClosureTimestamp(userWalletId: UserWalletId, timestamp: Long?) {
         appPreferencesStore.editData { mutablePreferences ->
             mutablePreferences.setObjectMap(
                 key = PreferencesKeys.UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY,
@@ -109,5 +96,13 @@ internal class DefaultHotWalletRepository(
                     .plus(userWalletId.stringValue to hasTopUp),
             )
         }
+    }
+
+    override fun isFirstTopUpDetectedThisSession(userWalletId: UserWalletId): Boolean {
+        return firstTopUpDetectedThisSession.containsKey(userWalletId.stringValue)
+    }
+
+    override fun markFirstTopUpDetectedThisSession(userWalletId: UserWalletId) {
+        firstTopUpDetectedThisSession[userWalletId.stringValue] = Unit
     }
 }
