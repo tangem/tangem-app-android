@@ -32,10 +32,10 @@ import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
-import com.tangem.features.onramp.mainv2.ui.Offer
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.ui.Offer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList

@@ -12,7 +12,7 @@ import com.tangem.features.onramp.alloffers.entity.AllOffersIntents
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateFactory
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
