@@ -41,8 +41,6 @@ dependencies {
     /** Feature API - remove after removing [HotWalletFeatureToggles] */
     implementation(projects.features.hotWallet.api)
 
-    /** Feature API - remove after removing [TangemPayFeatureToggles] */
-    implementation(projects.features.tangempay.details.api)
 
     /** Project - Utils */
     implementation(projects.core.utils)
