@@ -195,7 +195,9 @@ internal class CreateWalletStartModel @Inject constructor(
                     }
                 },
                 onFailure = { error ->
-                    handleScanError(error)
+                    if (!error.silent) {
+                        handleScanError(error)
+                    }
                     delay(HIDE_PROGRESS_DELAY)
                     setLoading(false)
                 },

@@ -37,6 +37,9 @@ sealed class TapSdkError(override val messageResId: Int?) : TangemError(code = 5
 
     class CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
     class CardNotSupportedByRelease : TapSdkError(R.string.error_wrong_card_type)
+    class CardAlreadyUsedWarningDisplayed : TapSdkError(null) {
+        override val silent: Boolean = true
+    }
 }
 
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {

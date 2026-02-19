@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
@@ -116,6 +117,7 @@ internal class LegacyScanProcessor @Inject constructor(
                             onSuccess = onSuccess,
                             onWalletNotCreated = onWalletNotCreated,
                             onCancel = onCancel,
+                            onFailure = onFailure,
                         )
                     },
                 )
@@ -201,6 +203,7 @@ internal class LegacyScanProcessor @Inject constructor(
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline onWalletNotCreated: suspend () -> Unit,
         crossinline onCancel: suspend () -> Unit,
+        crossinline onFailure: suspend (TangemError) -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
         checkCardWasUsedInApp(
@@ -215,6 +218,9 @@ internal class LegacyScanProcessor @Inject constructor(
                     onProgressStateChange.invoke(false)
                     onCancel()
                 }
+            },
+            onFailure = {
+                onFailure(it)
             },
         ) {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
@@ -256,6 +262,7 @@ internal class LegacyScanProcessor @Inject constructor(
         scanResponse: ScanResponse,
         onProgressStateChange: (showProgress: Boolean) -> Unit,
         onCancel: () -> Unit,
+        onFailure: suspend (TangemError) -> Unit,
         onSuccess: suspend () -> Unit,
     ) {
         val userWalletId = runCatching { UserWalletIdBuilder.card(scanResponse.card).build() }.getOrNull()
@@ -268,6 +275,7 @@ internal class LegacyScanProcessor @Inject constructor(
         val tokens = userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
 
         if (scanResponse.card.isAccessCodeSet && tokens == null) {
+            onFailure(TapSdkError.CardAlreadyUsedWarningDisplayed())
             if (usedCardOnboardingFeatureToggles.isUsedCardOnboardingEnabled) {
                 navigateTo(
                     route = AppRoute.UsedCardOnboarding(scanResponse = scanResponse),

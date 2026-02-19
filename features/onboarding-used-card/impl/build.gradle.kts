@@ -26,6 +26,8 @@ dependencies {
     implementation(projects.core.navigation)
 
     /** Domain */
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.card)
     implementation(projects.domain.settings)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)

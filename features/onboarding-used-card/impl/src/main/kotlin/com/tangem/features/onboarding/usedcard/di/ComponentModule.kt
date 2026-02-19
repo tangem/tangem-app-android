@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.usedcard.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onboarding.usedcard.UsedCardOnboardingComponent
+import com.tangem.features.onboarding.usedcard.alreadyactivated.AlreadyActivatedModel
 import com.tangem.features.onboarding.usedcard.entry.DefaultUsedCardOnboardingComponent
 import com.tangem.features.onboarding.usedcard.entry.UsedCardOnboardingModel
 import dagger.Binds
@@ -31,5 +32,10 @@ internal interface ModelModule {
     @Binds
     @IntoMap
     @ClassKey(UsedCardOnboardingModel::class)
-    fun provideModel(model: UsedCardOnboardingModel): Model
+    fun provideUsedCardOnboardingModel(model: UsedCardOnboardingModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(AlreadyActivatedModel::class)
+    fun provideAlreadyActivatedModel(model: AlreadyActivatedModel): Model
 }

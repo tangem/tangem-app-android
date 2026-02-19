@@ -4,8 +4,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.onboarding.usedcard.entry.UsedCardOnboardingModel
 import com.tangem.features.onboarding.usedcard.alreadyactivated.AlreadyActivatedComponent
+import com.tangem.features.onboarding.usedcard.entry.UsedCardOnboardingModel
 import com.tangem.features.onboarding.usedcard.syncwallet.SyncWalletComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
@@ -25,8 +25,8 @@ internal class UsedCardOnboardingChildFactory @Inject constructor(
             is UsedCardOnboardingRoute.AlreadyActivated -> AlreadyActivatedComponent(
                 context = childContext,
                 params = AlreadyActivatedComponent.Params(
-                    onThisIsMyWalletClick = model.alreadyActivatedCallbacks::onThisIsMyWalletClick,
-                    onNewCardClick = model.alreadyActivatedCallbacks::onNewCardClick,
+                    scanResponse = model.scanResponse,
+                    modelCallback = model.alreadyActivatedCallback,
                 ),
             )
             is UsedCardOnboardingRoute.AskBiometry -> askBiometryComponentFactory.create(

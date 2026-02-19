@@ -24,11 +24,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.usedcard.impl.R
 
 @Composable
-internal fun AlreadyActivatedScreen(
-    onThisIsMyWalletClick: () -> Unit,
-    onNewCardClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun AlreadyActivatedScreen(uiState: AlreadyActivatedUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -71,16 +67,19 @@ internal fun AlreadyActivatedScreen(
         Spacer(modifier = Modifier.weight(1f))
 
         PrimaryButton(
-            text = stringResourceSafe(R.string.this_is_my_wallet_title),
-            onClick = onThisIsMyWalletClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
+            text = stringResourceSafe(R.string.this_is_my_wallet_title),
+            onClick = uiState.onThisIsMyWalletClick,
+            showProgress = uiState.isSavingWallet,
+            enabled = !uiState.isSavingWallet,
         )
 
         SecondaryButton(
             text = stringResourceSafe(R.string.onboarding_used_card_new_card_button),
-            onClick = onNewCardClick,
+            onClick = uiState.onNewCardClick,
+            enabled = !uiState.isSavingWallet,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
@@ -125,8 +124,11 @@ private fun PreviewAlreadyActivatedScreen() {
                 .background(color = TangemTheme.colors.background.primary),
         ) {
             AlreadyActivatedScreen(
-                onThisIsMyWalletClick = {},
-                onNewCardClick = {},
+                uiState = AlreadyActivatedUM(
+                    isSavingWallet = false,
+                    onThisIsMyWalletClick = {},
+                    onNewCardClick = {},
+                ),
             )
         }
     }
