@@ -47,7 +47,7 @@ class AccountCryptoPortfolioItemStateConverter(
         )
         return TokenItemState.Content(
             id = account.accountId.toItemId(),
-            iconState = AccountIconItemStateConverter.convert(this),
+            iconState = AccountIconItemStateConverter().convert(this),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
             ),
@@ -73,7 +73,7 @@ class AccountCryptoPortfolioItemStateConverter(
     private fun Account.CryptoPortfolio.mapToLoadingState(): TokenItemState.Content {
         return TokenItemState.Content(
             id = account.accountId.toItemId(),
-            iconState = AccountIconItemStateConverter.convert(account),
+            iconState = AccountIconItemStateConverter().convert(account),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
             ),
@@ -95,7 +95,7 @@ class AccountCryptoPortfolioItemStateConverter(
     private fun Account.CryptoPortfolio.mapToUnreachableState(): TokenItemState.Unreachable {
         return TokenItemState.Unreachable(
             id = account.accountId.toItemId(),
-            iconState = AccountIconItemStateConverter.convert(account),
+            iconState = AccountIconItemStateConverter().convert(account),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
             ),
