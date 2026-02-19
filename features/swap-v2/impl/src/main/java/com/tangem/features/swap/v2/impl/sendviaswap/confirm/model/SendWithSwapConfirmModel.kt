@@ -429,6 +429,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 data = SwapNotificationData(
                     expressError = (confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                     fromCryptoCurrency = confirmData.fromCryptoCurrencyStatus?.currency,
+                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    memo = confirmData.enteredMemo,
+                    toCryptoCurrencyStatus = confirmData.toCryptoCurrencyStatus,
+                    userWalletId = params.userWallet.walletId,
                 ),
             )
             uiState.transformerUpdate(
