@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.express.models)
     implementation(projects.domain.account)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.visa.models)
 
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
