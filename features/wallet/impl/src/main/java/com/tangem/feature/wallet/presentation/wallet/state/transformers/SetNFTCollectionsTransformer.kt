@@ -30,7 +30,16 @@ internal class SetNFTCollectionsTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return when (walletUM) {
+            is WalletUM.Content -> walletUM.copy(
+                nftState = when {
+                    nftCollections.allLoadedCollectionsEmpty() ->
+                        WalletNFTItemUM.Empty(onItemClick)
+                    else -> createContentNFTItemUM(onItemClick)
+                },
+            )
+            is WalletUM.Locked -> walletUM
+        }
     }
 
     private fun createContentNFTItemUM(onItemClick: () -> Unit): WalletNFTItemUM.Content {
