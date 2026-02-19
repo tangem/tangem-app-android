@@ -15,6 +15,7 @@ internal sealed interface WalletUM {
 
     val buttons: PersistentList<TangemButtonUM>
     val notifications: ImmutableList<WalletNotificationUM>
+    val notificationsCarousel: ImmutableList<WalletNotificationUM>
 
     val tokensListUM: WalletTokensListUM
 
@@ -29,11 +30,11 @@ internal sealed interface WalletUM {
         override val walletsBalanceUM: WalletBalanceUM,
         override val buttons: PersistentList<TangemButtonUM>,
         override val notifications: ImmutableList<WalletNotificationUM>,
+        override val notificationsCarousel: ImmutableList<WalletNotificationUM>,
         override val tokensListUM: WalletTokensListUM,
         override val nftState: WalletNFTItemUM,
         override val type: WalletType,
         override val tangemPayState: TangemPayState,
-        val stackableNotifications: ImmutableList<WalletNotificationUM>,
     ) : WalletUM
 
     data class Locked(
@@ -42,6 +43,7 @@ internal sealed interface WalletUM {
         override val type: WalletType,
         override val notifications: ImmutableList<WalletNotificationUM> = persistentListOf(),
     ) : WalletUM {
+        override val notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf()
         override val pullToRefreshConfig = PullToRefreshConfig(false, {})
         override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Empty // todo redesign main locked state
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
