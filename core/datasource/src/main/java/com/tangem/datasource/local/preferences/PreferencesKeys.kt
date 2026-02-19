@@ -134,10 +134,6 @@ object PreferencesKeys {
 
     val SHOULD_SHOW_UPGRADE_BANNER_KEY by lazy { stringPreferencesKey(name = "shouldShowUpgradeBanner") }
 
-    val SHOULD_SHOW_NEXT_TIME_UPGRADE_BANNER_KEY by lazy {
-        stringPreferencesKey(name = "shouldShowNextTimeUpgradeBanner")
-    }
-
     val UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY by lazy { stringPreferencesKey(name = "upgradeBannerClosureTimestamp") }
 
     val WALLET_CREATION_TIMESTAMP_KEY by lazy { stringPreferencesKey(name = "walletCreationTimestamp") }
