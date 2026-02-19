@@ -22,11 +22,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.ds.button.*
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -58,7 +58,15 @@ fun TangemMessage(
             if (messageUM.iconUM != null) {
                 TangemIcon(
                     tangemIconUM = messageUM.iconUM,
-                    modifier = Modifier.size(TangemTheme.dimens2.x8),
+                    modifier = Modifier
+                        .align(
+                            if (messageUM.buttonsUM.isEmpty()) {
+                                Alignment.CenterVertically
+                            } else {
+                                Alignment.Top
+                            },
+                        )
+                        .size(TangemTheme.dimens2.x7),
                 )
             }
         },
@@ -342,6 +350,7 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                 id = "1",
                 title = stringReference("Title text"),
                 subtitle = stringReference("Subtext"),
+                iconUM = TangemIconUM.Icon(R.drawable.ic_attention_default_24),
                 messageEffect = TangemMessageEffect.None,
                 isCentered = true,
             ),
@@ -350,6 +359,7 @@ private class TangemMessagePreviewProvider : PreviewParameterProvider<TangemMess
                 title = stringReference("Title text"),
                 subtitle = stringReference("Subtext"),
                 messageEffect = TangemMessageEffect.Magic,
+                iconUM = TangemIconUM.Icon(R.drawable.ic_attention_default_24),
                 isCentered = false,
                 buttonsUM = persistentListOf(
                     TangemMessageButtonUM(
@@ -405,9 +415,8 @@ private fun TangemMessage2_Preview() {
             content = {
                 Box(
                     modifier = Modifier
-                        .size(TangemTheme.dimens2.x10)
+                        .size(TangemTheme.dimens2.x7)
                         .clip(RoundedCornerShape(TangemTheme.dimens2.x2))
-                        .flicker(isFlickering = true)
                         .background(TangemTheme.colors2.text.neutral.primary),
                 )
             },
