@@ -137,13 +137,13 @@ class TangemPayMainScreenCustomerInfoUseCase(
         userWalletId: UserWalletId,
         orderId: String,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
-        return customerOrderRepository.getOrderStatus(userWalletId, orderId = orderId)
+        return customerOrderRepository.getOrderData(userWalletId, orderId = orderId)
             .fold(
                 ifLeft = { error ->
                     error.mapErrorForCustomer().left()
                 },
-                ifRight = { orderStatus ->
-                    when (orderStatus) {
+                ifRight = { orderData ->
+                    when (orderData.status) {
                         // Kyc is passed and user waits for order creation -> no need to get customer info
                         OrderStatus.NEW,
                         OrderStatus.PROCESSING,
@@ -154,7 +154,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                                 kycStatus = CustomerInfo.KycStatus.APPROVED,
                                 cardInfo = null,
                             ),
-                            orderStatus = orderStatus,
+                            orderStatus = orderData.status,
                         ).right()
 
                         // Order was created/cancelled -> clear order id and get customer info
@@ -164,11 +164,11 @@ class TangemPayMainScreenCustomerInfoUseCase(
                         -> {
                             onboardingRepository.clearOrderId(userWalletId)
                             // If order was cancelled -> start order creation
-                            if (orderStatus == OrderStatus.CANCELED) onboardingRepository.createOrder(userWalletId)
+                            if (orderData.status == OrderStatus.CANCELED) onboardingRepository.createOrder(userWalletId)
                             onboardingRepository.getCustomerInfo(userWalletId = userWalletId)
                                 .mapLeft { it.mapErrorForCustomer() }
                                 .map { customerInfo ->
-                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderStatus)
+                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderData.status)
                                 }
                         }
                     }
