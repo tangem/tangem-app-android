@@ -25,7 +25,7 @@ class FinalizeTwinTask(
                             is CompletionResult.Success ->
                                 ScanProductTask(
                                     card = readResult.data,
-                                    derivationsFinder = null,
+                                    blockchainToDeriveFinder = null,
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
                                     onboardingV2FeatureToggles = null,
