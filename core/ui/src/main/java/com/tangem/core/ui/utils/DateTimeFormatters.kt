@@ -103,9 +103,9 @@ object DateTimeFormatters {
      */
     val localFullDate: DateTimeFormatter by lazy {
         val locale = Locale.getDefault()
-        val datePattern = DateFormat.getBestDateTimePattern(locale, "d MMMM")
+        val datePattern = icuPatternToJodaPattern(DateFormat.getBestDateTimePattern(locale, "d MMMM"))
         val timeSkeleton = if (is12HourFormat) "h:mm a" else "HH:mm"
-        val timePattern = DateFormat.getBestDateTimePattern(locale, timeSkeleton)
+        val timePattern = icuPatternToJodaPattern(DateFormat.getBestDateTimePattern(locale, timeSkeleton))
         val fullPattern = "$datePattern, $timePattern"
         DateTimeFormatterBuilder()
             .appendPattern(fullPattern)
@@ -128,11 +128,24 @@ object DateTimeFormatters {
      */
     fun getBestFormatterBySkeleton(skeleton: String): DateTimeFormatter {
         val skeletonWithLocale = skeleton.replaceHourLetters()
+        val icuPattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), skeletonWithLocale)
+        val jodaPattern = icuPatternToJodaPattern(icuPattern)
 
         return DateTimeFormatterBuilder()
-            .appendPattern(DateFormat.getBestDateTimePattern(Locale.getDefault(), skeletonWithLocale))
+            .appendPattern(jodaPattern)
             .toFormatter()
             .withLocale(Locale.getDefault())
+    }
+
+    /**
+     * Converts ICU date/time pattern (from [DateFormat.getBestDateTimePattern]) to Joda-Time compatible pattern.
+     */
+    internal fun icuPatternToJodaPattern(icuPattern: String): String {
+        return icuPattern
+            .replace("LLLL", "MMMM")
+            .replace("LLL", "MMM")
+            .replace("LL", "MM")
+            .replace("L", "M")
     }
 
     private fun String.replaceHourLetters(): String {
