@@ -2,6 +2,9 @@ package com.tangem.tap.data
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import com.tangem.data.pay.entity.WithdrawStoreData
+import com.tangem.data.pay.util.WithdrawStateConverter
+import com.tangem.data.pay.util.WithdrawStoreDataConverter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -11,6 +14,7 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayWithdrawState
 import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,6 +45,8 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     private val tokensAdapter by lazy { moshi.adapter(TangemPayAuthTokens::class.java) }
+    private val withdrawStoreDataConverter by lazy { WithdrawStoreDataConverter() }
+    private val withdrawStateConverter by lazy { WithdrawStateConverter() }
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         withContext(dispatcherProvider.io) {
@@ -131,10 +137,12 @@ internal class DefaultTangemPayStorage @Inject constructor(
         return appPreferencesStore.getSyncOrNull(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId))
     }
 
-    override suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String) {
+    override suspend fun storeWithdrawOrder(userWalletId: UserWalletId, data: TangemPayWithdrawState) {
         appPreferencesStore.editData { mutablePreferences ->
-            val orders = mutablePreferences.getObjectMap<String>(PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY)
-                .plus(createWithdrawOrderIdKey(userWalletId) to orderId)
+            val orders = mutablePreferences.getObjectMap<TangemPayWithdrawState>(
+                PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
+            )
+                .plus(createWithdrawOrderIdKey(userWalletId) to withdrawStoreDataConverter.convert(data))
             mutablePreferences.setObjectMap(
                 key = PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
                 value = orders,
@@ -142,14 +150,19 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
-    override suspend fun getWithdrawOrderId(userWalletId: UserWalletId): String? {
-        val orders = appPreferencesStore.getObjectMapSync<String>(PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY)
-        return orders[createWithdrawOrderIdKey(userWalletId)]
+    override suspend fun getWithdrawOrder(userWalletId: UserWalletId): TangemPayWithdrawState? {
+        val orders = appPreferencesStore.getObjectMapSync<WithdrawStoreData>(
+            PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
+        )
+        val data = orders[createWithdrawOrderIdKey(userWalletId)] ?: return null
+        return withdrawStateConverter.convert(data)
     }
 
     override suspend fun deleteWithdrawOrder(userWalletId: UserWalletId) {
         appPreferencesStore.editData { mutablePreferences ->
-            val orders = mutablePreferences.getObjectMap<String>(PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY)
+            val orders = mutablePreferences.getObjectMap<WithdrawStoreData>(
+                PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
+            )
                 .minus(createWithdrawOrderIdKey(userWalletId))
             mutablePreferences.setObjectMap(
                 key = PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
