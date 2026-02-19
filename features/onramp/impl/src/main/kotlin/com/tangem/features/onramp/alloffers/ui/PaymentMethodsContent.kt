@@ -33,10 +33,10 @@ import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
-import com.tangem.features.onramp.mainv2.ui.TimingBlock
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferCategoryUM
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.ui.TimingBlock
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf

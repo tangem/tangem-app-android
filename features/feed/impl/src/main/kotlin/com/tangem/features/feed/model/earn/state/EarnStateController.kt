@@ -26,8 +26,10 @@ internal class EarnStateController @Inject constructor() {
         return EarnUM(
             mostlyUsed = EarnListUM.Loading,
             bestOpportunities = EarnBestOpportunitiesUM.Loading,
-            selectedTypeFilter = EarnFilterTypeUM.All,
-            selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+            earnFilterUM = EarnFilterUM(
+                selectedTypeFilter = EarnFilterTypeUM.All,
+                selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+            ),
             onBackClick = {},
             onNetworkFilterClick = {},
             onTypeFilterClick = {},
