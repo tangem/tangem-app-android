@@ -1,5 +1,6 @@
 package com.tangem.features.swap.v2.impl.notifications.model
 
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -7,6 +8,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
@@ -14,6 +17,7 @@ import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import java.math.BigDecimal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -30,6 +34,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
     private val swapNotificationsUpdateTrigger: DefaultSwapNotificationsUpdateTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
+    private val validateTransactionUseCase: ValidateTransactionUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -61,10 +66,31 @@ internal class SwapNotificationsModel @Inject constructor(
     private suspend fun buildNotifications() {
         val notifications = buildList {
             addExpressErrorNotification()
+            addDestinationTagRequiredNotification()
         }
 
         swapNotificationsUpdateTrigger.callbackHasError(notifications.isNotEmpty())
         uiState.value = notifications.toImmutableList()
+    }
+
+    private suspend fun MutableList<NotificationUM>.addDestinationTagRequiredNotification() {
+        val toCryptoCurrencyStatus = notificationData.toCryptoCurrencyStatus ?: return
+        val userWalletId = notificationData.userWalletId ?: return
+        val destinationAddress = notificationData.destinationAddress
+        if (destinationAddress.isEmpty()) return
+
+        val validationError = validateTransactionUseCase(
+            amount = BigDecimal.ZERO.convertToSdkAmount(toCryptoCurrencyStatus),
+            fee = null,
+            memo = notificationData.memo,
+            destination = destinationAddress,
+            userWalletId = userWalletId,
+            network = toCryptoCurrencyStatus.currency.network,
+        ).leftOrNull()
+
+        if (validationError is BlockchainSdkError.DestinationTagRequired) {
+            add(NotificationUM.Error.DestinationTagRequired)
+        }
     }
 
     fun MutableList<NotificationUM>.addExpressErrorNotification() {
