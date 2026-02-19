@@ -10,7 +10,9 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,10 +45,13 @@ internal class ExpandedAccountsHolder @Inject constructor(
             .toSet()
         // main state holder
         val expandedAccounts = MutableStateFlow(initExpandedState)
+        var debounceJob: Job? = null
 
         actionChannel
             .filter { (accountId, _) -> accountId.userWalletId == walletId }
+            .filter { debounceJob?.isActive != true }
             .onEach { (accountId, isExpand) ->
+                debounceJob = launch { delay(DEBOUNCE_MILLIS) }
                 val newState = AccountExpandedState(accountId, isExpand)
                 launch { accountsExpandedRepository.update(newState) }
                 if (isExpand) {
@@ -100,4 +105,8 @@ internal class ExpandedAccountsHolder @Inject constructor(
     }
 
     private fun walletAccounts(walletId: UserWalletId): Flow<AccountList> = singleAccountListSupplier(walletId)
+
+    companion object {
+        private const val DEBOUNCE_MILLIS = 200L
+    }
 }
