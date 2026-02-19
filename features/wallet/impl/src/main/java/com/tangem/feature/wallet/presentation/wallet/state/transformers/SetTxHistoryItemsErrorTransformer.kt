@@ -5,6 +5,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import timber.log.Timber
 
 internal class SetTxHistoryItemsErrorTransformer(
@@ -25,6 +26,10 @@ internal class SetTxHistoryItemsErrorTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun createErrorState(): TxHistoryState.Error = when (error) {
