@@ -171,6 +171,10 @@ sealed class WalletSettingsAnalyticEvents(
         event = "Wallet Upgraded",
     ), AppsFlyerIncludedEvent
 
+    class WalletsReorder : WalletSettingsAnalyticEvents(
+        event = "Longtap - Wallets Order",
+    )
+
     enum class RecoveryPhraseScreenAction(val value: String) {
         Upgrade("Upgrade"),
         Backup("Backup"),
