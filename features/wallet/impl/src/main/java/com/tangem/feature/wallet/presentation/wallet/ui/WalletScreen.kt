@@ -720,7 +720,6 @@ internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modi
 private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig != null) {
         when (bottomSheetConfig.content) {
-            is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
             is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
             is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
             is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)

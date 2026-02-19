@@ -48,7 +48,6 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -119,8 +118,6 @@ interface ApplicationEntryPoint {
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
 
     fun getOnboardingRepository(): OnboardingRepository
-
-    fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
 
     fun getExcludedBlockchains(): ExcludedBlockchains
 
