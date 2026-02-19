@@ -13,8 +13,9 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
-import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.hotwallet.ShouldShowUpgradeHotWalletBannerUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -44,7 +45,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import java.util.concurrent.TimeUnit
+
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -60,7 +61,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val notificationsRepository: NotificationsRepository,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
-    private val hotWalletRepository: HotWalletRepository,
+    private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
+    private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
 ) {
 
     @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod")
@@ -101,8 +103,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.YieldPromo)
                 .distinctUntilChanged(),
-            hotWalletRepository.shouldShowUpgradeBanner(userWallet.walletId).distinctUntilChanged(),
-            hotWalletRepository.shouldShowNextTimeUpgradeBanner(userWallet.walletId).distinctUntilChanged(),
+            shouldShowUpgradeHotWalletBannerUseCase.invoke(userWallet.walletId)
+                .distinctUntilChanged(),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
@@ -117,7 +119,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldAccessCodeSkipped = array[6] as Boolean
                 val shouldShowYieldPromo = array[7] as Boolean
                 val shouldShowUpgradeBanner = array[8] as Boolean
-                val shouldShowNextTimeUpgradeBanner = array[9] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -129,7 +130,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         flattenCurrencies = flattenCurrencies,
                         clickIntents = clickIntents,
                         shouldShowUpgradeBanner = shouldShowUpgradeBanner,
-                        shouldShowNextTimeUpgradeBanner = shouldShowNextTimeUpgradeBanner,
                     )
 
                     addFinishWalletActivationNotification(
@@ -464,45 +464,22 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    @Suppress("CyclomaticComplexMethod")
     private suspend fun MutableList<WalletNotification>.addUpgradeHotWalletPromoNotification(
         userWallet: UserWallet,
         flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
         clickIntents: WalletClickIntents,
         shouldShowUpgradeBanner: Boolean,
-        shouldShowNextTimeUpgradeBanner: Boolean,
     ) {
         if (userWallet !is UserWallet.Hot) return
-
-        val currentTime = System.currentTimeMillis()
-        val creationTimestamp = hotWalletRepository.getWalletCreationTimestamp(userWallet.walletId)
-        val closureTimestamp = hotWalletRepository.getUpgradeBannerClosureTimestamp(userWallet.walletId)
-        val hasHadFirstTopUp = hotWalletRepository.hasHadFirstTopUp(userWallet.walletId)
-
-        if (creationTimestamp == null) {
-            hotWalletRepository.setWalletCreationTimestamp(userWallet.walletId, currentTime)
-            return
-        }
-
-        val daysSinceCreation = TimeUnit.MILLISECONDS.toDays(currentTime - creationTimestamp)
-        val daysSinceClosure = closureTimestamp?.let { TimeUnit.MILLISECONDS.toDays(currentTime - it) }
 
         val currencies = flattenCurrencies.getOrNull(isPartialContentAccepted = true).orEmpty()
         val hasBalance = currencies.any { it.value.amount.orZero().isPositive() }
 
-        if (hasBalance && !hasHadFirstTopUp) {
-            hotWalletRepository.setHasHadFirstTopUp(userWallet.walletId, true)
-        }
-
-        val shouldShow = when {
-            shouldShowUpgradeBanner && hasBalance -> true
-            shouldShowNextTimeUpgradeBanner && daysSinceClosure != null && daysSinceClosure >= UPGRADE_BANNER_RESHOW_DAYS -> true
-            !shouldShowUpgradeBanner && !shouldShowNextTimeUpgradeBanner && hasHadFirstTopUp && daysSinceCreation >= UPGRADE_BANNER_RESHOW_DAYS -> {
-                hotWalletRepository.setShouldShowNextTimeUpgradeBanner(userWallet.walletId, true)
-                true
-            }
-            else -> false
-        }
+        val shouldShow = checkHotWalletUpgradeBannerUseCase(
+            walletId = userWallet.walletId,
+            hasBalance = hasBalance,
+            shouldShowUpgradeBanner = shouldShowUpgradeBanner,
+        ).getOrNull() ?: return
 
         addIf(
             element = WalletNotification.UpgradeHotWalletPromo(
@@ -515,6 +492,5 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private companion object {
         const val MAX_REMAINING_SIGNATURES_COUNT = 10
-        const val UPGRADE_BANNER_RESHOW_DAYS = 30
     }
 }
