@@ -323,8 +323,9 @@ internal class SendDestinationModel @Inject constructor(
                 senderAddresses = senderAddresses.value,
             )
             val memoValidationResult = validateWalletMemoUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
                 memo = memo.orEmpty(),
-                network = cryptoCurrency.network,
             )
 
             if (type != null) {
