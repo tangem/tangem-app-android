@@ -133,6 +133,10 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
                 expressError = (model.confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                 fromCryptoCurrency = model.confirmData.fromCryptoCurrencyStatus?.currency,
+                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                memo = model.confirmData.enteredMemo,
+                toCryptoCurrencyStatus = model.confirmData.toCryptoCurrencyStatus,
+                userWalletId = params.userWallet.walletId,
             ),
         ),
     )
