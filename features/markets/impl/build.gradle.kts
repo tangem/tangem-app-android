@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
+    implementation(projects.domain.offramp)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.staking)
@@ -49,12 +50,6 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
 
-    // FIXME [REDACTED_TASK_KEY]
-    // Remove the "Buy" and "Sell" actions from the redux middleware.
-    // Instead, create some kind of interface for such cases.
-    /* Redux -_- */
-    implementation(projects.domain.legacy)
-    implementation(deps.reKotlin)
 
     /* Compose */
     implementation(deps.compose.coil)

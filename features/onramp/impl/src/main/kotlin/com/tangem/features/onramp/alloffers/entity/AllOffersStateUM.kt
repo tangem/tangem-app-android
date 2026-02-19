@@ -4,7 +4,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodStatus
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
+import com.tangem.features.onramp.main.entity.OnrampOfferUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface AllOffersStateUM {
