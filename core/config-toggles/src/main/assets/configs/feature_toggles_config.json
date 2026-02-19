@@ -42,7 +42,7 @@
     },
     {
         "name": "SWAP_MARKET_LIST_ENABLED",
-        "version": "undefined"
+        "version": "5.34"
     },
     {
         "name": "EARN_BLOCK_ENABLED",
@@ -54,6 +54,6 @@
     },
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
-        "version": "undefined"
+        "version": "5.34"
     }
 ]
