@@ -8,8 +8,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -19,6 +17,7 @@ import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.news.ArticleCard
@@ -65,12 +64,6 @@ internal fun NewsBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trend
 @Composable
 private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM, trendingArticle: ArticleConfigUM?) {
     val listState = rememberLazyListState()
-    val articlesReadStatus = remember(news.content) {
-        news.content.map { it.isViewed }
-    }
-    LaunchedEffect(articlesReadStatus) {
-        listState.requestScrollToItem(0)
-    }
     Column {
         Header(
             title = {
@@ -104,10 +97,14 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
                             }
                         },
                         style = TangemTheme.typography.subtitle1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                     )
                 }
             },
             onSeeAllClick = { feedListCallbacks.onOpenAllNews(false) },
+            isLoading = news.newsUMState == NewsUMState.LOADING,
+            shouldShowSeeAll = news.newsUMState == NewsUMState.CONTENT,
         )
         SpacerH(12.dp)
 
@@ -133,7 +130,7 @@ private fun NewsContentBlock(feedListCallbacks: FeedListCallbacks, news: NewsUM,
         ) {
             itemsIndexed(
                 items = news.content,
-                key = { _, article -> article.id },
+                key = { index, _ -> index },
                 contentType = { _, _ -> "article" },
             ) { index, article ->
                 val articleModifier = if (index == FOURTH_ITEM_INDEX) {
@@ -181,10 +178,14 @@ private fun NewsErrorBlock(onRetryClick: () -> Unit) {
                         text = stringResourceSafe(R.string.common_news),
                         style = TangemTheme.typography.h3,
                         color = TangemTheme.colors.text.primary1,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
                     )
                 }
             },
             onSeeAllClick = {},
+            shouldShowSeeAll = false,
+            isLoading = false,
         )
         SpacerH(12.dp)
         BlockCard(
