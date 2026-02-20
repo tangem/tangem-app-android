@@ -15,6 +15,7 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
+import com.tangem.domain.hotwallet.GetUpgradeBannerClosureTimestampUseCase
 import com.tangem.domain.hotwallet.ShouldShowUpgradeHotWalletBannerUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
@@ -62,10 +63,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
+    private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
 ) {
 
-    @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod")
+    @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod", "CastNullableToNonNullableType")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
@@ -105,8 +107,10 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 .distinctUntilChanged(),
             shouldShowUpgradeHotWalletBannerUseCase.invoke(userWallet.walletId)
                 .distinctUntilChanged(),
+            getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
+                .distinctUntilChanged(),
         ) { array -> array }
-            .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
+            .combine(tokenListFlow()) { array, any: Any? -> arrayOf(any).plus(elements = array) }
             .map { array ->
                 val lceTokens = array[0] as Lce<TokenListError, Pair<TotalFiatBalance, List<CryptoCurrencyStatus>>>
                 val totalFiatBalance = lceTokens.map { it.first }
@@ -119,6 +123,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldAccessCodeSkipped = array[6] as Boolean
                 val shouldShowYieldPromo = array[7] as Boolean
                 val shouldShowUpgradeBanner = array[8] as Boolean
+                val closureTimestamp = array[9] as? Long
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -130,6 +135,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         flattenCurrencies = flattenCurrencies,
                         clickIntents = clickIntents,
                         shouldShowUpgradeBanner = shouldShowUpgradeBanner,
+                        closureTimestamp = closureTimestamp,
                     )
 
                     addFinishWalletActivationNotification(
@@ -469,6 +475,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
         clickIntents: WalletClickIntents,
         shouldShowUpgradeBanner: Boolean,
+        closureTimestamp: Long?,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
@@ -479,6 +486,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             walletId = userWallet.walletId,
             hasBalance = hasBalance,
             shouldShowUpgradeBanner = shouldShowUpgradeBanner,
+            closureTimestamp = closureTimestamp,
         ).getOrNull() ?: return
 
         addIf(
