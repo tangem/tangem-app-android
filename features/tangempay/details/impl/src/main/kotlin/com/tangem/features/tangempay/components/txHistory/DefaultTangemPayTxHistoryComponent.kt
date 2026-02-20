@@ -25,7 +25,6 @@ internal class DefaultTangemPayTxHistoryComponent(
 
     data class Params(
         val userWalletId: UserWalletId,
-        val customerWalletAddress: String,
         val uiActions: TangemPayTxHistoryUiActions,
     )
 }

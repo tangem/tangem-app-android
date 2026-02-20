@@ -45,7 +45,6 @@ internal class TangemPayDetailsComponent(
         appComponentContext = child("txHistoryComponent"),
         params = DefaultTangemPayTxHistoryComponent.Params(
             userWalletId = params.userWalletId,
-            customerWalletAddress = params.config.customerWalletAddress,
             uiActions = model,
         ),
     )
