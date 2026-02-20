@@ -14,6 +14,7 @@ class CheckHotWalletUpgradeBannerUseCase(
         walletId: UserWalletId,
         hasBalance: Boolean,
         shouldShowUpgradeBanner: Boolean,
+        closureTimestamp: Long?,
     ): Either<Throwable, Boolean> = try {
         val currentTime = System.currentTimeMillis()
         val creationTimestamp = hotWalletRepository.getWalletCreationTimestamp(walletId)
@@ -27,7 +28,6 @@ class CheckHotWalletUpgradeBannerUseCase(
             creationTimestamp
         }
 
-        val closureTimestamp = hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId)
         val hasHadFirstTopUp = hotWalletRepository.hasHadFirstTopUp(walletId)
 
         val daysSinceCreation = TimeUnit.MILLISECONDS.toDays(currentTime - creationTimestampActual)
