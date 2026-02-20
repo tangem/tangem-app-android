@@ -43,8 +43,8 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
         componentScope.launch {
             val cardInfo = getWalletMetaInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
-            val userWalletId = cardInfo.userWalletId ?: return@launch
-            val visaCustomerId = getTangemPayCustomerIdUseCase(userWalletId).getOrNull()
+            val userWalletId = cardInfo.userWalletId
+            val visaCustomerId = userWalletId?.let { id -> getTangemPayCustomerIdUseCase(id).getOrNull() }
             sendFeedbackEmailUseCase(
                 if (params.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()) {
                     FeedbackEmailType.Visa.Activation(walletMetaInfo = cardInfo, customerId = visaCustomerId)
