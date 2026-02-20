@@ -537,9 +537,9 @@ class TangemColors2 internal constructor(
         var borderSolidColorAlt by mutableStateOf(borderSolidColorAlt)
             private set
 
-        var backgroundTintedGreenAlt by mutableStateOf(backgroundTintedGreen)
+        var backgroundTintedGreenAlt by mutableStateOf(backgroundTintedGreenAlt)
             private set
-        var backgroundSolidGreenAlt by mutableStateOf(backgroundSolidGreen)
+        var backgroundSolidGreenAlt by mutableStateOf(backgroundSolidGreenAlt)
             private set
 
         fun update(other: Markers) {
