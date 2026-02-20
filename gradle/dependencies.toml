@@ -102,6 +102,7 @@ markdownComposeView = "0.5.4"
 usedesk = "4.4.0"
 sumsub = "1.38.0"
 haze = "1.7.1"
+kotlinpoet = "1.18.1"
 # endregion Other libraries
 
 # region Tools
@@ -149,6 +150,7 @@ agconnect = { id = "com.huawei.agconnect", version.ref = "agconnect" }
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+gradle-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 # end region Classpath
 
 # region AndroidX
