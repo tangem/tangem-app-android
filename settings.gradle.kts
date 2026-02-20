@@ -300,6 +300,9 @@ include(":features:token-recieve:impl")
 include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
 
+include(":features:approval:api")
+include(":features:approval:impl")
+
 include(":features:feed:api")
 include(":features:feed:impl")
 // endregion Feature modules
