@@ -3,13 +3,15 @@ package com.tangem.domain.earn.usecase
 import arrow.core.Either
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.earn.repository.EarnRepository
 import com.tangem.domain.models.earn.EarnNetwork
 import com.tangem.domain.models.earn.EarnNetworks
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isLocked
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 /**
  * Observes earn networks with [EarnNetwork.isAdded] enriched from user's active (non-archived)
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.map
 class GetEarnNetworksUseCase(
     private val earnRepository: EarnRepository,
     private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
     operator fun invoke(): Flow<EarnNetworks> {
@@ -37,12 +40,23 @@ class GetEarnNetworksUseCase(
     }
 
     private fun observeMyNetworkIds(): Flow<Set<String>> {
-        return multiAccountListSupplier()
-            .map { accountLists ->
-                accountLists
-                    .flatMap(AccountList::flattenCurrencies)
-                    .map { it.network.backendId }
-                    .toSet()
+        return combine(
+            multiAccountListSupplier(),
+            userWalletsListRepository.userWallets,
+        ) { accountLists, wallets ->
+            val unlockedWalletsId = wallets
+                .orEmpty()
+                .filterNot(UserWallet::isLocked)
+                .mapTo(HashSet()) { it.walletId }
+
+            if (unlockedWalletsId.isEmpty()) {
+                return@combine emptySet()
             }
+
+            accountLists
+                .filter { it.userWalletId in unlockedWalletsId }
+                .flatMap(AccountList::flattenCurrencies)
+                .mapTo(HashSet()) { it.network.backendId }
+        }
     }
 }
