@@ -11,9 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.CustomerInfo.KycStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents

@@ -9,6 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
@@ -42,6 +43,7 @@ internal class WalletBalanceFetcherTest {
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher = mockk()
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
 
     private val fetcher = WalletBalanceFetcher(
@@ -52,6 +54,7 @@ internal class WalletBalanceFetcherTest {
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -76,7 +79,12 @@ internal class WalletBalanceFetcherTest {
         every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } throws exception
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = exception.left()
@@ -107,7 +115,12 @@ internal class WalletBalanceFetcherTest {
         every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException("Unknown type of wallet: $userWalletId").left()
@@ -139,7 +152,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } throws exception
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = exception.left()
@@ -171,7 +189,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = userWalletId) } returns emptySet()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException("UserWallet doesn't contain crypto-currencies: $userWalletId").left()
@@ -213,7 +236,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException(
@@ -259,7 +287,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException(
@@ -311,7 +344,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException(
@@ -354,7 +392,12 @@ internal class WalletBalanceFetcherTest {
         } returns Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         assertEitherRight(actual)
@@ -396,7 +439,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any()) } returns stakingId
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         assertEitherRight(actual)
@@ -444,7 +492,12 @@ internal class WalletBalanceFetcherTest {
         } returns stellarStakingId
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         assertEitherRight(actual)
@@ -506,7 +559,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = IllegalStateException(
@@ -572,7 +630,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns Unit.right()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = Unit.right()
@@ -624,7 +687,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = Unit.right()
@@ -674,7 +742,12 @@ internal class WalletBalanceFetcherTest {
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
         // Act
-        val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
+        val actual = fetcher(
+            params = WalletBalanceFetcher.Params(
+                userWalletId = userWalletId,
+                isPaymentAccountRefactorEnabled = false
+            )
+        )
 
         // Assert
         val expected = Unit.right()
