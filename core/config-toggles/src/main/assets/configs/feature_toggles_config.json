@@ -55,5 +55,9 @@
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
         "version": "5.34"
+    },
+    {
+        "name": "GASLESS_APPROVAL_ENABLED",
+        "version": "undefined"
     }
 ]
