@@ -16,28 +16,64 @@ internal class PortfolioAnalyticsEvent(
 
         fun addToPortfolioClicked() = PortfolioAnalyticsEvent(
             event = "Button - Add To Portfolio",
-            params = mapOf(
-                "Token" to token.symbol,
-            ),
+            params = buildMap {
+                put("Token", token.symbol)
+                if (source != null) put("Source", source)
+            },
         )
 
         fun popupToChooseAccount() = PortfolioAnalyticsEvent(
             event = "Choose Account Opened",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
+        )
+
+        fun popupToConfirm() = PortfolioAnalyticsEvent(
+            event = "Add Token Screen Opened",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
         )
 
         fun addToNotMainAccount() = PortfolioAnalyticsEvent(
             event = "Button - Add To Account",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
         )
 
-        fun addToPortfolioWalletChanged() = PortfolioAnalyticsEvent(event = "Wallet Selected")
+        fun addButtonClick() = PortfolioAnalyticsEvent(
+            event = "Button - Add Token",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
+        )
+
+        fun addToPortfolioWalletChanged() = PortfolioAnalyticsEvent(
+            event = "Wallet Selected",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
+        )
 
         fun addToPortfolioContinue(blockchainNames: List<String>) = PortfolioAnalyticsEvent(
             event = "Token Network Selected",
-            params = mapOf(
-                "Count" to blockchainNames.size.toString(),
-                "Token" to token.symbol,
-                "blockchain" to blockchainNames.joinToString(separator = ", "),
-            ),
+            params = buildMap {
+                put("Count", blockchainNames.size.toString())
+                put("Token", token.symbol)
+                put("blockchain", blockchainNames.joinToString(separator = ", "))
+                if (source != null) put("Source", source)
+            },
+        )
+
+        fun tokenAdded(blockchainName: String) = PortfolioAnalyticsEvent(
+            event = "Token Added",
+            params = buildMap {
+                put("Token", token.symbol)
+                put("Blockchain", blockchainName)
+                if (source != null) put("Source", source)
+            },
         )
 
         fun quickActionClick(actionUM: TokenActionsBSContentUM.Action, blockchainName: String) =
@@ -65,10 +101,16 @@ internal class PortfolioAnalyticsEvent(
                 TokenActionsBSContentUM.Action.Stake -> "Popup Get token - Button Stake"
                 else -> "error"
             },
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
         )
 
         fun getTokenLater() = PortfolioAnalyticsEvent(
             event = "Popup Get token - Button Later",
+            params = buildMap {
+                if (source != null) put("Source", source)
+            },
         )
     }
 }
