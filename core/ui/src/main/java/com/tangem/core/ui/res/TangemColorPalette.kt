@@ -63,7 +63,7 @@ object TangemColorPalette {
     val Azure = Color(0xFF0099FF)
     val Azure_50 = Color(0x800099FF)
     val Azure_10 = Color(0x1A0099FF)
-    // endregion Blue
+    // endregion Azure
 
     // region Amaranth
     val Amaranth = Color(0xFFFF3333)
@@ -96,7 +96,7 @@ object TangemColorPalette {
     val Eucalyptus_50 = Color(0x800C9F3D)
     val Eucalyptus_20 = Color(0x330C9F3D)
     val Eucalyptus_10 = Color(0x1A0C9F3D)
-    // endregion Emerald
+    // endregion Eucalyptus
 
     // region Overlay
     val Overlay1 = Color(0x66000000)
