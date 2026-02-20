@@ -77,34 +77,22 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         limit: Int,
     ): List<TangemPayTxHistoryItem> {
         cacheRegistry.invokeOnExpire(
-            key = getCacheKey(customerWalletAddress = config.customerWalletAddress, cursor = cursor),
+            key = getCacheKey(userWalletId = userWalletId, cursor = cursor),
             skipCache = config.shouldRefresh,
-            block = {
-                fetch(
-                    userWalletId = userWalletId,
-                    customerWalletAddress = config.customerWalletAddress,
-                    cursor = cursor,
-                    pageSize = limit,
-                )
-            },
+            block = { fetch(userWalletId = userWalletId, cursor = cursor, pageSize = limit) },
         )
 
         return txHistoryItemsStore.getSyncOrNull(
-            key = config.customerWalletAddress,
+            key = userWalletId.stringValue,
             cursor = cursor ?: INITIAL_CURSOR,
         ).orEmpty()
     }
 
-    private fun getCacheKey(customerWalletAddress: String, cursor: String?): String {
-        return "tangem_pay_tx_history_${customerWalletAddress}_${cursor ?: INITIAL_CURSOR}"
+    private fun getCacheKey(userWalletId: UserWalletId, cursor: String?): String {
+        return "tangem_pay_tx_history_${userWalletId.stringValue}_${cursor ?: INITIAL_CURSOR}"
     }
 
-    private suspend fun fetch(
-        userWalletId: UserWalletId,
-        customerWalletAddress: String,
-        cursor: String?,
-        pageSize: Int,
-    ) {
+    private suspend fun fetch(userWalletId: UserWalletId, cursor: String?, pageSize: Int) {
         requestPerformer.performRequest(userWalletId = userWalletId) { authHeader ->
             visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
         }.onLeft {
@@ -112,7 +100,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         }.onRight { response ->
             val result = response.result
             val items = txHistoryItemConverter.convertList(result.transactions).filterNotNull()
-            txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
+            txHistoryItemsStore.store(key = userWalletId.stringValue, cursor = cursor ?: INITIAL_CURSOR, value = items)
         }
     }
 }
