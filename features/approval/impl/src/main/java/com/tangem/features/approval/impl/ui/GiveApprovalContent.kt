@@ -1,4 +1,4 @@
-package com.tangem.common.ui.bottomsheet.permission
+package com.tangem.features.approval.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -21,61 +21,47 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.PopupProperties
-import com.tangem.common.ui.R
-import com.tangem.common.ui.bottomsheet.permission.state.*
+import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.containers.FooterContainer
-import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import kotlinx.collections.immutable.ImmutableList
-
-@Deprecated("Use GiveApprovalComponent")
-@Composable
-fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
-    var isPermissionAlertShow by remember { mutableStateOf(false) }
-
-    TangemBottomSheet(
-        config = config,
-        containerColor = TangemTheme.colors.background.secondary,
-        titleText = resourceReference(R.string.give_permission_title),
-        titleAction = TopAppBarButtonUM.Icon(
-            iconRes = R.drawable.ic_information_24,
-            onClicked = { isPermissionAlertShow = true },
-        ),
-        content = { content: GiveTxPermissionBottomSheetConfig ->
-            GiveTxPermissionBottomSheetContent(content = content)
-
-            if (isPermissionAlertShow) {
-                BasicDialog(
-                    message = content.data.dialogText.resolveReference(),
-                    title = stringResourceSafe(id = R.string.common_approve),
-                    confirmButton = DialogButtonUM { isPermissionAlertShow = false },
-                    onDismissDialog = {},
-                )
-            }
-        },
-    )
-}
+import kotlinx.collections.immutable.persistentListOf
+import com.tangem.common.ui.R as CommonUiR
 
 @Composable
-private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSheetConfig) {
-    val data = content.data
+@Suppress("LongParameterList")
+internal fun GiveApprovalContent(
+    currency: String,
+    subtitle: TextReference,
+    approveType: ApproveType,
+    approveItems: ImmutableList<ApproveType>,
+    onChangeApproveType: (ApproveType) -> Unit,
+    walletInteractionIcon: Int?,
+    isApproveEnabled: Boolean,
+    isApproveLoading: Boolean,
+    onApproveClick: () -> Unit,
+    onCancelClick: () -> Unit,
+    onOpenLearnMoreAboutApproveClick: () -> Unit,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = content.data.subtitle.resolveReference(),
+            text = subtitle.resolveReference(),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
@@ -84,50 +70,64 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
 
         SpacerH16()
 
-        ApprovalBottomSheetInfo(data)
+        ApprovalInfo(
+            currency = currency,
+            approveType = approveType,
+            approveItems = approveItems,
+            onChangeApproveType = onChangeApproveType,
+            onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
+            feeSelectorBlockComponent = feeSelectorBlockComponent,
+        )
 
         SpacerH(height = TangemTheme.dimens.spacing20)
 
         PrimaryButtonIconEnd(
-            text = stringResourceSafe(id = R.string.common_approve),
-            iconResId = content.walletInteractionIcon,
-            showProgress = data.approveButton.isLoading,
+            text = stringResourceSafe(id = CommonUiR.string.common_approve),
+            iconResId = walletInteractionIcon,
+            showProgress = isApproveLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
-            onClick = data.approveButton.onClick,
-            enabled = data.approveButton.isEnabled,
+            onClick = onApproveClick,
+            enabled = isApproveEnabled,
         )
 
         SpacerH12()
 
         SecondaryButton(
-            text = stringResourceSafe(id = R.string.common_cancel),
+            text = stringResourceSafe(id = CommonUiR.string.common_cancel),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
-            onClick = content.onCancel,
-            enabled = data.cancelButton.enabled,
+            onClick = onCancelClick,
         )
 
         SpacerH16()
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
-private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest) {
+private fun ApprovalInfo(
+    currency: String,
+    approveType: ApproveType,
+    approveItems: ImmutableList<ApproveType>,
+    onChangeApproveType: (ApproveType) -> Unit,
+    onOpenLearnMoreAboutApproveClick: () -> Unit,
+    feeSelectorBlockComponent: FeeSelectorBlockComponent,
+) {
     FooterContainer(
         footer = annotatedReference {
-            append(stringResourceSafe(R.string.swap_approve_description))
+            append(stringResourceSafe(CommonUiR.string.swap_approve_description))
             append(" ")
             withLink(
                 link = LinkAnnotation.Clickable(
                     tag = "APPROVE_TAG",
-                    linkInteractionListener = { data.onOpenLearnMoreAboutApproveClick() },
+                    linkInteractionListener = { onOpenLearnMoreAboutApproveClick() },
                 ),
                 block = {
                     appendColored(
-                        text = stringResourceSafe(R.string.common_learn_more),
+                        text = stringResourceSafe(CommonUiR.string.common_learn_more),
                         color = TangemTheme.colors.text.accent,
                     )
                 },
@@ -136,30 +136,23 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         AmountItem(
-            currency = data.currency,
-            approveType = data.approveType,
-            onChangeApproveType = data.onChangeApproveType,
-            approveItems = data.approveItems,
+            currency = currency,
+            approveType = approveType,
+            onChangeApproveType = onChangeApproveType,
+            approveItems = approveItems,
         )
     }
     SpacerH16()
     FooterContainer(
-        footer = data.footerText,
+        footer = resourceReference(CommonUiR.string.give_permission_policy_type_footer),
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
-        FeeItem(fee = data.fee)
+        feeSelectorBlockComponent.Content(
+            modifier = Modifier
+                .clip(TangemTheme.shapes.roundedCornersXMedium)
+                .background(TangemTheme.colors.background.action),
+        )
     }
-}
-
-@Composable
-private fun FeeItem(fee: TextReference) {
-    InputRowDefault(
-        title = resourceReference(R.string.common_network_fee_title),
-        text = fee,
-        modifier = Modifier
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action),
-    )
 }
 
 @Composable
@@ -167,7 +160,7 @@ private fun AmountItem(
     currency: String,
     approveType: ApproveType,
     approveItems: ImmutableList<ApproveType>,
-    onChangeApproveType: ((ApproveType) -> Unit)?,
+    onChangeApproveType: (ApproveType) -> Unit,
 ) {
     var isExpandSelector by remember { mutableStateOf(false) }
     var amountSize by remember { mutableStateOf(IntSize.Zero) }
@@ -177,7 +170,6 @@ private fun AmountItem(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .clickable(
-                enabled = onChangeApproveType != null,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = { isExpandSelector = true },
@@ -197,7 +189,7 @@ private fun AmountItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResourceSafe(id = R.string.give_permission_rows_amount, currency),
+                text = stringResourceSafe(id = CommonUiR.string.give_permission_rows_amount, currency),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
@@ -209,28 +201,24 @@ private fun AmountItem(
                 style = TangemTheme.typography.body1,
                 maxLines = 1,
             )
-            if (onChangeApproveType != null) {
-                Icon(
-                    painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.informative,
-                    modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
-                )
-            }
-        }
-        if (onChangeApproveType != null) {
-            DropdownSelector(
-                isExpanded = isExpandSelector,
-                onDismiss = { isExpandSelector = false },
-                onItemClick = { approveType ->
-                    isExpandSelector = false
-                    onChangeApproveType.invoke(approveType)
-                },
-                items = approveItems,
-                selectedType = approveType,
-                amountSize = amountSize,
+            Icon(
+                painter = rememberVectorPainter(ImageVector.vectorResource(id = CommonUiR.drawable.ic_chevron_24)),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
             )
         }
+        DropdownSelector(
+            isExpanded = isExpandSelector,
+            onDismiss = { isExpandSelector = false },
+            onItemClick = { type ->
+                isExpandSelector = false
+                onChangeApproveType(type)
+            },
+            items = approveItems,
+            selectedType = approveType,
+            amountSize = amountSize,
+        )
     }
 }
 
@@ -248,7 +236,6 @@ private fun DropdownSelector(
     val offsetY = amountSize.height.times(-1)
     val offsetX = amountSize.width - dropDownWidth.width
 
-    // Workaround to set color and shape of dropdown menu
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(surface = TangemTheme.colors.background.action),
         shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(TangemTheme.dimens.radius16)),
@@ -275,9 +262,11 @@ private fun DropdownSelector(
                             Text(
                                 text = when (item) {
                                     ApproveType.LIMITED -> stringResourceSafe(
-                                        id = R.string.give_permission_current_transaction,
+                                        id = CommonUiR.string.give_permission_current_transaction,
                                     )
-                                    ApproveType.UNLIMITED -> stringResourceSafe(id = R.string.give_permission_unlimited)
+                                    ApproveType.UNLIMITED -> stringResourceSafe(
+                                        id = CommonUiR.string.give_permission_unlimited,
+                                    )
                                 },
                                 color = TangemTheme.colors.text.primary1,
                                 style = TangemTheme.typography.body1,
@@ -286,7 +275,7 @@ private fun DropdownSelector(
                             SpacerWMax()
                             Icon(
                                 painter = rememberVectorPainter(
-                                    image = ImageVector.vectorResource(id = R.drawable.ic_check_24),
+                                    image = ImageVector.vectorResource(id = CommonUiR.drawable.ic_check_24),
                                 ),
                                 tint = color,
                                 contentDescription = null,
@@ -303,39 +292,62 @@ private fun DropdownSelector(
     }
 }
 
-// region preview
+// region Preview
 @Composable
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Preview(showBackground = true, locale = "ru")
-private fun Preview_GiveTxPermissionBottomSheet() {
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun GiveApprovalContentPreview(
+    @PreviewParameter(GiveApprovalContentPreviewProvider::class) params: GiveApprovalPreviewParams,
+) {
     TangemThemePreview {
-        GiveTxPermissionBottomSheet(
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = previewData,
-            ),
+        GiveApprovalContent(
+            currency = params.currency,
+            subtitle = params.subtitle,
+            approveType = params.approveType,
+            approveItems = params.approveItems,
+            onChangeApproveType = {},
+            walletInteractionIcon = params.walletInteractionIcon,
+            isApproveEnabled = params.isApproveEnabled,
+            isApproveLoading = params.isApproveLoading,
+            onApproveClick = {},
+            onCancelClick = {},
+            onOpenLearnMoreAboutApproveClick = {},
+            feeSelectorBlockComponent = PreviewFeeSelectorBlockComponent(),
         )
     }
 }
 
-private val previewData = GiveTxPermissionBottomSheetConfig(
-    data = GiveTxPermissionState.ReadyForRequest(
-        currency = "DAI",
-        amount = "1",
-        walletAddress = "",
-        spenderAddress = "",
-        fee = TextReference.Str("0.1233 BTC (2,14$)"),
-        approveType = ApproveType.LIMITED,
-        approveButton = ApprovePermissionButton(true) {},
-        cancelButton = CancelPermissionButton(true),
-        onChangeApproveType = { ApproveType.LIMITED },
-        subtitle = resourceReference(R.string.give_permission_staking_subtitle, wrappedList("1")),
-        dialogText = resourceReference(R.string.give_permission_staking_footer),
-        footerText = resourceReference(R.string.swap_give_permission_fee_footer),
-        onOpenLearnMoreAboutApproveClick = {},
-    ),
-    walletInteractionIcon = R.drawable.ic_tangem_24,
-    onCancel = {},
+private data class GiveApprovalPreviewParams(
+    val currency: String,
+    val subtitle: TextReference,
+    val approveType: ApproveType,
+    val approveItems: ImmutableList<ApproveType>,
+    val walletInteractionIcon: Int?,
+    val isApproveEnabled: Boolean,
+    val isApproveLoading: Boolean,
 )
+
+private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<GiveApprovalPreviewParams> {
+    override val values: Sequence<GiveApprovalPreviewParams>
+        get() = sequenceOf(
+            GiveApprovalPreviewParams(
+                currency = "USDT",
+                subtitle = stringReference("Allow this app to access your USDT"),
+                approveType = ApproveType.LIMITED,
+                approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
+                walletInteractionIcon = CommonUiR.drawable.ic_tangem_24,
+                isApproveEnabled = true,
+                isApproveLoading = false,
+            ),
+            GiveApprovalPreviewParams(
+                currency = "USDC",
+                subtitle = stringReference("Allow this app to access your USDC"),
+                approveType = ApproveType.UNLIMITED,
+                approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
+                walletInteractionIcon = CommonUiR.drawable.ic_tangem_24,
+                isApproveEnabled = false,
+                isApproveLoading = true,
+            ),
+        )
+}
+// endregion
