@@ -46,31 +46,12 @@ sealed class SwapEvents(
     class ChooseTokenScreenResult(
         val isTokenChosen: Boolean,
         val token: String? = null,
-        val source: String? = null,
-        val isSearched: Boolean? = null,
     ) : SwapEvents(
         event = "Choose Token Screen Result",
         params = buildMap {
             put("Token Chosen", if (isTokenChosen) "Yes" else "No")
             token?.let { put("Token", it) }
-            source?.let { put(TOKEN_SELECTED_SOURCE, it) }
-            isSearched?.let { put(SEARCHED, if (it) "True" else "False") }
         },
-    ) {
-        companion object {
-            const val TOKEN_SELECTED_SOURCE = "Token Selected Source"
-            const val SEARCHED = "Searched"
-            const val SOURCE_PORTFOLIO = "Portfolio"
-            const val SOURCE_MARKETS = "Markets"
-        }
-    }
-
-    class TokenAdded(val token: String, val blockchain: String) : SwapEvents(
-        event = "Token Added",
-        params = mapOf(
-            TOKEN_PARAM to token,
-            BLOCKCHAIN to blockchain,
-        ),
     )
 
     class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
