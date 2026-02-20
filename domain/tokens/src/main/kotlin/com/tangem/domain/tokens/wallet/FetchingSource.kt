@@ -9,4 +9,5 @@ enum class FetchingSource {
     NETWORK,
     QUOTE,
     STAKING,
+    TANGEM_PAY,
 }
