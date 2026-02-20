@@ -5,12 +5,10 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import timber.log.Timber
 import java.math.BigDecimal
@@ -23,6 +21,7 @@ internal class SetTokenListTransformer(
     private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
+    private val isAccountsModeEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -47,7 +46,17 @@ internal class SetTokenListTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return when (walletUM) {
+            is WalletUM.Content -> {
+                walletUM.copy(
+                    tokensListUM = toLoadedState(),
+                )
+            }
+            is WalletUM.Locked -> {
+                Timber.w("Impossible to load tokens list for locked wallet")
+                walletUM
+            }
+        }
     }
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
@@ -72,5 +81,20 @@ internal class SetTokenListTransformer(
             stakingAvailabilityMap = stakingAvailabilityMap,
             shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
+    }
+
+    private fun toLoadedState(): WalletTokensListUM {
+        if (params !is TokenConverterParams.Account) return WalletTokensListUM.Empty
+
+        return WalletTokensListUMTransformer(
+            selectedWallet = userWallet,
+            appCurrency = appCurrency,
+            clickIntents = clickIntents,
+            yieldModuleApyMap = yieldSupplyApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
+            shouldShowMainPromo = shouldShowMainPromo,
+            isAccountsModeEnabled = isAccountsModeEnabled,
+            expandedAccounts = params.expandedAccounts,
+        ).convert(value = params.accountList)
     }
 }
