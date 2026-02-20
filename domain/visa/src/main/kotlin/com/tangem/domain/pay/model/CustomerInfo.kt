@@ -1,6 +1,6 @@
 package com.tangem.domain.pay.model
 
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import com.tangem.domain.models.kyc.KycStatus
 import java.math.BigDecimal
 
 sealed class MainCustomerInfoContentState {
@@ -22,31 +22,15 @@ data class CustomerInfo(
     val cardInfo: CardInfo?,
 ) {
 
-    enum class KycStatus {
-        /** Initial state */
-        INIT,
-
-        /** Performing the check */
-        PENDING,
-
-        /** SumSub approved */
-        APPROVED,
-
-        /** The check failed, documents rejected */
-        REJECTED,
-    }
-
     data class ProductInstance(
         val id: String,
         val cardId: String,
-        val cardFrozenState: TangemPayCardFrozenState,
     )
 
     data class CardInfo(
         val lastFourDigits: String,
         val balance: BigDecimal,
         val currencyCode: String,
-        val customerWalletAddress: String,
         val depositAddress: String?,
         val isPinSet: Boolean,
     )
