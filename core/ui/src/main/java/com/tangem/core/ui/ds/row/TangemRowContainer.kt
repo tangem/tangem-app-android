@@ -16,7 +16,7 @@ import kotlin.math.max
 /**
  * A custom layout composable that arranges its children in a row with specific layout IDs.
  */
-internal enum class TangemRowLayoutId {
+enum class TangemRowLayoutId {
     HEAD, START_TOP, END_TOP, START_BOTTOM, END_BOTTOM, TAIL, EXTRA_TOP, EXTRA_BOTTOM
 }
 
