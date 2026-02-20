@@ -25,7 +25,6 @@ import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents
@@ -73,7 +72,7 @@ internal class AccountCreateEditModel @Inject constructor(
         when (params) {
             is AccountCreateEditComponent.Params.Create -> updateDerivationInfo(userWalletId = params.userWalletId)
             is AccountCreateEditComponent.Params.Edit -> {
-                val derivationIndex = params.account.derivationIndex?.value
+                val derivationIndex = params.account.derivationIndex.value
                 val event = AccountSettingsAnalyticEvents.AccountEditScreenOpened(derivationIndex)
                 analyticsEventHandler.send(event)
             }
@@ -170,7 +169,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = CryptoPortfolioIconConverter.convertBack(state.account.portfolioIcon)
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
-        val derivationIndex = params.account.derivationIndex?.value
+        val derivationIndex = params.account.derivationIndex.value
         analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon, derivationIndex))
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
@@ -182,7 +181,7 @@ internal class AccountCreateEditModel @Inject constructor(
         uiState.value = uiState.value.toggleProgress(showProgress = false)
 
         result
-            .onLeft { error -> handleEditAccountError(error, params.account.derivationIndex?.value) }
+            .onLeft { error -> handleEditAccountError(error, params.account.derivationIndex.value) }
             .onRight {
                 showMessage(R.string.account_edit_success_message)
                 router.pop()
