@@ -163,7 +163,7 @@ private fun LazyListScope.portfolioItem(
 
 @Suppress("MagicNumber")
 @Composable
-private fun SlideInItemVisibility(
+internal fun SlideInItemVisibility(
     visible: Boolean,
     currentIndex: Int,
     lastIndex: Int,
