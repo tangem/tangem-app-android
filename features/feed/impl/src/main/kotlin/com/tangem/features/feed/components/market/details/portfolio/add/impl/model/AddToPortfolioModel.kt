@@ -157,6 +157,8 @@ internal class AddToPortfolioModel @Inject constructor(
             allRequireForAdd.first()
             // line of navigation to AddToken screen is finished; cancel the job, select a new root screen
             firstPartOfNavigation.cancel()
+
+            analyticsEventHandler.send(event = eventBuilder.popupToConfirm())
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
             var middleNavigationJob: Job? = null
