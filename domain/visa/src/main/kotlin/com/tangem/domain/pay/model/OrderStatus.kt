@@ -1,9 +1,9 @@
 package com.tangem.domain.pay.model
 
-enum class OrderStatus(val apiName: String) {
-    UNKNOWN(""),
-    NEW("NEW"),
-    PROCESSING("PROCESSING"),
-    COMPLETED("COMPLETED"),
-    CANCELED("CANCELED"),
+enum class OrderStatus {
+    UNKNOWN, // TODO remove it after TangemPay accounts refactor TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED
+    NEW,
+    PROCESSING,
+    COMPLETED,
+    CANCELED,
 }

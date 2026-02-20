@@ -23,7 +23,7 @@ interface OnboardingRepository {
 
     suspend fun getOrderId(userWalletId: UserWalletId): String?
 
-    suspend fun checkCustomerWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
+    suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
 
     suspend fun checkCustomerEligibility(): Boolean
     suspend fun getCustomerEligibility(): Boolean
