@@ -24,8 +24,6 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.features.swap.domain)
-
 
     /** Security */
     implementation(deps.spongecastle.core)
