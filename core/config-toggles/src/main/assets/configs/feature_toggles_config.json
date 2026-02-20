@@ -59,5 +59,9 @@
     {
         "name": "GASLESS_APPROVAL_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED",
+        "version": "undefined"
     }
 ]

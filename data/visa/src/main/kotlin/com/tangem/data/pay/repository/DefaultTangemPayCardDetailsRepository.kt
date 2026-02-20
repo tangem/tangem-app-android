@@ -16,10 +16,10 @@ import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
 import com.tangem.datasource.api.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
+import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
@@ -279,15 +279,15 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
                         orderStatus.onRight { response ->
                             val status = response.result?.status
-                            if (status == OrderStatus.COMPLETED.apiName || status == OrderStatus.CANCELED.apiName) {
+                            if (status == Status.COMPLETED || status == Status.CANCELED) {
                                 // Remove from jobs
                                 pollingJobs.remove(key = orderId)
 
                                 // Final card state
                                 val finalState = when {
-                                    status == OrderStatus.COMPLETED.apiName && isFreeze
+                                    status == Status.COMPLETED && isFreeze
                                     -> TangemPayCardFrozenState.Frozen
-                                    status == OrderStatus.COMPLETED.apiName && !isFreeze
+                                    status == Status.COMPLETED && !isFreeze
                                     -> TangemPayCardFrozenState.Unfrozen
                                     else -> return@launch
                                 }

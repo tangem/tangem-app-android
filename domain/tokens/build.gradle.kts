@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.card)
     implementation(projects.domain.staking)
+    implementation(projects.domain.visa)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
