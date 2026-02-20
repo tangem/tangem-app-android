@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui.earn
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Icon
@@ -14,21 +13,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SmallButtonShimmer
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -39,6 +38,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
 import com.tangem.features.feed.ui.earn.components.EarnListItem
+import com.tangem.features.feed.ui.earn.components.MostlyUsedCard
 import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
 import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
@@ -158,57 +158,6 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .width(148.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-    ) {
-        CurrencyIcon(
-            modifier = Modifier.size(32.dp),
-            state = item.currencyIconState,
-            shouldDisplayNetwork = true,
-            networkBadgeSize = 12.dp,
-            networkBadgeBackground = TangemTheme.colors.background.action,
-        )
-
-        SpacerH(8.dp)
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier.weight(weight = 1f, fill = false),
-                text = item.tokenName.resolveReference(),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            SpacerW(4.dp)
-            Text(
-                text = item.symbol.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-            )
-        }
-
-        SpacerH(2.dp)
-
-        Text(
-            text = item.earnValue.resolveReference(),
-            color = TangemTheme.colors.text.accent,
-            style = TangemTheme.typography.caption1,
-            maxLines = 1,
-        )
     }
 }
 
