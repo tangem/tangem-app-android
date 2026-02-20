@@ -142,7 +142,7 @@ internal object TangemTokenRowPreviewData {
                         )
                     }),
                 ),
-                icons = persistentListOf(
+                startIcons = persistentListOf(
                     TangemIconUM.Icon(R.drawable.ic_staking_mini_10),
                     TangemIconUM.Icon(R.drawable.ic_attention_12),
                     TangemIconUM.Icon(R.drawable.ic_error_sync_24),
