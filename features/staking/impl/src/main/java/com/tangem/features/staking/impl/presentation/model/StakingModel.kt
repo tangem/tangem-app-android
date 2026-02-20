@@ -67,7 +67,6 @@ import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
-import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
@@ -249,7 +248,7 @@ internal class StakingModel @Inject constructor(
 
     private val stakingEventFactory: StakingEventFactory
         get() = StakingEventFactory(
-            stateController = stateController,
+            messageSender = messageSender,
             popBackStack = ::onBackClick,
             onFailedTxEmailClick = ::onFailedTxEmailClick,
         )
@@ -503,11 +502,7 @@ internal class StakingModel @Inject constructor(
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
-                    stateController.updateEvent(
-                        StakingEvent.ShowAlert(
-                            StakingAlertUM.FeeIncreased(stateController::dismissAlert),
-                        ),
-                    )
+                    messageSender.send(StakingAlertUM.feeIncreased {})
                     updateNotifications()
                 },
                 onTransactionExpired = {
@@ -571,9 +566,7 @@ internal class StakingModel @Inject constructor(
 
     override fun onAmountEnterClick() {
         if (integration.preferredTargets.isEmpty()) {
-            stateController.updateEvent(
-                StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
-            )
+            messageSender.send(StakingAlertUM.noAvailableValidators())
         } else {
             if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
@@ -1047,11 +1040,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun showPrimaryClickAlert() {
-        stateController.updateEvent(
-            StakingEvent.ShowAlert(
-                StakingAlertUM.StakeMoreClickUnavailable(cryptoCurrencyStatus.currency),
-            ),
-        )
+        messageSender.send(StakingAlertUM.stakeMoreClickUnavailable(cryptoCurrencyStatus.currency))
     }
 
     override fun onOpenLearnMoreAboutApproveClick() {
