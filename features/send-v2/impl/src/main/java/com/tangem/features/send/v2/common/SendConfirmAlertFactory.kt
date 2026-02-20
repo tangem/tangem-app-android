@@ -1,7 +1,6 @@
 package com.tangem.features.send.v2.common
 
-import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
-import com.tangem.common.ui.alerts.models.AlertDemoModeUM
+import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -14,6 +13,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class SendConfirmAlertFactory @Inject constructor(
     private val messageSender: UiMessageSender,
+    private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
 ) {
 
     fun getGenericErrorState(onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
@@ -31,34 +31,16 @@ internal class SendConfirmAlertFactory @Inject constructor(
     }
 
     fun getSendTransactionErrorState(
-        error: SendTransactionError?,
+        error: SendTransactionError,
         popBack: () -> Unit,
         onFailedTxEmailClick: (String) -> Unit,
     ) {
-        val transactionErrorAlertConverter = TransactionErrorAlertConverter(
+        val errorDialog = transactionErrorDialogFactory.create(
+            error = error,
             popBackStack = popBack,
             onFailedTxEmailClick = onFailedTxEmailClick,
-        )
+        ) ?: return
 
-        val errorAlert = error?.let { transactionErrorAlertConverter.convert(error) } ?: return
-        val onConfirmClick = errorAlert.onConfirmClick ?: return
-
-        messageSender.send(
-            DialogMessage(
-                title = errorAlert.title,
-                message = errorAlert.message,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = errorAlert.confirmButtonText,
-                        onClick = onConfirmClick,
-                    )
-                },
-                secondActionBuilder = if (errorAlert !is AlertDemoModeUM) {
-                    { cancelAction() }
-                } else {
-                    null
-                },
-            ),
-        )
+        messageSender.send(errorDialog)
     }
 }
