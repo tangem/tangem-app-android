@@ -17,7 +17,7 @@ interface HotWalletRepository {
 
     suspend fun setShouldShowUpgradeBanner(userWalletId: UserWalletId, shouldShow: Boolean)
 
-    suspend fun getUpgradeBannerClosureTimestamp(userWalletId: UserWalletId): Long?
+    fun upgradeBannerClosureTimestamp(userWalletId: UserWalletId): Flow<Long?>
 
     suspend fun setUpgradeBannerClosureTimestamp(userWalletId: UserWalletId, timestamp: Long?)
 
