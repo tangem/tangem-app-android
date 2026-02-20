@@ -1,11 +1,17 @@
 package com.tangem.features.onramp.swap.availablepairs.model
 
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
+import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.InputManager
-import com.tangem.core.ui.R as CoreUiR
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.resourceReference
@@ -43,9 +49,7 @@ import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetErrorWarningTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetLoadingTokenItemsTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetNoAvailablePairsTransformer
@@ -58,24 +62,22 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.*
+import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.core.ui.R as CoreUiR
 
 private typealias AvailablePairsState = Lce<Throwable, List<SwapPairLeast>>
 
@@ -567,9 +569,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
     private fun onPortfolioTokenClick(tokenItem: TokenItemState, status: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
-            AvailableSwapPairsAnalyticsEvent.TokenSelected(
+            SwapAnalyticsEvent.TokenSelected(
                 token = status.currency.symbol,
-                source = AvailableSwapPairsAnalyticsEvent.TokenSelected.SOURCE_PORTFOLIO,
+                source = ScreensSources.Portfolio,
                 isSearched = state.value.searchBarUM.query.isNotEmpty(),
             ),
         )
@@ -686,15 +688,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
         modelScope.launch {
             bottomSheetNavigation.dismiss()
             analyticsEventHandler.send(
-                AvailableSwapPairsAnalyticsEvent.TokenAdded(
+                SwapAnalyticsEvent.TokenSelected(
                     token = addedToken.symbol,
-                    blockchain = addedToken.network.name,
-                ),
-            )
-            analyticsEventHandler.send(
-                AvailableSwapPairsAnalyticsEvent.TokenSelected(
-                    token = addedToken.symbol,
-                    source = AvailableSwapPairsAnalyticsEvent.TokenSelected.SOURCE_MARKETS,
+                    source = ScreensSources.Markets,
                     isSearched = state.value.searchBarUM.query.isNotEmpty(),
                 ),
             )
@@ -746,7 +742,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 .create(
                     scope = modelScope,
                     token = param,
-                    analyticsParams = null,
+                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
                 ).apply {
                     setTokenNetworks(networks)
                 }
