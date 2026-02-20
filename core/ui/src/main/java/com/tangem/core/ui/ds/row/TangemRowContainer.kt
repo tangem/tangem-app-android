@@ -16,8 +16,8 @@ import kotlin.math.max
 /**
  * A custom layout composable that arranges its children in a row with specific layout IDs.
  */
-enum class TangemRowLayoutId {
-    HEAD, START_TOP, END_TOP, START_BOTTOM, END_BOTTOM, TAIL, EXTRA_TOP
+internal enum class TangemRowLayoutId {
+    HEAD, START_TOP, END_TOP, START_BOTTOM, END_BOTTOM, TAIL, EXTRA_TOP, EXTRA_BOTTOM
 }
 
 /**
@@ -37,6 +37,7 @@ fun TangemRowContainer(
     val density = LocalDensity.current
     val localDirection = LocalLayoutDirection.current
     val verticalPadding = with(density) { TangemTheme.dimens2.x1.roundToPx() }
+    val extraContentPadding = with(density) { TangemTheme.dimens2.x2.roundToPx() }
     val contentTopPadding = with(density) { contentPadding.calculateTopPadding().roundToPx() }
     val contentBottomPadding = with(density) { contentPadding.calculateBottomPadding().roundToPx() }
     val contentStartPadding = with(density) { contentPadding.calculateLeftPadding(localDirection).roundToPx() }
@@ -110,6 +111,10 @@ fun TangemRowContainer(
             layoutId = TangemRowLayoutId.EXTRA_TOP,
             constraints = constraints,
         )
+        val extraBottomPlaceable = measurables.measure(
+            layoutId = TangemRowLayoutId.EXTRA_BOTTOM,
+            constraints = constraints,
+        )
 
         val mainLayoutHeight = maxOf(
             headPlaceable.heightOrZero(),
@@ -124,7 +129,13 @@ fun TangemRowContainer(
             contentTopPadding
         }
 
-        val layoutHeight = mainLayoutHeight + mainContentTopPadding + contentBottomPadding
+        val mainContentBottomPadding = if (extraBottomPlaceable != null) {
+            extraBottomPlaceable.heightOrZero() + contentBottomPadding
+        } else {
+            contentBottomPadding
+        }
+
+        val layoutHeight = mainLayoutHeight + mainContentTopPadding + mainContentBottomPadding
 
         layout(width = constraints.maxWidth, height = layoutHeight) {
             extraTopPlaceable?.placeRelative(x = 0, y = 0)
@@ -173,6 +184,11 @@ fun TangemRowContainer(
             tailPlaceable?.placeRelative(
                 x = layoutWidth - tailPlaceable.width + contentEndPadding,
                 y = mainContentTopPadding + (mainLayoutHeight - tailPlaceable.height).div(other = 2),
+            )
+
+            extraBottomPlaceable?.placeRelative(
+                x = 0,
+                y = mainContentTopPadding + mainLayoutHeight + extraContentPadding,
             )
         }
     }
