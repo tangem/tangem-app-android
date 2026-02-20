@@ -22,7 +22,6 @@ private typealias TangemPayTxHistoryBatchAction = BatchAction<Int, TangemPayTxHi
 internal class TangemPayTxHistoryListManager(
     private val repository: TangemPayTxHistoryRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val customerWalletAddress: String,
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
 ) {
     private val jobHolder = JobHolder()
@@ -56,20 +55,13 @@ internal class TangemPayTxHistoryListManager(
 
     suspend fun reload() {
         actionsFlow.emit(
-            BatchAction.Reload(
-                requestParams = TangemPayTxHistoryListConfig(
-                    customerWalletAddress = customerWalletAddress,
-                    shouldRefresh = true,
-                ),
-            ),
+            BatchAction.Reload(requestParams = TangemPayTxHistoryListConfig(shouldRefresh = true)),
         )
     }
 
-    suspend fun loadMore(customerWalletAddress: String) {
+    suspend fun loadMore() {
         actionsFlow.emit(
-            BatchAction.LoadMore(
-                requestParams = TangemPayTxHistoryListConfig(customerWalletAddress, shouldRefresh = false),
-            ),
+            BatchAction.LoadMore(requestParams = TangemPayTxHistoryListConfig(shouldRefresh = false)),
         )
     }
 

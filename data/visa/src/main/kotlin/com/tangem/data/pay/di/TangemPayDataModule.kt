@@ -2,12 +2,17 @@ package com.tangem.data.pay.di
 
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
+import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
+import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -75,7 +80,29 @@ internal interface TangemPayDataModule {
     @Singleton
     fun bindTangemPayEligibilityManager(impl: DefaultTangemPayEligibilityManager): TangemPayEligibilityManager
 
+    @Binds
+    @Singleton
+    fun bindPaymentAccountStatusProducerFactory(
+        impl: DefaultPaymentAccountStatusProducer.Factory,
+    ): PaymentAccountStatusProducer.Factory
+
+    @Binds
+    @Singleton
+    fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
+
     companion object {
+
+        @Provides
+        @Singleton
+        fun providePaymentAccountStatusSupplier(
+            factory: PaymentAccountStatusProducer.Factory,
+        ): PaymentAccountStatusSupplier {
+            return object : PaymentAccountStatusSupplier(
+                factory = factory,
+                keyCreator = { "payment_account_status_${it.userWalletId.stringValue}" },
+            ) {}
+        }
+
         @Provides
         @Singleton
         fun provideTangemPayMainScreenCustomerInfoUseCase(
