@@ -5,11 +5,12 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.*
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
+import com.tangem.common.ui.userwallet.WalletActivationBannerType
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import javax.inject.Inject
 

@@ -30,11 +30,11 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
+import com.tangem.common.ui.userwallet.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.addIf

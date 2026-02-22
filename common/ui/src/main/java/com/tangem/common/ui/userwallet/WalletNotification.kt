@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.state.model
+package com.tangem.common.ui.userwallet
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
@@ -10,8 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
-import com.tangem.feature.wallet.impl.R
+import com.tangem.core.ui.R
 import org.joda.time.DateTime
 
 /**

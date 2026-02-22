@@ -19,8 +19,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification.Warning.TangemPayRefreshNeeded
+import com.tangem.common.ui.userwallet.WalletNotification
+import com.tangem.common.ui.userwallet.WalletNotification.Warning.TangemPayRefreshNeeded
 
 @Composable
 internal fun TangemPayRefreshBlock(state: TangemPayState.RefreshNeeded, modifier: Modifier = Modifier) {

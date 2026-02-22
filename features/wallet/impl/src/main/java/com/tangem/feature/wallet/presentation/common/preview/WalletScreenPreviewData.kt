@@ -13,7 +13,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
+import com.tangem.common.ui.userwallet.WalletActivationBannerType
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*

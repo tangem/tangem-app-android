@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletType

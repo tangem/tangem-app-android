@@ -20,7 +20,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.child.wallet.model;
+package com.tangem.common.ui.userwallet;
 
 public enum WalletActivationBannerType {
     Attention,

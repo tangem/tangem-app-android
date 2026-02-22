@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.userwallet.WalletNotification
 import com.tangem.core.ui.extensions.TextReference
 
 @Immutable
