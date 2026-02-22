@@ -143,6 +143,7 @@ dependencies {
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
     implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.main.api)
     implementation(projects.features.feed.api)
 
     /** Common modules */

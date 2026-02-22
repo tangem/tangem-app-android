@@ -17,14 +17,23 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.configToggles)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Features api */
-    implementation(projects.features.tangempay.details.api)
+    implementation(projects.features.tangempay.main.api)
 
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.constraintLayout)
+
+    /** Domain */
+    implementation(projects.domain.visa)
+    implementation(projects.domain.visa.models)
+    implementation(projects.domain.models)
 
     /** DI */
     implementation(deps.hilt.android)

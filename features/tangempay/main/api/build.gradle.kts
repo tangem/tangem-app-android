@@ -15,4 +15,9 @@ dependencies {
 
     /** Compose */
     implementation(deps.compose.runtime)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.ui)
+
+    /** Common */
+    implementation(projects.common.ui)
 }
