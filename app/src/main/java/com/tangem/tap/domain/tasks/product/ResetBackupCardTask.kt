@@ -27,6 +27,7 @@ internal class ResetBackupCardTask(
         PreflightReadTask(
             readMode = PreflightReadMode.FullCardRead,
             filter = UserWalletIdPreflightReadFilter(expectedUserWalletId = userWalletId),
+            secureStorage = session.environment.secureStorage,
         ).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> resetCard(session, callback)
