@@ -153,7 +153,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             val userWallet = userWallet ?: getUserWalletUseCase(params.userWalletId).getOrNull()
                 ?: return@launch
-            tangemPayWithdrawRepository.pollWithdrawOrderIfNeeds(userWallet)
+            tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
         }
     }
 
