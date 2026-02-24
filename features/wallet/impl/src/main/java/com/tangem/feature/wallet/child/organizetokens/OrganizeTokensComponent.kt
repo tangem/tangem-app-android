@@ -9,7 +9,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModel
-import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
+import com.tangem.feature.wallet.child.organizetokens.ui.OrganizeTokensScreen
 import kotlinx.coroutines.launch
 
 internal class OrganizeTokensComponent(
