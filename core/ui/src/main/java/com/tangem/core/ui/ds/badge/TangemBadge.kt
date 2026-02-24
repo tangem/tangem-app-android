@@ -72,14 +72,14 @@ fun TangemBadge(badgeUM: TangemBadgeUM, modifier: Modifier = Modifier) {
  */
 @Composable
 fun TangemBadge(
-    text: TextReference,
     modifier: Modifier = Modifier,
+    text: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     size: TangemBadgeSize = X9,
     shape: TangemBadgeShape = TangemBadgeShape.Default,
     color: TangemBadgeColor = TangemBadgeColor.Gray,
     type: TangemBadgeType = TangemBadgeType.Solid,
-    iconPosition: TangemBadgeIconPosition = TangemBadgeIconPosition.Start,
+    iconPosition: TangemBadgeIconPosition = TangemBadgeIconPosition.None,
     onClick: (() -> Unit)? = null,
 ) {
     val iconColor = getIconColor(type = type, color = color)
@@ -94,7 +94,7 @@ fun TangemBadge(
             .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() }),
     ) {
         AnimatedVisibility(
-            visible = iconRes != null && iconPosition == TangemBadgeIconPosition.Start,
+            visible = iconRes != null && iconPosition != TangemBadgeIconPosition.End,
             modifier = Modifier.size(size = size.toContentSize()),
             label = "Start Icon Visibility",
         ) {
@@ -105,13 +105,18 @@ fun TangemBadge(
                 tint = iconColor,
             )
         }
-        Text(
-            text = text.resolveReference(),
-            style = size.toTextStyle(),
-            maxLines = 1,
-            color = getTextColor(type = type, color = color),
-        )
-
+        AnimatedVisibility(
+            visible = text != null,
+            label = "Text Visibility",
+        ) {
+            val wrappedText = remember(this) { requireNotNull(text) }
+            Text(
+                text = wrappedText.resolveReference(),
+                style = size.toTextStyle(),
+                maxLines = 1,
+                color = getTextColor(type = type, color = color),
+            )
+        }
         AnimatedVisibility(
             visible = iconRes != null && iconPosition == TangemBadgeIconPosition.End,
             modifier = Modifier.size(size = size.toContentSize()),
@@ -178,14 +183,17 @@ enum class TangemBadgeSize {
         X4 -> when (position) {
             TangemBadgeIconPosition.Start -> PaddingValues(start = 4.dp, end = 6.dp)
             TangemBadgeIconPosition.End -> PaddingValues(start = 6.dp, end = 4.dp)
+            TangemBadgeIconPosition.None -> PaddingValues(start = 6.dp, end = 6.dp)
         }
         X6 -> when (position) {
             TangemBadgeIconPosition.Start -> PaddingValues(start = 8.dp, end = 12.dp)
             TangemBadgeIconPosition.End -> PaddingValues(start = 12.dp, end = 8.dp)
+            TangemBadgeIconPosition.None -> PaddingValues(start = 12.dp, end = 12.dp)
         }
         X9 -> when (position) {
             TangemBadgeIconPosition.Start -> PaddingValues(start = 12.dp, end = 16.dp)
             TangemBadgeIconPosition.End -> PaddingValues(start = 16.dp, end = 12.dp)
+            TangemBadgeIconPosition.None -> PaddingValues(start = 16.dp, end = 16.dp)
         }
     }
 
@@ -222,6 +230,7 @@ enum class TangemBadgeSize {
 enum class TangemBadgeIconPosition {
     Start,
     End,
+    None,
 }
 
 /**
@@ -240,6 +249,7 @@ enum class TangemBadgeColor {
     Blue,
     Red,
     Gray,
+    Green,
 }
 
 @ReadOnlyComposable
@@ -256,6 +266,12 @@ private fun getIconColor(type: TangemBadgeType, color: TangemBadgeColor) = when 
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
         -> TangemTheme.colors2.markers.iconRed
+        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+    }
+    TangemBadgeColor.Green -> when (type) {
+        TangemBadgeType.Outline,
+        TangemBadgeType.Tinted,
+        -> TangemTheme.colors2.markers.iconGreen
         TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
     }
 }
@@ -276,8 +292,15 @@ private fun getTextColor(type: TangemBadgeType, color: TangemBadgeColor) = when 
         -> TangemTheme.colors2.markers.textRed
         TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
     }
+    TangemBadgeColor.Green -> when (type) {
+        TangemBadgeType.Outline,
+        TangemBadgeType.Tinted,
+        -> TangemTheme.colors2.markers.textGreen
+        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+    }
 }
 
+@Suppress("CyclomaticComplexMethod")
 @ReadOnlyComposable
 @Composable
 private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadgeColor, shape: Shape) = when (type) {
@@ -286,6 +309,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
             TangemBadgeColor.Gray -> TangemTheme.colors2.markers.backgroundSolidGray
             TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundSolidBlue
             TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundSolidRed
+            TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundSolidGreen
         },
     )
     TangemBadgeType.Tinted -> background(
@@ -293,6 +317,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
             TangemBadgeColor.Gray -> TangemTheme.colors2.markers.backgroundTintedGray
             TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundTintedBlue
             TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundTintedRed
+            TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundTintedGreen
         },
     )
     TangemBadgeType.Outline -> {
@@ -301,6 +326,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
                 TangemBadgeColor.Gray -> TangemTheme.colors2.markers.borderGray
                 TangemBadgeColor.Blue -> TangemTheme.colors2.markers.borderTintedBlue
                 TangemBadgeColor.Red -> TangemTheme.colors2.markers.borderTintedRed
+                TangemBadgeColor.Green -> TangemTheme.colors2.markers.borderTintedGreen
             },
             shape = shape,
             width = 1.dp,
@@ -320,16 +346,16 @@ private fun TangemBadge_Preview(@PreviewParameter(TangemBadgePreviewProvider::cl
                 .background(TangemTheme.colors2.surface.level1)
                 .padding(8.dp),
         ) {
-            repeat(2) { yIndex ->
+            repeat(3) { yIndex ->
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     repeat(TangemBadgeType.entries.size) { index ->
                         TangemBadge(
-                            text = stringReference("Title"),
+                            text = stringReference("Title").takeIf { yIndex < 2 },
                             iconRes = R.drawable.ic_information_24,
                             type = TangemBadgeType.entries[index],
                             color = params,
                             shape = TangemBadgeShape.entries[yIndex % 2],
-                            iconPosition = TangemBadgeIconPosition.entries[yIndex % 2],
+                            iconPosition = TangemBadgeIconPosition.entries[yIndex],
                         )
                     }
                 }
@@ -344,6 +370,7 @@ private class TangemBadgePreviewProvider : PreviewParameterProvider<TangemBadgeC
             TangemBadgeColor.Gray,
             TangemBadgeColor.Blue,
             TangemBadgeColor.Red,
+            TangemBadgeColor.Green,
         )
 }
 // endregion
