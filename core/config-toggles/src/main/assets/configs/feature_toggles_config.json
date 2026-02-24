@@ -63,5 +63,9 @@
     {
         "name": "TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "MULTI_ADDRESS_UTXO_ENABLED",
+        "version": "undefined"
     }
 ]
