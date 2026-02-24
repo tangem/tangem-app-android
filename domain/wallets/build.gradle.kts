@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.tangemSdkApi)
+    implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.card)
