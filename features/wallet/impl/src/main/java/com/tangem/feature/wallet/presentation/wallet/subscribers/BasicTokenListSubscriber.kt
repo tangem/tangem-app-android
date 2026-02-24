@@ -143,6 +143,7 @@ internal abstract class BasicTokenListSubscriber(
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
+                isAccountsModeEnabled = false,
             ),
         )
     }
