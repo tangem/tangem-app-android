@@ -20,6 +20,11 @@ internal class RemoveNFTCollectionsTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return when (walletUM) {
+            is WalletUM.Content -> walletUM.copy(
+                nftState = WalletNFTItemUM.Hidden,
+            )
+            is WalletUM.Locked -> walletUM
+        }
     }
 }

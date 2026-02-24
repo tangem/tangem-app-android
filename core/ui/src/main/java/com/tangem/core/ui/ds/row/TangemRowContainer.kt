@@ -16,7 +16,7 @@ import kotlin.math.max
 /**
  * A custom layout composable that arranges its children in a row with specific layout IDs.
  */
-internal enum class TangemRowLayoutId {
+enum class TangemRowLayoutId {
     HEAD, START_TOP, END_TOP, START_BOTTOM, END_BOTTOM, TAIL, EXTRA_TOP
 }
 
@@ -29,7 +29,7 @@ internal enum class TangemRowLayoutId {
  */
 @Suppress("LongMethod")
 @Composable
-internal fun TangemRowContainer(
+fun TangemRowContainer(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(TangemTheme.dimens2.x3),
     content: @Composable () -> Unit,
