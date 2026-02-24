@@ -133,7 +133,8 @@ sealed class TangemTokenRowUM : TangemRowUM {
             val text: TextReference,
             val isAvailable: Boolean = true,
             val isFlickering: Boolean = false,
-            val icons: ImmutableList<TangemIconUM.Icon> = persistentListOf(),
+            val startIcons: ImmutableList<TangemIconUM.Icon> = persistentListOf(),
+            val endIcons: ImmutableList<TangemIconUM.Icon> = persistentListOf(),
             val priceChangeUM: PriceChangeState = PriceChangeState.Unknown,
         ) : EndContentUM()
 
