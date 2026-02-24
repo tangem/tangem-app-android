@@ -25,9 +25,9 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
                     contractAddress = pair.to.contractAddress,
                     network = pair.to.network,
                 ),
-                providers = pair.providers.mapNotNull {
-                    convertProvider(it, providersAdditionalMap)
-                },
+                providers = pair.providers
+                    .filterNot { it.hasOnlyFixedRateType() }
+                    .mapNotNull { convertProvider(it, providersAdditionalMap) },
             )
         }
         return PairsWithProviders(
