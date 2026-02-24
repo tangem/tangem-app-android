@@ -510,14 +510,7 @@ internal class SwapModel @Inject constructor(
                     dataState.fromCryptoCurrency
                 }
 
-                fromCryptoCurrency?.let { cryptoCurrency ->
-                    dataState = dataState.copy(
-                        feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrency,
-                        ).getOrNull(),
-                    )
-                }
+                if (fromCryptoCurrency != null) updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
@@ -752,6 +745,15 @@ internal class SwapModel @Inject constructor(
                 updateFeeBlock = updateFeeBlock,
             )
         }
+    }
+
+    private suspend fun updateFeePaidCryptoCurrencyFor(fromToken: CryptoCurrencyStatus) {
+        dataState = dataState.copy(
+            feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = fromToken,
+            ).getOrNull(),
+        )
     }
 
     private fun loadQuotesTask(
@@ -1402,6 +1404,9 @@ internal class SwapModel @Inject constructor(
                 toAccount = toAccount,
                 selectedProvider = null,
             )
+            modelScope.launch {
+                updateFeePaidCryptoCurrencyFor(fromToken)
+            }
             startLoadingQuotes(
                 fromToken = fromToken,
                 fromAccount = fromAccount,
@@ -1544,6 +1549,7 @@ internal class SwapModel @Inject constructor(
                     toAccount = newToAccount,
                 )
                 isOrderReversed = !isOrderReversed
+                updateFeePaidCryptoCurrencyFor(newFromToken)
                 dataState.tokensDataState?.let { tokensDataState ->
                     updateTokensState(tokensDataState)
                 }
