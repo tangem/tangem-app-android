@@ -5,4 +5,6 @@ package com.tangem.domain.tokens
  *
 [REDACTED_AUTHOR]
  */
-interface TokensFeatureToggles
+interface TokensFeatureToggles {
+    val isMultiAddressUtxoEnabled: Boolean
+}
