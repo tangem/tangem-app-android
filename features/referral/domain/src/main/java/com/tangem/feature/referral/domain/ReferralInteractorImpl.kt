@@ -73,7 +73,17 @@ internal class ReferralInteractorImpl(
 
         when (portfolioId) {
             is PortfolioId.Account -> {
-                manageCryptoCurrenciesUseCase(accountId = portfolioId.accountId, add = cryptoCurrency)
+                manageCryptoCurrenciesUseCase(
+                    accountId = portfolioId.accountId,
+                    add = cryptoCurrency,
+                    skipDerivationErrors = false,
+                ).mapLeft {
+                    it.mapToDomainError()
+                }.onLeft { error ->
+                    if (error is ReferralError.UserCancelledException) {
+                        throw error
+                    }
+                }
             }
             is PortfolioId.Wallet -> {
                 derivePublicKeysUseCase(userWallet.walletId, listOf(cryptoCurrency)).getOrElse { throwable ->
