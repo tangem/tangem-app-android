@@ -176,6 +176,7 @@ internal class DefaultTangemSdkManager(
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,
+                    shouldCheckIsAlreadyActivated = true,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 ),
                 cardId = cardId,
