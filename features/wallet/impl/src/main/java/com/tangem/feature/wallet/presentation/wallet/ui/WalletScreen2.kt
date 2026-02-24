@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
+import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
@@ -118,6 +119,9 @@ private fun WalletContent2(
     val partialCollapsedHeight = 64.dp + statusBarHeight
 
     val scaffoldContent: @Composable (PaddingValues?) -> Unit = { _ ->
+        Box(Modifier.fillMaxSize()) {
+            NorthernLightsBackground(Modifier.matchParentSize())
+        }
 
         val pagerState = rememberPagerState(
             initialPage = state.selectedWalletIndex,
