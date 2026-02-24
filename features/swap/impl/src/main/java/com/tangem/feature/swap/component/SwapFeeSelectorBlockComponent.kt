@@ -20,6 +20,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -55,7 +56,11 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
 
     init {
         params.repository.state
-            .onEach(feeSelectorBlockComponent::updateState)
+            .onEach { feeSelectorBlockComponent.updateState(it) }
+            .launchIn(componentScope)
+
+        params.repository.forceUpdateState
+            .onEach { feeSelectorBlockComponent.updateState(it) }
             .launchIn(componentScope)
     }
 
@@ -66,6 +71,9 @@ class SwapFeeSelectorBlockComponent @AssistedInject constructor(
 
     interface ModelRepository {
         val state: StateFlow<FeeSelectorUM>
+            get() = MutableStateFlow<FeeSelectorUM>(FeeSelectorUM.Loading)
+
+        val forceUpdateState: SharedFlow<FeeSelectorUM>
             get() = MutableStateFlow<FeeSelectorUM>(FeeSelectorUM.Loading)
 
         fun onResult(newState: FeeSelectorUM)
