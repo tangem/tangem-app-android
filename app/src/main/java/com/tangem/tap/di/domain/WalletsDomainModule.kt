@@ -1,9 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -272,11 +272,11 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesSetNotificationsEnabledUseCase(
         walletsRepository: WalletsRepository,
-        currenciesRepository: CurrenciesRepository,
+        accountsCRUDRepository: AccountsCRUDRepository,
     ): SetNotificationsEnabledUseCase {
         return SetNotificationsEnabledUseCase(
             walletsRepository = walletsRepository,
-            currenciesRepository = currenciesRepository,
+            accountsCRUDRepository = accountsCRUDRepository,
         )
     }
 
