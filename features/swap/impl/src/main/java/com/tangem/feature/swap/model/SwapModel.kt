@@ -2325,6 +2325,8 @@ internal class SwapModel @Inject constructor(
             FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true),
         )
 
+        override val forceUpdateState = MutableSharedFlow<FeeSelectorUM>()
+
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
@@ -2357,17 +2359,12 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onResult(newState: FeeSelectorUM) {
-            if (isPermissionNotificationShown()) {
-                state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                return
-            }
-
             if (newState is FeeSelectorUM.Error) {
-                state.value = newState.copy(isHidden = true)
+                modelScope.launch {
+                    forceUpdateState.emit(newState.copy(isHidden = true))
+                }
                 return
             }
-
-            state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
             val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
