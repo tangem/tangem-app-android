@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
 import timber.log.Timber
@@ -33,6 +34,10 @@ internal class SetPrimaryCurrencyTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun WalletCardState.toLoadedSingleCurrencyState(): WalletCardState {
