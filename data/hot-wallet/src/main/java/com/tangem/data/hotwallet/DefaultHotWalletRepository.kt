@@ -53,10 +53,9 @@ internal class DefaultHotWalletRepository(
         }
     }
 
-    override suspend fun getUpgradeBannerClosureTimestamp(userWalletId: UserWalletId): Long? {
-        return appPreferencesStore
-            .getObjectMapSync<Long>(PreferencesKeys.UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY)[userWalletId.stringValue]
-    }
+    override fun upgradeBannerClosureTimestamp(userWalletId: UserWalletId): Flow<Long?> = appPreferencesStore
+        .getObjectMap<Long>(PreferencesKeys.UPGRADE_BANNER_CLOSURE_TIMESTAMP_KEY)
+        .map { it[userWalletId.stringValue] }
 
     override suspend fun setUpgradeBannerClosureTimestamp(userWalletId: UserWalletId, timestamp: Long?) {
         appPreferencesStore.editData { mutablePreferences ->
