@@ -45,7 +45,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
@@ -96,7 +95,6 @@ internal class WalletModel @Inject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerStore: AppsFlyerStore,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -118,7 +116,6 @@ internal class WalletModel @Inject constructor(
     init {
         trackScreenOpened()
 
-        updateMarketToggle()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -152,12 +149,6 @@ internal class WalletModel @Inject constructor(
                     it.copy(showMarketsOnboarding = true)
                 }
             }
-        }
-    }
-
-    private fun updateMarketToggle() {
-        stateHolder.update {
-            it.copy(isNewMarketEnabled = feedFeatureToggle.isFeedEnabled)
         }
     }
 
