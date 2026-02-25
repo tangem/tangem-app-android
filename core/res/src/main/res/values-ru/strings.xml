@@ -31,7 +31,7 @@
   <string name="account_could_not_archive_referral_program_title">Этот аккаунт не может быть архивирован.</string>
   <string name="account_could_not_create">Мы не смогли создать аккаунт. Пожалуйста, попробуйте позже.</string>
   <string name="account_create_success_message">Аккаунт создан</string>
-  <string name="account_details_archive">Архивный аккаунт</string>
+  <string name="account_details_archive">Архивировать аккаунт</string>
   <string name="account_details_archive_action">Архив</string>
   <string name="account_details_archive_description">Вы архивируете свой аккаунт, но в любое время можете вернуть его обратно</string>
   <string name="account_details_archiving">Архивация...</string>
@@ -412,6 +412,7 @@
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$d UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
   <string name="common_value_copied">Значение скопировано</string>
+  <string name="common_wallets">Кошельки</string>
   <string name="common_week">неделю</string>
   <string name="common_with">с</string>
   <string name="common_yes">Да</string>
@@ -482,6 +483,7 @@
   <string name="domain_receive_assets_onboarding_title">Отправляйте средства, используя только</string>
   <string name="earn_best_opportunities">Лучшие возможности</string>
   <string name="earn_clear_filter">Очистить фильтр</string>
+  <string name="earn_empty">Список временно пуст — он обновляется. Пожалуйста, зайдите чуть позже.</string>
   <string name="earn_filter_all_networks">Все сети</string>
   <string name="earn_filter_all_types">Все типы</string>
   <string name="earn_filter_by">Фильтровать по</string>
@@ -1466,6 +1468,8 @@
   <string name="swap_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
+  <string name="swap_search_tooltip_description">Найдите любой токен, даже если его ещё нет в вашем списке</string>
+  <string name="swap_search_tooltip_title">Используйте поиск, чтобы найти то, что вам нужно.</string>
   <string name="swap_story_fifth_subtitle">Чувствуйте уверенность с круглосуточной поддержкой, готовой помочь в любой ситуации!</string>
   <string name="swap_story_fifth_title">Круглосуточная поддержка</string>
   <string name="swap_story_first_subtitle">Надежные провайдеры в одном месте — обменивайте любые активы легко и быстро прямо в своем кошельке!</string>
@@ -1511,6 +1515,8 @@
   <string name="tangem_pay_freeze_card_freeze">Заморозить</string>
   <string name="tangem_pay_freeze_card_success">Карта заморожена</string>
   <string name="tangem_pay_get_help">Обратиться в поддержку</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s・%s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Другое</string>
   <string name="tangem_pay_rooted_device_subtitle">Невозможно использовать на устройствах с root-доступом.</string>
   <string name="tangem_pay_status_completed">Успешно завершено</string>
@@ -1528,7 +1534,7 @@
   <string name="tangem_pay_unfreeze_card_success">Карта разморожена</string>
   <string name="tangem_pay_withdrawal">Вывести</string>
   <string name="tangempay_account_unable_to_use_rooted">Запрещено использовать на root-устройствах</string>
-  <string name="tangempay_cancel_kyc">Отменить KYC</string>
+  <string name="tangempay_cancel_kyc">Скрыть KYC с главной</string>
   <string name="tangempay_card_details_add_funds">Пополнить</string>
   <string name="tangempay_card_details_add_funds_subtitle">Способы пополнения</string>
   <string name="tangempay_card_details_card_number">Номер</string>
@@ -1588,11 +1594,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Если вы отмените KYC сейчас, вы сможете потом начать его заново</string>
   <string name="tangempay_kyc_failed_description">Не удалось подтвердить ваш профиль. Если у вас есть вопросы, обратитесь в службу поддержки.</string>
   <string name="tangempay_kyc_failed_title">К сожалению, нам не удалось подтвердить вашу личность</string>
+  <string name="tangempay_kyc_has_failed">KYC отклонено</string>
   <string name="tangempay_kyc_in_progress">KYC в процессе</string>
   <string name="tangempay_kyc_in_progress_notification_button">Посмотреть статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC в процессе для Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Обычно документы проверяются автоматически в течение 5 минут, в редких случах при необходимости ручной проверки – до 48 часов.</string>
-  <string name="tangempay_kyc_rejected">KYC отклонено</string>
+  <string name="tangempay_kyc_rejected">Отклонено</string>
+  <string name="tangempay_kyc_rejected_button_text">Скрыть KYC с главной</string>
+  <string name="tangempay_kyc_rejected_description">Извините, мы не смогли подтвердить</string>
+  <string name="tangempay_kyc_rejected_description_span">ваш профиль.</string>
   <string name="tangempay_onboarding_banner_description">Откройте бесплатную виртуальную карту Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Оплачивайте ежедневные покупки в USDC</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
