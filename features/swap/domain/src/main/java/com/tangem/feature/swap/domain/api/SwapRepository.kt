@@ -22,6 +22,7 @@ interface SwapRepository {
         userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
+        isIgnoreExpress: Boolean = false,
     ): PairsWithProviders
 
     suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): Either<UnknownError, ExchangeStatusModel>
