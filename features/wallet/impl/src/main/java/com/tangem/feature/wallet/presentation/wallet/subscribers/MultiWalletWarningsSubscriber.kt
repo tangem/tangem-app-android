@@ -8,14 +8,17 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
-internal class MultiWalletWarningsSubscriber(
-    private val userWallet: UserWallet,
-    private val stateHolder: WalletStateController,
+internal class MultiWalletWarningsSubscriber @AssistedInject constructor(
+    @Assisted private val userWallet: UserWallet,
+    private val stateController: WalletStateController,
     private val clickIntents: WalletClickIntents,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
@@ -27,14 +30,14 @@ internal class MultiWalletWarningsSubscriber(
             .conflate()
             .distinctUntilChanged()
             .onEach { warnings ->
-                val displayedState = stateHolder.getWalletState(userWallet.walletId)
+                val displayedState = stateController.getWalletState(userWallet.walletId)
 
                 // Wait until the wallet appears in the list
-                stateHolder.uiState.first {
+                stateController.uiState.first {
                     it.wallets.any { walletState -> walletState.walletCardState.id == userWallet.walletId }
                 }
 
-                stateHolder.update(
+                stateController.update(
                     SetWarningsTransformer(
                         userWalletId = userWallet.walletId,
                         warnings = warnings,
@@ -48,5 +51,10 @@ internal class MultiWalletWarningsSubscriber(
                     newWarnings = warnings,
                 )
             }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(userWallet: UserWallet): MultiWalletWarningsSubscriber
     }
 }
