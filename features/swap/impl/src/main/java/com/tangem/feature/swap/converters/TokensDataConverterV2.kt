@@ -46,11 +46,8 @@ internal class TokensDataConverterV2(
                 } else {
                     val tokensList = accountList.flatMap { (_, currencyList) ->
                         currencyList.asSequence().map { accountSwapCurrency ->
-                            if (accountSwapCurrency.isAvailable) {
-                                accountListItemConverter.createAvailableItemConverter()
-                            } else {
-                                accountListItemConverter.createUnavailableItemConverter()
-                            }.convert(accountSwapCurrency.cryptoCurrencyStatus)
+                            accountListItemConverter.createAvailableItemConverter()
+                                .convert(accountSwapCurrency.cryptoCurrencyStatus)
                         }.map(TokensListItemUM::Token).toPersistentList()
                     }.toPersistentList()
 
