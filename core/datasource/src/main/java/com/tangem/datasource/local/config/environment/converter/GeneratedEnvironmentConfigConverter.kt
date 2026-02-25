@@ -72,6 +72,14 @@ internal object GeneratedEnvironmentConfigConverter {
         }
     }
 
+    private fun createQuickNodeCredentials(apiKey: String?, subdomain: String?): QuickNodeCredentials? {
+        return if (!apiKey.isNullOrEmpty() && !subdomain.isNullOrEmpty()) {
+            QuickNodeCredentials(apiKey = apiKey, subdomain = subdomain)
+        } else {
+            null
+        }
+    }
+
     private fun createBlockchainSdkConfig(): BlockchainSdkConfig {
         return BlockchainSdkConfig(
             blockchairCredentials = BlockchairCredentials(
@@ -94,6 +102,14 @@ internal object GeneratedEnvironmentConfigConverter {
             quickNodeMonadCredentials = QuickNodeCredentials(
                 apiKey = GeneratedEnvironmentConfig.quiknodeMonadApiKey,
                 subdomain = GeneratedEnvironmentConfig.quiknodeMonadSubdomain,
+            ),
+            quickNodeBerachainCredentials = createQuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeBerachainApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeBerachainSubdomain,
+            ),
+            quickNodeStellarCredentials = QuickNodeCredentials(
+                apiKey = GeneratedEnvironmentConfig.quiknodeStellarApiKey,
+                subdomain = GeneratedEnvironmentConfig.quiknodeStellarSubdomain,
             ),
             infuraProjectId = GeneratedEnvironmentConfig.infuraProjectId,
             tronGridApiKey = GeneratedEnvironmentConfig.tronGridApiKey,
@@ -176,6 +192,7 @@ internal object GeneratedEnvironmentConfigConverter {
             tezos = GetBlockAccessToken(rest = GetBlockAccessTokens.Tezos.rest),
             monad = GetBlockAccessToken(rest = GetBlockAccessTokens.Monad.rest),
             stellar = GetBlockAccessToken(rest = GetBlockAccessTokens.Stellar.rest),
+            berachain = GetBlockAccessToken(rest = GetBlockAccessTokens.Berachain.rest),
         )
     }
 }
