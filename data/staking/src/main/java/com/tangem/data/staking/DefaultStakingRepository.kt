@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -134,6 +135,10 @@ internal class DefaultStakingRepository(
 
         if (userWallet !is UserWallet.Cold) {
             return false
+        }
+
+        if (userWallet.scanResponse.productType == ProductType.Note) {
+            return true
         }
 
         val blockchainId = cryptoCurrency.network.rawId
