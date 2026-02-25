@@ -1,9 +1,11 @@
-package com.tangem.common.ui.news
+package com.tangem.features.feed.ui.feed.components.articles
 
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableSet
 
+@Immutable
 data class ArticleConfigUM(
     val id: Int,
     val title: String,

@@ -177,7 +177,7 @@ private inline fun BaseScaffoldWithMarkets(
 
     val coroutineScope = rememberCoroutineScope()
     val background = if (state.isNewMarketEnabled) {
-        TangemTheme.colors.background.tertiary
+        TangemTheme.colors2.surface.level2
     } else {
         TangemTheme.colors.background.primary
     }
