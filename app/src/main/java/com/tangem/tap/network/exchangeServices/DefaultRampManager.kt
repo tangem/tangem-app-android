@@ -86,7 +86,7 @@ internal class DefaultRampManager(
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
         val availabilityState = runSuspendCatching {
-            getExchangeableState(userWalletId, cryptoCurrency)
+            getExchangeableState()
         }.getOrNull() ?: ExpressAvailabilityState.Error
         return availabilityState.toReason(cryptoCurrency.name)
     }
@@ -142,21 +142,9 @@ internal class DefaultRampManager(
         }
     }
 
-    private suspend fun getExchangeableState(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-    ): ExpressAvailabilityState {
-        val asset = expressServiceFetcher.getInitializationStatus(userWalletId).firstOrNull()
-            ?: return ExpressAvailabilityState.Loading
-        return when (asset) {
-            is Lce.Error -> ExpressAvailabilityState.Error
-            is Lce.Loading -> ExpressAvailabilityState.Loading
-            is Lce.Content -> {
-                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(assetId = it.id) }
-                foundAsset?.isExchangeAvailable?.toSwapAvailabilityState()
-                    ?: ExpressAvailabilityState.AssetNotFound
-            }
-        }
+    private fun getExchangeableState(): ExpressAvailabilityState {
+        // In task [REDACTED_TASK_KEY], removed all checks to make all tokens available
+        return ExpressAvailabilityState.Available
     }
 
     private suspend fun getOnrampAvailableState(
@@ -187,14 +175,6 @@ internal class DefaultRampManager(
             ExpressAvailabilityState.Loading -> ScenarioUnavailabilityReason.ExpressLoading(currencyName)
             ExpressAvailabilityState.NotOnrampable -> ScenarioUnavailabilityReason.BuyUnavailable(currencyName)
             ExpressAvailabilityState.NotExchangeable -> ScenarioUnavailabilityReason.NotExchangeable(currencyName)
-        }
-    }
-
-    private fun Boolean.toSwapAvailabilityState(): ExpressAvailabilityState {
-        return if (this) {
-            ExpressAvailabilityState.Available
-        } else {
-            ExpressAvailabilityState.NotExchangeable
         }
     }
 
