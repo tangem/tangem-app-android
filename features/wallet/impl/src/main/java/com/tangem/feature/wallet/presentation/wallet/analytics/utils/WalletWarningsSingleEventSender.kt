@@ -4,12 +4,8 @@ import com.tangem.common.routing.AppRoute.WalletBackup
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.icon
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.primaryButton
-import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
+import com.tangem.core.ui.components.bottomsheets.message.*
+import com.tangem.core.ui.ds.message.TangemMessageEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,7 +15,9 @@ import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -61,6 +59,44 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
                     // and for this wallet we haven't shown the activation bs yet (check that returns false, not true)
                     if (isActivationBottomSheetShown[userWalletId] == false) {
                         if (event.type == WalletActivationBannerType.Warning && event.isBackupExists.not()) {
+                            showFinishActivationBottomSheet(userWalletId)
+                        }
+                        isActivationBottomSheetShown[userWalletId] = true
+                    }
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    suspend fun send(
+        userWalletId: UserWalletId,
+        displayedWalletUM: WalletUM?,
+        newNotifications: List<WalletNotificationUM>,
+    ) {
+        if (screenLifecycleProvider.isBackgroundState.value) return
+        if (newNotifications.isEmpty()) return
+        if (displayedWalletUM == null || displayedWalletUM.pullToRefreshConfig.isRefreshing) return
+
+        val totalNotifications = displayedWalletUM.notifications + displayedWalletUM.notificationsCarousel
+        val events = newNotifications.filter { it !in totalNotifications }
+
+        // We must show activation bs only for the first seen wallet when open the app (if need, see conditions below),
+        // so we keep this wallet id and use for future checks, ignore other wallets during the app session.
+        if (isActivationBottomSheetShown.isEmpty()) {
+            isActivationBottomSheetShown[userWalletId] = false
+        }
+
+        events.forEach { event ->
+            when (event) {
+                is WalletNotificationUM.SeedPhraseNotification -> {
+                    seedPhraseNotificationUseCase.notified(userWalletId = userWalletId)
+                }
+                is WalletNotificationUM.FinishWalletActivation -> {
+                    // We check that map contains the first seen wallet (will return null instead false/true otherwise)
+                    // and for this wallet we haven't shown the activation bs yet (check that returns false, not true)
+                    if (isActivationBottomSheetShown[userWalletId] == false) {
+                        if (event.messageEffect == TangemMessageEffect.Warning && event.isBackupExists.not()) {
                             showFinishActivationBottomSheet(userWalletId)
                         }
                         isActivationBottomSheetShown[userWalletId] = true

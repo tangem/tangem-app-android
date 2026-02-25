@@ -6,7 +6,6 @@ import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
-import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import org.rekotlin.Middleware
@@ -29,7 +28,6 @@ data class AppState(
                 AccessCodeRequestPolicyMiddleware().middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
                 LegacyMiddleware.legacyMiddleware,
-                TradeCryptoMiddleware.middleware,
             )
         }
     }
