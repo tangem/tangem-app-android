@@ -40,6 +40,7 @@ import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.IOException
@@ -130,21 +131,48 @@ internal class DefaultSwapRepository(
         userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
+        isIgnoreExpress: Boolean,
     ): PairsWithProviders {
         return withContext(coroutineDispatcher.io) {
-            try {
-                val initial = NetworkLeastTokenInfo(
-                    contractAddress = initialCurrency.contractAddress,
-                    network = initialCurrency.network,
-                )
-                val currenciesList = currencyList
-                    .filter { currency ->
-                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
-                        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
-                        isAvailableForSwap
-                    }
-                    .map { currency -> leastTokenInfoConverter.convert(currency) }
+            val currenciesList = filterByAssetRequirements(userWallet, currencyList)
 
+            if (isIgnoreExpress) {
+                buildLocalPairs(initialCurrency, currenciesList)
+            } else {
+                fetchExpressPairs(userWallet, initialCurrency, currenciesList)
+            }
+        }
+    }
+
+    private fun buildLocalPairs(
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<NetworkLeastTokenInfo>,
+    ): PairsWithProviders {
+        val pairs = currenciesList.map { tokenInfo ->
+            SwapPairLeast(
+                from = initialCurrency,
+                to = LeastTokenInfo(
+                    contractAddress = tokenInfo.contractAddress,
+                    network = tokenInfo.network,
+                ),
+                providers = emptyList(),
+            )
+        }
+        return PairsWithProviders(pairs = pairs, allProviders = emptyList())
+    }
+
+    private suspend fun fetchExpressPairs(
+        userWallet: UserWallet,
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<NetworkLeastTokenInfo>,
+    ): PairsWithProviders {
+        try {
+            val initial = NetworkLeastTokenInfo(
+                contractAddress = initialCurrency.contractAddress,
+                network = initialCurrency.network,
+            )
+
+            val allPairs = supervisorScope {
                 val pairsDeferred = async {
                     getPairsInternal(
                         userWallet = userWallet,
@@ -161,25 +189,34 @@ internal class DefaultSwapRepository(
                     )
                 }
 
-                val pairs = pairsDeferred.await().getOrThrow()
-                val reversedPairs = reversedPairsDeferred.await().getOrThrow()
+                pairsDeferred.await().getOrThrow() + reversedPairsDeferred.await().getOrThrow()
+            }
 
-                val allPairs = pairs + reversedPairs
-
-                return@withContext swapPairInfoConverter.convert(
-                    SwapPairsWithProviders(
-                        swapPair = allPairs,
-                        providers = emptyList(),
-                    ),
-                )
-            } catch (exception: Exception) {
-                if (exception is ApiResponseError.HttpException) {
-                    throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
-                } else {
-                    throw exception
-                }
+            return swapPairInfoConverter.convert(
+                SwapPairsWithProviders(
+                    swapPair = allPairs,
+                    providers = emptyList(),
+                ),
+            )
+        } catch (exception: Exception) {
+            if (exception is ApiResponseError.HttpException) {
+                throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
+            } else {
+                throw exception
             }
         }
+    }
+
+    private suspend fun filterByAssetRequirements(
+        userWallet: UserWallet,
+        currencyList: List<CryptoCurrency>,
+    ): List<NetworkLeastTokenInfo> {
+        return currencyList
+            .filter { currency ->
+                val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
+                rampStateManager.checkAssetRequirements(requirements)
+            }
+            .map { currency -> leastTokenInfoConverter.convert(currency) }
     }
 
     private suspend fun getPairsInternal(
