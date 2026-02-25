@@ -1,6 +1,6 @@
 package com.tangem.features.feed.model.news.list.statemanager
 
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
