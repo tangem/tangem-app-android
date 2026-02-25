@@ -11,7 +11,6 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -31,7 +30,10 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
-import com.tangem.feature.wallet.presentation.wallet.domain.*
+import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -43,11 +45,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedCallbacks
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -80,7 +79,6 @@ internal class WalletModel @Inject constructor(
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val walletImageResolver: WalletImageResolver,
-    private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val walletContentFetcher: WalletContentFetcher,
@@ -90,17 +88,13 @@ internal class WalletModel @Inject constructor(
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val trackingContextProxy: TrackingContextProxy,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerStore: AppsFlyerStore,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -116,13 +110,12 @@ internal class WalletModel @Inject constructor(
     private val refreshWalletJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
-    private var needToRefreshWallet = false
-    private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+    private var shouldRefreshWallet = false
+    private val expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
         trackScreenOpened()
 
-        updateMarketToggle()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -159,17 +152,9 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun updateMarketToggle() {
-        stateHolder.update {
-            it.copy(isNewMarketEnabled = feedFeatureToggle.isFeedEnabled)
-        }
-    }
-
     private fun updateYieldSupplyApy() {
-        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled) {
-            modelScope.launch(dispatchers.default) {
-                yieldSupplyApyUpdateUseCase()
-            }
+        modelScope.launch(dispatchers.default) {
+            yieldSupplyApyUpdateUseCase()
         }
     }
 
@@ -188,7 +173,6 @@ internal class WalletModel @Inject constructor(
     override fun onDestroy() {
         super.onDestroy()
 
-        tokenListStore.clear()
         stateHolder.clear()
         walletScreenContentLoader.cancelAll()
     }
@@ -267,9 +251,9 @@ internal class WalletModel @Inject constructor(
         getWalletsUseCase()
             .conflate()
             .distinctUntilChanged()
-            .map {
+            .map { userWallets ->
                 walletsUpdateActionResolver.resolve(
-                    wallets = it,
+                    wallets = userWallets,
                     currentState = stateHolder.value,
                 )
             }
@@ -361,7 +345,7 @@ internal class WalletModel @Inject constructor(
                 refreshWalletJobHolder.cancel()
                 when {
                     isBackground -> needToRefreshTimer()
-                    needToRefreshWallet && !isBackground -> {
+                    shouldRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
                     }
                 }
@@ -394,7 +378,6 @@ internal class WalletModel @Inject constructor(
          * Update state each time a user opens/returns to wallet screen
          * and every minute while user stays on the main screen
          */
-        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
 
         combine(
             flow = screenLifecycleProvider.isBackgroundState,
@@ -433,12 +416,12 @@ internal class WalletModel @Inject constructor(
     private fun needToRefreshTimer() {
         modelScope.launch {
             delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
-            needToRefreshWallet = true
+            shouldRefreshWallet = true
         }.saveIn(refreshWalletJobHolder)
     }
 
     private fun triggerRefreshWalletQuotes() {
-        needToRefreshWallet = false
+        shouldRefreshWallet = false
         val state = stateHolder.uiState.value
         val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
         modelScope.launch {
@@ -469,7 +452,6 @@ internal class WalletModel @Inject constructor(
                 // refresh loader to use actual user wallet
                 walletScreenContentLoader.load(
                     userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
                     isRefresh = true,
                     coroutineScope = modelScope,
                 )
@@ -517,10 +499,9 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWallets) {
-        action.wallets.forEach {
+        action.wallets.forEach { userWallet ->
             walletScreenContentLoader.load(
-                userWallet = it,
-                clickIntents = clickIntents,
+                userWallet = userWallet,
                 coroutineScope = modelScope,
                 isRefresh = true,
             )
@@ -539,7 +520,6 @@ internal class WalletModel @Inject constructor(
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
 
@@ -566,11 +546,9 @@ internal class WalletModel @Inject constructor(
 
     private fun reinitializeNewWallet(action: WalletsUpdateActionResolver.Action.ReinitializeNewWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
-        tokenListStore.remove(action.prevWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
 
@@ -589,11 +567,9 @@ internal class WalletModel @Inject constructor(
     private fun reinitializeWallets(action: WalletsUpdateActionResolver.Action.ReinitializeWallets) {
         action.wallets.forEach { userWallet ->
             walletScreenContentLoader.cancel(userWallet.walletId)
-            tokenListStore.remove(userWallet.walletId)
 
             walletScreenContentLoader.load(
                 userWallet = userWallet,
-                clickIntents = clickIntents,
                 coroutineScope = modelScope,
             )
 
@@ -610,39 +586,20 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            fetchWalletContent(userWallet = action.selectedWallet)
+        fetchWalletContent(userWallet = action.selectedWallet)
 
-            stateHolder.update(
-                AddWalletTransformer(
-                    userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
-                    walletImageResolver = walletImageResolver,
-                ),
-            )
-
-            walletScreenContentLoader.load(
+        stateHolder.update(
+            AddWalletTransformer(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
-                coroutineScope = modelScope,
-            )
-        } else {
-            walletScreenContentLoader.load(
-                userWallet = action.selectedWallet,
-                clickIntents = clickIntents,
-                coroutineScope = modelScope,
-            )
+                walletImageResolver = walletImageResolver,
+            ),
+        )
 
-            fetchWalletContent(userWallet = action.selectedWallet)
-
-            stateHolder.update(
-                AddWalletTransformer(
-                    userWallet = action.selectedWallet,
-                    clickIntents = clickIntents,
-                    walletImageResolver = walletImageResolver,
-                ),
-            )
-        }
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            coroutineScope = modelScope,
+        )
 
         scrollToWallet(prevIndex = action.prevWalletIndex, newIndex = action.selectedWalletIndex) {
             stateHolder.update {
@@ -655,11 +612,9 @@ internal class WalletModel @Inject constructor(
 
     private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         walletScreenContentLoader.cancel(action.deletedWalletId)
-        tokenListStore.remove(action.deletedWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
 
@@ -703,7 +658,6 @@ internal class WalletModel @Inject constructor(
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
 
