@@ -93,10 +93,10 @@ internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
 @Composable
 private fun SuccessContent(sendWithSwapUM: SendWithSwapUM, modifier: Modifier = Modifier) {
     val confirmUM = sendWithSwapUM.confirmUM as? ConfirmUM.Success ?: return
-    val amountUM = sendWithSwapUM.amountUM as? SwapAmountUM.Content ?: return
+    val amountUM = confirmUM.amountUM as? SwapAmountUM.Content ?: return
     val quoteUM = amountUM.selectedQuote as? SwapQuoteUM.Content ?: return
-    val destinationUM = sendWithSwapUM.destinationUM as? DestinationUM.Content ?: return
-    val feeSelectorUM = sendWithSwapUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
+    val destinationUM = confirmUM.destinationUM as? DestinationUM.Content ?: return
+    val feeSelectorUM = confirmUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
 
     Column(
         modifier = modifier
@@ -392,6 +392,64 @@ private fun SendWithSwapSuccessContent_Preview() {
                             externalTxUrl = "https://tangem.com",
                             txExtraIdName = "Jeffry Blackwell",
                         ),
+                    ),
+                    amountUM = SwapAmountContentPreview.defaultState,
+                    destinationUM = DestinationUM.Content(
+                        isPrimaryButtonEnabled = false,
+                        addressTextField = DestinationTextFieldUM.RecipientAddress(
+                            value = "0x391316d97a07027a0702c8A002c8A0C25d8470",
+                            keyboardOptions = KeyboardOptions(),
+                            placeholder = TextReference.EMPTY,
+                            label = resourceReference(R.string.send_recipient),
+                            isError = false,
+                            error = null,
+                            isValuePasted = false,
+                            blockchainAddress = "0x391316d97a07027a0702c8A002c8A0C25d8470",
+                        ),
+                        memoTextField = DestinationTextFieldUM.RecipientMemo(
+                            value = "123123123",
+                            keyboardOptions = KeyboardOptions(),
+                            placeholder = TextReference.EMPTY,
+                            label = resourceReference(R.string.send_recipient),
+                            isError = false,
+                            error = null,
+                            isValuePasted = false,
+                            isEnabled = true,
+                            disabledText = TextReference.EMPTY,
+                        ),
+                        recent = persistentListOf(),
+                        wallets = persistentListOf(),
+                        networkName = "Polygon",
+                        isValidating = false,
+                        isInitialized = false,
+                        isRecentHidden = false,
+                        isAccountsMode = false,
+                    ),
+                    feeSelectorUM = FeeSelectorUM.Content(
+                        fees = TransactionFee.Single(
+                            normal = Fee.Common(
+                                BigDecimal.ONE.convertToSdkAmount(
+                                    SwapAmountContentPreview.cryptoCurrencyStatus,
+                                ),
+                            ),
+                        ),
+                        feeItems = persistentListOf(),
+                        selectedFeeItem = FeeItem.Market(
+                            Fee.Common(
+                                BigDecimal.ONE.convertToSdkAmount(
+                                    SwapAmountContentPreview.cryptoCurrencyStatus,
+                                ),
+                            ),
+                        ),
+                        feeExtraInfo = FeeExtraInfo(
+                            isFeeApproximate = false,
+                            isFeeConvertibleToFiat = false,
+                            isTronToken = false,
+                            feeCryptoCurrencyStatus = SwapAmountContentPreview.cryptoCurrencyStatus,
+                        ),
+                        feeFiatRateUM = null,
+                        feeNonce = FeeNonce.None,
+                        isPrimaryButtonEnabled = false,
                     ),
                 ),
                 navigationUM = NavigationUM.Content(

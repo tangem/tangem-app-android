@@ -25,14 +25,12 @@ internal class ExpressStateFactory(
 
     fun getStateWithClosedDialog(): ExpressTransactionsBlockState {
         val state = currentStateProvider()
-        val slot = state.dialogSlot ?: return state
-        return state.copy(dialogSlot = slot.copy(config = slot.config.copy(isShow = false)))
+        return state.copy(dialogSlot = null)
     }
 
     fun getStateWithClosedBottomSheet(): ExpressTransactionsBlockState {
         val state = currentStateProvider()
-        val slot = state.bottomSheetSlot ?: return state
-        return state.copy(bottomSheetSlot = slot.copy(config = slot.config.copy(isShown = false)))
+        return state.copy(bottomSheetSlot = null)
     }
 
     fun getStateWithConfirmHideExpressStatus(): ExpressTransactionsBlockState {
