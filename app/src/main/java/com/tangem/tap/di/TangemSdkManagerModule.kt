@@ -12,6 +12,7 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.tasks.product.BlockchainToDeriveFinder
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
@@ -40,6 +41,7 @@ internal class TangemSdkManagerModule {
         appFinisher: AppFinisher,
         sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        blockchainToDeriveFinder: BlockchainToDeriveFinder,
         dispatchers: CoroutineDispatcherProvider,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
@@ -56,6 +58,7 @@ internal class TangemSdkManagerModule {
                 appFinisher = appFinisher,
                 sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
                 analyticsExceptionHandler = analyticsExceptionHandler,
+                blockchainToDeriveFinder = blockchainToDeriveFinder,
                 dispatchers = dispatchers,
             )
         }
