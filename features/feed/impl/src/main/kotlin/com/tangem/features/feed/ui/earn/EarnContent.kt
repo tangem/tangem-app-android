@@ -3,7 +3,6 @@ package com.tangem.features.feed.ui.earn
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Icon
@@ -14,21 +13,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SmallButtonShimmer
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -39,6 +38,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
 import com.tangem.features.feed.ui.earn.components.EarnListItem
+import com.tangem.features.feed.ui.earn.components.MostlyUsedCard
 import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
 import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
@@ -91,12 +91,7 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
             SpacerH(12.dp)
             BestOpportunitiesFilters(
                 state = state.bestOpportunities,
-                selectedNetworkFilterText = when (state.selectedNetworkFilter) {
-                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
-                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
-                    is EarnFilterNetworkUM.Network -> TextReference.Str(state.selectedNetworkFilter.text)
-                },
-                selectedTypeFilterText = state.selectedTypeFilterText,
+                earnFilterUM = state.earnFilterUM,
                 onNetworkFilterClick = state.onNetworkFilterClick,
                 onTypeFilterClick = state.onTypeFilterClick,
             )
@@ -151,10 +146,12 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 12.dp,
-                        ),
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .background(
+                            color = TangemTheme.colors.background.action,
+                            shape = TangemTheme.shapes.roundedCornersXMedium,
+                        )
+                        .padding(vertical = 32.dp, horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     UnableToLoadData(onRetryClick = st.onRetryClicked)
@@ -165,70 +162,16 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
 }
 
 @Composable
-private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .width(148.dp)
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.action)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-    ) {
-        CurrencyIcon(
-            modifier = Modifier.size(32.dp),
-            state = item.currencyIconState,
-            shouldDisplayNetwork = true,
-            networkBadgeSize = 12.dp,
-            networkBadgeBackground = TangemTheme.colors.background.action,
-        )
-
-        SpacerH(8.dp)
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier.weight(weight = 1f, fill = false),
-                text = item.tokenName.resolveReference(),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.subtitle2,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            SpacerW(4.dp)
-            Text(
-                text = item.symbol.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-                maxLines = 1,
-            )
-        }
-
-        SpacerH(2.dp)
-
-        Text(
-            text = item.earnValue.resolveReference(),
-            color = TangemTheme.colors.text.accent,
-            style = TangemTheme.typography.caption1,
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
 private fun BestOpportunitiesFilters(
     state: EarnBestOpportunitiesUM,
-    selectedNetworkFilterText: TextReference,
-    selectedTypeFilterText: TextReference,
+    earnFilterUM: EarnFilterUM,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
 ) {
     when (state) {
         is EarnBestOpportunitiesUM.Loading -> FilterButtonsShimmer()
         else -> FilterButtons(
-            selectedNetworkFilterText = selectedNetworkFilterText,
-            selectedTypeFilterText = selectedTypeFilterText,
-            isEnabled = state is EarnBestOpportunitiesUM.Content || state is EarnBestOpportunitiesUM.EmptyFiltered,
+            earnFilterUM = earnFilterUM,
             onNetworkFilterClick = onNetworkFilterClick,
             onTypeFilterClick = onTypeFilterClick,
         )
@@ -307,9 +250,7 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM)
 
 @Composable
 private fun FilterButtons(
-    selectedNetworkFilterText: TextReference,
-    selectedTypeFilterText: TextReference,
-    isEnabled: Boolean,
+    earnFilterUM: EarnFilterUM,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -319,10 +260,14 @@ private fun FilterButtons(
     ) {
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedNetworkFilterText,
+                text = when (earnFilterUM.selectedNetworkFilter) {
+                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                    is EarnFilterNetworkUM.Network -> TextReference.Str(earnFilterUM.selectedNetworkFilter.text)
+                },
                 onClick = onNetworkFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = isEnabled,
+                isEnabled = earnFilterUM.isNetworkFilterEnabled,
             ),
         )
 
@@ -330,10 +275,10 @@ private fun FilterButtons(
 
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedTypeFilterText,
+                text = earnFilterUM.selectedTypeFilter.text,
                 onClick = onTypeFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
-                isEnabled = isEnabled,
+                isEnabled = earnFilterUM.isTypeFilterEnabled,
             ),
         )
     }
@@ -496,7 +441,7 @@ private fun EarnContentLoadingPreview() {
         ) {
             EarnContent(
                 state = previewEarnUM(
-                    mostlyUsed = EarnListUM.Loading,
+                    mostlyUsed = EarnListUM.Error(onRetryClicked = {}),
                     bestOpportunities = EarnBestOpportunitiesUM.Loading,
                 ),
             )
@@ -588,8 +533,12 @@ private fun previewEarnUM(
 ): EarnUM = EarnUM(
     mostlyUsed = mostlyUsed,
     bestOpportunities = bestOpportunities,
-    selectedTypeFilter = EarnFilterTypeUM.All,
-    selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+    earnFilterUM = EarnFilterUM(
+        selectedTypeFilter = EarnFilterTypeUM.All,
+        selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+        isTypeFilterEnabled = true,
+        isNetworkFilterEnabled = true,
+    ),
     onBackClick = {},
     onNetworkFilterClick = {},
     onTypeFilterClick = {},
