@@ -1,4 +1,4 @@
-package com.tangem.common.ui.news
+package com.tangem.features.feed.ui.feed.components.articles
 
 import android.content.res.Configuration
 import androidx.compose.foundation.*
@@ -37,7 +37,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
-fun ArticleCard(
+internal fun ArticleCardV1(
     articleConfigUM: ArticleConfigUM,
     onArticleClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -126,7 +126,7 @@ private fun TrendingArticle(
 }
 
 @Composable
-fun ShowMoreArticlesCard(modifier: Modifier = Modifier, onClick: () -> Unit) {
+internal fun ShowMoreArticlesCardV1(modifier: Modifier = Modifier, onClick: () -> Unit) {
     BlockCard(
         modifier = modifier,
         onClick = onClick,
