@@ -413,6 +413,7 @@
   <string name="common_unstake">Скасувати стейкінг</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Через обмеження %1$s в одну транзакцію може поміститися тільки %2$d UTXO. Це означає, що ви можете відправити тільки %3$s або менше. Вам потрібно зменшити суму.</string>
   <string name="common_value_copied">Скопійовано</string>
+  <string name="common_wallets">Гаманці</string>
   <string name="common_week">тиждень</string>
   <string name="common_with">з</string>
   <string name="common_yes">Так</string>
@@ -483,6 +484,7 @@
   <string name="domain_receive_assets_onboarding_title">Надсилайте кошти, використовуючи лише</string>
   <string name="earn_best_opportunities">Найкращі можливості</string>
   <string name="earn_clear_filter">Очистити фільтр</string>
+  <string name="earn_empty">Список тимчасово порожній, оскільки триває оновлення. Спробуйте ще раз за мить.</string>
   <string name="earn_filter_all_networks">Всі мережі</string>
   <string name="earn_filter_all_types">Всі типи</string>
   <string name="earn_filter_by">Фільтрувати за</string>
@@ -490,6 +492,7 @@
   <string name="earn_filter_networks">Мережі</string>
   <string name="earn_mostly_used">Часто використовані</string>
   <string name="earn_no_results">Немає результатів</string>
+  <string name="earn_title">Заробляйте</string>
   <string name="email_preface_wc_error">Привіт, команда підтримки, я зіткнувся з помилкою з кодом: %s</string>
   <string name="email_subject_wc_error">Помилка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Ви використали картку або кільце від іншого гаманця. Прикладіть картку або кільце, пов\'язану з цим гаманцем.</string>
@@ -853,6 +856,7 @@
   <string name="mobile_wallet_requires_min_os_warning_body">Оновіться до версії %1$s, щоб створити мобільний гаманець</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Мобільний гаманець потребує %1$s або новіше.</string>
   <string name="news_all_news">Всі новини</string>
+  <string name="news_like">Вподобайка</string>
   <plurals name="news_published_hours_ago">
     <item quantity="one">%d годину тому</item>
     <item quantity="few">%d години тому</item>
@@ -865,7 +869,10 @@
     <item quantity="many">%d хвилин тому</item>
     <item quantity="other">%d хвилин тому</item>
   </plurals>
+  <string name="news_quick_recap">Короткий огляд</string>
+  <string name="news_related_news">Новини</string>
   <string name="news_related_tokens">Пов\'язані токени</string>
+  <string name="news_sources">Схожі новини</string>
   <string name="news_stay_in_the_loop">Залишайтеся в курсі подій</string>
   <string name="nfc_error_unavailable">Функція NFC недоступна на вашому пристрої</string>
   <string name="nft_about_title">Про NFT</string>
@@ -1324,6 +1331,7 @@
   <string name="staking_amount_tron_integer_error">Сума стейкінгу буде округлена до %1$s TRX відповідно до правил мережі.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Сума зняття зі стейкінгу буде округлена до %1$s TRX через мережеві правила.</string>
   <string name="staking_apr_earn_badge">APR %1$s%%</string>
+  <string name="staking_cardano_details_rewards_info_text">Ваші винагороди за стейкінг почнуть надходити через 5 епох (~25 днів), поки ваша делегація реєструється та враховується мережею.</string>
   <string name="staking_claim_unstaked">Зняти кошти</string>
   <string name="staking_details_account_fee">Комісія за стейкінг-акаунт</string>
   <string name="staking_details_account_fee_info">Стейкінг-акаунт — це спеціальний рахунок, на якому зберігаються застейкані SOL токени. Він створюється, коли ви делегуєте свої токени валідатору для участі у перевірці транзакцій та отримання винагород. За створення стейкінг-акаунту стягується невелика комісія, яка повертається після завершення стейкінгу.</string>
@@ -1334,6 +1342,7 @@
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Винагороди автоматично накопичуються на вашому балансі щодня.</string>
+  <string name="staking_details_autocompound_rewards_earned">Винагороди реінвестуються у ваш баланс стейкінгу. Зароблено коштів: %s</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Середня ставка винагороди</string>
   <string name="staking_details_banner_text">Що таке стейкінг?</string>
@@ -1467,6 +1476,9 @@
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
+  <string name="swap_search_suggestion_hint">Шукаєте щось інше?\nСпробуйте пошукати або перегляньте інші криптовалюти!</string>
+  <string name="swap_search_tooltip_description">Шукайте будь-який токен, навіть якщо його ще немає у вашому списку.</string>
+  <string name="swap_search_tooltip_title">Використовуйте пошук, щоб знайти потрібне</string>
   <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
   <string name="swap_story_fifth_title">Цілодобова підтримка</string>
   <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
@@ -1513,6 +1525,8 @@
   <string name="tangem_pay_freeze_card_success">Вашу картку заморожено.</string>
   <string name="tangem_pay_get_help">Звернутися до підтримки</string>
   <string name="tangem_pay_history_item_spend_mc_declined_reason">Причина: %s</string>
+  <string name="tangem_pay_history_item_spend_mc_title_format" formatted="false">%s.%s</string>
+  <string name="tangem_pay_history_item_spend_mcc">MCC %s</string>
   <string name="tangem_pay_other">Інше</string>
   <string name="tangem_pay_rooted_device_subtitle">Неможливо використовувати на пристроях з root-правами.</string>
   <string name="tangem_pay_status_completed">Завершено</string>
@@ -1530,7 +1544,7 @@
   <string name="tangem_pay_unfreeze_card_success">Картку розморожено.</string>
   <string name="tangem_pay_withdrawal">Виведення коштів</string>
   <string name="tangempay_account_unable_to_use_rooted">Заборонено використовувати на root-пристроях</string>
-  <string name="tangempay_cancel_kyc">Скасувати KYC</string>
+  <string name="tangempay_cancel_kyc">Приховати KYC з головного екрана</string>
   <string name="tangempay_card_details_add_funds">Поповнити рахунок</string>
   <string name="tangempay_card_details_add_funds_subtitle">Варіанти поповнення</string>
   <string name="tangempay_card_details_card_number">Номер картки</string>
@@ -1567,6 +1581,7 @@
   <string name="tangempay_card_details_swap_description">Обміняйте будь-який актив у вашому портфелі на картку</string>
   <string name="tangempay_card_details_title">Реквізити картки</string>
   <string name="tangempay_card_details_unfreeze_card">Розморозити картку</string>
+  <string name="tangempay_card_details_view_pin_code_description">Поверніться до додатка, якщо ви забудете його.</string>
   <string name="tangempay_card_details_view_pin_code_title">Ваш ПІН</string>
   <string name="tangempay_card_details_withdraw">Вивести</string>
   <string name="tangempay_card_details_withdraw_error_title">Вивід наразі недоступний</string>
@@ -1590,10 +1605,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Ви впевнені, що хочете зупинити процес KYC? Ви можете повернутися до нього в будь-який момент.</string>
   <string name="tangempay_kyc_failed_description">Не вдалося підтвердити ваш профіль. Якщо у вас є питання, зверніться у службу підтримки.</string>
   <string name="tangempay_kyc_failed_title">На жаль, нам не вдалося підтвердити вашу особу </string>
+  <string name="tangempay_kyc_has_failed">KYC відхилено</string>
   <string name="tangempay_kyc_in_progress">KYC в процесі</string>
   <string name="tangempay_kyc_in_progress_notification_button">Переглянути статус</string>
   <string name="tangempay_kyc_in_progress_notification_title">Перевірка KYC для Tangem Pay в процесі</string>
   <string name="tangempay_kyc_in_progress_popup_description">Документи зазвичай перевіряються автоматично протягом 5 хвилин. У рідкісних випадках, коли потрібна ручна перевірка, це може зайняти до 48 годин.</string>
+  <string name="tangempay_kyc_rejected">Відхилено</string>
+  <string name="tangempay_kyc_rejected_button_text">Приховати блок KYC</string>
+  <string name="tangempay_kyc_rejected_description">Вибачте, ми не змогли підтвердити</string>
+  <string name="tangempay_kyc_rejected_description_span">вашу особу.</string>
   <string name="tangempay_onboarding_banner_description">Отримайте безкоштовну віртуальну картку Tangem Visa</string>
   <string name="tangempay_onboarding_banner_title">Використовуйте USDC для щоденних платежів</string>
   <string name="tangempay_onboarding_get_card_button_text">Отримати картку</string>
