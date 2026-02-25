@@ -645,21 +645,14 @@ internal class SwapModel @Inject constructor(
             tokensDataState = state,
         )
 
-        if (!isTokenAvailableForSwap(state, selectedCurrency, isReverseFromTo)) {
-            analyticsEventHandler.send(
-                SwapEvents.NoticeUnavailableToSwapPair(
-                    sendToken = fromCurrencyStatus.currency.symbol,
-                    receiveToken = toCurrencyStatus.currency.symbol,
-                    sendBlockchain = fromCurrencyStatus.currency.network.name,
-                    receiveBlockchain = toCurrencyStatus.currency.network.name,
-                ),
-            )
-            uiState = stateBuilder.createSwapNotSupportedState(
-                uiStateHolder = uiState,
+        if (handleSwapNotSupported(
+                state = state,
                 fromToken = fromCurrencyStatus,
                 toToken = toCurrencyStatus,
+                fromAccount = fromAccount,
                 toAccount = toAccount,
             )
+        ) {
             return
         }
 
@@ -1397,6 +1390,17 @@ internal class SwapModel @Inject constructor(
                 toAccount = toAccount,
                 selectedProvider = null,
             )
+            swapRouter.openScreen(SwapNavScreen.Main)
+            if (handleSwapNotSupported(
+                    state = tokens,
+                    fromToken = fromToken,
+                    toToken = toToken,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
+                )
+            ) {
+                return
+            }
             modelScope.launch {
                 updateFeePaidCryptoCurrencyFor(fromToken)
             }
@@ -1409,7 +1413,6 @@ internal class SwapModel @Inject constructor(
                 reduceBalanceBy = lastReducedBalanceBy.value,
                 toProvidersList = findSwapProviders(fromToken, toToken),
             )
-            swapRouter.openScreen(SwapNavScreen.Main)
             updateTokensState(tokens)
         }
     }
@@ -2009,6 +2012,37 @@ internal class SwapModel @Inject constructor(
         }
             ?.filterForTangemPayWithdrawal()
             .orEmpty()
+    }
+
+    /**
+     * @return true if swap is not supported and UI was updated to show error state
+     */
+    private fun handleSwapNotSupported(
+        state: TokensDataStateExpress,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
+    ): Boolean {
+        val selectedCurrency = if (isOrderReversed) fromToken else toToken
+        if (isTokenAvailableForSwap(state, selectedCurrency, isOrderReversed)) return false
+
+        analyticsEventHandler.send(
+            SwapEvents.NoticeUnavailableToSwapPair(
+                sendToken = fromToken.currency.symbol,
+                receiveToken = toToken.currency.symbol,
+                sendBlockchain = fromToken.currency.network.name,
+                receiveBlockchain = toToken.currency.network.name,
+            ),
+        )
+        uiState = stateBuilder.createSwapNotSupportedState(
+            uiStateHolder = uiState,
+            fromToken = fromToken,
+            toToken = toToken,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
+        )
+        return true
     }
 
     private fun isTokenAvailableForSwap(
