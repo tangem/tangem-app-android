@@ -6,7 +6,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
 import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.visa.error.VisaApiError
 import java.math.BigDecimal
 
 interface TangemPayWithdrawRepository {
@@ -21,5 +20,5 @@ interface TangemPayWithdrawRepository {
 
     suspend fun hasWithdrawOrder(userWallet: UserWallet): Boolean
 
-    suspend fun pollWithdrawOrderIfNeeds(userWallet: UserWallet): Either<VisaApiError, Unit>
+    suspend fun pollWithdrawOrdersIfNeeds(userWallet: UserWallet)
 }
