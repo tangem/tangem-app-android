@@ -36,11 +36,8 @@ internal class AccountTokenItemConverter(
             isExpanded = true,
             isCollapsable = false,
             tokens = value.currencyList.map { accountSwapCurrency ->
-                if (accountSwapCurrency.isAvailable) {
-                    createAvailableItemConverter()
-                } else {
-                    createUnavailableItemConverter()
-                }.convert(accountSwapCurrency.cryptoCurrencyStatus)
+                createAvailableItemConverter()
+                    .convert(accountSwapCurrency.cryptoCurrencyStatus)
             }.map(TokensListItemUM::Token).toPersistentList(),
         )
     }
