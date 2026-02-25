@@ -1,7 +1,7 @@
 package com.tangem.features.onramp.alloffers.entity
 
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
+import com.tangem.features.onramp.main.entity.OnrampOfferAdvantagesUM
 
 internal interface AllOffersIntents {
 
