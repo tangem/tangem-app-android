@@ -19,6 +19,7 @@ class GetAvailablePairsUseCase(
             userWallet = userWallet,
             initialCurrency = initialCurrency,
             currencyList = currencies,
+            isIgnoreExpress = true,
         ).pairs
     }
 }

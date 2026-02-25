@@ -18,5 +18,6 @@ class WithdrawStateConverter : Converter<WithdrawStoreData, TangemPayWithdrawSta
                 payInExtraId = exchangeData.payInExtraId,
             )
         },
+        txHash = value.txHash,
     )
 }
