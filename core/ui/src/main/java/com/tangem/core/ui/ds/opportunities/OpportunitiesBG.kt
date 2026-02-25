@@ -217,8 +217,8 @@ private const val SCALE_FACTOR = 1.5f
 private const val INNER_SHADOW_COLOR_START = 0x00000000
 private const val INNER_SHADOW_COLOR_END = 0xFFFFFFFF
 
-private const val BORDER_COLOR = 0xF0F0F0
-private const val OVERLAY_DARK = 0x141414
+private const val BORDER_COLOR = 0xFFF0F0F0
+private const val OVERLAY_DARK = 0xFF141414
 
 // region Previews
 
