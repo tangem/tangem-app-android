@@ -1,7 +1,7 @@
 package com.tangem.tap.di
 
 import com.tangem.datasource.api.moonpay.MoonPayApi
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
@@ -69,14 +69,14 @@ internal object ActivityModule {
     @Provides
     @Singleton
     fun provideExchangeService(
-        environmentConfigStorage: EnvironmentConfigStorage,
         getSelectedWalletUseCase: GetSelectedWalletUseCase,
         moonPayApi: MoonPayApi,
+        environmentConfig: EnvironmentConfig,
     ): SellService {
         return MoonPayService(
             api = moonPayApi,
-            apiKeyProvider = Provider { environmentConfigStorage.getConfigSync().moonPayApiKey },
-            secretKeyProvider = Provider { environmentConfigStorage.getConfigSync().moonPayApiSecretKey },
+            apiKey = environmentConfig.moonPayApiKey,
+            secretKey = environmentConfig.moonPayApiSecretKey,
             userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }

@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 
 internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletStateTransformer(userWalletId) {
 
@@ -20,6 +21,10 @@ internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletS
                 bottomSheetConfig = updateConfig(prevState),
             )
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 
     private fun updateConfig(prevState: WalletState) = prevState.bottomSheetConfig?.copy(
