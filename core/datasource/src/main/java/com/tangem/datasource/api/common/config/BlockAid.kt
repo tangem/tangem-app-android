@@ -1,11 +1,10 @@
 package com.tangem.datasource.api.common.config
 
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
-import kotlinx.coroutines.flow.first
 
 internal class BlockAid(
-    private val configStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
 ) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
@@ -21,9 +20,7 @@ internal class BlockAid(
             put(
                 key = "X-API-KEY",
                 value = ProviderSuspend {
-                    requireNotNull(
-                        configStorage.getConfig().first { !it.blockAidApiKey.isNullOrEmpty() }.blockAidApiKey,
-                    )
+                    requireNotNull(environmentConfig.blockAidApiKey)
                 },
             )
             put("accept", ProviderSuspend { "application/json" })

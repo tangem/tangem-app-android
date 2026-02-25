@@ -7,14 +7,13 @@ import com.amplitude.experiment.ExperimentConfig
 import com.amplitude.experiment.ExperimentUser
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.utils.Provider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class AmplitudeABTestsManager(
     val application: Application,
-    val apiKeyProvider: Provider<String>,
+    val apiKey: String,
     val scope: CoroutineScope,
 ) : ABTestsManager {
 
@@ -28,7 +27,7 @@ internal class AmplitudeABTestsManager(
 
         client = Experiment.initializeWithAmplitudeAnalytics(
             application = application,
-            apiKey = apiKeyProvider(),
+            apiKey = apiKey,
             config = ExperimentConfig
                 .builder()
                 .automaticFetchOnAmplitudeIdentityChange(true)
