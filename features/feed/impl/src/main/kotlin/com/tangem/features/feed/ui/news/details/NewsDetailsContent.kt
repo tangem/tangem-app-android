@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.tangem.common.ui.news.ArticleHeader
+import com.tangem.features.feed.ui.feed.components.articles.ArticleHeader
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
