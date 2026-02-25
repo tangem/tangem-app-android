@@ -399,6 +399,7 @@
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="common_value_copied">Value copied</string>
+  <string name="common_wallets">Wallets</string>
   <string name="common_week">week</string>
   <string name="common_with">with</string>
   <string name="common_yes">Yes</string>
@@ -1436,7 +1437,9 @@
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
-  <string name="swap_search_suggestion_hint">Looking for something else?/nTry searching or explore another crypto!</string>
+  <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
+  <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
+  <string name="swap_search_tooltip_title">Use search to find what you need</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
   <string name="swap_story_first_subtitle">Multiple trusted providers in one place—swap any asset effortlessly in your wallet</string>
@@ -1502,7 +1505,7 @@
   <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_account_unable_to_use_rooted">Unable to use on rooted device</string>
-  <string name="tangempay_cancel_kyc">Cancel KYC</string>
+  <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
@@ -1563,12 +1566,12 @@
   <string name="tangempay_kyc_confirm_cancellation_description">Are you sure you want to stop the KYC process? You can return to it anytime.</string>
   <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
   <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
-  <string name="tangempay_kyc_has_failed">KYC has failed</string>
+  <string name="tangempay_kyc_has_failed">KYC rejected</string>
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Documents are usually verified automatically within 5 minutes. In rare cases, if manual review is required, it may take up to 48 hours.</string>
-  <string name="tangempay_kyc_rejected">KYC rejected</string>
+  <string name="tangempay_kyc_rejected">Rejected</string>
   <string name="tangempay_kyc_rejected_button_text">Hide KYC block</string>
   <string name="tangempay_kyc_rejected_description">Sorry, we couldn\'t verify</string>
   <string name="tangempay_kyc_rejected_description_span">your profile.</string>
@@ -1894,6 +1897,8 @@
   <string name="warning_express_refresh_required_title">Service temporarily unavailable</string>
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
   <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
+  <string name="warning_express_unsupported_pair_description">Swapping isn\'t available for this pair. Please select a different token and try again.</string>
+  <string name="warning_express_unsupported_pair_title">Unsupported token pair</string>
   <string name="warning_express_wrong_amount_description">Please change the amount to swap</string>
   <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
   <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>

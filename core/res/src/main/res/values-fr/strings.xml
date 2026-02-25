@@ -1499,7 +1499,7 @@
   <string name="tangem_pay_unfreeze_card_success">Votre carte est dégelée.</string>
   <string name="tangem_pay_withdrawal">Retrait</string>
   <string name="tangempay_account_unable_to_use_rooted">Impossible à utiliser sur un appareil rooté</string>
-  <string name="tangempay_cancel_kyc">Annuler KYC</string>
+  <string name="tangempay_cancel_kyc">Masquer la vérification de l\'écran</string>
   <string name="tangempay_card_details_add_funds">Ajouter des fonds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Options de recharge</string>
   <string name="tangempay_card_details_card_number">Numéro de carte</string>
@@ -1565,10 +1565,10 @@
   <string name="tangempay_kyc_in_progress_notification_button">Voir le statut</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en cours pour Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Les documents sont généralement vérifiés automatiquement en moins de 5 minutes. Dans de rares cas nécessitant une vérification manuelle, le processus peut prendre jusqu’à 48 heures.</string>
-  <string name="tangempay_kyc_rejected">KYC rejeté</string>
+  <string name="tangempay_kyc_rejected">Refusé</string>
   <string name="tangempay_kyc_rejected_button_text">Masquer le bloc KYC</string>
-  <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier.</string>
-  <string name="tangempay_kyc_rejected_description_span">votre profil.</string>
+  <string name="tangempay_kyc_rejected_description">Désolé, nous n\'avons pas pu vérifier</string>
+  <string name="tangempay_kyc_rejected_description_span">votre identité.</string>
   <string name="tangempay_onboarding_banner_description">Obtenez votre carte virtuelle Tangem Visa gratuite</string>
   <string name="tangempay_onboarding_banner_title">Utilisez USDC pour les paiements quotidiens</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtenir la carte</string>
