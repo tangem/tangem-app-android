@@ -1,8 +1,8 @@
 package com.tangem.blockchainsdk
 
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -15,16 +15,16 @@ internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>
 /**
  * Implementation of Blockchain SDK components factory
  *
+ * @property blockchainSdkConfig             blockchain SDK config
  * @property blockchainProvidersTypesManager blockchain providers types manager
- * @property environmentConfigStorage        environment config storage
  * @property walletManagerFactoryCreator     wallet manager factory creator
  * @param dispatchers                     coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultBlockchainSDKFactory(
+    private val blockchainSdkConfig: BlockchainSdkConfig,
     private val blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
-    private val environmentConfigStorage: EnvironmentConfigStorage,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
     dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {
@@ -43,7 +43,7 @@ internal class DefaultBlockchainSDKFactory(
 
     private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
-            flow = environmentConfigStorage.getConfig().map { it.blockchainSdkConfig },
+            flow = flowOf(blockchainSdkConfig),
             flow2 = blockchainProvidersTypesManager.get(),
             // flow3 = subscribe on feature toggles changes, TODO: [REDACTED_JIRA]
             transform = walletManagerFactoryCreator::create,
