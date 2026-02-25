@@ -32,12 +32,10 @@ import com.tangem.features.feed.model.earn.filters.state.EarnFilterNetworkUMConv
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeConverter
 import com.tangem.features.feed.model.earn.filters.state.EarnFilterTypeUMConverter
 import com.tangem.features.feed.model.earn.state.EarnStateController
-import com.tangem.features.feed.model.earn.state.transformers.EarnFilterSelectedStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateBestOpportunitiesStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateEarnUMInitialStateTransformer
-import com.tangem.features.feed.model.earn.state.transformers.UpdateMostlyUsedStateTransformer
+import com.tangem.features.feed.model.earn.state.transformers.*
 import com.tangem.features.feed.model.earn.statemanager.EarnListBatchFlowManager
 import com.tangem.features.feed.model.earn.statemanager.EarnListStateManager
+import com.tangem.features.feed.ui.earn.state.EarnBestOpportunitiesUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnUM
@@ -69,8 +67,8 @@ internal class EarnModel @Inject constructor(
     private val earnNetworks = MutableStateFlow<EarnNetworks>(Either.Right(emptyList()))
     private val earnListConfigProvider = Provider {
         createEarnTokensListConfig(
-            selectedTypeFilter = stateController.value.selectedTypeFilter,
-            selectedNetworkFilter = stateController.value.selectedNetworkFilter,
+            selectedTypeFilter = stateController.value.earnFilterUM.selectedTypeFilter,
+            selectedNetworkFilter = stateController.value.earnFilterUM.selectedNetworkFilter,
             earnNetworks = earnNetworks.value,
         )
     }
@@ -104,7 +102,6 @@ internal class EarnModel @Inject constructor(
     init {
         updateInitialState()
         fetchEarnNetworks()
-        fetchTopEarnTokens()
         subscribeOnStoredFilters()
         subscribeOnNetworks()
         subscribeOnBatchFlow()
@@ -117,19 +114,22 @@ internal class EarnModel @Inject constructor(
             batchFlowManager.initialLoadingError,
             batchFlowManager.paginationStatus,
         ) { items, error, paginationStatus ->
-            val hasActiveFilters = state.value.selectedTypeFilter != EarnFilterTypeUM.All ||
-                state.value.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
-            error?.let(::handleBestOpportunitiesErrorAnalytics)
+            val hasActiveFilters = state.value.earnFilterUM.selectedTypeFilter != EarnFilterTypeUM.All ||
+                state.value.earnFilterUM.selectedNetworkFilter !is EarnFilterNetworkUM.AllNetworks
             EarnListStateManager.calculateState(
                 items = items,
                 error = error,
                 paginationStatus = paginationStatus,
                 hasActiveFilters = hasActiveFilters,
-                onRetryClick = { batchFlowManager.reload() },
+                onRetryClick = {
+                    batchFlowManager.reload()
+                    reloadEarnNetworks()
+                },
                 onLoadMore = { batchFlowManager.loadMore() },
                 onClearFiltersClick = ::onClearFiltersClick,
-            )
-        }.onEach { bestOpportunitiesState ->
+            ) to error
+        }.onEach { (bestOpportunitiesState, error) ->
+            error?.let(::handleBestOpportunitiesErrorAnalytics)
             stateController.update(UpdateBestOpportunitiesStateTransformer(bestOpportunitiesState))
         }.launchIn(modelScope)
     }
@@ -156,23 +156,27 @@ internal class EarnModel @Inject constructor(
 
     private fun subscribeOnStoredFilters() {
         modelScope.launch(dispatchers.default) {
-            getEarnFilterUseCase()
-                .collect { filter ->
-                    val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
-                    val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
-                    stateController.update(
-                        EarnFilterSelectedStateTransformer(
-                            filterType = typeFilterUM,
-                            filterNetwork = networkFilterUM,
-                        ),
-                    )
-                    batchFlowManager.reload()
-                }
+            combine(
+                getEarnFilterUseCase(),
+                earnNetworks,
+            ) { filter, networks ->
+                val typeFilterUM = EarnFilterTypeConverter().convert(filter.earnFilterType)
+                val networkFilterUM = EarnFilterNetworkConverter().convert(filter.earnFilterNetwork)
+                stateController.update(
+                    EarnFilterSelectedStateTransformer(
+                        filterType = typeFilterUM,
+                        filterNetwork = networkFilterUM,
+                        earnNetworks = networks,
+                    ),
+                )
+                batchFlowManager.reload()
+            }.collect()
         }
     }
 
     private fun fetchTopEarnTokens() {
         modelScope.launch(dispatchers.default) {
+            stateController.update(UpdateMostlyUsedStateLoadingTransformer())
             fetchTopEarnTokensUseCase()
         }
     }
@@ -183,13 +187,21 @@ internal class EarnModel @Inject constructor(
         }
     }
 
+    private fun reloadEarnNetworks() {
+        modelScope.launch(dispatchers.default) {
+            if (earnNetworks.value.isLeft()) {
+                fetchEarnNetworks()
+            }
+        }
+    }
+
     /* start of clicks area */
     private fun onTypeFilterClick() {
         val currentState = state.value
         bottomSheetNavigation.activate(
             FeedBottomSheetRoute.TypeFilter(
                 params = EarnTypeFilterComponent.Params(
-                    selectedFilter = EarnFilterTypeUMConverter().convert(currentState.selectedTypeFilter),
+                    selectedFilter = EarnFilterTypeUMConverter().convert(currentState.earnFilterUM.selectedTypeFilter),
                     onFilterSelected = ::onTypeFilterOptionSelected,
                     onDismiss = { bottomSheetNavigation.dismiss() },
                 ),
@@ -210,7 +222,7 @@ internal class EarnModel @Inject constructor(
     }
 
     private fun createNetworkFilters(): List<EarnFilterNetwork> {
-        val selectedFilter = state.value.selectedNetworkFilter
+        val selectedFilter = state.value.earnFilterUM.selectedNetworkFilter
         return buildList {
             add(
                 EarnFilterNetwork.AllNetworks(
@@ -277,11 +289,14 @@ internal class EarnModel @Inject constructor(
         modelScope.launch(dispatchers.default) {
             setEarnFilterUseCase(
                 EarnFilter(
-                    earnFilterNetwork = EarnFilterNetworkUMConverter().convert(state.value.selectedNetworkFilter),
+                    earnFilterNetwork = EarnFilterNetworkUMConverter().convert(
+                        value = state.value.earnFilterUM.selectedNetworkFilter,
+                    ),
                     earnFilterType = type,
                 ),
             )
             bottomSheetNavigation.dismiss()
+            reloadEarnNetworks()
         }
     }
 
@@ -290,7 +305,7 @@ internal class EarnModel @Inject constructor(
             setEarnFilterUseCase(
                 EarnFilter(
                     earnFilterNetwork = filter,
-                    earnFilterType = EarnFilterTypeUMConverter().convert(state.value.selectedTypeFilter),
+                    earnFilterType = EarnFilterTypeUMConverter().convert(state.value.earnFilterUM.selectedTypeFilter),
                 ),
             )
         }
@@ -319,11 +334,13 @@ internal class EarnModel @Inject constructor(
             is ApiResponseError.HttpException -> error.code.numericCode to error.message.orEmpty()
             else -> null to ""
         }
-        analyticsEventHandler.send(
-            EarnAnalyticsEvent.BestOpportunitiesLoadError(
-                code = code,
-                message = message,
-            ),
-        )
+        if (state.value.bestOpportunities !is EarnBestOpportunitiesUM.Error) {
+            analyticsEventHandler.send(
+                EarnAnalyticsEvent.BestOpportunitiesLoadError(
+                    code = code,
+                    message = message,
+                ),
+            )
+        }
     }
 }
