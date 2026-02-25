@@ -3,7 +3,7 @@ package com.tangem.tap.network.auth
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.Provider
@@ -11,7 +11,7 @@ import com.tangem.utils.ProviderSuspend
 
 internal class DefaultAuthProvider(
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
 ) : AuthProvider {
 
     override suspend fun getCardPublicKey(): String {
@@ -47,11 +47,11 @@ internal class DefaultAuthProvider(
                 ApiEnvironment.DEV,
                 ApiEnvironment.DEV_2,
                 ApiEnvironment.DEV_3,
-                -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
+                -> environmentConfig.tangemApiKeyDev
                 ApiEnvironment.STAGE_2,
                 ApiEnvironment.STAGE,
-                -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
-                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
+                -> environmentConfig.tangemApiKeyStage
+                ApiEnvironment.PROD -> environmentConfig.tangemApiKey
             } ?: error("No tangem tech api config provided")
         }
     }
@@ -60,8 +60,8 @@ internal class DefaultAuthProvider(
         return ProviderSuspend {
             when (apiEnvironment.invoke()) {
                 ApiEnvironment.DEV,
-                -> environmentConfigStorage.getConfigSync().gaslessTxApiKeyDev
-                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().gaslessTxApiKey
+                -> environmentConfig.gaslessTxApiKeyDev
+                ApiEnvironment.PROD -> environmentConfig.gaslessTxApiKey
                 else -> error("No gasless tx api config provided for ${apiEnvironment.invoke()}")
             } ?: error("No gasless tx api config provided")
         }
