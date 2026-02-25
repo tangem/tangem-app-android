@@ -1,13 +1,13 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
 
 internal sealed class TangemPay(
+    private val environmentConfig: EnvironmentConfig,
     private val appVersionProvider: AppVersionProvider,
-    private val environmentConfigStorage: EnvironmentConfigStorage,
 ) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = getInitialEnvironment()
@@ -61,8 +61,8 @@ internal sealed class TangemPay(
         return when (apiEnvironment) {
             ApiEnvironment.MOCK,
             ApiEnvironment.DEV,
-            -> environmentConfigStorage.getConfigSync().bffStaticTokenDev
-            ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().bffStaticToken
+            -> environmentConfig.bffStaticTokenDev
+            ApiEnvironment.PROD -> environmentConfig.bffStaticToken
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
             ApiEnvironment.DEV_2,
@@ -72,9 +72,9 @@ internal sealed class TangemPay(
     }
 
     class Bff(
+        environmentConfig: EnvironmentConfig,
         appVersionProvider: AppVersionProvider,
-        environmentConfigStorage: EnvironmentConfigStorage,
-    ) : TangemPay(appVersionProvider, environmentConfigStorage) {
+    ) : TangemPay(environmentConfig, appVersionProvider) {
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/bff-v2/"
@@ -90,9 +90,9 @@ internal sealed class TangemPay(
     }
 
     class Auth(
+        environmentConfig: EnvironmentConfig,
         appVersionProvider: AppVersionProvider,
-        environmentConfigStorage: EnvironmentConfigStorage,
-    ) : TangemPay(appVersionProvider, environmentConfigStorage) {
+    ) : TangemPay(environmentConfig, appVersionProvider) {
         override fun getBaseUrl(apiEnvironment: ApiEnvironment): String {
             return when (apiEnvironment) {
                 ApiEnvironment.DEV -> "https://api.dev.us.paera.com/"
