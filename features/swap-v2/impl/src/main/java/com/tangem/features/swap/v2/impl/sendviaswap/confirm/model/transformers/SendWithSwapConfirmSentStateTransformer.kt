@@ -20,6 +20,9 @@ internal class SendWithSwapConfirmSentStateTransformer(
                 txUrl = txUrl,
                 provider = provider,
                 swapDataModel = swapDataModel,
+                amountUM = prevState.amountUM,
+                destinationUM = prevState.destinationUM,
+                feeSelectorUM = prevState.feeSelectorUM,
             ),
         )
     }
