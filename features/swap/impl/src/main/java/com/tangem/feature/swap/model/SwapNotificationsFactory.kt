@@ -64,9 +64,9 @@ internal class SwapNotificationsFactory(
         )
     }
 
-    fun getSwapNotSupportedNotifications(tokenName: String): ImmutableList<NotificationUM> {
+    fun getSwapNotSupportedNotifications(): ImmutableList<NotificationUM> {
         return persistentListOf(
-            SwapNotificationUM.Warning.SwapNotSupported(tokenName),
+            SwapNotificationUM.Warning.SwapNotSupported,
         )
     }
 
