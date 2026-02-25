@@ -129,8 +129,8 @@ internal class EarnModel @Inject constructor(
                 onClearFiltersClick = ::onClearFiltersClick,
             ) to error
         }.onEach { (bestOpportunitiesState, error) ->
-            stateController.update(UpdateBestOpportunitiesStateTransformer(bestOpportunitiesState))
             error?.let(::handleBestOpportunitiesErrorAnalytics)
+            stateController.update(UpdateBestOpportunitiesStateTransformer(bestOpportunitiesState))
         }.launchIn(modelScope)
     }
 
