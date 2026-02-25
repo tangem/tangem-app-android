@@ -7,9 +7,7 @@ import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import timber.log.Timber
 import java.math.BigDecimal
@@ -48,6 +46,20 @@ internal class SetTokenListErrorTransformer(
             is TokenListError.DataError,
             is TokenListError.UnableToSortTokenList,
             -> prevState
+        }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return when (walletUM) {
+            is WalletUM.Content -> {
+                walletUM.copy(
+                    tokensListUM = WalletTokensListUM.Empty,
+                )
+            }
+            is WalletUM.Locked -> {
+                Timber.w("Impossible to load tokens list for locked wallet")
+                walletUM
+            }
         }
     }
 
