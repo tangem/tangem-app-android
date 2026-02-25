@@ -94,9 +94,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                             currencyStatus.currency.network.backendId == pair.to.network
                     }
 
-                val mappedProviders = pair.providers.mapNotNull {
-                    expressProviders[it.providerId]
-                }.filterYieldSupplyProvider(statusFrom)
+                val mappedProviders = pair.providers
+                    .filterNot { it.hasOnlyFixedRateType() }
+                    .mapNotNull { expressProviders[it.providerId] }
+                    .filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
                     SwapPairModel(
@@ -151,9 +152,10 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 val currencyStatusFrom = createSendWithSwapCryptoCurrencyStatus(statusFromDeferred.await())
                 val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
 
-                val mappedProvider = pair.providers.mapNotNull {
-                    mappedProviders[it.providerId]
-                }.filterYieldSupplyProvider(currencyStatusFrom)
+                val mappedProvider = pair.providers
+                    .filterNot { it.hasOnlyFixedRateType() }
+                    .mapNotNull { mappedProviders[it.providerId] }
+                    .filterYieldSupplyProvider(currencyStatusFrom)
 
                 if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
                     SwapPairModel(
