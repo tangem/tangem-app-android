@@ -1,4 +1,6 @@
+import com.tangem.plugin.configuration.configurations.EnvironmentConfigGenerator
 import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+import com.tangem.plugin.configuration.model.BuildType
 
 plugins {
     alias(deps.plugins.android.library)
@@ -10,12 +12,51 @@ plugins {
     id("configuration")
 }
 
+abstract class GenerateEnvironmentConfigTask : DefaultTask() {
+
+    @get:InputFile
+    abstract val configFile: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val input = configFile.get().asFile
+        require(input.exists()) { "Config file not found: ${input.absolutePath}" }
+        logger.lifecycle("Generating EnvironmentConfig from ${input.name}")
+        EnvironmentConfigGenerator.generate(input, outputDir.get().asFile)
+    }
+}
+
 android {
     namespace = "com.tangem.datasource"
+
+    sourceSets["main"].java.srcDir(layout.buildDirectory.dir("generated/source/environment-config"))
 
     room {
         schemaDirectory("$projectDir/schemas")
     }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val buildType = BuildType.values().firstOrNull { it.id == variant.buildType } ?: BuildType.Debug
+        val configFile = rootProject.file(
+            "app/src/main/assets/tangem-app-config/config_${buildType.environment}.json",
+        )
+
+        tasks.register<GenerateEnvironmentConfigTask>(
+            "generateEnvironmentConfig${variant.name.replaceFirstChar { it.uppercaseChar() }}",
+        ) {
+            this.configFile.set(configFile)
+            outputDir.set(layout.buildDirectory.dir("generated/source/environment-config"))
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn(tasks.matching { it.name.startsWith("generateEnvironmentConfig") })
 }
 
 tasks.withType<Test>().configureEach {
