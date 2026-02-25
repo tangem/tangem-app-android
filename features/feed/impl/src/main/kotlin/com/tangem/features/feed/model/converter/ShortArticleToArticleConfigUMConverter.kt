@@ -1,6 +1,6 @@
 package com.tangem.features.feed.model.converter
 
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
