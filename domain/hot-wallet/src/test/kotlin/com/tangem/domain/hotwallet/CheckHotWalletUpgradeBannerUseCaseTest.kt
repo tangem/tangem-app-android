@@ -23,7 +23,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     @Test
     fun `GIVEN creation timestamp is null WHEN invoke THEN set timestamp and return false`() = runTest {
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns null
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -31,6 +30,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -42,7 +42,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN shouldShowUpgradeBanner is true and hasBalance WHEN invoke THEN return true`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -50,6 +49,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = true,
             shouldShowUpgradeBanner = true,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -60,7 +60,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN shouldShowUpgradeBanner is true WHEN invoke THEN return true regardless of balance`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -68,6 +67,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = true,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -79,7 +79,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(60)
         val closureTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(31)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns closureTimestamp
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -87,6 +86,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = true,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = closureTimestamp,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -99,7 +99,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(60)
             val closureTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(15)
             coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-            coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns closureTimestamp
             coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
             every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -107,7 +106,8 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
                 walletId = walletId,
                 hasBalance = true,
                 shouldShowUpgradeBanner = false,
-                )
+                closureTimestamp = closureTimestamp,
+            )
 
             assertThat(result).isInstanceOf(Either.Right::class.java)
             assertThat((result as Either.Right).value).isFalse()
@@ -117,7 +117,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN no flags set and no closure and 30 days since creation WHEN invoke THEN return true`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(31)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -125,6 +124,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -135,7 +135,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN no flags set but less than 30 days since creation WHEN invoke THEN return false`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(15)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -143,6 +142,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -154,7 +154,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(60)
         val closureTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns closureTimestamp
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -162,6 +161,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = closureTimestamp,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -172,7 +172,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN first top-up detected WHEN invoke THEN return false and mark session`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -180,6 +179,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = true,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -194,7 +194,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN first top-up detected this session WHEN invoke THEN return false`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns true
 
@@ -202,6 +201,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = true,
             shouldShowUpgradeBanner = true,
+            closureTimestamp = null,
         )
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
@@ -212,7 +212,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN already had first top-up WHEN invoke with balance THEN do not set flags again`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(5)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns true
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -220,6 +219,7 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = true,
             shouldShowUpgradeBanner = true,
+            closureTimestamp = null,
         )
 
         coVerify(exactly = 0) { hotWalletRepository.setHasHadFirstTopUp(any(), any()) }
@@ -230,7 +230,6 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
     fun `GIVEN multiple re-emissions with same state WHEN invoke THEN return same result`() = runTest {
         val creationTimestamp = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(31)
         coEvery { hotWalletRepository.getWalletCreationTimestamp(walletId) } returns creationTimestamp
-        coEvery { hotWalletRepository.getUpgradeBannerClosureTimestamp(walletId) } returns null
         coEvery { hotWalletRepository.hasHadFirstTopUp(walletId) } returns false
         every { hotWalletRepository.isFirstTopUpDetectedThisSession(walletId) } returns false
 
@@ -238,16 +237,19 @@ class CheckHotWalletUpgradeBannerUseCaseTest {
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
         val result2 = useCase(
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
         val result3 = useCase(
             walletId = walletId,
             hasBalance = false,
             shouldShowUpgradeBanner = false,
+            closureTimestamp = null,
         )
 
         assertThat((result1 as Either.Right).value).isTrue()
