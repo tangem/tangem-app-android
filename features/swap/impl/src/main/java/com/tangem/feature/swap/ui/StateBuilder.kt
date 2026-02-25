@@ -204,12 +204,15 @@ internal class StateBuilder(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrencyStatus,
         toToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toAccount: Account.CryptoPortfolio?,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
+                    accountTitleUM = getFromCardAccountTitle(fromAccount),
+                ),
                 amountTextFieldValue = null,
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 token = fromToken,
@@ -240,7 +243,7 @@ internal class StateBuilder(
                 networkIconRes = getActiveIconRes(toToken.currency.network.rawId),
                 isBalanceHidden = isBalanceHiddenProvider(),
             ),
-            notifications = notificationsFactory.getSwapNotSupportedNotifications(toToken.currency.name),
+            notifications = notificationsFactory.getSwapNotSupportedNotifications(),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
                 walletInteractionIcon = walletInterationIcon(userWalletProvider()),
