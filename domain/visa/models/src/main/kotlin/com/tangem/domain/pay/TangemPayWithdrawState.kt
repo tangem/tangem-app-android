@@ -3,6 +3,7 @@ package com.tangem.domain.pay
 data class TangemPayWithdrawState(
     val orderId: String,
     val exchangeData: TangemPayWithdrawExchangeState?,
+    val txHash: String? = null,
 )
 
 data class TangemPayWithdrawExchangeState(
