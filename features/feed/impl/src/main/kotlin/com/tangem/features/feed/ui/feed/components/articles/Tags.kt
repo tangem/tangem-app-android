@@ -1,4 +1,4 @@
-package com.tangem.common.ui.news
+package com.tangem.features.feed.ui.feed.components.articles
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
