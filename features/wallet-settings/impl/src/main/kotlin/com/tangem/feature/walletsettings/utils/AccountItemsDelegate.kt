@@ -145,7 +145,7 @@ internal class AccountItemsDelegate @Inject constructor(
         return this.sortedBy { positionByAccountId[it.id] ?: Int.MAX_VALUE }
     }
 
-    private fun openAccountDetails(account: Account) {
+    private fun openAccountDetails(account: Account.CryptoPortfolio) {
         router.push(AppRoute.AccountDetails(account))
     }
 
