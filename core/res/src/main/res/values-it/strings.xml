@@ -98,6 +98,7 @@
   <string name="tangem_pay_unfreeze_card_failed">Impossibile sbloccare la carta. Riprova più tardi.</string>
   <string name="tangem_pay_unfreeze_card_success">La tua carta è sbloccata.</string>
   <string name="tangem_pay_withdrawal">Prelievo</string>
+  <string name="tangempay_cancel_kyc">Nascondi verifica dalla schermata</string>
   <string name="tangempay_card_details_add_funds">Aggiungi fondi</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opzioni di ricarica</string>
   <string name="tangempay_card_details_card_number">Numero carta</string>
@@ -151,10 +152,14 @@
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_failed_description">Non siamo riusciti a verificare il tuo profilo. Per domande, contatta il supporto.</string>
   <string name="tangempay_kyc_failed_title">Purtroppo non siamo riusciti a verificare la tua identità</string>
+  <string name="tangempay_kyc_has_failed">KYC rifiutato</string>
   <string name="tangempay_kyc_in_progress">KYC in corso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Visualizza stato</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in corso per Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">I documenti vengono solitamente verificati automaticamente entro 5 minuti. In rari casi, se è necessaria una revisione manuale, il processo può richiedere fino a 48 ore.</string>
+  <string name="tangempay_kyc_rejected">Rifiutato</string>
+  <string name="tangempay_kyc_rejected_description">Spiacenti, non siamo riusciti a verificare</string>
+  <string name="tangempay_kyc_rejected_description_span">la tua identità.</string>
   <string name="tangempay_onboarding_banner_description">Ottieni la tua carta virtuale Tangem Visa gratuita</string>
   <string name="tangempay_onboarding_banner_title">Usa USDC per i pagamenti quotidiani</string>
   <string name="tangempay_onboarding_get_card_button_text">Ottieni carta</string>
