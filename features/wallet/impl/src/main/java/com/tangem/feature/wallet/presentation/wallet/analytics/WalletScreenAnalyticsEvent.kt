@@ -33,7 +33,7 @@ sealed class WalletScreenAnalyticsEvent {
                 put(AnalyticsParam.BALANCE, balance.value)
                 tokensCount?.let { put(AnalyticsParam.TOKENS_COUNT, it.toString()) }
             },
-        )
+        ), AppsFlyerIncludedEvent
 
         class TokenBalance(balance: AnalyticsParam.EmptyFull, token: String) : Basic(
             event = "Token Balance",
