@@ -30,7 +30,7 @@ internal class WalletClickIntents @Inject constructor(
     private val currencyActionsClickIntentsImplementor: WalletCurrencyActionsClickIntentsImplementor,
     private val contentClickIntentsImplementor: WalletContentClickIntentsImplementor,
     private val pushPermissionClickIntentsImplementor: WalletPushPermissionClickIntentsImplementor,
-    private val stateHolder: WalletStateController,
+    private val stateController: WalletStateController,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val selectWalletUseCase: SelectWalletUseCase,
@@ -62,7 +62,7 @@ internal class WalletClickIntents @Inject constructor(
 
     fun onWalletChange(index: Int, onlyState: Boolean) {
         if (onlyState) {
-            stateHolder.update { it.copy(selectedWalletIndex = index) }
+            stateController.update { it.copy(selectedWalletIndex = index) }
             return
         }
 
@@ -70,27 +70,23 @@ internal class WalletClickIntents @Inject constructor(
             launch { neverToShowWalletsScrollPreview() }
 
             val maybeUserWallet = selectWalletUseCase(
-                userWalletId = stateHolder.value.wallets[index].walletCardState.id,
+                userWalletId = stateController.value.wallets[index].walletCardState.id,
             )
 
-            stateHolder.update { it.copy(selectedWalletIndex = index) }
+            stateController.update { it.copy(selectedWalletIndex = index) }
 
-            maybeUserWallet.onRight {
-                if (!it.isLocked) {
-                    launch { walletContentFetcher(userWalletId = it.walletId) }
+            maybeUserWallet.onRight { userWallet ->
+                if (!userWallet.isLocked) {
+                    launch { walletContentFetcher(userWalletId = userWallet.walletId) }
                 }
 
-                walletScreenContentLoader.load(
-                    userWallet = it,
-                    clickIntents = this@WalletClickIntents,
-                    coroutineScope = modelScope,
-                )
+                walletScreenContentLoader.load(userWallet = userWallet, coroutineScope = modelScope)
             }
         }
     }
 
     fun onRefreshSwipe(showRefreshState: Boolean) {
-        when (stateHolder.getSelectedWallet()) {
+        when (stateController.getSelectedWallet()) {
             is WalletState.MultiCurrency.Content -> {
                 refreshMultiCurrencyContent(showRefreshState)
             }
@@ -111,7 +107,7 @@ internal class WalletClickIntents @Inject constructor(
     private fun refreshMultiCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
-        stateHolder.update(
+        stateController.update(
             SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
@@ -126,7 +122,7 @@ internal class WalletClickIntents @Inject constructor(
             }
                 .awaitAll()
 
-            stateHolder.update(
+            stateController.update(
                 SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = false),
             )
         }
@@ -137,7 +133,7 @@ internal class WalletClickIntents @Inject constructor(
     private fun refreshSingleCurrencyContent(showRefreshState: Boolean) {
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
-        stateHolder.update(
+        stateController.update(
             SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
@@ -147,12 +143,11 @@ internal class WalletClickIntents @Inject constructor(
             onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
             walletScreenContentLoader.load(
                 userWallet = userWallet,
-                clickIntents = this@WalletClickIntents,
                 isRefresh = true,
                 coroutineScope = modelScope,
             )
 
-            stateHolder.update(
+            stateController.update(
                 SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = false),
             )
         }
