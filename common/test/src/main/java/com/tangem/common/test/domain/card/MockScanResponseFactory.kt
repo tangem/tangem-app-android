@@ -73,7 +73,7 @@ object MockScanResponseFactory {
                     CardDTO.Wallet(
                         CardWallet(
                             publicKey = curve.name.toByteArray(), // IMPORTANT: public key must equal to curve name
-                            chainCode = null,
+                            chainCode = ByteArray(32), // chainCode must not be null for HD wallets
                             curve = curve,
                             settings = createSettings(),
                             totalSignedHashes = null,
