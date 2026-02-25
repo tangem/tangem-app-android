@@ -7,6 +7,7 @@ import com.squareup.moshi.JsonClass
 data class WithdrawStoreData(
     @Json(name = "orderId") val orderId: String,
     @Json(name = "exchangeData") val exchangeData: ExchangeStoreData?,
+    @Json(name = "txHash") val txHash: String?,
 )
 
 @JsonClass(generateAdapter = false)
