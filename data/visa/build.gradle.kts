@@ -38,9 +38,6 @@ dependencies {
     implementation(projects.domain.common)
     implementation(projects.features.swap.domain)
 
-    /** Feature API - remove after removing [HotWalletFeatureToggles] */
-    implementation(projects.features.hotWallet.api)
-
 
     /** Project - Utils */
     implementation(projects.core.utils)
@@ -51,6 +48,7 @@ dependencies {
     implementation(projects.libs.visa)
 
     /** Libs - Other */
+    implementation(deps.androidx.datastore)
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.arrow.fx)
@@ -68,6 +66,6 @@ dependencies {
     implementation(projects.libs.tangemSdkApi)
 
     /** DI */
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 }
