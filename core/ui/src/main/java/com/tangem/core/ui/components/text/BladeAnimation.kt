@@ -45,18 +45,32 @@ fun TextStyle.applyBladeBrush(isEnabled: Boolean, textColor: Color): TextStyle {
                 override fun createShader(size: Size): Shader {
                     val center = Offset(size.width / 2f, size.height / 2f)
                     val diagonal = sqrt(size.width * size.width + size.height * size.height)
-                    val direction = Offset(x = 1f, y = 0.5f)
-                    val halfDist = diagonal / 2f
-                    val baseStart = center - direction * halfDist
-                    val baseEnd = center + direction * halfDist
-                    val shift = direction * offset * diagonal
+                    // Subtle diagonal angle, similar to iOS shimmer
+                    val direction = Offset(x = 1f, y = 0.3f)
 
+                    // Half-width of the blob (80% of diagonal total — wide, soft sweep)
+                    val bandHalf = diagonal * 0.40f
+
+                    // Sweep the highlight center from left-of-element to right-of-element.
+                    // offset 0..1 maps to a full pass including off-screen padding on both sides.
+                    val shift = direction * ((offset - 0.5f) * diagonal * 1.5f)
+                    val highlightCenter = center + shift
+
+                    // Full color text with a wide, gradual low-alpha dip sweeping left → right
                     return LinearGradientShader(
-                        colors = listOf(textColor.copy(alpha = 0.2f), textColor),
-                        from = baseStart + shift,
-                        to = baseEnd + shift,
-                        colorStops = listOf(0.0f, 0.15f),
-                        tileMode = TileMode.Mirror,
+                        colors = listOf(
+                            textColor,
+                            textColor.copy(alpha = 0.75f),
+                            textColor.copy(alpha = 0.45f),
+                            textColor.copy(alpha = 0.3f),
+                            textColor.copy(alpha = 0.45f),
+                            textColor.copy(alpha = 0.75f),
+                            textColor,
+                        ),
+                        from = highlightCenter - direction * bandHalf,
+                        to = highlightCenter + direction * bandHalf,
+                        colorStops = listOf(0f, 0.15f, 0.35f, 0.5f, 0.65f, 0.85f, 1f),
+                        tileMode = TileMode.Clamp,
                     )
                 }
             }
