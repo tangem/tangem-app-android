@@ -30,8 +30,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
-import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -46,14 +44,12 @@ import kotlinx.coroutines.launch
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
-    marketsEntryComponentFactory: MarketsEntryComponent.Factory,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
-    private val feedFeatureToggle: FeedFeatureToggle,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -64,9 +60,6 @@ internal class WalletComponent @AssistedInject constructor(
             context = child("feedEntryComponent"),
             entryRoute = null,
         )
-    }
-    private val marketsEntryComponent by lazy {
-        marketsEntryComponentFactory.create(child("marketsEntryComponent"))
     }
 
     init {
@@ -194,19 +187,11 @@ internal class WalletComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        if (feedFeatureToggle.isFeedEnabled) {
-            feedEntryComponent.BottomSheetContent(
-                bottomSheetState = bottomSheetState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                modifier = modifier,
-            )
-        } else {
-            marketsEntryComponent.BottomSheetContent(
-                bottomSheetState = bottomSheetState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                modifier = modifier,
-            )
-        }
+        feedEntryComponent.BottomSheetContent(
+            bottomSheetState = bottomSheetState,
+            onHeaderSizeChange = onHeaderSizeChange,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory
