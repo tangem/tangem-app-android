@@ -110,12 +110,15 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             val storeData = TangemPayWithdrawState(
                 orderId = orderId,
                 exchangeData = exchangeData,
+                txHash = withdrawTxHash,
             )
             if (order != null && !withdrawTxHash.isNullOrEmpty()) {
-                finalizeWithdraw(userWallet = userWallet, txHash = withdrawTxHash, exchangeData = exchangeData)
-                    .onLeft {
-                        tangemPayStorage.storeWithdrawOrder(userWalletId = userWallet.walletId, data = storeData)
-                    }
+                finalizeWithdraw(
+                    userWallet = userWallet,
+                    txHash = withdrawTxHash,
+                    exchangeData = exchangeData,
+                    orderId = orderId,
+                )
             } else {
                 tangemPayStorage.storeWithdrawOrder(userWalletId = userWallet.walletId, data = storeData)
             }
@@ -124,6 +127,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
 
     private suspend fun finalizeWithdraw(
         userWallet: UserWallet,
+        orderId: String,
         txHash: String,
         exchangeData: TangemPayWithdrawExchangeState,
     ): Either<ExpressDataError, Unit> {
@@ -135,10 +139,9 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             payInAddress = exchangeData.payInAddress,
             txHash = txHash,
             payInExtraId = exchangeData.payInExtraId,
-        )
-            .onLeft { error ->
-                Timber.tag(TAG).e(error.toString())
-            }
+        ).also {
+            tangemPayStorage.deleteWithdrawOrder(userWallet.walletId, orderId)
+        }
     }
 
     override suspend fun hasWithdrawOrder(userWallet: UserWallet): Boolean {
@@ -168,19 +171,23 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
 
     private suspend fun pollWithdrawOrderIfNeeds(userWallet: UserWallet, data: TangemPayWithdrawState) {
         val exchangeData = data.exchangeData ?: return
+        val storedHash = data.txHash
         val orderId = data.orderId
-        val order = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
-            ?: return
-        val txHash = order.withdrawTxHash
+        val txHash = if (storedHash.isNullOrEmpty()) {
+            val order = orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId).getOrNull()
+                ?: return
+            order.withdrawTxHash.also { fetchedHash ->
+                tangemPayStorage.storeWithdrawOrder(
+                    userWalletId = userWallet.walletId,
+                    data = data.copy(txHash = fetchedHash),
+                )
+            }
+        } else {
+            storedHash
+        }
 
         if (!txHash.isNullOrEmpty()) {
-            finalizeWithdraw(userWallet = userWallet, txHash = txHash, exchangeData = exchangeData)
-                .onRight {
-                    tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
-                }
-                .onLeft {
-                    startWithdrawOrderPolling(userWallet = userWallet, orderId = orderId, exchangeData = exchangeData)
-                }
+            finalizeWithdraw(userWallet = userWallet, txHash = txHash, exchangeData = exchangeData, orderId = orderId)
         } else {
             startWithdrawOrderPolling(userWallet = userWallet, orderId = orderId, exchangeData = exchangeData)
         }
@@ -204,20 +211,14 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                             .onRight { order ->
                                 val txHash = order.withdrawTxHash
                                 if (txHash.isNullOrEmpty()) return@onRight
-                                finalizeWithdraw(userWallet = userWallet, txHash = txHash, exchangeData = exchangeData)
-                                    .onRight {
-                                        tangemPayStorage.deleteWithdrawOrder(
-                                            userWalletId = userWallet.walletId,
-                                            orderId = orderId,
-                                        )
-                                        withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
-                                        return@launch
-                                    }
-                                    .onLeft { error ->
-                                        Timber.tag(TAG).e("finalizeWithdraw error: $error")
-                                        withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
-                                        return@launch
-                                    }
+                                finalizeWithdraw(
+                                    userWallet = userWallet,
+                                    txHash = txHash,
+                                    exchangeData = exchangeData,
+                                    orderId = orderId,
+                                )
+                                withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
+                                return@launch
                             }
                             .onLeft { error ->
                                 Timber.tag(TAG).e("getOrderData error ${error.errorCode}")
