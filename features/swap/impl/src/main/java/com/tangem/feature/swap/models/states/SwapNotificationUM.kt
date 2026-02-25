@@ -132,15 +132,12 @@ internal object SwapNotificationUM {
             ),
         )
 
-        data class SwapNotSupported(
-            val tokenName: String,
-        ) : Warning(
+        data object SwapNotSupported : Warning(
             title = resourceReference(
-                id = com.tangem.feature.swap.presentation.R.string.express_swap_not_supported_title,
-                formatArgs = wrappedList(tokenName),
+                id = com.tangem.feature.swap.presentation.R.string.warning_express_unsupported_pair_title,
             ),
             subtitle = resourceReference(
-                com.tangem.feature.swap.presentation.R.string.express_swap_not_supported_text,
+                com.tangem.feature.swap.presentation.R.string.warning_express_unsupported_pair_description,
             ),
         )
 
