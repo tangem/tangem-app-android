@@ -23,7 +23,7 @@ class PolkadotWarningsTest : BaseTestCase() {
     private val tokenName = "Polkadot"
     private val amountToLeaveLessThanDeposit = "1.299"
     private val amountToLeaveGreaterThanDeposit = "0.2"
-    private val depositAmount = "DOT 1.00"
+    private val depositAmount = "DOT 0.01"
 
     private val warningTitle = getResourceString(R.string.send_notification_existential_deposit_title)
     private val warningMessage = getResourceString(

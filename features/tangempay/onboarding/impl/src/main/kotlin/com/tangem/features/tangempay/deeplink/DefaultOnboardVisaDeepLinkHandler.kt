@@ -3,7 +3,6 @@ package com.tangem.features.tangempay.deeplink
 import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -11,18 +10,13 @@ import dagger.assisted.AssistedInject
 internal class DefaultOnboardVisaDeepLinkHandler @AssistedInject constructor(
     @Assisted uri: Uri,
     appRouter: AppRouter,
-    tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : OnboardVisaDeepLinkHandler {
 
     init {
-        if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            val mode = AppRoute.TangemPayOnboarding.Mode.Deeplink(
-                deeplink = uri.toString(),
-            )
-            appRouter.push(AppRoute.TangemPayOnboarding(mode))
-        } else {
-            appRouter.push(AppRoute.Home())
-        }
+        val mode = AppRoute.TangemPayOnboarding.Mode.Deeplink(
+            deeplink = uri.toString(),
+        )
+        appRouter.push(AppRoute.TangemPayOnboarding(mode))
     }
 
     @AssistedFactory
