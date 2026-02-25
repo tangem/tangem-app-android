@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
@@ -19,13 +18,16 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -100,7 +102,6 @@ import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
-import com.tangem.core.ui.R
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
@@ -117,12 +118,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -311,17 +308,13 @@ internal class SwapModel @Inject constructor(
             modelScope.launch {
                 bottomSheetNavigation.dismiss()
                 analyticsEventHandler.send(
-                    SwapEvents.ChooseTokenScreenResult(
-                        isTokenChosen = true,
-                        token = addedToken.symbol,
-                        source = SwapEvents.ChooseTokenScreenResult.SOURCE_MARKETS,
-                        isSearched = searchQueryState.value.isNotEmpty(),
-                    ),
+                    SwapEvents.ChooseTokenScreenResult(isTokenChosen = true, token = addedToken.symbol),
                 )
                 analyticsEventHandler.send(
-                    SwapEvents.TokenAdded(
+                    SwapAnalyticsEvent.TokenSelected(
                         token = addedToken.symbol,
-                        blockchain = addedToken.network.name,
+                        source = ScreensSources.Markets,
+                        isSearched = searchQueryState.value.isNotEmpty(),
                     ),
                 )
                 searchQueryState.value = ""
@@ -530,14 +523,7 @@ internal class SwapModel @Inject constructor(
                     dataState.fromCryptoCurrency
                 }
 
-                fromCryptoCurrency?.let { cryptoCurrency ->
-                    dataState = dataState.copy(
-                        feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrency,
-                        ).getOrNull(),
-                    )
-                }
+                if (fromCryptoCurrency != null) updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
@@ -772,6 +758,15 @@ internal class SwapModel @Inject constructor(
                 updateFeeBlock = updateFeeBlock,
             )
         }
+    }
+
+    private suspend fun updateFeePaidCryptoCurrencyFor(fromToken: CryptoCurrencyStatus) {
+        dataState = dataState.copy(
+            feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = fromToken,
+            ).getOrNull(),
+        )
     }
 
     private fun loadQuotesTask(
@@ -1332,10 +1327,13 @@ internal class SwapModel @Inject constructor(
 
         foundToken?.currency?.symbol?.let { symbol ->
             analyticsEventHandler.send(
-                SwapEvents.ChooseTokenScreenResult(
-                    isTokenChosen = true,
+                SwapEvents.ChooseTokenScreenResult(isTokenChosen = true, token = symbol),
+            )
+
+            analyticsEventHandler.send(
+                SwapAnalyticsEvent.TokenSelected(
                     token = symbol,
-                    source = SwapEvents.ChooseTokenScreenResult.SOURCE_PORTFOLIO,
+                    source = ScreensSources.Portfolio,
                     isSearched = searchQueryState.value.isNotEmpty(),
                 ),
             )
@@ -1399,6 +1397,9 @@ internal class SwapModel @Inject constructor(
                 toAccount = toAccount,
                 selectedProvider = null,
             )
+            modelScope.launch {
+                updateFeePaidCryptoCurrencyFor(fromToken)
+            }
             startLoadingQuotes(
                 fromToken = fromToken,
                 fromAccount = fromAccount,
@@ -1541,6 +1542,7 @@ internal class SwapModel @Inject constructor(
                     toAccount = newToAccount,
                 )
                 isOrderReversed = !isOrderReversed
+                updateFeePaidCryptoCurrencyFor(newFromToken)
                 dataState.tokensDataState?.let { tokensDataState ->
                     updateTokensState(tokensDataState)
                 }
@@ -2290,7 +2292,7 @@ internal class SwapModel @Inject constructor(
                 .create(
                     scope = modelScope,
                     token = param,
-                    analyticsParams = null,
+                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
                 ).apply {
                     setTokenNetworks(networks)
                 }
@@ -2372,6 +2374,8 @@ internal class SwapModel @Inject constructor(
             FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true),
         )
 
+        override val forceUpdateState = MutableSharedFlow<FeeSelectorUM>()
+
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
@@ -2404,17 +2408,12 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onResult(newState: FeeSelectorUM) {
-            if (isPermissionNotificationShown()) {
-                state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                return
-            }
-
             if (newState is FeeSelectorUM.Error) {
-                state.value = newState.copy(isHidden = true)
+                modelScope.launch {
+                    forceUpdateState.emit(newState.copy(isHidden = true))
+                }
                 return
             }
-
-            state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
             val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
