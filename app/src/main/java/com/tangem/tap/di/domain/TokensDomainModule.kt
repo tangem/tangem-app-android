@@ -179,20 +179,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideToggleTokenListGroupingUseCase(
-        dispatchers: CoroutineDispatcherProvider,
-    ): ToggleTokenListGroupingUseCase {
-        return ToggleTokenListGroupingUseCase(dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
-        return ToggleTokenListSortingUseCase(dispatchers)
-    }
-
-    @Provides
-    @Singleton
     fun provideApplyTokenListSortingUseCase(
         currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
