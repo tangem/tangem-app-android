@@ -5,7 +5,6 @@ import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
@@ -45,7 +44,7 @@ import kotlinx.coroutines.flow.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList")
-internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
+internal class MarketsPortfolioDelegate @AssistedInject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val allAccountSupplier: MultiAccountStatusListSupplier,
@@ -106,10 +105,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     private fun addFirstTokenFlow(): Flow<MyPortfolioUM> = buttonState.map { state ->
         when (state) {
             MyPortfolioUM.Tokens.AddButtonState.Loading -> MyPortfolioUM.Loading
-            MyPortfolioUM.Tokens.AddButtonState.Available -> MyPortfolioUM.AddFirstToken(
-                onAddClick = onAddClick,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-            )
+            MyPortfolioUM.Tokens.AddButtonState.Available -> MyPortfolioUM.AddFirstToken(onAddClick = onAddClick)
             MyPortfolioUM.Tokens.AddButtonState.Unavailable -> MyPortfolioUM.Unavailable
         }
     }
@@ -314,7 +310,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
             tokenActionsHandler: TokenActionsHandler,
             buttonState: Flow<MyPortfolioUM.Tokens.AddButtonState>,
             onAddClick: () -> Unit,
-        ): NewMarketsPortfolioDelegate
+        ): MarketsPortfolioDelegate
     }
 }
 
