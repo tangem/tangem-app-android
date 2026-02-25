@@ -48,7 +48,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
         if (screenLifecycleProvider.isBackgroundState.value) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
 
-        if (totalFiatBalance is TotalFiatBalance.Loading) {
+        val isFlickering = totalFiatBalance is TotalFiatBalance.Loaded && totalFiatBalance.source == StatusSource.CACHE
+        if (totalFiatBalance is TotalFiatBalance.Loading || isFlickering) {
             startLoadingTraceIfNeeded(userWallet.walletId, flattenCurrencies)
             return
         }
@@ -57,12 +58,10 @@ internal class TokenListAnalyticsSender @Inject constructor(
             stopLoadingTraceIfNeeded(userWallet.walletId, totalFiatBalance)
         }
 
-        val currenciesStatuses = flattenCurrencies
-
-        sendBalanceLoadedEventIfNeeded(totalFiatBalance, currenciesStatuses)
-        sendToppedUpEventIfNeeded(userWallet, totalFiatBalance, currenciesStatuses)
-        sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
-        sendTokenBalancesIfNeeded(currenciesStatuses)
+        sendBalanceLoadedEventIfNeeded(totalFiatBalance, flattenCurrencies)
+        sendToppedUpEventIfNeeded(userWallet, totalFiatBalance, flattenCurrencies)
+        sendUnreachableNetworksEventIfNeeded(flattenCurrencies)
+        sendTokenBalancesIfNeeded(flattenCurrencies)
     }
 
     private suspend fun startLoadingTraceIfNeeded(
