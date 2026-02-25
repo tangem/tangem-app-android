@@ -1,38 +1,43 @@
 package com.tangem.feature.swap.models
 
-import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 
-sealed class SwapAlertUM : AlertUM {
+internal object SwapAlertUM {
 
-    data class GenericError(
-        override val onConfirmClick: (() -> Unit),
-        override val message: TextReference = resourceReference(R.string.common_unknown_error),
-    ) : SwapAlertUM() {
-        override val title: TextReference? = null
-        override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.common_support)
-    }
+    fun genericError(
+        onConfirmClick: () -> Unit,
+        message: TextReference = resourceReference(R.string.common_unknown_error),
+    ): DialogMessage = DialogMessage(
+        title = null,
+        message = message,
+        firstAction = EventMessageAction(
+            title = resourceReference(id = R.string.common_support),
+            onClick = onConfirmClick,
+        ),
+    )
 
-    data class ExpressErrorAlert(
-        override val message: TextReference = resourceReference(R.string.common_unknown_error),
-        override val onConfirmClick: (() -> Unit),
-    ) : SwapAlertUM() {
-        override val title: TextReference? = null
-        override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.common_support)
-    }
+    fun expressErrorAlert(
+        message: TextReference = resourceReference(R.string.common_unknown_error),
+        onConfirmClick: () -> Unit,
+    ): DialogMessage = DialogMessage(
+        title = null,
+        message = message,
+        firstAction = EventMessageAction(
+            title = resourceReference(id = R.string.common_support),
+            onClick = onConfirmClick,
+        ),
+    )
 
-    data class InformationAlert(
-        override val message: TextReference,
-        override val onConfirmClick: (() -> Unit),
-    ) : SwapAlertUM() {
-        override val title: TextReference = resourceReference(
-            R.string.swapping_alert_title,
-        )
-        override val confirmButtonText: TextReference =
-            resourceReference(id = R.string.common_ok)
-    }
+    fun informationAlert(message: TextReference, onConfirmClick: () -> Unit): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.swapping_alert_title),
+        message = message,
+        firstAction = EventMessageAction(
+            title = resourceReference(id = R.string.common_ok),
+            onClick = onConfirmClick,
+        ),
+    )
 }

@@ -23,7 +23,7 @@ class KusamaWarningsTest : BaseTestCase() {
     private val tokenName = "Kusama"
     private val amountToLeaveLessThanDeposit = "0.300333"
     private val amountToLeaveGreaterThanDeposit = "0.1"
-    private val depositAmount = "KSM 0.000333333333"
+    private val depositAmount = "KSM 0.000003333"
 
     private val warningTitle = getResourceString(R.string.send_notification_existential_deposit_title)
     private val warningMessage = getResourceString(

@@ -53,11 +53,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
-import com.tangem.tap.derivationsFinder
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
-import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
-import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
-import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.product.*
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
@@ -85,6 +81,7 @@ internal class DefaultTangemSdkManager(
     private val appFinisher: AppFinisher,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     dispatchers: CoroutineDispatcherProvider,
 ) : TangemSdkManager {
 
@@ -172,7 +169,7 @@ internal class DefaultTangemSdkManager(
             runTaskAsyncReturnOnMain(
                 runnable = ScanProductTask(
                     card = null,
-                    derivationsFinder = derivationsFinder,
+                    blockchainToDeriveFinder = blockchainToDeriveFinder,
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,

@@ -1,7 +1,6 @@
 package com.tangem.features.yield.supply.impl.common
 
-import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
-import com.tangem.common.ui.alerts.models.AlertDemoModeUM
+import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -24,6 +23,7 @@ class YieldSupplyAlertFactory @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
 ) {
 
     fun getGenericErrorState(onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
@@ -41,35 +41,17 @@ class YieldSupplyAlertFactory @Inject constructor(
     }
 
     fun getSendTransactionErrorState(
-        error: SendTransactionError?,
+        error: SendTransactionError,
         popBack: () -> Unit,
         onFailedTxEmailClick: (String) -> Unit,
     ) {
-        val transactionErrorAlertConverter = TransactionErrorAlertConverter(
+        val errorDialog = transactionErrorDialogFactory.create(
+            error = error,
             popBackStack = popBack,
             onFailedTxEmailClick = onFailedTxEmailClick,
-        )
+        ) ?: return
 
-        val errorAlert = error?.let { transactionErrorAlertConverter.convert(error) } ?: return
-        val onConfirmClick = errorAlert.onConfirmClick ?: return
-
-        uiMessageSender.send(
-            DialogMessage.Companion(
-                title = errorAlert.title,
-                message = errorAlert.message,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = errorAlert.confirmButtonText,
-                        onClick = onConfirmClick,
-                    )
-                },
-                secondActionBuilder = if (errorAlert !is AlertDemoModeUM) {
-                    { cancelAction() }
-                } else {
-                    null
-                },
-            ),
-        )
+        uiMessageSender.send(errorDialog)
     }
 
     suspend fun onFailedTxEmailClick(userWallet: UserWallet, cryptoCurrency: CryptoCurrency?, errorMessage: String?) {

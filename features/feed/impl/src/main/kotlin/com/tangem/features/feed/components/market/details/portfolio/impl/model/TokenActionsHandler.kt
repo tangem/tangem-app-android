@@ -2,9 +2,12 @@ package com.tangem.features.feed.components.market.details.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
@@ -12,9 +15,8 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.features.feed.components.market.details.portfolio.impl.loader.PortfolioData
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -30,7 +32,9 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-    private val reduxStateHolder: ReduxStateHolder,
+    private val getOfframpUrlUseCase: GetOfframpUrlUseCase,
+    private val urlOpener: UrlOpener,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val currentAppCurrency: Provider<AppCurrency>,
     @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
@@ -104,12 +108,13 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onSellClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        reduxStateHolder.dispatch(
-            TradeCryptoAction.Sell(
-                cryptoCurrencyStatus = cryptoCurrencyData.status,
-                appCurrencyCode = currentAppCurrency().code,
-            ),
-        )
+        getOfframpUrlUseCase(
+            cryptoCurrencyStatus = cryptoCurrencyData.status,
+            appCurrencyCode = currentAppCurrency().code,
+        ).onRight { url ->
+            urlOpener.openUrl(url)
+            analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+        }
     }
 
     private fun onExchangeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {

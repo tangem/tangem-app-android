@@ -1,7 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
-import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin
@@ -27,6 +28,7 @@ import javax.inject.Singleton
 internal class WalletContentFetcher @Inject constructor(
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) {
 
     private val fetchingJobMap = ConcurrentHashMap<UserWalletId, JobHolder>()
@@ -64,8 +66,12 @@ internal class WalletContentFetcher @Inject constructor(
             Timber.d("Start fetching for $userWalletId")
 
             val maybeResult = launch {
-                walletBalanceFetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
-                    .onLeft(Timber::e)
+                walletBalanceFetcher(
+                    params = WalletBalanceFetcher.Params(
+                        userWalletId = userWalletId,
+                        isPaymentAccountRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
+                    ),
+                ).onLeft(Timber::e)
             }
                 .saveInAndJoin(jobHolder)
 
