@@ -26,7 +26,6 @@ import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -277,9 +276,9 @@ internal class HotCryptoModel @Inject constructor(
     private fun updateCryptoCurrency(
         cryptoCurrency: CryptoCurrency,
         userWallet: UserWallet,
-        account: AccountStatus,
+        account: AccountStatus.CryptoPortfolio,
     ): CryptoCurrency? {
-        val derivationIndex = account.account.derivationIndex ?: return null
+        val derivationIndex = account.account.derivationIndex
         val blockchain = cryptoCurrency.network.toBlockchain()
 
         val network = networkFactory.create(
