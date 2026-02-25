@@ -164,5 +164,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.ArbitrumNova -> null
             Blockchain.Plasma, Blockchain.PlasmaTestnet -> null
             Blockchain.Monad, Blockchain.MonadTestnet -> null
+            Blockchain.Berachain, Blockchain.BerachainTestnet -> null
         }
     }
