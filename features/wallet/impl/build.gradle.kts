@@ -9,6 +9,12 @@ plugins {
 
 android {
     namespace = "com.tangem.feature.wallet.impl"
+    packaging {
+        resources {
+            // To build and run composable preview
+            merges += "paymentrequest.proto"
+        }
+    }
 }
 
 dependencies {
@@ -43,6 +49,16 @@ dependencies {
     implementation(deps.firebase.perf) {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
+    implementation(deps.haze) {
+        exclude(module = "activity-compose")
+        exclude(module = "activity")
+        exclude(module = "activity-ktx")
+    }
+    implementation(deps.haze.materials) {
+        exclude(module = "activity-compose")
+        exclude(module = "activity")
+        exclude(module = "activity-ktx")
     }
 
     /** DI */
@@ -84,6 +100,7 @@ dependencies {
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.offramp)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo)
