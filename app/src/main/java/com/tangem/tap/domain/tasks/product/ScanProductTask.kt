@@ -27,6 +27,7 @@ import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
@@ -49,6 +50,7 @@ internal class ScanProductTask(
     private val visaCardScanHandler: VisaCardScanHandler?,
     private val visaCoroutineScope: CoroutineScope?,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
+    private val shouldCheckIsAlreadyActivated: Boolean,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -103,6 +105,14 @@ internal class ScanProductTask(
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
             }
+        }
+    }
+
+    override fun preflightReadMode(): PreflightReadMode {
+        return if (shouldCheckIsAlreadyActivated) {
+            PreflightReadMode.FullCardReadWithAccessCodeCheck
+        } else {
+            return super.preflightReadMode()
         }
     }
 
