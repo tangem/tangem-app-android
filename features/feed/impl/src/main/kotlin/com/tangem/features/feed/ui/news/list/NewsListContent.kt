@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
