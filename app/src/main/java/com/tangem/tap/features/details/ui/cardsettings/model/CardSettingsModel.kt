@@ -221,7 +221,7 @@ internal class CardSettingsModel @Inject constructor(
             val card = scanResponse.card
 
             modelScope.launch {
-                val hasTangemPay = onboardingRepository.checkCustomerWallet(userWalletId).getOrNull() == true
+                val hasTangemPay = onboardingRepository.hasTangemPayInWallet(userWalletId).getOrNull() == true
                 store.dispatchNavigationAction {
                     push(
                         route = AppRoute.ResetToFactory(
