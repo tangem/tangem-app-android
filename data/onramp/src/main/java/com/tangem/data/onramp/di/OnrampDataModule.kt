@@ -18,7 +18,7 @@ import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
@@ -131,11 +131,11 @@ internal object OnrampDataModule {
     @Provides
     @Singleton
     fun provideMercuryoRepository(
-        environmentConfigStorage: EnvironmentConfigStorage,
+        environmentConfig: EnvironmentConfig,
         dispatchersProvider: CoroutineDispatcherProvider,
     ): LegacyTopUpRepository {
         return MercuryoTopUpRepository(
-            environmentConfigStorage = environmentConfigStorage,
+            environmentConfig = environmentConfig,
             dispatchersProvider = dispatchersProvider,
         )
     }
