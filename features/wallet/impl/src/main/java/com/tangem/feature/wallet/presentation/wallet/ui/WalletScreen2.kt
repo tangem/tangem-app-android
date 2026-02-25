@@ -176,11 +176,7 @@ private inline fun BaseScaffoldWithMarkets(
     val maxHeight = LocalWindowSize.current.height
 
     val coroutineScope = rememberCoroutineScope()
-    val background = if (state.isNewMarketEnabled) {
-        TangemTheme.colors2.surface.level2
-    } else {
-        TangemTheme.colors.background.primary
-    }
+    val background = TangemTheme.colors2.surface.level2
 
     CompositionLocalProvider(
         LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
