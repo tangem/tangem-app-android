@@ -11,7 +11,6 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
@@ -63,7 +62,6 @@ data class DaggerGraphState(
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
-    val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
     val onboardingRepository: OnboardingRepository? = null,
     val excludedBlockchains: ExcludedBlockchains? = null,
