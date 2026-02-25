@@ -51,6 +51,16 @@ internal class DefaultTangemPayStorage @Inject constructor(
     private val withdrawStoreDataConverter by lazy { WithdrawStoreDataConverter() }
     private val withdrawStateConverter by lazy { WithdrawStateConverter() }
 
+    private val listType by lazy {
+        Types.newParameterizedType(List::class.java, WithdrawStoreData::class.java)
+    }
+    private val mapType by lazy {
+        Types.newParameterizedType(Map::class.java, String::class.java, listType)
+    }
+    private val adapter: JsonAdapter<Map<String, List<WithdrawStoreData>>> by lazy {
+        appPreferencesStore.moshi.adapter(mapType)
+    }
+
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         withContext(dispatcherProvider.io) {
             appPreferencesStore
@@ -152,15 +162,19 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     override suspend fun storeWithdrawOrder(userWalletId: UserWalletId, data: TangemPayWithdrawState) {
-        val listType = Types.newParameterizedType(List::class.java, WithdrawStoreData::class.java)
-        val mapType = Types.newParameterizedType(Map::class.java, String::class.java, listType)
-        val adapter: JsonAdapter<Map<String, List<WithdrawStoreData>>> = appPreferencesStore.moshi.adapter(mapType)
         appPreferencesStore.editData { prefs ->
             val walletKey = createWithdrawOrderIdKey(userWalletId)
-            val currentMap = prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]?.let(adapter::fromJson).orEmpty()
-            val updatedList = currentMap[walletKey].orEmpty() + withdrawStoreDataConverter.convert(data)
-            prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] = adapter
-                .toJson(currentMap + (walletKey to updatedList))
+            val currentMap = prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]
+                ?.let(adapter::fromJson)
+                .orEmpty()
+            val newItem = withdrawStoreDataConverter.convert(data)
+            val currentList = currentMap[walletKey].orEmpty()
+            val updatedList = buildList(currentList.size + 1) {
+                for (item in currentList) { if (item.orderId != newItem.orderId) add(item) }
+                add(newItem)
+            }
+            prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] =
+                adapter.toJson(currentMap + (walletKey to updatedList))
         }
     }
 
@@ -170,9 +184,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     override suspend fun getWithdrawOrders(userWalletId: UserWalletId): List<TangemPayWithdrawState> {
-        val listType = Types.newParameterizedType(List::class.java, WithdrawStoreData::class.java)
-        val mapType = Types.newParameterizedType(Map::class.java, String::class.java, listType)
-        val adapter: JsonAdapter<Map<String, List<WithdrawStoreData>>> = appPreferencesStore.moshi.adapter(mapType)
         val map = appPreferencesStore.data.firstOrNull()
             ?.get(PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY)?.let(adapter::fromJson).orEmpty()
         return map[createWithdrawOrderIdKey(userWalletId)].orEmpty().map(withdrawStateConverter::convert)
@@ -190,15 +201,22 @@ internal class DefaultTangemPayStorage @Inject constructor(
     }
 
     override suspend fun deleteWithdrawOrder(userWalletId: UserWalletId, orderId: String) {
-        appPreferencesStore.editData { mutablePreferences ->
-            val orders = mutablePreferences.getObjectMap<WithdrawStoreData>(
-                PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
-            )
-                .minus(createWithdrawOrderIdKey(userWalletId))
-            mutablePreferences.setObjectMap(
-                key = PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY,
-                value = orders,
-            )
+        appPreferencesStore.editData { prefs ->
+            val walletKey = createWithdrawOrderIdKey(userWalletId)
+            val currentMap = prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY]?.let(adapter::fromJson)
+                .orEmpty()
+            val currentList = currentMap[walletKey].orEmpty()
+            val updatedList = buildList(currentList.size) {
+                for (item in currentList) {
+                    if (item.orderId != orderId) add(item)
+                }
+            }
+            val updatedMap = if (updatedList.isEmpty()) {
+                currentMap - walletKey
+            } else {
+                currentMap + (walletKey to updatedList)
+            }
+            prefs[PreferencesKeys.TANGEM_PAY_WITHDRAW_ORDERS_KEY] = adapter.toJson(updatedMap)
         }
     }
 
