@@ -23,8 +23,8 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.markets.details.impl.model.formatter.toChartType
 import com.tangem.features.markets.impl.R
+import com.tangem.features.markets.token.block.impl.model.formatter.toChartType
 import com.tangem.features.markets.token.block.impl.ui.state.TokenMarketBlockUM
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.random.Random
