@@ -186,7 +186,7 @@ internal object WalletScreenPreviewData {
                 onItemClick = { },
             ),
             tangemPayState = TangemPayState.Empty,
-            type = WalletState.MultiCurrency.WalletType.Cold,
+            type = WalletType.Cold,
         )
     }
 
@@ -218,12 +218,12 @@ internal object WalletScreenPreviewData {
             singleWalletLockedState,
             multiWalletState,
         ),
+        wallets2 = persistentListOf(),
         onWalletChange = { _, _ -> },
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
-        isNewMarketEnabled = false,
     )
 
     internal val accountScreenState =
