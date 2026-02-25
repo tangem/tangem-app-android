@@ -36,7 +36,6 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -80,7 +79,6 @@ import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
 import timber.log.Timber
 
@@ -97,11 +95,11 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val appStateHolder: AppStateHolder
         get() = entryPoint.getAppStateHolder()
 
-    private val environmentConfigStorage: EnvironmentConfigStorage
-        get() = entryPoint.getEnvironmentConfigStorage()
-
     private val issuersConfigStorage: IssuersConfigStorage
         get() = entryPoint.getIssuersConfigStorage()
+
+    private val environmentConfig: EnvironmentConfig
+        get() = entryPoint.getEnvironmentConfig()
 
     private val featureTogglesManager: FeatureTogglesManager
         get() = entryPoint.getFeatureTogglesManager()
@@ -306,9 +304,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             Timber.i(excludedBlockchainsManager.toString())
         }
 
-        runBlocking {
-            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
-        }
+        initWithConfigDependency(environmentConfig = environmentConfig)
 
         abTestsManager.init()
 
@@ -345,7 +341,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         appStateHolder.mainStore = store
 
         wcInitializeUseCase.init(
-            projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
+            projectId = environmentConfig.walletConnectProjectId,
         )
     }
 
@@ -376,7 +372,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,

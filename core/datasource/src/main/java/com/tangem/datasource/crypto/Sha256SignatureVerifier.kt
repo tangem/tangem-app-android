@@ -5,10 +5,10 @@ import com.tangem.crypto.CryptoUtils
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 
 internal class Sha256SignatureVerifier(
-    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
     private val apiConfigsManager: ApiConfigsManager,
 ) : DataSignatureVerifier {
 
@@ -24,8 +24,8 @@ internal class Sha256SignatureVerifier(
     private fun getPubKey(): String? {
         val expressConfig = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.Express)
         return when (expressConfig.environment) {
-            ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().express?.signVerifierPublicKey
-            else -> environmentConfigStorage.getConfigSync().devExpress?.signVerifierPublicKey
+            ApiEnvironment.PROD -> environmentConfig.express?.signVerifierPublicKey
+            else -> environmentConfig.devExpress?.signVerifierPublicKey
         }
     }
 }
