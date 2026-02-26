@@ -103,6 +103,7 @@ usedesk = "4.4.0"
 sumsub = "1.38.0"
 haze = "1.7.1"
 kotlinpoet = "1.18.1"
+customerio = "4.6.3"
 # endregion Other libraries
 
 # region Tools
@@ -313,4 +314,6 @@ usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version
 sumsub-sdk = { module = "com.sumsub.sns:idensic-mobile-sdk", version.ref = "sumsub" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
+customerio-analytics = { module = "io.customer.android:datapipelines", version.ref = "customerio" }
+customerio-messaging = { module = "io.customer.android:messaging-push-fcm", version.ref = "customerio" }
 # endregion Other
