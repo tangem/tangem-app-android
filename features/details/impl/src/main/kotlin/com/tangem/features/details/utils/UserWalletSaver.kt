@@ -120,6 +120,7 @@ internal class UserWalletSaver @Inject constructor(
         scope.launch {
             scanCardProcessor.scan(
                 analyticsSource = AnalyticsParam.ScreensSources.Settings,
+                shouldCheckIsAlreadyActivated = true,
                 onWalletNotCreated = {
                     continuation.resume(Either.Right(null))
                 },
