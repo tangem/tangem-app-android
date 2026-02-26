@@ -163,6 +163,7 @@ internal class DefaultTangemSdkManager(
         cardId: String?,
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse> {
         val message = Message(resources.getStringSafe(messageRes ?: R.string.initial_message_scan_header))
         return coroutineScope {
@@ -173,7 +174,7 @@ internal class DefaultTangemSdkManager(
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,
-                    shouldCheckIsAlreadyActivated = true,
+                    shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 ),
                 cardId = cardId,
