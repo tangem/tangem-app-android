@@ -42,28 +42,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideAddCryptoCurrenciesUseCase(
-        currenciesRepository: CurrenciesRepository,
-        walletManagersFacade: WalletManagersFacade,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory: StakingIdFactory,
-    ): AddCryptoCurrenciesUseCase {
-        return AddCryptoCurrenciesUseCase(
-            currenciesRepository = currenciesRepository,
-            walletManagersFacade = walletManagersFacade,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideFetchPendingTransactionsUseCase(
         networksRepository: NetworksRepository,
     ): FetchPendingTransactionsUseCase {
@@ -85,20 +63,6 @@ internal object TokensDomainModule {
         return GetTokenListUseCase(
             currenciesRepository = currenciesRepository,
             currenciesStatusesOperations = currenciesStatusesOperations,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideRemoveCurrencyUseCase(
-        currenciesRepository: CurrenciesRepository,
-        walletManagersFacade: WalletManagersFacade,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    ): RemoveCurrencyUseCase {
-        return RemoveCurrencyUseCase(
-            currenciesRepository = currenciesRepository,
-            walletManagersFacade = walletManagersFacade,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         )
     }
 
@@ -175,20 +139,6 @@ internal object TokensDomainModule {
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     ): GetCryptoCurrencyUseCase {
         return GetCryptoCurrencyUseCase(currenciesRepository, multiWalletCryptoCurrenciesSupplier)
-    }
-
-    @Provides
-    @Singleton
-    fun provideApplyTokenListSortingUseCase(
-        currenciesRepository: CurrenciesRepository,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        dispatchers: CoroutineDispatcherProvider,
-    ): ApplyTokenListSortingUseCase {
-        return ApplyTokenListSortingUseCase(
-            currenciesRepository = currenciesRepository,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            dispatchers = dispatchers,
-        )
     }
 
     @Provides
