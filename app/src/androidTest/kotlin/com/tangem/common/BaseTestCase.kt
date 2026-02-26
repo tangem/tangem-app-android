@@ -146,9 +146,7 @@ abstract class BaseTestCase : TestCase(
         return ApplicationInjectionExecutionRule(
             toggleStates = mapOf(
                 "SWAP_REDESIGN_ENABLED" to false,
-                "HOT_WALLET_ENABLED" to true,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
-                "GASLESS_TRANSACTIONS_ENABLED" to true,
             )
         )
     }
