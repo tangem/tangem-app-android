@@ -16,4 +16,5 @@ internal enum class TesterScreen {
     ACCOUNTS,
     ADDRESSES_INFO,
     STORY_BOOK,
+    SURVEY_SPARROW,
 }
