@@ -6,6 +6,7 @@ import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -123,7 +124,7 @@ interface SwapInteractor {
         isReverseFromTo: Boolean,
     ): AccountSwapCurrency?
 
-    suspend fun getNativeToken(networkId: String): CryptoCurrency
+    suspend fun getNativeToken(network: Network): CryptoCurrency
 
     @Suppress("LongParameterList")
     suspend fun storeSwapTransaction(
