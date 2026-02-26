@@ -32,8 +32,6 @@ abstract class GenerateEnvironmentConfigTask : DefaultTask() {
 android {
     namespace = "com.tangem.datasource"
 
-    sourceSets["main"].java.srcDir(layout.buildDirectory.dir("generated/source/environment-config"))
-
     room {
         schemaDirectory("$projectDir/schemas")
     }
@@ -46,17 +44,18 @@ androidComponents {
             "app/src/main/assets/tangem-app-config/config_${buildType.environment}.json",
         )
 
-        tasks.register<GenerateEnvironmentConfigTask>(
+        val taskProvider = tasks.register<GenerateEnvironmentConfigTask>(
             "generateEnvironmentConfig${variant.name.replaceFirstChar { it.uppercaseChar() }}",
         ) {
             this.configFile.set(configFile)
-            outputDir.set(layout.buildDirectory.dir("generated/source/environment-config"))
+            outputDir.set(layout.buildDirectory.dir("generated/source/environment-config/${variant.name}"))
+            doFirst {
+                logger.lifecycle("[Environment config] Running: ${this.name}")
+            }
         }
-    }
-}
 
-tasks.named("preBuild") {
-    dependsOn(tasks.matching { it.name.startsWith("generateEnvironmentConfig") })
+        variant.sources.java?.addGeneratedSourceDirectory(taskProvider, GenerateEnvironmentConfigTask::outputDir)
+    }
 }
 
 tasks.withType<Test>().configureEach {
