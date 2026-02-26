@@ -45,10 +45,18 @@ interface TangemSdkManager {
 
     suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean = true): Boolean
 
+    /**
+     * Scans the card and returns [ScanResponse] with the card information.
+     * If [cardId] is provided, it will try to find the card with this ID in the card reader's range.
+     * If [allowsRequestAccessCodeFromRepository] is true, it will try to request access code from the repository
+     * if the card is protected by access code and the access code is not saved in the repository.
+     * If [shouldCheckIsAlreadyActivated] is true, it will check if the card is already activated and return an error if it is.
+     */
     suspend fun scanProduct(
         cardId: String? = null,
         messageRes: Int? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse>
 
     suspend fun createProductWallet(
