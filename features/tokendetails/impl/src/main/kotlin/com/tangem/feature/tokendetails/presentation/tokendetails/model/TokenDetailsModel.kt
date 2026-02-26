@@ -115,7 +115,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val isCryptoCurrencyCoinCouldHideUseCase: IsCryptoCurrencyCoinCouldHideUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -758,8 +758,12 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
         modelScope.launch {
-            val hasLinkedTokens = removeCurrencyUseCase.hasLinkedTokens(userWalletId, cryptoCurrency)
-            internalUiState.value = if (hasLinkedTokens) {
+            val canHide = cryptoCurrency is CryptoCurrency.Coin && isCryptoCurrencyCoinCouldHideUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyCoin = cryptoCurrency,
+            )
+
+            internalUiState.value = if (!canHide) {
                 stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
             } else {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
@@ -769,18 +773,14 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onHideConfirmed() {
         modelScope.launch {
-            if (accountsFeatureToggles.isFeatureEnabled) {
-                val accountId = account?.accountId
+            val accountId = account?.accountId
 
-                if (accountId == null) {
-                    Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
-                    return@launch
-                }
-
-                manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
-            } else {
-                removeCurrencyUseCase(userWalletId, cryptoCurrency)
+            if (accountId == null) {
+                Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
+                return@launch
             }
+
+            manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
                 .onLeft { Timber.e(it) }
                 .onRight { router.popBackStack() }
         }
