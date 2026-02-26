@@ -13,11 +13,16 @@ internal class DefaultScanCardRepository(
 
     private val exceptionConverter = ScanCardExceptionConverter()
 
-    override suspend fun scanCard(cardId: String?, allowRequestAccessCodeFromStorage: Boolean): ScanResponse {
+    override suspend fun scanCard(
+        cardId: String?,
+        allowRequestAccessCodeFromStorage: Boolean,
+        shouldCheckIsAlreadyActivated: Boolean,
+    ): ScanResponse {
         return when (
             val result = tangemSdkManager.scanProduct(
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = allowRequestAccessCodeFromStorage,
+                shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
             )
         ) {
             is CompletionResult.Success -> result.data
