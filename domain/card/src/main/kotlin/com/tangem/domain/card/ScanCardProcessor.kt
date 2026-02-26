@@ -11,10 +11,12 @@ interface ScanCardProcessor {
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse>
 
     suspend fun scan(
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onWalletNotCreated: suspend () -> Unit = {},
