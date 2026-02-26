@@ -23,7 +23,6 @@ import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -36,7 +35,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
@@ -75,10 +73,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -100,7 +96,6 @@ internal class SendConfirmModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
@@ -114,7 +109,6 @@ internal class SendConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
@@ -466,24 +460,14 @@ internal class SendConfirmModel @Inject constructor(
             .firstOrNull { it.address == confirmData.enteredDestination }
             ?: return
 
-        val userWalletId = receivingUserWallet.userWalletId ?: return
         val network = receivingUserWallet.network ?: return
 
         modelScope.launch(dispatchers.default) {
-            if (accountsFeatureToggles.isFeatureEnabled) {
-                val accountId = receivingUserWallet.accountId ?: return@launch
+            val accountId = receivingUserWallet.accountId ?: return@launch
 
-                val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
-                manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
-            } else {
-                withContext(NonCancellable) {
-                    addCryptoCurrenciesUseCase(
-                        userWalletId = userWalletId,
-                        cryptoCurrency = cryptoCurrency,
-                        network = network,
-                    )
-                }
-            }.onLeft(Timber::e)
+            val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
+                .onLeft(Timber::e)
         }
     }
 
