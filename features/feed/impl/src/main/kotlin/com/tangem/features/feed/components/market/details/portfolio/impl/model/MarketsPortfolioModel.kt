@@ -45,6 +45,14 @@ internal class MarketsPortfolioModel @Inject constructor(
 
     private val params = paramsContainer.require<MarketsPortfolioComponent.Params>()
 
+    private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
+        tokenSymbol = params.token.symbol,
+        source = params.analyticsParams?.source,
+    )
+
+    private val currentAppCurrency = createAppCurrencyFlow()
+    private val tokenActionsHandler = createTokenActionsHandler()
+
     val addToPortfolioManager: AddToPortfolioManager = createAddToPortfolioManager()
     private val marketsPortfolioDelegate: MarketsPortfolioDelegate = createMarketsPortfolioDelegate()
 
@@ -53,15 +61,6 @@ internal class MarketsPortfolioModel @Inject constructor(
         override fun onDismiss() = bottomSheetNavigation.dismiss()
         override fun onSuccess(addedToken: CryptoCurrency) = bottomSheetNavigation.dismiss()
     }
-
-    private val analyticsEventBuilder = PortfolioAnalyticsEvent.EventBuilder(
-        tokenSymbol = params.token.symbol,
-        source = params.analyticsParams?.source,
-    )
-
-    private val currentAppCurrency = createAppCurrencyFlow()
-
-    private val tokenActionsHandler = createTokenActionsHandler()
 
     init {
         marketsPortfolioDelegate.combineData()
