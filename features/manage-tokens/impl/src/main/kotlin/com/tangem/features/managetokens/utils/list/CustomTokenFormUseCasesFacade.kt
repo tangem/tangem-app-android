@@ -19,7 +19,6 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import dagger.assisted.Assisted
@@ -30,7 +29,6 @@ import timber.log.Timber
 @Suppress("LongParameterList")
 internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
@@ -40,14 +38,10 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
 ) {
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            either {
-                val accountId = getAccountId(currency)
+        return either {
+            val accountId = getAccountId(currency)
 
-                manageCryptoCurrenciesUseCase(accountId = accountId, add = currency).bind()
-            }
-        } else {
-            addCryptoCurrenciesUseCase.invoke(userWalletId = userWalletId, currency = currency)
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = currency).bind()
         }
     }
 
