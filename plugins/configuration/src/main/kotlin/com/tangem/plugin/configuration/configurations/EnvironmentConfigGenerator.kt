@@ -73,14 +73,9 @@ object EnvironmentConfigGenerator {
                 when {
                     value.isString -> {
                         val stringValue = value.content
-                        val isNullable = stringValue.isEmpty()
-                        val propertySpec = PropertySpec.builder(name, STRING.copy(nullable = isNullable))
-                            .initializer(if (isNullable) "null" else "%S", stringValue)
-
-                        // Add const modifier for non-nullable strings
-                        if (!isNullable) {
-                            propertySpec.addModifiers(KModifier.CONST)
-                        }
+                        val propertySpec = PropertySpec.builder(name, STRING)
+                            .addModifiers(KModifier.CONST)
+                            .initializer("%S", stringValue)
 
                         builder.addProperty(propertySpec.build())
                     }
