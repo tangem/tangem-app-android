@@ -170,11 +170,55 @@ fun BaseTestCase.checkStoriesChanges() {
     }
 }
 
+fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
+    step("Click on 'Select fee' icon") {
+        onSwapTokenScreen { selectFeeIcon.performClick() }
+    }
+
+    when (feeType) {
+        FeeType.Market -> {
+            step("Click on 'Market' item") {
+                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.performClick() }
+            }
+            step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
+                onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+            }
+        }
+        FeeType.Fast -> {
+            step("Click on 'Fast' item") {
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.performClick() }
+            }
+            step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
+                onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+            }
+        }
+    }
+}
+
+fun BaseTestCase.chackUnableToCoverFeeNotification(networkName: String, currencySymbol: String) {
+    step("Assert 'Unable to cover '$networkName' fee notification title is displayed'") {
+        onSwapTokenScreen { unableToCoverFeeNotificationTitle(networkName).assertIsDisplayed() }
+    }
+    step("Assert 'Unable to cover '$networkName' fee notification text is displayed'") {
+        onSwapTokenScreen {
+            unableToCoverFeeNotificationText(
+                currencyName = networkName,
+                currencySymbol = currencySymbol
+            ).assertIsDisplayed()
+        }
+    }
+}
+
 sealed class SwapEntryPoint {
     object MainScreen : SwapEntryPoint()
     object TokenDetails : SwapEntryPoint()
     object MarketsTokenDetails : SwapEntryPoint()
     object TokenActionsBottomSheet : SwapEntryPoint()
+}
+
+enum class FeeType {
+    Market,
+    Fast
 }
 
 
