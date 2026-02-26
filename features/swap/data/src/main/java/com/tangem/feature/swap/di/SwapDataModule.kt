@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.di
 
 import com.squareup.moshi.Moshi
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -11,7 +10,6 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapRepository
@@ -37,10 +35,8 @@ internal class SwapDataModule {
         coroutineDispatcher: CoroutineDispatcherProvider,
         dataSignature: DataSignatureVerifier,
         walletManagerFacade: WalletManagersFacade,
-        userWalletsListRepository: UserWalletsListRepository,
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
-        excludedBlockchains: ExcludedBlockchains,
         appPreferencesStore: AppPreferencesStore,
         rampStateManager: RampStateManager,
     ): SwapRepository {
@@ -48,11 +44,9 @@ internal class SwapDataModule {
             tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
             walletManagersFacade = walletManagerFacade,
-            userWalletsListRepository = userWalletsListRepository,
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
-            excludedBlockchains = excludedBlockchains,
             appPreferencesStore = appPreferencesStore,
             rampStateManager = rampStateManager,
         )
