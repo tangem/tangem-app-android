@@ -104,6 +104,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
 
             scanCardProcessor.scan(
                 analyticsSource = analyticsSource,
+                shouldCheckIsAlreadyActivated = true,
                 onProgressStateChange = { showProgress ->
                     if (!showProgress) {
                         delay(HIDE_PROGRESS_DELAY)
