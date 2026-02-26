@@ -28,5 +28,7 @@ data class EnvironmentConfig(
     val bffStaticTokenDev: String? = null,
     val gaslessTxApiKeyDev: String? = null,
     val gaslessTxApiKey: String? = null,
-    val customerIoCdpApiKey: String = "",
+    val customerIoCdpApiKey: String? = null,
+    val surveySparrowDomain: String? = null,
+    val surveySparrowToken: String? = null,
 )
