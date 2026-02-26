@@ -59,6 +59,7 @@ class MockTangemSdkManager(
         cardId: String?,
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse> {
         return MockProvider.getScanResponse()
     }
