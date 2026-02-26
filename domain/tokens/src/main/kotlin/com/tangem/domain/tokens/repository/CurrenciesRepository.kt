@@ -17,58 +17,6 @@ import kotlinx.coroutines.flow.Flow
 interface CurrenciesRepository {
 
     /**
-     * Saves the given list of cryptocurrencies, along with the preferences for grouping and sorting, for a specific
-     * multi-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The list of cryptocurrencies to be saved.
-     * @param isGroupedByNetwork A boolean flag indicating whether the tokens should be grouped by network.
-     * @param isSortedByBalance A boolean flag indicating whether the tokens should be sorted by balance.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    suspend fun saveTokens(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-        isGroupedByNetwork: Boolean,
-        isSortedByBalance: Boolean,
-    )
-
-    /**
-     * Add currencies to a specific user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The currencies which must be added.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    suspend fun addCurrenciesCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
-
-    /**
-     * Removes currency from a specific user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currency The currency which must be removed.
-     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
-
-    /**
-     * Removes currencies from a specific user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The currencies which must be removed.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
-
-    /**
      * Retrieves the list of cryptocurrencies within a user wallet.
      *
      * This method returns a list of cryptocurrencies associated with the user wallet regardless of whether
@@ -210,18 +158,6 @@ interface CurrenciesRepository {
     fun getAllWalletsCryptoCurrencies(currencyRawId: CryptoCurrency.RawID): Flow<Map<UserWallet, List<CryptoCurrency>>>
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
-
-    /**
-     * Synchronizes local tokens with remote data for a specific user wallet.
-     * This method ensures that the local token list matches the remote state by fetching
-     * the token data from the local cache and push it to backend.
-     *
-     * @param userWalletId The unique identifier of the user wallet to sync tokens for.
-     * @throws Exception if the sync request to the backend fails
-     */
-    @Deprecated("Use AccountsCRUDRepository instead")
-    @Throws
-    suspend fun syncTokens(userWalletId: UserWalletId)
 
     @Throws
     fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver?
