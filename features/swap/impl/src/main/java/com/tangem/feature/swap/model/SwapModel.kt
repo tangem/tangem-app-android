@@ -30,18 +30,11 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.toWrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
-import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
-import com.tangem.feature.swap.models.SwapAlertUM
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
@@ -90,6 +83,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
+import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -99,6 +93,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.AddToPortfolioRoute
+import com.tangem.feature.swap.models.SwapAlertUM
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
@@ -110,7 +105,6 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.swap.SwapComponent
@@ -167,7 +161,6 @@ internal class SwapModel @Inject constructor(
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
@@ -241,7 +234,7 @@ internal class SwapModel @Inject constructor(
     val feeSelectorRepository = FeeSelectorRepository()
 
     // shows currency order (direct - swap initial to selected, reversed = selected to initial)
-    var isOrderReversed by mutableStateOf(false)
+    private var isOrderReversed by mutableStateOf(false)
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private val lastReducedBalanceBy = mutableStateOf(BigDecimal.ZERO)
     private val swapRouter: SwapRouter = SwapRouter(router = router)
@@ -2399,13 +2392,6 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun getSelectedFeeState(): TxFeeSealedState {
-        if (!sendFeatureToggles.isGaslessTransactionsEnabled) {
-            return TxFeeSealedState.Legacy(
-                txFeeState = TxFeeState.Empty,
-                selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-            )
-        }
-
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
             ?: return TxFeeSealedState.Legacy(
                 txFeeState = TxFeeState.Empty,
@@ -2424,10 +2410,6 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun getSelectedFee(): TxFee? {
-        if (!sendFeatureToggles.isGaslessTransactionsEnabled) {
-            return dataState.selectedFee
-        }
-
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content ?: return null
         val transactionFeeExtended = feeStateUM.feeExtraInfo.transactionFeeExtended
 
