@@ -55,10 +55,12 @@ internal class LegacyScanProcessor @Inject constructor(
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse> {
         return tangemSdkManager.scanProduct(
             cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
         )
             .doOnFailure { error ->
                 onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
@@ -68,6 +70,7 @@ internal class LegacyScanProcessor @Inject constructor(
     @Suppress("LongParameterList")
     suspend fun scan(
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
@@ -80,7 +83,10 @@ internal class LegacyScanProcessor @Inject constructor(
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
 
-        val result = tangemSdkManager.scanProduct(cardId)
+        val result = tangemSdkManager.scanProduct(
+            cardId = cardId,
+            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+        )
 
         val analyticsEvent = Basic.CardWasScanned(analyticsSource)
         store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result, analyticsSource))
