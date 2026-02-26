@@ -1355,8 +1355,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             }
     }
 
-    override suspend fun getNativeToken(networkId: String): CryptoCurrency {
-        return repository.getNativeTokenForNetwork(networkId)
+    override suspend fun getNativeToken(network: Network): CryptoCurrency {
+        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+        )
+            ?.filterIsInstance<CryptoCurrency.Coin>()
+            ?.firstOrNull { it.network.id == network.id && it.network.derivationPath == network.derivationPath }
+            ?: error("Unable to create network coin with ID: ${network.id}")
     }
 
     private suspend fun isAllowedToSpend(
@@ -1505,7 +1510,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return quoteDataModel.fold(
             ifRight = { quoteModel ->
                 val swapState = updateBalances(
-                    networkId = networkId,
                     fromTokenStatus = fromToken,
                     fromAccount = fromAccount,
                     toTokenStatus = toToken,
@@ -1753,10 +1757,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             }
             else -> {
                 if (feeValue < amount.value) {
+                    val nativeCoinDecimals = Blockchain.fromNetworkId(networkId)?.decimals()
+                        ?: error("Blockchain not found")
                     IncludeFeeInAmount.Included(
                         amountSubtractFee = SwapAmount(
                             reducedBalance - feeValue,
-                            getNativeToken(fromToken.network.backendId).decimals,
+                            nativeCoinDecimals,
                         ),
                     )
                 } else {
@@ -1773,7 +1779,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
         val feeCurrencyId: CryptoCurrency.ID = when (feePaidCurrency) {
             is FeePaidCurrency.Token -> feePaidCurrency.tokenId
-            else -> getNativeToken(networkId = fromToken.network.backendId).id
+            else -> getNativeToken(network = fromToken.network).id
         }
         val rates = getQuotes(feeCurrencyId)
         return rates[feeCurrencyId]?.let { rate ->
@@ -1869,7 +1875,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     includeFeeInAmount = includeFeeInAmount,
                 )
                 val swapState = updateBalances(
-                    networkId = networkId,
                     fromTokenStatus = fromToken,
                     fromAccount = fromAccount,
                     toTokenStatus = toToken,
@@ -2037,7 +2042,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     @Suppress("LongParameterList", "MaxChainedCallsOnSameLine")
     private suspend fun updateBalances(
         provider: SwapProvider,
-        networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         toTokenStatus: CryptoCurrencyStatus,
@@ -2049,7 +2053,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     ): SwapState.QuotesLoadedState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
-        val nativeToken = repository.getNativeTokenForNetwork(networkId)
+        val nativeToken = getNativeToken(fromToken.network)
         val rates = getQuotes(fromToken.id, toToken.id, nativeToken.id)
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
@@ -2478,7 +2482,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 if (balanceToCheck > fee.multiply(percentsToFeeIncrease)) {
                     SwapFeeState.Enough
                 } else {
-                    val nativeToken = getNativeToken(fromTokenStatus.currency.network.backendId)
+                    val nativeToken = getNativeToken(fromTokenStatus.currency.network)
                     SwapFeeState.NotEnough(
                         feeCurrency = nativeToken,
                         currencyName = nativeToken.network.name,
@@ -2522,11 +2526,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 }
             }
             is FeePaidCurrency.FeeResource -> {
-                val network = repository.getNativeTokenForNetwork(networkId).network
                 val isFeeResourceEnough = currencyChecksRepository.checkIfFeeResourceEnough(
                     amount = spendAmount.value,
                     userWalletId = userWalletId,
-                    network = network,
+                    network = fromTokenStatus.currency.network,
                 )
 
                 if (isFeeResourceEnough) {
