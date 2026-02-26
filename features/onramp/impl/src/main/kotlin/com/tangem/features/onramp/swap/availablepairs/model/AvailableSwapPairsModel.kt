@@ -725,6 +725,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
             val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
                     blockchainId = network.networkId,
+                    coinId = tokenMarket.id.value,
+                    contractAddress = network.contractAddress,
                     excludedBlockchains = excludedBlockchains,
                     hotExcludedBlockchains = hotWalletExcludedBlockchains,
                     hasOnlyHotWallets = hasOnlyHotWallets,
