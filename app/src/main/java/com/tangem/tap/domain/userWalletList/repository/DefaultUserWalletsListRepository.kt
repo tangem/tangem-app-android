@@ -296,7 +296,9 @@ internal class DefaultUserWalletsListRepository(
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
-                    when (val res = tangemSdkManagerProvider().scanProduct()) {
+                    when (val res = tangemSdkManagerProvider().scanProduct(
+                        shouldCheckIsAlreadyActivated = false,
+                    )) {
                         is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
                         is CompletionResult.Success -> res.data
                     }
