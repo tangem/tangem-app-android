@@ -9,9 +9,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -25,7 +23,6 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -53,19 +50,16 @@ internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsListRepository: UserWalletsListRepository,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
     private val rampStateManager: RampStateManager,
     moshi: Moshi,
-    excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
 
     private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val exchangeStatusConverter = ExchangeStatusConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
@@ -442,18 +436,6 @@ internal class DefaultSwapRepository(
         return result.fold(
             onSuccess = { it },
             onFailure = { error(it) },
-        )
-    }
-
-    override suspend fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-
-        return requireNotNull(
-            cryptoCurrencyFactory.createCoin(
-                blockchain = blockchain,
-                extraDerivationPath = null,
-                userWallet = requireNotNull(userWalletsListRepository.selectedUserWalletSync()),
-            ),
         )
     }
 
