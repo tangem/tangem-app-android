@@ -33,13 +33,14 @@ class CustomerIoAnalyticsHandler(
 
     class Builder : AnalyticsHandlerBuilder {
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? {
+            val cdpApiKey = data.config.customerIoCdpApiKey
             return if (data.logConfig.isCustomerIoLogEnabled) {
                 CustomerIoAnalyticsHandler(client = CustomerIoLogClient())
-            } else if (data.config.customerIoCdpApiKey.isNotBlank()) {
+            } else if (!cdpApiKey.isNullOrBlank()) {
                 CustomerIoAnalyticsHandler(
                     client = CustomerIoClient(
                         application = data.application,
-                        cdpApiKey = data.config.customerIoCdpApiKey,
+                        cdpApiKey = cdpApiKey,
                     ),
                 )
             } else {
