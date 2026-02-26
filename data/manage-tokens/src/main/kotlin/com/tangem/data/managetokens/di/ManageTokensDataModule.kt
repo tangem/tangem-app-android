@@ -15,7 +15,6 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -65,20 +64,16 @@ internal object ManageTokensDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         userTokensResponseStore: UserTokensResponseStore,
-        walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
-        userTokensSaver: UserTokensSaver,
         networkFactory: NetworkFactory,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             userTokensResponseStore = userTokensResponseStore,
-            walletManagersFacade = walletManagersFacade,
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
-            userTokensSaver = userTokensSaver,
             networkFactory = networkFactory,
         )
     }
