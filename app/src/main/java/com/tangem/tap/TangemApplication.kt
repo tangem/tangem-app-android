@@ -66,6 +66,7 @@ import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
+import com.tangem.tap.common.analytics.handlers.customerio.CustomerIoAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -410,6 +411,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder(appsFlyerClientFactory))
+        factory.addHandlerBuilder(CustomerIoAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
         factory.addFilter(AppsFlyerEventFilter())
