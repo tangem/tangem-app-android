@@ -192,6 +192,7 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             scanCardProcessor.scan(
                 analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                shouldCheckIsAlreadyActivated = true,
                 onWalletNotCreated = {},
                 disclaimerWillShow = { router.pop() },
                 onSuccess = { scanResponse ->
