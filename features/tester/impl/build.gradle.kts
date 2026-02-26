@@ -49,6 +49,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.surveysparrow)
 
     /** Core modules */
     implementation(projects.core.datasource)

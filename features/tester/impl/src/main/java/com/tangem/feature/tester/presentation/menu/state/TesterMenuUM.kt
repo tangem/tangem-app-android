@@ -27,5 +27,6 @@ data class TesterMenuUM(
         ACCOUNTS(R.string.accounts),
         ADDRESSES_INFO(R.string.addresses_info),
         STORY_BOOK(R.string.story_book),
+        SURVEY_SPARROW(R.string.survey_sparrow),
     }
 }
