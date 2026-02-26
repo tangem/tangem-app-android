@@ -115,7 +115,7 @@ internal class UpgradeWalletModel @Inject constructor(
             )
 
             tangemSdkManager
-                .scanProduct()
+                .scanProduct(shouldCheckIsAlreadyActivated = true)
                 .doOnSuccess { scanResponse ->
                     checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
                         delay(DELAY_SDK_DIALOG_CLOSE)

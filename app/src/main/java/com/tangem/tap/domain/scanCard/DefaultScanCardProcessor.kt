@@ -20,6 +20,7 @@ internal class DefaultScanCardProcessor(
         cardId: String?,
         allowsRequestAccessCodeFromRepository: Boolean,
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse> {
         return if (isNewCardScanningEnabled) {
             UseCaseScanProcessor.scan(cardId, allowsRequestAccessCodeFromRepository)
@@ -28,6 +29,7 @@ internal class DefaultScanCardProcessor(
                 analyticsSource = analyticsSource,
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+                shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
             )
         }
     }
@@ -35,6 +37,7 @@ internal class DefaultScanCardProcessor(
     @Suppress("LongParameterList")
     override suspend fun scan(
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
@@ -56,6 +59,7 @@ internal class DefaultScanCardProcessor(
         } else {
             legacyScanProcessor.scan(
                 analyticsSource = analyticsSource,
+                shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
                 cardId = cardId,
                 onProgressStateChange = onProgressStateChange,
                 onWalletNotCreated = onWalletNotCreated,
