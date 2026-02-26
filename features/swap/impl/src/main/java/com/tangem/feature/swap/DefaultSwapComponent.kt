@@ -32,7 +32,6 @@ import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.extensions.isZero
@@ -46,7 +45,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SwapComponent.Params,
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val giveApprovalComponentFactory: GiveApprovalComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
@@ -58,7 +56,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         serializer = AddToPortfolioRoute.serializer(),
         key = BOTTOM_SHEET_SLOT_KEY,
         handleBackButton = false,
-        childFactory = { configuration, context -> bottomSheetChild(context) },
+        childFactory = { _, context -> bottomSheetChild(context) },
     )
 
     private val approvalSlot = childSlot(
@@ -83,8 +81,8 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         )
     }
 
-    val slotNavigation = SlotNavigation<FeeSelectorConfig>()
-    val childSlot = childSlot(
+    private val slotNavigation = SlotNavigation<FeeSelectorConfig>()
+    private val childSlot = childSlot(
         source = slotNavigation,
         serializer = null,
         key = FEE_SELECTOR_SLOT_KEY,
@@ -123,37 +121,35 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     @Composable
     override fun Content(modifier: Modifier) {
-        if (sendFeatureToggles.isGaslessTransactionsEnabled) {
-            val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
-            val fromCryptoCurrency by remember { derivedStateOf { dataState.fromCryptoCurrency } }
-            val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
-            val shouldHideBlock by remember {
-                derivedStateOf { toBigDecimalOrZero(dataState.amount).isZero() || model.uiState.isInsufficientFunds }
+        val dataState by model.dataStateStateFlow.collectAsStateWithLifecycle()
+        val fromCryptoCurrency by remember { derivedStateOf { dataState.fromCryptoCurrency } }
+        val feePaidCryptoCurrency by remember { derivedStateOf { dataState.feePaidCryptoCurrency } }
+        val shouldHideBlock by remember {
+            derivedStateOf { toBigDecimalOrZero(dataState.amount).isZero() || model.uiState.isInsufficientFunds }
+        }
+
+        LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
+            if (shouldHideBlock) {
+                slotNavigation.dismiss()
+                return@LaunchedEffect
             }
 
-            LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
-                if (shouldHideBlock) {
-                    slotNavigation.dismiss()
-                    return@LaunchedEffect
-                }
-
-                val sendingCryptoCurrencyStatus = fromCryptoCurrency ?: run {
-                    slotNavigation.dismiss()
-                    return@LaunchedEffect
-                }
-
-                val feeCurrencyStatus = feePaidCryptoCurrency ?: run {
-                    slotNavigation.dismiss()
-                    return@LaunchedEffect
-                }
-
-                slotNavigation.activate(
-                    FeeSelectorConfig(
-                        sendingCurrencyStatus = sendingCryptoCurrencyStatus,
-                        feeCurrencyStatus = feeCurrencyStatus,
-                    ),
-                )
+            val sendingCryptoCurrencyStatus = fromCryptoCurrency ?: run {
+                slotNavigation.dismiss()
+                return@LaunchedEffect
             }
+
+            val feeCurrencyStatus = feePaidCryptoCurrency ?: run {
+                slotNavigation.dismiss()
+                return@LaunchedEffect
+            }
+
+            slotNavigation.activate(
+                FeeSelectorConfig(
+                    sendingCurrencyStatus = sendingCryptoCurrencyStatus,
+                    feeCurrencyStatus = feeCurrencyStatus,
+                ),
+            )
         }
 
         val feeSelectorChildStackState by childSlot.subscribeAsState()
