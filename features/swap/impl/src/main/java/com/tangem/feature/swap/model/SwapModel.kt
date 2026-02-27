@@ -14,6 +14,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -31,9 +33,9 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.toWrappedList
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.InputNumberFormatter
@@ -118,6 +120,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -173,6 +177,7 @@ internal class SwapModel @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
     private val messageSender: UiMessageSender,
+    giveApprovalFeatureToggles: GiveApprovalFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -301,6 +306,33 @@ internal class SwapModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
+    val approvalSlotNavigation = SlotNavigation<Unit>()
+    private val shouldUseGaslessApproval: Boolean = giveApprovalFeatureToggles.isGaslessApprovalEnabled
+
+    val approvalCallback = object : GiveApprovalComponent.Callback {
+        override fun onApproveClick() {
+            sendPermissionApproveClickedEvent()
+        }
+
+        override fun onApproveDone() {
+            approvalSlotNavigation.dismiss()
+            updateWalletBalance()
+            uiState = stateBuilder.loadingPermissionState(uiState)
+            startLoadingQuotesFromLastState(isSilent = true)
+        }
+
+        override fun onApproveFailed() {
+            approvalSlotNavigation.dismiss()
+            showAlert()
+        }
+
+        override fun onCancelClick() {
+            approvalSlotNavigation.dismiss()
+            startLoadingQuotesFromLastState(isSilent = true)
+            analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
+        }
+    }
+
     val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
 
@@ -1224,7 +1256,7 @@ internal class SwapModel @Inject constructor(
                             fromTokenStatus = fromCryptoCurrency,
                             approveType = approveType,
                             txFee = feeForPermission,
-                            spenderAddress = approveDataModel.spenderAddress,
+                            spenderAddress = requireNotNull(dataState.approveDataModel).spenderAddress,
                         ),
                     )
                 }.onSuccess { swapTransactionState ->
@@ -1785,10 +1817,14 @@ internal class SwapModel @Inject constructor(
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 sendGivePermissionClickedEvent()
-                uiState = stateBuilder.showPermissionBottomSheet(uiState) {
-                    startLoadingQuotesFromLastState(isSilent = true)
-                    analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                if (shouldUseGaslessApproval) {
+                    approvalSlotNavigation.activate(Unit)
+                } else {
+                    uiState = stateBuilder.showPermissionBottomSheet(uiState) {
+                        startLoadingQuotesFromLastState(isSilent = true)
+                        analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
+                        uiState = stateBuilder.dismissBottomSheet(uiState)
+                    }
                 }
             },
             onAmountSelected = { onAmountSelected(it) },
