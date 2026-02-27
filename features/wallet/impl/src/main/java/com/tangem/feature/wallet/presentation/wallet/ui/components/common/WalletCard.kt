@@ -12,7 +12,6 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
@@ -45,7 +44,7 @@ import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDropDownItems
@@ -375,22 +374,22 @@ private fun Preview_WalletCard(
 
 private class WalletCardStateProvider : CollectionPreviewParameterProvider<WalletCardState>(
     collection = listOf(
-        WalletPreviewData.walletCardContentState,
-        WalletPreviewData.walletCardContentState.copy(
+        WalletPreviewDataLegacy.walletCardContentState,
+        WalletPreviewDataLegacy.walletCardContentState.copy(
             balance = "0.00",
         ),
-        WalletPreviewData.walletCardContentState.copy(
+        WalletPreviewDataLegacy.walletCardContentState.copy(
             title = "Title",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
                 content = TextReference.Str("3 cards"),
             ),
         ),
-        WalletPreviewData.walletCardContentState.copy(
+        WalletPreviewDataLegacy.walletCardContentState.copy(
             isBalanceFlickering = true,
         ),
-        WalletPreviewData.walletCardLoadingState,
-        WalletPreviewData.walletCardErrorState,
+        WalletPreviewDataLegacy.walletCardLoadingState,
+        WalletPreviewDataLegacy.walletCardErrorState,
     ),
 )
 

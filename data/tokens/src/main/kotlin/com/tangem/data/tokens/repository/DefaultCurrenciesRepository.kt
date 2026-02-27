@@ -34,7 +34,6 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -65,134 +64,6 @@ internal class DefaultCurrenciesRepository(
         dispatchers = dispatchers,
         userTokensSaver = userTokensSaver,
     )
-
-    override suspend fun saveTokens(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-        isGroupedByNetwork: Boolean,
-        isSortedByBalance: Boolean,
-    ) = withContext(dispatchers.io) {
-        ensureIsCorrectUserWallet(userWalletId, isMultiCurrencyWalletExpected = true)
-
-        val response = userTokensResponseFactory.createUserTokensResponse(
-            currencies = currencies,
-            isGroupedByNetwork = isGroupedByNetwork,
-            isSortedByBalance = isSortedByBalance,
-        )
-        userTokensSaver.storeAndPush(userWalletId, response)
-    }
-
-    override suspend fun addCurrenciesCache(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-    ): List<CryptoCurrency> = withContext(dispatchers.io) {
-        val savedCurrencies = requireNotNull(
-            value = getSavedUserTokensResponseSync(key = userWalletId),
-            lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
-        )
-
-        val currenciesToAdd = filterAlreadyAddedCurrencies(
-            savedCurrencies = savedCurrencies.tokens,
-            currenciesToAdd = populateCurrenciesWithMissedCoins(currencies = currencies),
-        )
-
-        val updatedResponse = savedCurrencies.copy(
-            tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
-        )
-
-        userTokensSaver.store(
-            userWalletId = userWalletId,
-            response = updatedResponse,
-        )
-
-        fetchExpressAssetsByNetworkIds(
-            userWallet = userWalletsListRepository.getSyncStrict(id = userWalletId),
-            userTokens = updatedResponse,
-        )
-
-        currenciesToAdd
-    }
-
-    private fun filterAlreadyAddedCurrencies(
-        savedCurrencies: List<UserTokensResponse.Token>,
-        currenciesToAdd: List<CryptoCurrency>,
-    ): List<CryptoCurrency> {
-        return currenciesToAdd.filter { currency ->
-            val networkId = currency.network.toBlockchain().toNetworkId()
-            val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
-
-            savedCurrencies.none { token ->
-                token.contractAddress == contractAddress &&
-                    token.networkId == networkId &&
-                    token.derivationPath == currency.network.derivationPath.value
-            }
-        }
-    }
-
-    private fun populateCurrenciesWithMissedCoins(currencies: List<CryptoCurrency>): List<CryptoCurrency> {
-        val currenciesSequence = currencies.asSequence()
-
-        val networksWithTokens = currenciesSequence
-            .filterIsInstance<CryptoCurrency.Token>()
-            .map { it.network }
-            .distinct()
-
-        val networksWithCoins = currenciesSequence
-            .filterIsInstance<CryptoCurrency.Coin>()
-            .map { it.network }
-            .distinct()
-
-        val networksNeedingCoins = (networksWithTokens - networksWithCoins.toSet()).toMutableList()
-
-        if (networksNeedingCoins.isEmpty()) return currencies
-
-        return buildList {
-            currencies.forEach { currency ->
-                if (currency is CryptoCurrency.Token && currency.network in networksNeedingCoins) {
-                    val coin = cryptoCurrencyFactory.createCoin(currency.network)
-                    add(coin)
-
-                    networksNeedingCoins.remove(currency.network)
-                }
-
-                add(currency)
-            }
-        }
-    }
-
-    override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
-        withContext(dispatchers.io) {
-            val savedCurrencies = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform remove currency action" },
-            )
-
-            val token = userTokensResponseFactory.createResponseToken(currency)
-            val updatedResponse =
-                savedCurrencies.copy(tokens = savedCurrencies.tokens.filterNot { it == token })
-            userTokensSaver.storeAndPush(
-                userWalletId = userWalletId,
-                response = updatedResponse,
-            )
-        }
-
-    override suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        return withContext(dispatchers.io) {
-            val savedCurrencies = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform remove currencies action" },
-            )
-
-            val tokens = currencies.map(userTokensResponseFactory::createResponseToken)
-            val updatedResponse = savedCurrencies.copy(
-                tokens = savedCurrencies.tokens.filterNot(tokens::contains),
-            )
-            userTokensSaver.storeAndPush(
-                userWalletId = userWalletId,
-                response = updatedResponse,
-            )
-        }
-    }
 
     override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return channelFlow {
@@ -577,19 +448,6 @@ internal class DefaultCurrenciesRepository(
         return blockchain?.isNetworkFeeZero() == true
     }
 
-    override suspend fun syncTokens(userWalletId: UserWalletId) {
-        runSuspendCatching {
-            val savedCurrencies = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
-            )
-            userTokensSaver.storeAndPush(
-                userWalletId = userWalletId,
-                response = savedCurrencies,
-            )
-        }
-    }
-
     override fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver? {
         return (userWalletsListRepository.getSyncStrict(userWalletId) as? UserWallet.Cold)?.cardTypesResolver
     }
@@ -711,12 +569,6 @@ internal class DefaultCurrenciesRepository(
             isSortedByBalance = false,
             accountId = null,
         )
-
-    private fun ensureIsCorrectUserWallet(userWalletId: UserWalletId, isMultiCurrencyWalletExpected: Boolean) {
-        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-
-        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected)
-    }
 
     private fun ensureIsCorrectUserWallet(userWallet: UserWallet, isMultiCurrencyWalletExpected: Boolean) {
         val userWalletId = userWallet.walletId

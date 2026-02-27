@@ -1,7 +1,6 @@
 package com.tangem.features.swap.v2.impl.common
 
-import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
-import com.tangem.common.ui.alerts.models.AlertDemoModeUM
+import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -25,6 +24,7 @@ internal class SwapAlertFactory @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
 ) {
     fun getGenericErrorState(expressError: ExpressError, onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
         uiMessageSender.send(
@@ -44,36 +44,21 @@ internal class SwapAlertFactory @Inject constructor(
         )
     }
 
+    @Suppress("CanBeNonNullable")
     fun getSendTransactionErrorState(
         error: SendTransactionError?,
         popBack: () -> Unit,
         onFailedTxEmailClick: (String) -> Unit,
     ) {
-        val transactionErrorAlertConverter = TransactionErrorAlertConverter(
+        if (error == null) return
+
+        val errorDialog = transactionErrorDialogFactory.create(
+            error = error,
             popBackStack = popBack,
             onFailedTxEmailClick = onFailedTxEmailClick,
-        )
+        ) ?: return
 
-        val errorAlert = error?.let { transactionErrorAlertConverter.convert(error) } ?: return
-        val onConfirmClick = errorAlert.onConfirmClick ?: return
-
-        uiMessageSender.send(
-            DialogMessage.Companion(
-                title = errorAlert.title,
-                message = errorAlert.message,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = errorAlert.confirmButtonText,
-                        onClick = onConfirmClick,
-                    )
-                },
-                secondActionBuilder = if (errorAlert !is AlertDemoModeUM) {
-                    { cancelAction() }
-                } else {
-                    null
-                },
-            ),
-        )
+        uiMessageSender.send(errorDialog)
     }
 
     suspend fun onFailedTxEmailClick(
