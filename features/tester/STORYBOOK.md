@@ -171,10 +171,55 @@ Show every meaningful axis of variation in one place:
 | **Shapes** (Default, Rounded) | One labeled group (`ShapeGroup`) per shape, iterate `TangemButtonShape.entries` |
 | **Content** (text+icon vs icon-only) | Two columns per row |
 | **Sizes** | Separate `LazyColumn` item per size group if needed |
+| **Styles / Effects** (e.g. `TangemMessageEffect`) | Chip toggle — see below |
 
 > **Prefer vertical stacking over horizontal.** A row should contain at most
 > 2–3 components; more than that overflows on narrow screens. Use
 > `Modifier.weight(1f)` on columns instead of fixed widths.
+
+### Toggle for style/effect axes
+
+When a discrete axis (e.g. a visual effect enum) would produce too many full-width
+components on one screen, use a **sticky chip-picker** instead of stacking all values.
+Make the page **stateful** and store the selected value in the `StoryBookPage` data class.
+
+```
+┌─────────────────────────────────┐  ← stickyHeader
+│  Magic  │  Card  │ Warning │ None│  ← chip row (EffectToggle)
+└─────────────────────────────────┘
+  No icon, no buttons
+  [  message with selected effect ]
+  With icon
+  [  message with selected effect ]
+  …
+```
+
+**Pattern:**
+
+1. Add the selected value + callback to the `StoryBookPage` data class:
+   ```kotlin
+   internal data class FooStory(
+       val selectedVariant: Variant,
+       val onVariantChange: (Variant) -> Unit,
+   ) : StoryBookPage
+   ```
+2. Use a stateful `Build.kt` (see [Step 2](#2-create-pagefoobuildk)).
+3. In the story composable, add a `stickyHeader` with a chip row:
+   ```kotlin
+   stickyHeader("toggle") {
+       VariantToggle(
+           selected = state.selectedVariant,
+           onSelect = state.onVariantChange,
+           modifier = Modifier
+               .fillMaxWidth()
+               .background(TangemTheme.colors2.surface.level1)
+               .padding(horizontal = 16.dp, vertical = 8.dp),
+       )
+   }
+   ```
+4. Each `item` below uses `state.selectedVariant` for the component under test.
+
+See `TangemMessageStory` for a complete example.
 
 ### Section structure (component grids)
 
