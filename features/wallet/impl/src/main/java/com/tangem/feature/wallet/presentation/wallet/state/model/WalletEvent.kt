@@ -31,4 +31,6 @@ internal sealed class WalletEvent {
         val onAllow: () -> Unit,
         val onDeny: () -> Unit,
     ) : WalletEvent()
+
+    data object CollapseBalance : WalletEvent()
 }
