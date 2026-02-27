@@ -63,6 +63,7 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.*
 import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
+import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
@@ -163,6 +164,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
         }
 
         initializeSearchBarCallbacks()
+        subscribeOnSelectedStatusChange()
         subscribeOnAvailablePairsUpdates()
 
         if (swapFeatureToggles.isMarketListFeatureEnabled) {
@@ -193,6 +195,13 @@ internal class AvailableSwapPairsModel @Inject constructor(
             }
             .flowOn(dispatchers.default)
             .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
+    }
+
+    private fun subscribeOnSelectedStatusChange() {
+        params.selectedStatus
+            .filter { it == null }
+            .onEach { clearSearchState() }
+            .launchIn(modelScope)
     }
 
     private fun initializeSearchBarCallbacks() {
@@ -575,7 +584,20 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 isSearched = state.value.searchBarUM.query.isNotEmpty(),
             ),
         )
+        clearSearchState()
         params.onTokenClick(tokenItem, status)
+    }
+
+    private fun clearSearchState() {
+        tokenListUMController.update(
+            transformer = ClearSearchBarTransformer(
+                placeHolder = resourceReference(id = R.string.common_search),
+            ),
+        )
+        modelScope.launch {
+            searchManager.update("")
+        }
+        searchQueryStateForMarkets.value = ""
     }
 
     private fun CryptoCurrencyStatus.toLeastTokenInfo(): LeastTokenInfo {
@@ -694,6 +716,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
                     isSearched = state.value.searchBarUM.query.isNotEmpty(),
                 ),
             )
+
+            clearSearchState()
 
             // Trigger re-fetch of available pairs (clears cache + re-enters collectLatest)
             refreshPairsTrigger.emit(Unit)

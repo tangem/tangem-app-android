@@ -5,6 +5,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.InputManager
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -36,6 +37,7 @@ import com.tangem.features.onramp.swap.entity.AccountCurrencyUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.*
 import com.tangem.features.onramp.tokenlist.entity.transformer.*
+import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
@@ -120,7 +122,7 @@ internal class OnrampTokenListModel @Inject constructor(
 
                 UpdateTokenItemsTransformer(
                     appCurrency = appCurrency,
-                    onItemClick = params.onTokenClick,
+                    onItemClick = ::onTokenClick,
                     statuses = filterByQueryTokenList.let { statuses ->
                         if (hasRestrictionForSell || isInsufficientBalanceForSell) {
                             mapOf(false to statuses)
@@ -174,7 +176,7 @@ internal class OnrampTokenListModel @Inject constructor(
                 updateTokenListUM(
                     UpdateAccountTokenListTransformer(
                         appCurrency = appCurrency,
-                        onItemClick = params.onTokenClick,
+                        onItemClick = ::onTokenClick,
                         accountList = filterByQueryAccountList.filterByAvailability(),
                         isBalanceHidden = isBalanceHidden,
                         unavailableErrorText = getUnavailableTokensHeaderReference(),
@@ -272,6 +274,22 @@ internal class OnrampTokenListModel @Inject constructor(
         } else {
             prevState.availableItems.isEmpty() && prevState.unavailableItems.isEmpty() &&
                 (newState.availableItems.isNotEmpty() || newState.unavailableItems.isNotEmpty())
+        }
+    }
+
+    private fun onTokenClick(tokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
+        clearSearchState()
+        params.onTokenClick(tokenItemState, status)
+    }
+
+    private fun clearSearchState() {
+        tokenListUMController.update(
+            transformer = ClearSearchBarTransformer(
+                placeHolder = resourceReference(id = R.string.common_search),
+            ),
+        )
+        modelScope.launch {
+            searchManager.update("")
         }
     }
 
