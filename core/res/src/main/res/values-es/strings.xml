@@ -1896,6 +1896,8 @@
   <string name="warning_express_refresh_required_title">Servicio no disponible temporalmente</string>
   <string name="warning_express_too_maximum_amount_title">La cantidad de tokens a intercambiar no debe exceder %s</string>
   <string name="warning_express_too_minimal_amount_title">El monto a cambiar debe ser de al menos %s</string>
+  <string name="warning_express_unsupported_pair_description">El intercambio no está disponible para este par. Por favor, seleccione otro token e inténtelo de nuevo.</string>
+  <string name="warning_express_unsupported_pair_title">Par de intercambio no compatible.</string>
   <string name="warning_express_wrong_amount_description">Por favor cambie la cantidad a cambiar</string>
   <string name="warning_failed_to_verify_card_message">Esta tarjeta podría ser una muestra de producción o una falsificación</string>
   <string name="warning_failed_to_verify_card_title">La verificación de autenticidad falló</string>
