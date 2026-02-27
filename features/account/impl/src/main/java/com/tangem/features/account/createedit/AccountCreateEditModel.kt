@@ -1,6 +1,7 @@
 package com.tangem.features.account.createedit
 
 import androidx.annotation.StringRes
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toDomain
@@ -23,6 +24,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -134,10 +136,14 @@ internal class AccountCreateEditModel @Inject constructor(
 
         result
             .onLeft { error -> handleAddAccountError(error, derivationIndex.value) }
-            .onRight {
+            .onRight { account ->
                 analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.AccountCreated())
                 showMessage(R.string.account_create_success_message)
-                router.pop()
+                val route = AppRoute.ManageTokens(
+                    source = AppRoute.ManageTokens.Source.ACCOUNT,
+                    portfolioId = PortfolioId(account.accountId),
+                )
+                router.replaceCurrent(route)
             }
     }
 
