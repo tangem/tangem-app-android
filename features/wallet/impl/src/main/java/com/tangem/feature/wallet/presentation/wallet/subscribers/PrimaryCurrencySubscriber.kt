@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import java.math.BigDecimal
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class PrimaryCurrencySubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
