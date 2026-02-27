@@ -1898,7 +1898,7 @@
   <string name="warning_express_too_maximum_amount_title">The amount of tokens to be swapped must not exceed %s</string>
   <string name="warning_express_too_minimal_amount_title">The amount to swap must be at least %s</string>
   <string name="warning_express_unsupported_pair_description">Swapping isn\'t available for this pair. Please select a different token and try again.</string>
-  <string name="warning_express_unsupported_pair_title">Unsupported token pair</string>
+  <string name="warning_express_unsupported_pair_title">Unsupported swap pair</string>
   <string name="warning_express_wrong_amount_description">Please change the amount to swap</string>
   <string name="warning_failed_to_verify_card_message">This card might be a production sample or counterfeit</string>
   <string name="warning_failed_to_verify_card_title">Authenticity check failed</string>
