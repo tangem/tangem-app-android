@@ -4,5 +4,9 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.tokens.TokensFeatureToggles
 
 internal class DefaultTokensFeatureToggles(
-    @Suppress("UnusedPrivateMember") private val featureTogglesManager: FeatureTogglesManager,
-) : TokensFeatureToggles
+    private val featureTogglesManager: FeatureTogglesManager,
+) : TokensFeatureToggles {
+
+    override val isMultiAddressUtxoEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("MULTI_ADDRESS_UTXO_ENABLED")
+}

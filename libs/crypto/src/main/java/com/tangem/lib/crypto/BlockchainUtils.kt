@@ -85,11 +85,20 @@ object BlockchainUtils {
         excludedBlockchains: ExcludedBlockchains,
         hotExcludedBlockchains: Set<Blockchain>,
         hasOnlyHotWallets: Boolean = false,
+        coinId: String? = null,
+        contractAddress: String? = null,
     ): Boolean {
-        val blockchain = Blockchain.fromNetworkId(blockchainId)
+        val blockchain = Blockchain.fromNetworkId(blockchainId) ?: return false
 
-        return blockchain != null && blockchain !in excludedBlockchains &&
-            (hasOnlyHotWallets.not() || blockchain !in hotExcludedBlockchains)
+        if (blockchain in excludedBlockchains) return false
+        if (hasOnlyHotWallets && blockchain in hotExcludedBlockchains) return false
+
+        if (!contractAddress.isNullOrEmpty()) {
+            if (!blockchain.canHandleTokens()) return false
+            if (coinId != null && !isNotBlockedByTerraV1Filter(blockchainId, coinId)) return false
+        }
+
+        return true
     }
 
     fun isArbitrum(blockchainId: String): Boolean {
