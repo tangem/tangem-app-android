@@ -49,7 +49,7 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.reorderable)
+    api(deps.compose.reorderable)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
