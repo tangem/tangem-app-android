@@ -2,7 +2,7 @@ package com.tangem.core.ui.ds.topbar
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -55,6 +55,7 @@ fun TangemTopBar(
         modifier = modifier,
         content = {
             Column(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x0_5),
             ) {
@@ -95,11 +96,17 @@ private fun TangemTopBarTitle(title: TextReference?, @DrawableRes titleIconRes: 
     AnimatedVisibility(
         visible = title != null,
         label = "Title Visibility",
+        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
     ) {
         val wrappedTitle = remember(this) { requireNotNull(title) }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(
+                space = TangemTheme.dimens2.x1,
+                alignment = Alignment.CenterHorizontally,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedVisibility(
