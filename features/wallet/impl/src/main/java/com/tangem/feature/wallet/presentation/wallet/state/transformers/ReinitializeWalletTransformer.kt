@@ -4,6 +4,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 
 /**
@@ -23,6 +24,12 @@ internal class ReinitializeWalletTransformer(
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+        )
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletLoadingStateFactory.create2(
+            userWallet = userWallet,
         )
     }
 
