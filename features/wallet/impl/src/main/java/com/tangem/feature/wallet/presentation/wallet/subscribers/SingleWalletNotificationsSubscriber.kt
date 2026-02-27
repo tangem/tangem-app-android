@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.onEach
 /**
 [REDACTED_AUTHOR]
  */
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class SingleWalletNotificationsSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val stateController: WalletStateController,
