@@ -2,8 +2,9 @@ package com.tangem.features.approval.impl
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.approval.api.GiveApprovalFeatureToggles
+import javax.inject.Inject
 
-internal class DefaultGiveApprovalFeatureToggles(
+internal class DefaultGiveApprovalFeatureToggles @Inject constructor(
     private val featureToggles: FeatureTogglesManager,
 ) : GiveApprovalFeatureToggles {
 
