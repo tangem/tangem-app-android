@@ -26,7 +26,7 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MainScreenTestTags
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletCard
 import kotlinx.collections.immutable.ImmutableList
@@ -106,7 +106,7 @@ private fun Preview_WalletsList() {
     TangemThemePreview {
         WalletsList(
             lazyListState = rememberLazyListState(),
-            wallets = WalletPreviewData.wallets.values.toPersistentList(),
+            wallets = WalletPreviewDataLegacy.wallets.values.toPersistentList(),
             isBalanceHidden = false,
         )
     }
