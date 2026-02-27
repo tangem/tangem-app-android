@@ -1434,6 +1434,8 @@
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
+  <string name="swap_search_tooltip_description">Recherchez n’importe quel token, même s’il ne figure pas encore dans votre liste.</string>
+  <string name="swap_search_tooltip_title">Utilisez la recherche pour trouver ce dont vous avez besoin.</string>
   <string name="swap_story_fifth_subtitle">Ayez confiance en notre assistance 24 heures sur 24 pour vous aider à résoudre tous vos problèmes</string>
   <string name="swap_story_fifth_title">Assistance 24 heures sur 24</string>
   <string name="swap_story_first_subtitle">Plusieurs fournisseurs de confiance en un seul endroit : échangez n\'importe quel actif facilement</string>
@@ -1891,6 +1893,8 @@
   <string name="warning_express_refresh_required_title">Service temporairement indisponible</string>
   <string name="warning_express_too_maximum_amount_title">Le nombre de jetons à échanger ne doit pas dépasser %s</string>
   <string name="warning_express_too_minimal_amount_title">Le montant à échanger doit être d\'au moins %s</string>
+  <string name="warning_express_unsupported_pair_description">L’échange n’est pas disponible pour cette paire. Veuillez sélectionner un autre token et réessayer.</string>
+  <string name="warning_express_unsupported_pair_title">Paire d’échange non prise en charge.</string>
   <string name="warning_express_wrong_amount_description">Veuillez modifier le montant à échanger</string>
   <string name="warning_failed_to_verify_card_message">Cette carte pourrait être un échantillon de production ou une contrefaçon</string>
   <string name="warning_failed_to_verify_card_title">Échec de la vérification d\'authenticité</string>
