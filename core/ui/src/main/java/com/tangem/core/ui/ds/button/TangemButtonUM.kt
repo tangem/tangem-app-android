@@ -1,6 +1,7 @@
 package com.tangem.core.ui.ds.button
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -19,6 +20,7 @@ import com.tangem.core.ui.extensions.TextReference
  *
 [REDACTED_AUTHOR]
  */
+@Stable
 data class TangemButtonUM(
     val text: TextReference? = null,
     val descriptionText: TextReference? = null,

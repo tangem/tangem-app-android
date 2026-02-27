@@ -20,6 +20,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun TangemPullToRefreshContainer(
     config: PullToRefreshConfig,
     modifier: Modifier = Modifier,
+    indicatorModifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val state = rememberPullToRefreshState()
@@ -32,7 +33,7 @@ fun TangemPullToRefreshContainer(
         modifier = modifier,
         indicator = {
             Indicator(
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = indicatorModifier.align(Alignment.TopCenter),
                 isRefreshing = config.isRefreshing,
                 state = state,
                 containerColor = TangemTheme.colors.background.tertiary,

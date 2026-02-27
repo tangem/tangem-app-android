@@ -6,14 +6,12 @@ import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
-import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.models.staking.PendingAction
 import com.tangem.domain.staking.model.StakingTarget
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
-import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
@@ -40,7 +38,6 @@ internal data class StakingUiState(
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val actionType: StakingActionCommonType,
     val buttonsState: NavigationButtonsState,
-    val event: StateEvent<StakingEvent>,
     val balanceState: BalanceState?,
     val showColdWalletInteractionIcon: Boolean,
     val shouldShowHoldToConfirmButton: Boolean,
