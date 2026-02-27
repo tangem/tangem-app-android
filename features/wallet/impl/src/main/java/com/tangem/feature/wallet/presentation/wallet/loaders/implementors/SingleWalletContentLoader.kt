@@ -1,34 +1,33 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.feature.wallet.presentation.wallet.subscribers.CheckWalletWithFundsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletNotificationsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-@Suppress("LongParameterList")
+/**
+ * This content loader is used for the wallet screen when for single wallets.
+ * For example - [Note, Twins, Single with token]
+ */
 internal class SingleWalletContentLoader @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet.Cold,
-    @Assisted private val isRefresh: Boolean,
-    private val primaryCurrencySubscriberFactory: PrimaryCurrencySubscriber.Factory,
-    private val singleWalletButtonsSubscriberFactory: SingleWalletButtonsSubscriber.Factory,
-    private val singleWalletNotificationsSubscriberFactory: SingleWalletNotificationsSubscriber.Factory,
-    private val singleWalletExpressStatusesSubscriberFactory: SingleWalletExpressStatusesSubscriber.Factory,
-    private val txHistorySubscriberFactory: TxHistorySubscriber.Factory,
+    private val walletNotificationsSubscriber: WalletNotificationsSubscriber.Factory,
+    private val singleWalletSubscriber: SingleWalletSubscriber.Factory,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOf(
-        primaryCurrencySubscriberFactory.create(userWallet),
-        singleWalletButtonsSubscriberFactory.create(userWallet),
-        singleWalletNotificationsSubscriberFactory.create(userWallet),
-        singleWalletExpressStatusesSubscriberFactory.create(userWallet),
-        txHistorySubscriberFactory.create(userWallet, isRefresh),
-        checkWalletWithFundsSubscriberFactory.create(userWallet),
+        singleWalletSubscriber.create(userWallet = userWallet),
+        walletNotificationsSubscriber.create(userWallet = userWallet),
+        checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet),
     )
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet.Cold, isRefresh: Boolean): SingleWalletContentLoader
+        fun create(userWallet: UserWallet.Cold): SingleWalletContentLoader
     }
 }
