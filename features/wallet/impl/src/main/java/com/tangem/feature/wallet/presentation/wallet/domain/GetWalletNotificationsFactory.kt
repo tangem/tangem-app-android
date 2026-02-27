@@ -13,6 +13,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
@@ -35,7 +36,7 @@ import javax.inject.Inject
  */
 @Suppress("LongParameterList")
 @ModelScoped
-internal class GetWalletWarningsFactory @Inject constructor(
+internal class GetWalletNotificationsFactory @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
@@ -194,7 +195,7 @@ internal class GetWalletWarningsFactory @Inject constructor(
             condition = flattenCurrencies.hasUnreachableNetworks(),
         )
 
-        addCloreMigrationNotification(flattenCurrencies, clickIntents)
+        addCloreMigrationNotification(userWallet, flattenCurrencies, clickIntents)
 
         addNoAccountWarning(cryptoCurrencyStatus = flattenCurrencies.firstOrNull())
 
@@ -220,13 +221,15 @@ internal class GetWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotificationUM>.addCloreMigrationNotification(
+        userWallet: UserWallet,
         flattenCurrencies: List<CryptoCurrencyStatus>,
         clickIntents: WalletClickIntents,
     ) {
         val cloreCurrency = flattenCurrencies.findCloreCurrency() ?: return
 
-        add(
-            WalletNotificationUM.CloreMigration(
+        addIf(
+            condition = userWallet.isMultiCurrency,
+            element = WalletNotificationUM.CloreMigration(
                 onStartMigrationClick = { clickIntents.onCloreMigrationClick(cloreCurrency) },
             ),
         )

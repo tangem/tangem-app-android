@@ -30,8 +30,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @Suppress("LongParameterList")
-internal class TxHistorySubscriber @AssistedInject constructor(
+internal class TxHistorySubscriberLegacy @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet.Cold,
     @Assisted private val isRefresh: Boolean,
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -126,6 +127,6 @@ internal class TxHistorySubscriber @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet.Cold, isRefresh: Boolean): TxHistorySubscriber
+        fun create(userWallet: UserWallet.Cold, isRefresh: Boolean): TxHistorySubscriberLegacy
     }
 }
