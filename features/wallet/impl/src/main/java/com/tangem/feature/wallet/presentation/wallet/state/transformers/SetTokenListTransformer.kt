@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.converte
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import timber.log.Timber
 import java.math.BigDecimal
@@ -101,7 +101,7 @@ internal class SetTokenListTransformer(
     private fun toLoadedState(): WalletTokensListUM {
         if (params !is TokenConverterParams.Account) return WalletTokensListUM.Empty
 
-        return WalletTokensListUMTransformer(
+        return WalletTokensListUMConverter(
             selectedWallet = userWallet,
             appCurrency = appCurrency,
             clickIntents = clickIntents,
