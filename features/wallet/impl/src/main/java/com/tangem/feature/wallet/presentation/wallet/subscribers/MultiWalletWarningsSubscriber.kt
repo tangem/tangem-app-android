@@ -16,6 +16,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class MultiWalletWarningsSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val stateController: WalletStateController,
