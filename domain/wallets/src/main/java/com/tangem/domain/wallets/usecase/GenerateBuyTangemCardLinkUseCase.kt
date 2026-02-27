@@ -2,7 +2,7 @@ package com.tangem.domain.wallets.usecase
 
 import com.tangem.common.TangemSiteUrlBuilder
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
-import java.util.Locale
+import com.tangem.utils.SupportedLanguages
 
 class GenerateBuyTangemCardLinkUseCase(
     private val walletsPromoRepository: WalletsPromoRepository,
@@ -15,7 +15,7 @@ class GenerateBuyTangemCardLinkUseCase(
     suspend operator fun invoke(utmCampaign: String?): String {
         val refCode = walletsPromoRepository.getReferralCodeIfExists()
         val refCodeTag = TangemSiteUrlBuilder.getRefCodeTag(refCode)
-        val langCode = Locale.getDefault().language
+        val langCode = SupportedLanguages.getCurrentSupportedLanguageCode()
         val utmTags = TangemSiteUrlBuilder.getUtmTags(utmCampaign)
         return "https://buy.tangem.com/$langCode?$utmTags&$refCodeTag"
     }
