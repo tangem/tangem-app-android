@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemeRedesign
 
 /**
  * Interface representing a Compose screen with common theming and content composition properties.
@@ -61,7 +62,9 @@ internal fun ComposeScreen.createComposeView(
                 uiDependencies = uiDependencies,
                 overrideSystemBarColors = overrideSystemBarColors,
             ) {
-                ScreenContent(modifier = screenModifier)
+                TangemThemeRedesign {
+                    ScreenContent(modifier = screenModifier)
+                }
             }
         }
     }

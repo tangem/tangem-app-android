@@ -304,11 +304,7 @@ private inline fun BaseScaffoldWithMarkets(
     val maxHeight = LocalWindowSize.current.height
 
     val coroutineScope = rememberCoroutineScope()
-    val background = if (state.isNewMarketEnabled) {
-        TangemTheme.colors.background.tertiary
-    } else {
-        TangemTheme.colors.background.primary
-    }
+    val background = TangemTheme.colors.background.tertiary
 
     val showMarketsHint by remember {
         derivedStateOf {
@@ -720,7 +716,6 @@ internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modi
 private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig != null) {
         when (bottomSheetConfig.content) {
-            is WalletBottomSheetConfig -> WalletBottomSheet(config = bottomSheetConfig)
             is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
             is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
             is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)
