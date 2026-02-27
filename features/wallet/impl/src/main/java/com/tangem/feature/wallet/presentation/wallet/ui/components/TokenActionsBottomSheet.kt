@@ -9,14 +9,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SimpleSettingsRow
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.getDefaultRowColors
 import com.tangem.core.ui.components.getWarningRowColors
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
 import kotlinx.collections.immutable.ImmutableList
@@ -64,5 +64,5 @@ private fun ActionsBottomSheetContent_Light(
 }
 
 private class ActionsBottomSheetContentConfigProvider : CollectionPreviewParameterProvider<ActionsBottomSheetConfig>(
-    collection = listOf(WalletPreviewData.actionsBottomSheet),
+    collection = listOf(WalletPreviewDataLegacy.actionsBottomSheet),
 )
