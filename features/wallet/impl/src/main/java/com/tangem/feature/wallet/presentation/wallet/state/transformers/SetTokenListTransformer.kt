@@ -6,6 +6,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletBalanceUMTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMTransformer
@@ -49,7 +51,9 @@ internal class SetTokenListTransformer(
         return when (walletUM) {
             is WalletUM.Content -> {
                 walletUM.copy(
+                    walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
                     tokensListUM = toLoadedState(),
+                    buttons = walletUM.enableButtons(),
                 )
             }
             is WalletUM.Locked -> {
@@ -69,6 +73,17 @@ internal class SetTokenListTransformer(
             selectedWallet = userWallet,
             appCurrency = appCurrency,
         ).convert(value = this)
+    }
+
+    private fun WalletBalanceUM.toLoadedState2(): WalletBalanceUM {
+        val fiatBalance = when (params) {
+            is TokenConverterParams.Account -> params.accountList.totalFiatBalance
+            is TokenConverterParams.Wallet -> params.tokenList.totalFiatBalance
+        }
+        return MultiWalletBalanceUMTransformer(
+            fiatBalance = fiatBalance,
+            appCurrency = appCurrency,
+        ).transform(prevState = this)
     }
 
     private fun WalletTokensListState.toLoadedState(): WalletTokensListState {
