@@ -4,12 +4,12 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface GiveApprovalComponent : ComposableBottomSheetComponent {
 
     data class Params(
-        val userWallet: UserWallet,
+        val userWalletId: UserWalletId,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val amount: String,
@@ -19,6 +19,7 @@ interface GiveApprovalComponent : ComposableBottomSheetComponent {
     )
 
     interface Callback {
+        fun onApproveClick()
         fun onApproveDone()
         fun onApproveFailed()
         fun onCancelClick()
