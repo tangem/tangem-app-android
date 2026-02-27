@@ -15,7 +15,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrency
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -24,8 +23,6 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCa
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.models.PortfolioId
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -44,10 +41,12 @@ import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList")
 @Stable
 @ModelScoped
@@ -60,7 +59,6 @@ internal class ReferralModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val portfolioFetcherFactory: PortfolioFetcher.Factory,
     val portfolioSelectorController: PortfolioSelectorController,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
@@ -92,26 +90,24 @@ internal class ReferralModel @Inject constructor(
 
     init {
         analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened())
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            combine(
-                flow = referralData.filterNotNull().onEach(::selectAccount),
-                flow2 = portfolioSelectorController.isAccountMode,
-                transform = { referralData, isAccountMode -> referralData to isAccountMode },
-            ).transformLatest { (referralData, isAccountMode) ->
-                when (isAccountMode) {
-                    false -> showContent(referralData)
-                    true -> combineAccountUI(referralData)
+
+        combine(
+            flow = referralData.filterNotNull().onEach(::selectAccount),
+            flow2 = portfolioSelectorController.isAccountMode,
+            transform = { referralData, isAccountMode -> referralData to isAccountMode },
+        )
+            .transformLatest { (referralData, isAccountMode) ->
+                if (!isAccountMode) {
+                    showContent(referralData)
+                } else {
+                    combineAccountUI(referralData)
                         .map { referralData to it }
                         .collect(::emit)
                 }
             }
-                .onEach { (referralData, accountAward) -> showContent(referralData, accountAward) }
-                .launchIn(modelScope)
-        } else {
-            referralData.filterNotNull()
-                .onEach(::showContent)
-                .launchIn(modelScope)
-        }
+            .onEach { (referralData, accountAward) -> showContent(referralData, accountAward) }
+            .launchIn(modelScope)
+
         loadReferralData()
     }
 
@@ -123,12 +119,7 @@ internal class ReferralModel @Inject constructor(
         flow3 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow4 = portfolioFetcher.data,
     ) { pair, isBalanceHidden, appCurrency, portfolios ->
-        val selectedAccount = pair?.second ?: return@combine null
-
-        val cryptoPortfolio = when (selectedAccount) {
-            is AccountStatus.CryptoPortfolio -> selectedAccount
-            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
-        }
+        val cryptoPortfolio = pair?.second ?: return@combine null
 
         val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
             userWalletId = params.userWalletId,
@@ -185,11 +176,8 @@ internal class ReferralModel @Inject constructor(
             val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
-                val portfolioId = when (accountsFeatureToggles.isFeatureEnabled) {
-                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccountSync))
-                    false -> PortfolioId(params.userWalletId)
-                }
-                runCatching { referralInteractor.startReferral(portfolioId) }
+                val accountId = requireNotNull(portfolioSelectorController.selectedAccountSync)
+                runCatching { referralInteractor.startReferral(accountId) }
                     .onSuccess { referral ->
                         analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful())
                         referralData.value = referral

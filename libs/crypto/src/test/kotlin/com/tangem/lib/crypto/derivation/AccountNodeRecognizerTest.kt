@@ -103,6 +103,29 @@ internal class AccountNodeRecognizerTest {
                 expected = null,
             ),
             // endregion
+
+            // region Berachain blockchain (EVM-like)
+            TestModel(
+                blockchain = Blockchain.Berachain,
+                derivationPath = "m/44'/60'/0'/0/1",
+                expected = 1,
+            ),
+            TestModel(
+                blockchain = Blockchain.Berachain,
+                derivationPath = "m/44'/60'/0'/0/0",
+                expected = 0,
+            ),
+            TestModel(
+                blockchain = Blockchain.Berachain,
+                derivationPath = "m/44'/60'/0'/0",
+                expected = null,
+            ),
+            TestModel(
+                blockchain = Blockchain.Berachain,
+                derivationPath = "m/44'/60'",
+                expected = null,
+            ),
+            // endregion
         )
 
         private fun provideUTXOTestModels() = listOf(
