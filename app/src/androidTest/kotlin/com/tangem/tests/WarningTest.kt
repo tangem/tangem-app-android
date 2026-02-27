@@ -75,7 +75,7 @@ class WarningTest : BaseTestCase() {
             }
         ).run {
             step("Open 'Main' screen") {
-                openMainScreen(mockContent = Wallet2WithSeedPhraseMockContent, alreadyActivatedDialogIsShown = true)
+                openMainScreen(mockContent = Wallet2WithSeedPhraseMockContent)
             }
             step("Assert 'Seed phrase' notification icon is displayed") {
                 onMainScreen { seedPhraseNotificationIcon.assertIsDisplayed() }
