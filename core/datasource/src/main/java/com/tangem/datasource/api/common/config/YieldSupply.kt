@@ -2,7 +2,7 @@ package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
@@ -10,7 +10,7 @@ import com.tangem.utils.version.AppVersionProvider
 
 /** YieldSupply [ApiConfig] */
 internal class YieldSupply(
-    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
     private val appVersionProvider: AppVersionProvider,
     private val authProvider: AuthProvider,
     private val appInfoProvider: AppInfoProvider,
@@ -78,8 +78,8 @@ internal class YieldSupply(
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
             ApiEnvironment.STAGE_2,
-            -> environmentConfigStorage.getConfigSync().yieldModuleApiKeyDev
-            ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().yieldModuleApiKey
+            -> environmentConfig.yieldModuleApiKeyDev
+            ApiEnvironment.PROD -> environmentConfig.yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
     }
 }
