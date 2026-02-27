@@ -1864,6 +1864,8 @@
   <string name="warning_express_refresh_required_title">Сервис временно недоступен</string>
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
   <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
+  <string name="warning_express_unsupported_pair_description">Обмен для этой пары недоступен. Пожалуйста, выберите другой токен и попробуйте снова.</string>
+  <string name="warning_express_unsupported_pair_title">Неподдерживаемая для обмена пара</string>
   <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
   <string name="warning_failed_to_verify_card_message">Возможно, данная карта является образцом или подделкой</string>
   <string name="warning_failed_to_verify_card_title">Ошибка проверки подлинности</string>
