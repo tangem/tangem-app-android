@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -46,7 +45,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = CommonSendAnalyticEvents.APPROVE_CATEGORY,
             analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Approve,
-            userWalletId = params.userWallet.walletId,
+            userWalletId = params.userWalletId,
         ),
         onResult = model::onFeeResult,
     )
@@ -84,7 +83,7 @@ internal class DefaultGiveApprovalComponent @AssistedInject constructor(
                 approveType = uiState.approveType,
                 approveItems = uiState.approveItems,
                 onChangeApproveType = model::onChangeApproveType,
-                walletInteractionIcon = walletInterationIcon(params.userWallet),
+                walletInteractionIcon = uiState.walletInteractionIcon,
                 isApproveEnabled = uiState.isApproveButtonEnabled,
                 isApproveLoading = uiState.isApproveLoading,
                 onApproveClick = model::onApproveClick,
