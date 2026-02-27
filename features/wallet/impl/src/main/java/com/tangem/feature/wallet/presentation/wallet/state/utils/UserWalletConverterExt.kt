@@ -22,3 +22,7 @@ private fun UserWallet.Cold.isWalletWithTokens(): Boolean {
 internal fun UserWallet.isSingleWallet(): Boolean {
     return this is UserWallet.Cold && scanResponse.cardTypesResolver.isSingleWallet()
 }
+
+internal fun UserWallet.isSingleWalletWithToken(): Boolean {
+    return this is UserWallet.Cold && scanResponse.cardTypesResolver.isSingleWalletWithToken()
+}
