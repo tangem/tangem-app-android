@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.map
 
 import javax.inject.Inject
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
