@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.formatStyled
 import com.tangem.core.ui.res.TangemTheme
@@ -41,6 +42,13 @@ internal class MultiWalletBalanceUMTransformer(
         return WalletBalanceUM.Content(
             id = id,
             name = name,
+            balanceInAppBar = fiatBalance.amount.formatStyled {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                )
+            },
             balance = fiatBalance.amount.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
