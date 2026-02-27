@@ -18,7 +18,7 @@ internal data class FeedListUM(
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
     val globalState: GlobalFeedState = GlobalFeedState.Content,
-    val earnListUM: EarnListUM?,
+    val earnListUM: EarnListUM,
 )
 
 internal data class FeedListCallbacks(
