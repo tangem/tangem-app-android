@@ -35,6 +35,8 @@ import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
 import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
+import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
+import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
@@ -86,6 +88,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
                             ButtonUM.ADDRESSES_INFO,
+                            ButtonUM.STORY_BOOK,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -97,6 +100,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
                                 ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
+                                ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
                             }
 
                             innerTesterRouter.open(route)
@@ -178,6 +182,15 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AddressesInfoScreen(state)
+            }
+
+            composable(route = TesterScreen.STORY_BOOK.name) {
+                val viewModel = hiltViewModel<StoryBookViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                StoryBookScreen(state)
             }
         }
     }
