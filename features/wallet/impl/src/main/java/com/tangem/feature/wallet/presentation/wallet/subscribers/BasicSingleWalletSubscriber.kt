@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.mapNotNull
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal abstract class BasicSingleWalletSubscriber : BasicWalletSubscriber() {
 
     /** Account ID for the main crypto portfolio of the user wallet */
