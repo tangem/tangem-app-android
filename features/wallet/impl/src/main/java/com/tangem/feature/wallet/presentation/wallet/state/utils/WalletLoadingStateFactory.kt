@@ -4,6 +4,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
@@ -14,9 +15,11 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -41,6 +44,26 @@ internal class WalletLoadingStateFactory(
                 createLoadingHotWalletContent(userWallet)
             }
         }
+    }
+
+    fun create2(userWallet: UserWallet): WalletUM {
+        return WalletUM.Content(
+            pullToRefreshConfig = createPullToRefreshConfig(),
+            walletsBalanceUM = WalletBalanceUM.Loading(
+                id = userWallet.walletId,
+                name = userWallet.name,
+            ),
+            buttons = createWalletActions(userWallet),
+            notifications = persistentListOf(),
+            notificationsCarousel = persistentListOf(),
+            tokensListUM = WalletTokensListUM.Loading,
+            nftState = WalletNFTItemUM.Hidden,
+            type = when (userWallet) {
+                is UserWallet.Cold -> WalletType.Cold
+                is UserWallet.Hot -> WalletType.Hot
+            },
+            tangemPayState = TangemPayState.Empty,
+        )
     }
 
     private fun createLoadingHotWalletContent(userWallet: UserWallet.Hot): WalletState.MultiCurrency.Content {
@@ -142,6 +165,39 @@ internal class WalletLoadingStateFactory(
                 onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
             ),
         )
+    }
+
+    private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
+        return buildList {
+            add(
+                WalletActionButtons.Buy(
+                    isEnabled = false,
+                    onClick = {
+                        clickIntents.onMultiWalletBuyClick(
+                            userWalletId = userWallet.walletId,
+                            screenType = WALLET_TYPE,
+                        )
+                    },
+                ).buttonUM,
+            )
+            addIf(
+                condition = !userWallet.isSingleWallet(),
+                element = WalletActionButtons.Swap(
+                    isEnabled = false,
+                    onClick = {
+                        clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId)
+                    },
+                ).buttonUM,
+            )
+            add(
+                WalletActionButtons.Sell(
+                    isEnabled = false,
+                    onClick = {
+                        clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId)
+                    },
+                ).buttonUM,
+            )
+        }.toPersistentList()
     }
 
     private fun createDimmedButtons(): PersistentList<WalletManageButton> {
