@@ -16,11 +16,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
 import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.background.northernLightsStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.buttons.buttonsStoryFactory
 
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
 private fun buildStories() = listOf(
-    StoryItem(title = "Northern Lights Background", factory = northernLightsStoryFactory),
+    StoryItem(title = "🔘 Buttons", factory = buttonsStoryFactory),
+    StoryItem(title = "🌌 Northern Lights Background", factory = northernLightsStoryFactory),
 )
 
 @Composable
