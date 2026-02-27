@@ -4,10 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.feature.tester.presentation.storybook.entity.ButtonsStory
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
 import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
 import com.tangem.feature.tester.presentation.storybook.entity.StoryList
 import com.tangem.feature.tester.presentation.storybook.page.background.NorthernLightsStory
+import com.tangem.feature.tester.presentation.storybook.page.buttons.ButtonsStory
 
 @Composable
 internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) {
@@ -20,6 +22,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
         when (storyState) {
             StoryList -> StoryBookListScreen(state = state)
             is NorthernLightsStory -> NorthernLightsStory(state = storyState)
+            ButtonsStory -> ButtonsStory()
         }
     }
 }
