@@ -41,6 +41,13 @@ internal class ReinitializeNewWalletTransformer(
                     ),
                 )
                 .toImmutableList(),
+            wallets2 = prevState.wallets2
+                .filterNot { it.walletsBalanceUM.id == prevWalletId }
+                .plus(
+                    element = walletLoadingStateFactory.create2(
+                        userWallet = newUserWallet,
+                    ),
+                ).toImmutableList(),
         )
     }
 }
