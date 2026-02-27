@@ -24,8 +24,8 @@ import com.tangem.features.feed.ui.earn.state.EarnListUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
-internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM?, modifier: Modifier = Modifier) {
-    if (earnListUM == null) return
+internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM, modifier: Modifier = Modifier) {
+    if (earnListUM is EarnListUM.Empty) return
 
     Column(modifier = modifier) {
         Header(
@@ -57,6 +57,7 @@ internal fun EarnBlock(onSeeAllClick: () -> Unit, earnListUM: EarnListUM?, modif
                     is EarnListUM.Content -> EarnContentBlock(items = earnListUM.items)
                     is EarnListUM.Error -> EarnErrorBlock(onRetryClick = earnListUM.onRetryClicked)
                     EarnListUM.Loading -> EarnListPlaceholder(placeholderCount = PLACEHOLDER_ITEM_COUNT)
+                    EarnListUM.Empty -> Unit
                 }
             }
         }
