@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -9,9 +10,12 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createStateByWalletType
+import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleWallet
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
@@ -41,6 +45,9 @@ internal class InitializeWalletsTransformer(
                         )
                     }
                 }
+                .toImmutableList(),
+            wallets2 = wallets
+                .map(::createInitState)
                 .toImmutableList(),
             onWalletChange = clickIntents::onWalletChange,
             onDismissMarketsTooltip = clickIntents::onDismissMarketsTooltip,
@@ -79,6 +86,16 @@ internal class InitializeWalletsTransformer(
         )
     }
 
+    private fun createInitState(userWallet: UserWallet): WalletUM {
+        return if (userWallet.isLocked) {
+            userWallet.toLockedWalletUM()
+        } else {
+            walletLoadingStateFactory.create2(
+                userWallet = userWallet,
+            )
+        }
+    }
+
     private fun UserWallet.toLockedWalletCardState(): WalletCardState {
         return WalletCardState.LockedContent(
             id = walletId,
@@ -86,6 +103,25 @@ internal class InitializeWalletsTransformer(
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             imageResId = walletImageResolver.resolve(userWallet = this),
             dropDownItems = persistentListOf(),
+        )
+    }
+
+    private fun UserWallet.toLockedWalletUM(): WalletUM.Locked {
+        return WalletUM.Locked(
+            walletsBalanceUM = WalletBalanceUM.Loading(
+                id = walletId,
+                name = name,
+            ),
+            buttons = createWalletActions(userWallet = this),
+            type = when (this) {
+                is UserWallet.Cold -> WalletType.Cold
+                is UserWallet.Hot -> WalletType.Hot
+            },
+            notifications = persistentListOf(
+                WalletNotificationUM.UnlockWallets(
+                    onClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
+                ),
+            ),
         )
     }
 
@@ -108,5 +144,29 @@ internal class InitializeWalletsTransformer(
             WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
             WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
         )
+    }
+
+    private fun createWalletActions(userWallet: UserWallet): PersistentList<TangemButtonUM> {
+        return buildList {
+            add(
+                WalletActionButtons.Buy(
+                    isEnabled = false,
+                    onClick = {},
+                ).buttonUM,
+            )
+            addIf(
+                condition = !userWallet.isSingleWallet(),
+                element = WalletActionButtons.Swap(
+                    isEnabled = false,
+                    onClick = {},
+                ).buttonUM,
+            )
+            add(
+                WalletActionButtons.Sell(
+                    isEnabled = false,
+                    onClick = {},
+                ).buttonUM,
+            )
+        }.toPersistentList()
     }
 }
