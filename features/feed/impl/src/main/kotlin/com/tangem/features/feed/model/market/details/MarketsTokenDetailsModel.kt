@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.TangemSiteShareUrlBuilder
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -667,7 +668,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun onShareClick() {
         val tokenId = params.token.id.value
-        val shareUrl = "$CRYPTOCURRENCIES_BASE_URL$tokenId"
+        val shareUrl = TangemSiteShareUrlBuilder.shareUrl(tokenId)
         shareManager.shareText(shareUrl)
         analyticsEventHandler.send(analyticsEventBuilder.shareClicked())
     }
@@ -735,6 +736,5 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private companion object {
         const val QUOTES_UPDATE_INTERVAL_MILLIS = 60000L
         const val RELATED_NEWS_LIMIT = 10
-        const val CRYPTOCURRENCIES_BASE_URL = "https://tangem.com/en/cryptocurrencies/"
     }
 }
