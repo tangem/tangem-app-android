@@ -226,7 +226,7 @@ private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = co
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TangemTokenRow_Preview(
-    @PreviewParameter(TangemTokenRowPreviewProvider::class) tokenRowUM: TangemTokenRowUM,
+    @PreviewParameter(TangemTokenRow_PreviewProvider::class) tokenRowUM: TangemTokenRowUM,
 ) {
     TangemThemePreviewRedesign {
         TangemTokenRow(
@@ -238,7 +238,8 @@ private fun TangemTokenRow_Preview(
     }
 }
 
-private class TangemTokenRowPreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
+@Suppress("ClassNaming")
+class TangemTokenRow_PreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
     collection = listOf(
         TangemTokenRowPreviewData.defaultState,
         TangemTokenRowPreviewData.defaultEllipsisState,
