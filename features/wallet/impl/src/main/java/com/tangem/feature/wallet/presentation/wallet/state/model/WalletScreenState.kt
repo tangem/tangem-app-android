@@ -9,10 +9,10 @@ internal data class WalletScreenState(
     val topBarConfig: WalletTopBarConfig,
     val selectedWalletIndex: Int,
     val wallets: ImmutableList<WalletState>,
+    val wallets2: ImmutableList<WalletUM>,
     val onWalletChange: (index: Int, onlyState: Boolean) -> Unit,
     val event: StateEvent<WalletEvent>,
     val isHidingMode: Boolean,
     val showMarketsOnboarding: Boolean,
-    val isNewMarketEnabled: Boolean,
     val onDismissMarketsTooltip: () -> Unit,
 )

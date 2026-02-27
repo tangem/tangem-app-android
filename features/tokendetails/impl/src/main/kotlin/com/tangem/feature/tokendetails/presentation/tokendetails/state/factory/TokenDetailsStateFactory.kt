@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.tokendetails.TokenDetailsDialogConfig
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.TextReference
@@ -33,8 +32,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.clore.CloreMigrationBottomSheetConfig
 import com.tangem.features.tokendetails.impl.R
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 
@@ -48,7 +47,6 @@ internal class TokenDetailsStateFactory(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -57,7 +55,6 @@ internal class TokenDetailsStateFactory(
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
-            yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
 
@@ -74,7 +71,6 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = tokenDetailsClickIntents,
-            yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
 
