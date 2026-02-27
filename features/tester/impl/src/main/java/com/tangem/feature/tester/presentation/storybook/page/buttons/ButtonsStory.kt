@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber", "LongMethod")
 package com.tangem.feature.tester.presentation.storybook.page.buttons
 
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
+            .statusBarsPadding()
             .fillMaxSize()
             .background(TangemTheme.colors2.surface.level1),
     ) {

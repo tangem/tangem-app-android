@@ -46,7 +46,7 @@ fun TangemRowContainer(
         content = content,
         modifier = modifier,
     ) { measurables, constraints ->
-        val layoutWidth = constraints.maxWidth - contentStartPadding - contentEndPadding
+        val layoutWidth = max(0, constraints.maxWidth - contentStartPadding - contentEndPadding)
 
         val startTopMinWidth = (layoutWidth * TITLE_MIN_WIDTH_COEFFICIENT).toInt()
         val startBottomMinWidth = (layoutWidth * PRICE_MIN_WIDTH_COEFFICIENT).toInt()
