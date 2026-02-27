@@ -23,6 +23,7 @@ internal class AddWalletTransformer(
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
             wallets = (prevState.wallets + walletLoadingStateFactory.create(userWallet)).toImmutableList(),
+            wallets2 = (prevState.wallets2 + walletLoadingStateFactory.create2(userWallet)).toImmutableList(),
         )
     }
 }

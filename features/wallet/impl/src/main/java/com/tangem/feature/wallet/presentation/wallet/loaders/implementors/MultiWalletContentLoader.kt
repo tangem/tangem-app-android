@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
 import dagger.assisted.Assisted
@@ -13,15 +14,21 @@ internal class MultiWalletContentLoader @AssistedInject constructor(
     private val walletNFTListSubscriberFactory: WalletNFTListSubscriberV2.Factory,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
     private val multiWalletWarningsSubscriberFactory: MultiWalletWarningsSubscriber.Factory,
+    private val walletNotificationsSubscriberFactory: WalletNotificationsSubscriber.Factory,
     private val multiWalletActionButtonsSubscriberFactory: MultiWalletActionButtonsSubscriber.Factory,
     private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOf(
         accountListSubscriberFactory.create(userWallet),
         walletNFTListSubscriberFactory.create(userWallet),
         checkWalletWithFundsSubscriberFactory.create(userWallet),
-        multiWalletWarningsSubscriberFactory.create(userWallet),
+        if (designFeatureToggles.isRedesignEnabled) {
+            walletNotificationsSubscriberFactory.create(userWallet)
+        } else {
+            multiWalletWarningsSubscriberFactory.create(userWallet)
+        },
         multiWalletActionButtonsSubscriberFactory.create(userWallet),
         tangemPayMainSubscriberFactory.create(userWallet),
     )

@@ -1,13 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.MultiWalletContentLoader
-import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.SingleWalletContentLoader
-import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.SingleWalletWithTokenContentLoader
-import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.WalletContentLoader
+import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -15,7 +13,9 @@ import javax.inject.Inject
 internal class WalletContentLoaderFactory @Inject constructor(
     private val multiWalletContentLoaderFactory: MultiWalletContentLoader.Factory,
     private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoader.Factory,
-    private val singleWalletContentLoaderFactory: SingleWalletContentLoader.Factory,
+    private val singleWalletContentLoaderLegacyFactory: SingleWalletContentLoaderLegacy.Factory,
+    private val singleWalletContentLoader: SingleWalletContentLoader.Factory,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet, isRefresh: Boolean = false): WalletContentLoader? {
@@ -24,10 +24,18 @@ internal class WalletContentLoaderFactory @Inject constructor(
                 multiWalletContentLoaderFactory.create(userWallet)
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
-                singleWalletWithTokenContentLoaderFactory.create(userWallet)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    singleWalletContentLoader.create(userWallet)
+                } else {
+                    singleWalletWithTokenContentLoaderFactory.create(userWallet)
+                }
             }
             userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
-                singleWalletContentLoaderFactory.create(userWallet, isRefresh)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    singleWalletContentLoader.create(userWallet)
+                } else {
+                    singleWalletContentLoaderLegacyFactory.create(userWallet, isRefresh)
+                }
             }
             else -> null
         }
