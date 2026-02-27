@@ -25,6 +25,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @ModelScoped
 @Suppress("LongParameterList")
 internal class GetSingleWalletWarningsFactory @Inject constructor(
