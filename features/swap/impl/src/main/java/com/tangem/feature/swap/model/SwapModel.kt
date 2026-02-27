@@ -2480,6 +2480,8 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onResult(newState: FeeSelectorUM) {
+            state.value = newState
+
             if (newState is FeeSelectorUM.Error) {
                 modelScope.launch {
                     forceUpdateState.emit(newState.copy(isHidden = true))
