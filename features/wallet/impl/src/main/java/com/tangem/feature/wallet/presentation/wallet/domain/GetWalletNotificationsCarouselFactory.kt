@@ -5,6 +5,7 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
@@ -48,8 +49,11 @@ internal class GetWalletNotificationsCarouselFactory @Inject constructor(
             buildList {
                 addNoteMigrationNotification(userWallet, wallets, clickIntents)
                 addRateAppNotification(showRateAppPromo, clickIntents)
-                addOnePlusOnePromoNotification(clickIntents, showOnePlusOnePromo)
-                addYieldPromoNotification(clickIntents, showYieldPromo)
+
+                if (userWallet.isMultiCurrency) {
+                    addOnePlusOnePromoNotification(clickIntents, showOnePlusOnePromo)
+                    addYieldPromoNotification(clickIntents, showYieldPromo)
+                }
 
                 addPushNotification(
                     shouldShow = showPushesNotification,
