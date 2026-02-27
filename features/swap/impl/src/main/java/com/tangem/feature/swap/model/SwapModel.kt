@@ -14,6 +14,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -24,12 +26,22 @@ import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.toWrappedList
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.InputNumberFormatter
+import com.tangem.core.ui.utils.parseBigDecimal
+import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
+import com.tangem.feature.swap.models.SwapAlertUM
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
@@ -108,6 +120,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -162,6 +176,8 @@ internal class SwapModel @Inject constructor(
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
     private val appsFlyerStore: AppsFlyerStore,
     private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
+    private val messageSender: UiMessageSender,
+    giveApprovalFeatureToggles: GiveApprovalFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -290,6 +306,33 @@ internal class SwapModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> = SlotNavigation()
+    val approvalSlotNavigation = SlotNavigation<Unit>()
+    private val shouldUseGaslessApproval: Boolean = giveApprovalFeatureToggles.isGaslessApprovalEnabled
+
+    val approvalCallback = object : GiveApprovalComponent.Callback {
+        override fun onApproveClick() {
+            sendPermissionApproveClickedEvent()
+        }
+
+        override fun onApproveDone() {
+            approvalSlotNavigation.dismiss()
+            updateWalletBalance()
+            uiState = stateBuilder.loadingPermissionState(uiState)
+            startLoadingQuotesFromLastState(isSilent = true)
+        }
+
+        override fun onApproveFailed() {
+            approvalSlotNavigation.dismiss()
+            showAlert()
+        }
+
+        override fun onCancelClick() {
+            approvalSlotNavigation.dismiss()
+            startLoadingQuotesFromLastState(isSilent = true)
+            analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
+        }
+    }
+
     val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
 
@@ -342,7 +385,8 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromAccountStatus == null) {
-                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    showAlert()
+                    swapRouter.back()
                 } else {
                     fromAccountCurrencyStatus = fromAccountStatus
                     toAccountCurrencyStatus = toAccountStatus
@@ -360,7 +404,8 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromStatus == null) {
-                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    showAlert()
+                    swapRouter.back()
                 } else {
                     initialFromStatus = fromStatus
                     initialToStatus = toStatus
@@ -1020,7 +1065,7 @@ internal class SwapModel @Inject constructor(
         val fee = getSelectedFee()
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
-            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+            showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
                 startLoadingQuotesFromLastState()
@@ -1046,7 +1091,7 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         if (fee == null) {
-                            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                            showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
                         sendSuccessSwapEvent(
@@ -1090,21 +1135,11 @@ internal class SwapModel @Inject constructor(
                         swapRouter.openScreen(SwapNavScreen.Success)
                     }
                     SwapTransactionState.DemoMode -> {
-                        uiState = stateBuilder.createDemoModeAlert(
-                            uiState = uiState,
-                            onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-                            isReverseSwapPossible = isReverseSwapPossible(),
-                        )
+                        showDemoModeAlert()
                     }
                     is SwapTransactionState.Error -> {
                         startLoadingQuotesFromLastState()
-                        uiState = stateBuilder.createErrorTransactionAlert(
-                            uiState = uiState,
-                            error = swapTransactionState,
-                            onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-                            onSupportClick = ::onFailedTxEmailClick,
-                            isReverseSwapPossible = isReverseSwapPossible(),
-                        )
+                        showTransactionErrorAlert(swapTransactionState)
                     }
                     is SwapTransactionState.TangemPayWithdrawalData -> {
                         processTangemPayWithdrawal(swapTransactionState = swapTransactionState)
@@ -1113,7 +1148,7 @@ internal class SwapModel @Inject constructor(
             }.onFailure { error ->
                 Timber.e(error)
                 startLoadingQuotesFromLastState()
-                makeDefaultAlert()
+                showAlert()
             }
         }
     }
@@ -1205,7 +1240,7 @@ internal class SwapModel @Inject constructor(
                     }
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
-                        makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                        showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                         Timber.e("Fee should not be Empty")
                         return@launch
                     }
@@ -1221,7 +1256,7 @@ internal class SwapModel @Inject constructor(
                             fromTokenStatus = fromCryptoCurrency,
                             approveType = approveType,
                             txFee = feeForPermission,
-                            spenderAddress = approveDataModel.spenderAddress,
+                            spenderAddress = requireNotNull(dataState.approveDataModel).spenderAddress,
                         ),
                     )
                 }.onSuccess { swapTransactionState ->
@@ -1235,29 +1270,19 @@ internal class SwapModel @Inject constructor(
                             startLoadingQuotesFromLastState(isSilent = true)
                         }
                         is SwapTransactionState.Error -> {
-                            uiState = stateBuilder.createErrorTransactionAlert(
-                                uiState = uiState,
-                                error = swapTransactionState,
-                                onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-                                onSupportClick = ::onFailedTxEmailClick,
-                                isReverseSwapPossible = isReverseSwapPossible(),
-                            )
+                            showTransactionErrorAlert(swapTransactionState)
                         }
                         SwapTransactionState.DemoMode -> {
-                            uiState = stateBuilder.createDemoModeAlert(
-                                uiState = uiState,
-                                onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-                                isReverseSwapPossible = isReverseSwapPossible(),
-                            )
+                            showDemoModeAlert()
                         }
                         is SwapTransactionState.TangemPayWithdrawalData -> {
                             processTangemPayWithdrawal(swapTransactionState = swapTransactionState)
                         }
                     }
-                }.onFailure { makeDefaultAlert() }
+                }.onFailure { showAlert() }
             }.onFailure { error ->
                 Timber.e(error.message.orEmpty())
-                makeDefaultAlert()
+                showAlert()
             }
         }
     }
@@ -1657,16 +1682,94 @@ internal class SwapModel @Inject constructor(
         return inputNumberFormatter.getValidatedNumberWithFixedDecimals(amount, maxDecimals)
     }
 
-    private fun makeDefaultAlert() {
-        uiState = stateBuilder.addDefaultAlert(uiState = uiState)
+    private fun showAlert(message: TextReference = resourceReference(R.string.common_unknown_error)) {
+        messageSender.send(SwapAlertUM.genericError(onConfirmClick = { }, message = message))
     }
 
-    private fun makeSupportAlert(message: TextReference) {
-        uiState = stateBuilder.addSupportAlert(
-            uiState = uiState,
-            message = message,
-            onSupportClick = { onFailedTxEmailClick("Fee calculation error") },
+    private fun showDemoModeAlert() {
+        messageSender.send(
+            DialogMessage(
+                title = resourceReference(id = R.string.warning_demo_mode_title),
+                message = resourceReference(id = R.string.warning_demo_mode_message),
+                firstAction = EventMessageAction(
+                    title = resourceReference(id = R.string.common_ok),
+                    onClick = {},
+                ),
+            ),
         )
+    }
+
+    private fun showTransactionErrorAlert(
+        error: SwapTransactionState.Error,
+        onSupportClick: (String) -> Unit = ::onFailedTxEmailClick,
+    ) {
+        val errorAlert = SwapTransactionErrorStateConverter(
+            onDismiss = {},
+            onSupportClick = onSupportClick,
+        ).convert(error)
+        errorAlert?.let { messageSender.send(it) }
+    }
+
+    private fun onTangemPaySupportClick(txId: String) {
+        modelScope.launch {
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            val customerId = getTangemPayCustomerIdUseCase(userWallet.walletId).getOrNull().orEmpty()
+            val email = FeedbackEmailType.Visa.Withdrawal(
+                walletMetaInfo = metaInfo,
+                customerId = customerId,
+                providerName = dataState.selectedProvider?.name.orEmpty(),
+                txId = txId,
+            )
+            sendFeedbackEmailUseCase(email)
+        }
+    }
+
+    private fun showSwapInfoAlert(isPriceImpact: Boolean, token: String, provider: SwapProvider) {
+        messageSender.send(
+            SwapAlertUM.informationAlert(
+                message = buildSwapInfoMessage(isPriceImpact, token, provider),
+                onConfirmClick = {},
+            ),
+        )
+    }
+
+    private fun buildSwapInfoMessage(isPriceImpact: Boolean, token: String, provider: SwapProvider): TextReference {
+        val slippage = provider.slippage?.let { "${it.parseBigDecimal(1)}%" }
+        val messages = buildList {
+            when (provider.type) {
+                ExchangeProviderType.CEX -> {
+                    if (slippage != null) {
+                        add(
+                            resourceReference(
+                                id = R.string.swapping_alert_cex_description_with_slippage,
+                                formatArgs = wrappedList(token, slippage),
+                            ),
+                        )
+                    } else {
+                        add(resourceReference(R.string.swapping_alert_cex_description, wrappedList(token)))
+                    }
+                }
+                ExchangeProviderType.DEX,
+                ExchangeProviderType.DEX_BRIDGE,
+                -> {
+                    if (isPriceImpact) {
+                        add(resourceReference(R.string.swapping_high_price_impact_description))
+                        add(stringReference("\n\n"))
+                    }
+                    if (slippage != null) {
+                        add(
+                            resourceReference(
+                                id = R.string.swapping_alert_dex_description_with_slippage,
+                                formatArgs = wrappedList(slippage),
+                            ),
+                        )
+                    } else {
+                        add(resourceReference(R.string.swapping_alert_dex_description, wrappedList(token)))
+                    }
+                }
+            }
+        }
+        return combinedReference(messages.toWrappedList())
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -1714,10 +1817,14 @@ internal class SwapModel @Inject constructor(
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
                 sendGivePermissionClickedEvent()
-                uiState = stateBuilder.showPermissionBottomSheet(uiState) {
-                    startLoadingQuotesFromLastState(isSilent = true)
-                    analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
-                    uiState = stateBuilder.dismissBottomSheet(uiState)
+                if (shouldUseGaslessApproval) {
+                    approvalSlotNavigation.activate(Unit)
+                } else {
+                    uiState = stateBuilder.showPermissionBottomSheet(uiState) {
+                        startLoadingQuotesFromLastState(isSilent = true)
+                        analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
+                        uiState = stateBuilder.dismissBottomSheet(uiState)
+                    }
                 }
             },
             onAmountSelected = { onAmountSelected(it) },
@@ -1786,14 +1893,7 @@ internal class SwapModel @Inject constructor(
                 val selectedProvider = dataState.selectedProvider ?: return@UiActions
                 val currencySymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return@UiActions
                 val isPriceImpact = uiState.priceImpact is PriceImpact.Value
-                uiState = stateBuilder.createAlert(
-                    uiState = uiState,
-                    isPriceImpact = isPriceImpact,
-                    token = currencySymbol,
-                    provider = selectedProvider,
-                    isReverseSwapPossible = isReverseSwapPossible(),
-                    onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-                )
+                showSwapInfoAlert(isPriceImpact, currencySymbol, selectedProvider)
             },
             onLinkClick = urlOpener::openUrl,
             onSelectTokenClick = {
@@ -2130,29 +2230,10 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun onTangemPayWithdrawalError(txId: String?) {
-        uiState = stateBuilder.createErrorTransactionAlert(
-            uiState = uiState,
+        showTransactionErrorAlert(
             error = SwapTransactionState.Error.TangemPayWithdrawalError(txId.orEmpty()),
-            onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
-            onSupportClick = {
-                val customerId = getTangemPayCustomerIdUseCase(userWallet.walletId).getOrNull() ?: "Unknown"
-                onTangemPaySupportClick(customerId = customerId, txId = txId)
-            },
-            isReverseSwapPossible = isReverseSwapPossible(),
+            onSupportClick = ::onTangemPaySupportClick,
         )
-    }
-
-    private fun onTangemPaySupportClick(customerId: String, txId: String?) {
-        modelScope.launch {
-            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
-            val email = FeedbackEmailType.Visa.Withdrawal(
-                walletMetaInfo = metaInfo,
-                customerId = customerId,
-                providerName = dataState.selectedProvider?.name.orEmpty(),
-                txId = txId.orEmpty(),
-            )
-            sendFeedbackEmailUseCase(email)
-        }
     }
 
     private fun onFailedTxEmailClick(errorMessage: String) {
@@ -2264,6 +2345,8 @@ internal class SwapModel @Inject constructor(
             val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
                     blockchainId = network.networkId,
+                    coinId = tokenMarket.id.value,
+                    contractAddress = network.contractAddress,
                     excludedBlockchains = excludedBlockchains,
                     hotExcludedBlockchains = hotWalletExcludedBlockchains,
                     hasOnlyHotWallets = hasOnlyHotWallets,

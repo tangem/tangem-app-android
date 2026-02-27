@@ -7,14 +7,7 @@
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
     },
-    {
-        "name": "STAKING_TON_ENABLED",
-        "version": "5.28.0"
-    },
-    {
-        "name": "STAKING_CARDANO_ENABLED",
-        "version": "5.31.1"
-    },
+
     {
         "name": "STAKING_ETH_ENABLED",
         "version": "undefined"
@@ -32,27 +25,7 @@
         "version": "5.32.0"
     },
     {
-        "name": "TANGEM_PAY_ENABLED",
-        "version": "5.31.0"
-    },
-    {
-        "name": "YIELD_SUPPLY_FEATURE_ENABLED",
-        "version": "5.30.0"
-    },
-    {
-        "name": "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
-        "version": "5.33.0"
-    },
-    {
-        "name": "NEW_ONRAMP_MAIN_ENABLED",
-        "version": "5.31.0"
-    },
-    {
         "name": "ACCOUNTS_FEATURE_ENABLED",
-        "version": "5.33.0"
-    },
-    {
-        "name": "FEED_ENABLED",
         "version": "5.33.0"
     },
     {
@@ -78,5 +51,17 @@
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
         "version": "5.34"
+    },
+    {
+        "name": "GASLESS_APPROVAL_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TANGEM_PAY_ACCOUNTS_REFACTOR_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "MULTI_ADDRESS_UTXO_ENABLED",
+        "version": "undefined"
     }
 ]

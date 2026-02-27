@@ -18,11 +18,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
+import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -47,15 +49,14 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
 import com.tangem.domain.promo.models.PromoId
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
@@ -91,7 +92,6 @@ import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -115,7 +115,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val isCryptoCurrencyCoinCouldHideUseCase: IsCryptoCurrencyCoinCouldHideUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -130,7 +130,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
     private val openTrustlineUseCase: OpenTrustlineUseCase,
     private val dismissIncompleteTransactionUseCase: DismissIncompleteTransactionUseCase,
-    private val reduxStateHolder: ReduxStateHolder,
+    private val getOfframpUrlUseCase: GetOfframpUrlUseCase,
+    private val urlOpener: UrlOpener,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
@@ -144,7 +145,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
@@ -193,7 +193,6 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
@@ -423,9 +422,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
-        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            status.value.yieldSupplyStatus?.isActive == true
-        ) {
+        if (status.value.yieldSupplyStatus?.isActive == true) {
             if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
                 return
             }
@@ -709,12 +706,13 @@ internal class TokenDetailsModel @Inject constructor(
         showErrorIfDemoModeOrElse {
             val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
 
-            reduxStateHolder.dispatch(
-                TradeCryptoAction.Sell(
-                    cryptoCurrencyStatus = status,
-                    appCurrencyCode = selectedAppCurrencyFlow.value.code,
-                ),
-            )
+            getOfframpUrlUseCase(
+                cryptoCurrencyStatus = status,
+                appCurrencyCode = selectedAppCurrencyFlow.value.code,
+            ).onRight { url ->
+                urlOpener.openUrl(url)
+                analyticsEventsHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+            }
         }
     }
 
@@ -760,8 +758,12 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
         modelScope.launch {
-            val hasLinkedTokens = removeCurrencyUseCase.hasLinkedTokens(userWalletId, cryptoCurrency)
-            internalUiState.value = if (hasLinkedTokens) {
+            val canHide = cryptoCurrency is CryptoCurrency.Coin && isCryptoCurrencyCoinCouldHideUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyCoin = cryptoCurrency,
+            )
+
+            internalUiState.value = if (!canHide) {
                 stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
             } else {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
@@ -771,18 +773,14 @@ internal class TokenDetailsModel @Inject constructor(
 
     override fun onHideConfirmed() {
         modelScope.launch {
-            if (accountsFeatureToggles.isFeatureEnabled) {
-                val accountId = account?.accountId
+            val accountId = account?.accountId
 
-                if (accountId == null) {
-                    Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
-                    return@launch
-                }
-
-                manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
-            } else {
-                removeCurrencyUseCase(userWalletId, cryptoCurrency)
+            if (accountId == null) {
+                Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
+                return@launch
             }
+
+            manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
                 .onLeft { Timber.e(it) }
                 .onRight { router.popBackStack() }
         }
@@ -1235,13 +1233,11 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private suspend fun needShowYieldSupplyWarning(): Boolean {
-        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+        return needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
     }
 
     private fun isActiveYieldSupply(): Boolean {
-        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
-            cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+        return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {

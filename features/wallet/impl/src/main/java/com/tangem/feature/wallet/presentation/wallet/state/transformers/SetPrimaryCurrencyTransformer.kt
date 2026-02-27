@@ -6,10 +6,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
 import timber.log.Timber
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class SetPrimaryCurrencyTransformer(
     private val userWallet: UserWallet,
     private val status: CryptoCurrencyStatus,
@@ -33,6 +35,10 @@ internal class SetPrimaryCurrencyTransformer(
                 prevState
             }
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // It will not be used
     }
 
     private fun WalletCardState.toLoadedSingleCurrencyState(): WalletCardState {
