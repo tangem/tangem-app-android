@@ -15,7 +15,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
+import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
@@ -186,7 +186,7 @@ internal object WalletScreenPreviewData {
                 onItemClick = { },
             ),
             tangemPayState = TangemPayState.Empty,
-            type = WalletState.MultiCurrency.WalletType.Cold,
+            type = WalletType.Cold,
         )
     }
 
@@ -218,12 +218,12 @@ internal object WalletScreenPreviewData {
             singleWalletLockedState,
             multiWalletState,
         ),
+        wallets2 = persistentListOf(),
         onWalletChange = { _, _ -> },
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
-        isNewMarketEnabled = false,
     )
 
     internal val accountScreenState =
