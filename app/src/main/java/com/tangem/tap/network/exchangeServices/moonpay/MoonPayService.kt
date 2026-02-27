@@ -19,7 +19,6 @@ import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.network.exchangeServices.SellServiceInitializationStatus
 import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPayAvailableCurrency
-import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
@@ -28,8 +27,8 @@ import javax.crypto.spec.SecretKeySpec
 
 class MoonPayService(
     private val api: MoonPayApi,
-    private val apiKeyProvider: Provider<String>,
-    private val secretKeyProvider: Provider<String>,
+    private val apiKey: String,
+    private val secretKey: String,
     private val userWalletProvider: () -> UserWallet?,
 ) : SellService {
 
@@ -47,18 +46,18 @@ class MoonPayService(
             _initializationStatus.value = lceLoading()
 
             performRequest {
-                val userStatus = when (val result = performRequest { api.getUserStatus(apiKeyProvider()) }) {
+                val userStatus = when (val result = performRequest { api.getUserStatus(apiKey) }) {
                     is Result.Failure -> {
-                        Timber.e("Failed to load user status", result.error)
+                        Timber.e(result.error, "Failed to load user status")
                         _initializationStatus.value = result.error.lceError()
                         return@performRequest
                     }
                     is Result.Success -> result.data
                 }
 
-                val currencies = when (val result = performRequest { api.getCurrencies(apiKeyProvider()) }) {
+                val currencies = when (val result = performRequest { api.getCurrencies(apiKey) }) {
                     is Result.Failure -> {
-                        Timber.e("Failed to load currencies", result.error)
+                        Timber.e(result.error, "Failed to load currencies")
                         _initializationStatus.value = result.error.lceError()
                         return@performRequest
                     }
@@ -163,7 +162,7 @@ class MoonPayService(
         val uri = Uri.Builder()
             .scheme(SCHEME)
             .authority(URL_SELL)
-            .appendQueryParameter("apiKey", apiKeyProvider())
+            .appendQueryParameter("apiKey", apiKey)
             .appendQueryParameter("baseCurrencyCode", moonpayCurrency.currencyCode.uppercase())
             .appendQueryParameter("refundWalletAddress", walletAddress)
             .appendQueryParameter("redirectURL", "tangem://redirect_sell?currency_id=${cryptoCurrency.id.value}")
@@ -177,17 +176,9 @@ class MoonPayService(
         return uri.build().toString()
     }
 
-    override fun getSellCryptoReceiptUrl(transactionId: String): String {
-        return Uri.Builder()
-            .scheme(SCHEME)
-            .authority(URL_SELL)
-            .appendPath("transaction_receipt")
-            .appendQueryParameter("transactionId", transactionId).build().toString()
-    }
-
     private fun createSignature(data: String): String {
         val sha256Hmac = Mac.getInstance("HmacSHA256")
-        val secretKey = SecretKeySpec(secretKeyProvider().toByteArray(), "HmacSHA256")
+        val secretKey = SecretKeySpec(secretKey.toByteArray(), "HmacSHA256")
         sha256Hmac.init(secretKey)
         val sha256encoded = sha256Hmac.doFinal("?$data".toByteArray())
         return Base64.encodeToString(sha256encoded, Base64.NO_WRAP)
