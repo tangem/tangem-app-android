@@ -12,7 +12,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-internal class SingleWalletWithTokenSubscriber @AssistedInject constructor(
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
+internal class SingleWalletWithTokenSubscriberLegacy @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet.Cold,
     override val accountDependencies: AccountDependencies,
     override val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -30,6 +31,6 @@ internal class SingleWalletWithTokenSubscriber @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet.Cold): SingleWalletWithTokenSubscriber
+        fun create(userWallet: UserWallet.Cold): SingleWalletWithTokenSubscriberLegacy
     }
 }
