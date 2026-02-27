@@ -73,15 +73,6 @@ android {
         }
     }
 
-    buildTypes {
-        debug {
-            buildConfigField("String", "BUILD_TYPE", "\"debug\"")
-        }
-        release {
-            buildConfigField("String", "BUILD_TYPE", "\"release\"")
-        }
-    }
-
 }
 
 configurations.all {
