@@ -711,6 +711,9 @@ internal class StateBuilder(
     fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
+            notifications = uiState.notifications
+                .filterNot { it is SwapNotificationUM.Info.PermissionNeeded }
+                .toImmutableList(),
         )
     }
 
