@@ -12,11 +12,15 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesScreen
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.R
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
@@ -26,6 +30,7 @@ import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
+import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
@@ -43,6 +48,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
     private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
+    private val giveApprovalComponentFactory: GiveApprovalComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
 
     private val model: SwapModel = getOrCreateModel(params)
@@ -53,6 +59,21 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         key = BOTTOM_SHEET_SLOT_KEY,
         handleBackButton = false,
         childFactory = { configuration, context -> bottomSheetChild(context) },
+    )
+
+    private val approvalSlot = childSlot(
+        key = APPROVAL_SLOT_KEY,
+        source = model.approvalSlotNavigation,
+        serializer = null,
+        handleBackButton = true,
+        childFactory = { _, factoryContext ->
+            val approvalParams = getApprovalParams()
+                ?: error("Approval params are not available")
+            giveApprovalComponentFactory.create(
+                context = childByContext(factoryContext),
+                params = approvalParams,
+            )
+        },
     )
 
     init {
@@ -191,6 +212,9 @@ internal class DefaultSwapComponent @AssistedInject constructor(
         }
 
         bottomSheet.child?.instance?.BottomSheet()
+
+        val approvalSlotState by approvalSlot.subscribeAsState()
+        approvalSlotState.child?.instance?.BottomSheet()
     }
 
     @Suppress("UnsafeCallOnNullableType")
@@ -202,6 +226,27 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 callback = model.addToPortfolioCallback,
                 shouldSkipTokenActionsScreen = true,
             ),
+        )
+    }
+
+    fun getApprovalParams(): GiveApprovalComponent.Params? {
+        val permissionState = model.uiState.permissionState as? GiveTxPermissionState.ReadyForRequest
+            ?: return null
+        val fromCryptoCurrency = model.dataState.fromCryptoCurrency ?: return null
+        val feeCryptoCurrency = model.dataState.feePaidCryptoCurrency ?: return null
+        val providerName = model.dataState.selectedProvider?.name.orEmpty()
+
+        return GiveApprovalComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = fromCryptoCurrency,
+            feeCryptoCurrencyStatus = feeCryptoCurrency,
+            amount = permissionState.amount,
+            spenderAddress = requireNotNull(model.dataState.approveDataModel).spenderAddress,
+            subtitle = resourceReference(
+                id = R.string.give_permission_swap_subtitle,
+                formatArgs = wrappedList(providerName, permissionState.currency),
+            ),
+            callback = model.approvalCallback,
         )
     }
 
@@ -217,5 +262,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     private companion object {
         const val BOTTOM_SHEET_SLOT_KEY = "bottomSheetSlot"
         const val FEE_SELECTOR_SLOT_KEY = "feeSelectorSlot"
+        const val APPROVAL_SLOT_KEY = "approvalSlot"
     }
 }

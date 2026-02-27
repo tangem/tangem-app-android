@@ -26,5 +26,6 @@ data class TesterMenuUM(
         TEST_PUSHES(R.string.test_push),
         ACCOUNTS(R.string.accounts),
         ADDRESSES_INFO(R.string.addresses_info),
+        STORY_BOOK(R.string.story_book),
     }
 }
