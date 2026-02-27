@@ -2,7 +2,7 @@ package com.tangem.datasource.di
 
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
@@ -21,13 +21,13 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideExpressConfig(
-        environmentConfigStorage: EnvironmentConfigStorage,
+        environmentConfig: EnvironmentConfig,
         expressAuthProvider: ExpressAuthProvider,
         appVersionProvider: AppVersionProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig {
         return Express(
-            environmentConfigStorage = environmentConfigStorage,
+            environmentConfig = environmentConfig,
             expressAuthProvider = expressAuthProvider,
             appVersionProvider = appVersionProvider,
             appInfoProvider = appInfoProvider,
@@ -73,12 +73,12 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideYieldSupplyConfig(
-        environmentConfigStorage: EnvironmentConfigStorage,
+        environmentConfig: EnvironmentConfig,
         appVersionProvider: AppVersionProvider,
         authProvider: AuthProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig = YieldSupply(
-        environmentConfigStorage = environmentConfigStorage,
+        environmentConfig = environmentConfig,
         appVersionProvider = appVersionProvider,
         authProvider = authProvider,
         appInfoProvider = appInfoProvider,
@@ -87,21 +87,21 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideTangemPayBffConfig(
+        environmentConfig: EnvironmentConfig,
         appVersionProvider: AppVersionProvider,
-        environmentConfigStorage: EnvironmentConfigStorage,
-    ): ApiConfig = TangemPay.Bff(appVersionProvider, environmentConfigStorage)
+    ): ApiConfig = TangemPay.Bff(environmentConfig, appVersionProvider)
 
     @Provides
     @IntoSet
     fun provideTangemPayAuthConfig(
+        environmentConfig: EnvironmentConfig,
         appVersionProvider: AppVersionProvider,
-        environmentConfigStorage: EnvironmentConfigStorage,
-    ): ApiConfig = TangemPay.Auth(appVersionProvider, environmentConfigStorage)
+    ): ApiConfig = TangemPay.Auth(environmentConfig, appVersionProvider)
 
     @Provides
     @IntoSet
-    fun provideBlockAidConfig(environmentConfigStorage: EnvironmentConfigStorage): ApiConfig {
-        return BlockAid(environmentConfigStorage)
+    fun provideBlockAidConfig(environmentConfig: EnvironmentConfig): ApiConfig {
+        return BlockAid(environmentConfig)
     }
 
     @Provides

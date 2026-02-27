@@ -84,6 +84,7 @@ dependencies {
     /** Api */
     implementation(projects.features.swap.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.approval.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
