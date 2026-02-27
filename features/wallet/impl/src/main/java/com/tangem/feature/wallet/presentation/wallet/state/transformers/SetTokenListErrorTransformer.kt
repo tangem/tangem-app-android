@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.formatStyled
@@ -90,6 +91,13 @@ internal class SetTokenListErrorTransformer(
         return WalletBalanceUM.Content(
             id = id,
             name = name,
+            balanceInAppBar = BigDecimal.ZERO.formatStyled {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                )
+            },
             balance = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
