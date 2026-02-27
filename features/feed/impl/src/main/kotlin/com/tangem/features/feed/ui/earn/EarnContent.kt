@@ -108,8 +108,8 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
     AnimatedContent(
         targetState = state,
         contentKey = { it::class.java },
-    ) { st ->
-        when (st) {
+    ) { animatedState ->
+        when (animatedState) {
             is EarnListUM.Loading -> {
                 MostlyUsedPlaceholder()
             }
@@ -122,7 +122,7 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     itemsIndexed(
-                        items = st.items,
+                        items = animatedState.items,
                         key = { _, item -> "${item.tokenName}-${item.network}" },
                     ) { index, item ->
                         val cardModifier = Modifier.conditional(
@@ -154,9 +154,10 @@ private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
                         .padding(vertical = 32.dp, horizontal = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    UnableToLoadData(onRetryClick = st.onRetryClicked)
+                    UnableToLoadData(onRetryClick = animatedState.onRetryClicked)
                 }
             }
+            EarnListUM.Empty -> Unit // no need to handle
         }
     }
 }
