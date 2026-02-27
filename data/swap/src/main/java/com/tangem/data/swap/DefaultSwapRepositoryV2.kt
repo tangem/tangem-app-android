@@ -4,6 +4,8 @@ import arrow.core.none
 import arrow.core.some
 import arrow.core.toOption
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
 import com.tangem.data.swap.converter.SwapStatusConverter
@@ -132,42 +134,43 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             swapTxType = swapTxType,
         ).associateBy(ExpressProvider::providerId)
 
-        allPairs.map { pair ->
-            async {
-                val statusFromDeferred = async {
-                    cryptoCurrencyList
-                        .firstOrNull { currency ->
-                            currency.getContractAddress() == pair.from.contractAddress &&
-                                currency.network.backendId == pair.from.network
-                        }
-                }
-                val statusToDeferred = async {
-                    cryptoCurrencyList
-                        .firstOrNull { currency ->
-                            currency.getContractAddress() == pair.to.contractAddress &&
-                                currency.network.backendId == pair.to.network
-                        }
-                }
+        allPairs.filter { it.to.network !in MEMO_RESTRICTED_NETWORKS }
+            .map { pair ->
+                async {
+                    val statusFromDeferred = async {
+                        cryptoCurrencyList
+                            .firstOrNull { currency ->
+                                currency.getContractAddress() == pair.from.contractAddress &&
+                                    currency.network.backendId == pair.from.network
+                            }
+                    }
+                    val statusToDeferred = async {
+                        cryptoCurrencyList
+                            .firstOrNull { currency ->
+                                currency.getContractAddress() == pair.to.contractAddress &&
+                                    currency.network.backendId == pair.to.network
+                            }
+                    }
 
-                val currencyStatusFrom = createSendWithSwapCryptoCurrencyStatus(statusFromDeferred.await())
-                val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
+                    val currencyStatusFrom = createSendWithSwapCryptoCurrencyStatus(statusFromDeferred.await())
+                    val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
 
-                val mappedProvider = pair.providers
-                    .filterNot { it.hasOnlyFixedRateType() }
-                    .mapNotNull { mappedProviders[it.providerId] }
-                    .filterYieldSupplyProvider(currencyStatusFrom)
+                    val mappedProvider = pair.providers
+                        .filterNot { it.hasOnlyFixedRateType() }
+                        .mapNotNull { mappedProviders[it.providerId] }
+                        .filterYieldSupplyProvider(currencyStatusFrom)
 
-                if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
-                    SwapPairModel(
-                        from = currencyStatusFrom,
-                        to = currencyStatusTo,
-                        providers = mappedProvider,
-                    )
-                } else {
-                    null
+                    if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
+                        SwapPairModel(
+                            from = currencyStatusFrom,
+                            to = currencyStatusTo,
+                            providers = mappedProvider,
+                        )
+                    } else {
+                        null
+                    }
                 }
-            }
-        }.awaitAll().filterNotNull()
+            }.awaitAll().filterNotNull()
     }
 
     override suspend fun getSwapQuote(
@@ -439,6 +442,14 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             }
         }
 }
+
+private val MEMO_RESTRICTED_NETWORKS = setOf(
+    Blockchain.XRP.toNetworkId(),
+    Blockchain.Stellar.toNetworkId(),
+    Blockchain.InternetComputer.toNetworkId(),
+    Blockchain.Casper.toNetworkId(),
+    Blockchain.Algorand.toNetworkId(),
+)
 
 private suspend fun ExpressRepository.getFilteredProviders(
     userWallet: UserWallet,
