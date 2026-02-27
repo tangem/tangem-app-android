@@ -8,10 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification.Warning.TangemPayRefreshNeeded
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TangemPayCardMainBlock
 
 @Composable
@@ -36,6 +38,17 @@ private fun TangemPayMainScreenBlockPreview() {
     TangemThemePreview {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
             TangemPayMainScreenBlock(state = TangemPayState.Loading, isBalanceHidden = false)
+            TangemPayMainScreenBlock(
+                state = TangemPayState.RefreshNeeded(
+                    TangemPayRefreshNeeded(
+                        tangemIcon = R.drawable.ic_tangem_24,
+                        buttonText = resourceReference(id = R.string.home_button_scan),
+                        onRefreshClick = {},
+                        shouldShowProgress = false,
+                    ),
+                ),
+                isBalanceHidden = false,
+            )
 
             TangemPayMainScreenBlock(state = TangemPayState.ExposedDevice, isBalanceHidden = false)
 

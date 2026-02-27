@@ -47,7 +47,12 @@ class MultiWalletBalanceFetcherTest {
         val actual = fetcher.fetchingSources
 
         // Assert
-        val expected = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)
+        val expected = setOf(
+            FetchingSource.NETWORK,
+            FetchingSource.QUOTE,
+            FetchingSource.STAKING,
+            FetchingSource.TANGEM_PAY,
+        )
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
