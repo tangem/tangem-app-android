@@ -1,7 +1,7 @@
 package com.tangem.features.feed.ui.news.list.state
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.chip.entity.ChipUM
 import kotlinx.collections.immutable.ImmutableList
 
