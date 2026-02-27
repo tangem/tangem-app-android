@@ -64,7 +64,7 @@ class DetailsTest : BaseTestCase() {
     fun wallet2DetailsTest() =
         setupHooks().run {
             step("Open 'Main Screen'") {
-                openMainScreen(productType = ProductType.Wallet2, alreadyActivatedDialogIsShown = true)
+                openMainScreen(productType = ProductType.Wallet2)
             }
             onTopBar {
                 step("Open wallet details") {
