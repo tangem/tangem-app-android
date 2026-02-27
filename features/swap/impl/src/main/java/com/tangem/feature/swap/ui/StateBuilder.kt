@@ -1069,7 +1069,7 @@ internal class StateBuilder(
         )
     }
 
-    fun addAlert(
+    fun addDefaultAlert(
         uiState: SwapStateHolder,
         message: TextReference = resourceReference(R.string.common_unknown_error),
         onDismiss: () -> Unit = { clearAlert(uiState) },
@@ -1077,7 +1077,23 @@ internal class StateBuilder(
         return uiState.copy(
             event = triggeredEvent(
                 SwapEvent.ShowAlert(
-                    SwapAlertUM.GenericError(onDismiss, message),
+                    SwapAlertUM.DefaultError(onDismiss, message),
+                ),
+                onConsume = onDismiss,
+            ),
+        )
+    }
+
+    fun addSupportAlert(
+        uiState: SwapStateHolder,
+        message: TextReference = resourceReference(R.string.common_unknown_error),
+        onDismiss: () -> Unit = { clearAlert(uiState) },
+        onSupportClick: () -> Unit,
+    ): SwapStateHolder {
+        return uiState.copy(
+            event = triggeredEvent(
+                SwapEvent.ShowAlert(
+                    SwapAlertUM.SupportError(onSupportClick, message),
                 ),
                 onConsume = onDismiss,
             ),
