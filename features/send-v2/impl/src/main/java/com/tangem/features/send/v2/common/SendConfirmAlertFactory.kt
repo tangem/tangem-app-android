@@ -22,10 +22,13 @@ internal class SendConfirmAlertFactory @Inject constructor(
                 title = resourceReference(id = R.string.send_alert_transaction_failed_title),
                 message = resourceReference(id = R.string.common_unknown_error),
                 onDismissRequest = popBack,
-                firstAction = EventMessageAction(
-                    title = resourceReference(R.string.common_support),
-                    onClick = onFailedTxEmailClick,
-                ),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_support),
+                        onClick = onFailedTxEmailClick,
+                    )
+                },
+                secondActionBuilder = { cancelAction { } },
             ),
         )
     }
