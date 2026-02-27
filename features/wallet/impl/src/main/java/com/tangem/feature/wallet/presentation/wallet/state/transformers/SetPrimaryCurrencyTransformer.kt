@@ -11,6 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.converte
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletMarketPriceConverter
 import timber.log.Timber
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class SetPrimaryCurrencyTransformer(
     private val userWallet: UserWallet,
     private val status: CryptoCurrencyStatus,
@@ -37,7 +38,7 @@ internal class SetPrimaryCurrencyTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return walletUM // It will not be used
     }
 
     private fun WalletCardState.toLoadedSingleCurrencyState(): WalletCardState {
