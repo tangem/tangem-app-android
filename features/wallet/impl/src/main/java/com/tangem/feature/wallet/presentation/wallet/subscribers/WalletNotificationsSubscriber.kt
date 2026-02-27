@@ -5,10 +5,13 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletNotificationsCarouselFactory
-import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletWarningsFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.GetWalletNotificationsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWarningsTransformer
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -16,11 +19,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
 @Suppress("LongParameterList")
-internal class MultiWalletWarningsSubscriberV2(
-    private val userWallet: UserWallet,
+internal class WalletNotificationsSubscriber @AssistedInject constructor(
+    @Assisted private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
-    private val getWalletWarningsFactory: GetWalletWarningsFactory,
+    private val getWalletNotificationsFactory: GetWalletNotificationsFactory,
     private val getWalletNotificationsCarouselFactory: GetWalletNotificationsCarouselFactory,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
@@ -28,7 +31,7 @@ internal class MultiWalletWarningsSubscriberV2(
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotificationUM>> {
         return combine(
-            flow = getWalletWarningsFactory.create(userWallet, clickIntents).conflate().distinctUntilChanged(),
+            flow = getWalletNotificationsFactory.create(userWallet, clickIntents).conflate().distinctUntilChanged(),
             flow2 = getWalletNotificationsCarouselFactory.create(userWallet, clickIntents).conflate()
                 .distinctUntilChanged(),
         ) { notifications, notificationsCarousel ->
@@ -67,5 +70,10 @@ internal class MultiWalletWarningsSubscriberV2(
 
             totalNotifications
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(userWallet: UserWallet): WalletNotificationsSubscriber
     }
 }
