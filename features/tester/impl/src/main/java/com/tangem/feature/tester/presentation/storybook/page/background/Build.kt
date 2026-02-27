@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber", "LongMethod")
 package com.tangem.feature.tester.presentation.storybook.page.background
 
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
