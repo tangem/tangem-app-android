@@ -22,6 +22,8 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common.ui)
@@ -33,6 +35,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)

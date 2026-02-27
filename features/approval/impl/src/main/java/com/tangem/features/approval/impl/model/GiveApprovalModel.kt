@@ -8,6 +8,9 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -28,6 +31,8 @@ import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,14 +57,23 @@ internal class GiveApprovalModel @Inject constructor(
     private val createAndSendGaslessTransactionUseCase: CreateAndSendGaslessTransactionUseCase,
     private val uiMessageSender: UiMessageSender,
     private val urlOpener: UrlOpener,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), FeeSelectorModelCallback {
 
     private val params: GiveApprovalComponent.Params = paramsContainer.require()
+
+    private val userWallet by lazy {
+        requireNotNull(
+            getUserWalletUseCase(params.userWalletId).getOrNull(),
+        ) { "No wallet found for id: $params.userWalletId" }
+    }
 
     val uiState: StateFlow<GiveApprovalUM>
         field = MutableStateFlow(
             GiveApprovalUM(
                 approveType = ApproveType.LIMITED,
+                walletInteractionIcon = walletInterationIcon(userWallet),
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,
             ),
@@ -73,6 +87,7 @@ internal class GiveApprovalModel @Inject constructor(
     }
 
     fun onApproveClick() {
+        params.callback.onApproveClick()
         uiState.update { it.copy(isApproveLoading = true) }
         modelScope.launch(dispatchers.main) {
             val isSuccess = sendApprovalTransaction()
@@ -113,7 +128,7 @@ internal class GiveApprovalModel @Inject constructor(
 
         return createApprovalTransactionUseCase(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            userWalletId = params.userWallet.walletId,
+            userWalletId = params.userWalletId,
             amount = getApprovalAmount(),
             contractAddress = tokenCurrency.contractAddress,
             spenderAddress = params.spenderAddress,
@@ -126,7 +141,7 @@ internal class GiveApprovalModel @Inject constructor(
 
         return getFeeUseCase(
             transactionData = approvalTransaction,
-            userWallet = params.userWallet,
+            userWallet = userWallet,
             network = params.cryptoCurrencyStatus.currency.network,
         )
     }
@@ -138,13 +153,13 @@ internal class GiveApprovalModel @Inject constructor(
         return if (maybeToken == null) {
             getFeeForGaslessUseCase(
                 transactionData = approvalTransaction,
-                userWallet = params.userWallet,
+                userWallet = userWallet,
                 network = params.cryptoCurrencyStatus.currency.network,
             )
         } else {
             getFeeForTokenUseCase(
                 transactionData = approvalTransaction,
-                userWallet = params.userWallet,
+                userWallet = userWallet,
                 token = maybeToken.currency,
             )
         }
@@ -162,7 +177,7 @@ internal class GiveApprovalModel @Inject constructor(
 
         val transactionData = createApprovalTransactionUseCase(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            userWalletId = params.userWallet.walletId,
+            userWalletId = params.userWalletId,
             amount = getApprovalAmount(),
             fee = selectedFee,
             contractAddress = tokenCurrency.contractAddress,
@@ -174,14 +189,14 @@ internal class GiveApprovalModel @Inject constructor(
 
         return if (isFeeInTokenCurrency) {
             createAndSendGaslessTransactionUseCase(
-                userWallet = params.userWallet,
+                userWallet = userWallet,
                 transactionData = transactionData,
                 fee = feeExtended,
             )
         } else {
             sendTransactionUseCase(
                 txData = transactionData,
-                userWallet = params.userWallet,
+                userWallet = userWallet,
                 network = tokenCurrency.network,
             )
         }.fold(
@@ -189,7 +204,32 @@ internal class GiveApprovalModel @Inject constructor(
                 Timber.e("Failed to send approval transaction: $error")
                 false
             },
-            ifRight = { true },
+            ifRight = {
+                sendApproveSuccessAnalytics(feeContent)
+                true
+            },
+        )
+    }
+
+    private fun sendApproveSuccessAnalytics(feeContent: FeeSelectorUM.Content) {
+        val currency = params.cryptoCurrencyStatus.currency
+        val feeToken = feeContent.feeExtraInfo.feeCryptoCurrencyStatus.currency.symbol
+        val permissionType = when (uiState.value.approveType) {
+            ApproveType.LIMITED -> "Current transaction"
+            ApproveType.UNLIMITED -> "Unlimited"
+        }
+        val event = AnalyticsParam.TxSentFrom.Approve(
+            blockchain = currency.network.name,
+            token = currency.symbol,
+            feeType = feeContent.toAnalyticType(),
+            feeToken = feeToken,
+            permissionType = permissionType,
+        )
+        analyticsEventHandler.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
         )
     }
 
