@@ -17,10 +17,9 @@ import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.dev.BlockchainProvidersResponseSerializer
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -40,14 +39,14 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
+        environmentConfig: EnvironmentConfig,
         blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
-        environmentConfigStorage: EnvironmentConfigStorage,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
+            blockchainSdkConfig = environmentConfig.blockchainSdkConfig,
             blockchainProvidersTypesManager = blockchainProvidersTypesManager,
-            environmentConfigStorage = environmentConfigStorage,
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
         )
@@ -91,13 +90,11 @@ internal object BlockchainSDKFactoryModule {
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
-        featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
             accountCreator = DefaultAccountCreator(tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
-            featureTogglesManager = featureTogglesManager,
         )
     }
 }
