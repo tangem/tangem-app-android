@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber")
+@file:Suppress("MagicNumber", "LongMethod")
 package com.tangem.feature.tester.presentation.storybook.page.background
 
 import androidx.compose.foundation.background
