@@ -342,7 +342,7 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromAccountStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
                 } else {
                     fromAccountCurrencyStatus = fromAccountStatus
                     toAccountCurrencyStatus = toAccountStatus
@@ -360,7 +360,7 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
                 } else {
                     initialFromStatus = fromStatus
                     initialToStatus = toStatus
@@ -1020,7 +1020,7 @@ internal class SwapModel @Inject constructor(
         val fee = getSelectedFee()
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
-            makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
                 startLoadingQuotesFromLastState()
@@ -1046,7 +1046,7 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         if (fee == null) {
-                            makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
                         sendSuccessSwapEvent(
@@ -1205,7 +1205,7 @@ internal class SwapModel @Inject constructor(
                     }
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
-                        makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                        makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                         Timber.e("Fee should not be Empty")
                         return@launch
                     }
@@ -1658,11 +1658,15 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun makeDefaultAlert() {
-        uiState = stateBuilder.addAlert(uiState)
+        uiState = stateBuilder.addDefaultAlert(uiState = uiState)
     }
 
-    private fun makeDefaultAlert(message: TextReference) {
-        uiState = stateBuilder.addAlert(uiState, message)
+    private fun makeSupportAlert(message: TextReference) {
+        uiState = stateBuilder.addSupportAlert(
+            uiState = uiState,
+            message = message,
+            onSupportClick = { onFailedTxEmailClick("Fee calculation error") },
+        )
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
