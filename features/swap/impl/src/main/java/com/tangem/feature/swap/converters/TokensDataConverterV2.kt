@@ -39,10 +39,14 @@ internal class TokensDataConverterV2(
                 tokensListData = if (isAccountsMode) {
                     val portfolioList = accountListItemConverter.convertList(accountList).toPersistentList()
                     val totalTokensCount = portfolioList.sumOf { it.tokens.size }
-                    TokenListUMData.AccountList(
-                        tokensList = portfolioList,
-                        totalTokensCount = totalTokensCount,
-                    )
+                    if (totalTokensCount > 0) {
+                        TokenListUMData.AccountList(
+                            tokensList = portfolioList,
+                            totalTokensCount = totalTokensCount,
+                        )
+                    } else {
+                        TokenListUMData.EmptyList
+                    }
                 } else {
                     val tokensList = accountList.flatMap { (_, currencyList) ->
                         currencyList.asSequence().map { accountSwapCurrency ->
