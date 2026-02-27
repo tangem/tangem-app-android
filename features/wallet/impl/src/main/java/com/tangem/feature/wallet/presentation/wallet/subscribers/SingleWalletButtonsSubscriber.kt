@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 internal class SingleWalletButtonsSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
