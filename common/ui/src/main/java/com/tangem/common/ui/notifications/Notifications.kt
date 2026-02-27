@@ -138,7 +138,7 @@ fun LazyListScope.notifications(
  * @param containerColor    Color to be used for the background of the notifications.
  * @param modifier          Optional Modifier for the notifications.
  */
-fun LazyListScope.stackedNotifications(
+fun LazyListScope.notificationsCarousel(
     notifications: ImmutableList<TangemMessageUM>?,
     containerColor: Color,
     modifier: Modifier = Modifier,
@@ -192,7 +192,7 @@ private fun StackedNotifications_Preview(
                 .background(contentColor)
                 .padding(16.dp),
         ) {
-            stackedNotifications(
+            notificationsCarousel(
                 notifications = params,
                 containerColor = contentColor,
             )
