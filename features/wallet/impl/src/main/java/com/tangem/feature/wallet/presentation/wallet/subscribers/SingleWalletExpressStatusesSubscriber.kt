@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @Suppress("LongParameterList")
 internal class SingleWalletExpressStatusesSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
