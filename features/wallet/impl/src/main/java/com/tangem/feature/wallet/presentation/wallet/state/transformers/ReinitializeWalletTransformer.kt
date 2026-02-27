@@ -28,7 +28,9 @@ internal class ReinitializeWalletTransformer(
     }
 
     override fun transform(walletUM: WalletUM): WalletUM {
-        return walletUM // todo redesign main
+        return walletLoadingStateFactory.create2(
+            userWallet = userWallet,
+        )
     }
 
     override fun transform(prevState: WalletState): WalletState {
