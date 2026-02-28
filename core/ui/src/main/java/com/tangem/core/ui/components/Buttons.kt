@@ -191,6 +191,7 @@ fun PrimaryButtonIconStart(
     tint: Color? = null,
     size: TangemButtonSize = TangemButtonSize.Default,
     shape: Shape = size.toShape(),
+    iconType: TangemButtonIconType = TangemButtonIconType.Tinted,
 ) {
     TangemButton(
         modifier = modifier,
@@ -206,6 +207,7 @@ fun PrimaryButtonIconStart(
         textStyle = TangemTheme.typography.subtitle1,
         size = size,
         shape = shape,
+        iconType = iconType,
     )
 }
 // endregion PrimaryButton

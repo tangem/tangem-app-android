@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
@@ -45,6 +46,7 @@ fun TangemButton(
     shape: Shape = size.toShape(),
     iconPadding: Dp = size.toIconPadding(),
     animateContentChange: Boolean = false,
+    iconType: TangemButtonIconType = TangemButtonIconType.Tinted,
 ) {
     val multipleClickPreventer = remember { MultipleClickPreventer.get() }
 
@@ -93,15 +95,25 @@ fun TangemButton(
                 )
             },
             icon = { iconResId ->
-                Icon(
-                    modifier = Modifier
-                        .buttonContentSize(maxContentSize)
-                        .padding(vertical = 2.dp)
-                        .testTag(BaseButtonTestTags.ICON),
-                    painter = painterResource(id = iconResId),
-                    tint = icon.iconTint ?: colors.contentColor(enabled = enabled).value,
-                    contentDescription = null,
-                )
+                when (iconType) {
+                    TangemButtonIconType.Tinted -> Icon(
+                        modifier = Modifier
+                            .buttonContentSize(maxContentSize)
+                            .padding(vertical = 2.dp)
+                            .testTag(BaseButtonTestTags.ICON),
+                        painter = painterResource(id = iconResId),
+                        tint = icon.iconTint ?: colors.contentColor(enabled = enabled).value,
+                        contentDescription = null,
+                    )
+                    TangemButtonIconType.OriginalColor -> Image(
+                        modifier = Modifier
+                            .buttonContentSize(maxContentSize)
+                            .padding(vertical = 2.dp)
+                            .testTag(BaseButtonTestTags.ICON),
+                        painter = painterResource(id = iconResId),
+                        contentDescription = null,
+                    )
+                }
             },
             additionalText = {
                 if (additionalText != null) {
