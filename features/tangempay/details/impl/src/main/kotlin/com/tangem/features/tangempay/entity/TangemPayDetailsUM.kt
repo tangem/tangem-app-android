@@ -59,5 +59,4 @@ sealed class CardFrozenState {
 
 internal data class AddToWalletBlockState(
     val onClick: () -> Unit,
-    val onClickClose: () -> Unit,
 )

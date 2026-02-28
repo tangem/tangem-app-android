@@ -16,13 +16,6 @@ internal class GoogleWalletUtil @Inject constructor(
 
     fun isWalletAvailable(): Boolean = getWalletIntent() != null
 
-    fun openWallet() {
-        val intent = getWalletIntent()
-        if (intent != null) {
-            context.startActivity(intent)
-        }
-    }
-
     private fun getWalletIntent(): Intent? {
         return if (walletIntent != null) {
             walletIntent

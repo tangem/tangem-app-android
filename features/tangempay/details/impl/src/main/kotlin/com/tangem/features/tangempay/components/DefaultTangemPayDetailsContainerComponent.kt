@@ -71,10 +71,6 @@ internal class DefaultTangemPayDetailsContainerComponent @AssistedInject constru
         TangemPayDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
         )
-        TangemPayDetailsInnerRoute.AddToWallet -> TangemPayAddToWalletComponent(
-            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
-            params = params,
-        )
     }
 
     private fun onChildBack() {

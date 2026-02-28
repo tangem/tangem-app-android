@@ -45,6 +45,7 @@ import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.utils.GoogleWalletUtil
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
@@ -83,6 +84,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
+    private val googleWalletUtil: GoogleWalletUtil,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener, ViewPinListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -362,8 +364,17 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun fetchAddToWalletBanner() {
         modelScope.launch {
+            if (!googleWalletUtil.isWalletAvailable()) {
+                uiState.update(
+                    transformer = DetailsAddToWalletBannerTransformer(
+                        onClickBanner = ::onClickAddToWalletBlock,
+                        isDone = true,
+                    ),
+                )
+                return@launch
+            }
             val isDone = try {
-                cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
+                cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == false
             } catch (e: Exception) {
                 Timber.e(e)
                 return@launch
@@ -371,7 +382,6 @@ internal class TangemPayDetailsModel @Inject constructor(
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(
                     onClickBanner = ::onClickAddToWalletBlock,
-                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
                     isDone = isDone,
                 ),
             )
@@ -403,24 +413,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onClickAddToWalletBlock() {
         analytics.send(TangemPayAnalyticsEvents.AddToWalletClicked())
-        router.push(TangemPayDetailsInnerRoute.AddToWallet)
-    }
-
-    private fun onClickCloseAddToWalletBlock() {
-        modelScope.launch {
-            try {
-                cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
-            uiState.update(
-                transformer = DetailsAddToWalletBannerTransformer(
-                    onClickBanner = ::onClickAddToWalletBlock,
-                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
-                    isDone = true,
-                ),
-            )
-        }.saveIn(addToWalletBannerJobHolder)
+        TODO("Launch MeaWallet")
     }
 
     private fun onOpenMenu() {

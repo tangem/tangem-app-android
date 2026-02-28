@@ -851,6 +851,7 @@
   <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
+  <string name="news_trending_score">Trending score</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
   <string name="nft_asset">NFT asset</string>
@@ -1508,6 +1509,7 @@
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">Change PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>

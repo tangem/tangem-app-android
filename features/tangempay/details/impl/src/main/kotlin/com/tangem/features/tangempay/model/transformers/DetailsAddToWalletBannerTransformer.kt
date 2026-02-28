@@ -6,7 +6,6 @@ import com.tangem.utils.transformer.Transformer
 
 internal class DetailsAddToWalletBannerTransformer(
     private val onClickBanner: () -> Unit,
-    private val onClickCloseBanner: () -> Unit,
     private val isDone: Boolean,
 ) : Transformer<TangemPayDetailsUM> {
 
@@ -15,7 +14,7 @@ internal class DetailsAddToWalletBannerTransformer(
             addToWalletBlockState = if (isDone) {
                 null
             } else {
-                AddToWalletBlockState(onClick = onClickBanner, onClickClose = onClickCloseBanner)
+                AddToWalletBlockState(onClick = onClickBanner)
             },
         )
     }
