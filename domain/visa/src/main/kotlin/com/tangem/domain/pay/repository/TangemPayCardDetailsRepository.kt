@@ -21,8 +21,6 @@ interface TangemPayCardDetailsRepository {
 
     suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean>
 
-    suspend fun setAddToWalletAsDone(userWalletId: UserWalletId): Either<UniversalError, Unit>
-
     suspend fun freezeCard(userWalletId: UserWalletId, cardId: String): Either<UniversalError, TangemPayCardFrozenState>
     suspend fun unfreezeCard(
         userWalletId: UserWalletId,

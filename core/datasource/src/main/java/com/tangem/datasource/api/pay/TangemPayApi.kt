@@ -61,6 +61,11 @@ interface TangemPayApi {
         @Body body: CardDetailsRequest,
     ): ApiResponse<CardDetailsResponse>
 
+    @GET("v1/customer/card/processor/details")
+    suspend fun getCardProcessorDetails(
+        @Header("Authorization") authHeader: String,
+    ): ApiResponse<CardProcessorDetailsResponse>
+
     @GET("v1/customer/card/pin")
     suspend fun getPin(
         @Header("Authorization") authHeader: String,

@@ -124,20 +124,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
-    override suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean {
-        return withContext(dispatcherProvider.io) {
-            appPreferencesStore.getSyncOrNull(
-                key = PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress),
-            ) == true
-        }
-    }
-
-    override suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean) {
-        withContext(dispatcherProvider.io) {
-            appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), isDone)
-        }
-    }
-
     override suspend fun clearOrderId(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         appPreferencesStore.store(PreferencesKeys.getTangemPayOrderIdKey(customerWalletAddress), "")
     }

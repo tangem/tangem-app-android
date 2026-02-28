@@ -18,7 +18,6 @@ import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
-import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -42,7 +41,6 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
-    private val storage: TangemPayStorage,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val errorConverter: TangemPayErrorConverter,
 ) : TangemPayCardDetailsRepository {
@@ -172,21 +170,10 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
         return catch(
             block = {
-                storage.getAddToWalletDone(
-                    customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId),
-                ).right()
-            },
-            catch = ::catchException,
-        )
-    }
-
-    override suspend fun setAddToWalletAsDone(userWalletId: UserWalletId): Either<UniversalError, Unit> {
-        return catch(
-            block = {
-                storage.storeAddToWalletDone(
-                    customerWalletAddress = requestHelper.getCustomerWalletAddress(userWalletId),
-                    isDone = true,
-                ).right()
+                val response = requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.getCardProcessorDetails(authHeader = authHeader)
+                }
+                TODO("Launch MeaWallet")
             },
             catch = ::catchException,
         )
