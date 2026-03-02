@@ -18,7 +18,10 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.finisher.AppFinisher
@@ -82,6 +85,7 @@ internal class DefaultTangemSdkManager(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     dispatchers: CoroutineDispatcherProvider,
 ) : TangemSdkManager {
 
@@ -470,6 +474,9 @@ internal class DefaultTangemSdkManager(
                         title = resourceReference(R.string.alert_button_request_support),
                         onClick = {
                             coroutineScope.launch {
+                                analyticsEventHandler.send(
+                                    Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.SignIn),
+                                )
                                 sendFeedbackEmailUseCase(FeedbackEmailType.BiometricsAuthenticationFailed)
                             }
                         },
