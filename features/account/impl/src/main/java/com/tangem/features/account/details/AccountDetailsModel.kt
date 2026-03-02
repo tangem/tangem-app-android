@@ -16,7 +16,6 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -65,7 +64,7 @@ internal class AccountDetailsModel @Inject constructor(
     private fun onManageTokensClick(account: Account.CryptoPortfolio) {
         val route = AppRoute.ManageTokens(
             source = AppRoute.ManageTokens.Source.ACCOUNT,
-            portfolioId = PortfolioId(account.accountId),
+            accountId = account.accountId,
         )
         analyticsEventHandler.send(
             AccountSettingsAnalyticEvents.ButtonManageTokens(account.derivationIndex.value),
