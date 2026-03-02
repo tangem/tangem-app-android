@@ -16,11 +16,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.model.ManageTokensModel
 import com.tangem.features.managetokens.ui.ManageTokensScreen
@@ -38,7 +38,7 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = ManageTokensBottomSheetConfig.serializer(),
+        serializer = AccountId.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -57,13 +57,10 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
     }
 
     private fun bottomSheetChild(
-        config: ManageTokensBottomSheetConfig,
+        accountId: AccountId,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
-        val mode = when (config) {
-            is ManageTokensBottomSheetConfig.AddWalletCustomToken -> AddCustomTokenMode.Wallet(config.userWalletId)
-            is ManageTokensBottomSheetConfig.AddAccountCustomToken -> AddCustomTokenMode.Account(config.accountId)
-        }
+        val mode = AddCustomTokenMode(accountId)
         return addCustomTokenComponentFactory.create(
             context = childByContext(componentContext),
             params = AddCustomTokenComponent.Params(
