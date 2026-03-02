@@ -15,7 +15,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
 import com.tangem.domain.models.account.Account
@@ -52,7 +51,6 @@ internal class CustomTokenSelectorModel @Inject constructor(
     private val getSupportedNetworksUseCase: GetSupportedNetworksUseCase,
     private val messageSender: UiMessageSender,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -171,7 +169,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
     }
 
     private suspend fun getSupportedNetworks(mode: AddCustomTokenMode): List<Network> {
-        return getSupportedNetworksUseCase(mode.userWalletId).getOrElse { e ->
+        return getSupportedNetworksUseCase(mode.userWalletId).getOrElse { _ ->
             val message = SnackbarMessage(message = resourceReference(R.string.common_unknown_error))
             messageSender.send(message)
 
@@ -194,19 +192,23 @@ internal class CustomTokenSelectorModel @Inject constructor(
     fun selectCustomDerivationPath(value: SelectedDerivationPath) {
         when (params) {
             is NetworkSelector -> return
-            is DerivationPathSelector -> if (accountsFeatureToggles.isFeatureEnabled) {
-                params.checkAccountDerivation(value)
-            } else {
-                params.onDerivationPathSelected(value, null)
-            }
+            is DerivationPathSelector -> params.checkAccountDerivation(value)
         }
     }
 
     private fun DerivationPathSelector.checkAccountDerivation(derivationPath: SelectedDerivationPath) =
         modelScope.launch {
             val account = derivationPath.id
-                ?.let { Blockchain.fromId(it.rawId.value) }?.let(::AccountNodeRecognizer)
-                ?.let { recognizer -> derivationPath.value.value?.let { recognizer.recognize(it) } }
+                ?.let { Blockchain.fromId(it.rawId.value) }
+                ?.let(::AccountNodeRecognizer)
+                ?.let { recognizer ->
+                    val derivationPathValue = derivationPath.value.value
+                    if (derivationPathValue != null) {
+                        recognizer.recognize(derivationPathValue)
+                    } else {
+                        null
+                    }
+                }
                 ?.let { accountNode ->
                     fun AccountStatus.CryptoPortfolio.sameNodeAndNotMain() = !this.account.isMainAccount &&
                         this.account.derivationIndex.value.toLong() == accountNode

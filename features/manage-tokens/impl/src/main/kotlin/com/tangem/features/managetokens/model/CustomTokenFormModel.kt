@@ -179,7 +179,7 @@ internal class CustomTokenFormModel @Inject constructor(
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
     ) = modelScope.launch {
-        val needColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
+        val isNeedColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = params.mode.userWalletId,
             networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
         )
@@ -193,7 +193,7 @@ internal class CustomTokenFormModel @Inject constructor(
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
-                    walletInteractionIcon = R.drawable.ic_tangem_24.takeIf { needColdWalletInteraction },
+                    walletInteractionIcon = R.drawable.ic_tangem_24.takeIf { isNeedColdWalletInteraction },
                 )
 
             if (fillForm) {
@@ -353,14 +353,8 @@ internal class CustomTokenFormModel @Inject constructor(
         )
         analyticsEventHandler.send(event)
 
-        useCasesFacade.derivePublicKeysUseCase(listOf(currency)).getOrElse {
-            Timber.e(it, "Failed to derive public keys")
-            showErrorDialog()
-            return@resource
-        }
-
-        useCasesFacade.addCryptoCurrenciesUseCase(currency).getOrElse {
-            Timber.e(it, "Failed to add currency")
+        useCasesFacade.addCryptoCurrenciesUseCase(currency).getOrElse { throwable ->
+            Timber.e(throwable, "Failed to add currency")
             showErrorDialog()
             return@resource
         }

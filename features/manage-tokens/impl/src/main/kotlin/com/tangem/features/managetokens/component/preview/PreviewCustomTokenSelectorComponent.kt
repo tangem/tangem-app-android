@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewCustomTokenSelectorComponent(
     private val params: Params = Params.NetworkSelector(
-        mode = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321")),
+        mode = AddCustomTokenMode(UserWalletId(stringValue = "321")),
         selectedNetwork = null,
         onNetworkSelected = {},
     ),
@@ -39,7 +39,7 @@ internal class PreviewCustomTokenSelectorComponent(
                 )
 
                 DerivationPathUM(
-                    id = d.id?.rawId?.value ?: "",
+                    id = d.id?.rawId?.value.orEmpty(),
                     value = d.value.value.orEmpty(),
                     networkName = stringReference(d.name),
                     isSelected = d.value == params.selectedDerivationPath?.value,
