@@ -17,8 +17,6 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
@@ -45,7 +43,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.collections.isNotEmpty
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -55,7 +52,6 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
@@ -63,15 +59,14 @@ internal class ChooseManagedTokensModel @Inject constructor(
 
     private val params: ChooseManagedTokensComponent.Params = paramsContainer.require()
 
-    private val manageTokensMode = if (accountsFeatureToggles.isFeatureEnabled) {
-        val accountId = AccountId.forMainCryptoPortfolio(userWalletId = params.userWalletId)
-        ManageTokensMode.Account(accountId = accountId)
-    } else {
-        ManageTokensMode.Wallet(params.userWalletId)
-    }
+    private val manageTokensMode = ManageTokensMode.Account(params.userWalletId)
 
     private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
         .create(mode = manageTokensMode)
+
+    val bottomSheetNavigation: SlotNavigation<ChooseManageTokensBottomSheetConfig> = SlotNavigation()
+    val uiState: StateFlow<ChooseManagedTokenUM>
+        field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
 
     private val manageTokensListManager = manageTokensListManagerFactory.create(
         scope = modelScope,
@@ -90,10 +85,6 @@ internal class ChooseManagedTokensModel @Inject constructor(
             )
         },
     )
-
-    val bottomSheetNavigation: SlotNavigation<ChooseManageTokensBottomSheetConfig> = SlotNavigation()
-    val uiState: StateFlow<ChooseManagedTokenUM>
-        field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
 
     init {
         manageTokensListManager.uiItems
@@ -146,11 +137,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private fun removeNotification() {
         modelScope.launch {
             setShouldShowNotificationUseCase(NotificationId.SendViaSwapTokenSelectorNotification.key, false)
-            uiState.update {
-                it.copy(
-                    notificationUM = null,
-                )
-            }
+            uiState.update { it.copy(notificationUM = null) }
         }
     }
 
@@ -161,7 +148,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 if (!new.readContent.search.isActive && old.readContent.search.isActive) {
                     analyticsEventHandler.send(
                         CommonManageTokensAnalyticEvents.TokenSearched(
-                            params.analyticsCategoryName,
+                            categoryName = params.analyticsCategoryName,
                             token = null,
                             blockchain = null,
                             isTokenChosen = false,
@@ -195,8 +182,9 @@ internal class ChooseManagedTokensModel @Inject constructor(
                         val isToken = currency.id.value == params.initialCurrency.id.rawCurrencyId?.value
 
                         // Ensure that initial token network is filtered out and network list is empty
+                        val paramsRawId = params.initialCurrency.network.id.rawId
                         val isEmptyNetworks = availableNetworks?.networks?.filterNot { network ->
-                            network.id == params.initialCurrency.network.id.rawId.value
+                            network.id == paramsRawId.value
                         }.isNullOrEmpty()
 
                         // Filter out currency from display
