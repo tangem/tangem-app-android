@@ -17,6 +17,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -81,7 +82,7 @@ internal fun TokenRowPromoBanner(promoBannerUM: TangemTokenRowUM.PromoBannerUM.C
                 shape = TangemBadgeShape.Rounded,
                 color = TangemBadgeColor.Green,
                 type = TangemBadgeType.Tinted,
-                iconRes = R.drawable.ic_close_24,
+                tangemIconUM = TangemIconUM.Icon(R.drawable.ic_close_24),
                 iconPosition = TangemBadgeIconPosition.None,
                 onClick = promoBannerUM.onCloseClick,
             )
