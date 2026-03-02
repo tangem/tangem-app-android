@@ -1,14 +1,14 @@
 package com.tangem.core.ui.ds.badge
 
-import androidx.annotation.DrawableRes
 import com.tangem.core.ui.ds.badge.TangemBadgeSize.X9
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
 
 /**
  * UI model for [TangemBadge] component
  *
  * @param text          TextReference for the badge label.
- * @param iconRes       Drawable resource ID for the icon to be displayed in the badge.
+ * @param tangemIconUM  Model of representation for the icon to be displayed in the badge.
  * @param size          [TangemBadgeSize] defining the size of the badge.
  * @param shape         [TangemBadgeShape] defining the shape of the badge.
  * @param color         [TangemBadgeColor] defining the color scheme of the badge.
@@ -18,7 +18,7 @@ import com.tangem.core.ui.extensions.TextReference
  */
 class TangemBadgeUM(
     val text: TextReference,
-    @DrawableRes val iconRes: Int? = null,
+    val tangemIconUM: TangemIconUM? = null,
     val size: TangemBadgeSize = X9,
     val shape: TangemBadgeShape = TangemBadgeShape.Default,
     val color: TangemBadgeColor = TangemBadgeColor.Gray,
