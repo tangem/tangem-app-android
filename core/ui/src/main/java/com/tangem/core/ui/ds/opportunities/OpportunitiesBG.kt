@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,12 +28,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import dev.chrisbanes.haze.HazeStyle
 
@@ -117,6 +121,7 @@ private fun BoxScope.BackgroundLayer(icon: TangemIconUM, blurRadius: Dp = 26.dp)
         is TangemIconUM.Icon -> SolidColorBackground(icon.tintReference(), blurRadius)
         is TangemIconUM.Ident -> Unit
         is TangemIconUM.Image -> ResBackground(icon.imageRes, blurRadius)
+        is TangemIconUM.Url -> UrlColorBackground(icon.url, blurRadius)
     }
 }
 
@@ -210,6 +215,31 @@ private fun BoxScope.SolidColorBackground(color: Color, blurRadius: Dp) {
             .matchParentSize()
             .background(color = color)
             .hazeForegroundEffectTangem(style = HazeStyle(blurRadius = blurRadius, tint = null)),
+    )
+}
+
+@Composable
+private fun BoxScope.UrlColorBackground(url: String, blurRadius: Dp) {
+    SubcomposeAsyncImage(
+        modifier = Modifier
+            .matchParentSize()
+            .hazeForegroundEffectTangem(style = HazeStyle(blurRadius = blurRadius, tint = null)),
+        model = ImageRequest.Builder(context = LocalContext.current)
+            .data(url)
+            .crossfade(enable = true)
+            .allowHardware(enable = false)
+            .build(),
+        loading = { CircleShimmer() },
+        error = {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors2.surface.level3,
+                        shape = CircleShape,
+                    ),
+            )
+        },
+        contentDescription = null,
     )
 }
 
