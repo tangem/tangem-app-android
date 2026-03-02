@@ -11,9 +11,12 @@ class TokenExchangeAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Token", event, params) {
 
-    class CexTxStatusOpened(token: String) : TokenScreenAnalyticsEvent(
+    class CexTxStatusOpened(token: String, provider: String) : TokenScreenAnalyticsEvent(
         event = "Swap Status Opened",
-        params = mapOf(TOKEN_PARAM to token),
+        params = mapOf(
+            TOKEN_PARAM to token,
+            PROVIDER to provider,
+        ),
     )
 
     class CexTxStatusChanged(token: String, status: String, provider: String) : TokenScreenAnalyticsEvent(
