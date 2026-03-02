@@ -13,9 +13,7 @@ fun ArticleCard(
     modifier: Modifier = Modifier,
     colors: CardColors = TangemBlockCardColors,
 ) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
-
-    if (isRedesignEnabled) {
+    if (LocalRedesignEnabled.current) {
         ArticleCardV2(
             articleConfigUM = articleConfigUM,
             onArticleClick = onArticleClick,
