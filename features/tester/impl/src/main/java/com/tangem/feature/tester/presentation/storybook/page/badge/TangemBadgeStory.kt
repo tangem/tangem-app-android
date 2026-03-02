@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemBadgeStory
@@ -185,7 +186,7 @@ private fun BadgeTypeRow(
         ) {
             TangemBadge(
                 text = stringReference("New"),
-                iconRes = R.drawable.ic_information_24,
+                tangemIconUM = TangemIconUM.Icon(R.drawable.ic_information_24),
                 size = size,
                 shape = shape,
                 color = color,
@@ -210,7 +211,7 @@ private fun BadgeTypeRow(
             modifier = Modifier.weight(1f),
         ) {
             TangemBadge(
-                iconRes = R.drawable.ic_information_24,
+                tangemIconUM = TangemIconUM.Icon(R.drawable.ic_information_24),
                 size = size,
                 shape = shape,
                 color = color,
