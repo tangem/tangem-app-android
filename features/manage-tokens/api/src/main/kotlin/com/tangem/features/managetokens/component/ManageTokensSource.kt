@@ -2,6 +2,7 @@ package com.tangem.features.managetokens.component
 
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
 enum class ManageTokensSource(val analyticsName: String) {
     STORIES(analyticsName = "Stories"),
@@ -12,18 +13,15 @@ enum class ManageTokensSource(val analyticsName: String) {
 }
 
 sealed interface ManageTokensMode {
-    data class Wallet(val userWalletId: UserWalletId) : ManageTokensMode
-    data class Account(val accountId: AccountId) : ManageTokensMode
+    data class Account(val accountId: AccountId) : ManageTokensMode {
+        constructor(userWalletId: UserWalletId) : this(AccountId.forMainCryptoPortfolio(userWalletId))
+    }
     data object None : ManageTokensMode
 }
 
-sealed interface AddCustomTokenMode {
+@Serializable
+data class AddCustomTokenMode(val accountId: AccountId) {
+    val userWalletId: UserWalletId = accountId.userWalletId
 
-    val userWalletId: UserWalletId
-
-    data class Wallet(override val userWalletId: UserWalletId) : AddCustomTokenMode
-
-    data class Account(val accountId: AccountId) : AddCustomTokenMode {
-        override val userWalletId: UserWalletId = accountId.userWalletId
-    }
+    constructor(userWalletId: UserWalletId) : this(AccountId.forMainCryptoPortfolio(userWalletId))
 }
