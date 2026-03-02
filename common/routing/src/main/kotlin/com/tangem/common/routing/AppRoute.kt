@@ -7,13 +7,12 @@ import android.os.Bundle
 import com.tangem.common.routing.bundle.RouteBundleParams
 import com.tangem.common.routing.bundle.bundle
 import com.tangem.common.routing.entity.InitScreenLaunchMode
-import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.serialization.SerializedBigDecimal
@@ -21,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.tokens.model.details.NavigationAction
 import kotlinx.serialization.Serializable
 
@@ -128,8 +128,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class ManageTokens(
         val source: Source,
-        val portfolioId: PortfolioId? = null,
-    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${portfolioId?.stringValue}") {
+        val accountId: AccountId? = null,
+    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${accountId?.value}") {
 
         /**
          * Source of launching the screen.
