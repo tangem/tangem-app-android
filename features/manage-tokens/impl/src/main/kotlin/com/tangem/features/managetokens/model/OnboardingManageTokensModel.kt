@@ -13,8 +13,6 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.redux.OnboardingManageTokensAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
@@ -45,18 +43,13 @@ internal class OnboardingManageTokensModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    accountsFeatureToggles: AccountsFeatureToggles,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
     private val params: OnboardingManageTokensComponent.Params = paramsContainer.require()
-    private val portfolio = if (accountsFeatureToggles.isFeatureEnabled) {
-        ManageTokensMode.Account(accountId = AccountId.forMainCryptoPortfolio(params.userWalletId))
-    } else {
-        ManageTokensMode.Wallet(params.userWalletId)
-    }
+    private val portfolio = ManageTokensMode.Account(params.userWalletId)
     private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
         .create(mode = portfolio)
     private val manageTokensListManager = manageTokensListManagerFactory.create(
@@ -223,12 +216,12 @@ internal class OnboardingManageTokensModel @Inject constructor(
                 .flatten()
                 .toSet()
                 .associate { network -> network.backendId to network.derivationPath.value }
-            val showTangemIcon = useCasesFacade.needColdWalletInteraction(network = network)
+            val shouldShowTangemIcon = useCasesFacade.needColdWalletInteraction(network = network)
             state.update { state ->
                 state.copy(
                     actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Continue(
                         onClick = ::saveChanges,
-                        showTangemIcon = showTangemIcon,
+                        showTangemIcon = shouldShowTangemIcon,
                     ),
                 )
             }
@@ -267,8 +260,8 @@ internal class OnboardingManageTokensModel @Inject constructor(
         useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
-        ).getOrElse {
-            Timber.e(it, "Failed to save changes")
+        ).getOrElse { throwable ->
+            Timber.e(throwable, "Failed to save changes")
             return@resource
         }
 
@@ -292,8 +285,8 @@ internal class OnboardingManageTokensModel @Inject constructor(
         useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
-        ).getOrElse {
-            Timber.e(it, "Failed to save changes")
+        ).getOrElse { throwable ->
+            Timber.e(throwable, "Failed to save changes")
             return@resource
         }
 
