@@ -122,6 +122,7 @@ internal fun ShowMoreArticlesCardV2(modifier: Modifier = Modifier, onClick: () -
             .padding(vertical = 41.dp, horizontal = 16.dp),
     ) {
         Image(
+            modifier = Modifier.size(40.dp),
             imageVector = ImageVector.vectorResource(R.drawable.ic_show_more_news_48),
             contentDescription = stringResourceSafe(R.string.common_show_more),
         )
@@ -133,6 +134,8 @@ internal fun ShowMoreArticlesCardV2(modifier: Modifier = Modifier, onClick: () -
             style = TangemTheme.typography2.bodyRegular16,
             color = TangemTheme.colors2.text.neutral.primary,
         )
+
+        SpacerH(4.dp)
 
         Text(
             text = stringResourceSafe(R.string.news_stay_in_the_loop),
@@ -150,17 +153,27 @@ private fun DefaultArticle(
 ) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors2.surface.level2)
-            .clickable { onArticleClick() }
-            .padding(vertical = 16.dp, horizontal = 10.dp),
+            .clip(RoundedCornerShape(20.dp))
+            .background(color = TangemTheme.colors2.surface.level3)
+            .clickable(onClick = onArticleClick)
+            .border(
+                width = 1.dp,
+                color = TangemTheme.colors2.border.neutral.primary,
+                shape = RoundedCornerShape(20.dp),
+            )
+            .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            RatingInfo(rating = stringReference("${articleConfigUM.score}"))
+            RatingInfo(
+                rating = stringReference("${articleConfigUM.score}"),
+                isTrending = false,
+            )
         }
 
         SpacerH(8.dp)
 
         Text(
+            modifier = Modifier.weight(1f),
             text = articleConfigUM.title,
             color = if (articleConfigUM.isViewed) {
                 TangemTheme.colors2.text.neutral.tertiary
@@ -168,19 +181,21 @@ private fun DefaultArticle(
                 TangemTheme.colors2.text.neutral.primary
             },
             style = TangemTheme.typography2.bodyRegular16,
-            minLines = 3,
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
 
+        SpacerH(8.dp)
+
         Text(
-            modifier = Modifier.padding(vertical = 20.dp),
             text = articleConfigUM.createdAt.resolveReference(),
             style = TangemTheme.typography2.captionSemibold12,
             color = TangemTheme.colors2.text.neutral.secondary,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
         )
+
+        SpacerH(8.dp)
 
         Tags(tags = articleConfigUM.tags.toImmutableList())
     }
@@ -269,7 +284,7 @@ private fun DayAndRatingInfo(rating: TextReference, modifier: Modifier = Modifie
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RatingInfo(rating)
+        RatingInfo(rating = rating, isTrending = true)
 
         SpacerW(8.dp)
 
@@ -282,10 +297,14 @@ private fun DayAndRatingInfo(rating: TextReference, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun RatingInfo(rating: TextReference) {
+private fun RatingInfo(rating: TextReference, isTrending: Boolean) {
     Icon(
         imageVector = ImageVector.vectorResource(R.drawable.ic_wrapped_circle_star_16),
-        tint = TangemTheme.colors2.fill.status.attention,
+        tint = if (isTrending) {
+            TangemTheme.colors2.fill.status.attention
+        } else {
+            TangemTheme.colors2.markers.iconGray
+        },
         contentDescription = null,
     )
 
@@ -293,7 +312,11 @@ private fun RatingInfo(rating: TextReference) {
 
     Text(
         text = rating.resolveReference(),
-        color = TangemTheme.colors2.text.status.attention,
+        color = if (isTrending) {
+            TangemTheme.colors2.text.status.attention
+        } else {
+            TangemTheme.colors2.text.neutral.secondary
+        },
         style = TangemTheme.typography2.captionSemibold12,
     )
 }
