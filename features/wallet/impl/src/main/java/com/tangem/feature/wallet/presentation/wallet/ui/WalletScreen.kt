@@ -68,9 +68,9 @@ import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenWithEmptyTokensState
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewDataLegacy.accountScreenState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewDataLegacy.accountScreenWithEmptyTokensState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewDataLegacy.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
@@ -111,7 +111,7 @@ internal fun WalletScreen(
         onBottomSheetStateChange = onBottomSheetStateChange,
     )
 
-    WalletEventEffect(
+    WalletEventEffectLegacy(
         walletsListState = walletsListState,
         snackbarHostState = snackbarHostState,
         event = state.event,
@@ -499,7 +499,7 @@ private fun MarketsTooltip(
 }
 
 @Composable
-internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
+private fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         modifier = modifier,
         visible = isVisible,
