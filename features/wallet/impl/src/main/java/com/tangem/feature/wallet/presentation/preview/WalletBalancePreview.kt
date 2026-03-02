@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.preview
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -12,6 +13,14 @@ internal object WalletBalancePreview {
     val content: WalletBalanceUM.Content = WalletBalanceUM.Content(
         id = UserWalletId("0"),
         name = "My Wallet",
+        balanceInAppBar = combinedReference(
+            stringReference("1,234"),
+            styledStringReference(
+                ".56",
+                { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+            ),
+            stringReference(" $"),
+        ),
         balance = combinedReference(
             stringReference("1,234"),
             styledStringReference(
