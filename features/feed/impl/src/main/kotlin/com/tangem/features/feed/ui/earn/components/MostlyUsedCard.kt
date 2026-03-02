@@ -25,9 +25,7 @@ import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 
 @Composable
 internal fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val isRedesignEnabled = LocalRedesignEnabled.current
-
-    if (isRedesignEnabled) {
+    if (LocalRedesignEnabled.current) {
         MostlyUsedCardV2(
             modifier = modifier,
             item = item,
