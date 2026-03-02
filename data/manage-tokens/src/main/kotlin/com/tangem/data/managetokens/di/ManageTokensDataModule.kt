@@ -2,8 +2,6 @@ package com.tangem.data.managetokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
@@ -11,7 +9,6 @@ import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -33,13 +30,10 @@ internal object ManageTokensDataModule {
         userWalletsListRepository: UserWalletsListRepository,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
         userTokensResponseStore: UserTokensResponseStore,
-        userTokensSaver: UserTokensSaver,
         testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
-        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         networkFactory: NetworkFactory,
-        accountsFeatureToggles: AccountsFeatureToggles,
         walletAccountsFetcher: WalletAccountsFetcher,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
@@ -47,13 +41,10 @@ internal object ManageTokensDataModule {
             userWalletsListRepository = userWalletsListRepository,
             manageTokensUpdateFetcher = manageTokensUpdateFetcher,
             userTokensResponseStore = userTokensResponseStore,
-            userTokenSaver = userTokensSaver,
             testnetTokensStorage = testnetTokensStorage,
             excludedBlockchains = excludedBlockchains,
-            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             networkFactory = networkFactory,
             dispatchers = dispatchers,
-            accountsFeatureToggles = accountsFeatureToggles,
             walletAccountsFetcher = walletAccountsFetcher,
         )
     }
