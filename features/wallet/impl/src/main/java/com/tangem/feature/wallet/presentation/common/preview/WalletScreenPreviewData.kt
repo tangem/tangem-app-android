@@ -2,243 +2,97 @@ package com.tangem.feature.wallet.presentation.common.preview
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
-import com.tangem.core.ui.components.token.AccountItemPreviewData
-import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
-import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.ds.button.TangemButtonType
+import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
+import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
+import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 
 internal object WalletScreenPreviewData {
-    private val tokenItemState = TokenItemState.Content(
+
+    private val tokenRowDefault = TangemTokenRowUM.Content(
         id = "1",
-        iconState = CurrencyIconState.Locked,
-        titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
-        fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
-        subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
-        subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
-            price = "34 496,75 \$",
-            priceChangePercent = "0,43 %",
-            type = PriceChangeType.DOWN,
+        headIconUM = TangemIconUM.Currency(CurrencyIconState.Loading),
+        titleUM = TangemTokenRowUM.TitleUM.Content(
+            text = stringReference("Bitcoin"),
         ),
+        subtitleUM = TangemTokenRowUM.SubtitleUM.Content(
+            text = stringReference("Bitcoin"),
+        ),
+        topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+            text = stringReference("1 234,56 \$"),
+        ),
+        bottomEndContentUM = TangemTokenRowUM.EndContentUM.Content(
+            text = stringReference("0,12345678 BTC"),
+        ),
+        promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
+        tailUM = TangemTokenRowUM.TailUM.Empty,
         onItemClick = {},
         onItemLongClick = {},
     )
 
-    private val textContentTokensState = WalletTokensListState.ContentState.Content(
-        items = persistentListOf(
-            TokensListItemUM.GroupTitle(id = 1, text = stringReference("Network Bitcoin")),
-            TokensListItemUM.Token(state = tokenItemState),
-            TokensListItemUM.GroupTitle(id = 2, text = stringReference("Network Ethereum")),
-            TokensListItemUM.Token(
-                state = tokenItemState.copy(
-                    id = "2",
-                    titleState = TokenItemState.TitleState.Content(text = stringReference("Ethereum")),
-                    fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
-                    subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "1,856660295 ETH"),
-                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
-                        price = "1 799,41 \$",
-                        priceChangePercent = "5,16 %",
-                        type = PriceChangeType.UP,
-                    ),
-                ),
-            ),
-            TokensListItemUM.Token(
-                state = TokenItemState.Unreachable(
-                    id = "3",
-                    iconState = CurrencyIconState.Locked,
-                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
-                    onItemClick = {},
-                    onItemLongClick = {},
-                ),
-            ),
-            TokensListItemUM.Token(
-                state = tokenItemState.copy(
-                    id = "4",
-                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Shiba Inu")),
-                    fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
-                    subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "6 200 220,00 SHIB"),
-                    subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
-                        price = "0.01 \$",
-                        priceChangePercent = "1,34 %",
-                        type = PriceChangeType.DOWN,
-                    ),
-                ),
-            ),
+    private val tokenListDefault = WalletTokensListUM.Content(
+        tokenList = persistentListOf(
+            TokensListItemUM2.Token(tokenRowDefault.copy(id = "0")),
+            TokensListItemUM2.Token(tokenRowDefault.copy(id = "1")),
+            TokensListItemUM2.Token(tokenRowDefault.copy(id = "2")),
         ),
-        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
-            isEnabled = true,
+        organizeButtonUM = TangemButtonUM(
+            text = resourceReference(R.string.organize_tokens_title),
+            type = TangemButtonType.Secondary,
             onClick = {},
         ),
     )
 
-    private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
-        items = persistentListOf(
-            TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
-                isExpanded = false,
-                isCollapsable = true,
-                tokenItemUM = AccountItemPreviewData.accountItem
-                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
-            ),
-            TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
-                isExpanded = true,
-                isCollapsable = true,
-                tokenItemUM = AccountItemPreviewData.accountItem,
-            ),
-        ),
-        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
-            isEnabled = true,
-            onClick = {},
-        ),
+    private val walletLocked = WalletUM.Locked(
+        walletsBalanceUM = WalletBalancePreview.content,
+        buttons = WalletPreviewData.actionButtons,
+        type = WalletType.Cold,
+        notifications = persistentListOf(),
     )
 
-    private val emptyPortfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
-        items = persistentListOf(
-            TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
-                isExpanded = false,
-                isCollapsable = true,
-                tokenItemUM = AccountItemPreviewData.accountItem
-                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
-            ),
-            TokensListItemUM.Portfolio(
-                tokens = persistentListOf(),
-                isExpanded = true,
-                isCollapsable = true,
-                tokenItemUM = AccountItemPreviewData.accountItem,
-            ),
+    private val walletDefault = WalletUM.Content(
+        walletsBalanceUM = WalletBalancePreview.content,
+        buttons = WalletPreviewData.actionButtons,
+        type = WalletType.Cold,
+        pullToRefreshConfig = PullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
         ),
-        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
-            isEnabled = true,
-            onClick = {},
+        notifications = persistentListOf(),
+        notificationsCarousel = persistentListOf(),
+        tokensListUM = tokenListDefault,
+        nftState = WalletNFTItemUM.Content(
+            previews = persistentListOf(),
+            collectionsCount = 0,
+            allAssetsCount = 0,
+            noCollectionAssetsCount = 0,
+            isFlickering = false,
+            onItemClick = {},
         ),
+        tangemPayState = TangemPayState.Loading,
     )
 
-    private val noteLockedCard by lazy {
-        WalletCardState.LockedContent(
-            id = UserWalletId(stringValue = "1"),
-            title = "Note",
-            additionalInfo = WalletAdditionalInfo(
-                hideable = false,
-                content = TextReference.Str("Locked"),
-            ),
-            imageResId = R.drawable.ill_note_btc_120_106,
-            dropDownItems = persistentListOf(),
-        )
-    }
-    private val miltiUnreachableCard by lazy {
-        WalletCardState.Content(
-            id = UserWalletId(stringValue = "2"),
-            title = "Wallet 1",
-            additionalInfo = WalletAdditionalInfo(
-                hideable = false,
-                content = TextReference.Str("Seed phrase"),
-            ),
-            imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            cardCount = 3,
-            balance = DASH_SIGN,
-            dropDownItems = persistentListOf(),
-            isZeroBalance = false,
-            isBalanceFlickering = false,
-        )
-    }
-    private val multiWalletState by lazy {
-        WalletState.MultiCurrency.Content(
-            pullToRefreshConfig = PullToRefreshConfig(
-                isRefreshing = false,
-                onRefresh = {},
-            ),
-            walletCardState = miltiUnreachableCard,
-            buttons = persistentListOf(buyButton),
-            warnings = persistentListOf(
-                WalletNotification.Warning.SomeNetworksUnreachable,
-                WalletNotification.FinishWalletActivation(
-                    type = WalletActivationBannerType.Attention,
-                    buttonsState = ButtonsState.SecondaryButtonConfig(
-                        text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { },
-                    ),
-                    isBackupExists = false,
-                ),
-            ),
-            bottomSheetConfig = null,
-            tokensListState = textContentTokensState,
-            nftState = WalletNFTItemUM.Content(
-                previews = persistentListOf(WalletNFTItemUM.Content.CollectionPreview.Image("img1")),
-                collectionsCount = 1,
-                allAssetsCount = 3,
-                noCollectionAssetsCount = 0,
-                isFlickering = false,
-                onItemClick = { },
-            ),
-            tangemPayState = TangemPayState.Empty,
-            type = WalletType.Cold,
-        )
-    }
-
-    private val buyButton = WalletManageButton.Buy(enabled = false, dimContent = true, onClick = {})
-    private val sendButton = WalletManageButton.Send(enabled = false, dimContent = true, onClick = {})
-    private val receiveButton = WalletManageButton.Receive(
-        enabled = false,
-        dimContent = true,
-        onClick = {},
-        onLongClick = null,
-    )
-
-    private val singleWalletLockedState = WalletState.SingleCurrency.Locked(
-        walletCardState = noteLockedCard,
-        buttons = persistentListOf(
-            buyButton,
-            sendButton,
-            receiveButton,
-        ),
-        bottomSheetConfig = null,
-        onUnlockNotificationClick = {},
-        onExploreClick = {},
-    )
-
-    internal val walletScreenState = WalletScreenState(
+    internal val defaultState = WalletScreenState(
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
-        wallets = persistentListOf(
-            singleWalletLockedState,
-            multiWalletState,
+        wallets = persistentListOf(),
+        wallets2 = persistentListOf(
+            walletLocked,
+            walletDefault,
         ),
-        wallets2 = persistentListOf(),
         onWalletChange = { _, _ -> },
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
     )
-
-    internal val accountScreenState =
-        walletScreenState.copy(
-            wallets = persistentListOf(
-                singleWalletLockedState,
-                multiWalletState.copy(tokensListState = portfolioContentState),
-            ),
-        )
-
-    internal val accountScreenWithEmptyTokensState =
-        walletScreenState.copy(
-            wallets = persistentListOf(
-                singleWalletLockedState,
-                multiWalletState.copy(tokensListState = emptyPortfolioContentState),
-            ),
-        )
 }
