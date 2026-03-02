@@ -1,6 +1,9 @@
 package com.tangem.features.swap.v2.impl.common
 
 import com.tangem.common.ui.alerts.TransactionErrorDialogFactory
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -25,6 +28,7 @@ internal class SwapAlertFactory @Inject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val transactionErrorDialogFactory: TransactionErrorDialogFactory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
     fun getGenericErrorState(expressError: ExpressError, onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
         uiMessageSender.send(
@@ -83,6 +87,7 @@ internal class SwapAlertFactory @Inject constructor(
 
         val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return
 
+        analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Swap))
         sendFeedbackEmailUseCase(
             type = FeedbackEmailType.SwapProblem(
                 walletMetaInfo = metaInfo,
