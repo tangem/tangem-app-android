@@ -2,6 +2,8 @@ package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -66,6 +68,7 @@ internal class TangemPayTxHistoryDetailsModel @Inject constructor(
 
     private fun dispute(customerId: String) {
         analytics.send(TangemPayAnalyticsEvents.SupportOnTransactionPopupClicked())
+        analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
         modelScope.launch {
             val walletMetaInfo = getWalletMetaInfoUseCase.invoke(params.userWalletId).getOrNull() ?: return@launch
 
