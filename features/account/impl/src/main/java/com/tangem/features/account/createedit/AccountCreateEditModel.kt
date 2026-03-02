@@ -24,7 +24,6 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -141,7 +140,7 @@ internal class AccountCreateEditModel @Inject constructor(
                 showMessage(R.string.account_create_success_message)
                 val route = AppRoute.ManageTokens(
                     source = AppRoute.ManageTokens.Source.ACCOUNT,
-                    portfolioId = PortfolioId(account.accountId),
+                    accountId = account.accountId,
                 )
                 router.replaceCurrent(route)
             }
