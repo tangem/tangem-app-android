@@ -8,8 +8,12 @@ import androidx.compose.ui.layout.SubcomposeMeasureScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.ds.badge.*
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
@@ -31,7 +35,25 @@ internal fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
 
         val tagPlaceables = subcompose(ContentSlot.Tags) {
             tags.forEach { tag ->
-                Label(state = tag)
+                if (LocalRedesignEnabled.current) {
+                    TangemBadge(
+                        text = tag.text,
+                        tangemIconUM = when (val content = tag.leadingContent) {
+                            LabelLeadingContentUM.None -> null
+                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(content.iconUrl)
+                        },
+                        shape = TangemBadgeShape.Rounded,
+                        size = TangemBadgeSize.X6,
+                        type = TangemBadgeType.Tinted,
+                        color = TangemBadgeColor.Gray,
+                        iconPosition = when (tag.leadingContent) {
+                            LabelLeadingContentUM.None -> TangemBadgeIconPosition.None
+                            is LabelLeadingContentUM.Token -> TangemBadgeIconPosition.Start
+                        },
+                    )
+                } else {
+                    Label(state = tag)
+                }
             }
         }.map { it.measure(constraints) }
 
@@ -108,12 +130,22 @@ private fun SubcomposeMeasureScope.calculateLayoutInfo(
 
 @Composable
 private fun OverflowLabel(count: Int) {
-    Label(
-        state = LabelUM(
+    if (LocalRedesignEnabled.current) {
+        TangemBadge(
             text = TextReference.Str("${StringsSigns.PLUS}$count"),
-            maxLines = 1,
-        ),
-    )
+            shape = TangemBadgeShape.Rounded,
+            size = TangemBadgeSize.X6,
+            type = TangemBadgeType.Tinted,
+            color = TangemBadgeColor.Gray,
+        )
+    } else {
+        Label(
+            state = LabelUM(
+                text = TextReference.Str("${StringsSigns.PLUS}$count"),
+                maxLines = 1,
+            ),
+        )
+    }
 }
 
 private fun calculateRowWidth(placeables: List<Placeable>, spacingPx: Int): Int {
