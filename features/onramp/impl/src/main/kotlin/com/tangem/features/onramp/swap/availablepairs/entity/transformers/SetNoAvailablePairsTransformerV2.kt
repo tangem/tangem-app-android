@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.swap.availablepairs.entity.transformers
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
+import com.tangem.common.ui.account.TokensListPortfolioItemConverter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
@@ -34,7 +35,7 @@ internal class SetNoAvailablePairsTransformerV2(
             tokensListData = if (isAccountsMode) {
                 TokenListUMData.AccountList(
                     tokensList = accountList.map { (account, cryptoCurrencies) ->
-                        TokensListItemUM.Portfolio(
+                        TokensListPortfolioItemConverter(
                             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                                 appCurrency = appCurrency,
                                 account = account,
@@ -45,7 +46,7 @@ internal class SetNoAvailablePairsTransformerV2(
                             tokens = unavailableConverter.convertList(cryptoCurrencies)
                                 .map(TokensListItemUM::Token)
                                 .toPersistentList(),
-                        )
+                        ).convert(Unit)
                     }.toPersistentList(),
                     totalTokensCount = totalTokensCount,
                 )

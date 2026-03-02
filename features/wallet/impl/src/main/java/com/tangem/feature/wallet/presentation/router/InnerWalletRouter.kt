@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
@@ -36,6 +37,9 @@ internal interface InnerWalletRouter {
 
     /** Open details screen */
     fun openDetailsScreen(selectedWalletId: UserWalletId)
+
+    /** Open manage tokens screen */
+    fun openManageTokensScreen(accountId: AccountId)
 
     /** Open onboarding screen */
     fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean = false)
