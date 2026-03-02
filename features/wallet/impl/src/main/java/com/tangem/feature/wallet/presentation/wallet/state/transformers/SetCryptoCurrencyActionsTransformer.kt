@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -16,7 +16,7 @@ import timber.log.Timber
 internal class SetCryptoCurrencyActionsTransformer(
     private val tokenActionsState: TokenActionsState,
     private val userWallet: UserWallet,
-    private val portfolioId: PortfolioId,
+    private val accountId: AccountId,
     private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -51,7 +51,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
-                                    userWalletId = portfolioId.userWalletId,
+                                    accountId = accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
@@ -64,7 +64,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onReceiveClick(
-                                    portfolioId.userWalletId,
+                                    accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                 )
                             },
@@ -91,7 +91,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
-                                    userWalletId = portfolioId.userWalletId,
+                                    accountId = accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
