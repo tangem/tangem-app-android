@@ -6,6 +6,9 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -73,6 +76,7 @@ internal class NFTSendModel @Inject constructor(
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -230,6 +234,7 @@ internal class NFTSendModel @Inject constructor(
 
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
     }
