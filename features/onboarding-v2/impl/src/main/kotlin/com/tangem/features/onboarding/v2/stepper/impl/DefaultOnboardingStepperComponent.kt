@@ -8,6 +8,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -45,6 +47,7 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
             val cardInfo = getWalletMetaInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
             val userWalletId = cardInfo.userWalletId
             val visaCustomerId = userWalletId?.let { id -> getTangemPayCustomerIdUseCase(id).getOrNull() }
+            analyticsHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Onboarding))
             sendFeedbackEmailUseCase(
                 if (params.scanResponse.card.isVisa && !visaCustomerId.isNullOrEmpty()) {
                     FeedbackEmailType.Visa.Activation(walletMetaInfo = cardInfo, customerId = visaCustomerId)
