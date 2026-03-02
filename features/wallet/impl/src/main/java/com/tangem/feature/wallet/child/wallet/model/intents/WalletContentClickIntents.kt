@@ -201,6 +201,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onAccountExpandClick(account: Account) {
         analyticsEventHandler.send(MainScreenAnalyticsEvent.AccountShowTokens())
         accountDependencies.expandedAccountsHolder.expandAccount(account.accountId)
+        walletEventSender.send(WalletEvent.CollapseBalance)
     }
 
     override fun onAccountCollapseClick(account: Account) {

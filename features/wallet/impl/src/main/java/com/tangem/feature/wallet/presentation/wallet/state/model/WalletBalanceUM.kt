@@ -35,6 +35,7 @@ internal sealed interface WalletBalanceUM {
         override val id: UserWalletId,
         override val name: String,
         val balance: TextReference,
+        val balanceInAppBar: TextReference,
         val isBalanceFlickering: Boolean,
         val isZeroBalance: Boolean?,
     ) : WalletBalanceUM
