@@ -17,9 +17,9 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletContentClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -33,11 +33,12 @@ import java.math.BigDecimal
 
 internal class WalletTokenCurrencyItemConverter(
     private val appCurrency: AppCurrency,
-    private val selectedWallet: UserWallet,
+    private val accountId: AccountId,
+    private val shouldShowPromo: Boolean,
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val clickIntents: WalletContentClickIntents,
     stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
-) : Converter<Pair<CryptoCurrencyStatus, Boolean>, TangemTokenRowUM> {
+) : Converter<CryptoCurrencyStatus, TangemTokenRowUM> {
 
     private val currencyToIconStateConverter = CryptoCurrencyToIconStateConverter()
     private val earnApyConverter = EarnApyConverter(
@@ -45,8 +46,7 @@ internal class WalletTokenCurrencyItemConverter(
         stakingApyMap = stakingAvailabilityMap,
     )
 
-    override fun convert(value: Pair<CryptoCurrencyStatus, Boolean>): TangemTokenRowUM {
-        val (currencyStatus, shouldShowPromo) = value
+    override fun convert(currencyStatus: CryptoCurrencyStatus): TangemTokenRowUM {
         val earnApyInfo = earnApyConverter.convert(currencyStatus)
 
         return TangemTokenRowUM.Content(
@@ -59,6 +59,7 @@ internal class WalletTokenCurrencyItemConverter(
             topEndContentUM = toCurrencyRowTopEnd(currencyStatus),
             bottomEndContentUM = toCurrencyRowBottomEnd(currencyStatus),
             promoBannerUM = toPromoBannerUM(
+                accountId,
                 currencyStatus,
                 earnApyInfo.takeIf { shouldShowPromo },
             ),
@@ -68,7 +69,7 @@ internal class WalletTokenCurrencyItemConverter(
                 -> null
                 else -> {
                     {
-                        clickIntents.onTokenItemClick(selectedWallet.walletId, currencyStatus)
+                        clickIntents.onTokenItemClick(accountId, currencyStatus)
                     }
                 }
             },
@@ -76,7 +77,7 @@ internal class WalletTokenCurrencyItemConverter(
                 CryptoCurrencyStatus.Loading -> null
                 else -> {
                     {
-                        clickIntents.onTokenItemLongClick(selectedWallet.walletId, currencyStatus)
+                        clickIntents.onTokenItemLongClick(accountId, currencyStatus)
                     }
                 }
             },
@@ -117,7 +118,7 @@ internal class WalletTokenCurrencyItemConverter(
                         onClick = if (earnApyInfo.apy != null) {
                             {
                                 clickIntents.onApyLabelClick(
-                                    userWalletId = selectedWallet.walletId,
+                                    accountId = accountId,
                                     currencyStatus = currencyStatus,
                                     apySource = earnApyInfo.source,
                                     apy = earnApyInfo.apy,
@@ -261,6 +262,7 @@ internal class WalletTokenCurrencyItemConverter(
     }
 
     private fun toPromoBannerUM(
+        accountId: AccountId,
         currencyStatus: CryptoCurrencyStatus,
         earnApyInfo: EarnApyConverter.EarnApyInfo?,
     ): TangemTokenRowUM.PromoBannerUM {
@@ -281,7 +283,7 @@ internal class WalletTokenCurrencyItemConverter(
             onPromoBannerClick = {
                 clickIntents.onYieldPromoClicked(currency)
                 clickIntents.onApyLabelClick(
-                    userWalletId = selectedWallet.walletId,
+                    accountId = accountId,
                     currencyStatus = currencyStatus,
                     apySource = earnApyInfo.source,
                     apy = earnApyInfo.apy,
