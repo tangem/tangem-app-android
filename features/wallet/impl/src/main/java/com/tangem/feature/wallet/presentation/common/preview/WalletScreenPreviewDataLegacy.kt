@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.components.token.AccountItemPreviewData
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.event.consumedEvent
@@ -97,14 +98,20 @@ internal object WalletScreenPreviewDataLegacy {
     private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
         items = persistentListOf(
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
+                content = PortfolioItemContentUM.Tokens(
+                    tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>()
+                        .toPersistentList(),
+                ),
                 isExpanded = false,
                 isCollapsable = true,
                 tokenItemUM = AccountItemPreviewData.accountItem
                     .copy(iconState = AccountItemPreviewData.accountLetterIcon),
             ),
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
+                content = PortfolioItemContentUM.Tokens(
+                    tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>()
+                        .toPersistentList(),
+                ),
                 isExpanded = true,
                 isCollapsable = true,
                 tokenItemUM = AccountItemPreviewData.accountItem,
@@ -119,14 +126,22 @@ internal object WalletScreenPreviewDataLegacy {
     private val emptyPortfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
         items = persistentListOf(
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
+                content = PortfolioItemContentUM.Tokens(
+                    tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>()
+                        .toPersistentList(),
+                ),
                 isExpanded = false,
                 isCollapsable = true,
                 tokenItemUM = AccountItemPreviewData.accountItem
                     .copy(iconState = AccountItemPreviewData.accountLetterIcon),
             ),
             TokensListItemUM.Portfolio(
-                tokens = persistentListOf(),
+                content = PortfolioItemContentUM.Empty(
+                    action = PortfolioItemContentUM.Empty.Action(
+                        text = stringReference("Manage tokens"),
+                        onClick = {},
+                    ),
+                ),
                 isExpanded = true,
                 isCollapsable = true,
                 tokenItemUM = AccountItemPreviewData.accountItem,
