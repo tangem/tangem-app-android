@@ -112,7 +112,9 @@ private fun Content(
             key = ArticleConfigUM::id,
         ) { article ->
             ArticleCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .heightIn(min = 152.dp)
+                    .fillMaxWidth(),
                 colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 articleConfigUM = article,
                 onArticleClick = {
