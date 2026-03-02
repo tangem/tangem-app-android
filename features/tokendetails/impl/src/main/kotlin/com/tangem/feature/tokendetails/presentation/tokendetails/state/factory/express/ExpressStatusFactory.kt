@@ -122,7 +122,8 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         val analyticEvents = when (expressState) {
             is ExchangeUM -> listOfNotNull(
                 TokenExchangeAnalyticsEvent.CexTxStatusOpened(
-                    cryptoCurrency.symbol,
+                    token = cryptoCurrency.symbol,
+                    provider = expressState.provider.name,
                 ),
                 maybeGetLongTimeExchangeNotificationShowEvent(
                     expressState = expressState,
