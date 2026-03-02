@@ -1648,6 +1648,7 @@ internal class SwapModel @Inject constructor(
                 providerName = dataState.selectedProvider?.name.orEmpty(),
                 txId = txId,
             )
+            analyticsEventHandler.send(Basic.ButtonSupport(source = ScreensSources.Swap))
             sendFeedbackEmailUseCase(email)
         }
     }
@@ -2179,6 +2180,7 @@ internal class SwapModel @Inject constructor(
                 txId = transaction?.txId.orEmpty(),
             )
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = ScreensSources.Swap))
             sendFeedbackEmailUseCase(email)
         }
     }
