@@ -35,7 +35,7 @@ internal class WalletTokensListUMConverter(
     private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val isAccountsModeEnabled: Boolean,
     private val expandedAccounts: Set<AccountId>,
-    stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
+    private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability>,
     shouldShowMainPromo: Boolean,
 ) : Converter<AccountStatusList, WalletTokensListUM> {
 
@@ -48,19 +48,24 @@ internal class WalletTokensListUMConverter(
         )
     }
 
-    private val currencyRowConverter by lazy(LazyThreadSafetyMode.NONE) {
-        WalletTokenCurrencyItemConverter(
-            appCurrency = appCurrency,
-            selectedWallet = selectedWallet,
-            yieldModuleApyMap = yieldModuleApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
-            clickIntents = clickIntents,
-        )
-    }
     private val yieldSupplyPromoBannerConverter by lazy(LazyThreadSafetyMode.NONE) {
         YieldSupplyPromoBannerConverter(
             yieldModuleApyMap,
             shouldShowMainPromo,
+        )
+    }
+
+    private fun currencyRowConverter(
+        accountId: AccountId,
+        shouldShowPromo: Boolean,
+    ): WalletTokenCurrencyItemConverter {
+        return WalletTokenCurrencyItemConverter(
+            appCurrency = appCurrency,
+            accountId = accountId,
+            shouldShowPromo = shouldShowPromo,
+            yieldModuleApyMap = yieldModuleApyMap,
+            stakingAvailabilityMap = stakingAvailabilityMap,
+            clickIntents = clickIntents,
         )
     }
 
@@ -85,13 +90,13 @@ internal class WalletTokensListUMConverter(
                                 isExpanded = isExpanded || !isCollapsable,
                                 isCollapsable = isCollapsable,
                                 tokenList = getTokenListItems(
-                                    accountStatus.tokenList,
+                                    accountStatus,
                                     promoCryptoCurrency,
                                 ).toPersistentList(),
                             ),
                         )
                     } else {
-                        getTokenListItems(accountStatus.tokenList, promoCryptoCurrency)
+                        getTokenListItems(accountStatus, promoCryptoCurrency)
                     }
                 }.toPersistentList()
 
@@ -103,10 +108,10 @@ internal class WalletTokensListUMConverter(
     }
 
     private fun getTokenListItems(
-        tokenList: TokenList,
+        accountStatus: AccountStatus.CryptoPortfolio,
         promoCryptoCurrency: CryptoCurrencyStatus?,
     ): Sequence<TokensListItemUM2> {
-        return when (tokenList) {
+        return when (val tokenList = accountStatus.tokenList) {
             TokenList.Empty -> emptySequence()
             is TokenList.GroupedByNetwork -> {
                 tokenList.groups.asSequence().flatMap { (network, currencies) ->
@@ -120,7 +125,10 @@ internal class WalletTokensListUMConverter(
                             currencies.asSequence().map { currencyStatus ->
                                 val shouldShowPromo = promoCryptoCurrency?.currency?.id == currencyStatus.currency.id
                                 TokensListItemUM2.Token(
-                                    tokenRowUM = currencyRowConverter.convert(currencyStatus to shouldShowPromo),
+                                    tokenRowUM = currencyRowConverter(
+                                        accountStatus.accountId,
+                                        shouldShowPromo,
+                                    ).convert(currencyStatus),
                                 )
                             }.toList(),
                         )
@@ -131,7 +139,10 @@ internal class WalletTokensListUMConverter(
                 tokenList.currencies.asSequence().map { currencyStatus ->
                     val shouldShowPromo = promoCryptoCurrency?.currency?.id == currencyStatus.currency.id
                     TokensListItemUM2.Token(
-                        tokenRowUM = currencyRowConverter.convert(currencyStatus to shouldShowPromo),
+                        tokenRowUM = currencyRowConverter(
+                            accountStatus.accountId,
+                            shouldShowPromo,
+                        ).convert(currencyStatus),
                     )
                 }
             }
