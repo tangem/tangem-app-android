@@ -3,7 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.ui
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -12,51 +14,66 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
-import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
-import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
+import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
+import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.res.*
-import com.tangem.core.ui.test.MainScreenTestTags
-import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenWithEmptyTokensState
-import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalWindowSize
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
-import dev.chrisbanes.haze.HazeProgressive
+import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsHint
+import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsTooltip
+import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletBalance
+import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletListContent
+import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
+import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletTopBar
+import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+
+private const val MARKET_HINT_THRESHOLD = 0.5f
 
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
@@ -69,98 +86,201 @@ internal fun WalletScreen2(
     // It means that screen is still initializing
     if (state.selectedWalletIndex == NOT_INITIALIZED_WALLET_INDEX) return
 
-    val walletsListState = rememberLazyListState(initialFirstVisibleItemIndex = state.selectedWalletIndex)
+    val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
+
     val snackbarHostState = remember(::SnackbarHostState)
-    val isAutoScroll = remember { mutableStateOf(value = false) }
+    val walletsPagerState = rememberPagerState(
+        initialPage = state.selectedWalletIndex,
+        pageCount = { state.wallets2.size },
+    )
+
+    val partialCollapsedHeight = 64.dp + statusBarHeight
+    val balanceBlockHeight = 320.dp + partialCollapsedHeight
+    val behavior = rememberTangemExitUntilCollapsedScrollBehavior(
+        expandedHeight = balanceBlockHeight,
+        partialCollapsedHeight = partialCollapsedHeight,
+        snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
+    )
+
+    val coroutineScope = rememberCoroutineScope()
 
     WalletContent2(
         state = state,
-        walletsListState = walletsListState,
+        walletsPagerState = walletsPagerState,
         snackbarHostState = snackbarHostState,
-        isAutoScroll = isAutoScroll,
-        onAutoScrollReset = { isAutoScroll.value = false },
+        behavior = behavior,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
     )
 
     WalletEventEffect(
-        walletsListState = walletsListState,
+        walletsPagerState = walletsPagerState,
         snackbarHostState = snackbarHostState,
         event = state.event,
-        onAutoScrollSet = { isAutoScroll.value = true },
+        onCollapseBalance = {
+            if (behavior.state.collapsedFraction < 1f) {
+                coroutineScope.launch {
+                    behavior.state.collapse()
+                }
+            }
+        },
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalDecomposeApi::class)
-@Suppress("LongMethod", "LongParameterList", "UnusedPrivateMember")
+@Suppress("LongMethod", "LongParameterList", "CyclomaticComplexMethod")
 @Composable
 private fun WalletContent2(
     state: WalletScreenState,
-    walletsListState: LazyListState,
+    walletsPagerState: PagerState,
+    behavior: TangemCollapsingAppBarBehavior,
     snackbarHostState: SnackbarHostState,
-    isAutoScroll: State<Boolean>,
-    onAutoScrollReset: () -> Unit,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
 ) {
-    /*
-     * Don't pass key to remember, because it will brake scroll animation.
-     * selectedWalletIndex will be changed in WalletsListEffects.
-     */
-    // val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
-    // val selectedWallet = state.wallets2.getOrElse(selectedWalletIndex) { state.wallets2[state.selectedWalletIndex] }
+    val density = LocalDensity.current
+    val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
 
-    val statusBarHeight = with(LocalDensity.current) { WindowInsets.statusBars.getBottom(this).toDp() }
-
-    val listState = rememberLazyListState()
-
-    val partialCollapsedHeight = 64.dp + statusBarHeight
-
-    val scaffoldContent: @Composable (PaddingValues?) -> Unit = { _ ->
-        Box(Modifier.fillMaxSize()) {
-            NorthernLightsBackground(Modifier.matchParentSize())
-        }
-
-        val pagerState = rememberPagerState(
-            initialPage = state.selectedWalletIndex,
-            pageCount = { state.wallets2.size },
-        )
-
-        LaunchedEffect(pagerState.currentPage) {
-            if (pagerState.currentPage != state.selectedWalletIndex) {
-                state.onWalletChange(pagerState.currentPage, false)
-            }
-        }
-    }
+    var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
 
     BaseScaffoldWithMarkets(
         state = state,
-        listState = listState,
         snackbarHostState = snackbarHostState,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         bottomSheetContent = bottomSheetContent,
-        content = scaffoldContent,
-    )
+        appBarContent = {
+            WalletTopBar(
+                topBarConfig = state.topBarConfig,
+                walletBalance = walletBalance,
+                behavior = behavior,
+            )
+        },
+    ) { paddingValues, bottomSheetState ->
+        val marketHintApproxHeight = 140.dp
+
+        val contentPadding = PaddingValues(
+            bottom = paddingValues.calculateBottomPadding() + marketHintApproxHeight,
+        )
+
+        LaunchedEffect(walletsPagerState.currentPage) {
+            if (walletsPagerState.currentPage != state.selectedWalletIndex) {
+                state.onWalletChange(walletsPagerState.currentPage, false)
+            }
+        }
+
+        val listStates = rememberSaveable(saver = lazyListStateMapSaver(walletsPagerState.pageCount)) {
+            mutableMapOf<Int, LazyListState>().apply {
+                repeat(walletsPagerState.pageCount) { index -> put(index, LazyListState()) }
+            }
+        }
+
+        val canPagerScroll by remember { derivedStateOf { behavior.state.heightOffset == 0f } }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSourceTangem(-1f),
+        ) {
+            NorthernLightsBackground(Modifier.matchParentSize())
+
+            WalletPagerIndicator(
+                pagerState = walletsPagerState,
+                behavior = behavior,
+            )
+
+            HorizontalPager(
+                state = walletsPagerState,
+                userScrollEnabled = canPagerScroll,
+                beyondViewportPageCount = 1,
+            ) { currentWalletIndex ->
+                val listState = listStates[currentWalletIndex] ?: rememberLazyListState()
+
+                val currentWallet = state.wallets2.getOrElse(currentWalletIndex) {
+                    state.wallets2[state.selectedWalletIndex]
+                }
+
+                LaunchedEffect(walletsPagerState.currentPage) {
+                    if (walletsPagerState.currentPage == currentWalletIndex) {
+                        walletBalance = (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
+                    }
+                }
+
+                val isShowMarketsHint by remember {
+                    derivedStateOf {
+                        behavior.state.collapsedFraction > MARKET_HINT_THRESHOLD &&
+                            listState.layoutInfo.totalItemsCount > 0 &&
+                            !listState.canScrollBackward && !listState.canScrollForward ||
+                            listState.canScrollBackward && !listState.canScrollForward
+                    }
+                }
+
+                val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
+
+                Box(
+                    modifier = Modifier.alpha(pageSlideAlpha),
+                ) {
+                    TangemCollapsingTopBar(
+                        state = behavior.state,
+                        collapsingPart = {
+                            WalletBalance(
+                                behavior = behavior,
+                                walletBalanceUM = currentWallet.walletsBalanceUM,
+                                buttons = currentWallet.buttons,
+                                isBalanceHidden = state.isHidingMode,
+                            )
+                        },
+                        body = {
+                            WalletListContent(
+                                currentWallet = currentWallet,
+                                listState = listState,
+                                isBalanceHidden = state.isHidingMode,
+                                contentPadding = contentPadding,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .nestedScroll(behavior.nestedScrollConnection),
+                            )
+                        },
+                    )
+
+                    val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
+                    MarketsHint(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = peekHeight + TangemTheme.dimens2.x7),
+                        isVisible = isShowMarketsHint,
+                    )
+                }
+            }
+
+            MarketsTooltip(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
+                    .fillMaxWidth(fraction = 0.7f),
+                isVisible = state.showMarketsOnboarding,
+                availableHeight = LocalWindowSize.current.height,
+                bottomSheetState = bottomSheetState,
+            )
+        }
+    }
 }
 
-@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod", "UnusedPrivateMember")
+@Suppress("LongParameterList", "LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private inline fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
     snackbarHostState: SnackbarHostState,
-    listState: LazyListState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     modifier: Modifier = Modifier,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    crossinline appBarContent: @Composable () -> Unit,
     crossinline bottomSheetContent: @Composable () -> Unit,
-    crossinline content: @Composable (PaddingValues) -> Unit,
+    crossinline content: @Composable (PaddingValues, TangemSheetState) -> Unit,
 ) {
     val bottomSheetState = rememberTangemStandardBottomSheetState()
-    val isPowerSaving by LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsStateWithLifecycle()
 
     val isKeyboardVisible by rememberIsKeyboardVisible()
 
@@ -176,7 +296,7 @@ private inline fun BaseScaffoldWithMarkets(
     val maxHeight = LocalWindowSize.current.height
 
     val coroutineScope = rememberCoroutineScope()
-    val background = TangemTheme.colors2.surface.level2
+    val background = TangemTheme.colors2.surface.level3
 
     CompositionLocalProvider(
         LocalMainBottomSheetColor provides remember(background) { mutableStateOf(background) },
@@ -194,20 +314,12 @@ private inline fun BaseScaffoldWithMarkets(
 
         Box(modifier = modifier) {
             TangemBottomSheetScaffold(
-                modifier = Modifier.background(
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            TangemTheme.colors2.surface.level1,
-                            TangemTheme.colors2.surface.level2,
-                        ),
-                    ),
-                ),
                 snackbarHost = { snackbarHostState ->
                     WalletSnackbarHost(
                         snackbarHostState = snackbarHostState,
                         event = state.event,
                         modifier = Modifier
-                            .padding(bottom = TangemTheme.dimens.spacing4)
+                            .padding(bottom = TangemTheme.dimens2.x1)
                             .navigationBarsPadding(),
                     )
                 },
@@ -250,47 +362,22 @@ private inline fun BaseScaffoldWithMarkets(
                     }
                 },
                 content = { paddingValues ->
-                    Box {
-                        Column(
-                            modifier = Modifier.hazeSourceTangem(-1f),
-                        ) {
-                            content(paddingValues)
-                        }
+                    content(paddingValues, bottomSheetState)
+                    appBarContent()
 
-                        Surface(
-                            color = Color.Unspecified,
-                            contentColor = Color.Unspecified,
-                            modifier = Modifier
-                                .hazeEffectTangem {
-                                    progressive =
-                                        HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-                                },
-                        ) {
-                            TangemTopBar(
-                                title = stringReference(""), // todo balance
-                                startIconRes = R.drawable.ic_tangem_24,
-                                endIconRes = R.drawable.ic_more_default_24,
-                                onEndContentClick = state.topBarConfig.onDetailsClick,
-                                isGhostButtons = !isPowerSaving,
-                                modifier = Modifier
-                                    .testTag(MainScreenTestTags.TOP_BAR),
-                            )
-                        }
-
-                        BottomSheetScrim(
-                            color = if (state.showMarketsOnboarding) {
-                                Color.Black.copy(alpha = .65f)
-                            } else {
-                                Color.Black.copy(alpha = .40f)
-                            },
-                            visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
-                                state.showMarketsOnboarding,
-                            onDismissRequest = {
-                                coroutineScope.launch { bottomSheetState.partialExpand() }
-                                state.onDismissMarketsTooltip()
-                            },
-                        )
-                    }
+                    BottomSheetScrim(
+                        color = if (state.showMarketsOnboarding) {
+                            Color.Black.copy(alpha = .65f)
+                        } else {
+                            Color.Black.copy(alpha = .40f)
+                        },
+                        visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
+                            state.showMarketsOnboarding,
+                        onDismissRequest = {
+                            coroutineScope.launch { bottomSheetState.partialExpand() }
+                            state.onDismissMarketsTooltip()
+                        },
+                    )
                 },
             )
 
@@ -410,6 +497,29 @@ private fun WalletSnackbarHost(
     }
 }
 
+@Composable
+private fun rememberPageAlpha(pagerState: PagerState, currentPageIndex: Int): State<Float> {
+    return remember {
+        derivedStateOf {
+            val pageOffset = pagerState.currentPageOffsetFraction
+            val currentPage = pagerState.currentPage
+
+            when {
+                // Current page is being swiped away
+                currentPageIndex == currentPage -> {
+                    1f - abs(pageOffset) * 2f
+                }
+                // Target page is being swiped in
+                currentPageIndex == pagerState.targetPage -> {
+                    (abs(pageOffset) * 2f - 1f).coerceAtLeast(0f)
+                }
+                // Other pages remain invisible
+                else -> 0f
+            }.coerceIn(0f, 1f)
+        }
+    }
+}
+
 // region Preview
 @OptIn(ExperimentalDecomposeApi::class)
 @Preview(showBackground = true, widthDp = 360)
@@ -431,10 +541,8 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
 private class WalletScreen2PreviewProvider : PreviewParameterProvider<WalletScreenState> {
     override val values: Sequence<WalletScreenState>
         get() = sequenceOf(
-            walletScreenState,
-            walletScreenState.copy(selectedWalletIndex = 1),
-            accountScreenState.copy(selectedWalletIndex = 1),
-            accountScreenWithEmptyTokensState.copy(selectedWalletIndex = 1),
+            WalletScreenPreviewData.defaultState,
+            WalletScreenPreviewData.defaultState.copy(selectedWalletIndex = 1),
         )
 }
 // endregion
