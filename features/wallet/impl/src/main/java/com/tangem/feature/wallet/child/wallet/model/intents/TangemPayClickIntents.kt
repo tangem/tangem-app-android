@@ -2,6 +2,9 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
@@ -71,6 +74,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
@@ -169,6 +173,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     private fun goToSupportForRejectKyc(customerId: String) {
         modelScope.launch {
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
             sendFeedbackEmailUseCase(
                 type = FeedbackEmailType.Visa.KycRejected(
                     walletMetaInfo = WalletMetaInfo(
@@ -227,6 +232,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 userWalletId = stateHolder.getSelectedWalletId(),
             ).getOrNull() ?: return@launch
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
             sendFeedbackEmailUseCase(
                 FeedbackEmailType.Visa.FailedIssueCard(
                     walletMetaInfo = cardInfo,
