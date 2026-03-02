@@ -4,7 +4,9 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -48,6 +50,7 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -179,6 +182,7 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
         modelScope.launch {
             val cardInfo =
                 getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Onboarding))
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }
