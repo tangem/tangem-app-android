@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -33,17 +32,17 @@ internal class SingleWalletButtonsSubscriber @AssistedInject constructor(
                 getCryptoCurrencyActionsUseCaseV2(accountId = accountId, currency = it.currency)
             }
             .onEach {
-                updateContent(tokenActionsState = it, portfolioId = PortfolioId(userWallet.walletId))
+                updateContent(tokenActionsState = it)
             }
     }
 
-    private fun updateContent(tokenActionsState: TokenActionsState, portfolioId: PortfolioId) {
+    private fun updateContent(tokenActionsState: TokenActionsState) {
         stateController.update(
             SetCryptoCurrencyActionsTransformer(
                 tokenActionsState = tokenActionsState,
                 userWallet = userWallet,
                 clickIntents = clickIntents,
-                portfolioId = portfolioId,
+                accountId = accountId,
             ),
         )
     }
