@@ -2,12 +2,19 @@ package com.tangem.core.ui.ds.image
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
@@ -40,6 +47,11 @@ sealed interface TangemIconUM {
     data class Ident(
         val text: String,
     ) : TangemIconUM
+
+    /** Image represented from network by url */
+    data class Url(
+        val url: String,
+    ) : TangemIconUM
 }
 
 /**
@@ -71,6 +83,25 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
         is TangemIconUM.Ident -> IdentIcon(
             address = tangemIconUM.text,
             modifier = modifier,
+        )
+        is TangemIconUM.Url -> SubcomposeAsyncImage(
+            modifier = modifier,
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(tangemIconUM.url)
+                .crossfade(enable = true)
+                .allowHardware(enable = false)
+                .build(),
+            loading = { CircleShimmer() },
+            error = {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = TangemTheme.colors2.surface.level3,
+                            shape = CircleShape,
+                        ),
+                )
+            },
+            contentDescription = null,
         )
     }
 }
