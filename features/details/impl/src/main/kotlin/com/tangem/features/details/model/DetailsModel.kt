@@ -150,6 +150,7 @@ internal class DetailsModel @Inject constructor(
                 }
             }
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
         }
     }
@@ -230,6 +231,7 @@ internal class DetailsModel @Inject constructor(
                 }
             }
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
         }
     }
