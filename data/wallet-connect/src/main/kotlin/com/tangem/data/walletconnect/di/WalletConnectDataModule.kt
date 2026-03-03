@@ -20,7 +20,6 @@ import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
@@ -95,7 +94,6 @@ internal object WalletConnectDataModule {
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
         analytics: AnalyticsEventHandler,
-        accountsFeatureToggles: AccountsFeatureToggles,
         wcScope: WcScope,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
@@ -104,7 +102,6 @@ internal object WalletConnectDataModule {
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
-            accountsFeatureToggles = accountsFeatureToggles,
             scope = wcScope,
         )
     }

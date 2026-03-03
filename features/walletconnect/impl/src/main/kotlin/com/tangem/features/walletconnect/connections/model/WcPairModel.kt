@@ -21,7 +21,6 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
@@ -75,7 +74,6 @@ internal class WcPairModel @Inject constructor(
     private val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     val selectorController: PortfolioSelectorController,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
@@ -95,7 +93,10 @@ internal class WcPairModel @Inject constructor(
     )
 
     val stackNavigation = StackNavigation<WcAppInfoRoutes>()
-    val portfolioFetcher: PortfolioFetcher?
+    val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
+        mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
+        scope = modelScope,
+    )
     val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
         override val onDismiss: () -> Unit = { stackNavigation.pop() }
         override val onBack: () -> Unit = { stackNavigation.pop() }
@@ -110,32 +111,23 @@ internal class WcPairModel @Inject constructor(
     )
     private var proposalNetwork by Delegates.notNull<WcSessionProposal.ProposalNetwork>()
     private var sessionProposal by Delegates.notNull<WcSessionProposal>()
-    private var additionallyEnabledNetworks = setOf<Network>()
+    private var additionallyEnabledNetworks = emptySet<Network>()
     private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
         field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
 
     init {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            portfolioFetcher = portfolioFetcherFactory.create(
-                mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
-                scope = modelScope,
-            )
-            modelScope.launch {
-                val params = SingleAccountListProducer.Params(params.userWalletId)
-                val accountList = singleAccountListSupplier.getSyncOrNull(params)
-                if (accountList == null) {
-                    router.pop()
-                    return@launch
-                }
-                val firstAccount = accountList.accounts.first()
-                selectorController.selectAccount(firstAccount.accountId)
-                combineFlows(portfolioFetcher)
+        modelScope.launch {
+            val params = SingleAccountListProducer.Params(params.userWalletId)
+            val accountList = singleAccountListSupplier.getSyncOrNull(params)
+            if (accountList == null) {
+                router.pop()
+                return@launch
             }
-        } else {
-            portfolioFetcher = null
-            loadDAppInfo()
+            val firstAccount = accountList.accounts.first()
+            selectorController.selectAccount(firstAccount.accountId)
+            combineFlows(portfolioFetcher)
         }
     }
 
@@ -151,19 +143,13 @@ internal class WcPairModel @Inject constructor(
             flow4 = isAccountsModeEnabledUseCase(),
             transform = { portfolios, selected, pairState, isAccountMode ->
                 handlePairState(
-                    pairState,
-                    portfolios,
-                    selected,
-                    isAccountMode,
+                    pairState = pairState,
+                    portfolios = portfolios,
+                    selected = selected,
+                    isAccountMode = isAccountMode,
                 )
             },
         )
-            .launchIn(modelScope)
-    }
-
-    private fun loadDAppInfo() {
-        wcPairUseCase()
-            .onEach { pairState -> handlePairState(pairState) }
             .launchIn(modelScope)
     }
 
@@ -193,7 +179,7 @@ internal class WcPairModel @Inject constructor(
                 )
                 processError(pairState.error)
             }
-            is WcPairState.Loading -> appInfoUiState.update { createLoadingState(isAccountMode ?: false) }
+            is WcPairState.Loading -> appInfoUiState.update { createLoadingState(isAccountMode == true) }
             is WcPairState.Proposal -> handleProposalState(
                 pairState = pairState,
                 portfolios = portfolios,
@@ -225,7 +211,7 @@ internal class WcPairModel @Inject constructor(
         } else {
             val portfolioSelectRow = tryToCreatePortfolioSelectRow(selected, portfolios)
             if (proposalAccountNetwork != null) {
-                selectorController.isEnabled.value = { wallet, account ->
+                selectorController.isEnabled.value = { _, account ->
                     proposalAccountNetwork.contains(account.account.accountId)
                 }
             }
