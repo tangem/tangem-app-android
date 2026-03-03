@@ -8,7 +8,6 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
@@ -34,7 +33,6 @@ internal class DefaultWcSessionsManager(
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val scope: WcScope,
 ) : WcSessionsManager, WcSdkObserver {
 
@@ -57,7 +55,6 @@ internal class DefaultWcSessionsManager(
             .flowOn(dispatchers.io)
 
     private suspend fun migrateToAccountSession(inStore: Set<WcSessionDTO>): Boolean {
-        if (!accountsFeatureToggles.isFeatureEnabled) return false
         if (oneTimeMigration.value) return false
 
         var someMigrated = false
@@ -118,9 +115,7 @@ internal class DefaultWcSessionsManager(
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
             val account = storeSession.accountId?.let { wcNetworksConverter.getAccount(it) } as? Account.CryptoPortfolio
-            if (accountsFeatureToggles.isFeatureEnabled && account == null) {
-                return@mapNotNull null
-            }
+                ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
             val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
             WcSession(
