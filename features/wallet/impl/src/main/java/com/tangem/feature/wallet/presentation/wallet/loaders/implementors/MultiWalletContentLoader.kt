@@ -11,7 +11,7 @@ import dagger.assisted.AssistedInject
 internal class MultiWalletContentLoader @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val accountListSubscriberFactory: AccountListSubscriber.Factory,
-    private val walletNFTListSubscriberFactory: WalletNFTListSubscriberV2.Factory,
+    private val walletNFTListSubscriberFactory: WalletNFTListSubscriber.Factory,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
     private val multiWalletWarningsSubscriberFactory: MultiWalletWarningsSubscriber.Factory,
     private val walletNotificationsSubscriberFactory: WalletNotificationsSubscriber.Factory,
