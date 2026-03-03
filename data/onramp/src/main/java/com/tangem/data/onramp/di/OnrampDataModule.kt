@@ -27,8 +27,6 @@ import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -110,8 +108,6 @@ internal object OnrampDataModule {
         appCurrencyResponseStore: AppCurrencyResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
-        userTokensResponseStore: UserTokensResponseStore,
-        accountsFeatureToggles: AccountsFeatureToggles,
         walletAccountsFetcher: WalletAccountsFetcher,
     ): HotCryptoRepository {
         return DefaultHotCryptoRepository(
@@ -122,8 +118,6 @@ internal object OnrampDataModule {
             appCurrencyResponseStore = appCurrencyResponseStore,
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
-            userTokensResponseStore = userTokensResponseStore,
-            accountsFeatureToggles = accountsFeatureToggles,
             walletAccountsFetcher = walletAccountsFetcher,
         )
     }
