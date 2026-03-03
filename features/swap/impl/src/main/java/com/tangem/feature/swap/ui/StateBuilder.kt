@@ -9,6 +9,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
+import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
@@ -20,13 +21,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.TokensDataConverter
-import com.tangem.feature.swap.converters.TokensDataConverterV2
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -62,20 +61,13 @@ internal class StateBuilder(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val isAccountsModeProvider: Provider<Boolean>,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
-    private val holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
+    holdToConfirmButtonFeatureToggles: HoldToConfirmButtonFeatureToggles,
 ) {
 
     private val isHoldToConfirmEnabled: Boolean =
         holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWalletProvider().isHotWallet
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
-    private val tokensDataConverter = TokensDataConverter(
-        onSearchEntered = actions.onSearchEntered,
-        onTokenSelected = actions.onTokenSelected,
-        isBalanceHiddenProvider = isBalanceHiddenProvider,
-        appCurrencyProvider = appCurrencyProvider,
-    )
 
     private val notificationsFactory by lazy(LazyThreadSafetyMode.NONE) {
         SwapNotificationsFactory(actions, iGaslessFeeSupportedForNetwork)
@@ -677,28 +669,12 @@ internal class StateBuilder(
         )
     }
 
-    fun addTokensToState(
-        uiState: SwapStateHolder,
-        fromToken: CryptoCurrency,
-        tokensDataState: CurrenciesGroup,
-    ): SwapStateHolder {
-        val currentMarketsState = uiState.selectTokenState?.marketsState
-        return uiState.copy(
-            selectTokenState = tokensDataConverter.convert(
-                value = CurrenciesGroupWithFromCurrency(
-                    fromCurrency = fromToken,
-                    group = tokensDataState,
-                ),
-            ).copy(marketsState = currentMarketsState),
-        )
-    }
-
     fun addTokensToStateV2(
         uiState: SwapStateHolder,
         tokensDataState: CurrenciesGroup,
         isAccountsMode: Boolean,
     ): SwapStateHolder {
-        return TokensDataConverterV2(
+        return TokensDataConverter(
             onSearchEntered = actions.onSearchEntered,
             onTokenSelected = actions.onTokenSelected,
             appCurrencyProvider = appCurrencyProvider,
