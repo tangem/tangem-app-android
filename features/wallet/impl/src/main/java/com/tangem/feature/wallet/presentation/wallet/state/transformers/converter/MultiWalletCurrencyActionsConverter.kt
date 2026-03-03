@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -10,7 +9,8 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletCurrencyActionsClickIntents
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
+import com.tangem.feature.wallet.presentation.wallet.state.utils.isSingleWalletWithToken
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
@@ -20,9 +20,9 @@ internal class MultiWalletCurrencyActionsConverter(
     private val userWallet: UserWallet,
     private val accountId: AccountId,
     private val clickIntents: WalletCurrencyActionsClickIntents,
-) : Converter<TokenActionsState, ImmutableList<TokenActionButtonConfig>> {
+) : Converter<TokenActionsState, ImmutableList<TokenActionButtonUM>> {
 
-    override fun convert(value: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
+    override fun convert(value: TokenActionsState): ImmutableList<TokenActionButtonUM> {
         return value.states
             .filterIfSingleWithToken()
             .mapNotNull {
@@ -32,9 +32,7 @@ internal class MultiWalletCurrencyActionsConverter(
     }
 
     private fun List<TokenActionsState.ActionState>.filterIfSingleWithToken(): List<TokenActionsState.ActionState> {
-        return if (userWallet is UserWallet.Cold &&
-            userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
-        ) {
+        return if (userWallet.isSingleWalletWithToken()) {
             filter { it !is TokenActionsState.ActionState.HideToken }
         } else {
             this
@@ -45,7 +43,7 @@ internal class MultiWalletCurrencyActionsConverter(
     private fun mapTokenActionState(
         actionsState: TokenActionsState.ActionState,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): TokenActionButtonConfig? {
+    ): TokenActionButtonUM? {
         if (actionsState is TokenActionsState.ActionState.Send && cryptoCurrencyStatus.value.amount.isNullOrZero()) {
             return null
         }
@@ -112,12 +110,12 @@ internal class MultiWalletCurrencyActionsConverter(
             }
         }
 
-        return TokenActionButtonConfig(
+        return TokenActionButtonUM(
             text = title,
             iconResId = icon,
             onClick = action,
             isWarning = actionsState is TokenActionsState.ActionState.HideToken,
-            enabled = actionsState.unavailabilityReason == noneReason,
+            isEnabled = actionsState.unavailabilityReason == noneReason,
         )
     }
 }
