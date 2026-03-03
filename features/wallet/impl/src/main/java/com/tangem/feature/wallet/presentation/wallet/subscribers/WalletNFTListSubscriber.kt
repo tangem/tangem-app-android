@@ -15,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
-internal class WalletNFTListSubscriberV2 @AssistedInject constructor(
+internal class WalletNFTListSubscriber @AssistedInject constructor(
     @Assisted override val userWallet: UserWallet,
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val walletsRepository: WalletsRepository,
@@ -35,7 +35,7 @@ internal class WalletNFTListSubscriberV2 @AssistedInject constructor(
             // if NFT is enabled for this wallet and there are currencies,
             // then start observing changes from store and apply transformer if need
             if (nftEnabled && currencies.isNotEmpty()) {
-                getNFTCollectionsUseCase.invokeForAccounts(userWallet.walletId)
+                getNFTCollectionsUseCase(userWallet.walletId)
                     .shareIn(
                         scope = coroutineScope,
                         started = SharingStarted.WhileSubscribed(),
@@ -61,6 +61,6 @@ internal class WalletNFTListSubscriberV2 @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(userWallet: UserWallet): WalletNFTListSubscriberV2
+        fun create(userWallet: UserWallet): WalletNFTListSubscriber
     }
 }
