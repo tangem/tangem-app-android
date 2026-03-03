@@ -3,7 +3,9 @@ package com.tangem.data.tokens.repository
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
-import com.tangem.blockchainsdk.utils.*
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.*
@@ -13,7 +15,6 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -51,7 +52,6 @@ internal class DefaultCurrenciesRepository(
     private val userTokensSaver: UserTokensSaver,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
@@ -187,19 +187,7 @@ internal class DefaultCurrenciesRepository(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Coin {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            getNetworkCoinNew(userWalletId, networkId, derivationPath)
-        } else {
-            getNetworkCoinLegacy(userWalletId, networkId, derivationPath)
-        }
-    }
-
-    private suspend fun getNetworkCoinNew(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-    ): CryptoCurrency.Coin = withContext(dispatchers.default) {
-        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
             params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
         )
             .orEmpty()
@@ -209,44 +197,6 @@ internal class DefaultCurrenciesRepository(
                     currency.network.derivationPath == derivationPath
             } as? CryptoCurrency.Coin
             ?: error("Unable to find coin for network ID: $networkId")
-    }
-
-    private suspend fun getNetworkCoinLegacy(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-    ): CryptoCurrency.Coin {
-        return withContext(dispatchers.io) {
-            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-            ensureIsCorrectUserWallet(userWallet = userWallet, isMultiCurrencyWalletExpected = true)
-
-            fetchTokensIfCacheExpired(userWallet = userWallet, refresh = false)
-
-            val storedTokens = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = {
-                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-                },
-            )
-            val blockchain = networkId.toBlockchain()
-            val blockchainNetworkId = blockchain.toNetworkId()
-            val coinId = blockchain.toCoinId()
-
-            val storedCoin = storedTokens.tokens
-                .find { token ->
-                    token.networkId == blockchainNetworkId &&
-                        compareIdWithMigrations(token, coinId) &&
-                        token.derivationPath == derivationPath.value
-                } ?: error("Coin in this network $networkId not found")
-
-            val coin = responseCryptoCurrenciesFactory.createCurrency(
-                responseToken = storedCoin,
-                userWallet = userWallet,
-                accountIndex = DerivationIndex.Main,
-            )
-
-            coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
-        }
     }
 
     override fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean> {
@@ -468,13 +418,6 @@ internal class DefaultCurrenciesRepository(
             skipCache = refresh,
             block = { fetchTokens(userWallet) },
         )
-    }
-
-    private fun compareIdWithMigrations(token: UserTokensResponse.Token, coinId: String): Boolean {
-        return when {
-            token.id == OLD_POLYGON_NAME -> NEW_POLYGON_NAME == coinId
-            else -> token.id == coinId
-        }
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
