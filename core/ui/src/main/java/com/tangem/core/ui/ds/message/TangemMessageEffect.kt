@@ -106,7 +106,10 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
                     Color(0x1AFFFFFF),
                 )
             } else {
-                persistentListOf()
+                persistentListOf(
+                    Color(0xFFE1E1E1),
+                    Color(0xFFE1E1E1),
+                )
             }
         }
     }
@@ -192,7 +195,10 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
                 Color(0x17E44848),
             )
             None -> if (isInDarkTheme) {
-                persistentListOf()
+                persistentListOf(
+                    Color(0x1AFFFFFF),
+                    Color(0x1AFFFFFF),
+                )
             } else {
                 persistentListOf(
                     Color(0x0d000000),
@@ -238,9 +244,10 @@ internal fun Modifier.messageEffectBackground(
     val isInDarkTheme = LocalIsInDarkTheme.current
     val borderGradientColors = remember { messageEffect.getBorderGradient(isInDarkTheme) }
     val gradientColors = remember { messageEffect.getColorGradient(isInDarkTheme) }
+    val gradientTint = remember { messageEffect.getGradientTint(isInDarkTheme) }
 
     val angle by rememberAnimationAngle(messageEffect.isAnimatable)
-    val brush = Brush.sweepGradient(messageEffect.getColorGradient(isInDarkTheme))
+    val brush = remember { Brush.sweepGradient(messageEffect.getColorGradient(isInDarkTheme)) }
     val padding = 1.dp.toPx()
 
     return this
@@ -254,14 +261,14 @@ internal fun Modifier.messageEffectBackground(
             border(
                 width = 1.dp,
                 brush = Brush.sweepGradient(
-                    colors = messageEffect.getBorderGradient(isInDarkTheme),
+                    colors = borderGradientColors,
                     center = Offset.Infinite,
                 ),
                 shape = RoundedCornerShape(radius),
             )
         }
         .hazeForegroundEffectTangem(
-            style = HazeStyle(tints = messageEffect.getGradientTint(isInDarkTheme)),
+            style = HazeStyle(tints = gradientTint),
             isBlurEnabled = true,
         ) {
             fallbackTint = HazeTint(
