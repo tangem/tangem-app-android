@@ -45,16 +45,14 @@ internal fun WalletListContent(
         overscrollEffect = rememberOverscrollEffect(),
     ) {
         notifications(
-            notifications = currentWallet.notifications.map { it.messageUM }
-                .toPersistentList(),
+            notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
             contentColor = containerColor,
             modifier = movableItemModifier,
         )
         notificationsCarousel(
             containerColor = containerColor,
             modifier = movableItemModifier,
-            notifications = currentWallet.notifications.map { it.messageUM }
-                .toPersistentList(),
+            notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
         )
 
         tangemPay(
