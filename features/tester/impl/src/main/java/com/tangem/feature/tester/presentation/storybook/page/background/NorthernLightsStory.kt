@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber", "LongMethod")
+
 package com.tangem.feature.tester.presentation.storybook.page.background
 
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.NorthernLightsStory
 
 @Composable
@@ -22,6 +24,7 @@ internal fun NorthernLightsStory(state: NorthernLightsStory, modifier: Modifier 
     Box(modifier = modifier.fillMaxSize()) {
         NorthernLightsBackground(
             modifier = Modifier.fillMaxSize(),
+            containerColor = TangemTheme.colors2.surface.level1,
             forceSimpleVersion = state.variant == NorthernLightsStory.Variant.Simple,
         )
 
