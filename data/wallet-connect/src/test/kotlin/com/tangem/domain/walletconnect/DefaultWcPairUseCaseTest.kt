@@ -14,7 +14,6 @@ import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcPairError
@@ -37,7 +36,6 @@ internal class DefaultWcPairUseCaseTest {
     private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
     private val sdkDelegate: WcPairSdkDelegate = mockk<WcPairSdkDelegate>()
     private val blockAidVerifier: BlockAidVerifier = mockk<BlockAidVerifier>()
-    private val accountsFeatureToggles = mockk<AccountsFeatureToggles>()
 
     private val url = "testUrl"
     private val source = WcPairRequest.Source.QR
@@ -117,14 +115,13 @@ internal class DefaultWcPairUseCaseTest {
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
         analytics = analytics,
-        accountsFeatureToggles = accountsFeatureToggles,
         pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
     @Before
     fun setup() {
         coEvery { associateNetworksDelegate.associate(sdkProposal) } returns mapOf()
-        coEvery { accountsFeatureToggles.isFeatureEnabled } returns false
+        coEvery { associateNetworksDelegate.associateAccounts(sdkProposal) } returns mapOf()
         coEvery {
             caipNamespaceDelegate.associate(
                 sessionProposal = sdkProposal,
