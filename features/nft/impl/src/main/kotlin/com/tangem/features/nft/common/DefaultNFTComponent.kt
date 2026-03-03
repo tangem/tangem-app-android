@@ -20,7 +20,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.PortfolioId
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorComponent
@@ -53,7 +52,6 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     private val portfolioSelectorController: PortfolioSelectorController,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : NFTComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<NFTRoute>()
@@ -66,14 +64,10 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     private val initialRoute: NFTRoute = NFTRoute.Collections(params.userWalletId)
     private val currentRoute = MutableStateFlow(initialRoute)
     private val onReceiveClickJob = JobHolder()
-    private val portfolioFetcher: PortfolioFetcher? = if (accountsFeatureToggles.isFeatureEnabled) {
-        portfolioFetcherFactory.create(
-            mode = PortfolioFetcher.Mode.Wallet(params.userWalletId),
-            scope = componentScope,
-        )
-    } else {
-        null
-    }
+    private val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
+        mode = PortfolioFetcher.Mode.Wallet(params.userWalletId),
+        scope = componentScope,
+    )
     private val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
     private val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
         override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
@@ -83,7 +77,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         source = bottomSheetNavigation,
         serializer = Unit.serializer(),
         handleBackButton = false,
-        childFactory = { configuration, context -> bottomSheetChild(context) },
+        childFactory = { _, context -> bottomSheetChild(context) },
     )
 
     private val childStack = childStack(
@@ -146,17 +140,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         params = NFTCollectionsComponent.Params(
             userWalletId = route.userWalletId,
             onBackClick = ::onChildBack,
-            onReceiveClick = {
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    onReceiveClick(route)
-                } else {
-                    innerRouter.push(
-                        NFTRoute.Receive(
-                            portfolioId = PortfolioId(route.userWalletId),
-                        ),
-                    )
-                }
-            },
+            onReceiveClick = { onReceiveClick(route) },
             onAssetClick = { asset, collection ->
                 innerRouter.push(
                     NFTRoute.Details(
@@ -170,7 +154,6 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     )
 
     private fun onReceiveClick(route: NFTRoute.Collections) = componentScope.launch {
-        val portfolioFetcher = requireNotNull(portfolioFetcher)
         portfolioSelectorController.selectAccount(null)
         portfolioFetcher.updateMode(mode = PortfolioFetcher.Mode.Wallet(route.userWalletId))
         val portfolioData = portfolioFetcher.data.first()
@@ -245,7 +228,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         portfolioSelectorComponentFactory.create(
             context = childByContext(componentContext),
             params = PortfolioSelectorComponent.Params(
-                portfolioFetcher = portfolioFetcher!!,
+                portfolioFetcher = portfolioFetcher,
                 controller = portfolioSelectorController,
                 bsCallback = portfolioSelectorCallback,
             ),
