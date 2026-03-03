@@ -19,7 +19,6 @@ import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -29,7 +28,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAn
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
@@ -142,8 +140,15 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
             getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus)
                 .take(count = 1)
-                .collectLatest {
-                    showActionsBottomSheet(it, userWallet, accountId)
+                .collectLatest { actionsState ->
+                    router.openTokenActionSheet(
+                        userWallet = userWallet,
+                        tokenActionList = MultiWalletCurrencyActionsConverter(
+                            userWallet = userWallet,
+                            accountId = accountId,
+                            clickIntents = currencyActionsClickIntents,
+                        ).convert(actionsState),
+                    )
                 }
         }
     }
@@ -257,23 +262,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is NavigationAction.CloreMigration -> return
         }
         analyticsEventHandler.send(event)
-    }
-
-    private fun showActionsBottomSheet(
-        tokenActionsState: TokenActionsState,
-        userWallet: UserWallet,
-        accountId: AccountId,
-    ) {
-        stateHolder.showBottomSheet(
-            ActionsBottomSheetConfig(
-                actions = MultiWalletCurrencyActionsConverter(
-                    userWallet = userWallet,
-                    accountId = accountId,
-                    clickIntents = currencyActionsClickIntents,
-                ).convert(tokenActionsState),
-            ),
-            userWallet.walletId,
-        )
     }
 
     override fun onTransactionClick(txHash: String) {
