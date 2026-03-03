@@ -73,7 +73,6 @@ import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreview
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewDataLegacy.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
-import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
@@ -716,7 +715,6 @@ internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modi
 private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
     if (bottomSheetConfig != null) {
         when (bottomSheetConfig.content) {
-            is ActionsBottomSheetConfig -> TokenActionsBottomSheet(config = bottomSheetConfig)
             is ChooseAddressBottomSheetConfig -> ChooseAddressBottomSheet(config = bottomSheetConfig)
             is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)
         }
