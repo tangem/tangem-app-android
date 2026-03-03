@@ -8,7 +8,6 @@ import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -16,19 +15,14 @@ import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetAssetRequirementsUseCase
-import com.tangem.domain.tokens.GetTokenListUseCase
-import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
@@ -36,7 +30,9 @@ import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
 import com.tangem.features.onramp.swap.entity.AccountCurrencyUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.*
-import com.tangem.features.onramp.tokenlist.entity.transformer.*
+import com.tangem.features.onramp.tokenlist.entity.transformer.SetLoadingAccountTokenListTransformer
+import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
+import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateAccountTokenListTransformer
 import com.tangem.features.onramp.utils.ClearSearchBarTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
@@ -60,12 +56,10 @@ internal class OnrampTokenListModel @Inject constructor(
     private val searchManager: InputManager,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getTokenListUseCase: GetTokenListUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val rampStateManager: RampStateManager,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
 ) : Model() {
@@ -84,68 +78,10 @@ internal class OnrampTokenListModel @Inject constructor(
                 onActiveChange = ::onSearchBarActiveChange,
             ),
         )
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            subscribeOnUpdateStateV2()
-        } else {
-            subscribeOnUpdateState()
-        }
+        subscribeOnUpdateState()
     }
 
     private fun subscribeOnUpdateState() {
-        combine(
-            flow = getTokenListUseCase.launch(userWalletId = params.userWalletId).distinctUntilChanged(),
-            flow2 = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } }.distinctUntilChanged(),
-            flow3 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
-            flow4 = searchManager.query,
-            flow5 = hasRestrictionForSellFlow(),
-        ) { maybeTokenList, appCurrency, isBalanceHidden, query, hasRestrictionForSell ->
-            val currencies = maybeTokenList.getOrElse(
-                ifLoading = { it ?: TokenList.Empty },
-                ifError = { TokenList.Empty },
-            )
-                .flattenCurrencies()
-
-            val filterByQueryTokenList = currencies
-                .filterByQuery(query = query)
-
-            if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
-                SetNothingToFoundStateTransformer(
-                    isBalanceHidden = isBalanceHidden,
-                    emptySearchMessageReference = getEmptySearchMessageReference(),
-                )
-            } else {
-                val isInsufficientBalanceForSell = if (params.filterOperation == OnrampOperation.SELL) {
-                    maybeTokenList.isInsufficientBalanceForSell()
-                } else {
-                    false
-                }
-
-                UpdateTokenItemsTransformer(
-                    appCurrency = appCurrency,
-                    onItemClick = ::onTokenClick,
-                    statuses = filterByQueryTokenList.let { statuses ->
-                        if (hasRestrictionForSell || isInsufficientBalanceForSell) {
-                            mapOf(false to statuses)
-                        } else {
-                            statuses.filterByAvailability()
-                        }
-                    },
-                    isBalanceHidden = isBalanceHidden,
-                    unavailableTokensHeaderReference = getUnavailableTokensHeaderReference(),
-                    warning = when {
-                        hasRestrictionForSell -> NotificationUM.Warning.SellingRegionalRestriction
-                        isInsufficientBalanceForSell -> NotificationUM.Warning.InsufficientBalanceForSelling
-                        else -> null
-                    },
-                )
-            }
-        }
-            .onEach(::updateTokenListUM)
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-    }
-
-    private fun subscribeOnUpdateStateV2() {
         combine(
             flow = singleAccountStatusListSupplier(
                 SingleAccountStatusListProducer.Params(params.userWalletId),
@@ -160,7 +96,7 @@ internal class OnrampTokenListModel @Inject constructor(
 
             if (query.isNotEmpty() && filterByQueryAccountList.isEmpty()) {
                 updateTokenListUM(
-                    SetNothingToFoundStateTransformerV2(
+                    SetNothingToFoundStateTransformer(
                         isBalanceHidden = isBalanceHidden,
                         emptySearchMessageReference = getEmptySearchMessageReference(),
                     ),
@@ -211,16 +147,6 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
-    private fun Lce<TokenListError, TokenList>.isInsufficientBalanceForSell(): Boolean {
-        return if (params.filterOperation == OnrampOperation.SELL) {
-            isContent {
-                (it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isZero() == true
-            }
-        } else {
-            false
-        }
-    }
-
     private fun AccountStatusList.isInsufficientBalanceForSell(): Boolean {
         return if (params.filterOperation == OnrampOperation.SELL) {
             (totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isZero() == true
@@ -268,13 +194,8 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     private fun isFirstInitialization(prevState: TokenListUM, newState: TokenListUM): Boolean {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            prevState.tokensListData == TokenListUMData.EmptyList &&
-                newState.tokensListData != TokenListUMData.EmptyList
-        } else {
-            prevState.availableItems.isEmpty() && prevState.unavailableItems.isEmpty() &&
-                (newState.availableItems.isNotEmpty() || newState.unavailableItems.isNotEmpty())
-        }
+        return prevState.tokensListData == TokenListUMData.EmptyList &&
+            newState.tokensListData != TokenListUMData.EmptyList
     }
 
     private fun onTokenClick(tokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
@@ -330,41 +251,6 @@ internal class OnrampTokenListModel @Inject constructor(
         return filter { status ->
             status.currency.name.contains(other = query, ignoreCase = true) ||
                 status.currency.symbol.contains(other = query, ignoreCase = true)
-        }
-    }
-
-    private suspend fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
-        return coroutineScope {
-            map { status ->
-                async {
-                    val isOperationAvailable = checkAvailabilityByOperation(status = status)
-                    val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
-                    val isNotLoading = status.value !is CryptoCurrencyStatus.Loading
-
-                    val requirements = getAssetRequirementsUseCase(
-                        userWalletId = userWallet.walletId,
-                        currency = status.currency,
-                    ).getOrNull()
-
-                    val isAvailableForBuy = rampStateManager.checkAssetRequirements(requirements)
-                    val isNotUnreachable = status.value !is CryptoCurrencyStatus.Unreachable
-
-                    val isAvailable = when (params.filterOperation) {
-                        OnrampOperation.BUY -> {
-                            isAvailableForBuy
-                        } // unreachable state is available for Buy operation
-                        OnrampOperation.SELL -> isNotUnreachable
-                        OnrampOperation.SWAP -> {
-                            isNotUnreachable && isAvailableForBuy
-                        }
-                    }
-
-                    status to (isOperationAvailable && isNotMissedDerivation && isNotLoading && isAvailable)
-                }
-            }
-                .awaitAll()
-                .groupBy(Pair<CryptoCurrencyStatus, Boolean>::second)
-                .mapValues { it.value.map(Pair<CryptoCurrencyStatus, Boolean>::first) }
         }
     }
 
