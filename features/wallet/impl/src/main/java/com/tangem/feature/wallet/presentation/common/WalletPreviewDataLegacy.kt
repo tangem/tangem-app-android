@@ -3,9 +3,10 @@ package com.tangem.feature.wallet.presentation.common
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LargeClass")
 internal object WalletPreviewDataLegacy {
@@ -54,15 +55,4 @@ internal object WalletPreviewDataLegacy {
             UserWalletId(stringValue = "24") to walletCardErrorState,
         )
     }
-
-    val actionsBottomSheet = ActionsBottomSheetConfig(
-        actions = listOf(
-            TokenActionButtonConfig(
-                text = TextReference.Str("Send"),
-                iconResId = R.drawable.ic_share_24,
-                isWarning = false,
-                onClick = {},
-            ),
-        ).toImmutableList(),
-    )
 }
