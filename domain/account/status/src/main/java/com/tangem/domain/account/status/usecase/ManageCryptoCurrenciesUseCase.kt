@@ -84,7 +84,7 @@ class ManageCryptoCurrenciesUseCase(
         withContext(NonCancellable) {
             val accountStatus = getAccountStatus(accountId = accountId)
 
-            val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+            var modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = add, remove = remove)
 
             if (!modifiedCurrencyList.hasChanges) {
@@ -92,11 +92,20 @@ class ManageCryptoCurrenciesUseCase(
                 return@withContext
             }
 
+            val derivingResult = derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+
+            if (!skipDerivationErrors && derivingResult.isLeft()) {
+                modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+                    .modify(add = emptyList(), remove = remove)
+
+                if (!modifiedCurrencyList.hasChanges) {
+                    derivingResult.bind()
+                }
+            }
+
             saveAccount(
                 account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total),
             )
-
-            val result = derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
             parallelUpdatingScope.launch {
                 syncTokens(userWalletId, modifiedCurrencyList)
@@ -107,7 +116,7 @@ class ManageCryptoCurrenciesUseCase(
             }
 
             if (!skipDerivationErrors) {
-                result.bind()
+                derivingResult.bind()
             }
         }
     }
