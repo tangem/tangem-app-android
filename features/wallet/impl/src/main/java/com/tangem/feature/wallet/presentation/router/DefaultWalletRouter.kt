@@ -19,7 +19,9 @@ import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
@@ -148,6 +150,14 @@ internal class DefaultWalletRouter @Inject constructor(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 apy = apy,
+            ),
+        )
+    }
+
+    override fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.TokenActionList(
+                actionList = tokenActionList,
             ),
         )
     }
