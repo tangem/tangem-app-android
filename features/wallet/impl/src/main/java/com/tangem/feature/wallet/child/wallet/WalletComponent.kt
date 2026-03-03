@@ -21,6 +21,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -132,6 +133,15 @@ internal class WalletComponent @AssistedInject constructor(
                             walletId = dialogConfig.walletId,
                             customerId = dialogConfig.customerId,
                             callbacks = model.tangemPayKycRejectedCallbacks,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.TokenActionList -> {
+                    TokenActionsComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = TokenActionsComponent.Params(
+                            actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
