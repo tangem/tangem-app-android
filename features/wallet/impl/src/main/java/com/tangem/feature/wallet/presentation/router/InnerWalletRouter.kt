@@ -14,7 +14,9 @@ import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
@@ -81,4 +83,7 @@ internal interface InnerWalletRouter {
 
     /** Open yield supply entry screen */
     fun openYieldSupplyEntryScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
+
+    /** Open token action sheet */
+    fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>)
 }
