@@ -15,7 +15,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -33,7 +32,6 @@ internal class DefaultMarketsTokenDetailsComponent(
     appComponentContext: AppComponentContext,
     val params: Params,
     analyticsEventHandler: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
@@ -117,7 +115,6 @@ internal class DefaultMarketsTokenDetailsComponent(
             modifier = modifier,
             backgroundColor = LocalMainBottomSheetColor.current.value,
             state = state,
-            isAccountEnabled = accountsFeatureToggles.isFeatureEnabled,
             portfolioBlock = portfolioComponent?.let { component ->
                 { blockModifier ->
                     component.Content(blockModifier)
