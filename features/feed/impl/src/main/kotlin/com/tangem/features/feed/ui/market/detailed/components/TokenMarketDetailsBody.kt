@@ -20,10 +20,9 @@ import com.tangem.features.feed.ui.feed.state.NewsSliderConfig
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM.RelatedNews
 
-@Suppress("CanBeNonNullable") // TODO will be removed after [REDACTED_JIRA]
+@Suppress("CanBeNonNullable")
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
-    isAccountEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     relatedNews: RelatedNews,
 ) {
@@ -39,9 +38,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 }
             }
 
-            if (isAccountEnabled) {
-                aboutCoinHeader()
-            }
+            aboutCoinHeader()
 
             loadingInfoBlocks()
         }
@@ -60,9 +57,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 relatedNews(relatedNews)
             }
 
-            if (isAccountEnabled) {
-                aboutCoinHeader()
-            }
+            aboutCoinHeader()
 
             infoBlocksList(state.infoBlocks)
         }
