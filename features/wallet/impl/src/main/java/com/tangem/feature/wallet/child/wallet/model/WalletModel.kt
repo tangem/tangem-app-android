@@ -13,6 +13,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -97,6 +99,7 @@ internal class WalletModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerStore: AppsFlyerStore,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -219,6 +222,7 @@ internal class WalletModel @Inject constructor(
                     }
                     val result = getAppThemeModeUseCase().firstOrNull()
                     val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+                    val appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
                     analyticsEventsHandler.send(
                         WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
                             hasMobileWallet = hasMobileWallet,
@@ -226,6 +230,7 @@ internal class WalletModel @Inject constructor(
                             theme = theme.value,
                             isImported = selectedWallet.isImported(),
                             referralId = appsFlyerStore.get()?.refcode,
+                            appCurrency = appCurrency,
                         ),
                     )
                 }
