@@ -4,12 +4,7 @@ package com.tangem.core.ui.components.background.northernlights
 
 import android.os.Build
 import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.StartOffset
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.background.shaderBackground
 import com.tangem.core.ui.res.LocalPowerSavingState
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.shader.NorthernLightsMeshGradientShader
 
 /**
@@ -29,10 +23,14 @@ import com.tangem.core.ui.shader.NorthernLightsMeshGradientShader
  * Uses a RuntimeShader on Android 13+ and falls back to a simpler implementation on older versions and in power saving mode.
  */
 @Composable
-fun NorthernLightsBackground(modifier: Modifier = Modifier, forceSimpleVersion: Boolean = false) {
+fun NorthernLightsBackground(
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    forceSimpleVersion: Boolean = false,
+) {
     val isPowerSavingMode by LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
     if (!forceSimpleVersion && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPowerSavingMode) {
-        NorthernLightsBackgroundWithShader(modifier)
+        NorthernLightsBackgroundWithShader(containerColor, modifier)
     } else {
         MovingColorfulBlubsBackground(modifier)
     }
@@ -40,9 +38,8 @@ fun NorthernLightsBackground(modifier: Modifier = Modifier, forceSimpleVersion: 
 
 @Suppress("LongMethod")
 @Composable
-private fun NorthernLightsBackgroundWithShader(modifier: Modifier = Modifier) {
+private fun NorthernLightsBackgroundWithShader(containerColor: Color, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "FluidMeshGradientV2")
-    val backgroundColor = TangemTheme.colors2.surface.level1
 
     // Each track cycles through 4 states (matching the screenshot frames):
     //   deep/dark → saturated+bright → light/pastel → vibrant/vivid → back
@@ -128,7 +125,7 @@ private fun NorthernLightsBackgroundWithShader(modifier: Modifier = Modifier) {
                 Color(0xFF1444AA),
                 Color(0xFF4422BB),
                 Color(0xFF331199),
-                backgroundColor,
+                containerColor,
             ),
             speed = 0.5f,
             scale = 4f,
@@ -139,12 +136,12 @@ private fun NorthernLightsBackgroundWithShader(modifier: Modifier = Modifier) {
     colorsArray[1] = color2
     colorsArray[2] = color3
     colorsArray[3] = color4
-    colorsArray[4] = backgroundColor
+    colorsArray[4] = containerColor
     shader.updateColors(colorsArray)
 
     Box(
         modifier = modifier
-            .background(backgroundColor)
+            .background(containerColor)
             .fillMaxSize()
             .shaderBackground(shader),
     )
