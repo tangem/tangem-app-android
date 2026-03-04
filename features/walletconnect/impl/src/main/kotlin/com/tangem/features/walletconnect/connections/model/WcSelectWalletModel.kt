@@ -6,7 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.tokens.GetTokenListUseCase
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent.WcSelectWalletParams
@@ -24,7 +24,7 @@ internal class WcSelectWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     messageSender: UiMessageSender,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
-    getTokenListUseCase: GetTokenListUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
@@ -41,7 +41,7 @@ internal class WcSelectWalletModel @Inject constructor(
 
     private val userWalletsFetcher = WcUserWalletsFetcher(
         userWalletsFetcherFactory = userWalletsFetcherFactory,
-        getTokenListUseCase = getTokenListUseCase,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         messageSender = messageSender,
         onWalletSelected = ::onWalletSelected,
     )
