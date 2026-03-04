@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import kotlinx.serialization.json.*
 import java.io.File
+import java.util.Locale
 
 /**
  * Generator for environment configuration Kotlin object from JSON file.
@@ -68,12 +69,13 @@ object EnvironmentConfigGenerator {
      * Adds a property to the TypeSpec based on the JSON value type
      */
     private fun addPropertyFromJsonValue(builder: TypeSpec.Builder, name: String, value: JsonElement) {
+        val propertyName = name.toValidIdentifier()
         when (value) {
             is JsonPrimitive -> {
                 when {
                     value.isString -> {
                         val stringValue = value.content
-                        val propertySpec = PropertySpec.builder(name, STRING)
+                        val propertySpec = PropertySpec.builder(propertyName, STRING)
                             .addModifiers(KModifier.CONST)
                             .initializer("%S", stringValue)
 
@@ -81,7 +83,7 @@ object EnvironmentConfigGenerator {
                     }
                     value.booleanOrNull != null -> {
                         builder.addProperty(
-                            PropertySpec.builder(name, BOOLEAN)
+                            PropertySpec.builder(propertyName, BOOLEAN)
                                 .addModifiers(KModifier.CONST)
                                 .initializer("%L", value.boolean)
                                 .build()
@@ -89,7 +91,7 @@ object EnvironmentConfigGenerator {
                     }
                     value.longOrNull != null -> {
                         builder.addProperty(
-                            PropertySpec.builder(name, LONG)
+                            PropertySpec.builder(propertyName, LONG)
                                 .addModifiers(KModifier.CONST)
                                 .initializer("%L", value.long)
                                 .build()
@@ -97,7 +99,7 @@ object EnvironmentConfigGenerator {
                     }
                     value.doubleOrNull != null -> {
                         builder.addProperty(
-                            PropertySpec.builder(name, DOUBLE)
+                            PropertySpec.builder(propertyName, DOUBLE)
                                 .addModifiers(KModifier.CONST)
                                 .initializer("%L", value.double)
                                 .build()
@@ -106,7 +108,7 @@ object EnvironmentConfigGenerator {
                     else -> {
                         // Null value
                         builder.addProperty(
-                            PropertySpec.builder(name, STRING.copy(nullable = true))
+                            PropertySpec.builder(propertyName, STRING.copy(nullable = true))
                                 .initializer("null")
                                 .build()
                         )
@@ -117,7 +119,7 @@ object EnvironmentConfigGenerator {
                 val listType = LIST.parameterizedBy(STRING)
                 val values = value.map { it.jsonPrimitive.content }
                 builder.addProperty(
-                    PropertySpec.builder(name, listType)
+                    PropertySpec.builder(propertyName, listType)
                         .initializer(
                             CodeBlock.builder()
                                 .add("listOf(\n")
@@ -147,14 +149,48 @@ object EnvironmentConfigGenerator {
     }
 
     /**
-     * Converts a string to PascalCase, handling dashes and underscores.
-     * Examples: "cosmos-hub" -> "CosmosHub", "polygon-zkevm" -> "PolygonZkevm"
+     * Converts a string to PascalCase for use as a class/object name.
+     * - If the string contains separators (dots, dashes, underscores), splits and joins in PascalCase
+     * - If no separators, just capitalizes the first letter to preserve original casing (e.g., "AppsFlyer" stays "AppsFlyer")
      */
     private fun String.toPascalCase(): String {
-        return this.split("-", "_")
+        val hasSeparators = contains('.') || contains('-') || contains('_')
+        return if (hasSeparators) {
+            this.split("-", "_", ".")
+                .filter { it.isNotEmpty() }
+                .joinToString("") { part ->
+                    part.lowercase(Locale.ROOT).replaceFirstChar { it.uppercase(Locale.ROOT) }
+                }
+        } else {
+            this.replaceFirstChar { it.uppercase(Locale.ROOT) }
+        }
+    }
+
+    /**
+     * Converts a string to a valid Kotlin property identifier.
+     * - If the string contains dots, converts to camelCase (dots cannot be escaped by KotlinPoet)
+     * - Otherwise, ensures the first letter is lowercase (Kotlin property naming convention)
+     */
+    private fun String.toValidIdentifier(): String {
+        return if (contains('.')) {
+            toCamelCase()
+        } else {
+            this.replaceFirstChar { it.lowercase(Locale.ROOT) }
+        }
+    }
+
+    /**
+     * Converts a string to camelCase, handling dashes, underscores, and dots.
+     * Normalizes each segment to lowercase first for consistent results.
+     * Examples: "cosmos-hub" -> "cosmosHub", "customer.io" -> "customerIo", "CUSTOMER.IO" -> "customerIo"
+     */
+    private fun String.toCamelCase(): String {
+        val parts = this.split("-", "_", ".")
             .filter { it.isNotEmpty() }
-            .joinToString("") { part ->
-                part.replaceFirstChar { it.uppercase() }
-            }
+        return parts.mapIndexed { index, part ->
+            val normalized = part.lowercase(Locale.ROOT)
+            if (index == 0) normalized
+            else normalized.replaceFirstChar { it.uppercase(Locale.ROOT) }
+        }.joinToString("")
     }
 }
