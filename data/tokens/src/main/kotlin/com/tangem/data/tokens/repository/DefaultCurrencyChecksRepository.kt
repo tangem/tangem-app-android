@@ -15,7 +15,6 @@ import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
@@ -25,7 +24,6 @@ import java.math.BigDecimal
 internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) : CurrencyChecksRepository {
 
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
@@ -67,7 +65,6 @@ internal class DefaultCurrencyChecksRepository(
     }
 
     override fun isNetworkSupportedForGaslessTx(network: Network): Boolean {
-        if (!sendFeatureToggles.isGaslessTransactionsEnabled) return false
         val blockchain = Blockchain.fromId(network.rawId)
         return blockchain.isGaslessTxSupported
     }
