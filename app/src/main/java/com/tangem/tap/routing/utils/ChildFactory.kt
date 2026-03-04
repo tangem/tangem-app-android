@@ -349,6 +349,7 @@ internal class ChildFactory @Inject constructor(
                 val source = when (route.source) {
                     is AppRoute.QrScanning.Source.Send -> SourceType.SEND
                     is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
+                    is AppRoute.QrScanning.Source.MainScreen -> SourceType.MAIN_SCREEN
                 }
                 createComponentChild(
                     context = context,
