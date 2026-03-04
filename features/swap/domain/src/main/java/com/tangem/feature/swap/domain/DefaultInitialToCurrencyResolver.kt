@@ -1,35 +1,17 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.models.ui.AccountSwapCurrency
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.getGroupWithReverse
 import com.tangem.utils.extensions.orZero
-import java.math.BigDecimal
 
 internal class DefaultInitialToCurrencyResolver(
     private val swapTransactionRepository: SwapTransactionRepository,
 ) : InitialToCurrencyResolver {
 
     override suspend fun tryGetFromCache(
-        userWallet: UserWallet,
-        initialCryptoCurrency: CryptoCurrency,
-        state: TokensDataStateExpress,
-        isReverseFromTo: Boolean,
-    ): CryptoCurrencyStatus? {
-        val id = swapTransactionRepository.getLastSwappedCryptoCurrencyId(userWallet.walletId) ?: return null
-
-        return if (id != initialCryptoCurrency.id.value) {
-            val group = state.getGroupWithReverse(isReverseFromTo)
-            group.available.find { it.currencyStatus.currency.id.value == id }?.currencyStatus
-        } else {
-            null
-        }
-    }
-
-    override suspend fun tryGetFromCacheV2(
         userWallet: UserWallet,
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
@@ -48,14 +30,7 @@ internal class DefaultInitialToCurrencyResolver(
         }
     }
 
-    override fun tryGetWithMaxAmount(state: TokensDataStateExpress, isReverseFromTo: Boolean): CryptoCurrencyStatus? {
-        val group = state.getGroupWithReverse(isReverseFromTo)
-        return group.available.maxByOrNull {
-            it.currencyStatus.value.fiatAmount ?: BigDecimal.ZERO
-        }?.currencyStatus
-    }
-
-    override fun tryGetWithMaxAmountV2(state: TokensDataStateExpress, isReverseFromTo: Boolean): AccountSwapCurrency? {
+    override fun tryGetWithMaxAmount(state: TokensDataStateExpress, isReverseFromTo: Boolean): AccountSwapCurrency? {
         val group = state.getGroupWithReverse(isReverseFromTo)
         return group.accountCurrencyList.firstNotNullOfOrNull { (_, currencyList) ->
             currencyList.maxByOrNull { swapAccountCurrency ->
