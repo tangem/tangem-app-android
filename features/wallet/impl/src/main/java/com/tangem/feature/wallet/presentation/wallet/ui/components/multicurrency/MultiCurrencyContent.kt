@@ -204,6 +204,7 @@ private fun LazyListScope.portfolioItem(
                     )
                     is TangemHeaderRowUM -> TangemHeaderRow(
                         headerRowUM = tokenRowUM,
+                        isBalanceHidden = isBalanceHidden,
                         modifier = itemModifier,
                     )
                 }
