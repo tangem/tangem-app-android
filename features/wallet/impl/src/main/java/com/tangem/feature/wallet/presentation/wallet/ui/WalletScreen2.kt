@@ -54,10 +54,7 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.LocalWindowSize
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import com.tangem.core.ui.res.*
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
@@ -181,9 +178,16 @@ private fun WalletContent2(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem(-1f),
+                .hazeSourceTangem(zIndex = -1f),
         ) {
-            NorthernLightsBackground(Modifier.matchParentSize())
+            NorthernLightsBackground(
+                containerColor = if (LocalIsInDarkTheme.current) {
+                    TangemTheme.colors2.surface.level1
+                } else {
+                    TangemTheme.colors2.surface.level2
+                },
+                modifier = Modifier.matchParentSize(),
+            )
 
             WalletPagerIndicator(
                 pagerState = walletsPagerState,
@@ -201,7 +205,7 @@ private fun WalletContent2(
                     state.wallets2[state.selectedWalletIndex]
                 }
 
-                LaunchedEffect(walletsPagerState.currentPage) {
+                LaunchedEffect(walletsPagerState.currentPage, currentWallet.walletsBalanceUM) {
                     if (walletsPagerState.currentPage == currentWalletIndex) {
                         walletBalance = (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
                     }
