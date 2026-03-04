@@ -1,29 +1,35 @@
-@file:Suppress("TopLevelPropertyNaming")
+package com.tangem.core.ui.ds.contextmenu
 
-package com.tangem.core.ui.components.dropdownmenu
-
+import android.content.res.Configuration
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.components.haze.hazeSourceTangem
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.PopUpMenuTestTags
+import dev.chrisbanes.haze.rememberHazeState
 import kotlin.math.max
 import kotlin.math.min
 
@@ -31,11 +37,11 @@ import kotlin.math.min
  * Just copy paste [DropdownMenu] from material3 with deleting vertical paddings.
  */
 @Composable
-fun TangemDropdownMenu(
+fun TangemContextMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    offset: DpOffset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacing10.times(-1)),
+    offset: DpOffset = DpOffset.Zero,
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -67,8 +73,8 @@ fun TangemDropdownMenu(
     }
 }
 
-private const val InTransitionDuration = 120
-private const val OutTransitionDuration = 75
+private const val IN_TRANSITION_DURATION = 120
+private const val OUT_TRANSITION_DURATION = 75
 
 @Suppress("ReusedModifierInstance", "MagicNumber")
 @Composable
@@ -86,20 +92,20 @@ private fun DropdownMenuContent(
             if (false isTransitioningTo true) {
                 // Dismissed to expanded
                 tween(
-                    durationMillis = InTransitionDuration,
+                    durationMillis = IN_TRANSITION_DURATION,
                     easing = LinearOutSlowInEasing,
                 )
             } else {
                 // Expanded to dismissed.
                 tween(
                     durationMillis = 1,
-                    delayMillis = OutTransitionDuration - 1,
+                    delayMillis = OUT_TRANSITION_DURATION - 1,
                 )
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {
@@ -115,12 +121,12 @@ private fun DropdownMenuContent(
                 tween(durationMillis = 30)
             } else {
                 // Expanded to dismissed.
-                tween(durationMillis = OutTransitionDuration)
+                tween(durationMillis = OUT_TRANSITION_DURATION)
             }
         },
         label = "",
-    ) {
-        if (it) {
+    ) { isExpanded ->
+        if (isExpanded) {
             // Menu is expanded.
             1f
         } else {
@@ -129,18 +135,22 @@ private fun DropdownMenuContent(
         }
     }
     Card(
-        modifier = Modifier.graphicsLayer {
-            scaleX = scale
-            scaleY = scale
-            this.alpha = alpha
-            transformOrigin = transformOriginState.value
-        },
+        modifier = Modifier
+            .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+                transformOrigin = transformOriginState.value
+            },
         elevation = CardDefaults.cardElevation(),
     ) {
         Column(
             modifier = modifier
                 .width(IntrinsicSize.Max)
                 .verticalScroll(rememberScrollState())
+                .clip(RoundedCornerShape(TangemTheme.dimens2.x5))
+                .background(TangemTheme.colors2.contextMenu.background)
                 .testTag(PopUpMenuTestTags.CONTAINER),
             content = content,
         )
@@ -238,3 +248,41 @@ internal data class DropdownMenuPositionProvider(
         return IntOffset(x, y)
     }
 }
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun TangemContextMenu_Preview() {
+    TangemThemePreviewRedesign {
+        val hazeState = rememberHazeState()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors2.surface.level1)
+                .hazeSourceTangem(state = hazeState, zIndex = -1f),
+        ) {
+            TangemContextMenu(
+                expanded = true,
+                onDismissRequest = { },
+                modifier = Modifier.hazeEffectTangem(state = hazeState),
+            ) {
+                TangemContextMenuCheckboxItem(
+                    title = stringReference("Sort by balance"),
+                    isChecked = true,
+                    onClick = {},
+                )
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = TangemTheme.colors2.border.neutral.quaternary,
+                )
+                TangemContextMenuCheckboxItem(
+                    title = stringReference("Group tokens"),
+                    isChecked = false,
+                    onClick = {},
+                )
+            }
+        }
+    }
+}
+// endregion
