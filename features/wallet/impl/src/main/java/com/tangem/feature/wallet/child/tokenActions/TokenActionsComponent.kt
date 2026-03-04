@@ -13,6 +13,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
+import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -36,7 +37,7 @@ internal class TokenActionsComponent @AssistedInject constructor(
             ),
         ) {
             Column {
-                params.actions.forEach { action ->
+                params.actions.fastForEach { action ->
                     if (action.isEnabled) {
                         val rowColors = if (action.isWarning) {
                             getWarningRowColors()
