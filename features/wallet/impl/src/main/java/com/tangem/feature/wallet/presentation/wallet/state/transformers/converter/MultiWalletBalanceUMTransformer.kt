@@ -28,6 +28,7 @@ internal class MultiWalletBalanceUMTransformer(
         return WalletBalanceUM.Loading(
             id = id,
             name = name,
+            deviceIcon = deviceIcon,
         )
     }
 
@@ -35,6 +36,7 @@ internal class MultiWalletBalanceUMTransformer(
         return WalletBalanceUM.Error(
             id = id,
             name = name,
+            deviceIcon = deviceIcon,
         )
     }
 
@@ -42,6 +44,7 @@ internal class MultiWalletBalanceUMTransformer(
         return WalletBalanceUM.Content(
             id = id,
             name = name,
+            deviceIcon = deviceIcon,
             balanceInAppBar = fiatBalance.amount.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
