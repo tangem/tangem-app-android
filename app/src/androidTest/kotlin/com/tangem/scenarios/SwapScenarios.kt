@@ -2,6 +2,7 @@ package com.tangem.scenarios
 
 import androidx.compose.ui.test.click
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.screens.*
@@ -256,6 +257,44 @@ fun BaseTestCase.chackUnableToCoverFeeNotification(networkName: String, currency
     step("Assert 'Unable to cover '$networkName' fee notification icon is displayed'") {
         onSwapTokenScreen { unableToCoverFeeNotificationIcon(networkName).assertIsDisplayed() }
     }
+}
+
+fun BaseTestCase.checkSwapWarning(
+    title: String,
+    message: String,
+    isDisplayed: Boolean = true,
+    swapButtonIsDisabled: Boolean = isDisplayed,
+) {
+    val assertDisplay = if (isDisplayed) "displayed" else "not displayed"
+
+    step("Assert warning title is $assertDisplay") {
+        onSwapTokenScreen {
+            warningTitle(title).assertVisibility(isDisplayed)
+        }
+    }
+    step("Assert warning icon is $assertDisplay") {
+        onSwapTokenScreen {
+            warningIcon(message).assertVisibility(isDisplayed)
+        }
+    }
+    step("Assert warning message is $assertDisplay") {
+        onSwapTokenScreen {
+            warningMessage(message).assertVisibility(isDisplayed)
+        }
+    }
+
+    if (swapButtonIsDisabled)
+        step("Assert 'Swap' button is disabled") {
+            onSwapTokenScreen {
+                swapButton.assertIsNotEnabled()
+            }
+        }
+    else
+        step("Assert 'Swap' button is enabled") {
+            onSwapTokenScreen {
+                swapButton.assertIsEnabled()
+            }
+        }
 }
 
 sealed class SwapEntryPoint {
