@@ -5,149 +5,149 @@ import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.wallet.WalletServerBinder
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+/**
+ * Tests for [DefaultWalletsRepository]
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultWalletsRepositoryTest {
-    private lateinit var repository: DefaultWalletsRepository
-    private val preferencesDataStore = mockk<DataStore<Preferences>>(relaxed = true)
+
+    private val preferencesDataStore: DataStore<Preferences> = mockk(relaxed = true)
+    private val tangemTechApi: TangemTechApi = mockk()
+    private val walletServerBinder: WalletServerBinder = mockk()
+
     private val appPreferenceStore = AppPreferencesStore(
         moshi = Moshi.Builder().build(),
         dispatchers = TestingCoroutineDispatcherProvider(),
         preferencesDataStore = preferencesDataStore,
     )
-    private lateinit var tangemTechApi: TangemTechApi
-    private lateinit var dispatchers: CoroutineDispatcherProvider
-    private lateinit var walletServerBinder: WalletServerBinder
-    private lateinit var appsFlyerStore: AppsFlyerStore
+
+    private val repository = DefaultWalletsRepository(
+        appPreferencesStore = appPreferenceStore,
+        tangemTechApi = tangemTechApi,
+        userWalletsListRepository = mockk(),
+        seedPhraseNotificationVisibilityStore = mockk(),
+        dispatchers = TestingCoroutineDispatcherProvider(),
+        walletServerBinder = walletServerBinder,
+        moshi = mockk(),
+    )
 
     private val testWalletId = UserWalletId("1234567890abcdef")
 
-    @Before
-    fun setup() {
-        tangemTechApi = mockk()
-        walletServerBinder = mockk()
-        appsFlyerStore = mockk()
-        dispatchers = TestingCoroutineDispatcherProvider()
-        repository = DefaultWalletsRepository(
-            appPreferencesStore = appPreferenceStore,
-            tangemTechApi = tangemTechApi,
-            userWalletsListRepository = mockk(),
-            seedPhraseNotificationVisibilityStore = mockk(),
-            dispatchers = dispatchers,
-            authProvider = mockk(),
-            walletServerBinder = walletServerBinder,
-            appsFlyerStore = appsFlyerStore,
-            accountsFeatureToggles = mockk(),
-            moshi = mockk(),
-        )
+    @AfterEach
+    fun tearDown() {
+        clearMocks(tangemTechApi, preferencesDataStore)
     }
 
-    @Test
-    fun `GIVEN local storage has value WHEN isNotificationsEnabled THEN should return local value`() = runTest {
-        // GIVEN
-        val expectedPreferences = """{"${testWalletId.stringValue}":true}"""
-        val preferences = mockk<Preferences>()
-        coEvery { preferencesDataStore.data } returns flowOf(preferences)
-        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns expectedPreferences
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class IsNotificationsEnabled {
 
-        // WHEN
-        val result = repository.isNotificationsEnabled(testWalletId)
+        @Test
+        fun `should return local value when local storage has value`() = runTest {
+            // Arrange
+            val expectedPreferences = """{"${testWalletId.stringValue}":true}"""
+            val preferences = mockk<Preferences>()
+            coEvery { preferencesDataStore.data } returns flowOf(preferences)
+            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns expectedPreferences
 
-        // THEN
-        assertThat(result).isTrue()
+            // Act
+            val result = repository.isNotificationsEnabled(testWalletId)
+
+            // Assert
+            assertThat(result).isTrue()
+        }
+
+        @Test
+        fun `should return false when local storage is empty`() = runTest {
+            // Arrange
+            val preferences = mockk<Preferences>()
+            coEvery { preferencesDataStore.data } returns flowOf(preferences)
+            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+
+            // Act
+            val result = repository.isNotificationsEnabled(testWalletId)
+
+            // Assert
+            assertThat(result).isFalse()
+        }
     }
 
-    @Test
-    fun `GIVEN local storage is empty WHEN isNotificationsEnabled THEN should return false`() = runTest {
-        // GIVEN
-        val preferences = mockk<Preferences>()
-        coEvery { preferencesDataStore.data } returns flowOf(preferences)
-        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class SetNotificationsEnabled {
 
-        // WHEN
-        val result = repository.isNotificationsEnabled(testWalletId)
+        @Test
+        fun `should update local storage when enabled status`() = runTest {
+            // Arrange
+            val preferences = mockk<Preferences>()
+            coEvery { preferencesDataStore.data } returns flowOf(preferences)
+            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+            coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
-        // THEN
-        assertThat(result).isFalse()
+            // Act
+            repository.setNotificationsEnabled(testWalletId, isEnabled = true)
+
+            // Assert
+            coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
+        }
+
+        @Test
+        fun `should update local storage when disabled status`() = runTest {
+            // Arrange
+            val preferences = mockk<Preferences>()
+            coEvery { preferencesDataStore.data } returns flowOf(preferences)
+            coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
+            coEvery { preferencesDataStore.updateData(any()) } returns mockk()
+
+            // Act
+            repository.setNotificationsEnabled(testWalletId, isEnabled = false)
+
+            // Assert
+            coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
+        }
     }
 
-    @Test
-    fun `GIVEN enabled status WHEN setNotificationsEnabled THEN should update local storage`() = runTest {
-        // GIVEN
-        val preferences = mockk<Preferences>()
-        coEvery { preferencesDataStore.data } returns flowOf(preferences)
-        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk()
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetWalletsInfo {
 
-        // WHEN
-        repository.setNotificationsEnabled(testWalletId, isEnabled = true)
-
-        // THEN
-        coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
-    }
-
-    @Test
-    fun `GIVEN disabled status WHEN setNotificationsEnabled THEN should update local storage`() = runTest {
-        // GIVEN
-        val preferences = mockk<Preferences>()
-        coEvery { preferencesDataStore.data } returns flowOf(preferences)
-        coEvery { preferences[PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY] } returns "{}"
-        coEvery { preferencesDataStore.updateData(any()) } returns mockk()
-
-        // WHEN
-        repository.setNotificationsEnabled(testWalletId, isEnabled = false)
-
-        // THEN
-        coVerify(exactly = 1) { preferencesDataStore.updateData(any()) }
-    }
-
-    @Test
-    fun `GIVEN API returns wallets WHEN getWalletsInfo THEN should return converted wallets and update cache if requested`() =
-        runTest {
-            // GIVEN
+        @Test
+        fun `should return converted wallets and update cache when updateCache is true`() = runTest {
+            // Arrange
             val applicationId = "test_app_id"
             val wallet1Id = "1234567890abcdef"
             val wallet2Id = "fedcba0987654321"
             val walletResponses = listOf(
-                WalletResponse(
-                    id = wallet1Id,
-                    notifyStatus = true,
-                ),
-                WalletResponse(
-                    id = wallet2Id,
-                    notifyStatus = false,
-                ),
+                WalletResponse(id = wallet1Id, notifyStatus = true),
+                WalletResponse(id = wallet2Id, notifyStatus = false),
             )
             coEvery { tangemTechApi.getWallets(applicationId) } returns ApiResponse.Success(walletResponses)
             coEvery { preferencesDataStore.updateData(any()) } returns mockk()
 
-            // WHEN
+            // Act
             val result = repository.getWalletsInfo(applicationId, updateCache = true)
 
-            // THEN
+            // Assert
             assertThat(result).hasSize(2)
             assertThat(result[0].walletId.stringValue).isEqualTo(wallet1Id)
             assertThat(result[0].isNotificationsEnabled).isTrue()
@@ -158,24 +158,20 @@ class DefaultWalletsRepositoryTest {
             coVerify(exactly = 2) { preferencesDataStore.updateData(any()) }
         }
 
-    @Test
-    fun `GIVEN API returns wallets WHEN getWalletsInfo with updateCache false THEN should return converted wallets without updating cache`() =
-        runTest {
-            // GIVEN
+        @Test
+        fun `should return converted wallets without updating cache when updateCache is false`() = runTest {
+            // Arrange
             val applicationId = "test_app_id"
             val wallet1Id = "1234567890abcdef"
             val walletResponses = listOf(
-                WalletResponse(
-                    id = wallet1Id,
-                    notifyStatus = true,
-                ),
+                WalletResponse(id = wallet1Id, notifyStatus = true),
             )
             coEvery { tangemTechApi.getWallets(applicationId) } returns ApiResponse.Success(walletResponses)
 
-            // WHEN
+            // Act
             val result = repository.getWalletsInfo(applicationId, updateCache = false)
 
-            // THEN
+            // Assert
             assertThat(result).hasSize(1)
             assertThat(result[0].walletId.stringValue).isEqualTo(wallet1Id)
             assertThat(result[0].isNotificationsEnabled).isTrue()
@@ -183,152 +179,126 @@ class DefaultWalletsRepositoryTest {
             coVerify(exactly = 1) { tangemTechApi.getWallets(applicationId) }
             coVerify(exactly = 0) { preferencesDataStore.updateData(any()) }
         }
+    }
 
-    @Test
-    fun `GIVEN user wallets and application ID WHEN associateWallets THEN should convert and send to API`() = runTest {
-        // GIVEN
-        val applicationId = "test_app_id"
-        val wallet1Id = "1234567890abcdef"
-        val wallet2Id = "fedcba0987654321"
-        val card1PublicKey = "card1_public_key"
-        val card2PublicKey = "card2_public_key"
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class AssociateWallets {
 
-        val userWallets = listOf(
-            mockk<UserWallet.Cold> {
-                every { cardsInWallet } returns setOf(card1PublicKey)
-                every { walletId } returns UserWalletId(wallet1Id)
-                every { name } returns "Wallet 1"
-            },
-            mockk<UserWallet.Cold> {
-                every { cardsInWallet } returns setOf(card2PublicKey)
-                every { walletId } returns UserWalletId(wallet2Id)
-                every { name } returns "Wallet 2"
-            },
-        )
+        @Test
+        fun `should convert and send to API V2`() = runTest {
+            // Arrange
+            val applicationId = "test_app_id"
+            val wallet1Id = "1234567890abcdef"
+            val wallet2Id = "fedcba0987654321"
 
-        val publicKeys = mapOf(
-            card1PublicKey to "public_key_1",
-            card2PublicKey to "public_key_2",
-        )
-
-        val authProvider = mockk<AuthProvider> {
-            coEvery { getCardsPublicKeys() } returns publicKeys
-        }
-
-        val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
-            every { isFeatureEnabled } returns false
-        }
-
-        repository = DefaultWalletsRepository(
-            appPreferencesStore = appPreferenceStore,
-            tangemTechApi = tangemTechApi,
-            userWalletsListRepository = mockk(),
-            seedPhraseNotificationVisibilityStore = mockk(),
-            dispatchers = dispatchers,
-            authProvider = authProvider,
-            walletServerBinder = walletServerBinder,
-            appsFlyerStore = appsFlyerStore,
-            accountsFeatureToggles = accountsFeatureToggles,
-            moshi = mockk(),
-        )
-
-        coEvery { appsFlyerStore.get() } returns null
-
-        coEvery {
-            tangemTechApi.associateApplicationIdWithWallets(
-                eq(applicationId),
-                any(),
-            )
-        } returns ApiResponse.Success(Unit)
-
-        // WHEN
-        repository.associateWallets(applicationId, userWallets)
-
-        // THEN
-        coVerify(exactly = 1) {
-            tangemTechApi.associateApplicationIdWithWallets(
-                applicationId = eq(applicationId),
-                body = match { body ->
-                    body.size == 2 &&
-                        body.any {
-                            it.walletId == wallet1Id &&
-                                it.cards!!.any { card -> card.cardPublicKey == "public_key_1" } &&
-                                it.name == "Wallet 1"
-                        } &&
-                        body.any {
-                            it.walletId == wallet2Id &&
-                                it.cards!!.any { card -> card.cardPublicKey == "public_key_2" } &&
-                                it.name == "Wallet 2"
-                        }
+            val userWallets = listOf(
+                mockk<UserWallet.Cold> {
+                    every { walletId } returns UserWalletId(wallet1Id)
+                },
+                mockk<UserWallet.Cold> {
+                    every { walletId } returns UserWalletId(wallet2Id)
                 },
             )
+
+            coEvery {
+                tangemTechApi.associateApplicationIdWithWalletsV2(eq(applicationId), any())
+            } returns ApiResponse.Success(Unit)
+
+            // Act
+            repository.associateWallets(applicationId, userWallets)
+
+            // Assert
+            coVerify(exactly = 1) {
+                tangemTechApi.associateApplicationIdWithWalletsV2(
+                    applicationId = eq(applicationId),
+                    body = match { body ->
+                        body.walletIds.size == 2 &&
+                            body.walletIds.contains(wallet1Id) &&
+                            body.walletIds.contains(wallet2Id)
+                    },
+                )
+            }
         }
     }
 
-    @Test
-    fun `GIVEN valid data WHEN activatePromoCode THEN returns Right with status and calls API`() = runTest {
-        // GIVEN
-        val walletId = UserWalletId("1234567890abcdef")
-        val promoCode = "PROMO123"
-        val address = "bc1qexampleaddress"
-        coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
-            PromocodeActivationResponse(status = "activated"),
-        )
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ActivatePromoCode {
 
-        // WHEN
-        val result = repository.activatePromoCode(
-            userWalletId = walletId,
-            promoCode = promoCode,
-            bitcoinAddress = address
-        )
-
-        // THEN
-        var right: String? = null
-        var left: ActivatePromoCodeError? = null
-        result.fold({ left = it }, { right = it })
-        assertThat(left).isNull()
-        assertThat(right).isEqualTo("activated")
-
-        coVerify(exactly = 1) {
-            tangemTechApi.activatePromoCode(
-                match { it is PromocodeActivationBody && it.promoCode == promoCode && it.address == address },
+        @Test
+        fun `should return Right with status when API returns success`() = runTest {
+            // Arrange
+            val walletId = UserWalletId("1234567890abcdef")
+            val promoCode = "PROMO123"
+            val address = "bc1qexampleaddress"
+            coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Success(
+                PromocodeActivationResponse(status = "activated"),
             )
-        }
-    }
 
-    @Test
-    fun `GIVEN NOT_FOUND error WHEN activatePromoCode THEN returns Left InvalidPromoCode`() = runTest {
-        // GIVEN
-        val walletId = UserWalletId("1234567890abcdef")
-        coEvery { tangemTechApi.activatePromoCode(any()) } returns
-            ApiResponse.Error(
+            // Act
+            val result = repository.activatePromoCode(
+                userWalletId = walletId,
+                promoCode = promoCode,
+                bitcoinAddress = address,
+            )
+
+            // Assert
+            var right: String? = null
+            var left: ActivatePromoCodeError? = null
+            result.fold({ left = it }, { right = it })
+            assertThat(left).isNull()
+            assertThat(right).isEqualTo("activated")
+
+            coVerify(exactly = 1) {
+                tangemTechApi.activatePromoCode(
+                    match<PromocodeActivationBody> { it.promoCode == promoCode && it.address == address },
+                )
+            }
+        }
+
+        @Test
+        fun `should return Left InvalidPromoCode when API returns NOT_FOUND`() = runTest {
+            // Arrange
+            val walletId = UserWalletId("1234567890abcdef")
+            @Suppress("UNCHECKED_CAST")
+            coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Error(
                 HttpException(code = HttpException.Code.NOT_FOUND, message = null, errorBody = null),
             ) as ApiResponse<PromocodeActivationResponse>
 
-        // WHEN
-        val result = repository.activatePromoCode(userWalletId = walletId, promoCode = "PROMO", bitcoinAddress = "addr")
+            // Act
+            val result = repository.activatePromoCode(
+                userWalletId = walletId,
+                promoCode = "PROMO",
+                bitcoinAddress = "addr",
+            )
 
-        // THEN
-        var error: ActivatePromoCodeError? = null
-        result.fold({ error = it }, { })
-        assertThat(error).isEqualTo(ActivatePromoCodeError.InvalidPromoCode)
-    }
+            // Assert
+            var error: ActivatePromoCodeError? = null
+            result.fold({ error = it }, { })
+            assertThat(error).isEqualTo(ActivatePromoCodeError.InvalidPromoCode)
+        }
 
-    @Test
-    fun `GIVEN CONFLICT error WHEN activatePromoCode THEN returns Left PromocodeAlreadyUsed`() = runTest {
-        // GIVEN
-        val walletId = UserWalletId("1234567890abcdef")
-        coEvery { tangemTechApi.activatePromoCode(any()) } returns
-            ApiResponse.Error(
+        @Test
+        fun `should return Left PromocodeAlreadyUsed when API returns CONFLICT`() = runTest {
+            // Arrange
+            val walletId = UserWalletId("1234567890abcdef")
+            @Suppress("UNCHECKED_CAST")
+            coEvery { tangemTechApi.activatePromoCode(any()) } returns ApiResponse.Error(
                 HttpException(code = HttpException.Code.CONFLICT, message = null, errorBody = null),
             ) as ApiResponse<PromocodeActivationResponse>
 
-        // WHEN
-        val result = repository.activatePromoCode(userWalletId = walletId, promoCode = "PROMO", bitcoinAddress = "addr")
+            // Act
+            val result = repository.activatePromoCode(
+                userWalletId = walletId,
+                promoCode = "PROMO",
+                bitcoinAddress = "addr",
+            )
 
-        // THEN
-        var error: ActivatePromoCodeError? = null
-        result.fold({ error = it }, { })
-        assertThat(error).isEqualTo(ActivatePromoCodeError.PromocodeAlreadyUsed)
+            // Assert
+            var error: ActivatePromoCodeError? = null
+            result.fold({ error = it }, { })
+            assertThat(error).isEqualTo(ActivatePromoCodeError.PromocodeAlreadyUsed)
+        }
     }
 }

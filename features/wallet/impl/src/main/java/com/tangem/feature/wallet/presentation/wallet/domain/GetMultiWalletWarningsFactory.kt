@@ -11,7 +11,6 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.CheckHotWalletUpgradeBannerUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
@@ -49,10 +48,10 @@ import kotlinx.coroutines.flow.map
 
 import javax.inject.Inject
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
-    private val tokenListStore: MultiWalletTokenListStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
@@ -71,30 +70,15 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        val accountStatusList by lazy {
+        val accountStatusListFlow by lazy {
             val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
             accountDependencies.singleAccountStatusListSupplier(params)
                 .map { it.totalFiatBalance to it.flattenCurrencies() }
                 .map { Lce.Content(it) }
         }
 
-        fun tokenListFlow(): LceFlow<TokenListError, Pair<TotalFiatBalance, List<CryptoCurrencyStatus>>> {
-            return if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
-                accountStatusList
-            } else {
-                runCatching { tokenListStore.getOrThrow(userWallet.walletId) }
-                    .map { result -> result.map { lce -> lce.map { it.totalFiatBalance to it.flattenCurrencies() } } }
-                    .getOrNull()
-                    // in case of runtime change ft in tester menu
-                    ?: accountStatusList
-            }
-        }
-
-        // val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
-        // val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
         return combine(
-            // todo account just use it, after delete accountsFeatureToggles
-            // accountStatusListFlow,
+            accountStatusListFlow,
             isReadyToShowRateAppUseCase().distinctUntilChanged(),
             isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
@@ -110,7 +94,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
                 .distinctUntilChanged(),
         ) { array -> array }
-            .combine(tokenListFlow()) { array, any: Any? -> arrayOf(any).plus(elements = array) }
             .map { array ->
                 val lceTokens = array[0] as Lce<TokenListError, Pair<TotalFiatBalance, List<CryptoCurrencyStatus>>>
                 val totalFiatBalance = lceTokens.map { it.first }
@@ -149,9 +132,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                     addYieldPromoNotification(clickIntents, shouldShowYieldPromo)
 
-                    addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
+                    addInformationalNotifications(
+                        userWallet = userWallet,
+                        cardTypesResolver = cardTypesResolver,
+                        flattenCurrencies = flattenCurrencies,
+                        clickIntents = clickIntents,
+                    )
 
-                    addWarningNotifications(cardTypesResolver, flattenCurrencies, isNeedToBackup, clickIntents)
+                    addWarningNotifications(
+                        cardTypesResolver = cardTypesResolver,
+                        flattenCurrencies = flattenCurrencies,
+                        isNeedToBackup = isNeedToBackup,
+                        clickIntents = clickIntents,
+                    )
 
                     addPushReminderNotification(
                         clickIntents = clickIntents,
