@@ -30,11 +30,6 @@ internal interface WalletConnectModelModule {
 
     @Binds
     @IntoMap
-    @ClassKey(WcSelectWalletModel::class)
-    fun bindWcSelectWalletModel(model: WcSelectWalletModel): Model
-
-    @Binds
-    @IntoMap
     @ClassKey(WcSelectNetworksModel::class)
     fun bindWcSelectNetworksModel(model: WcSelectNetworksModel): Model
 
