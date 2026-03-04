@@ -4,7 +4,6 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
@@ -44,7 +43,6 @@ internal object TokensDataModule {
         expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-        tokensSaver: UserTokensSaver,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     ): CurrenciesRepository {
@@ -58,7 +56,6 @@ internal object TokensDataModule {
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-            userTokensSaver = tokensSaver,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         )
