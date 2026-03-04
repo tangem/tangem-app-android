@@ -6,8 +6,6 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseFactory
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.managetokens.utils.TokenAddressesConverter
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -26,7 +24,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -35,10 +32,8 @@ internal class DefaultCustomTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val userTokensResponseStore: UserTokensResponseStore,
-    private val walletManagersFacade: WalletManagersFacade,
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val userTokensSaver: UserTokensSaver,
     private val networkFactory: NetworkFactory,
 ) : CustomTokensRepository {
 
@@ -48,7 +43,6 @@ internal class DefaultCustomTokensRepository(
     )
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
-    private val userTokensResponseFactory = UserTokensResponseFactory()
     private val tokenAddressConverter = TokenAddressesConverter()
 
     override suspend fun validateContractAddress(contractAddress: String, networkId: Network.ID): Boolean =
@@ -212,41 +206,6 @@ internal class DefaultCustomTokensRepository(
             contractAddress = tokenAddress,
         )
     }
-
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    override suspend fun removeCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom) =
-        withContext(dispatchers.io) {
-            val cryptoCurrency = when (currency) {
-                is ManagedCryptoCurrency.Custom.Coin -> createCoin(
-                    userWalletId = userWalletId,
-                    networkId = currency.network.id,
-                    derivationPath = currency.network.derivationPath,
-                )
-                is ManagedCryptoCurrency.Custom.Token -> cryptoCurrencyFactory.createToken(
-                    network = currency.network,
-                    rawId = currency.currencyId.rawCurrencyId,
-                    name = currency.name,
-                    symbol = currency.symbol,
-                    decimals = currency.decimals,
-                    contractAddress = currency.contractAddress,
-                )
-            }
-            val storedCurrencies = userTokensResponseStore.getSyncOrNull(userWalletId)
-
-            requireNotNull(storedCurrencies) {
-                "User tokens not found for user wallet [$userWalletId] while removing currency"
-            }
-
-            val token = userTokensResponseFactory.createResponseToken(currency = cryptoCurrency, accountId = null)
-            userTokensSaver.storeAndPush(
-                userWalletId = userWalletId,
-                response = storedCurrencies.copy(tokens = storedCurrencies.tokens.filterNot { it == token }),
-            )
-            when (cryptoCurrency) {
-                is CryptoCurrency.Coin -> walletManagersFacade.remove(userWalletId, setOf(cryptoCurrency.network))
-                is CryptoCurrency.Token -> walletManagersFacade.removeTokens(userWalletId, setOf(cryptoCurrency))
-            }
-        }
 
     override suspend fun convertToCryptoCurrency(
         userWalletId: UserWalletId,
