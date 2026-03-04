@@ -63,7 +63,7 @@ fun TangemTopBar(
         },
         endContent = if (endActions.isNotEmpty()) {
             {
-                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5)) {
                     endActions.forEach { action ->
                         TangemTopBarActionContent(action)
                     }
@@ -225,7 +225,7 @@ private fun TangemTopBar_Preview(@PreviewParameter(PreviewProvider::class) param
             startContent = params.startActionUM?.let { { TangemTopBarActionContent(it) } },
             endContent = if (params.endActions.isNotEmpty()) {
                 {
-                    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5)) {
                         params.endActions.forEach { action ->
                             TangemTopBarActionContent(action)
                         }
