@@ -300,6 +300,9 @@ include(":features:token-recieve:impl")
 include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
 
+include(":features:approval:api")
+include(":features:approval:impl")
+
 include(":features:feed:api")
 include(":features:feed:impl")
 // endregion Feature modules
@@ -349,6 +352,7 @@ include(":domain:manage-tokens")
 include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
+include(":domain:offramp")
 include(":domain:promo")
 include(":domain:promo:models")
 include(":domain:nft")
