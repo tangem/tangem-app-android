@@ -326,7 +326,10 @@ class TangemColors2 internal constructor(
     class Border internal constructor(
         val neutral: Neutral,
         val status: Status,
+        walletIcon: Color,
     ) {
+        var walletIcon by mutableStateOf(walletIcon)
+            private set
 
         @Stable
         class Neutral internal constructor(
@@ -367,6 +370,7 @@ class TangemColors2 internal constructor(
         fun update(other: Border) {
             neutral.update(other.neutral)
             status.update(other.status)
+            walletIcon = other.walletIcon
         }
     }
 
