@@ -49,7 +49,7 @@ internal class WcSolanaNetwork(
         val wallet = session.wallet
         val account = session.account
         val chainId = request.chainId.orEmpty()
-        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet, account)
+        suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, account)
         suspend fun anyAddress() = anyExistNetwork()
             ?.let { network -> networksConverter.getAddressForWC(wallet.walletId, network).orEmpty() }
             .orEmpty()
@@ -64,7 +64,7 @@ internal class WcSolanaNetwork(
             ?: anyExistNetwork()
             ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
-        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet, account).size
+        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, account).size
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
@@ -86,7 +86,7 @@ internal class WcSolanaNetwork(
         override val namespaceKey: NamespaceKey = NamespaceKey("solana")
 
         override fun toBlockchain(chainId: CAIP2): Blockchain? {
-            val isMainNet = MAINNET_CHAIN_ID.any { it.lowercase() == chainId.reference.lowercase() }
+            val isMainNet = MAINNET_CHAIN_ID.any { it.equals(chainId.reference, ignoreCase = true) }
             if (chainId.namespace != namespaceKey.key) return null
             return when {
                 isMainNet -> Blockchain.Solana
