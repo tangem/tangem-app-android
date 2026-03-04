@@ -22,6 +22,7 @@ class TangemColors2 internal constructor(
     val skeleton: Skeleton,
     val markers: Markers,
     val tabs: Tabs,
+    val contextMenu: ContextMenu,
 ) {
 
     @Stable
@@ -332,15 +333,23 @@ class TangemColors2 internal constructor(
         class Neutral internal constructor(
             primary: Color,
             secondary: Color,
+            tertiary: Color,
+            quaternary: Color,
         ) {
             var primary by mutableStateOf(primary)
                 private set
             var secondary by mutableStateOf(secondary)
                 private set
+            var tertiary by mutableStateOf(tertiary)
+                private set
+            var quaternary by mutableStateOf(quaternary)
+                private set
 
             fun update(other: Neutral) {
                 primary = other.primary
                 secondary = other.secondary
+                tertiary = other.tertiary
+                quaternary = other.quaternary
             }
         }
 
@@ -612,6 +621,18 @@ class TangemColors2 internal constructor(
         }
     }
 
+    @Stable
+    class ContextMenu internal constructor(
+        background: Color,
+    ) {
+        var background by mutableStateOf(background)
+            private set
+
+        fun update(other: ContextMenu) {
+            background = other.background
+        }
+    }
+
     fun update(other: TangemColors2) {
         text.update(other.text)
         graphic.update(other.graphic)
@@ -625,5 +646,6 @@ class TangemColors2 internal constructor(
         skeleton.update(other.skeleton)
         markers.update(other.markers)
         tabs.update(other.tabs)
+        contextMenu.update(other.contextMenu)
     }
 }
