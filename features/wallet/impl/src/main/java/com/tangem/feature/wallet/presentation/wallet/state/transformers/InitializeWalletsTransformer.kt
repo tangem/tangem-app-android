@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -22,12 +24,14 @@ internal class InitializeWalletsTransformer(
     private val wallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+            getWalletIconUseCase = getWalletIconUseCase,
         )
     }
 
@@ -111,6 +115,8 @@ internal class InitializeWalletsTransformer(
             walletsBalanceUM = WalletBalanceUM.Loading(
                 id = walletId,
                 name = name,
+                deviceIcon = getWalletIconUseCase.invoke(userWallet = this)
+                    .let { WalletIconUMConverter().convert(it) },
             ),
             buttons = createWalletActions(userWallet = this),
             type = when (this) {
