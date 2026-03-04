@@ -269,7 +269,7 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
     PreviewParameterProvider<CustomTokenSelectorComponent> {
 
     private val derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0")
-    private val mode: AddCustomTokenMode get() = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321"))
+    private val mode: AddCustomTokenMode get() = AddCustomTokenMode(UserWalletId(stringValue = "321"))
 
     override val values: Sequence<CustomTokenSelectorComponent>
         get() = sequenceOf(

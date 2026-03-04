@@ -5,7 +5,6 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -13,14 +12,13 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class MercuryoTopUpRepository @Inject constructor(
-    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
     private val dispatchersProvider: CoroutineDispatcherProvider,
 ) : LegacyTopUpRepository {
 
     override suspend fun getTopUpUrl(cryptoCurrency: CryptoCurrency, walletAddress: String): String =
         withContext(dispatchersProvider.default) {
             val blockchain = cryptoCurrency.network.toBlockchain()
-            val environmentConfig = environmentConfigStorage.getConfigSync()
 
             val builder = Uri.Builder()
                 .scheme(LegacyTopUpRepository.SCHEME)
