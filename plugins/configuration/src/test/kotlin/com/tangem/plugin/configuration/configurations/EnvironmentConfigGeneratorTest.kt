@@ -211,6 +211,32 @@ class EnvironmentConfigGeneratorTest {
     }
 
     @Test
+    fun `generate preserves camelCase object names without separators`() {
+        // Arrange - object names like "AppsFlyer" should stay as "AppsFlyer", not become "Appsflyer"
+        val json = """
+            {
+                "AppsFlyer": {
+                    "DevKey": "key123"
+                },
+                "GetBlockAccessTokens": {
+                    "ethereum": {
+                        "jsonRpc": "token"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val generatedCode = generateAndReadOutput(json)
+
+        // Assert - object names preserved, property names have first letter lowercased
+        assertThat(generatedCode).contains("object AppsFlyer {")
+        assertThat(generatedCode).contains("""const val devKey: String = "key123"""")
+        assertThat(generatedCode).contains("object GetBlockAccessTokens {")
+        assertThat(generatedCode).contains("object Ethereum {")
+    }
+
+    @Test
     fun `generate converts dash-separated names to PascalCase`() {
         // Arrange
         val json = """
@@ -449,6 +475,68 @@ class EnvironmentConfigGeneratorTest {
 
         // Deeply nested object
         assertThat(generatedCode).contains("object QuickNodeSolanaCredentials {")
+    }
+
+    @Test
+    fun `generate converts dot-separated object names to PascalCase`() {
+        // Arrange - testing the customer.io case that caused the original build failure
+        val json = """
+            {
+                "customer.io": {
+                    "TrackSiteID": "site-id-123",
+                    "TrackApiKey": "api-key-456"
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val generatedCode = generateAndReadOutput(json)
+
+        // Assert
+        assertThat(generatedCode).contains("object CustomerIo {")
+        // Property names have first letter lowercased (Kotlin convention)
+        assertThat(generatedCode).contains("""const val trackSiteID: String = "site-id-123"""")
+        assertThat(generatedCode).contains("""const val trackApiKey: String = "api-key-456"""")
+    }
+
+    @Test
+    fun `generate converts dot-separated property names to camelCase`() {
+        // Arrange - testing property names with dots (not nested objects)
+        val json = """
+            {
+                "api.key": "test-key",
+                "service.url": "https://example.com"
+            }
+        """.trimIndent()
+
+        // Act
+        val generatedCode = generateAndReadOutput(json)
+
+        // Assert - dots in property names are converted to camelCase
+        assertThat(generatedCode).contains("""const val apiKey: String = "test-key"""")
+        assertThat(generatedCode).contains("""const val serviceUrl: String = "https://example.com"""")
+    }
+
+    @Test
+    fun `generate preserves valid property names without transformation`() {
+        // Arrange - valid Kotlin identifiers should not be transformed
+        val json = """
+            {
+                "apiKey": "key1",
+                "moonPayApiKey": "moon-pay-key",
+                "isEnabled": true,
+                "maxRetryCount": 5
+            }
+        """.trimIndent()
+
+        // Act
+        val generatedCode = generateAndReadOutput(json)
+
+        // Assert - original names preserved exactly
+        assertThat(generatedCode).contains("""const val apiKey: String = "key1"""")
+        assertThat(generatedCode).contains("""const val moonPayApiKey: String = "moon-pay-key"""")
+        assertThat(generatedCode).contains("const val isEnabled: Boolean = true")
+        assertThat(generatedCode).contains("const val maxRetryCount: Long = 5")
     }
 
     private fun generateAndReadOutput(jsonContent: String): String {
