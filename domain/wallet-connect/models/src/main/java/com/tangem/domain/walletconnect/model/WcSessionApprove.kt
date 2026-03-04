@@ -6,6 +6,6 @@ import com.tangem.domain.models.wallet.UserWallet
 
 data class WcSessionApprove(
     val wallet: UserWallet,
-    val account: Account?,
+    val account: Account,
     val network: List<Network>,
 )
