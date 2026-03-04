@@ -14,6 +14,7 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.scenarios.SwapEntryPoint
 import com.tangem.scenarios.chackUnableToCoverFeeNotification
+import com.tangem.scenarios.checkSwapWarning
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.openSwapScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -313,6 +314,266 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             }
             step("Click on 'OK' button") {
                 onDialog { okButton.performClick() }
+            }
+        }
+    }
+
+    @AllureId("2831")
+    @DisplayName("Swap: warning is not displayed, if remaining balance is equal to 0")
+    @Test
+    fun solanaRemainingBalanceEqualToZeroWarningTest() {
+        val tokenTitle = "Solana"
+        val inputAmount = "0.00168933"
+        val tokensScenarioState = "SolanaUSDC"
+        val rentAmount = "SOL 0.00089088"
+        val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+        val notificationMessage = getResourceString(
+            R.string.send_notification_invalid_amount_rent_fee,
+            rentAmount
+        )
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: $tokensScenarioState") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokensScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Invalid amount' warning is not displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkSwapWarning(
+                        title = notificationTitle,
+                        message = notificationMessage,
+                        isDisplayed = false
+                    )
+                }
+            }
+        }
+    }
+
+    @AllureId("2832")
+    @DisplayName("Swap: warning is not displayed, if remaining balance is equal to rent amount")
+    @Test
+    fun solanaRemainingBalanceEqualToRentAmountTest() {
+        val tokenTitle = "Solana"
+        val inputAmount = "0.001689338"
+        val tokensScenarioState = "SolanaUSDC"
+        val rentAmount = "SOL 0.00089088"
+        val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+        val notificationMessage = getResourceString(
+            R.string.send_notification_invalid_amount_rent_fee,
+            rentAmount
+        )
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: $tokensScenarioState") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokensScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Invalid amount' warning is not displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkSwapWarning(
+                        title = notificationTitle,
+                        message = notificationMessage,
+                        isDisplayed = false
+                    )
+                }
+
+            }
+        }
+    }
+
+    @AllureId("2833")
+    @DisplayName("Swap: warning is not displayed, if remaining balance more than rent amount")
+    @Test
+    fun solanaRemainingBalanceMoreThanRentAmountTest() {
+        val tokenTitle = "Solana"
+        val inputAmount = "0.0000941"
+        val tokensScenarioState = "SolanaUSDC"
+        val rentAmount = "SOL 0.00089088"
+        val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+        val notificationMessage = getResourceString(
+            R.string.send_notification_invalid_amount_rent_fee,
+            rentAmount
+        )
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: $tokensScenarioState") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokensScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Invalid amount' warning is not displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkSwapWarning(
+                        title = notificationTitle,
+                        message = notificationMessage,
+                        isDisplayed = false
+                    )
+                }
+            }
+        }
+    }
+
+    @AllureId("2830")
+    @DisplayName("Swap: warning is displayed, if remaining balance less than rent amount")
+    @Test
+    fun solanaRemainingBalanceLessThanRentAmountTest() {
+        val tokenTitle = "Solana"
+        val inputAmount = "0.0016941"
+        val tokensScenarioState = "SolanaUSDC"
+        val rentAmount = "SOL 0.00089088"
+        val notificationTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+        val notificationMessage = getResourceString(
+            R.string.send_notification_invalid_amount_rent_fee,
+            rentAmount
+        )
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokensScenarioState)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: $tokensScenarioState") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokensScenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenTitle'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
+            }
+            step("Assert title: '$tokenTitle' is displayed") {
+                onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Invalid amount' warning is displayed") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkSwapWarning(
+                        title = notificationTitle,
+                        message = notificationMessage
+                    )
+                }
             }
         }
     }
