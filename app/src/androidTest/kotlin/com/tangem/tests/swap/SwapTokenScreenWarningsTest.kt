@@ -88,7 +88,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
             additionalAfterSection = {
                 resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
                 resetWireMockScenarioState(QUOTES_API_SCENARIO)
-                resetWireMockScenarioState(balanceScenarioState)
+                resetWireMockScenarioState(balanceScenarioName)
             }
         ).run {
 
