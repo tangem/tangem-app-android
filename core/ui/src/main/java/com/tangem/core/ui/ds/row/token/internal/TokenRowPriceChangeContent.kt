@@ -24,6 +24,12 @@ internal fun RowScope.TokenRowPriceChangeContent(
     isFlickering: Boolean,
     isAvailable: Boolean = true,
 ) {
+    val color = when (priceChangeState.type) {
+        PriceChangeType.UP -> TangemTheme.colors2.graphic.status.accent
+        PriceChangeType.DOWN -> TangemTheme.colors2.graphic.status.warning
+        PriceChangeType.NEUTRAL -> TangemTheme.colors2.graphic.neutral.tertiary
+    }
+
     AnimatedContent(
         targetState = priceChangeState.type,
         label = "Update the price change's arrow",
@@ -39,11 +45,7 @@ internal fun RowScope.TokenRowPriceChangeContent(
                     },
                 ),
             ),
-            tint = when (animatedType) {
-                PriceChangeType.UP -> TangemTheme.colors2.graphic.status.accent
-                PriceChangeType.DOWN -> TangemTheme.colors2.graphic.status.warning
-                PriceChangeType.NEUTRAL -> TangemTheme.colors2.graphic.neutral.secondary
-            },
+            tint = color,
             contentDescription = null,
             modifier = Modifier.size(TangemTheme.dimens2.x3),
         )
@@ -61,7 +63,7 @@ internal fun RowScope.TokenRowPriceChangeContent(
             style = TangemTheme.typography2.captionSemibold12.applyBladeBrush(
                 isEnabled = isFlickering,
                 textColor = if (isAvailable) {
-                    TangemTheme.colors2.text.neutral.secondary
+                    color
                 } else {
                     TangemTheme.colors2.text.status.disabled
                 },
