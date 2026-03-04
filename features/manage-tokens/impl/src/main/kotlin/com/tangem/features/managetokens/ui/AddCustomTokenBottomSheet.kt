@@ -69,7 +69,7 @@ private fun Preview_AddCustomTokenBottomSheet(
 }
 
 private class AddCustomTokenComponentPreviewProvider : PreviewParameterProvider<AddCustomTokenComponent> {
-    private val mode: AddCustomTokenMode get() = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321"))
+    private val mode: AddCustomTokenMode get() = AddCustomTokenMode(UserWalletId(stringValue = "321"))
     override val values: Sequence<AddCustomTokenComponent>
         get() = sequenceOf(
             PreviewAddCustomTokenComponent(),

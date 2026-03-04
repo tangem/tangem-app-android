@@ -5,8 +5,7 @@ import com.tangem.core.abtests.BuildConfig
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.abtests.manager.impl.AmplitudeABTestsManager
 import com.tangem.core.abtests.manager.impl.StubABTestsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
-import com.tangem.utils.Provider
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -24,7 +23,7 @@ internal object ABTestsManagerModule {
     @Singleton
     fun provideABTestsManager(
         application: Application,
-        environmentConfigStorage: EnvironmentConfigStorage,
+        environmentConfig: EnvironmentConfig,
         dispatchers: CoroutineDispatcherProvider,
     ): ABTestsManager {
         return if (BuildConfig.AB_TESTS_ENABLED) {
@@ -32,7 +31,7 @@ internal object ABTestsManagerModule {
         } else {
             AmplitudeABTestsManager(
                 application = application,
-                apiKeyProvider = Provider { environmentConfigStorage.getConfigSync().amplitudeApiKey },
+                apiKey = environmentConfig.amplitudeApiKey,
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             )
         }

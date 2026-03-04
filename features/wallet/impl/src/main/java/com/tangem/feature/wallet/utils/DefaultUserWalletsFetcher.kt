@@ -6,7 +6,6 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCaseV2
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
@@ -20,7 +19,6 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.impl.R
@@ -39,8 +37,6 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList")
 internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     getWalletsUseCase: GetWalletsUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val getWalletTotalBalanceUseCaseV2: GetWalletTotalBalanceUseCaseV2,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -103,11 +99,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             // We should not load balances in auth mode
             flowOf(Lce.Loading(walletIds.associateWith { TotalFiatBalance.Loading }))
         } else {
-            if (accountsFeatureToggles.isFeatureEnabled) {
-                getWalletTotalBalanceUseCaseV2(userWalletIds = walletIds)
-            } else {
-                getWalletTotalBalanceUseCase(walletIds).distinctUntilChanged()
-            }
+            getWalletTotalBalanceUseCaseV2(userWalletIds = walletIds)
         }
     }
 

@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.nft.*
@@ -25,15 +24,11 @@ internal object NFTDomainModule {
     @Provides
     @Singleton
     fun providesGetNFTCollectionsUseCase(
-        currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
-        accountsFeatureToggles: AccountsFeatureToggles,
     ): GetNFTCollectionsUseCase = GetNFTCollectionsUseCase(
-        currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
         singleAccountListSupplier = singleAccountListSupplier,
-        accountsFeatureToggles = accountsFeatureToggles,
     )
 
     @Provides
