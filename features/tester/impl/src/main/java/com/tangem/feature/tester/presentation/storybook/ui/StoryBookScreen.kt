@@ -12,6 +12,7 @@ import com.tangem.feature.tester.presentation.storybook.entity.StoryBookUM
 import com.tangem.feature.tester.presentation.storybook.entity.StoryList
 import com.tangem.feature.tester.presentation.storybook.entity.TangemCheckboxStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemHeaderRowStory
+import com.tangem.feature.tester.presentation.storybook.entity.TangemContextMenuStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemSegmentedPickerStory
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
@@ -24,6 +25,7 @@ import com.tangem.feature.tester.presentation.storybook.page.message.TangemMessa
 import com.tangem.feature.tester.presentation.storybook.page.tabs.TangemSegmentedPickerStory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.TangemTokenRowStory
 import com.tangem.feature.tester.presentation.storybook.page.headerrow.TangemHeaderRowStory
+import com.tangem.feature.tester.presentation.storybook.page.contextmenu.TangemContextMenuStory
 
 @Composable
 internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) {
@@ -45,6 +47,7 @@ internal fun StoryBookScreen(state: StoryBookUM, modifier: Modifier = Modifier) 
             TangemSegmentedPickerStory -> TangemSegmentedPickerStory()
             is TangemTokenRowStory -> TangemTokenRowStory(state = storyState)
             is TangemHeaderRowStory -> TangemHeaderRowStory(state = storyState)
+            is TangemContextMenuStory -> TangemContextMenuStory(state = storyState)
         }
     }
 }
