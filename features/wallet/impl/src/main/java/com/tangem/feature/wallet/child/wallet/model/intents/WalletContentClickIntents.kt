@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions")
 internal interface WalletContentClickIntents {
 
     fun onDetailsClick()
