@@ -6,7 +6,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
@@ -20,7 +19,6 @@ import javax.inject.Inject
 
 internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
 ) {
@@ -66,7 +64,6 @@ internal class FeedEntryChildFactory @Inject constructor(
                     appComponentContext = appComponentContext,
                     params = child.params,
                     analyticsEventHandler = analyticsEventHandler,
-                    accountsFeatureToggles = accountsFeatureToggles,
                     portfolioComponentFactory = portfolioComponentFactory,
                 )
             }

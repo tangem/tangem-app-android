@@ -10,6 +10,7 @@ internal sealed interface EarnListUM {
     data object Loading : EarnListUM
     data class Content(val items: ImmutableList<EarnListItemUM>) : EarnListUM
     data class Error(val onRetryClicked: () -> Unit) : EarnListUM
+    data object Empty : EarnListUM
 }
 
 @Immutable

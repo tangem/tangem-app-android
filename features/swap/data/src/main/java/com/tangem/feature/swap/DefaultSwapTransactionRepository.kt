@@ -8,7 +8,6 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.Account
@@ -23,14 +22,12 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
 internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val singleAccountListSupplier: SingleAccountListSupplier,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     networkFactory: NetworkFactory,
 ) : SwapTransactionRepository {
@@ -110,11 +107,7 @@ internal class DefaultSwapTransactionRepository(
             flow2 = appPreferencesStore.getObjectMap<ExchangeStatusModel>(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             ),
-            flow3 = if (accountsFeatureToggles.isFeatureEnabled) {
-                singleAccountListSupplier(SingleAccountListProducer.Params(userWallet.walletId))
-            } else {
-                flowOf(null)
-            },
+            flow3 = singleAccountListSupplier(SingleAccountListProducer.Params(userWallet.walletId)),
         ) { savedTransactions, txStatuses, accountList ->
 
             val currencyToTxs = savedTransactions?.filter { savedTx ->
