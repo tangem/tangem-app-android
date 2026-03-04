@@ -24,7 +24,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -181,14 +180,12 @@ internal object WalletConnectDataModule {
     fun wcNetworksConverter(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         singleAccountSupplier: SingleAccountSupplier,
     ): WcNetworksConverter = WcNetworksConverter(
         namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         singleAccountSupplier = singleAccountSupplier,
     )
 
