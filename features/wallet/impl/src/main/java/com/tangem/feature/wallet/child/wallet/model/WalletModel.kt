@@ -27,6 +27,7 @@ import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -100,6 +101,7 @@ internal class WalletModel @Inject constructor(
     private val bindRefcodeWithWalletUseCase: BindRefcodeWithWalletUseCase,
     private val appsFlyerStore: AppsFlyerStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -520,6 +522,7 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                getWalletIconUseCase = getWalletIconUseCase,
             ),
         )
 
@@ -565,6 +568,7 @@ internal class WalletModel @Inject constructor(
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                getWalletIconUseCase = getWalletIconUseCase,
             ),
         )
     }
@@ -585,6 +589,7 @@ internal class WalletModel @Inject constructor(
                     userWallet = userWallet,
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
+                    getWalletIconUseCase = getWalletIconUseCase,
                 ),
             )
         }
@@ -598,6 +603,7 @@ internal class WalletModel @Inject constructor(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                getWalletIconUseCase = getWalletIconUseCase,
             ),
         )
 
@@ -658,6 +664,7 @@ internal class WalletModel @Inject constructor(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                getWalletIconUseCase = getWalletIconUseCase,
             ),
         )
 
