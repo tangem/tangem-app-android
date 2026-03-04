@@ -3,6 +3,7 @@ package com.tangem.tap.common.pushes
 import android.annotation.SuppressLint
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import io.customer.messagingpush.CustomerIOFirebaseMessagingService
 import timber.log.Timber
 
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
@@ -15,10 +16,14 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Timber.d("New FCM token received: $token")
+
+        CustomerIOFirebaseMessagingService.onNewToken(applicationContext, token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+
+        CustomerIOFirebaseMessagingService.onMessageReceived(applicationContext, message)
 
         val notification = message.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
