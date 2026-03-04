@@ -13,13 +13,8 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.io.File
 
@@ -67,6 +62,8 @@ internal class DefaultNetworksStatusesStore(
 
     override fun get(userWalletId: UserWalletId): Flow<Set<SimpleNetworkStatus>> {
         return runtimeStore.get().mapNotNull { it[userWalletId.stringValue] }
+            .adaptiveThrottle()
+            .conflate()
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId, network: Network): SimpleNetworkStatus? {
@@ -179,5 +176,62 @@ internal class DefaultNetworksStatusesStore(
                 this[userWalletId.stringValue] = updatedValues
             }
         }
+    }
+}
+
+@Suppress("MagicNumber")
+internal fun <T> Flow<Set<T>>.adaptiveThrottle(): Flow<Set<T>> = channelFlow {
+    var accumulator: Set<T>? = null
+    var lastEmitTime = 0L
+
+    // params that control maximum emissions that can be throttled
+    var densityLevel = 0
+    val maxDensity = 10
+
+    // params that control maximum delay and growth of delay between emissions
+    var lastDelay = 0L
+    val maxDelay = 1500L
+    val growthFactor = 250L
+
+    fun resetThrottling() {
+        lastDelay = 0L
+        densityLevel = 0
+    }
+
+    this@adaptiveThrottle.collectLatest { newSet ->
+        val previousSet: Collection<T>? = accumulator
+        accumulator = newSet
+
+        when {
+            // first value, just emit
+            previousSet == null -> resetThrottling()
+            // changed size, just emit
+            previousSet.size != newSet.size -> resetThrottling()
+
+            // apply adaptive throttling
+            else -> {
+                val networksCount = newSet.size
+                // more networks - more throttling
+                val cooldownThreshold = when {
+                    networksCount in 10..25 -> 300L
+                    networksCount > 25 -> 500L
+                    // 0..9 networks
+                    else -> 100L
+                }
+
+                val now = System.currentTimeMillis()
+                val timeSinceLastEmit = now - lastEmitTime
+                if (timeSinceLastEmit < cooldownThreshold && densityLevel < maxDensity) {
+                    lastDelay = (lastDelay + growthFactor).coerceAtMost(maximumValue = maxDelay)
+                    densityLevel += 1
+                    delay(lastDelay)
+                } else {
+                    resetThrottling()
+                }
+            }
+        }
+
+        lastEmitTime = System.currentTimeMillis()
+        channel.send(newSet)
     }
 }
