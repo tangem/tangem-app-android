@@ -18,12 +18,13 @@ import com.tangem.feature.tester.presentation.storybook.entity.StoryPageFactory
 import com.tangem.feature.tester.presentation.storybook.page.background.northernLightsStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.badge.tangemBadgeStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.buttons.buttonsStoryFactory
-import com.tangem.feature.tester.presentation.storybook.page.opportunities.opportunitiesBGStoryFactory
-import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessageStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.tangemCheckboxStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.contextmenu.tangemContextMenuStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessageStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.opportunities.opportunitiesBGStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
-import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
 
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
@@ -37,6 +38,7 @@ private fun buildStories() = listOf(
     StoryItem(title = "☑️ Checkbox", factory = tangemCheckboxStoryFactory),
     StoryItem(title = "🪙 Token Row", factory = tangemTokenRowStoryFactory),
     StoryItem(title = "📑 Header Row", factory = tangemHeaderRowStoryFactory),
+    StoryItem(title = "📋 Context Menu", factory = tangemContextMenuStoryFactory),
 )
 
 @Composable
