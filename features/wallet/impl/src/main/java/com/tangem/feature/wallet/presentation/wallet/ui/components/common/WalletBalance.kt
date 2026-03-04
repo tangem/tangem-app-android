@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
@@ -16,21 +15,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
@@ -87,19 +84,14 @@ internal fun WalletBalance(
             SpacerH(TangemTheme.dimens2.x3)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
             ) {
                 Text(
                     text = walletBalanceUM.name,
                     style = TangemTheme.typography2.bodyRegular14,
                     color = TangemTheme.colors2.text.neutral.tertiary,
                 )
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_tangem_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors2.graphic.neutral.tertiaryConstant,
-                    modifier = Modifier.size(TangemTheme.dimens2.x6),
-                )
+                TangemDeviceIcon(state = walletBalanceUM.deviceIcon)
             }
         }
         SpacerH(TangemTheme.dimens2.x2)
