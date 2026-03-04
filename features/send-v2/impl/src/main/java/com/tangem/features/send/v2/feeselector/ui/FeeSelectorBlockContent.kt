@@ -57,7 +57,6 @@ private const val READ_MORE_TAG = "READ_MORE"
 @Composable
 internal fun FeeSelectorBlockContent(
     state: FeeSelectorUM,
-    isGaslessFeatureEnabled: Boolean,
     onReadMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -80,25 +79,16 @@ internal fun FeeSelectorBlockContent(
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )
-        FeeSelectorDescription(
-            state = state,
-            isGaslessFeatureEnabled = isGaslessFeatureEnabled,
-            onReadMoreClick = onReadMoreClick,
-        )
+        FeeSelectorDescription(state = state, onReadMoreClick = onReadMoreClick)
     }
 }
 
 @Composable
-private fun FeeSelectorDescription(
-    state: FeeSelectorUM,
-    isGaslessFeatureEnabled: Boolean,
-    onReadMoreClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun FeeSelectorDescription(state: FeeSelectorUM, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         FeeSelectorStaticPart(modifier = Modifier.weight(1f), onReadMoreClick = onReadMoreClick)
         when (state) {
-            is FeeSelectorUM.Content -> FeeContent(state, isGaslessFeatureEnabled)
+            is FeeSelectorUM.Content -> FeeContent(state)
             is FeeSelectorUM.Loading -> FeeLoading()
             is FeeSelectorUM.Error -> FeeError()
         }
@@ -181,17 +171,15 @@ private fun FeeLoading() {
 }
 
 @Composable
-private fun FeeContent(state: FeeSelectorUM.Content, isGaslessFeatureEnabled: Boolean, modifier: Modifier = Modifier) {
+private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifier) {
     val fiatRate = state.feeFiatRateUM
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (isGaslessFeatureEnabled) {
-            AuditLabel(
-                state = AuditLabelUM(
-                    text = stringReference(state.selectedFeeItem.fee.amount.currencySymbol),
-                    type = AuditLabelUM.Type.General,
-                ),
-            )
-        }
+        AuditLabel(
+            state = AuditLabelUM(
+                text = stringReference(state.selectedFeeItem.fee.amount.currencySymbol),
+                type = AuditLabelUM.Type.General,
+            ),
+        )
 
         EllipsisText(
             text = if (state.feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
@@ -218,7 +206,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, isGaslessFeatureEnabled: Bo
                 .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
 
-        val isGaslessAvailable = isGaslessFeatureEnabled && state.feeExtraInfo.transactionFeeExtended != null
+        val isGaslessAvailable = state.feeExtraInfo.transactionFeeExtended != null
 
         if (!state.feeItems.isSingleItem() || isGaslessAvailable) {
             Icon(
@@ -240,7 +228,6 @@ private fun FeeSelectorBlockContent_Preview(@PreviewParameter(FeeSelectorUMProvi
     TangemThemePreview {
         FeeSelectorBlockContent(
             modifier = Modifier.fillMaxWidth(),
-            isGaslessFeatureEnabled = true,
             state = state,
             onReadMoreClick = {},
         )

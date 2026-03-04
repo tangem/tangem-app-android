@@ -17,8 +17,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -43,7 +41,6 @@ import timber.log.Timber
  *
  * @property excludedBlockchains      excluded blockchains
  * @property hotCryptoResponseStore   store of `HotCryptoResponse`
- * @property userWalletsStore         store of `UserWallet`
  * @property tangemTechApi            tangem tech api
  * @property appCurrencyResponseStore store of current app currency
  * @property dispatchers              dispatchers
@@ -59,8 +56,6 @@ internal class DefaultHotCryptoRepository(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemTechApi: TangemTechApi,
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val userTokensResponseStore: UserTokensResponseStore,
     private val walletAccountsFetcher: WalletAccountsFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -106,12 +101,8 @@ internal class DefaultHotCryptoRepository(
     private fun getWalletsWithTokensFlow(): Flow<Map<UserWallet, List<UserTokensResponse.Token>>> {
         return userWalletsListRepository.loadAndGet().flatMapLatest { userWallets ->
             val flows = userWallets.map { userWallet ->
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    walletAccountsFetcher.get(userWalletId = userWallet.walletId).map { it.toUserTokensResponse() }
-                } else {
-                    userTokensResponseStore.get(userWalletId = userWallet.walletId)
-                }
-                    .map { userWallet to it?.tokens.orEmpty() }
+                walletAccountsFetcher.get(userWalletId = userWallet.walletId).map { it.toUserTokensResponse() }
+                    .map { userWallet to it.tokens }
             }
 
             combine(flows) { it.toMap() }

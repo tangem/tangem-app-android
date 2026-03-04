@@ -7,11 +7,11 @@ import kotlinx.serialization.Serializable
 /**
  * Temporary wrapper over ID to support a gradual migration between two modes:
  *
- * - [Wallet] — legacy flow, wallet design; used when the [AccountsFeatureToggles] is disabled.
- * - [Account] — new flow, wallet/account design; used when the [AccountsFeatureToggles] is enabled.
+ * - [Wallet] — legacy flow, wallet design.
+ * - [Account] — new flow, wallet/account design.
  *
- * ⚠️ When an [Account] you must verify the current app mode with [IsAccountsModeEnabledUseCase]
- *      and then use wallet/account design
+ * ⚠️ When using an [Account], you must verify the current app mode with [IsAccountsModeEnabledUseCase],
+ *      then use the wallet/account design.
  *
  * Intended to be removed after the full migration to the new mode.
  */
