@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
@@ -16,12 +17,14 @@ internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+            getWalletIconUseCase = getWalletIconUseCase,
         )
     }
 
