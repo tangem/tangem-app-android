@@ -113,6 +113,24 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         useUnmergedTree = true
     }
 
+    fun warningTitle(title: String): KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(title)
+        useUnmergedTree = true
+    }
+
+    fun warningMessage(message: String): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(message)
+        useUnmergedTree = true
+    }
+
+    fun warningIcon(message: String): KNode = child {
+        hasTestTag(NotificationTestTags.ICON)
+        hasAnySibling(withText(message))
+        useUnmergedTree = true
+    }
+
     val refreshButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.warning_button_refresh))
