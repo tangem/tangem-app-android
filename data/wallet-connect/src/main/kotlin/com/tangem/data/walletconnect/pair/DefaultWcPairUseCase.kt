@@ -111,7 +111,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val sessionDTO = WcSessionDTO(
                 topic = "",
                 walletId = sessionForApprove.wallet.walletId,
-                accountId = sessionForApprove.account?.accountId,
+                accountId = sessionForApprove.account.accountId,
                 url = sdkVerifyContext.getDappOriginUrl(),
                 securityStatus = proposalState.dAppSession.securityStatus,
                 connectingTime = connectingTime,
@@ -195,7 +195,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
-        val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
         val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
         val verificationInfo = when {
             verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
@@ -224,7 +223,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         )
         val dAppSession = WcSessionProposal(
             dAppMetaData = appMetaData,
-            proposalNetwork = proposalNetwork,
             securityStatus = verificationInfo,
             proposalAccountNetwork = proposalAccountNetwork,
         )
