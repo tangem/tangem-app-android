@@ -1,8 +1,16 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
+import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
 /**
  * Wallet screen top bar config
  *
- * @property onDetailsClick lambda be invoked when details button is clicked
+ * @property endActions list of top bar end action buttons (e.g. QR scan, More)
  */
-internal data class WalletTopBarConfig(val onDetailsClick: () -> Unit)
+@Immutable
+internal data class WalletTopBarConfig(
+    val endActions: ImmutableList<TangemTopBarActionUM> = persistentListOf(),
+)

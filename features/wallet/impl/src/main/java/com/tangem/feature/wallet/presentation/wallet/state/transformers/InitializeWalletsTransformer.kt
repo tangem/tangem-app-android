@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.core.ui.R as CoreUiR
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -25,6 +27,7 @@ internal class InitializeWalletsTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val isMainScreenQrScanningEnabled: Boolean = false,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -60,7 +63,20 @@ internal class InitializeWalletsTransformer(
 
     private fun createTopBarConfig(): WalletTopBarConfig {
         return WalletTopBarConfig(
-            onDetailsClick = clickIntents::onDetailsClick,
+            endActions = listOfNotNull(
+                if (isMainScreenQrScanningEnabled) {
+                    TangemTopBarActionUM(
+                        iconRes = CoreUiR.drawable.ic_qrcode_scaner_24,
+                        onClick = clickIntents::onScanQrClick,
+                    )
+                } else {
+                    null
+                },
+                TangemTopBarActionUM(
+                    iconRes = CoreUiR.drawable.ic_more_default_24,
+                    onClick = clickIntents::onDetailsClick,
+                ),
+            ).toPersistentList(),
         )
     }
 
