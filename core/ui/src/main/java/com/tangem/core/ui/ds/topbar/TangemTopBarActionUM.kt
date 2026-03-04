@@ -2,6 +2,7 @@ package com.tangem.core.ui.ds.topbar
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.FloatRange
+import androidx.compose.runtime.Immutable
 
 /**
  * User model for top bar action
@@ -11,6 +12,7 @@ import androidx.annotation.FloatRange
  * @property onClick lambda be invoked when action component is clicked. If null, action will not be clickable
  * @property ghostModeProgress progress of ghost mode animation, from 0f to 1f.
  */
+@Immutable
 data class TangemTopBarActionUM(
     @param:DrawableRes val iconRes: Int,
     val isActionable: Boolean = true,
