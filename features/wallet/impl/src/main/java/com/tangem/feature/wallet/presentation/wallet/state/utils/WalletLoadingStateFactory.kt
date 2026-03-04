@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
+import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion.WALLET_TYPE
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
@@ -10,6 +11,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -52,6 +55,8 @@ internal class WalletLoadingStateFactory(
             walletsBalanceUM = WalletBalanceUM.Loading(
                 id = userWallet.walletId,
                 name = userWallet.name,
+                deviceIcon = getWalletIconUseCase.invoke(userWallet = userWallet)
+                    .let { WalletIconUMConverter().convert(it) },
             ),
             buttons = createWalletActions(userWallet),
             notifications = persistentListOf(),
