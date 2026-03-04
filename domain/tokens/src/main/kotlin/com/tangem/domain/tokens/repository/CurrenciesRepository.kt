@@ -5,7 +5,6 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import kotlinx.coroutines.flow.Flow
@@ -72,23 +71,6 @@ interface CurrenciesRepository {
     ): CryptoCurrency
 
     /**
-     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
-     *
-     * Loads cryptocurrencies if they have expired or if [refresh] is `true`.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh A boolean flag indicating whether the data should be refreshed.
-     * @return A list of [CryptoCurrency].
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use MultiWalletCryptoCurrenciesSupplier")
-    suspend fun getMultiCurrencyWalletCurrenciesSync(
-        userWalletId: UserWalletId,
-        refresh: Boolean = false,
-    ): List<CryptoCurrency>
-
-    /**
      * Get the coin for a specific network.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -100,28 +82,6 @@ interface CurrenciesRepository {
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency.Coin
-
-    /**
-     * Determines whether the tokens within a specific multi-currency user wallet are grouped.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A [Flow] emitting a boolean value indicating whether the tokens are grouped.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use SingleAccountListSupplier instead")
-    fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
-
-    /**
-     * Determines whether the tokens within a specific multi-currency user wallet are sorted by balance.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A [Flow] emitting a boolean value indicating whether the tokens are sorted by balance.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    @Deprecated("Use SingleAccountListSupplier instead")
-    fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 
     /**
      * Determines whether the currency sending is blocked by network pending transaction
@@ -152,10 +112,6 @@ interface CurrenciesRepository {
         contractAddress: String,
         networkId: String,
     ): CryptoCurrency.Token
-
-    /** Get crypto currencies by [currencyRawId] from all user wallets */
-    @Deprecated("Use MultiAccountListSupplier instead")
-    fun getAllWalletsCryptoCurrencies(currencyRawId: CryptoCurrency.RawID): Flow<Map<UserWallet, List<CryptoCurrency>>>
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
 
