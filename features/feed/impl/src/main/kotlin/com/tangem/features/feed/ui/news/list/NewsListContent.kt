@@ -12,13 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.chip.Chip
 import com.tangem.core.ui.components.chip.entity.ChipUM
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.news.list.components.NewsListLazyColumn
 import com.tangem.features.feed.ui.news.list.state.NewsListState
@@ -29,6 +31,7 @@ import kotlinx.collections.immutable.toImmutableSet
 @Composable
 internal fun NewsListContent(state: NewsListUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val lazyListState = rememberLazyListState()
 
     Column(
@@ -44,7 +47,17 @@ internal fun NewsListContent(state: NewsListUM, modifier: Modifier = Modifier) {
                 items = state.filters,
                 key = { it.id },
             ) { filter ->
-                Chip(state = filter)
+                if (isRedesignEnabled) {
+                    TangemTab(
+                        text = filter.text,
+                        isChecked = filter.isSelected,
+                        onCheckedChange = {
+                            filter.onClick()
+                        },
+                    )
+                } else {
+                    Chip(state = filter)
+                }
             }
         }
 

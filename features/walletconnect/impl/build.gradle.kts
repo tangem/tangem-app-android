@@ -30,6 +30,7 @@ dependencies {
 
     /** Domain models */
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.blockaid.models)

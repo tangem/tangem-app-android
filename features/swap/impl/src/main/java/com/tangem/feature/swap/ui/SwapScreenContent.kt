@@ -117,10 +117,6 @@ internal fun SwapScreenContent(
                 textAlign = TextAlign.Start,
             )
         }
-
-        SwapEventEffect(
-            event = state.event,
-        )
     }
 }
 
