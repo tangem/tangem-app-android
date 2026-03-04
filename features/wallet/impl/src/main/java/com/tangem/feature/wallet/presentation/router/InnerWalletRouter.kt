@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
@@ -13,7 +14,9 @@ import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
@@ -36,6 +39,9 @@ internal interface InnerWalletRouter {
 
     /** Open details screen */
     fun openDetailsScreen(selectedWalletId: UserWalletId)
+
+    /** Open manage tokens screen */
+    fun openManageTokensScreen(accountId: AccountId)
 
     /** Open onboarding screen */
     fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean = false)
@@ -77,4 +83,7 @@ internal interface InnerWalletRouter {
 
     /** Open yield supply entry screen */
     fun openYieldSupplyEntryScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
+
+    /** Open token action sheet */
+    fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>)
 }

@@ -89,12 +89,9 @@ internal class ManageTokensListManager @AssistedInject constructor(
      * @param isCollapsed   set initial display state of networks. !!! WARNING !!! Use `false` flag with cation
      */
     suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
-        val loadUserTokensFromRemote = when (mode) {
-            is ManageTokensMode.Wallet,
-            is ManageTokensMode.Account,
-            -> source == ManageTokensSource.ONBOARDING
-            ManageTokensMode.None,
-            -> false
+        val shouldLoadTokensFromRemote = when (mode) {
+            is ManageTokensMode.Account -> source == ManageTokensSource.ONBOARDING
+            ManageTokensMode.None -> false
         }
         val batchFlow = useCasesFacade.getManagedTokensUseCase(
             context = ManageTokensListBatchingContext(
@@ -102,7 +99,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 coroutineScope = this,
             ),
             // only for onboarding case, change carefully and check repository implementation
-            loadUserTokensFromRemote = loadUserTokensFromRemote,
+            loadUserTokensFromRemote = shouldLoadTokensFromRemote,
         )
 
         batchFlow.state
@@ -185,9 +182,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 }
 
                 val canEditItems = when (state.mode) {
-                    is ManageTokensMode.Account,
-                    is ManageTokensMode.Wallet,
-                    -> true
+                    is ManageTokensMode.Account -> true
                     ManageTokensMode.None -> false
                 }
                 state.copy(
@@ -210,7 +205,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
     override fun addCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
         changedCurrenciesManager.addCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = true)
+        sendSelectCurrencyAction(batchKey = batchKey, currencyId = currency.id, network = network, isSelected = true)
 
         sendSelectCurrencyAnalyticsEvent(currency, isSelected = true)
     }
@@ -218,7 +213,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
     override fun removeCurrency(batchKey: Int, currency: ManagedCryptoCurrency.Token, network: Network) {
         changedCurrenciesManager.removeCurrency(currency, network)
 
-        sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)
+        sendSelectCurrencyAction(batchKey = batchKey, currencyId = currency.id, network = network, isSelected = false)
 
         sendSelectCurrencyAnalyticsEvent(currency, isSelected = false)
     }
@@ -270,9 +265,9 @@ internal class ManageTokensListManager @AssistedInject constructor(
             network = network,
             tempAddedTokens = changedCurrenciesManager.currenciesToAdd.value,
             tempRemovedTokens = changedCurrenciesManager.currenciesToRemove.value,
-        ).getOrElse {
+        ).getOrElse { throwable ->
             Timber.e(
-                it,
+                throwable,
                 """
                     Failed to check linked tokens
                     |- Mode: $mode
@@ -281,7 +276,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
             )
 
             val message = SnackbarMessage(
-                message = it.localizedMessage
+                message = throwable.localizedMessage
                     ?.let(::stringReference)
                     ?: resourceReference(R.string.common_error),
             )
@@ -296,9 +291,9 @@ internal class ManageTokensListManager @AssistedInject constructor(
     ): CurrencyUnsupportedState? {
         return useCasesFacade.checkCurrencyUnsupportedUseCase(
             sourceNetwork = sourceNetwork,
-        ).getOrElse {
+        ).getOrElse { throwable ->
             Timber.e(
-                it,
+                throwable,
                 """
                     Failed to check currency unsupported state
                     |- Mode: $mode
@@ -307,7 +302,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
             )
 
             val message = SnackbarMessage(
-                message = it.localizedMessage
+                message = throwable.localizedMessage
                     ?.let(::stringReference)
                     ?: resourceReference(R.string.common_error),
             )
@@ -334,7 +329,12 @@ internal class ManageTokensListManager @AssistedInject constructor(
                     toRemove = currenciesToRemove.value,
                 ),
                 onSelectCurrencyNetwork = { networkId, isSelected ->
-                    selectNetwork(currencyBatch.key, currency, networkId, isSelected)
+                    selectNetwork(
+                        batchKey = currencyBatch.key,
+                        currency = currency,
+                        source = networkId,
+                        isSelected = isSelected,
+                    )
                 },
                 onLongTap = ::copyContractAddress,
             )

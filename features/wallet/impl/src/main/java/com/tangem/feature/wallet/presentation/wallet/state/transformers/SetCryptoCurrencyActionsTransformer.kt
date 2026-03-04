@@ -1,13 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
@@ -15,7 +16,7 @@ import timber.log.Timber
 internal class SetCryptoCurrencyActionsTransformer(
     private val tokenActionsState: TokenActionsState,
     private val userWallet: UserWallet,
-    private val portfolioId: PortfolioId,
+    private val accountId: AccountId,
     private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -35,6 +36,10 @@ internal class SetCryptoCurrencyActionsTransformer(
         }
     }
 
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
+    }
+
     private fun TokenActionsState.toManageButtons(): PersistentList<WalletManageButton> {
         return states
             .filterIfS2C()
@@ -46,7 +51,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
-                                    userWalletId = portfolioId.userWalletId,
+                                    accountId = accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
@@ -59,7 +64,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onReceiveClick(
-                                    portfolioId.userWalletId,
+                                    accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                 )
                             },
@@ -86,7 +91,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
-                                    userWalletId = portfolioId.userWalletId,
+                                    accountId = accountId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )

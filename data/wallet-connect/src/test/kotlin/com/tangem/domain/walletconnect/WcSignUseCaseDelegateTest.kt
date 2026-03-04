@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.sign.*
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
@@ -58,7 +59,7 @@ internal class WcSignUseCaseDelegateTest {
         session = WcSession(
             wallet = MockUserWalletFactory.create(),
             networks = setOf(),
-            account = null,
+            account = Account.CryptoPortfolio.createMainAccount(MockUserWalletFactory.create().walletId),
             securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
             connectingTime = 0L,
             sdkModel = WcSdkSession(
