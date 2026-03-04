@@ -66,7 +66,6 @@ internal class WcPairComponent(
                 else -> model.stackNavigation.pop()
             }
             is WcAppInfoRoutes.SelectNetworks,
-            is WcAppInfoRoutes.SelectWallet,
             is WcAppInfoRoutes.PortfolioSelector,
             -> model.stackNavigation.pop()
         }
@@ -98,14 +97,6 @@ internal class WcPairComponent(
                     availableNetworks = config.availableNetworks,
                     notAddedNetworks = config.notAddedNetworks,
                     enabledAvailableNetworks = config.enabledAvailableNetworks,
-                    onDismiss = ::dismiss,
-                    callback = model,
-                ),
-            )
-            is WcAppInfoRoutes.SelectWallet -> WcSelectWalletComponent(
-                appComponentContext = appComponentContext,
-                params = WcSelectWalletComponent.WcSelectWalletParams(
-                    selectedWalletId = config.selectedWalletId,
                     onDismiss = ::dismiss,
                     callback = model,
                 ),
