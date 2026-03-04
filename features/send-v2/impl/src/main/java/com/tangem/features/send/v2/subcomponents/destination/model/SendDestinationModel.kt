@@ -11,18 +11,14 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.network.CryptoCurrencyAddress
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -63,7 +59,6 @@ internal class SendDestinationModel @Inject constructor(
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
@@ -71,7 +66,6 @@ internal class SendDestinationModel @Inject constructor(
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
@@ -191,15 +185,7 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun getWalletsAndRecent() {
         combine(
-            flow = if (accountsFeatureToggles.isFeatureEnabled) {
-                getAddedAddresses()
-            } else {
-                getWalletsUseCase().conflate().map {
-                    waitForDelay(RECENT_LOAD_DELAY) {
-                        it.toAvailableWallets()
-                    }
-                }
-            },
+            flow = getAddedAddresses(),
             flow2 = getFixedTxHistoryItemsUseCase(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
@@ -224,48 +210,6 @@ internal class SendDestinationModel @Inject constructor(
                 ),
             )
         }.flowOn(dispatchers.default).launchIn(modelScope)
-    }
-
-    private suspend fun List<UserWallet>.toAvailableWallets(): List<DestinationWalletUM> {
-        return coroutineScope {
-            val cryptoCurrencyNetwork = cryptoCurrency.network
-
-            return@coroutineScope filterNot { it.isLocked }
-                .map { wallet ->
-                    async {
-                        val addresses = if (!wallet.isMultiCurrency) {
-                            getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let { cryptoCurrency ->
-                                if (cryptoCurrency.network.rawId == cryptoCurrencyNetwork.rawId) {
-                                    getNetworkAddressesUseCase.invokeSync(
-                                        userWalletId = wallet.walletId,
-                                        networkRawId = cryptoCurrency.network.id.rawId,
-                                    )
-                                } else {
-                                    null
-                                }
-                            }
-                        } else {
-                            getNetworkAddressesUseCase.invokeSync(
-                                userWalletId = wallet.walletId,
-                                networkRawId = cryptoCurrencyNetwork.id.rawId,
-                            )
-                        }
-                        wallet to addresses
-                    }
-                }.awaitAll()
-                .asSequence()
-                .mapNotNull { (wallet, addresses) ->
-                    addresses?.map { (cryptoCurrency, address) ->
-                        DestinationWalletUM(
-                            name = wallet.name,
-                            address = address,
-                            cryptoCurrency = cryptoCurrency,
-                            userWalletId = wallet.walletId,
-                        )
-                    }
-                }.flatten()
-                .toList()
-        }
     }
 
     private fun getAddedAddresses(): Flow<List<DestinationWalletUM>> {

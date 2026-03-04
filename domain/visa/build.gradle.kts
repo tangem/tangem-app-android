@@ -24,10 +24,6 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
-    implementation(projects.features.swap.domain)
-
-    /** Feature API - remove after removing [TangemPayFeatureToggles] */
-    implementation(projects.features.tangempay.details.api)
 
     /** Security */
     implementation(deps.spongecastle.core)

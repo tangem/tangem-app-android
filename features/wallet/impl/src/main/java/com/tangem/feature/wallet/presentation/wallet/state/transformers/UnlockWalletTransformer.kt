@@ -2,24 +2,29 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
 
 internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+            getWalletIconUseCase = getWalletIconUseCase,
         )
     }
 
@@ -31,6 +36,18 @@ internal class UnlockWalletTransformer(
                     if (unlockedWallet == null) state else createLoadingState(state, unlockedWallet)
                 }
                 .toImmutableList(),
+            wallets2 = prevState.wallets2
+                .map { walletUM ->
+                    val unlockedWallet = getUnlockedWallet(walletUM.walletsBalanceUM.id)
+                    if (unlockedWallet == null) {
+                        walletUM
+                    } else {
+                        createLoadingState2(
+                            walletUM = walletUM,
+                            unlockedWallet = unlockedWallet,
+                        )
+                    }
+                }.toPersistentList(),
         )
     }
 
@@ -50,6 +67,18 @@ internal class UnlockWalletTransformer(
             -> {
                 Timber.e("Impossible to unlock wallet with not locked state")
                 prevState
+            }
+        }
+    }
+
+    private fun createLoadingState2(walletUM: WalletUM, unlockedWallet: UserWallet): WalletUM {
+        return when (walletUM) {
+            is WalletUM.Locked -> walletLoadingStateFactory.create2(
+                userWallet = unlockedWallet,
+            )
+            is WalletUM.Content -> {
+                Timber.e("Impossible to unlock wallet with not locked state")
+                walletUM
             }
         }
     }

@@ -52,15 +52,6 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
-            TokenRowPromoBanner(
-                promoBannerUM = tokenRowUM.promoBannerUM,
-                modifier = Modifier
-                    .layoutId(layoutId = TangemRowLayoutId.EXTRA_TOP)
-                    .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
-                    .padding(horizontal = TangemTheme.dimens2.x3)
-                    .fillMaxWidth(),
-            )
-
             TokenRowTitle(
                 titleUM = tokenRowUM.titleUM,
                 modifier = Modifier
@@ -77,17 +68,21 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_PRICE),
             )
 
-            TokenRowEndTopContent(
+            TokenRowEndContent(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
+                textStyle = TangemTheme.typography2.bodySemibold16,
+                textColor = TangemTheme.colors2.text.neutral.primary,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
             )
 
-            TokenRowEndBottomContent(
+            TokenRowEndContent(
                 endContentUM = tokenRowUM.bottomEndContentUM,
                 isBalanceHidden = isBalanceHidden,
+                textStyle = TangemTheme.typography2.captionSemibold12,
+                textColor = TangemTheme.colors2.text.neutral.secondary,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
@@ -99,6 +94,15 @@ fun TangemTokenRow(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
+            )
+
+            TokenRowPromoBanner(
+                promoBannerUM = tokenRowUM.promoBannerUM,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.EXTRA_BOTTOM)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
+                    .padding(start = TangemTheme.dimens2.x10, bottom = TangemTheme.dimens2.x2)
+                    .fillMaxWidth(),
             )
         },
         modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
@@ -159,17 +163,21 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_PRICE),
             )
 
-            TokenRowEndTopContent(
+            TokenRowEndContent(
                 endContentUM = tokenRowUM.topEndContentUM,
                 isBalanceHidden = isBalanceHidden,
+                textStyle = TangemTheme.typography2.bodySemibold16,
+                textColor = TangemTheme.colors2.text.neutral.primary,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
             )
 
-            TokenRowEndBottomContent(
+            TokenRowEndContent(
                 endContentUM = tokenRowUM.bottomEndContentUM,
                 isBalanceHidden = isBalanceHidden,
+                textStyle = TangemTheme.typography2.captionSemibold12,
+                textColor = TangemTheme.colors2.text.neutral.secondary,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
@@ -218,7 +226,7 @@ private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = co
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TangemTokenRow_Preview(
-    @PreviewParameter(TangemTokenRowPreviewProvider::class) tokenRowUM: TangemTokenRowUM,
+    @PreviewParameter(TangemTokenRow_PreviewProvider::class) tokenRowUM: TangemTokenRowUM,
 ) {
     TangemThemePreviewRedesign {
         TangemTokenRow(
@@ -230,7 +238,8 @@ private fun TangemTokenRow_Preview(
     }
 }
 
-private class TangemTokenRowPreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
+@Suppress("ClassNaming")
+class TangemTokenRow_PreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
     collection = listOf(
         TangemTokenRowPreviewData.defaultState,
         TangemTokenRowPreviewData.defaultEllipsisState,
