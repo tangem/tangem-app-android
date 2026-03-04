@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.preview
 
 import androidx.compose.ui.text.SpanStyle
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.styledStringReference
@@ -31,6 +32,7 @@ internal object WalletBalancePreview {
             ),
             stringReference(" $"),
         ),
+        deviceIcon = DeviceIconUM.Stub(cardsCount = 3),
         isBalanceFlickering = false,
         isZeroBalance = false,
     )
@@ -38,10 +40,12 @@ internal object WalletBalancePreview {
     val loading: WalletBalanceUM.Loading = WalletBalanceUM.Loading(
         id = UserWalletId("1"),
         name = "My Wallet",
+        deviceIcon = DeviceIconUM.Mobile,
     )
 
     val error: WalletBalanceUM.Error = WalletBalanceUM.Error(
         id = UserWalletId("2"),
         name = "My Wallet",
+        deviceIcon = DeviceIconUM.Stub(cardsCount = 3),
     )
 }
