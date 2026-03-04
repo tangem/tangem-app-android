@@ -22,6 +22,7 @@ internal class InitializeQrScanningStateTransformer(
         val message = when (source) {
             SourceType.SEND -> network?.let { resourceReference(R.string.send_qrcode_scan_info, wrappedList(it)) }
             SourceType.WALLET_CONNECT -> resourceReference(R.string.wc_qr_scan_hint)
+            SourceType.MAIN_SCREEN -> resourceReference(R.string.main_qr_scan_hint)
         }
 
         return QrScanningState(
@@ -42,6 +43,10 @@ internal class InitializeQrScanningStateTransformer(
             )
             SourceType.WALLET_CONNECT -> TopBarConfig(
                 title = resourceReference(R.string.wc_new_connection),
+                startIcon = R.drawable.ic_close_24,
+            )
+            SourceType.MAIN_SCREEN -> TopBarConfig(
+                title = null,
                 startIcon = R.drawable.ic_close_24,
             )
         }
