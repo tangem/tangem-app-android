@@ -44,3 +44,8 @@ internal data class TangemTokenRowStory(
     val isBalanceHidden: Boolean,
     val onBalanceHiddenToggle: () -> Unit,
 ) : StoryBookPage
+
+internal data class TangemHeaderRowStory(
+    val isBalanceHidden: Boolean,
+    val onBalanceHiddenToggle: () -> Unit,
+) : StoryBookPage
