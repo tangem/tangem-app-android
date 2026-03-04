@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resourceReference
@@ -34,7 +35,7 @@ internal object WalletScreenPreviewData {
             text = stringReference("0,12345678 BTC"),
         ),
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
-        tailUM = TangemTokenRowUM.TailUM.Empty,
+        tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
         onItemLongClick = {},
     )
