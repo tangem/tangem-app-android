@@ -15,6 +15,7 @@ import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -73,7 +74,7 @@ internal class DefaultWcPairUseCaseTest {
         get() = WcSessionApprove(
             wallet = MockUserWalletFactory.create(),
             network = listOf(),
-            account = null,
+            account = Account.CryptoPortfolio.createMainAccount(MockUserWalletFactory.create().walletId),
         )
 
     private val sdkApprove: Wallet.Params.SessionApprove
@@ -106,7 +107,7 @@ internal class DefaultWcPairUseCaseTest {
             networks = setOf(),
             connectingTime = null,
             showWalletInfo = false,
-            account = null,
+            account = Account.CryptoPortfolio.createMainAccount(MockUserWalletFactory.create().walletId),
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
@@ -120,7 +121,6 @@ internal class DefaultWcPairUseCaseTest {
 
     @Before
     fun setup() {
-        coEvery { associateNetworksDelegate.associate(sdkProposal) } returns mapOf()
         coEvery { associateNetworksDelegate.associateAccounts(sdkProposal) } returns mapOf()
         coEvery {
             caipNamespaceDelegate.associate(
@@ -254,7 +254,6 @@ internal class DefaultWcPairUseCaseTest {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
-                associateNetworksDelegate.associate(sdkProposal)
                 blockAidVerifier.verifyDApp(DAppData(sdkVerifyContext.origin))
             }
             assert(awaitItem() is WcPairState.Proposal)
