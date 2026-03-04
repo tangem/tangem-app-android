@@ -82,9 +82,11 @@ internal interface WalletContentClickIntents {
     fun onDisposeExpressStatus()
 
     fun onNFTClick(userWallet: UserWallet)
+
+    fun onScanQrClick()
 }
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 @ModelScoped
 internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -368,5 +370,9 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
 
         router.openNFT(userWallet)
+    }
+
+    override fun onScanQrClick() {
+        router.openQrScanner()
     }
 }
