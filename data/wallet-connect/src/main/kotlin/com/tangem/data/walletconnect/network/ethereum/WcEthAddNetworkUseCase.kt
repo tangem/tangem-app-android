@@ -131,12 +131,9 @@ internal class WcEthAddSwitchCommonDelegate @AssistedInject constructor(
         val caip2 = hexChainIdToCAIP2(hexChainId)
             ?: return HandleMethodError.UnknownError("Failed to parse CAIP2").left()
         val generalNetwork = networksConverter.createNetwork(caip2.raw, wallet)
-        if (generalNetwork == null) {
-            return HandleMethodError.TangemUnsupportedNetwork(caip2.raw).left()
-        }
+            ?: return HandleMethodError.TangemUnsupportedNetwork(caip2.raw).left()
         val addedNetwork = networksConverter.mainOrAnyWalletNetworkForRequest(
             rawChainId = caip2.raw,
-            wallet = wallet,
             account = context.session.account,
         )
         if (addedNetwork == null) {
