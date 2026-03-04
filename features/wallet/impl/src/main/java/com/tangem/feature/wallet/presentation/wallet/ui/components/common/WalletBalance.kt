@@ -45,6 +45,7 @@ import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
+import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
 private const val MIN_SCALE = 0.75f
@@ -135,7 +136,19 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
                     ),
                 )
             }
-            is WalletBalanceUM.Error,
+            is WalletBalanceUM.Error -> {
+                Text(
+                    text = StringsSigns.DASH_SIGN,
+                    style = TangemTheme.typography2.titleRegular44,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
+                        maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
+                    ),
+                )
+            }
             is WalletBalanceUM.Loading,
             -> {
                 TextShimmer(
