@@ -55,5 +55,9 @@
     {
         "name": "MULTI_ADDRESS_UTXO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "MAIN_SCREEN_QR_SCANNING_ENABLED",
+        "version": "undefined"
     }
 ]
