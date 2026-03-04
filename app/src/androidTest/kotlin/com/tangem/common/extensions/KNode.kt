@@ -18,3 +18,12 @@ fun KNode.assertTextContainsSafe(
     )
 }
 
+fun KNode.isDisplayedSafely(): Boolean {
+    return try {
+        assertIsDisplayed()
+        true
+    } catch (_: AssertionError) {
+        false
+    }
+}
+
