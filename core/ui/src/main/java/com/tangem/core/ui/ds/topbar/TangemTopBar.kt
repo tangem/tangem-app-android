@@ -26,6 +26,8 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * A top bar composable that displays a title and optional start and end icons.
@@ -34,8 +36,8 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param title                 The title text to be displayed in the center of the top bar.
  * @param modifier              Modifier to be applied to the top bar.
  * @param subtitle              Optional subtitle text to be displayed below the title.
- * @param startActionUM         Optional action data for the start action icon.
- * @param endActionUM           Optional action data for the end action icon.
+ * @param startAction         Optional action data for the start action icon.
+ * @param endActions            List of end action icons to display on the right side.
  * @param titleIconRes          Optional drawable resource ID for the icon to be displayed next to the title.
  *
 [REDACTED_AUTHOR]
@@ -45,8 +47,8 @@ fun TangemTopBar(
     modifier: Modifier = Modifier,
     title: TextReference? = null,
     subtitle: TextReference? = null,
-    startActionUM: TangemTopBarActionUM? = null,
-    endActionUM: TangemTopBarActionUM? = null,
+    startAction: TangemTopBarActionUM? = null,
+    endActions: ImmutableList<TangemTopBarActionUM> = persistentListOf(),
     @DrawableRes titleIconRes: Int? = null,
 ) {
     TangemTopBar(
@@ -54,13 +56,19 @@ fun TangemTopBar(
         subtitle = subtitle,
         titleIconRes = titleIconRes,
         modifier = modifier,
-        startContent = if (startActionUM != null) {
-            { TangemTopBarActionContent(startActionUM) }
+        startContent = if (startAction != null) {
+            { TangemTopBarActionContent(startAction) }
         } else {
             null
         },
-        endContent = if (endActionUM != null) {
-            { TangemTopBarActionContent(endActionUM) }
+        endContent = if (endActions.isNotEmpty()) {
+            {
+                Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+                    endActions.forEach { action ->
+                        TangemTopBarActionContent(action)
+                    }
+                }
+            }
         } else {
             null
         },
@@ -215,7 +223,17 @@ private fun TangemTopBar_Preview(@PreviewParameter(PreviewProvider::class) param
             titleIconRes = params.titleIconRes,
             modifier = Modifier.background(TangemTheme.colors2.surface.level1),
             startContent = params.startActionUM?.let { { TangemTopBarActionContent(it) } },
-            endContent = params.endActionUM?.let { { TangemTopBarActionContent(it) } },
+            endContent = if (params.endActions.isNotEmpty()) {
+                {
+                    Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1)) {
+                        params.endActions.forEach { action ->
+                            TangemTopBarActionContent(action)
+                        }
+                    }
+                }
+            } else {
+                null
+            },
         )
     }
 }
@@ -225,7 +243,7 @@ private class TangemTopBarPreviewData(
     val subtitle: TextReference? = null,
     val titleIconRes: Int? = null,
     val startActionUM: TangemTopBarActionUM? = null,
-    val endActionUM: TangemTopBarActionUM? = null,
+    val endActions: ImmutableList<TangemTopBarActionUM> = persistentListOf(),
 )
 
 private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData> {
@@ -238,11 +256,11 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     onClick = {},
                     isActionable = false,
                 ),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = false,
-                ),
+                )),
             ),
             TangemTopBarPreviewData(
                 title = stringReference("Title"),
@@ -253,12 +271,12 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     isActionable = true,
                     ghostModeProgress = 1f,
                 ),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = true,
                     ghostModeProgress = 1f,
-                ),
+                )),
             ),
             TangemTopBarPreviewData(
                 title = stringReference("Title"),
@@ -269,12 +287,12 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     onClick = {},
                     isActionable = false,
                 ),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = true,
                     ghostModeProgress = 1f,
-                ),
+                )),
             ),
             TangemTopBarPreviewData(
                 subtitle = stringReference("Subtitle"),
@@ -284,19 +302,19 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     onClick = {},
                     isActionable = true,
                 ),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = false,
-                ),
+                )),
             ),
             TangemTopBarPreviewData(
                 title = stringReference("Title"),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = false,
-                ),
+                )),
             ),
             TangemTopBarPreviewData(
                 title = stringReference("Title"),
@@ -335,11 +353,11 @@ private class PreviewProvider : PreviewParameterProvider<TangemTopBarPreviewData
                     onClick = {},
                     isActionable = true,
                 ),
-                endActionUM = TangemTopBarActionUM(
+                endActions = persistentListOf(TangemTopBarActionUM(
                     iconRes = R.drawable.ic_more_default_24,
                     onClick = {},
                     isActionable = false,
-                ),
+                )),
             ),
         )
 }
