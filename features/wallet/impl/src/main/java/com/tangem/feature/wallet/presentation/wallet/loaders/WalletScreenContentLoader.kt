@@ -4,7 +4,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.newSingleThreadContext
@@ -14,9 +13,8 @@ import javax.inject.Inject
 /**
  * Base wallet screen content loader. Use it to load content by [UserWallet].
  *
- * @property factory     factory that creates loader
- * @property storage     storage that save loader's jobs
- * @property dispatchers coroutine dispatchers provider
+ * @property factory factory that creates loader
+ * @property storage storage that save loader's jobs
  *
 [REDACTED_AUTHOR]
  */
@@ -33,25 +31,19 @@ internal class WalletScreenContentLoader @Inject constructor(
      * Load content by [UserWallet]
      *
      * @param userWallet     user wallet
-     * @param clickIntents   click intents
      * @param isRefresh      flag that determinate if content must load again
      * @param coroutineScope coroutine scope
      */
-    fun load(
-        userWallet: UserWallet,
-        clickIntents: WalletClickIntents,
-        isRefresh: Boolean = false,
-        coroutineScope: CoroutineScope,
-    ) {
+    fun load(userWallet: UserWallet, isRefresh: Boolean = false, coroutineScope: CoroutineScope) {
         if (userWallet.isLocked) return
 
         val id = userWallet.walletId
         if (!storage.contains(id)) {
-            loadInternal(userWallet, clickIntents, coroutineScope, isRefresh)
+            loadInternal(userWallet, coroutineScope, isRefresh)
         } else {
             if (isRefresh) {
                 storage.remove(id)
-                loadInternal(userWallet, clickIntents, coroutineScope, isRefresh = true)
+                loadInternal(userWallet, coroutineScope, isRefresh = true)
             } else {
                 Timber.d("$id content loading has already started")
             }
@@ -70,15 +62,9 @@ internal class WalletScreenContentLoader @Inject constructor(
         singleBackgroundDispatcher.close()
     }
 
-    private fun loadInternal(
-        userWallet: UserWallet,
-        clickIntents: WalletClickIntents,
-        coroutineScope: CoroutineScope,
-        isRefresh: Boolean,
-    ) {
+    private fun loadInternal(userWallet: UserWallet, coroutineScope: CoroutineScope, isRefresh: Boolean) {
         val loader = factory.create(
             userWallet = userWallet,
-            clickIntents = clickIntents,
             isRefresh = isRefresh,
         )
 

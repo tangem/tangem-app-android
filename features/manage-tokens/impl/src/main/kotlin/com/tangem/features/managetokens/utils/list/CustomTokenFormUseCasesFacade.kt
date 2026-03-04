@@ -7,59 +7,38 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import timber.log.Timber
 
-@Suppress("LongParameterList")
 internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     @Assisted private val userWalletId: UserWalletId,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
-    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            either {
-                val accountId = getAccountId(currency)
+        return either {
+            val accountId = getAccountId(currency)
 
-                manageCryptoCurrenciesUseCase(
-                    accountId = accountId,
-                    add = currency,
-                    skipDerivationErrors = false,
-                ).bind()
-            }
-        } else {
-            addCryptoCurrenciesUseCase.invoke(userWalletId = userWalletId, currency = currency)
-        }
-    }
-
-    suspend fun derivePublicKeysUseCase(currencies: List<CryptoCurrency>): Either<Throwable, Unit> {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            Unit.right()
-        } else {
-            derivePublicKeysUseCase.invoke(userWalletId = userWalletId, currencies = currencies)
+            manageCryptoCurrenciesUseCase(
+                accountId = accountId,
+                add = currency,
+                skipDerivationErrors = false,
+            ).bind()
         }
     }
 
@@ -67,23 +46,14 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         contractAddress: String?,
-    ): Either<Throwable, Boolean> = if (accountsFeatureToggles.isFeatureEnabled) {
-        getAccountCurrencyStatusUseCase.invokeSync(
-            userWalletId = userWalletId,
-            networkId = networkId,
-            derivationPath = derivationPath,
-            contractAddress = contractAddress,
-        )
-            .fold(ifEmpty = { true }, ifSome = { false })
-            .right()
-    } else {
-        checkIsCurrencyNotAddedUseCase.invoke(
-            userWalletId = userWalletId,
-            networkId = networkId,
-            derivationPath = derivationPath,
-            contractAddress = contractAddress,
-        )
-    }
+    ): Either<Throwable, Boolean> = getAccountCurrencyStatusUseCase.invokeSync(
+        userWalletId = userWalletId,
+        networkId = networkId,
+        derivationPath = derivationPath,
+        contractAddress = contractAddress,
+    )
+        .fold(ifEmpty = { true }, ifSome = { false })
+        .right()
 
     private suspend fun Raise<Throwable>.getAccountId(currency: CryptoCurrency): AccountId {
         val accountList = singleAccountListSupplier.getSyncOrNull(

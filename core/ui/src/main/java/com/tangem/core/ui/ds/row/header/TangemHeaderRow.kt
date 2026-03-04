@@ -25,10 +25,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
@@ -40,12 +37,13 @@ import com.tangem.core.ui.test.TokenElementsTestTags
  * @param modifier    Modifier for the composable
  */
 @Composable
-fun TangemHeaderRow(headerRowUM: TangemHeaderRowUM, modifier: Modifier = Modifier) {
+fun TangemHeaderRow(headerRowUM: TangemHeaderRowUM, modifier: Modifier = Modifier, isBalanceHidden: Boolean = false) {
     TangemHeaderRow(
         headTangemIconUM = headerRowUM.startIconUM,
         footerTangemIconRes = headerRowUM.endIconRes,
         title = headerRowUM.title,
         subtitle = headerRowUM.subtitle,
+        isBalanceHidden = isBalanceHidden,
         modifier = modifier,
     )
 }
@@ -63,6 +61,7 @@ fun TangemHeaderRow(headerRowUM: TangemHeaderRowUM, modifier: Modifier = Modifie
 @Composable
 fun TangemHeaderRow(
     modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean = false,
     subtitle: TextReference? = null,
     onItemClick: (() -> Unit)? = null,
     @DrawableRes footerTangemIconRes: Int? = null,
@@ -92,7 +91,7 @@ fun TangemHeaderRow(
         ) {
             val wrappedSubtitle = remember(this) { requireNotNull(subtitle) }
             Text(
-                text = wrappedSubtitle.resolveAnnotatedReference(),
+                text = wrappedSubtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                 style = TangemTheme.typography2.captionSemibold12,
                 color = TangemTheme.colors2.text.neutral.secondary,
                 maxLines = 1,
@@ -131,6 +130,7 @@ fun TangemHeaderRow(
 fun TangemHeaderRow(
     title: TextReference,
     modifier: Modifier = Modifier,
+    isBalanceHidden: Boolean = false,
     subtitle: TextReference? = null,
     headTangemIconUM: TangemIconUM? = null,
     @DrawableRes footerTangemIconRes: Int? = null,
@@ -172,7 +172,7 @@ fun TangemHeaderRow(
         ) {
             val wrappedSubtitle = remember(this) { requireNotNull(subtitle) }
             Text(
-                text = wrappedSubtitle.resolveAnnotatedReference(),
+                text = wrappedSubtitle.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
                 style = TangemTheme.typography2.captionSemibold12,
                 color = TangemTheme.colors2.text.neutral.secondary,
                 maxLines = 1,
