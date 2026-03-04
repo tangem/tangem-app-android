@@ -161,4 +161,8 @@ internal class DefaultWalletRouter @Inject constructor(
             ),
         )
     }
+
+    override fun openQrScanner() {
+        router.push(AppRoute.QrScanning(source = AppRoute.QrScanning.Source.MainScreen))
+    }
 }
