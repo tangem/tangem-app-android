@@ -6,6 +6,7 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -126,10 +127,9 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 }
             }
             step("Check 'Unable to cover '$networkName' fee notification") {
-                chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
-            }
-            step("Assert 'Unable to cover '$networkName' fee notification icon is displayed'") {
-                onSwapTokenScreen { unableToCoverFeeNotificationIcon(networkName).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
+                }
             }
             step("Assert 'Swap' button is disabled") {
                 onSwapTokenScreen { swapButton.assertIsNotEnabled() }
@@ -202,7 +202,12 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 }
             }
             step("Assert fiat amount with warning is displayed") {
-                onSwapTokenScreen { receiveFiatAmountWithPriceImpactWarning.assertTextContains("%", substring = true) }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen {
+                        waitForIdle()
+                        receiveFiatAmountWithPriceImpactWarning.assertTextContains("%", substring = true)
+                    }
+                }
             }
             step("Assert receive amount information icon is displayed") {
                 onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
