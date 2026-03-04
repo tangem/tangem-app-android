@@ -147,6 +147,7 @@ abstract class BaseTestCase : TestCase(
             toggleStates = mapOf(
                 "SWAP_REDESIGN_ENABLED" to false,
                 "ACCOUNTS_FEATURE_ENABLED" to true,
+                "GASLESS_APPROVAL_ENABLED" to true,
             )
         )
     }
