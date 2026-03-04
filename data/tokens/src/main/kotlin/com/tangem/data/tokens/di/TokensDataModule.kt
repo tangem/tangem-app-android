@@ -4,7 +4,6 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
@@ -13,7 +12,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -22,7 +20,6 @@ import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -46,10 +43,8 @@ internal object TokensDataModule {
         expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-        tokensSaver: UserTokensSaver,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        accountsFeatureToggles: AccountsFeatureToggles,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -61,10 +56,8 @@ internal object TokensDataModule {
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-            userTokensSaver = tokensSaver,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            accountsFeatureToggles = accountsFeatureToggles,
         )
     }
 
@@ -73,12 +66,10 @@ internal object TokensDataModule {
     fun provideCurrencyChecksRepository(
         walletManagersFacade: WalletManagersFacade,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
-        sendFeatureToggles: SendFeatureToggles,
     ): CurrencyChecksRepository {
         return DefaultCurrencyChecksRepository(
             walletManagersFacade = walletManagersFacade,
             coroutineDispatchers = coroutineDispatcherProvider,
-            sendFeatureToggles = sendFeatureToggles,
         )
     }
 
