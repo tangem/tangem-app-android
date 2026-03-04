@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.ds.image.DeviceIconUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -24,6 +25,9 @@ internal sealed interface WalletBalanceUM {
     /** Wallet Name */
     val name: String
 
+    /** Wallet Icon */
+    val deviceIcon: DeviceIconUM
+
     /**
      * Wallet card content state
      *
@@ -34,6 +38,7 @@ internal sealed interface WalletBalanceUM {
     data class Content(
         override val id: UserWalletId,
         override val name: String,
+        override val deviceIcon: DeviceIconUM,
         val balance: TextReference,
         val balanceInAppBar: TextReference,
         val isBalanceFlickering: Boolean,
@@ -49,6 +54,7 @@ internal sealed interface WalletBalanceUM {
     data class Error(
         override val id: UserWalletId,
         override val name: String,
+        override val deviceIcon: DeviceIconUM,
     ) : WalletBalanceUM
 
     /**
@@ -60,6 +66,7 @@ internal sealed interface WalletBalanceUM {
     data class Loading(
         override val id: UserWalletId,
         override val name: String,
+        override val deviceIcon: DeviceIconUM,
     ) : WalletBalanceUM
 
     fun copySealed(name: String): WalletBalanceUM {
