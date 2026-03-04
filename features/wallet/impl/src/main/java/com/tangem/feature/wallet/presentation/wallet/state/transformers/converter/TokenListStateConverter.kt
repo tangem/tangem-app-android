@@ -1,7 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
+import com.tangem.common.ui.account.TokensListPortfolioItemConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -9,7 +11,6 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -49,35 +50,39 @@ internal class TokenListStateConverter(
         shouldShowMainPromo,
     )
 
-    private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
+    private val onTokenClick: (accountId: AccountId, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            clickIntents.onTokenItemClick(selectedWallet.walletId, currencyStatus)
+            clickIntents.onTokenItemClick(accountId, currencyStatus)
         }
 
-    private val onTokenLongClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
+    private val onTokenLongClick: (accountId: AccountId, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            clickIntents.onTokenItemLongClick(selectedWallet.walletId, currencyStatus)
+            clickIntents.onTokenItemLongClick(accountId, currencyStatus)
         }
 
-    private val onApyLabelClick:
-        (currencyStatus: CryptoCurrencyStatus, apySource: TokenItemStateConverter.ApySource, apy: String) -> Unit =
-        { currencyStatus, apySource, apy ->
+    private val onApyLabelClick: (
+        currencyStatus: CryptoCurrencyStatus,
+        accountId: AccountId,
+        apySource: TokenItemStateConverter.ApySource,
+        apy: String,
+    ) -> Unit =
+        { currencyStatus, accountId, apySource, apy ->
             clickIntents.onApyLabelClick(
-                userWalletId = selectedWallet.walletId,
+                accountId = accountId,
                 currencyStatus = currencyStatus,
                 apySource = apySource,
                 apy = apy,
             )
         }
 
-    private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
+    private fun tokenStatusConverter(accountId: AccountId) = TokenItemStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
         promoCryptoCurrencyStatus = yieldSupplyPromoBannerConverter.convert(params),
         stakingApyMap = stakingAvailabilityMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
-        onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, apySource, apy) },
+        onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, accountId, apySource, apy) },
         onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
         onYieldPromoShown = clickIntents::onYieldPromoShown,
         onYieldPromoClicked = clickIntents::onYieldPromoClicked,
@@ -87,7 +92,7 @@ internal class TokenListStateConverter(
         return when (params) {
             is TokenConverterParams.Account -> convertAccountList(params)
             is TokenConverterParams.Wallet -> convertTokenList(
-                tokenConverter = tokenStatusConverter((params.portfolioId as? PortfolioId.Account)?.accountId),
+                tokenConverter = tokenStatusConverter(params.accountId),
                 tokenList = params.tokenList,
             )
         }
@@ -136,12 +141,17 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.ContentState.Locked -> tokensListState.items
                 is WalletTokensListState.Empty -> listOf()
             }
-            return TokensListItemUM.Portfolio(
+            val onEmptyAction = PortfolioItemContentUM.Empty.Action(
+                text = resourceReference(id = R.string.main_manage_tokens),
+                onClick = { clickIntents.onManageTokensClick(account.accountId) },
+            )
+            return TokensListPortfolioItemConverter(
                 tokenItemUM = accountItem,
                 isExpanded = isExtend,
                 isCollapsable = true,
                 tokens = items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
-            )
+                onEmptyAction = onEmptyAction,
+            ).convert(Unit)
         }
 
         val accountItems = accountList.accountStatuses

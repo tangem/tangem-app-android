@@ -1,29 +1,23 @@
 package com.tangem.features.swap.v2.impl.sendviaswap.model
 
-import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.ui.navigationButtons.NavigationUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -49,7 +43,6 @@ import kotlin.properties.Delegates
 internal class SendWithSwapModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -57,7 +50,6 @@ internal class SendWithSwapModel @Inject constructor(
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val swapAlertFactory: SwapAlertFactory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model(),
     SwapAmountComponent.ModelCallback,
@@ -202,79 +194,20 @@ internal class SendWithSwapModel @Inject constructor(
     }
 
     private fun getPrimaryCurrencyStatusUpdates(cryptoCurrency: CryptoCurrency) {
-        val wallet = userWallet
-        val isMultiCurrency = wallet.isMultiCurrency
-        val isSingleWalletWithToken = wallet is UserWallet.Cold &&
-            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        getAccountCurrencyStatusUseCase(
+            userWalletId = params.userWalletId,
+            currency = cryptoCurrency,
+        ).onEach { (account, cryptoCurrencyStatus) ->
+            accountFlow.value = account
+            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
 
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            getAccountCurrencyStatusUseCase(
+            primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
+            primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
                 userWalletId = params.userWalletId,
-                currency = cryptoCurrency,
-            ).onEach { (account, cryptoCurrencyStatus) ->
-                accountFlow.value = account
-                isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
-
-                primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
-                primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                    userWalletId = params.userWalletId,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                ).getOrNull() ?: cryptoCurrencyStatus
-            }.flowOn(dispatchers.default)
-                .launchIn(modelScope)
-        } else {
-            getCurrencyStatus(
-                cryptoCurrency = cryptoCurrency,
-                isSingleWalletWithToken = isSingleWalletWithToken,
-                isMultiCurrency = isMultiCurrency,
-            ).onEach { maybeCryptoCurrency ->
-                maybeCryptoCurrency.fold(
-                    ifRight = { cryptoCurrencyStatus ->
-                        primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
-                        primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = params.userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ).getOrNull() ?: cryptoCurrencyStatus
-                    },
-                    ifLeft = { error ->
-                        swapAlertFactory.getGenericErrorState(
-                            expressError = ExpressError.UnknownError,
-                            onFailedTxEmailClick = {
-                                modelScope.launch {
-                                    swapAlertFactory.onFailedTxEmailClick(
-                                        userWallet = userWallet,
-                                        cryptoCurrency = params.currency,
-                                        errorMessage = error.toString(),
-                                    )
-                                }
-                            },
-                            popBack = ::onBackClick,
-                        )
-                    },
-                )
-            }.flowOn(dispatchers.default)
-                .launchIn(modelScope)
-        }
-    }
-
-    private fun getCurrencyStatus(
-        cryptoCurrency: CryptoCurrency,
-        isSingleWalletWithToken: Boolean,
-        isMultiCurrency: Boolean,
-    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        return when {
-            isSingleWalletWithToken -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = params.userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = true,
-            )
-            isMultiCurrency -> getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = params.userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = false,
-            )
-            else -> getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWalletId = params.userWalletId)
-        }
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+            ).getOrNull() ?: cryptoCurrencyStatus
+        }.flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnBalanceHidden() {

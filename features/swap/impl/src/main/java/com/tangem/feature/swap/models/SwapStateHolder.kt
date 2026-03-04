@@ -7,14 +7,11 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
-import com.tangem.feature.swap.models.states.events.SwapEvent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -24,7 +21,6 @@ internal data class SwapStateHolder(
     val blockchainId: String, // not the same as networkId, its local id in app
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
     val isInsufficientFunds: Boolean,
-    val event: StateEvent<SwapEvent> = consumedEvent(),
     val changeCardsButtonState: ChangeCardsButtonState,
     val providerState: ProviderState,
 
