@@ -1,9 +1,8 @@
 package com.tangem.datasource.di.local.config
 
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.local.config.environment.DefaultEnvironmentConfigStorage
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.converter.GeneratedEnvironmentConfigConverter
 import com.tangem.datasource.local.config.issuers.DefaultIssuersConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
@@ -23,11 +22,8 @@ internal object ConfigModule {
 
     @Provides
     @Singleton
-    fun provideEnvironmentConfigStorage(assetLoader: AssetLoader): EnvironmentConfigStorage {
-        return DefaultEnvironmentConfigStorage(
-            assetLoader = assetLoader,
-            environmentConfigStore = RuntimeStateStore(defaultValue = EnvironmentConfig()),
-        )
+    fun provideEnvironmentConfig(): EnvironmentConfig {
+        return GeneratedEnvironmentConfigConverter.convert()
     }
 
     @Provides

@@ -164,4 +164,6 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         ArbitrumNova -> null
         Plasma, PlasmaTestnet -> null
         Monad, MonadTestnet -> null
+        Berachain -> MoonPaySupportedCurrency(networkCode = "berachain", currencyCode = "bera_bera")
+        BerachainTestnet -> null
     }

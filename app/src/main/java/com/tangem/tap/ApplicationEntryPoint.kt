@@ -19,7 +19,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -48,7 +48,6 @@ import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -58,11 +57,11 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
 
-    fun getEnvironmentConfigStorage(): EnvironmentConfigStorage
-
     fun getAppStateHolder(): AppStateHolder
 
     fun getIssuersConfigStorage(): IssuersConfigStorage
+
+    fun getEnvironmentConfig(): EnvironmentConfig
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
@@ -119,8 +118,6 @@ interface ApplicationEntryPoint {
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
 
     fun getOnboardingRepository(): OnboardingRepository
-
-    fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
 
     fun getExcludedBlockchains(): ExcludedBlockchains
 

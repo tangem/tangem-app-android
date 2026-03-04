@@ -64,7 +64,7 @@ class ResetCardTest : BaseTestCase() {
     fun resetWallet2CardWithBackupTest() {
         setupHooks().run {
             step("Open 'Main Screen'") {
-                openMainScreen(productType = ProductType.Wallet2, alreadyActivatedDialogIsShown = true)
+                openMainScreen(productType = ProductType.Wallet2)
             }
             step("Open 'Device settings' screen") {
                 openDeviceSettingsScreen()

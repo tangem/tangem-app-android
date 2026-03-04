@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>BooleanPropertyNaming:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer$val showNotification = sendingAmount + feeAmount &gt; balance</ID>
     <ID>BooleanPropertyNaming:AmountCurrencyChangeStateTransformer.kt$AmountCurrencyChangeStateTransformer$private val value: Boolean</ID>
-    <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noBalanceState = balanceState == null</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingStates.InitialInfoState.Data$val showBanner: Boolean</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingUiState$val showColdWalletInteractionIcon: Boolean</ID>
     <ID>CastNullableToNonNullableType:SetApprovalBottomSheetInProgressTransformer.kt$SetApprovalBottomSheetInProgressTransformer$as</ID>
@@ -14,28 +13,13 @@
     <ID>MultilineLambdaItParameter:StakingFeeBlock.kt${ if (it == FeeState.Error) { Text( text = DASH_SIGN, color = TangemTheme.colors.text.primary1, style = TangemTheme.typography.body1, ) } }</ID>
     <ID>MultilineLambdaItParameter:StakingFeeBlock.kt${ if (it == FeeState.Loading) { RectangleShimmer( radius = TangemTheme.dimens.radius3, modifier = Modifier.size( height = TangemTheme.dimens.size24, width = TangemTheme.dimens.size90, ), ) } }</ID>
     <ID>MultilineLambdaItParameter:StakingInfoNotificationsFactory.kt$StakingInfoNotificationsFactory${ it.type == BalanceType.PREPARING || it.type == BalanceType.STAKED || it.type == BalanceType.LOCKED }</ID>
-    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ EnterAmountBoundary( amount = it, fiatRate = status.value.fiatRate.orZero(), ) }</ID>
-    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ Timber.e(it) false }</ID>
-    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ isBalanceHiddenFlow.value = it.isBalanceHidden stateController.update( transformer = HideBalanceStateTransformer( isBalanceHidden = it.isBalanceHidden, cryptoCurrencyStatus = cryptoCurrencyStatus, appCurrency = appCurrency, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ stateController.update( SetFeeToTonInitializeBottomSheetTransformer( appCurrencyProvider = Provider { appCurrency }, feeCryptoCurrencyStatus = feeCryptoCurrencyStatus, fee = it.normal, isFeeApproximate = false, ), ) }</ID>
     <ID>MultilineLambdaItParameter:StakingStateController.kt$StakingStateController${ it.copy( showColdWalletInteractionIcon = userWallet is UserWallet.Cold, ) }</ID>
-    <ID>NullCheckOnMutableProperty:StakingModel.kt$StakingModel$if (feeCryptoCurrencyStatus != null &amp;&amp; fee != null) { getBalanceNotEnoughForFeeWarningUseCase( fee = fee, userWalletId = userWalletId, tokenStatus = cryptoCurrencyStatus, coinStatus = feeCryptoCurrencyStatus ?: cryptoCurrencyStatus, ).getOrNull() } else { null }</ID>
     <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$networkId</ID>
     <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$tokenId</ID>
     <ID>PropertyUsedBeforeDeclaration:StakingFeeBlock.kt$FeeBlockPreviewProvider$contentState</ID>
-    <ID>PropertyUsedBeforeDeclaration:StakingModel.kt$StakingModel$isAmountSubtractAvailable</ID>
     <ID>PropertyUsedBeforeDeclaration:StakingStateController.kt$StakingStateController$uiState</ID>
-    <ID>SuspendFunSwallowedCancellation:StakingModel.kt$StakingModel$runCatching</ID>
     <ID>UnnecessaryEventHandlerParameter:StakingInitialInfoContent.kt$onClick: (BalanceState) -&gt; Unit</ID>
-    <ID>UnnecessaryLet:StakingModel.kt$StakingModel$let(::add)</ID>
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(PRIVACY_POLICY_URL) }</ID>
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(TERMS_OF_USE_URL) }</ID>
-    <ID>UnsafeCallOnNullableType:StakingModel.kt$StakingModel$tonAccountInitializeTransaction!!</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var actionsJobHolder: JobHolder = JobHolder()</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var approvalJobHolder: JobHolder = JobHolder()</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var feeJobHolder: JobHolder = JobHolder()</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var sendTransactionJobHolder = JobHolder()</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var stakingStateRouter: StakingStateRouter = StakingStateRouter( appRouter = appRouter, stateController = stateController, analyticsEventsHandler = analyticsEventHandler, )</ID>
-    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var stepChangesJobHolder = JobHolder()</ID>
   </CurrentIssues>
 </SmellBaseline>

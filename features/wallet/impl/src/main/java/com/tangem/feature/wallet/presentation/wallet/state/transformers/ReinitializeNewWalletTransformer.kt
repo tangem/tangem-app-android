@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
@@ -22,12 +23,14 @@ internal class ReinitializeNewWalletTransformer(
     private val newUserWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+            getWalletIconUseCase = getWalletIconUseCase,
         )
     }
 
@@ -41,6 +44,13 @@ internal class ReinitializeNewWalletTransformer(
                     ),
                 )
                 .toImmutableList(),
+            wallets2 = prevState.wallets2
+                .filterNot { it.walletsBalanceUM.id == prevWalletId }
+                .plus(
+                    element = walletLoadingStateFactory.create2(
+                        userWallet = newUserWallet,
+                    ),
+                ).toImmutableList(),
         )
     }
 }
