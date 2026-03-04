@@ -23,6 +23,7 @@ import com.tangem.feature.tester.presentation.storybook.page.message.tangemMessa
 import com.tangem.feature.tester.presentation.storybook.page.checkbox.tangemCheckboxStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tabs.tangemSegmentedPickerStoryFactory
 import com.tangem.feature.tester.presentation.storybook.page.tokenrow.tangemTokenRowStoryFactory
+import com.tangem.feature.tester.presentation.storybook.page.headerrow.tangemHeaderRowStoryFactory
 
 private data class StoryItem(val title: String, val factory: StoryPageFactory)
 
@@ -35,6 +36,7 @@ private fun buildStories() = listOf(
     StoryItem(title = "🗂️ Segmented Picker", factory = tangemSegmentedPickerStoryFactory),
     StoryItem(title = "☑️ Checkbox", factory = tangemCheckboxStoryFactory),
     StoryItem(title = "🪙 Token Row", factory = tangemTokenRowStoryFactory),
+    StoryItem(title = "📑 Header Row", factory = tangemHeaderRowStoryFactory),
 )
 
 @Composable
