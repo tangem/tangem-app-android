@@ -91,6 +91,7 @@ internal class SetTokenListErrorTransformer(
         return WalletBalanceUM.Content(
             id = id,
             name = name,
+            deviceIcon = deviceIcon,
             balanceInAppBar = BigDecimal.ZERO.formatStyled {
                 fiat(
                     fiatCurrencyCode = appCurrency.code,
