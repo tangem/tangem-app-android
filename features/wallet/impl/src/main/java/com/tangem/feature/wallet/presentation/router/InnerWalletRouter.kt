@@ -86,4 +86,7 @@ internal interface InnerWalletRouter {
 
     /** Open token action sheet */
     fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>)
+
+    /** Open QR scanner screen */
+    fun openQrScanner()
 }
