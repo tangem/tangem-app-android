@@ -21,16 +21,11 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.producer.SingleAccountListProducer
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isLocked
-import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.Unknown
@@ -40,16 +35,17 @@ import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.features.walletconnect.connections.components.WcPairComponent
 import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent
-import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
-import com.tangem.features.walletconnect.connections.model.transformers.*
+import com.tangem.features.walletconnect.connections.model.transformers.WcAppInfoTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcConnectButtonProgressTransformer
+import com.tangem.features.walletconnect.connections.model.transformers.WcDAppVerifiedStateConverter
+import com.tangem.features.walletconnect.connections.model.transformers.WcNetworksSelectedTransformer
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -61,10 +57,7 @@ import kotlin.properties.Delegates
 import com.tangem.utils.transformer.update as transformerUpdate
 
 internal interface WcPairComponentCallback :
-    WcSelectWalletComponent.ModelCallback,
     WcSelectNetworksComponent.ModelCallback
-
-private const val WC_WALLETS_SELECTOR_MIN_COUNT = 2
 
 @Stable
 @ModelScoped
@@ -75,11 +68,9 @@ internal class WcPairModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analytics: AnalyticsEventHandler,
     val selectorController: PortfolioSelectorController,
-    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     portfolioFetcherFactory: PortfolioFetcher.Factory,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
-    getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), WcPairComponentCallback {
 
@@ -102,9 +93,6 @@ internal class WcPairModel @Inject constructor(
         override val onBack: () -> Unit = { stackNavigation.pop() }
     }
 
-    private val selectedUserWalletFlow: MutableStateFlow<UserWallet> by lazy {
-        MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
-    }
     private val selectedPortfolio = MutableSharedFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -119,14 +107,15 @@ internal class WcPairModel @Inject constructor(
 
     init {
         modelScope.launch {
-            val params = SingleAccountListProducer.Params(params.userWalletId)
-            val accountList = singleAccountListSupplier.getSyncOrNull(params)
-            if (accountList == null) {
+            val portfolioBalance = portfolioFetcher.data.first().balances
+                .firstNotNullOfOrNull { (walletId, balance) ->
+                    if (params.userWalletId == walletId) balance else null
+                }
+            if (portfolioBalance == null) {
                 router.pop()
                 return@launch
             }
-            val firstAccount = accountList.accounts.first()
-            selectorController.selectAccount(firstAccount.accountId)
+            selectorController.selectAccount(portfolioBalance.accountsBalance.mainAccount.accountId)
             combineFlows(portfolioFetcher)
         }
     }
@@ -135,10 +124,12 @@ internal class WcPairModel @Inject constructor(
         combine(
             flow = portfolioFetcher.data,
             flow2 = selectorController.selectedAccountWithData(portfolioFetcher)
-                .distinctUntilChanged()
                 .filterNotNull()
                 .onEach { selectedPortfolio.tryEmit(it) }
-                .onEach { stackNavigation.pop() },
+                .runningReduce { _, new ->
+                    stackNavigation.pop()
+                    new
+                },
             flow3 = wcPairUseCase(),
             flow4 = isAccountsModeEnabledUseCase(),
             transform = { portfolios, selected, pairState, isAccountMode ->
@@ -155,9 +146,9 @@ internal class WcPairModel @Inject constructor(
 
     private suspend fun handlePairState(
         pairState: WcPairState,
-        portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null,
-        isAccountMode: Boolean? = null,
+        portfolios: PortfolioFetcher.Data,
+        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>,
+        isAccountMode: Boolean,
     ) {
         when (pairState) {
             is WcPairState.Approving.Loading -> appInfoUiState.transformerUpdate(
@@ -184,36 +175,32 @@ internal class WcPairModel @Inject constructor(
                 pairState = pairState,
                 portfolios = portfolios,
                 selected = selected,
+                isAccountMode = isAccountMode,
             )
         }
     }
 
     private suspend fun handleProposalState(
         pairState: WcPairState.Proposal,
-        portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null,
+        portfolios: PortfolioFetcher.Data,
+        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>,
+        isAccountMode: Boolean,
     ) {
-        val availableWallets = pairState.dAppSession.proposalNetwork.keys
-            .filter { !it.isLocked && it.isMultiCurrency }
         sessionProposal = pairState.dAppSession
-        val selectedUserWalletFlow = this.selectedUserWalletFlow
-        val portfolioWallet = selected?.first
-        val portfolioAccount = selected?.second
-        val portfolioAccountId = portfolioAccount?.account?.accountId
+        val portfolioAccount = selected.second
+        val portfolioAccountId = portfolioAccount.account.accountId
         val proposalAccountNetwork = sessionProposal.proposalAccountNetwork
-        val foundNetwork = if (portfolioAccountId != null) {
-            requireNotNull(proposalAccountNetwork)[portfolioAccountId]
-        } else {
-            sessionProposal.proposalNetwork[selectedUserWalletFlow.value]
-        }
+        val foundNetwork = proposalAccountNetwork[portfolioAccountId]
         if (foundNetwork == null) {
             processError(Unknown("Selected wallet not found"))
         } else {
-            val portfolioSelectRow = tryToCreatePortfolioSelectRow(selected, portfolios)
-            if (proposalAccountNetwork != null) {
-                selectorController.isEnabled.value = { _, account ->
-                    proposalAccountNetwork.contains(account.account.accountId)
-                }
+            val portfolioSelectRow = createPortfolioSelectRow(
+                selectedPortfolio = selected,
+                portfolios = portfolios,
+                isAccountMode = isAccountMode,
+            )
+            selectorController.isEnabled.value = { _, account ->
+                proposalAccountNetwork.contains(account.account.accountId)
             }
             proposalNetwork = foundNetwork
             additionallyEnabledNetworks = proposalNetwork.available
@@ -224,13 +211,6 @@ internal class WcPairModel @Inject constructor(
                     onDismiss = ::rejectPairing,
                     onConnect = ::onConnect,
                     portfolioSelectRow = portfolioSelectRow,
-                    onWalletClick = {
-                        stackNavigation.pushNew(
-                            WcAppInfoRoutes.SelectWallet(selectedUserWalletFlow.value.walletId),
-                        )
-                    }.takeIf {
-                        portfolioSelectRow == null && availableWallets.size >= WC_WALLETS_SELECTOR_MIN_COUNT
-                    },
                     onNetworksClick = {
                         stackNavigation.pushNew(
                             WcAppInfoRoutes.SelectNetworks(
@@ -242,7 +222,6 @@ internal class WcPairModel @Inject constructor(
                             ),
                         )
                     },
-                    userWallet = portfolioWallet ?: selectedUserWalletFlow.value,
                     proposalNetwork = proposalNetwork,
                     additionallyEnabledNetworks = additionallyEnabledNetworks,
                 ),
@@ -250,17 +229,15 @@ internal class WcPairModel @Inject constructor(
         }
     }
 
-    private suspend fun tryToCreatePortfolioSelectRow(
-        selectedPortfolio: Pair<UserWallet, AccountStatus.CryptoPortfolio>?,
-        portfolios: PortfolioFetcher.Data?,
-    ): PortfolioSelectUM? {
-        selectedPortfolio ?: return null
-        portfolios ?: return null
+    private suspend fun createPortfolioSelectRow(
+        selectedPortfolio: Pair<UserWallet, AccountStatus.CryptoPortfolio>,
+        portfolios: PortfolioFetcher.Data,
+        isAccountMode: Boolean,
+    ): PortfolioSelectUM {
         val (wallet, portfolioAccount) = selectedPortfolio
         val account = when (val account = portfolioAccount.account) {
             is Account.CryptoPortfolio -> account
         }
-        val isAccountMode = selectorController.isAccountMode.first()
         val icon: AccountIconUM.CryptoPortfolio?
         val name: TextReference
         if (isAccountMode) {
@@ -303,15 +280,16 @@ internal class WcPairModel @Inject constructor(
     private fun connect() {
         val enabledAvailableNetworks =
             proposalNetwork.available.filter { network -> network in additionallyEnabledNetworks }
-        val selectedPortfolio = selectedPortfolio.replayCache.firstOrNull()
-        val wallet = selectedPortfolio?.first ?: selectedUserWalletFlow.value
-        val account = selectedPortfolio?.second?.account
+        val selectedPortfolio = selectedPortfolio.replayCache
+            .firstOrNull()
+            ?: return
+        val (wallet, account) = selectedPortfolio
 
         modelScope.launch {
             analytics.send(
                 WcAnalyticEvents.PairButtonConnect(
                     dAppName = sessionProposal.dAppMetaData.name,
-                    accountDerivation = account?.derivationIndex?.value,
+                    accountDerivation = account.account.derivationIndex.value,
                 ),
             )
         }
@@ -319,7 +297,7 @@ internal class WcPairModel @Inject constructor(
             WcSessionApprove(
                 wallet = wallet,
                 network = enabledAvailableNetworks + proposalNetwork.required,
-                account = account,
+                account = account.account,
             ),
         )
     }
@@ -373,20 +351,6 @@ internal class WcPairModel @Inject constructor(
             }
         }
         alert?.let { stackNavigation.pushNew(it) }
-    }
-
-    override fun onWalletSelected(userWalletId: UserWalletId) {
-        val selectedUserWallet = sessionProposal.proposalNetwork.keys.first { it.walletId == userWalletId }
-        proposalNetwork = sessionProposal.proposalNetwork[selectedUserWallet] ?: return
-        selectedUserWalletFlow.update { selectedUserWallet }
-        additionallyEnabledNetworks = proposalNetwork.available
-        appInfoUiState.transformerUpdate(
-            WcAppInfoWalletChangedTransformer(
-                selectedUserWallet = selectedUserWallet,
-                proposalNetwork = proposalNetwork,
-                additionallyEnabledNetworks = additionallyEnabledNetworks,
-            ),
-        )
     }
 
     override fun onNetworksSelected(selectedNetworks: Set<Network>) {
