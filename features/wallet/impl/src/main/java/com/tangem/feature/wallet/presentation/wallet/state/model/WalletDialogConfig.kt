@@ -4,6 +4,7 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.details.TokenAction
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.Serializable
 
 /**
@@ -25,6 +26,11 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data class TokenReceive(val tokenReceiveConfig: TokenReceiveConfig) : WalletDialogConfig
+
+    @Serializable
+    data class TokenActionList(
+        val actionList: ImmutableList<TokenActionButtonUM>,
+    ) : WalletDialogConfig
 
     @Serializable
     data class YieldSupplyWarning(

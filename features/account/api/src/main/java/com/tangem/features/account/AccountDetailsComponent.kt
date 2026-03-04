@@ -7,5 +7,5 @@ import com.tangem.domain.models.account.Account
 interface AccountDetailsComponent : ComposableContentComponent {
     interface Factory : ComponentFactory<Params, AccountDetailsComponent>
 
-    data class Params(val account: Account)
+    data class Params(val account: Account.CryptoPortfolio)
 }

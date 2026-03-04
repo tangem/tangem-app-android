@@ -443,7 +443,7 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
                 showTangemIcon = true,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    mode = ManageTokensMode.Wallet(UserWalletId("0x")),
+                    mode = ManageTokensMode.Account(UserWalletId("0x")),
                 ),
             ),
             PreviewManageTokensComponent(
@@ -459,7 +459,7 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
                 showTangemIcon = false,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    mode = ManageTokensMode.Wallet(UserWalletId("0x")),
+                    mode = ManageTokensMode.Account(UserWalletId("0x")),
                 ),
             ),
         )
