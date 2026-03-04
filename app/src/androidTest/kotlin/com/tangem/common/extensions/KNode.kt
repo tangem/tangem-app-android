@@ -27,3 +27,10 @@ fun KNode.isDisplayedSafely(): Boolean {
     }
 }
 
+fun KNode.assertVisibility(shouldBeDisplayed: Boolean) {
+    if (shouldBeDisplayed) {
+        assertIsDisplayed()
+    } else {
+        assertIsNotDisplayed()
+    }
+}
