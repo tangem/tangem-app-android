@@ -1,51 +1,40 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @ModelScoped
 internal class WalletContentLoaderFactory @Inject constructor(
-    private val multiWalletContentLoaderFactory: MultiWalletContentLoaderFactory,
-    private val multiWalletContentLoaderV2Factory: MultiWalletContentLoaderV2.Factory,
-    private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoaderFactory,
-    private val singleWalletWithTokenContentLoaderV2Factory: SingleWalletWithTokenContentLoaderV2.Factory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
-    private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
+    private val multiWalletContentLoaderFactory: MultiWalletContentLoader.Factory,
+    private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoader.Factory,
+    private val singleWalletContentLoaderLegacyFactory: SingleWalletContentLoaderLegacy.Factory,
+    private val singleWalletContentLoader: SingleWalletContentLoader.Factory,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) {
 
-    fun create(
-        userWallet: UserWallet,
-        clickIntents: WalletClickIntents,
-        isRefresh: Boolean = false,
-    ): WalletContentLoader? {
+    fun create(userWallet: UserWallet, isRefresh: Boolean = false): WalletContentLoader? {
         return when {
             userWallet.isMultiCurrency -> {
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    multiWalletContentLoaderV2Factory.create(userWallet)
-                } else {
-                    multiWalletContentLoaderFactory.create(userWallet, clickIntents)
-                }
+                multiWalletContentLoaderFactory.create(userWallet)
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    singleWalletWithTokenContentLoaderV2Factory.create(userWallet)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    singleWalletContentLoader.create(userWallet)
                 } else {
-                    singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
+                    singleWalletWithTokenContentLoaderFactory.create(userWallet)
                 }
             }
             userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    singleWalletContentLoaderV2Factory.create(userWallet, isRefresh)
+                if (designFeatureToggles.isRedesignEnabled) {
+                    singleWalletContentLoader.create(userWallet)
                 } else {
-                    singleWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
+                    singleWalletContentLoaderLegacyFactory.create(userWallet, isRefresh)
                 }
             }
             else -> null

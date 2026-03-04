@@ -13,7 +13,6 @@ import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.config.testnet.models.TestnetTokensConfig
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
@@ -21,7 +20,6 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.lib.crypto.BlockchainUtils
 import timber.log.Timber
@@ -29,7 +27,6 @@ import timber.log.Timber
 internal class ManagedCryptoCurrencyFactory(
     private val networkFactory: NetworkFactory,
     private val excludedBlockchains: ExcludedBlockchains,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
     fun create(
@@ -120,30 +117,15 @@ internal class ManagedCryptoCurrencyFactory(
             ?.takeUnless { it in excludedBlockchains }
             ?: return null
 
-        val network = if (accountsFeatureToggles.isFeatureEnabled) {
-            val network = networkFactory.create(
-                blockchain = blockchain,
-                extraDerivationPath = token.derivationPath,
-                userWallet = userWallet,
-                accountIndex = accountIndex,
-            ) ?: return null
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = token.derivationPath,
+            userWallet = userWallet,
+            accountIndex = accountIndex,
+        ) ?: return null
 
-            if (!checkIsCustomToken(token, network.derivationPath)) {
-                return null
-            }
-
-            network
-        } else {
-            if (!checkIsCustomToken(token, blockchain, userWallet.derivationStyleProvider)) {
-                return null
-            }
-
-            networkFactory.create(
-                blockchain = blockchain,
-                extraDerivationPath = token.derivationPath,
-                userWallet = userWallet,
-                accountIndex = accountIndex,
-            ) ?: return null
+        if (!checkIsCustomToken(token, network.derivationPath)) {
+            return null
         }
 
         val contractAddress = token.contractAddress
@@ -285,22 +267,9 @@ internal class ManagedCryptoCurrencyFactory(
         return "${imageHost ?: DEFAULT_IMAGE_HOST}large/$id.png"
     }
 
-    private fun checkIsCustomToken(
-        token: UserTokensResponse.Token,
-        blockchain: Blockchain,
-        derivationStyleProvider: DerivationStyleProvider,
-    ): Boolean = token.id.isNullOrBlank() ||
-        checkIsCustomDerivationPath(token.derivationPath, blockchain, derivationStyleProvider)
-
     private fun checkIsCustomToken(token: UserTokensResponse.Token, derivationPath: Network.DerivationPath): Boolean {
         return token.id.isNullOrBlank() || derivationPath is Network.DerivationPath.Custom
     }
-
-    private fun checkIsCustomDerivationPath(
-        derivationPath: String?,
-        blockchain: Blockchain,
-        derivationStyleProvider: DerivationStyleProvider,
-    ): Boolean = derivationPath != blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
 
     /**
      * Filter tokens for TerraV1 (Terra Classic) network.
