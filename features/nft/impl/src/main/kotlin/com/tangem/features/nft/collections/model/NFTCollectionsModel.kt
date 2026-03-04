@@ -7,7 +7,6 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
@@ -33,7 +32,6 @@ internal class NFTCollectionsModel @Inject constructor(
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -66,51 +64,21 @@ internal class NFTCollectionsModel @Inject constructor(
     }
 
     init {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            subscribeToNFTCollectionsNew()
-        } else {
-            subscribeToNFTCollections()
-        }
+        subscribeToNFTCollections()
     }
 
     private fun subscribeToNFTCollections() {
         combine(
             flow = getNFTCollectionsUseCase(params.userWalletId),
             flow2 = searchManager.query.distinctUntilChanged(),
-        ) { nftCollections, query ->
-            _state.update {
-                UpdateDataStateTransformer(
-                    nftCollections = nftCollections.filter(query),
-                    onReceiveClick = {
-                        params.onReceiveClick()
-                    },
-                    onRetryClick = ::onRefresh,
-                    onExpandCollectionClick = ::onExpandCollectionClick,
-                    onRetryAssetsClick = ::onRetryAssetsClick,
-                    onAssetClick = { asset, collection ->
-                        params.onAssetClick(asset, collection)
-                    },
-                    initialSearchBarFactory = ::getInitialSearchBar,
-                    collectionIdProvider = collectionIdProvider,
-                ).transform(it)
-            }
-        }
-            .onStart { onRefresh() }
-            .launchIn(modelScope)
-    }
-
-    private fun subscribeToNFTCollectionsNew() {
-        combine(
-            flow = getNFTCollectionsUseCase.invokeForAccounts(params.userWalletId),
-            flow2 = searchManager.query.distinctUntilChanged(),
             flow3 = isAccountsModeEnabledUseCase(),
         ) { nftCollections, query, isAccountMode ->
             val filteredNFTs = nftCollections.collections
                 .mapValues { (_, nfts) -> nfts.filter(query) }
 
-            _state.update {
+            _state.update { stateUM ->
                 UpdateDataStateTransformer(
-                    nftCollections = listOf(),
+                    nftCollections = emptyList(),
                     isAccountMode = isAccountMode,
                     walletNFTCollections = nftCollections.copy(collections = filteredNFTs),
                     onReceiveClick = {
@@ -124,22 +92,22 @@ internal class NFTCollectionsModel @Inject constructor(
                     },
                     initialSearchBarFactory = ::getInitialSearchBar,
                     collectionIdProvider = collectionIdProvider,
-                ).transform(it)
+                ).transform(stateUM)
             }
         }
             .onStart { onRefresh() }
             .launchIn(modelScope)
     }
 
-    private fun List<NFTCollections>.filter(query: String): List<NFTCollections> = map {
-        it.copy(
-            content = when (val content = it.content) {
+    private fun List<NFTCollections>.filter(query: String): List<NFTCollections> = map { collections ->
+        collections.copy(
+            content = when (val content = collections.content) {
                 is NFTCollections.Content.Collections -> content.copy(
-                    collections = content.collections.orEmpty().filter {
-                        val assetsFulfillQuery = if (query.isEmpty()) {
+                    collections = content.collections.orEmpty().filter { collection: NFTCollection ->
+                        val isAssetsFulfillQuery = if (query.isEmpty()) {
                             true
                         } else {
-                            when (val assets = it.assets) {
+                            when (val assets = collection.assets) {
                                 is NFTCollection.Assets.Empty,
                                 is NFTCollection.Assets.Failed,
                                 is NFTCollection.Assets.Loading,
@@ -152,13 +120,13 @@ internal class NFTCollectionsModel @Inject constructor(
                             }
                         }
 
-                        val collectionFulfillQuery =
-                            query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
+                        val isCollectionFulfillQuery =
+                            query.isEmpty() || collection.name?.lowercase()?.contains(query.lowercase()) == true
 
-                        collectionFulfillQuery || assetsFulfillQuery
+                        isCollectionFulfillQuery || isAssetsFulfillQuery
                     },
                 )
-                is NFTCollections.Content.Error -> it.content
+                is NFTCollections.Content.Error -> collections.content
             },
         )
     }
@@ -198,12 +166,12 @@ internal class NFTCollectionsModel @Inject constructor(
     }
 
     private fun onExpandCollectionClick(collection: NFTCollection) {
-        _state.update {
+        _state.update { stateUM ->
             ChangeCollectionExpandedStateTransformer(
                 collection = collection,
                 collectionIdProvider = collectionIdProvider,
                 onFirstExpanded = { onFirstExpanded(collection) },
-            ).transform(it)
+            ).transform(stateUM)
         }
     }
 
