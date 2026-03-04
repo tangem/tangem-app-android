@@ -25,6 +25,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import dev.chrisbanes.haze.HazeProgressive
+import kotlinx.collections.immutable.persistentListOf
 
 private const val VISIBILITY_THRESHOLD = 0.5f
 
@@ -54,16 +55,11 @@ internal fun WalletTopBar(
 
         TangemTopBar(
             title = wrappedBalance,
-            startActionUM = TangemTopBarActionUM(
+            startAction = TangemTopBarActionUM(
                 iconRes = R.drawable.ic_tangem_24,
                 isActionable = false,
             ),
-            endActionUM = TangemTopBarActionUM(
-                iconRes = R.drawable.ic_more_default_24,
-                isActionable = true,
-                onClick = topBarConfig.onDetailsClick,
-                ghostModeProgress = behavior.state.collapsedFraction,
-            ),
+            endActions = topBarConfig.endActions,
             modifier = Modifier
                 .statusBarsPadding()
                 .testTag(MainScreenTestTags.TOP_BAR),
@@ -85,8 +81,15 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
             Icon(painter = painterResource(id = R.drawable.img_tangem_logo_90_24), contentDescription = null)
         },
         actions = {
-            IconButton(onClick = config.onDetailsClick, modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON)) {
-                Icon(painter = painterResource(id = R.drawable.ic_more_vertical_24), contentDescription = null)
+            config.endActions.forEach { action ->
+                if (action.onClick != null) {
+                    IconButton(onClick = action.onClick!!) {
+                        Icon(
+                            painter = painterResource(id = action.iconRes),
+                            contentDescription = null,
+                        )
+                    }
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -115,7 +118,31 @@ private fun Preview_WalletTopBar() {
 private fun WalletTopBar_Preview() {
     TangemThemePreviewRedesign {
         WalletTopBar(
-            topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
+            topBarConfig = WalletTopBarConfig(),
+            walletBalance = stringReference("$ 8923,05"),
+            behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
+        )
+    }
+}
+
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun WalletTopBar_WithQrButton_Preview() {
+    TangemThemePreviewRedesign {
+        WalletTopBar(
+            topBarConfig = WalletTopBarConfig(
+                endActions = persistentListOf(
+                    TangemTopBarActionUM(
+                        iconRes = com.tangem.core.ui.R.drawable.ic_qrcode_scaner_24,
+                        onClick = {},
+                    ),
+                    TangemTopBarActionUM(
+                        iconRes = R.drawable.ic_more_default_24,
+                        onClick = {},
+                    ),
+                ),
+            ),
             walletBalance = stringReference("$ 8923,05"),
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
         )
