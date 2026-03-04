@@ -85,6 +85,7 @@ private fun lightThemeColors2(): TangemColors2 {
             warning = TangemColorPalette.Amaranth,
             attention = TangemColorPalette.Tangerine,
         ),
+        walletIcon = TangemColorPalette.Dark_10,
     )
     val overlay = TangemColors2.Overlay(
         overlayPrimary = TangemColorPalette.Overlay1,
@@ -247,6 +248,7 @@ private fun darkThemeColors2(): TangemColors2 {
             warning = TangemColorPalette.Flamingo,
             attention = TangemColorPalette.Mustard,
         ),
+        walletIcon = TangemColorPalette.Light_10,
     )
     val overlay = TangemColors2.Overlay(
         overlayPrimary = TangemColorPalette.Overlay1,
