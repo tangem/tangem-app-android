@@ -699,6 +699,7 @@
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
+  <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
   <string name="main_scan_card_warning_view_title">Scan your card or ring</string>
   <string name="main_swap_changelly_promotion_message">Enjoy %1$s service fees on swaps via Changelly from February %2$s-%3$s</string>
@@ -1509,6 +1510,7 @@
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">Change PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
