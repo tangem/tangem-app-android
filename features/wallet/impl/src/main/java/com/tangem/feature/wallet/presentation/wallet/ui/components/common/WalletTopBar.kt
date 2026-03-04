@@ -82,8 +82,8 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
         },
         actions = {
             config.endActions.forEach { action ->
-                if (action.onClick != null) {
-                    IconButton(onClick = action.onClick!!) {
+                action.onClick?.let { onClick ->
+                    IconButton(onClick = onClick) {
                         Icon(
                             painter = painterResource(id = action.iconRes),
                             contentDescription = null,
