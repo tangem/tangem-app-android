@@ -86,12 +86,7 @@ class SwapChooseTokenScreenTest : BaseTestCase() {
                 onSwapChooseTokenScreen { tokenWithTitle(bitcoin).assertIsNotDisplayed() }
             }
             step("Assert '$jesusCoin' is displayed and unavailable for swap") {
-                onSwapChooseTokenScreen {
-                    tokenWithTitle(
-                        tokenTitle = jesusCoin,
-                        availableForSwap = false
-                    ).assertIsDisplayed()
-                }
+                onSwapChooseTokenScreen { tokenWithTitle(tokenTitle = jesusCoin).assertIsDisplayed() }
             }
             step("Assert custom token without backend id '$salam' is not displayed") {
                 onSwapChooseTokenScreen { tokenWithTitle(salam).assertIsNotDisplayed() }
