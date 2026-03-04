@@ -45,6 +45,11 @@ internal data class TangemTokenRowStory(
     val onBalanceHiddenToggle: () -> Unit,
 ) : StoryBookPage
 
+internal data class TangemContextMenuStory(
+    val isExpanded: Boolean,
+    val onExpandedChange: (Boolean) -> Unit,
+) : StoryBookPage
+
 internal data class TangemHeaderRowStory(
     val isBalanceHidden: Boolean,
     val onBalanceHiddenToggle: () -> Unit,
