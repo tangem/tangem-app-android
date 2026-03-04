@@ -7,7 +7,6 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.getValidatorsCount
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -28,7 +27,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -67,7 +65,6 @@ import com.tangem.features.staking.impl.navigation.InnerStakingRouter
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingAlertUM
-import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.events.StakingEventFactory
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingBalanceUpdater
 import com.tangem.features.staking.impl.presentation.state.helpers.StakingFeeLoader
@@ -114,7 +111,6 @@ internal class StakingModel @Inject constructor(
     private val stateController: StakingStateController,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -150,7 +146,6 @@ internal class StakingModel @Inject constructor(
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -159,7 +154,7 @@ internal class StakingModel @Inject constructor(
 
     private val params = paramsContainer.require<StakingComponent.Params>()
 
-    private var stakingStateRouter: StakingStateRouter = StakingStateRouter(
+    private val stakingStateRouter: StakingStateRouter = StakingStateRouter(
         appRouter = appRouter,
         stateController = stateController,
         analyticsEventsHandler = analyticsEventHandler,
@@ -238,6 +233,7 @@ internal class StakingModel @Inject constructor(
         )
     }
 
+    @Suppress("PropertyUsedBeforeDeclaration")
     private val transactionSender: StakingTransactionSender by lazy(LazyThreadSafetyMode.NONE) {
         stakingOperationsFactory.createTransactionSender(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -249,7 +245,7 @@ internal class StakingModel @Inject constructor(
 
     private val stakingEventFactory: StakingEventFactory
         get() = StakingEventFactory(
-            stateController = stateController,
+            messageSender = messageSender,
             popBackStack = ::onBackClick,
             onFailedTxEmailClick = ::onFailedTxEmailClick,
         )
@@ -299,17 +295,17 @@ internal class StakingModel @Inject constructor(
     override fun onNextClick(balanceState: BalanceState?) {
         modelScope.launch {
             val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
-            val noBalanceState = balanceState == null
+            val isBalanceAbsent = balanceState == null
             val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalance !is StakingBalance.Data.StakeKit
 
             when {
-                isInitialInfoStep && noBalanceState && integration.areAllTargetsFull && hasNoYieldBalanceData -> {
+                isInitialInfoStep && isBalanceAbsent && integration.areAllTargetsFull && hasNoYieldBalanceData -> {
                     stakingEventFactory.createStakingValidatorsUnavailableAlert()
                     return@launch
                 }
-                isInitialInfoStep && noBalanceState -> {
+                isInitialInfoStep && isBalanceAbsent -> {
                     val list = buildList {
-                        SetConfirmationStateInitTransformer(
+                        val setConfirmationStateInitTransformer = SetConfirmationStateInitTransformer(
                             isEnter = true,
                             isExplicitExit = false,
                             balanceState = null,
@@ -317,13 +313,17 @@ internal class StakingModel @Inject constructor(
                             stakingApproval = stakingApproval,
                             stakingAllowance = stakingAllowance,
                             integration = integration,
-                        ).let(::add)
+                        )
+
+                        add(setConfirmationStateInitTransformer)
+
                         if (integration.isPartialAmountDisabled) {
-                            ValidatorSelectChangeTransformer(
+                            val validatorSelectChangeTransformer = ValidatorSelectChangeTransformer(
                                 selectedTarget = integration.preferredTargets.firstOrNull(),
                                 integration = integration,
-                            ).let(::add)
-                            SetAmountDataTransformer(
+                            )
+
+                            val setAmountDataTransformer = SetAmountDataTransformer(
                                 clickIntents = this@StakingModel,
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
@@ -331,15 +331,25 @@ internal class StakingModel @Inject constructor(
                                 isBalanceHidden = isBalanceHiddenFlow.value,
                                 isAccountsModeEnabled = isAccountsModeEnabled,
                                 account = account,
-                            ).let(::add)
-                            AmountMaxValueStateTransformer(
+                            )
+
+                            val amountMaxValueStateTransformer = AmountMaxValueStateTransformer(
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                                 minimumTransactionAmount = minimumTransactionAmount,
                                 actionType = uiState.value.actionType,
                                 integration = integration,
-                            ).let(::add)
+                            )
+
+                            addAll(
+                                listOf(
+                                    validatorSelectChangeTransformer,
+                                    setAmountDataTransformer,
+                                    amountMaxValueStateTransformer,
+                                ),
+                            )
                         }
                     }
+
                     stateController.updateAll(*list.toTypedArray())
                 }
             }
@@ -503,11 +513,7 @@ internal class StakingModel @Inject constructor(
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
-                    stateController.updateEvent(
-                        StakingEvent.ShowAlert(
-                            StakingAlertUM.FeeIncreased(stateController::dismissAlert),
-                        ),
-                    )
+                    messageSender.send(StakingAlertUM.feeIncreased {})
                     updateNotifications()
                 },
                 onTransactionExpired = {
@@ -571,9 +577,7 @@ internal class StakingModel @Inject constructor(
 
     override fun onAmountEnterClick() {
         if (integration.preferredTargets.isEmpty()) {
-            stateController.updateEvent(
-                StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
-            )
+            messageSender.send(StakingAlertUM.noAvailableValidators())
         } else {
             if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
@@ -907,7 +911,7 @@ internal class StakingModel @Inject constructor(
         AmountReduceByStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             minimumTransactionAmount = minimumTransactionAmount,
-            value = AmountReduceByTransformer.ReduceByData(
+            value = ReduceByData(
                 reduceAmountBy = reduceAmountBy,
                 reduceAmountByDiff = reduceAmountByDiff,
             ),
@@ -960,7 +964,7 @@ internal class StakingModel @Inject constructor(
             task = PeriodicTask(
                 delay = ALLOWANCE_UPDATE_DELAY,
                 task = {
-                    runCatching {
+                    runSuspendCatching {
                         getAllowanceUseCase(
                             userWalletId = userWalletId,
                             cryptoCurrency = cryptoCurrencyStatus.currency,
@@ -1047,11 +1051,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun showPrimaryClickAlert() {
-        stateController.updateEvent(
-            StakingEvent.ShowAlert(
-                StakingAlertUM.StakeMoreClickUnavailable(cryptoCurrencyStatus.currency),
-            ),
-        )
+        messageSender.send(StakingAlertUM.stakeMoreClickUnavailable(cryptoCurrencyStatus.currency))
     }
 
     override fun onOpenLearnMoreAboutApproveClick() {
@@ -1084,17 +1084,20 @@ internal class StakingModel @Inject constructor(
                 network = cryptoCurrencyStatus.currency.network,
                 memo = null,
             )
-            tonAccountInitializeTransaction = transaction.getOrElse {
+
+            val initialTransaction = transaction.getOrElse {
                 stateController.update(
                     SetFeeErrorToTonInitializeBottomSheetTransformer(),
                 )
                 return@launch
             }
 
+            tonAccountInitializeTransaction = initialTransaction
+
             val transactionFee = getFeeUseCase(
                 userWallet = userWallet,
                 network = cryptoCurrencyStatus.currency.network,
-                transactionData = tonAccountInitializeTransaction!!,
+                transactionData = initialTransaction,
             )
 
             transactionFee.fold(
@@ -1103,12 +1106,12 @@ internal class StakingModel @Inject constructor(
                         SetFeeErrorToTonInitializeBottomSheetTransformer(),
                     )
                 },
-                ifRight = {
+                ifRight = { fee ->
                     stateController.update(
                         SetFeeToTonInitializeBottomSheetTransformer(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                            fee = it.normal,
+                            fee = fee.normal,
                             isFeeApproximate = false,
                         ),
                     )
@@ -1201,41 +1204,20 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            getAccountCurrencyStatusUseCase(
-                userWalletId = params.userWalletId,
-                currency = params.cryptoCurrency,
-            ).conflate().distinctUntilChanged()
-                .filter {
-                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
-                }.onEach { (maybeAccount, maybeStatus) ->
-                    isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
-                    account = maybeAccount
-                    onDataLoaded(maybeStatus)
-                }.flowOn(dispatchers.main)
-                .launchIn(modelScope)
-        } else {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
-                currencyId = cryptoCurrencyId,
-                isSingleWalletWithTokens = false,
-            ).conflate().distinctUntilChanged()
-                .filter {
-                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
-                }
-                .onEach { maybeStatus ->
-                    maybeStatus.fold(
-                        ifRight = { onDataLoaded(it) },
-                        ifLeft = { error ->
-                            stakingEventFactory.createGenericErrorAlert(error.toString())
-                            stateController.update(
-                                SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
-                            )
-                        },
-                    )
-                }.flowOn(dispatchers.main)
-                .launchIn(modelScope)
-        }
+        getAccountCurrencyStatusUseCase(
+            userWalletId = params.userWalletId,
+            currency = params.cryptoCurrency,
+        )
+            .conflate()
+            .distinctUntilChanged()
+            .filter { value.currentStep == StakingStep.InitialInfo || isTopHeatupCase() }
+            .onEach { (maybeAccount, maybeStatus) ->
+                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                account = maybeAccount
+                onDataLoaded(maybeStatus)
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
     }
 
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
@@ -1252,12 +1234,11 @@ internal class StakingModel @Inject constructor(
             )
         }
 
-        feeCryptoCurrencyStatus =
-            getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
-        minimumTransactionAmount =
-            getMinimumTransactionAmountSyncUseCase(userWalletId, status).getOrNull()?.let {
+        feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+        minimumTransactionAmount = getMinimumTransactionAmountSyncUseCase(userWalletId, status).getOrNull()
+            ?.let { amount ->
                 EnterAmountBoundary(
-                    amount = it,
+                    amount = amount,
                     fiatRate = status.value.fiatRate.orZero(),
                 )
             }
@@ -1276,11 +1257,11 @@ internal class StakingModel @Inject constructor(
         getBalanceHidingSettingsUseCase()
             .conflate()
             .distinctUntilChanged()
-            .onEach {
-                isBalanceHiddenFlow.value = it.isBalanceHidden
+            .onEach { settings ->
+                isBalanceHiddenFlow.value = settings.isBalanceHidden
                 stateController.update(
                     transformer = HideBalanceStateTransformer(
-                        isBalanceHidden = it.isBalanceHidden,
+                        isBalanceHidden = settings.isBalanceHidden,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         appCurrency = appCurrency,
                     ),
@@ -1414,8 +1395,8 @@ internal class StakingModel @Inject constructor(
         val isAccountInitializedNewValue = checkAccountInitializedUseCase.invoke(
             userWalletId = userWalletId,
             network = cryptoCurrencyStatus.currency.network,
-        ).getOrElse {
-            Timber.e(it)
+        ).getOrElse { throwable ->
+            Timber.e(throwable)
             false
         }
 

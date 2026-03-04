@@ -3,20 +3,11 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
-import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -55,40 +46,6 @@ internal object ManageTokensDomainModule {
         customTokensRepository: CustomTokensRepository,
     ): CheckIsCurrencyNotAddedUseCase {
         return CheckIsCurrencyNotAddedUseCase(customTokensRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideRemoveCustomManagedCryptoCurrencyUseCase(
-        customTokensRepository: CustomTokensRepository,
-    ): RemoveCustomManagedCryptoCurrencyUseCase {
-        return RemoveCustomManagedCryptoCurrencyUseCase(customTokensRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSaveManagedTokensUseCase(
-        customTokensRepository: CustomTokensRepository,
-        walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
-        derivationsRepository: DerivationsRepository,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
-        dispatchers: CoroutineDispatcherProvider,
-    ): SaveManagedTokensUseCase {
-        return SaveManagedTokensUseCase(
-            customTokensRepository = customTokensRepository,
-            walletManagersFacade = walletManagersFacade,
-            currenciesRepository = currenciesRepository,
-            derivationsRepository = derivationsRepository,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
-            stakingIdFactory = stakingIdFactory,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
-        )
     }
 
     @Provides

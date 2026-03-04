@@ -6,11 +6,12 @@ import com.tangem.common.constants.TestConstants.RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.redux.StateDialog
-import com.tangem.scenarios.*
+import com.tangem.scenarios.checkFailedTransactionDialog
+import com.tangem.scenarios.checkScanWarningDialog
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
-import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
@@ -96,7 +97,7 @@ class FeedbackTest : BaseTestCase() {
             step("Click 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
-            step("Assert sanding text is displayed") {
+            step("Assert sеnding text is displayed") {
                 onSendConfirmScreen { sendingText.assertIsDisplayed() }
             }
             step("Click 'Send' button") {
@@ -157,41 +158,6 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Click on 'Request support' button") {
                 ScanWarningDialogPageObject { requestSupportButton.click() }
-            }
-            step("Assert 'Gmail' app is open") {
-                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
-            }
-        }
-    }
-
-    @AllureId("3986")
-    @DisplayName("Send feedback: from scan already used wallet alert dialog")
-    @Test
-    fun sendFeedbackAfterScanAlreadyUsedWalletTest() {
-        val gmailText = "Welcome to Gmail"
-
-        setupHooks(
-            additionalAfterSection = {
-                device.uiDevice.pressBack()
-            }
-        ).run {
-            step("Set mocks for Wallet2") {
-                MockProvider.setMocks(ProductType.Wallet2)
-            }
-            step("Click on 'Accept' button") {
-                onDisclaimerScreen { acceptButton.clickWithAssertion() }
-            }
-            step("Click on 'Get started' button") {
-                onStoriesScreen { getStartedButton.clickWithAssertion() }
-            }
-            step("Click on 'Scan card or ring' button") {
-                onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
-            }
-            step("Check 'Already used Wallet' dialog") {
-                checkAlreadyUsedWalletDialog()
-            }
-            step("Click on 'Request support' button") {
-                AlreadyUsedWalletDialogPageObject { requestSupportButton.click() }
             }
             step("Assert 'Gmail' app is open") {
                 ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }

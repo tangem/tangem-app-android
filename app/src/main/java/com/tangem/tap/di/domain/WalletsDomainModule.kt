@@ -68,6 +68,12 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetWalletIconUseCase(walletsRepository: WalletsRepository): GetWalletIconUseCase {
+        return GetWalletIconUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @Singleton
     fun providesGetSelectedWalletSyncUseCase(
         userWalletsListRepository: UserWalletsListRepository,
     ): GetSelectedWalletSyncUseCase {

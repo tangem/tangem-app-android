@@ -30,10 +30,7 @@ class OnboardingTest : BaseTestCase() {
     @Test
     fun shibaBackupScreenTest() {
         setupHooks().run {
-            scanCard(
-                mockContent = ShibaNoBackupMockContent,
-                alreadyActivatedDialogIsShown = true
-            )
+            scanCard(mockContent = ShibaNoBackupMockContent)
             checkBackupScreen()
         }
     }
@@ -54,10 +51,7 @@ class OnboardingTest : BaseTestCase() {
     @Test
     fun wallet2BackupScreenTest() {
         setupHooks().run {
-            scanCard(
-                mockContent = Wallet2NoBackupMockContent,
-                alreadyActivatedDialogIsShown = true
-            )
+            scanCard(mockContent = Wallet2NoBackupMockContent)
             checkBackupScreen()
         }
     }
