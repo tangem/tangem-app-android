@@ -6,8 +6,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -17,12 +18,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
-@Suppress("LongParameterList")
 @ModelScoped
 internal class WcUserWalletsFetcher(
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
     messageSender: UiMessageSender,
-    private val getTokenListUseCase: GetTokenListUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val onWalletSelected: (UserWalletId) -> Unit,
 ) {
 
@@ -42,12 +42,13 @@ internal class WcUserWalletsFetcher(
         }
 
     private fun getTokenListFlow(walletItem: UserWalletItemUM): Flow<UserWalletItemUM> {
-        return getTokenListUseCase.launch(UserWalletId(walletItem.id)).map { lce ->
-            val information = lce.fold(
-                ifLoading = { UserWalletItemUM.Information.Loading },
-                ifError = { UserWalletItemUM.Information.Failed },
-                ifContent = { tokenList -> tokenCountInfo(tokenList.flattenCurrencies().size) },
-            )
+        return singleAccountStatusListSupplier(userWalletId = UserWalletId(walletItem.id)).map { accountStatusList ->
+            val information = when (accountStatusList.totalFiatBalance) {
+                is TotalFiatBalance.Failed -> UserWalletItemUM.Information.Failed
+                is TotalFiatBalance.Loading -> UserWalletItemUM.Information.Loading
+                is TotalFiatBalance.Loaded -> tokenCountInfo(accountStatusList.flattenCurrencies().size)
+            }
+
             walletItem.copy(information = information)
         }
     }

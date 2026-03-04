@@ -2,7 +2,6 @@ package com.tangem.domain.tokens.error.mapper
 
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
-import com.tangem.domain.tokens.operations.TokenListOperations
 
 internal fun CurrenciesStatusesOperations.Error.mapToTokenListError(): TokenListError {
     return when (this) {
@@ -14,13 +13,5 @@ internal fun CurrenciesStatusesOperations.Error.mapToTokenListError(): TokenList
         is CurrenciesStatusesOperations.Error.UnableToCreateCurrencyStatus,
         is CurrenciesStatusesOperations.Error.EmptyStakingBalances,
         -> TokenListError.EmptyTokens
-    }
-}
-
-internal fun TokenListOperations.Error.mapToTokenListError(): TokenListError {
-    return when (this) {
-        is TokenListOperations.Error.DataError -> TokenListError.DataError(this.cause)
-        is TokenListOperations.Error.UnableToSortTokenList ->
-            TokenListError.UnableToSortTokenList(this.unsortedTokenList)
     }
 }
