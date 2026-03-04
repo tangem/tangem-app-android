@@ -3,6 +3,7 @@ package com.tangem.domain.pay.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.*
@@ -38,7 +39,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             return // fast exit
         }
 
-        onboardingRepository.checkCustomerWallet(userWalletId)
+        onboardingRepository.hasTangemPayInWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
                     Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
@@ -125,7 +126,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
             }
             .map { customerInfo ->
                 Timber.tag(TAG).i("customerInfo")
-                if (customerInfo.cardInfo == null && customerInfo.kycStatus == CustomerInfo.KycStatus.APPROVED) {
+                if (customerInfo.cardInfo == null && customerInfo.kycStatus == KycStatus.APPROVED) {
                     // If order id wasn't saved -> start order creation and get customer info
                     onboardingRepository.createOrder(userWalletId)
                 }
@@ -151,7 +152,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                             info = CustomerInfo(
                                 customerId = null,
                                 productInstance = null,
-                                kycStatus = CustomerInfo.KycStatus.APPROVED,
+                                kycStatus = KycStatus.APPROVED,
                                 cardInfo = null,
                             ),
                             orderStatus = orderData.status,
