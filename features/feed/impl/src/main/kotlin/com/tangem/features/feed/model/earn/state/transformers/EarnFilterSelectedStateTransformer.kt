@@ -16,7 +16,7 @@ internal class EarnFilterSelectedStateTransformer(
             earnFilterUM = prevState.earnFilterUM.copy(
                 selectedTypeFilter = filterType,
                 selectedNetworkFilter = filterNetwork,
-                isNetworkFilterEnabled = earnNetworks.isRight(),
+                isNetworkFilterEnabled = earnNetworks.isRight { networks -> networks.isNotEmpty() },
                 isTypeFilterEnabled = true,
             ),
         )
