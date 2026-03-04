@@ -34,7 +34,7 @@ internal fun NewsSlider(newsSliderConfig: NewsSliderConfig) {
                 .conditionalCompose(
                     condition = isRedesignEnabled,
                     modifier = {
-                        hazeSourceTangem(-1f)
+                        hazeSourceTangem(zIndex = -1f)
                     },
                 )
                 .background(color = background),
