@@ -167,11 +167,14 @@ sealed class AppRoute(val path: String) : Route {
                 get() = when (this) {
                     is Send -> "/$networkName"
                     WalletConnect -> ""
+                    MainScreen -> ""
                 }
 
             data class Send(val networkName: String) : Source()
 
             data object WalletConnect : Source()
+
+            data object MainScreen : Source()
         }
     }
 
