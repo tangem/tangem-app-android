@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Suppress("LargeClass")
 internal object WalletPreviewDataLegacy {
 
-    val topBarConfig by lazy { WalletTopBarConfig(onDetailsClick = {}) }
+    val topBarConfig by lazy { WalletTopBarConfig() }
 
     val walletCardContentState by lazy {
         WalletCardState.Content(
