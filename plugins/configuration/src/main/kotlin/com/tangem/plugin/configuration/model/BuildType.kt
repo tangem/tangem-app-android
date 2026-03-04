@@ -1,11 +1,11 @@
 package com.tangem.plugin.configuration.model
 
-internal enum class BuildType(
+enum class BuildType(
     val id: String,
-    val appIdSuffix: String? = null,
-    val versionSuffix: String? = null,
-    val obfuscating: Boolean = false,
-    val configFields: List<BuildConfigField>,
+    internal val appIdSuffix: String? = null,
+    internal val versionSuffix: String? = null,
+    internal val obfuscating: Boolean = false,
+    internal val configFields: List<BuildConfigField>,
 ) {
 
     /**
@@ -117,4 +117,19 @@ internal enum class BuildType(
             BuildConfigField.ABTestsEnabled(isEnabled = false),
         ),
     ),
+    ;
+
+    /** Returns the environment value (dev/prod) for this build type */
+    val environment: String
+        get() {
+            val environmentField = configFields
+                .filterIsInstance<BuildConfigField.Environment>()
+                .firstOrNull()
+
+            requireNotNull(environmentField) {
+                "BuildType '$id' must have a BuildConfigField.Environment in configFields"
+            }
+
+            return environmentField.value.removeSurrounding("\"")
+        }
 }
