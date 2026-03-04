@@ -23,7 +23,9 @@ internal fun createEarnTokensListConfig(
             earnNetworks.fold(
                 ifLeft = { null },
                 ifRight = { networks ->
-                    networks.filter(EarnNetwork::isAdded).map(EarnNetwork::networkId)
+                    networks.filter(EarnNetwork::isAdded)
+                        .map(EarnNetwork::networkId)
+                        .ifEmpty { listOf(NO_ONE_NETWORK) }
                 },
             )
         }
@@ -35,3 +37,8 @@ internal fun createEarnTokensListConfig(
         isForEarn = isForEarn,
     )
 }
+
+/**
+ * This id means that backend has to return empty result
+ */
+private const val NO_ONE_NETWORK = "-1"

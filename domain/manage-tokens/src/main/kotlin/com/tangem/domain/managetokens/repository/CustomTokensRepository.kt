@@ -43,9 +43,6 @@ interface CustomTokensRepository {
         formValues: AddCustomTokenForm.Validated.All,
     ): CryptoCurrency.Token
 
-    @Deprecated("Use ManageCryptoCurrenciesUseCase")
-    suspend fun removeCurrency(userWalletId: UserWalletId, currency: ManagedCryptoCurrency.Custom)
-
     suspend fun convertToCryptoCurrency(
         userWalletId: UserWalletId,
         currency: ManagedCryptoCurrency.Custom,
