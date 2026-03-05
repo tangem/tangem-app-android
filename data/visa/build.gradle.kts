@@ -15,6 +15,7 @@ android {
 dependencies {
 
     /** Project - Data */
+    implementation(projects.core.analytics)
     implementation(projects.core.datasource)
     implementation(projects.core.error)
     implementation(projects.core.error.ext)
