@@ -40,6 +40,7 @@ internal class NewsDetailsConverter(
             newsUrl = value.newsUrl,
             relatedTokens = value.relatedTokens.toImmutableList(),
             isLiked = value.isLiked,
+            isTrending = value.isTrending,
         )
     }
 
