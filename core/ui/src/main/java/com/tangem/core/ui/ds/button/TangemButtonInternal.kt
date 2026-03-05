@@ -80,7 +80,7 @@ internal fun TangemButtonInternal(
                 visible = iconRes != null && iconPosition == TangemButtonIconPosition.Start,
                 modifier = Modifier.size(size = size.toContentSize()),
             ) {
-                val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
+                val wrappedIconRes = remember(this, iconRes) { requireNotNull(iconRes) }
                 TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
             }
 
