@@ -14,7 +14,7 @@ import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponentLegacy
 import com.tangem.feature.wallet.child.wallet.WalletComponent
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.features.wallet.WalletEntryComponent
@@ -40,9 +40,9 @@ internal class DefaultWalletEntryComponent @AssistedInject constructor(
                     appComponentContext = childByContext(context),
                     navigate = { navigation.pushNew(it) },
                 )
-                is WalletRoute.OrganizeTokens -> OrganizeTokensComponent(
+                is WalletRoute.OrganizeTokens -> OrganizeTokensComponentLegacy(
                     appComponentContext = childByContext(context),
-                    params = OrganizeTokensComponent.Params(route.userWalletId),
+                    params = OrganizeTokensComponentLegacy.Params(route.userWalletId),
                     onBack = { navigation.pop() },
                 )
             }
