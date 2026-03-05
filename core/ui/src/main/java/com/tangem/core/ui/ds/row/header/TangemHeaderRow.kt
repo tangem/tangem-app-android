@@ -1,22 +1,18 @@
 package com.tangem.core.ui.ds.row.header
 
 import android.content.res.Configuration
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -25,10 +21,13 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTail
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.TokenElementsTestTags
+import org.burnoutcrew.reorderable.ReorderableLazyListState
 
 /**
  * UI model for header row component
@@ -37,13 +36,19 @@ import com.tangem.core.ui.test.TokenElementsTestTags
  * @param modifier    Modifier for the composable
  */
 @Composable
-fun TangemHeaderRow(headerRowUM: TangemHeaderRowUM, modifier: Modifier = Modifier, isBalanceHidden: Boolean = false) {
+fun TangemHeaderRow(
+    headerRowUM: TangemHeaderRowUM,
+    modifier: Modifier = Modifier,
+    reorderableState: ReorderableLazyListState? = null,
+    isBalanceHidden: Boolean = false,
+) {
     TangemHeaderRow(
         headTangemIconUM = headerRowUM.startIconUM,
-        footerTangemIconRes = headerRowUM.endIconRes,
+        tailUM = headerRowUM.tailUM,
         title = headerRowUM.title,
         subtitle = headerRowUM.subtitle,
         isBalanceHidden = isBalanceHidden,
+        reorderableState = reorderableState,
         modifier = modifier,
     )
 }
@@ -54,7 +59,7 @@ fun TangemHeaderRow(headerRowUM: TangemHeaderRowUM, modifier: Modifier = Modifie
  * @param modifier         Modifier for the composable
  * @param subtitle         Optional subtitle as a TextReference
  * @param onItemClick      Optional click callback for the row
- * @param footerTangemIconRes Optional drawable resource ID for the footer icon
+ * @param tailUM           Optional TailUM for the tail content
  * @param titleContent     Composable lambda for the title content
  * @param headContent      Composable lambda for the head content
  */
@@ -64,7 +69,7 @@ fun TangemHeaderRow(
     isBalanceHidden: Boolean = false,
     subtitle: TextReference? = null,
     onItemClick: (() -> Unit)? = null,
-    @DrawableRes footerTangemIconRes: Int? = null,
+    tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
     titleContent: @Composable (Modifier) -> Unit,
     headContent: @Composable (Modifier) -> Unit,
 ) {
@@ -101,17 +106,7 @@ fun TangemHeaderRow(
             )
         }
         SpacerWMax()
-        AnimatedVisibility(
-            visible = footerTangemIconRes != null,
-        ) {
-            val wrappedIconUM = remember(this) { requireNotNull(footerTangemIconRes) }
-            Icon(
-                imageVector = ImageVector.vectorResource(id = wrappedIconUM),
-                contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.secondary,
-                modifier = Modifier.size(TangemTheme.dimens2.x4),
-            )
-        }
+        TangemRowTail(tangemRowTailUM = tailUM)
     }
 }
 
@@ -133,7 +128,8 @@ fun TangemHeaderRow(
     isBalanceHidden: Boolean = false,
     subtitle: TextReference? = null,
     headTangemIconUM: TangemIconUM? = null,
-    @DrawableRes footerTangemIconRes: Int? = null,
+    tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
+    reorderableState: ReorderableLazyListState? = null,
     isEnabled: Boolean = false,
     onItemClick: (() -> Unit)? = null,
 ) {
@@ -182,17 +178,10 @@ fun TangemHeaderRow(
             )
         }
         SpacerWMax()
-        AnimatedVisibility(
-            visible = footerTangemIconRes != null,
-        ) {
-            val wrappedIconUM = remember(this) { requireNotNull(footerTangemIconRes) }
-            Icon(
-                imageVector = ImageVector.vectorResource(id = wrappedIconUM),
-                contentDescription = null,
-                tint = TangemTheme.colors2.graphic.neutral.secondary,
-                modifier = Modifier.size(TangemTheme.dimens2.x4),
-            )
-        }
+        TangemRowTail(
+            tangemRowTailUM = tailUM,
+            reorderableState = reorderableState,
+        )
     }
 }
 
@@ -217,7 +206,25 @@ private class PreviewProvider : PreviewParameterProvider<TangemHeaderRowUM> {
                 startIconUM = TangemIconUM.Currency(
                     currencyIconState = CurrencyIconState.Locked,
                 ),
-                endIconRes = R.drawable.ic_minimize_24,
+                tailUM = TangemRowTailUM.Empty,
+                title = stringReference("Account"),
+                subtitle = stringReference("\$ 42,900.17"),
+            ),
+            TangemHeaderRowUM(
+                id = "1",
+                startIconUM = TangemIconUM.Currency(
+                    currencyIconState = CurrencyIconState.Locked,
+                ),
+                tailUM = TangemRowTailUM.Icon(R.drawable.ic_arrow_collapse_24),
+                title = stringReference("Account"),
+                subtitle = stringReference("\$ 42,900.17"),
+            ),
+            TangemHeaderRowUM(
+                id = "1",
+                startIconUM = TangemIconUM.Currency(
+                    currencyIconState = CurrencyIconState.Locked,
+                ),
+                tailUM = TangemRowTailUM.Icon(R.drawable.ic_group_drop_24),
                 title = stringReference("Account"),
                 subtitle = stringReference("\$ 42,900.17"),
             ),
