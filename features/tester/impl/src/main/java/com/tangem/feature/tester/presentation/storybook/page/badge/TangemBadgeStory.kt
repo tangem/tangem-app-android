@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber", "LongMethod")
+
 package com.tangem.feature.tester.presentation.storybook.page.badge
 
 import androidx.compose.foundation.background
@@ -186,7 +187,7 @@ private fun BadgeTypeRow(
         ) {
             TangemBadge(
                 text = stringReference("New"),
-                tangemIconUM = TangemIconUM.Icon(R.drawable.ic_information_24),
+                tangemIconUM = TangemIconUM.Icon(iconRes = R.drawable.ic_information_24),
                 size = size,
                 shape = shape,
                 color = color,
