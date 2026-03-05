@@ -1,8 +1,9 @@
 package com.tangem.feature.wallet.child.organizetokens.model.common
 
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
+import com.tangem.feature.wallet.child.organizetokens.entity.RoundingModeUM
 
-internal fun List<DraggableItem>.uniteItems(isAccountsMode: Boolean): List<DraggableItem> {
+internal fun List<DraggableItem>.uniteItemsLegacy(isAccountsMode: Boolean): List<DraggableItem> {
     val items = this
     val lastItemIndex = items.lastIndex
 
@@ -11,30 +12,30 @@ internal fun List<DraggableItem>.uniteItems(isAccountsMode: Boolean): List<Dragg
         .mapIndexed { index, item ->
             val mode = when (index) {
                 0 -> if (item is DraggableItem.Placeholder) {
-                    DraggableItem.RoundingMode.None
+                    RoundingModeUM.None
                 } else {
-                    DraggableItem.RoundingMode.Top()
+                    RoundingModeUM.Top()
                 }
-                lastItemIndex -> DraggableItem.RoundingMode.Bottom()
+                lastItemIndex -> RoundingModeUM.Bottom()
                 1 -> if (items.first() is DraggableItem.Placeholder) {
-                    DraggableItem.RoundingMode.Top()
+                    RoundingModeUM.Top()
                 } else {
-                    DraggableItem.RoundingMode.None
+                    RoundingModeUM.None
                 }
                 else -> when (item) {
-                    is DraggableItem.Placeholder -> DraggableItem.RoundingMode.None
+                    is DraggableItem.Placeholder -> RoundingModeUM.None
                     is DraggableItem.GroupHeader -> if (isAccountsMode) {
-                        DraggableItem.RoundingMode.None
+                        RoundingModeUM.None
                     } else {
-                        DraggableItem.RoundingMode.Top(showGap = true)
+                        RoundingModeUM.Top(isShowGap = true)
                     }
-                    is DraggableItem.Token -> applyRoundingModeToToken(
+                    is DraggableItem.Token -> applyRoundingModeToTokenLegacy(
                         isAccountsMode = isAccountsMode,
                         items = items,
                         index = index,
                         lastItemIndex = lastItemIndex,
                     )
-                    is DraggableItem.Portfolio -> DraggableItem.RoundingMode.Top(showGap = true)
+                    is DraggableItem.Portfolio -> RoundingModeUM.Top(isShowGap = true)
                 }
             }
 
@@ -53,7 +54,7 @@ internal fun List<DraggableItem>.divideMovingItem(movingItem: DraggableItem): Li
 
         if (item.id == movingItem.id) {
             val dividedItem = movingItem
-                .updateRoundingMode(DraggableItem.RoundingMode.All())
+                .updateRoundingMode(RoundingModeUM.All())
                 .updateShadowVisibility(show = true)
 
             listIterator.set(dividedItem)
@@ -94,7 +95,7 @@ internal fun List<DraggableItem>.divideMovingItem(movingItem: DraggableItem): Li
  * * TOKEN          <- add rounding
  * * PLACEHOLDER    index + 1 is PLACEHOLDER
  */
-private fun applyRoundingModeToToken(
+private fun applyRoundingModeToTokenLegacy(
     isAccountsMode: Boolean,
     items: List<DraggableItem>,
     index: Int,
@@ -103,10 +104,10 @@ private fun applyRoundingModeToToken(
     isAccountsMode && index + 1 < lastItemIndex &&
         (items[index + 1] is DraggableItem.Portfolio ||
             items[index + 1] is DraggableItem.Placeholder && items[index + 2] is DraggableItem.Portfolio) -> {
-        DraggableItem.RoundingMode.Bottom(showGap = true)
+        RoundingModeUM.Bottom(isShowGap = true)
     }
     (!isAccountsMode || index + 1 == lastItemIndex) && items[index + 1] is DraggableItem.Placeholder -> {
-        DraggableItem.RoundingMode.Bottom(showGap = true)
+        RoundingModeUM.Bottom(isShowGap = true)
     }
-    else -> DraggableItem.RoundingMode.None
+    else -> RoundingModeUM.None
 }
