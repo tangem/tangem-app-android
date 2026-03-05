@@ -10,8 +10,13 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
+import com.tangem.features.approval.api.GiveApprovalComponent
+import com.tangem.features.approval.api.GiveApprovalFeatureToggles
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
@@ -22,6 +27,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -146,11 +152,14 @@ internal class StakingModel @Inject constructor(
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
+    private val giveApprovalFeatureToggles: GiveApprovalFeatureToggles,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
     val value: StakingUiState get() = uiState.value
+
+    val approvalSlotNavigation = SlotNavigation<Unit>()
 
     private val params = paramsContainer.require<StakingComponent.Params>()
 
@@ -253,6 +262,31 @@ internal class StakingModel @Inject constructor(
     private val stakingAnalyticSender = StakingAnalyticSender(
         analyticsEventHandler = analyticsEventHandler,
     )
+
+    private val approvalCallback = object : GiveApprovalComponent.Callback {
+        override fun onApproveClick() {
+        }
+
+        override fun onApproveDone() {
+            approvalSlotNavigation.dismiss()
+            stakingAnalyticSender.sendTransactionApprovalAnalytics(
+                cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return,
+            )
+            stateController.update(SetApprovalInProgressTransformer)
+            awaitForAllowance()
+        }
+
+        override fun onApproveFailed() {
+            approvalSlotNavigation.dismiss()
+            stateController.update(
+                SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+            )
+        }
+
+        override fun onCancelClick() {
+            approvalSlotNavigation.dismiss()
+        }
+    }
 
     private var stakingApproval: StakingApproval = StakingApproval.Empty
     private var stakingAllowance: BigDecimal = BigDecimal.ZERO
@@ -748,16 +782,20 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun showApprovalBottomSheet() {
-        stateController.update(
-            ShowApprovalBottomSheetTransformer(
-                userWallet = userWallet,
-                appCurrencyProvider = Provider { appCurrency },
-                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-            ) {
-                stateController.update(DismissBottomSheetStateTransformer)
-            },
-        )
+        if (giveApprovalFeatureToggles.isGaslessApprovalEnabled) {
+            approvalSlotNavigation.activate(Unit)
+        } else {
+            stateController.update(
+                ShowApprovalBottomSheetTransformer(
+                    userWallet = userWallet,
+                    appCurrencyProvider = Provider { appCurrency },
+                    cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                ) {
+                    stateController.update(DismissBottomSheetStateTransformer)
+                },
+            )
+        }
     }
 
     override fun onApproveTypeChange(approveType: ApproveType) {
@@ -1437,6 +1475,26 @@ internal class StakingModel @Inject constructor(
         return value.currentStep == StakingStep.Confirmation &&
             isTon(cryptoCurrencyStatus.currency.network.rawId) &&
             isTonHeatupCase
+    }
+
+    fun getApprovalParams(): GiveApprovalComponent.Params? {
+        val amountState = value.amountState as? AmountState.Data ?: return null
+        val validatorState = value.validatorState as? StakingStates.ValidatorState.Data ?: return null
+        val targetAddress = validatorState.chosenTarget.address
+        val feeCurrencyStatus = feeCryptoCurrencyStatus ?: return null
+
+        return GiveApprovalComponent.Params(
+            userWalletId = userWallet.walletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeCryptoCurrencyStatus = feeCurrencyStatus,
+            amount = amountState.amountTextField.value,
+            spenderAddress = targetAddress,
+            subtitle = resourceReference(
+                id = R.string.give_permission_staking_subtitle,
+                formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
+            ),
+            callback = approvalCallback,
+        )
     }
 
     private companion object {
