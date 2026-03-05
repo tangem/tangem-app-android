@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.ds.row.internal.TangemRowTail
 import com.tangem.core.ui.ds.row.token.internal.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -30,16 +31,16 @@ import org.burnoutcrew.reorderable.ReorderableLazyListState
  *
  * [Token Row](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8207-17583&t=k8dyaykorsNocGVq-4)
  *
- * @param tokenRowUM                The user model containing the data for the token row.
- * @param isBalanceHidden           A boolean indicating whether the balance should be hidden.
- * @param reorderableTokenListState The state of the reorderable lazy list, if applicable.
- * @param modifier                  The modifier to be applied to the row.
+ * @param tokenRowUM        The user model containing the data for the token row.
+ * @param isBalanceHidden   A boolean indicating whether the balance should be hidden.
+ * @param reorderableState  The state of the reorderable lazy list, if applicable.
+ * @param modifier          The modifier to be applied to the row.
  */
 @Composable
 fun TangemTokenRow(
     tokenRowUM: TangemTokenRowUM,
     isBalanceHidden: Boolean,
-    reorderableTokenListState: ReorderableLazyListState?,
+    reorderableState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
 ) {
     TangemRowContainer(
@@ -88,9 +89,9 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
             )
 
-            TokenRowTail(
-                tailUM = tokenRowUM.tailUM,
-                reorderableTokenListState = reorderableTokenListState,
+            TangemRowTail(
+                tangemRowTailUM = tokenRowUM.tailUM,
+                reorderableState = reorderableState,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
@@ -114,18 +115,18 @@ fun TangemTokenRow(
  *
  * [Token Row](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8207-17583&t=k8dyaykorsNocGVq-4)
  *
- * @param tokenRowUM                The user model containing the data for the token row.
- * @param headComponent             The composable function representing the head component.
- * @param titleComponent            The composable function representing the title component.
- * @param isBalanceHidden           A boolean indicating whether the balance should be hidden.
- * @param reorderableTokenListState The state of the reorderable lazy list, if applicable.
- * @param modifier                  The modifier to be applied to the row.
+ * @param tokenRowUM        The user model containing the data for the token row.
+ * @param headComponent     The composable function representing the head component.
+ * @param titleComponent    The composable function representing the title component.
+ * @param isBalanceHidden   A boolean indicating whether the balance should be hidden.
+ * @param reorderableState  The state of the reorderable lazy list, if applicable.
+ * @param modifier          The modifier to be applied to the row.
  */
 @Composable
 fun TangemTokenRow(
     tokenRowUM: TangemTokenRowUM,
     isBalanceHidden: Boolean,
-    reorderableTokenListState: ReorderableLazyListState?,
+    reorderableState: ReorderableLazyListState?,
     modifier: Modifier = Modifier,
     headComponent: @Composable (Modifier) -> Unit,
     titleComponent: @Composable (Modifier) -> Unit,
@@ -183,9 +184,9 @@ fun TangemTokenRow(
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
             )
 
-            TokenRowTail(
-                tailUM = tokenRowUM.tailUM,
-                reorderableTokenListState = reorderableTokenListState,
+            TangemRowTail(
+                tangemRowTailUM = tokenRowUM.tailUM,
+                reorderableState = reorderableState,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
                     .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
@@ -232,7 +233,7 @@ private fun TangemTokenRow_Preview(
         TangemTokenRow(
             tokenRowUM = tokenRowUM,
             isBalanceHidden = false,
-            reorderableTokenListState = null,
+            reorderableState = null,
             modifier = Modifier.background(TangemTheme.colors2.surface.level1),
         )
     }
