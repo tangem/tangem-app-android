@@ -100,7 +100,6 @@ fun getActiveIconRes(blockchainId: String): Int {
         "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.img_plasma_22
         "monad", "monad/test" -> R.drawable.img_monad_22
-        "berachain", "berachain/test" -> R.drawable.img_berachain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -199,7 +198,6 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.img_plasma_22
         "monad", "monad/test" -> R.drawable.img_monad_22
-        "berachain-bera" -> R.drawable.img_berachain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -301,7 +299,6 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "arbitrum-nova" -> R.drawable.ic_arbitrum_nova_22
         "plasma", "plasma/test" -> R.drawable.ic_plasma_22
         "monad", "monad/test" -> R.drawable.ic_monad_22
-        "berachain", "berachain/test" -> R.drawable.ic_berachain_22
         else -> R.drawable.ic_alert_24
     }
 }
