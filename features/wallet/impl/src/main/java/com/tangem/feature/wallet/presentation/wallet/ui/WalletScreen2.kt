@@ -262,10 +262,12 @@ private fun WalletContent2(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 24.dp)
-                    .fillMaxWidth(fraction = 0.7f),
+                    .padding(horizontal = 12.dp)
+                    .fillMaxWidth(),
                 isVisible = state.showMarketsOnboarding,
                 availableHeight = LocalWindowSize.current.height,
                 bottomSheetState = bottomSheetState,
+                onCloseClick = state.onDismissMarketsTooltip,
             )
         }
     }
@@ -370,16 +372,10 @@ private inline fun BaseScaffoldWithMarkets(
                     appBarContent()
 
                     BottomSheetScrim(
-                        color = if (state.showMarketsOnboarding) {
-                            Color.Black.copy(alpha = .65f)
-                        } else {
-                            Color.Black.copy(alpha = .40f)
-                        },
-                        visible = bottomSheetState.targetValue == TangemSheetValue.Expanded ||
-                            state.showMarketsOnboarding,
+                        color = Color.Black.copy(alpha = .40f),
+                        visible = bottomSheetState.targetValue == TangemSheetValue.Expanded,
                         onDismissRequest = {
                             coroutineScope.launch { bottomSheetState.partialExpand() }
-                            state.onDismissMarketsTooltip()
                         },
                     )
                 },
