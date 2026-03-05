@@ -29,6 +29,5 @@ data class EnvironmentConfig(
     val gaslessTxApiKeyDev: String? = null,
     val gaslessTxApiKey: String? = null,
     val customerIoCdpApiKey: String? = null,
-    val surveySparrowDomain: String? = null,
     val surveySparrowToken: String? = null,
 )
