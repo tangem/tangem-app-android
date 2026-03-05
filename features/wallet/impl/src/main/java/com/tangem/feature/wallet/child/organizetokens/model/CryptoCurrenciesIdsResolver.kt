@@ -9,7 +9,10 @@ import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListU
 
 internal class CryptoCurrenciesIdsResolver {
 
-    fun resolve(tokensListUM: OrganizeTokensListUM, accountStatusList: AccountStatusList?): AccountCryptoCurrencies {
+    fun resolveLegacy(
+        tokensListUM: OrganizeTokensListUM,
+        accountStatusList: AccountStatusList?,
+    ): AccountCryptoCurrencies {
         if (accountStatusList == null) return emptyMap()
 
         val draggableTokens = when (tokensListUM) {
