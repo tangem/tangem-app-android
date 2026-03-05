@@ -81,6 +81,7 @@ fun BottomFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier) {
                             ),
                         ),
                     ),
+                    backgroundColor = Color.Transparent,
                 ),
             ) {
                 progressive =
