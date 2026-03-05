@@ -2,6 +2,7 @@ package com.tangem.features.feed.ui.news.details.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,6 +17,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.model.news.details.NewsDetailsModel.Companion.RELATED_TOKEN_MAX_COUNT
 import com.tangem.features.feed.ui.news.details.state.RelatedTokensUM
@@ -38,11 +40,20 @@ internal fun RelatedTokensBlock(
 
     Column(modifier = modifier) {
         SpacerH(40.dp)
-        Text(
-            text = stringResourceSafe(R.string.news_related_tokens),
-            style = TangemTheme.typography.h3,
-            color = TangemTheme.colors.text.primary1,
-        )
+        if (LocalRedesignEnabled.current) {
+            Text(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                text = stringResourceSafe(R.string.news_related_tokens),
+                style = TangemTheme.typography2.headingSemibold20,
+                color = TangemTheme.colors2.text.neutral.primary,
+            )
+        } else {
+            Text(
+                text = stringResourceSafe(R.string.news_related_tokens),
+                style = TangemTheme.typography.h3,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
         SpacerH(12.dp)
 
         BlockCard(
