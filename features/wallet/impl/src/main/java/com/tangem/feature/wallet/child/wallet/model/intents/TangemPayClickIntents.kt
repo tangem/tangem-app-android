@@ -25,6 +25,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
@@ -261,6 +262,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     private fun disableTangemPay(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.KycCancelled())
         modelScope.launch {
             tangemPayOnboardingRepository.disableTangemPay(userWalletId)
                 .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId) }
