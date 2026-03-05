@@ -8,12 +8,13 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensState
+import com.tangem.feature.wallet.child.organizetokens.entity.RoundingModeUM
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import java.util.UUID
 
-internal object OrganizeTokensPreview {
+internal object OrganizeTokensPreviewLegacy {
 
     private const val networksSize = 10
     private const val tokensSize = 3
@@ -44,11 +45,10 @@ internal object OrganizeTokensPreview {
                 val group = DraggableItem.GroupHeader(
                     id = networkNumber,
                     networkName = "$networkNumber",
-
-                    roundingMode = when (index) {
-                        0 -> DraggableItem.RoundingMode.Top()
-                        lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
-                        else -> DraggableItem.RoundingMode.None
+                    roundingModeUM = when (index) {
+                        0 -> RoundingModeUM.Top()
+                        lastNetworkIndex -> RoundingModeUM.Bottom()
+                        else -> RoundingModeUM.None
                     },
                     accountId = "account_$networkNumber",
                 )
@@ -66,9 +66,9 @@ internal object OrganizeTokensPreview {
                             ),
                             groupId = group.id,
                             accountId = "account_$networkNumber",
-                            roundingMode = when {
-                                i == lastTokenIndex && index == lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
-                                else -> DraggableItem.RoundingMode.None
+                            roundingModeUM = when {
+                                i == lastTokenIndex && index == lastNetworkIndex -> RoundingModeUM.Bottom()
+                                else -> RoundingModeUM.None
                             },
                         ),
                     )
