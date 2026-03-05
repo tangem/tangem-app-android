@@ -47,7 +47,8 @@ import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensState
-import com.tangem.feature.wallet.child.organizetokens.ui.preview.OrganizeTokensPreview
+import com.tangem.feature.wallet.child.organizetokens.entity.RoundingModeUM
+import com.tangem.feature.wallet.child.organizetokens.ui.preview.OrganizeTokensPreviewLegacy
 import com.tangem.feature.wallet.impl.R
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -181,7 +182,7 @@ private fun LazyItemScope.DraggableItem(
         mutableStateOf(value = false)
     }
 
-    val itemModifier = Modifier.applyShapeAndShadow(item.roundingMode, item.showShadow)
+    val itemModifier = Modifier.applyShapeAndShadow(item.roundingModeUM, item.showShadow)
 
     ReorderableItem(
         reorderableState = reorderableState,
@@ -335,14 +336,14 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
     }
 }
 
-private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMode, showShadow: Boolean): Modifier {
+private fun Modifier.applyShapeAndShadow(roundingMode: RoundingModeUM, showShadow: Boolean): Modifier {
     return composed {
         val radius by animateDpAsState(
             targetValue = when (roundingMode) {
-                is DraggableItem.RoundingMode.None -> TangemTheme.dimens.radius0
-                is DraggableItem.RoundingMode.All -> TangemTheme.dimens.radius12
-                is DraggableItem.RoundingMode.Bottom,
-                is DraggableItem.RoundingMode.Top,
+                is RoundingModeUM.None -> TangemTheme.dimens.radius0
+                is RoundingModeUM.All -> TangemTheme.dimens.radius12
+                is RoundingModeUM.Bottom,
+                is RoundingModeUM.Top,
                 -> TangemTheme.dimens.radius16
             },
             label = "item_shape_radius",
@@ -368,15 +369,15 @@ private fun Modifier.applyShapeAndShadow(roundingMode: DraggableItem.RoundingMod
 
 @Composable
 @ReadOnlyComposable
-private fun getItemGap(roundingMode: DraggableItem.RoundingMode): PaddingValues {
+private fun getItemGap(roundingMode: RoundingModeUM): PaddingValues {
     val paddingValue = TangemTheme.dimens.spacing4
 
-    return if (roundingMode.showGap) {
+    return if (roundingMode.isShowGap) {
         when (roundingMode) {
-            is DraggableItem.RoundingMode.None -> PaddingValues(all = 0.dp)
-            is DraggableItem.RoundingMode.All -> PaddingValues(vertical = paddingValue)
-            is DraggableItem.RoundingMode.Top -> PaddingValues(top = paddingValue)
-            is DraggableItem.RoundingMode.Bottom -> PaddingValues(bottom = paddingValue)
+            is RoundingModeUM.None -> PaddingValues(all = 0.dp)
+            is RoundingModeUM.All -> PaddingValues(vertical = paddingValue)
+            is RoundingModeUM.Top -> PaddingValues(top = paddingValue)
+            is RoundingModeUM.Bottom -> PaddingValues(bottom = paddingValue)
         }
     } else {
         PaddingValues(all = 0.dp)
@@ -384,18 +385,18 @@ private fun getItemGap(roundingMode: DraggableItem.RoundingMode): PaddingValues 
 }
 
 @Stable
-private fun getItemShape(roundingMode: DraggableItem.RoundingMode, radius: Dp): Shape {
+private fun getItemShape(roundingMode: RoundingModeUM, radius: Dp): Shape {
     return when (roundingMode) {
-        is DraggableItem.RoundingMode.None -> RectangleShape
-        is DraggableItem.RoundingMode.Top -> RoundedCornerShape(
+        is RoundingModeUM.None -> RectangleShape
+        is RoundingModeUM.Top -> RoundedCornerShape(
             topStart = radius,
             topEnd = radius,
         )
-        is DraggableItem.RoundingMode.Bottom -> RoundedCornerShape(
+        is RoundingModeUM.Bottom -> RoundedCornerShape(
             bottomStart = radius,
             bottomEnd = radius,
         )
-        is DraggableItem.RoundingMode.All -> RoundedCornerShape(
+        is RoundingModeUM.All -> RoundedCornerShape(
             size = radius,
         )
     }
@@ -416,8 +417,8 @@ private fun OrganizeTokensScreenPreview(
 
 private class OrganizeTokensStateProvider : CollectionPreviewParameterProvider<OrganizeTokensState>(
     collection = listOf(
-        OrganizeTokensPreview.stateAccounts,
-        OrganizeTokensPreview.state,
+        OrganizeTokensPreviewLegacy.stateAccounts,
+        OrganizeTokensPreviewLegacy.state,
     ),
 )
 // endregion Preview
