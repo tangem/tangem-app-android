@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.di
 
 import com.tangem.core.decompose.model.Model
 import com.tangem.feature.wallet.DefaultWalletEntryComponent
-import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModel
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedModel
 import com.tangem.feature.wallet.utils.DefaultUserWalletImageFetcher
@@ -41,9 +40,4 @@ internal interface WalletFeatureModule {
     @IntoMap
     @ClassKey(KycRejectedModel::class)
     fun bindKycRejectedModel(model: KycRejectedModel): Model
-
-    @Binds
-    @IntoMap
-    @ClassKey(OrganizeTokensModel::class)
-    fun bindOrganizeTokensModel(model: OrganizeTokensModel): Model
 }
