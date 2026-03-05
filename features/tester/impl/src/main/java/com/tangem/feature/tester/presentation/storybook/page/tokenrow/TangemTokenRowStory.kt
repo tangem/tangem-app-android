@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber", "LongMethod")
+
 package com.tangem.feature.tester.presentation.storybook.page.tokenrow
 
 import androidx.compose.foundation.background
@@ -44,7 +45,7 @@ internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier 
             TangemTokenRow(
                 tokenRowUM = um,
                 isBalanceHidden = state.isBalanceHidden,
-                reorderableTokenListState = null,
+                reorderableState = null,
                 modifier = Modifier.background(TangemTheme.colors2.surface.level1),
             )
             HorizontalDivider(
