@@ -18,10 +18,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokensSortType
-import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponentLegacy
 import com.tangem.feature.wallet.child.organizetokens.analytics.PortfolioOrganizeTokensAnalyticsEvent
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensState
-import com.tangem.feature.wallet.child.organizetokens.model.dnd.DragAndDropAdapter
+import com.tangem.feature.wallet.child.organizetokens.model.dnd.DragAndDropAdapterLegacy
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -31,7 +31,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @Stable
 @ModelScoped
-internal class OrganizeTokensModel @Inject constructor(
+internal class OrganizeTokensModelLegacy @Inject constructor(
     paramsContainer: ParamsContainer,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -48,17 +48,18 @@ internal class OrganizeTokensModel @Inject constructor(
 
     private var isBalanceHidden = true
 
-    private val dragAndDropAdapter = DragAndDropAdapter(
+    @Suppress("PropertyUsedBeforeDeclaration")
+    private val dragAndDropAdapterLegacy = DragAndDropAdapterLegacy(
         tokenListUMProvider = Provider { uiState.value.tokenListUM },
     )
 
     private val stateHolder = OrganizeTokensStateHolder(
         intents = this,
-        dragAndDropAdapter = dragAndDropAdapter,
+        dragAndDropAdapterLegacy = dragAndDropAdapterLegacy,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
     )
 
-    private val userWalletId = paramsContainer.require<OrganizeTokensComponent.Params>().userWalletId
+    private val userWalletId = paramsContainer.require<OrganizeTokensComponentLegacy.Params>().userWalletId
 
     private var cachedAccountStatusList: AccountStatusList? = null
 
@@ -72,8 +73,8 @@ internal class OrganizeTokensModel @Inject constructor(
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened())
 
         getBalanceHidingSettingsUseCase()
-            .onEach {
-                isBalanceHidden = it.isBalanceHidden
+            .onEach { balanceHidingSettings ->
+                isBalanceHidden = balanceHidingSettings.isBalanceHidden
                 stateHolder.updateHiddenState(isBalanceHidden)
             }
             .launchIn(modelScope)
@@ -134,7 +135,7 @@ internal class OrganizeTokensModel @Inject constructor(
             )
 
             val result = applyTokenListSortingUseCase(
-                sortedTokensIdsByAccount = resolver.resolve(tokensListUM, cachedAccountStatusList),
+                sortedTokensIdsByAccount = resolver.resolveLegacy(tokensListUM, cachedAccountStatusList),
                 isGroupedByNetwork = isGroupedByNetwork,
                 isSortedByBalance = isSortedByBalance,
             )
@@ -173,7 +174,7 @@ internal class OrganizeTokensModel @Inject constructor(
     }
 
     private fun bootstrapDragAndDropUpdates() {
-        dragAndDropAdapter.dragAndDropUpdates
+        dragAndDropAdapterLegacy.dragAndDropUpdates
             .distinctUntilChanged()
             .onEach { (type, updatedListState) ->
                 disableSortingByBalanceIfListChanged(type)
@@ -183,8 +184,8 @@ internal class OrganizeTokensModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun disableSortingByBalanceIfListChanged(dragOperationType: DragAndDropAdapter.DragOperation.Type) {
-        if (dragOperationType !is DragAndDropAdapter.DragOperation.Type.End) return
+    private fun disableSortingByBalanceIfListChanged(dragOperationType: DragAndDropAdapterLegacy.DragOperation.Type) {
+        if (dragOperationType !is DragAndDropAdapterLegacy.DragOperation.Type.End) return
 
         if (uiState.value.header.isSortedByBalance && dragOperationType.isItemsOrderChanged) {
             cachedAccountStatusList = cachedAccountStatusList?.copy(sortType = TokensSortType.NONE)
