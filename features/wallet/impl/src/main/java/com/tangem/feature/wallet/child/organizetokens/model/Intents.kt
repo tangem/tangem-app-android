@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.organizetokens.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import org.burnoutcrew.reorderable.ItemPosition
 
@@ -16,13 +17,14 @@ internal interface OrganizeTokensIntents {
     fun onCancelClick()
 }
 
+@Stable
 internal interface DragAndDropIntents {
 
     fun onItemDragged(from: ItemPosition, to: ItemPosition)
 
     fun canDragItemOver(dragOver: ItemPosition, dragging: ItemPosition): Boolean
 
-    fun onItemDraggingStart(item: DraggableItem)
+    fun onItemDraggingStartLegacy(item: DraggableItem)
 
     fun onItemDraggingEnd()
 }
