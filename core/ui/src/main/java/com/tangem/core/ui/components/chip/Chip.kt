@@ -66,7 +66,7 @@ fun Chip(state: ChipUM, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ChipPreviewV() {
+private fun ChipPreview() {
     TangemThemePreview {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
