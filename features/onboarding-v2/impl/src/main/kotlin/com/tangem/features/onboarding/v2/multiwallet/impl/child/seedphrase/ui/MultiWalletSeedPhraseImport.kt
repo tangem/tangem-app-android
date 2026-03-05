@@ -28,6 +28,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.security.DisableAutofillEffect
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.utils.InvalidWordsColorTransformation
@@ -52,6 +53,8 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
             onDismissDialog = state.dialog.onDismiss,
         )
     }
+
+    DisableAutofillEffect()
 
     Box(modifier.fillMaxSize()) {
         Column(
