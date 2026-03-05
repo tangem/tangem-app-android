@@ -20,6 +20,7 @@ object TangemColorPalette {
     // endregion Dark
 
     // region Dark Alpha
+    val Dark_05 = Color(0x0D1E1E1E)
     val Dark_10 = Color(0x1A1E1E1E)
     val Dark_20 = Color(0x331E1E1E)
     val Dark_30 = Color(0x4D1E1E1E)
