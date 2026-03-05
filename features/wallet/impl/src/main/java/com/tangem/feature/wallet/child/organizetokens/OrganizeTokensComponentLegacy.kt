@@ -8,17 +8,17 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModel
+import com.tangem.feature.wallet.child.organizetokens.model.OrganizeTokensModelLegacy
 import com.tangem.feature.wallet.child.organizetokens.ui.OrganizeTokensScreen
 import kotlinx.coroutines.launch
 
-internal class OrganizeTokensComponent(
+internal class OrganizeTokensComponentLegacy(
     appComponentContext: AppComponentContext,
     params: Params,
     onBack: () -> Unit,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OrganizeTokensModel = getOrCreateModel(params)
+    private val model: OrganizeTokensModelLegacy = getOrCreateModel(params)
 
     init {
         componentScope.launch {
