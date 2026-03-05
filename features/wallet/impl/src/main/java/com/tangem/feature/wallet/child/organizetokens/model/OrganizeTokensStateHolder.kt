@@ -10,7 +10,7 @@ import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensState
 import com.tangem.feature.wallet.child.organizetokens.model.converter.InProgressStateConverter
 import com.tangem.feature.wallet.child.organizetokens.model.converter.TokenListToStateConverter
 import com.tangem.feature.wallet.child.organizetokens.model.converter.error.TokenListSortingErrorConverter
-import com.tangem.feature.wallet.child.organizetokens.model.dnd.DragAndDropAdapter
+import com.tangem.feature.wallet.child.organizetokens.model.dnd.DragAndDropAdapterLegacy
 import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 
 internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
-    private val dragAndDropAdapter: DragAndDropAdapter,
+    private val dragAndDropAdapterLegacy: DragAndDropAdapterLegacy,
     private val appCurrencyProvider: Provider<AppCurrency>,
 ) {
 
@@ -91,10 +91,10 @@ internal class OrganizeTokensStateHolder(
                 onCancelClick = intents::onCancelClick,
             ),
             dndConfig = OrganizeTokensState.DragAndDropConfig(
-                onItemDragged = dragAndDropAdapter::onItemDragged,
-                onItemDragStart = dragAndDropAdapter::onItemDraggingStart,
-                onItemDragEnd = dragAndDropAdapter::onItemDraggingEnd,
-                canDragItemOver = dragAndDropAdapter::canDragItemOver,
+                onItemDragged = dragAndDropAdapterLegacy::onItemDragged,
+                onItemDragStart = dragAndDropAdapterLegacy::onItemDraggingStartLegacy,
+                onItemDragEnd = dragAndDropAdapterLegacy::onItemDraggingEnd,
+                canDragItemOver = dragAndDropAdapterLegacy::canDragItemOver,
             ),
             scrollListToTop = consumedEvent(),
             isBalanceHidden = true,
