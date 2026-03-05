@@ -213,13 +213,12 @@ internal class TesterActivity : ComposeActivity() {
     }
 
     private fun startSurveySparrow(): Boolean {
-        val domain = environmentConfig.surveySparrowDomain
         val token = environmentConfig.surveySparrowToken
 
-        if (domain.isNullOrEmpty() || token.isNullOrEmpty()) {
+        if (token.isNullOrEmpty()) {
             val toast = Toast.makeText(
                 this,
-                "Survey Sparrow is not configured. Domain or token is missing.",
+                "Survey Sparrow is not configured. Token is missing.",
                 Toast.LENGTH_LONG,
             )
 
@@ -227,7 +226,7 @@ internal class TesterActivity : ComposeActivity() {
             return false
         }
 
-        SurveySparrowManager(domain = domain, token = token).startSurveyForResult(
+        SurveySparrowManager(domain = DOMAIN, token = token).startSurveyForResult(
             activity = this,
             requestCode = SURVEY_SPARROW_REQUEST_CODE,
         )
@@ -236,6 +235,7 @@ internal class TesterActivity : ComposeActivity() {
     }
 
     private companion object {
+        const val DOMAIN = "tangem.com"
         const val SURVEY_SPARROW_REQUEST_CODE = 1001
     }
 }
