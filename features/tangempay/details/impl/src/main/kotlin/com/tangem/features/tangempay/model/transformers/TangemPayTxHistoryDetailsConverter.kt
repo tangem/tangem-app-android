@@ -115,13 +115,17 @@ internal object TangemPayTxHistoryDetailsConverter :
                         this.amount.isPositive() -> StringsSigns.MINUS
                     else -> StringsSigns.PLUS
                 }
-                val amount = this.amount.abs().format {
+                val amount = when (this.status) {
+                    TangemPayTxHistoryItem.Status.DECLINED -> this.authorizedAmount
+                    else -> this.amount
+                }
+                val formattedAmount = amount.abs().format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
                         fiatCurrencySymbol = this@extractAmount.currency.symbol,
                     )
                 }
-                amountPrefix + amount
+                amountPrefix + formattedAmount
             }
             is TangemPayTxHistoryItem.Collateral -> {
                 val amountPrefix = when {

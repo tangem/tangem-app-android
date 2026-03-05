@@ -50,9 +50,9 @@ internal object WalletScreenPreviewDataLegacy {
 
     private val textContentTokensState = WalletTokensListState.ContentState.Content(
         items = persistentListOf(
-            TokensListItemUM.GroupTitle(id = 1, text = stringReference("Network Bitcoin")),
+            TokensListItemUM.GroupTitle(id = 111, text = stringReference("Network Bitcoin")),
             TokensListItemUM.Token(state = tokenItemState),
-            TokensListItemUM.GroupTitle(id = 2, text = stringReference("Network Ethereum")),
+            TokensListItemUM.GroupTitle(id = 222, text = stringReference("Network Ethereum")),
             TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "2",
@@ -210,7 +210,12 @@ internal object WalletScreenPreviewDataLegacy {
                 isFlickering = false,
                 onItemClick = { },
             ),
-            tangemPayState = TangemPayState.Empty,
+            tangemPayState = TangemPayState.Card(
+                lastFourDigits = stringReference("*1234"),
+                balanceText = stringReference("$10"),
+                balanceSymbol = stringReference("USDC"),
+                onClick = {},
+            ),
             type = WalletType.Cold,
         )
     }
