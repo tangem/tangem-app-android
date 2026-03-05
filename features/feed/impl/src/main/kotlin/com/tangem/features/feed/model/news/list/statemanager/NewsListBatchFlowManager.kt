@@ -1,12 +1,12 @@
 package com.tangem.features.feed.model.news.list.statemanager
 
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.news.model.NewsListConfig
 import com.tangem.domain.news.usecase.GetNewsListBatchFlowUseCase
 import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMConverter
 import com.tangem.features.feed.model.converter.distinctBatchesContent
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.PaginationStatus
@@ -30,7 +30,7 @@ internal open class NewsListBatchFlowManager(
 ) {
     private val actionsFlow = MutableSharedFlow<BatchAction<Int, NewsListConfig, Nothing>>()
     private val converter by lazy {
-        ShortArticleToArticleConfigUMConverter(isTrending = Provider { false })
+        ShortArticleToArticleConfigUMConverter(null)
     }
 
     private val batchFlow = getNewsListBatchFlowUseCase(
