@@ -31,6 +31,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.ds.row.token.internal.TokenRowTitle
@@ -146,7 +147,7 @@ private fun LazyListScope.tokenItem(
             is TangemTokenRowUM -> TangemTokenRow(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
-                reorderableTokenListState = null,
+                reorderableState = null,
                 modifier = itemModifier,
             )
             is TangemHeaderRowUM -> TangemHeaderRow(
@@ -199,7 +200,7 @@ private fun LazyListScope.portfolioItem(
                     is TangemTokenRowUM -> TangemTokenRow(
                         tokenRowUM = tokenRowUM,
                         isBalanceHidden = isBalanceHidden,
-                        reorderableTokenListState = null,
+                        reorderableState = null,
                         modifier = itemModifier,
                     )
                     is TangemHeaderRowUM -> TangemHeaderRow(
@@ -368,7 +369,7 @@ internal fun PortfolioRowItem(
                         ?.text?.orMaskWithStars(isBalanceHidden),
                     titleContent = composables.title,
                     headContent = composables.icon,
-                    footerTangemIconRes = R.drawable.ic_minimize_24,
+                    tailUM = TangemRowTailUM.Icon(R.drawable.ic_minimize_24),
                     onItemClick = item.tokenRowUM.onItemClick,
                 )
             } else {
@@ -377,7 +378,7 @@ internal fun PortfolioRowItem(
                     headComponent = composables.icon,
                     titleComponent = composables.title,
                     isBalanceHidden = isBalanceHidden,
-                    reorderableTokenListState = null,
+                    reorderableState = null,
                 )
             }
         }
