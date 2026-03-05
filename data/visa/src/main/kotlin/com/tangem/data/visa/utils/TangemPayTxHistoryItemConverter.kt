@@ -6,6 +6,7 @@ import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.extensions.orZero
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import timber.log.Timber
@@ -37,6 +38,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             date = spend.authorizedAt.withLocalZone(),
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
+            authorizedAmount = spend.authorizedAmount.orZero(),
             localAmount = spend.localAmount,
             localCurrency = spend.localCurrency?.let(Currency::getInstance),
             enrichedMerchantName = spend.enrichedMerchantName,
