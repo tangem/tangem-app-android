@@ -17,6 +17,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
@@ -24,6 +25,7 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 
 @Composable
 internal fun QuickRecap(content: String, modifier: Modifier = Modifier) {
@@ -105,17 +107,33 @@ private fun QuickRecapV2(content: String, modifier: Modifier = Modifier) {
 
         Box {
             VerticalDivider(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(start = 10.dp),
                 thickness = 2.dp,
                 color = Color(QUICK_RECAP_DIVIDER_COLOR),
             )
             Text(
-                modifier = Modifier.padding(start = 16.dp),
+                modifier = Modifier.padding(start = 20.dp),
                 text = content,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography2.bodyRegular16,
+                color = TangemTheme.colors2.text.neutral.primary,
             )
         }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun QuickRecapPreview() {
+    TangemThemePreviewRedesign {
+        QuickRecapV2(
+            content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut" +
+                " labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris " +
+                "nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit " +
+                "esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt " +
+                "in culpa qui officia deserunt mollit anim id est laborum.",
+        )
     }
 }
 
