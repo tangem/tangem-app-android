@@ -41,13 +41,17 @@ internal class TangemPayTxHistoryItemsConverter(
             spend.status == TangemPayTxHistoryItem.Status.DECLINED || spend.amount.isPositive() -> StringsSigns.MINUS
             else -> StringsSigns.PLUS
         }
-        val amount = amountPrefix + spend.amount.abs().format {
+        val amount = when (spend.status) {
+            TangemPayTxHistoryItem.Status.DECLINED -> spend.authorizedAmount
+            else -> spend.amount
+        }
+        val formattedAmount = amountPrefix + amount.abs().format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
-            amount = amount,
+            amount = formattedAmount,
             amountColor = themedColor {
                 when {
                     spend.status == TangemPayTxHistoryItem.Status.DECLINED -> TangemTheme.colors.text.warning
