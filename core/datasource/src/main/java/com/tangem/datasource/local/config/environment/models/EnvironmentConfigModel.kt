@@ -20,10 +20,6 @@ class EnvironmentConfigModel(
     @Json(name = "quiknodePlasmaApiKey") val quiknodePlasmaApiKey: String,
     @Json(name = "quiknodeMonadSubdomain") val quiknodeMonadSubdomain: String,
     @Json(name = "quiknodeMonadApiKey") val quiknodeMonadApiKey: String,
-    @Json(name = "quiknodeBerachainSubdomain") val quiknodeBerachainSubdomain: String,
-    @Json(name = "quiknodeBerachainApiKey") val quiknodeBerachainApiKey: String,
-    @Json(name = "quiknodeStellarSubdomain") val quiknodeStellarSubdomain: String,
-    @Json(name = "quiknodeStellarApiKey") val quiknodeStellarApiKey: String,
     @Json(name = "nowNodesApiKey") val nowNodesApiKey: String,
     @Json(name = "getBlockAccessTokens") val getBlockAccessTokens: GetBlockAccessTokens?,
     @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
@@ -105,7 +101,6 @@ data class GetBlockAccessTokens(
     @Json(name = "tezos") val tezos: GetBlockToken?,
     @Json(name = "monad") val monad: GetBlockToken?,
     @Json(name = "stellar") val stellar: GetBlockToken?,
-    @Json(name = "berachain") val berachain: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
