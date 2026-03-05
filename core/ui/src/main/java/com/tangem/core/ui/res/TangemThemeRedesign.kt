@@ -79,6 +79,8 @@ private fun lightThemeColors2(): TangemColors2 {
         neutral = TangemColors2.Border.Neutral(
             primary = TangemColorPalette.Light3,
             secondary = TangemColorPalette.Light5,
+            tertiary = TangemColorPalette.Light_10,
+            quaternary = TangemColorPalette.Dark_10,
         ),
         status = TangemColors2.Border.Status(
             accent = TangemColorPalette.Azure,
@@ -187,6 +189,9 @@ private fun lightThemeColors2(): TangemColors2 {
         backgroundTertiary = TangemColorPalette.White,
         backgroundQuaternary = TangemColorPalette.Dark_20,
     )
+    val contextMenu = TangemColors2.ContextMenu(
+        background = TangemColorPalette.Dark_05,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -200,6 +205,7 @@ private fun lightThemeColors2(): TangemColors2 {
         skeleton = skeleton,
         markers = markers,
         tabs = tabs,
+        contextMenu = contextMenu,
     )
 }
 
@@ -242,6 +248,8 @@ private fun darkThemeColors2(): TangemColors2 {
         neutral = TangemColors2.Border.Neutral(
             primary = TangemColorPalette.Dark4,
             secondary = TangemColorPalette.Dark4,
+            tertiary = TangemColorPalette.Light_10,
+            quaternary = TangemColorPalette.Light_10,
         ),
         status = TangemColors2.Border.Status(
             accent = TangemColorPalette.Azure,
@@ -350,6 +358,9 @@ private fun darkThemeColors2(): TangemColors2 {
         backgroundTertiary = TangemColorPalette.Light_10,
         backgroundQuaternary = TangemColorPalette.Light_10,
     )
+    val contextMenu = TangemColors2.ContextMenu(
+        background = TangemColorPalette.Light_10,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -363,5 +374,6 @@ private fun darkThemeColors2(): TangemColors2 {
         skeleton = skeleton,
         markers = markers,
         tabs = tabs,
+        contextMenu = contextMenu,
     )
 }
