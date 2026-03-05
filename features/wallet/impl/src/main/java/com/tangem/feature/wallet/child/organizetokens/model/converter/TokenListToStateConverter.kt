@@ -11,8 +11,8 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensState
-import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupPlaceholder
-import com.tangem.feature.wallet.child.organizetokens.model.common.uniteItems
+import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupPlaceholderLegacy
+import com.tangem.feature.wallet.child.organizetokens.model.common.uniteItemsLegacy
 import com.tangem.feature.wallet.child.organizetokens.model.converter.items.OrganizedTokenListConverter
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.transformer.Transformer
@@ -74,7 +74,12 @@ internal class AccountTokenItemConverter(
                                     ),
                                 )
                                 if (isGrouping) {
-                                    add(getGroupPlaceholder(accountId = accountStatus.accountId.value, index = -1))
+                                    add(
+                                        getGroupPlaceholderLegacy(
+                                            accountId = accountStatus.accountId.value,
+                                            index = -1,
+                                        ),
+                                    )
                                 }
                                 addAll(organizedTokenListConverter.convert(accountStatus))
                             }
@@ -82,17 +87,17 @@ internal class AccountTokenItemConverter(
                             emptyList()
                         }
                     }.toList()
-                    .uniteItems(true).toPersistentList(),
+                    .uniteItemsLegacy(true).toPersistentList(),
             )
         } else {
             OrganizeTokensListUM.TokensList(
                 isGrouped = isGrouping,
                 items = buildList {
                     if (isGrouping) {
-                        add(getGroupPlaceholder(accountId = value.mainAccount.accountId.value, index = -1))
+                        add(getGroupPlaceholderLegacy(accountId = value.mainAccount.accountId.value, index = -1))
                     }
                     addAll(organizedTokenListConverter.convert(value.mainAccount))
-                }.uniteItems(false)
+                }.uniteItemsLegacy(false)
                     .toPersistentList(),
             )
         }
