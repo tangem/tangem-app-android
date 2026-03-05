@@ -1,9 +1,9 @@
 package com.tangem.core.ui.ds.row.header
 
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.extensions.TextReference
 
 /**
@@ -13,7 +13,7 @@ import com.tangem.core.ui.extensions.TextReference
  * @param title       Title text reference
  * @param subtitle    Subtitle text reference (optional)
  * @param startIconUM Icon UI model (optional)
- * @param endIconRes  Icon UI model (optional)
+ * @param tailUM      Tail UI model (optional)
  * @param isEnabled   Flag indicating if click is enabled
  * @param onItemClick Callback for item click (optional)
  */
@@ -23,7 +23,7 @@ data class TangemHeaderRowUM(
     val title: TextReference,
     val subtitle: TextReference? = null,
     val startIconUM: TangemIconUM? = null,
-    @DrawableRes val endIconRes: Int? = null,
+    val tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
     val isEnabled: Boolean = false,
     val onItemClick: (() -> Unit)? = null,
 ) : TangemRowUM
