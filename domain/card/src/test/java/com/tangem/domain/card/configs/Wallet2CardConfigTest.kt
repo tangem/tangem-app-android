@@ -175,8 +175,6 @@ class Wallet2CardConfigTest {
         Blockchain.PlasmaTestnet to EllipticCurve.Secp256k1,
         Blockchain.Monad to EllipticCurve.Secp256k1,
         Blockchain.MonadTestnet to EllipticCurve.Secp256k1,
-        Blockchain.Berachain to EllipticCurve.Secp256k1,
-        Blockchain.BerachainTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test
