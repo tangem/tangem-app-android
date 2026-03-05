@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.ds.badge.TangemBadgeUM
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -32,7 +33,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
     abstract val bottomEndContentUM: EndContentUM
 
     /** Token row tail UM */
-    abstract val tailUM: TailUM
+    abstract val tailUM: TangemRowTailUM
 
     /** Promo banner UM */
     abstract val promoBannerUM: PromoBannerUM
@@ -54,7 +55,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val topEndContentUM: EndContentUM,
         override val bottomEndContentUM: EndContentUM,
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty,
-        override val tailUM: TailUM = TailUM.Empty,
+        override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty,
         override val onItemClick: (() -> Unit)?,
         override val onItemLongClick: (() -> Unit)?,
     ) : TangemTokenRowUM()
@@ -71,7 +72,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val topEndContentUM: EndContentUM = EndContentUM.Loading
         override val bottomEndContentUM: EndContentUM = EndContentUM.Loading
         override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty
-        override val tailUM: TailUM = TailUM.Empty
+        override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty
         override val onItemClick: (() -> Unit)? = null
         override val onItemLongClick: (() -> Unit)? = null
     }
@@ -84,7 +85,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
         override val headIconUM: TangemIconUM.Currency,
         override val titleUM: TitleUM,
         override val subtitleUM: SubtitleUM,
-        override val tailUM: TailUM,
+        override val tailUM: TangemRowTailUM,
         override val onItemClick: (() -> Unit)?,
         override val onItemLongClick: (() -> Unit)?,
         override val topEndContentUM: EndContentUM = EndContentUM.Empty,
@@ -153,16 +154,5 @@ sealed class TangemTokenRowUM : TangemRowUM {
         ) : PromoBannerUM()
 
         data object Empty : PromoBannerUM()
-    }
-
-    @Immutable
-    sealed class TailUM {
-        data class Text(
-            val text: TextReference,
-        ) : TailUM()
-
-        data object Draggable : TailUM()
-
-        data object Empty : TailUM()
     }
 }
