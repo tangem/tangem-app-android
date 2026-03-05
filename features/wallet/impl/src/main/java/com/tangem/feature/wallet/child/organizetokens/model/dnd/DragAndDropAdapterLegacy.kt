@@ -4,7 +4,7 @@ import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 import com.tangem.feature.wallet.child.organizetokens.model.DragAndDropIntents
 import com.tangem.feature.wallet.child.organizetokens.model.common.divideMovingItem
-import com.tangem.feature.wallet.child.organizetokens.model.common.uniteItems
+import com.tangem.feature.wallet.child.organizetokens.model.common.uniteItemsLegacy
 import com.tangem.feature.wallet.child.organizetokens.model.common.updateItems
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.mutate
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import org.burnoutcrew.reorderable.ItemPosition
 
-internal class DragAndDropAdapter(
+internal class DragAndDropAdapterLegacy(
     private val tokenListUMProvider: Provider<OrganizeTokensListUM>,
 ) : DragAndDropIntents {
 
@@ -72,7 +72,7 @@ internal class DragAndDropAdapter(
         return canDrag
     }
 
-    override fun onItemDraggingStart(item: DraggableItem) {
+    override fun onItemDraggingStartLegacy(item: DraggableItem) {
         if (draggingItem != null) return
         draggingItem = item
 
@@ -81,7 +81,7 @@ internal class DragAndDropAdapter(
                 is DraggableItem.Placeholder,
                 is DraggableItem.Portfolio,
                 -> items
-                is DraggableItem.GroupHeader -> draggableGroupsOperations.collapseGroup(items, item)
+                is DraggableItem.GroupHeader -> draggableGroupsOperations.collapseGroupLegacy(items, item)
                     .divideMovingItem(item)
                 is DraggableItem.Token -> items.divideMovingItem(item)
             }
@@ -96,11 +96,11 @@ internal class DragAndDropAdapter(
         updateListState(DragOperation.Type.End(isItemsOrderChanged = checkIsItemsOrderChanged())) {
             when (draggingItem) {
                 is DraggableItem.GroupHeader -> {
-                    draggableGroupsOperations.expandGroups(items)
-                        .uniteItems(tokenListUM is OrganizeTokensListUM.AccountList)
+                    draggableGroupsOperations.expandGroupsLegacy(items)
+                        .uniteItemsLegacy(tokenListUM is OrganizeTokensListUM.AccountList)
                 }
                 is DraggableItem.Token -> {
-                    items.uniteItems(tokenListUM is OrganizeTokensListUM.AccountList)
+                    items.uniteItemsLegacy(tokenListUM is OrganizeTokensListUM.AccountList)
                 }
                 is DraggableItem.Placeholder,
                 is DraggableItem.Portfolio,

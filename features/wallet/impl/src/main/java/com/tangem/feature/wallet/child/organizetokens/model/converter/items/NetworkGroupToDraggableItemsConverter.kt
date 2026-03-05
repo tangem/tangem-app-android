@@ -6,7 +6,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
 import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupHeaderId
-import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupPlaceholder
+import com.tangem.feature.wallet.child.organizetokens.model.common.getGroupPlaceholderLegacy
 import com.tangem.utils.converter.Converter
 
 internal class NetworkGroupToDraggableItemsConverter(
@@ -28,7 +28,7 @@ internal class NetworkGroupToDraggableItemsConverter(
             convert(pair).toMutableList()
                 .also { mutableGroup ->
                     mutableGroup.add(
-                        getGroupPlaceholder(accountId = pair.first.accountId.value, index = index),
+                        getGroupPlaceholderLegacy(accountId = pair.first.accountId.value, index = index),
                     )
                 }
         }
