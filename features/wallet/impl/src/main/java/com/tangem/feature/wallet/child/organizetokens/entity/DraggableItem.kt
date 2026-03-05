@@ -11,13 +11,13 @@ import com.tangem.feature.wallet.impl.R
  * Helper class for the DND list items
  *
  * @property id ID of the item
- * @property roundingMode item [RoundingMode]
+ * @property roundingModeUM item [RoundingModeUM]
  * @property showShadow if true then item should be elevated
  * */
 @Immutable
 internal sealed class DraggableItem {
     abstract val id: Any
-    abstract val roundingMode: RoundingMode
+    abstract val roundingModeUM: RoundingModeUM
     abstract val showShadow: Boolean
 
     /**
@@ -26,14 +26,14 @@ internal sealed class DraggableItem {
      * @property id ID of the network group
      * @property networkName network group name
      * @property accountId account id
-     * @property roundingMode item [RoundingMode]
+     * @property roundingModeUM item [RoundingModeUM]
      * @property showShadow if true then item should be elevated
      * */
     data class GroupHeader(
         override val id: Int,
         val networkName: String,
         val accountId: String = "",
-        override val roundingMode: RoundingMode = RoundingMode.None,
+        override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
         override val showShadow: Boolean = false,
     ) : DraggableItem() {
 
@@ -53,7 +53,7 @@ internal sealed class DraggableItem {
      * @property groupId ID of the network group which contains this token
      * @property accountId account id
      * @property id ID of the token
-     * @property roundingMode item [RoundingMode]
+     * @property roundingModeUM item [RoundingModeUM]
      * @property showShadow if true then item should be elevated
      * */
     data class Token(
@@ -61,7 +61,7 @@ internal sealed class DraggableItem {
         val groupId: Int,
         val accountId: String = "",
         override val showShadow: Boolean = false,
-        override val roundingMode: RoundingMode = RoundingMode.None,
+        override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
     ) : DraggableItem() {
         override val id: String = tokenItemState.id
     }
@@ -77,7 +77,7 @@ internal sealed class DraggableItem {
         val accountId: String = "",
     ) : DraggableItem() {
         override val showShadow: Boolean = false
-        override val roundingMode: RoundingMode = RoundingMode.None
+        override val roundingModeUM: RoundingModeUM = RoundingModeUM.None
     }
 
     /**
@@ -85,11 +85,11 @@ internal sealed class DraggableItem {
      *
      * @property tokenItemState state of the portfolio item
      * @property id ID of the portfolio
-     * @property roundingMode item [RoundingMode]
+     * @property roundingModeUM item [RoundingModeUM]
      * @property showShadow if true then item should be elevated
      * */
     data class Portfolio(
-        override val roundingMode: RoundingMode = RoundingMode.None,
+        override val roundingModeUM: RoundingModeUM = RoundingModeUM.None,
         val tokenItemState: TokenItemState,
     ) : DraggableItem() {
         override val id: String = tokenItemState.id
@@ -97,55 +97,17 @@ internal sealed class DraggableItem {
     }
 
     /**
-     * Rounding mode of the [DraggableItem]
+     * Update item [RoundingModeUM]
      *
-     * @property showGap if true then item should have padding on rounded side
-     * */
-    @Immutable
-    sealed class RoundingMode {
-        abstract val showGap: Boolean
-
-        /**
-         * In this mode, item is not rounded
-         * */
-        object None : RoundingMode() {
-            override val showGap: Boolean = false
-        }
-
-        /**
-         * In this mode, item should have a rounded top side
-         *
-         * @property showGap if true then item should have top padding
-         * */
-        data class Top(override val showGap: Boolean = false) : RoundingMode()
-
-        /**
-         * In this mode, item should have a rounded bottom side
-         *
-         * @property showGap if true then item should have bottom padding
-         * */
-        data class Bottom(override val showGap: Boolean = false) : RoundingMode()
-
-        /**
-         * In this mode, item should have a rounded all sides
-         *
-         * @property showGap if true then item should have top and bottom padding
-         * */
-        data class All(override val showGap: Boolean = false) : RoundingMode()
-    }
-
-    /**
-     * Update item [RoundingMode]
-     *
-     * @param mode new [RoundingMode]
+     * @param mode new [RoundingModeUM]
      *
      * @return updated [DraggableItem]
      * */
-    fun updateRoundingMode(mode: RoundingMode): DraggableItem = when (this) {
+    fun updateRoundingMode(mode: RoundingModeUM): DraggableItem = when (this) {
         is Placeholder -> this
-        is Portfolio -> this.copy(roundingMode = mode)
-        is GroupHeader -> this.copy(roundingMode = mode)
-        is Token -> this.copy(roundingMode = mode)
+        is Portfolio -> this.copy(roundingModeUM = mode)
+        is GroupHeader -> this.copy(roundingModeUM = mode)
+        is Token -> this.copy(roundingModeUM = mode)
     }
 
     /**
