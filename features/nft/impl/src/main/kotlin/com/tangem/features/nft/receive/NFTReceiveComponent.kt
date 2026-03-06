@@ -13,8 +13,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.account.AccountId
 import com.tangem.features.nft.receive.model.NFTReceiveModel
 import com.tangem.features.nft.receive.ui.NFTReceive
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -57,7 +57,7 @@ internal class NFTReceiveComponent @AssistedInject constructor(
     )
 
     data class Params(
-        val portfolioId: PortfolioId,
+        val accountId: AccountId,
         val onBackClick: () -> Unit,
     )
 }
