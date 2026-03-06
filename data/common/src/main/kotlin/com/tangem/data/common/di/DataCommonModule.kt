@@ -12,7 +12,6 @@ import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -67,7 +66,6 @@ internal object DataCommonModule {
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
-        userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
@@ -75,7 +73,6 @@ internal object DataCommonModule {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
-            userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
             pushTokensRetryerPool = RetryerPool(
