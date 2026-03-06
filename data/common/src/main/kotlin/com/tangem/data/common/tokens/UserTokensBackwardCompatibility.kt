@@ -9,7 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
  * Helper to apply compatibility changes for [UserTokensResponse] to support old saved tokens
  * in new application with new IDs
  */
-internal class UserTokensBackwardCompatibility {
+class UserTokensBackwardCompatibility {
 
     fun applyCompatibilityAndGetUpdated(userTokensResponse: UserTokensResponse): UserTokensResponse {
         return userTokensResponse.copy(
@@ -26,6 +26,21 @@ internal class UserTokensBackwardCompatibility {
                 }
             },
         )
+    }
+
+    fun applyCompatibilityAndGetUpdated(tokens: List<UserTokensResponse.Token>): List<UserTokensResponse.Token> {
+        return tokens.map { token ->
+            val oldSavedId = NETWORKS_TO_OLD_SAVED_IDS[token.networkId]
+            if (oldSavedId != null && token.id == oldSavedId) {
+                Blockchain.fromNetworkId(token.networkId)?.let { blockchain ->
+                    token.copy(
+                        id = blockchain.toCoinId(),
+                    )
+                } ?: token
+            } else {
+                token
+            }
+        }
     }
 
     companion object {
