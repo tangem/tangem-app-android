@@ -138,6 +138,22 @@ internal class SendModel @Inject constructor(
             ),
         )
 
+    val isAvailableForSend: Boolean
+        get() {
+            val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
+            val feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
+
+            return cryptoCurrencyStatus.isAvailableForSend() && feeCryptoCurrencyStatus.isAvailableForSend()
+        }
+
+    val isUnavailableForSend: Boolean
+        get() {
+            val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
+            val feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value
+
+            return cryptoCurrencyStatus.isUnavailableForSend() || feeCryptoCurrencyStatus.isUnavailableForSend()
+        }
+
     val accountFlow: StateFlow<Account?>
         field = MutableStateFlow(null)
     val isAccountModeFlow: StateFlow<Boolean>
@@ -153,6 +169,9 @@ internal class SendModel @Inject constructor(
         subscribeOnBalanceHidden()
         subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
+        if (params.amount != null) {
+            subscribeOnStatusForDeeplinkDestination()
+        }
         initAppCurrency()
         initPredefinedValues()
     }
@@ -363,10 +382,6 @@ internal class SendModel @Inject constructor(
                             userWalletId = params.userWalletId,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ).getOrNull() ?: cryptoCurrencyStatus
-
-                        if (params.amount != null) {
-                            router.replaceAll(Confirm)
-                        }
                     }.flowOn(dispatchers.default)
                         .launchIn(modelScope)
                 },
@@ -378,6 +393,34 @@ internal class SendModel @Inject constructor(
             )
         }
     }
+
+    private fun subscribeOnStatusForDeeplinkDestination() {
+        combine(
+            cryptoCurrencyStatusFlow,
+            feeCryptoCurrencyStatusFlow,
+        ) { cryptoCurrencyStatus, feeCryptoCurrencyStatus ->
+            if (isAvailableForSend && currentRoute.value == initialRoute) {
+                router.replaceAll(Confirm)
+            } else if (isUnavailableForSend) {
+                showAlertError()
+            }
+        }.launchIn(modelScope)
+    }
+
+    private fun CryptoCurrencyStatus.hasAvailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Loaded ||
+        this.value is CryptoCurrencyStatus.Custom ||
+        this.value is CryptoCurrencyStatus.NoQuote
+
+    private fun CryptoCurrencyStatus.hasUnavailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Unreachable ||
+        this.value is CryptoCurrencyStatus.NoAmount ||
+        this.value is CryptoCurrencyStatus.MissedDerivation ||
+        this.value is CryptoCurrencyStatus.NoAccount
+
+    private fun CryptoCurrencyStatus.isAvailableForSend(): Boolean =
+        this.hasAvailableStatus() && this.value.sources.networkSource.isActual()
+
+    private fun CryptoCurrencyStatus.isUnavailableForSend(): Boolean =
+        this.hasUnavailableStatus() && this.value.sources.networkSource.isActual()
 
     private fun subscribeOnBalanceHidden() {
         getBalanceHidingSettingsUseCase()
