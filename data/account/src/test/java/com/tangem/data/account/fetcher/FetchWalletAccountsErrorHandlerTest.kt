@@ -2,6 +2,7 @@ package com.tangem.data.account.fetcher
 
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
+import com.tangem.data.account.store.LegacyUserTokensResponseStore
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.wallet.WalletServerBinder
@@ -14,7 +15,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -34,7 +34,7 @@ class FetchWalletAccountsErrorHandlerTest {
     private val tangemTechApi: TangemTechApi = mockk()
     private val walletServerBinder: WalletServerBinder = mockk()
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
-    private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
+    private val userTokensResponseStore: LegacyUserTokensResponseStore = mockk(relaxUnitFun = true)
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
 
     private val handler = FetchWalletAccountsErrorHandler(

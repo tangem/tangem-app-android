@@ -8,12 +8,9 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.getTokenId
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -21,7 +18,6 @@ import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
-import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -36,9 +32,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
@@ -52,27 +46,11 @@ internal class DefaultCurrenciesRepository(
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    private val userTokensResponseStore: UserTokensResponseStore,
-    private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
-
-    override fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        return channelFlow {
-            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-
-            if (userWallet.isMultiCurrency) {
-                getMultiCurrencyWalletCurrenciesUpdates(userWalletId).collect(::send)
-            } else {
-                val currencies = getSingleCurrencyWalletWithCardCurrencies(userWalletId)
-
-                send(currencies)
-            }
-        }
-    }
 
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(
         userWalletId: UserWalletId,
@@ -140,17 +118,6 @@ internal class DefaultCurrenciesRepository(
             requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
             fetchExpressAssetsByNetworkIds(userWallet, listOf(currency))
             currency
-        }
-    }
-
-    private fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        return channelFlow {
-            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
-            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
-
-            getMultiCurrencyWalletCurrencies(userWallet)
-                .onEach { send(it) }
-                .launchIn(scope = this + dispatchers.io)
         }
     }
 
@@ -281,16 +248,6 @@ internal class DefaultCurrenciesRepository(
         return (userWalletsListRepository.getSyncStrict(userWalletId) as? UserWallet.Cold)?.cardTypesResolver
     }
 
-    private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
-        return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
-            responseCryptoCurrenciesFactory.createCurrencies(
-                response = storedTokens,
-                userWallet = userWallet,
-                accountIndex = DerivationIndex.Main,
-            )
-        }
-    }
-
     private suspend fun fetchExpressAssetsByNetworkIds(
         userWallet: UserWallet,
         cryptoCurrencies: List<CryptoCurrency>,
@@ -337,9 +294,5 @@ internal class DefaultCurrenciesRepository(
             Timber.e(error)
             throw error
         }
-    }
-
-    private fun getSavedUserTokensResponse(key: UserWalletId): Flow<UserTokensResponse> {
-        return userTokensResponseStore.get(userWalletId = key).filterNotNull()
     }
 }
