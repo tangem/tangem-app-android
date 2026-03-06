@@ -41,4 +41,7 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data class KycRejected(val walletId: UserWalletId, val customerId: String) : WalletDialogConfig
+
+    @Serializable
+    data class OrganizeTokens(val userWalletId: UserWalletId) : WalletDialogConfig
 }
