@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.child.organizetokens.model.dnd
 
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
+import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 import com.tangem.feature.wallet.child.organizetokens.model.DragAndDropIntents
 import com.tangem.feature.wallet.child.organizetokens.model.common.divideMovingItem
@@ -89,6 +90,8 @@ internal class DragAndDropAdapterLegacy(
 
         draggingListState = tokenListUM
     }
+
+    override fun onItemDraggingStart(item: OrganizeRowItemUM) { /* no-op */ }
 
     override fun onItemDraggingEnd() {
         val draggingItem = draggingItem ?: return
