@@ -20,7 +20,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.PortfolioId
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.account.PortfolioSelectorController
@@ -160,13 +159,13 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         if (portfolioData.isSingleChoice) {
             val mainAccountId = portfolioData.balances.values.first()
                 .accountsBalance.mainAccount.account.accountId
-            innerRouter.push(NFTRoute.Receive(portfolioId = PortfolioId(mainAccountId)))
+            innerRouter.push(NFTRoute.Receive(accountId = mainAccountId))
         } else {
             bottomSheetNavigation.activate(Unit)
             val selectedAccountId = portfolioSelectorController.selectedAccount
                 .filterNotNull().first()
             bottomSheetNavigation.dismiss()
-            innerRouter.push(NFTRoute.Receive(portfolioId = PortfolioId(selectedAccountId)))
+            innerRouter.push(NFTRoute.Receive(accountId = selectedAccountId))
         }
     }.saveIn(onReceiveClickJob)
 
@@ -176,7 +175,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
     ): ComposableContentComponent = NFTReceiveComponent(
         context = factoryContext,
         params = NFTReceiveComponent.Params(
-            portfolioId = route.portfolioId,
+            accountId = route.accountId,
             onBackClick = ::onChildBack,
         ),
         tokenReceiveComponentFactory = tokenReceiveComponentFactory,
