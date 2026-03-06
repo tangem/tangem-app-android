@@ -7,25 +7,12 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository for everything related to the tokens of user wallet
  * */
 @Suppress("TooManyFunctions")
 interface CurrenciesRepository {
-
-    /**
-     * Retrieves the list of cryptocurrencies within a user wallet.
-     *
-     * This method returns a list of cryptocurrencies associated with the user wallet regardless of whether
-     * it is a multi-currency or single-currency wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A list of [CryptoCurrency].
-     */
-    @Deprecated("Use MultiWalletCryptoCurrenciesSupplier")
-    fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
