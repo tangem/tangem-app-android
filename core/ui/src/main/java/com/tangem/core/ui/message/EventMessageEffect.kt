@@ -23,10 +23,13 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2
+import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalEventMessageHandler
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.LocalSnackbarHostState
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
@@ -35,6 +38,10 @@ fun EventMessageEffect(
     snackbarHostState: SnackbarHostState = LocalSnackbarHostState.current,
     onShowSnackbar: suspend (SnackbarMessage, Context) -> Unit = { message, context ->
         showSnackbar(snackbarHostState, message, context)
+    },
+    topSnackbarHostState: TangemTopSnackbarHostState = LocalTopSnackbarHostState.current,
+    onShowTopSnackbar: suspend (SnackbarMessage) -> Unit = { message ->
+        topSnackbarHostState.showSnackbar(message)
     },
     onShowToast: (ToastMessage, Context) -> Unit = { message, context -> showToast(message, context) },
 ) {
@@ -45,11 +52,16 @@ fun EventMessageEffect(
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessageV2: BottomSheetMessageV2? by remember { mutableStateOf(value = null) }
     var loadingMessage: GlobalLoadingMessage? by remember { mutableStateOf(value = null) }
+    val isRedesignEnabled = LocalRedesignEnabled.current
 
     EventEffect(event = messageEvent) { message ->
         when (message) {
             is SnackbarMessage -> {
-                onShowSnackbar(message, context)
+                if (isRedesignEnabled) {
+                    onShowTopSnackbar(message)
+                } else {
+                    onShowSnackbar(message, context)
+                }
             }
             is DialogMessage -> {
                 dialogMessage = message
@@ -220,7 +232,8 @@ private fun showToast(message: ToastMessage, context: Context) {
     Toast.makeText(
         /* context = */ context,
         /* text = */ message.message.resolveReference(context.resources),
-        /* duration = */ when (message.duration) {
+        /* duration = */
+        when (message.duration) {
             ToastMessage.Duration.Short -> Toast.LENGTH_SHORT
             ToastMessage.Duration.Long -> Toast.LENGTH_LONG
         },
