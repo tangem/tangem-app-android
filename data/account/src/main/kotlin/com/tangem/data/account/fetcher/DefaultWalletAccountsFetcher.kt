@@ -10,6 +10,7 @@ import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.common.response.ETAG_HEADER
@@ -56,6 +57,8 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val mainAccountTokensMigration: DefaultMainAccountTokensMigration,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
+    private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
+
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
         val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
@@ -90,7 +93,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     override suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
         val store = getAccountsResponseStore(userWalletId = userWalletId)
 
-        store.updateData { response }
+        store.updateData { response.applyTokensCompatibility() }
     }
 
     override suspend fun update(
@@ -99,7 +102,9 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     ) {
         val store = getAccountsResponseStore(userWalletId = userWalletId)
 
-        store.updateData { transform(it) }
+        store.updateData {
+            transform(it).applyTokensCompatibility()
+        }
     }
 
     override suspend fun push(
@@ -267,6 +272,22 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                     tokens = accountDTO.tokens?.map { token ->
                         token.copy(accountId = accountDTO.id)
                     },
+                )
+            },
+        )
+    }
+
+    private fun GetWalletAccountsResponse?.applyTokensCompatibility(): GetWalletAccountsResponse? {
+        if (this == null) return null
+
+        return copy(
+            accounts = accounts.map { accountDTO ->
+                val tokens = accountDTO.tokens
+
+                if (tokens.isNullOrEmpty()) return@map accountDTO
+
+                accountDTO.copy(
+                    tokens = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(tokens),
                 )
             },
         )
