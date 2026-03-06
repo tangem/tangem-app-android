@@ -18,8 +18,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,18 +45,14 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
-import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
-import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
-import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.*
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsHint
 import com.tangem.feature.wallet.presentation.wallet.ui.components.MarketsTooltip
@@ -85,7 +79,6 @@ internal fun WalletScreen2(
 
     val statusBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getTop(this).toDp() }
 
-    val snackbarHostState = remember(::SnackbarHostState)
     val walletsPagerState = rememberPagerState(
         initialPage = state.selectedWalletIndex,
         pageCount = { state.wallets2.size },
@@ -104,7 +97,6 @@ internal fun WalletScreen2(
     WalletContent2(
         state = state,
         walletsPagerState = walletsPagerState,
-        snackbarHostState = snackbarHostState,
         behavior = behavior,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
@@ -113,7 +105,6 @@ internal fun WalletScreen2(
 
     WalletEventEffect(
         walletsPagerState = walletsPagerState,
-        snackbarHostState = snackbarHostState,
         event = state.event,
         onCollapseBalance = {
             if (behavior.state.collapsedFraction < 1f) {
@@ -131,7 +122,6 @@ private fun WalletContent2(
     state: WalletScreenState,
     walletsPagerState: PagerState,
     behavior: TangemCollapsingAppBarBehavior,
-    snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
@@ -143,7 +133,6 @@ private fun WalletContent2(
 
     BaseScaffoldWithMarkets(
         state = state,
-        snackbarHostState = snackbarHostState,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
         bottomSheetContent = bottomSheetContent,
@@ -278,7 +267,6 @@ private fun WalletContent2(
 @Composable
 private inline fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
-    snackbarHostState: SnackbarHostState,
     bottomSheetHeaderHeightProvider: () -> Dp,
     modifier: Modifier = Modifier,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -290,10 +278,7 @@ private inline fun BaseScaffoldWithMarkets(
 
     val isKeyboardVisible by rememberIsKeyboardVisible()
 
-    val scaffoldState = rememberTangemBottomSheetScaffoldState(
-        bottomSheetState = bottomSheetState,
-        snackbarHostState = snackbarHostState,
-    )
+    val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
 
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(density = this).toDp() }
@@ -320,15 +305,6 @@ private inline fun BaseScaffoldWithMarkets(
 
         Box(modifier = modifier) {
             TangemBottomSheetScaffold(
-                snackbarHost = { snackbarHostState ->
-                    WalletSnackbarHost(
-                        snackbarHostState = snackbarHostState,
-                        event = state.event,
-                        modifier = Modifier
-                            .padding(bottom = TangemTheme.dimens2.x1)
-                            .navigationBarsPadding(),
-                    )
-                },
                 containerColor = Color.Unspecified,
                 sheetContainerColor = backgroundColor.value,
                 scaffoldState = scaffoldState,
@@ -479,21 +455,6 @@ private fun BottomSheetStateEffects(
                 BottomSheetState.EXPANDED
             },
         )
-    }
-}
-
-@Composable
-private fun WalletSnackbarHost(
-    snackbarHostState: SnackbarHostState,
-    event: StateEvent<WalletEvent>,
-    modifier: Modifier = Modifier,
-) {
-    SnackbarHost(hostState = snackbarHostState, modifier = modifier) { data ->
-        if (event is StateEvent.Triggered && event.data is WalletEvent.CopyAddress) {
-            CopiedTextSnackbar(data)
-        } else {
-            TangemSnackbar(data)
-        }
     }
 }
 
