@@ -4,7 +4,6 @@ import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListBatchFlow
 import com.tangem.domain.managetokens.model.ManageTokensListBatchingContext
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 
 interface ManageTokensRepository {
@@ -14,13 +13,6 @@ interface ManageTokensRepository {
         loadUserTokensFromRemote: Boolean,
         batchSize: Int,
     ): ManageTokensListBatchFlow
-
-    suspend fun hasLinkedTokens(
-        userWalletId: UserWalletId,
-        network: Network,
-        tempAddedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-        tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-    ): Boolean
 
     suspend fun checkCurrencyUnsupportedState(
         userWalletId: UserWalletId,
