@@ -18,7 +18,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.network.Network
@@ -88,14 +87,12 @@ internal class NFTReceiveModel @Inject constructor(
     }
 
     private fun loadPortfolioName() = modelScope.launch(dispatchers.default) {
-        val appBarSubtitle = when (val portfolioId = params.portfolioId) {
-            is PortfolioId.Wallet -> loadWalletName(portfolioId.userWalletId)
-            is PortfolioId.Account -> if (isAccountsModeEnabledUseCase.invokeSync()) {
-                loadAccountName(portfolioId.accountId)
-            } else {
-                loadWalletName(portfolioId.userWalletId)
-            }
+        val appBarSubtitle = if (isAccountsModeEnabledUseCase.invokeSync()) {
+            loadAccountName(params.accountId)
+        } else {
+            loadWalletName(params.accountId.userWalletId)
         }
+
         _state.update { it.copy(appBarSubtitle = appBarSubtitle) }
     }
 
@@ -121,7 +118,7 @@ internal class NFTReceiveModel @Inject constructor(
 
     private fun subscribeToNFTAvailableNetworks() {
         combine(
-            flow = getNFTNetworksUseCase(params.portfolioId),
+            flow = getNFTNetworksUseCase(params.accountId),
             flow2 = searchManager.query.distinctUntilChanged(),
         ) { networks, query ->
             filterNFTAvailableNetworksUseCase(networks, query)
@@ -173,7 +170,7 @@ internal class NFTReceiveModel @Inject constructor(
                 analyticsEventHandler.send(NFTAnalyticsEvent.Receive.BlockchainChosen(network.name))
 
                 val networkStatus = getNFTNetworkStatusUseCase.invoke(
-                    userWalletId = params.portfolioId.userWalletId,
+                    userWalletId = params.accountId.userWalletId,
                     network = network,
                 ) ?: return@launch
 
@@ -198,7 +195,7 @@ internal class NFTReceiveModel @Inject constructor(
     private suspend fun configureReceiveAddresses(addresses: NetworkAddress, network: Network): TokenReceiveConfig {
         val cryptoCurrency = getNFTCurrencyUseCase.invoke(network)
         return receiveAddressesFactory.createForNft(
-            userWalletId = params.portfolioId.userWalletId,
+            userWalletId = params.accountId.userWalletId,
             addresses = addresses,
             network = network,
             nft = cryptoCurrency,
