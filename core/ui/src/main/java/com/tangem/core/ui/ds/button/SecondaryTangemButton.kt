@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -83,6 +84,7 @@ fun SecondaryTangemButton(
         onClick = onClick,
         modifier = modifier
             .clip(shape.toShape(size))
+            .hazeEffectTangem()
             .then(backgroundModifier),
         text = text,
         contentColor = contentColor,
