@@ -21,6 +21,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
@@ -143,6 +144,15 @@ internal class WalletComponent @AssistedInject constructor(
                         params = TokenActionsComponent.Params(
                             actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.OrganizeTokens -> {
+                    OrganizeTokensComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = OrganizeTokensComponent.Params(
+                            userWalletId = dialogConfig.userWalletId,
+                            callback = model.innerWalletRouter.organizeCallbacks,
                         ),
                     )
                 }

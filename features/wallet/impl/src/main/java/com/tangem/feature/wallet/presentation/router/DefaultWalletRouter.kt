@@ -2,10 +2,12 @@ package com.tangem.feature.wallet.presentation.router
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,6 +20,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -32,6 +35,7 @@ internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
     private val reduxStateHolder: ReduxStateHolder,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : InnerWalletRouter {
 
     override val dialogNavigation: SlotNavigation<WalletDialogConfig> = SlotNavigation()
@@ -41,8 +45,17 @@ internal class DefaultWalletRouter @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_LATEST,
     )
 
+    override val organizeCallbacks: OrganizeTokensComponent.Callback
+        get() = OrganizeCallbacks()
+
     override fun openOrganizeTokensScreen(userWalletId: UserWalletId) {
-        navigateToFlow.tryEmit(WalletRoute.OrganizeTokens(userWalletId))
+        if (designFeatureToggles.isRedesignEnabled) {
+            dialogNavigation.activate(
+                configuration = WalletDialogConfig.OrganizeTokens(userWalletId),
+            )
+        } else {
+            navigateToFlow.tryEmit(WalletRoute.OrganizeTokens(userWalletId))
+        }
     }
 
     override fun openDetailsScreen(selectedWalletId: UserWalletId) {
@@ -164,5 +177,11 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openQrScanner() {
         router.push(AppRoute.QrScanning(source = AppRoute.QrScanning.Source.MainScreen))
+    }
+
+    inner class OrganizeCallbacks : OrganizeTokensComponent.Callback {
+        override fun onDismiss() {
+            dialogNavigation.dismiss()
+        }
     }
 }
