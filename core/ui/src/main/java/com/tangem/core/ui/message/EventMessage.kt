@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.resourceReference
 @Immutable
 sealed interface EventMessage : UiMessage
 
+@Immutable
 data class ToastMessage(
     val message: TextReference,
     val duration: Duration = ToastMessage.Duration.Short,
@@ -48,8 +49,10 @@ data class ToastMessage(
  * @param actionLabel The label of the action button. Optional, `null` by default.
  * @param action The action to perform when the action button is clicked. Optional, `null` by default.
  * */
+@Immutable
 data class SnackbarMessage(
     val message: TextReference,
+    @field:DrawableRes val startIconId: Int? = null,
     val duration: Duration = Duration.Short,
     val onDismissRequest: () -> Unit = {},
     val actionLabel: TextReference? = null,
@@ -92,6 +95,7 @@ data class SnackbarMessage(
  * `true` by default.
  * @param onDismissRequest The action to perform when the dialog is dismissed.
  * */
+@Immutable
 data class DialogMessage(
     val message: TextReference,
     val title: TextReference? = null,
@@ -146,6 +150,7 @@ data class DialogMessage(
     }
 }
 
+@Immutable
 data class GlobalLoadingMessage(val isShow: Boolean) : EventMessage
 
 /**
@@ -159,6 +164,7 @@ data class GlobalLoadingMessage(val isShow: Boolean) : EventMessage
  * @param secondAction The second action to perform. Optional, `null` by default.
  * @param onDismissRequest The action to perform when the bottom sheet is dismissed.
  * */
+@Immutable
 data class BottomSheetMessage(
     @DrawableRes val iconResId: Int? = null,
     val title: TextReference? = null,
@@ -202,6 +208,7 @@ data class BottomSheetMessage(
     }
 }
 
+@Immutable
 data class BottomSheetMessageV2(
     val messageBottomSheetUMV2: MessageBottomSheetUMV2,
 ) : EventMessage
