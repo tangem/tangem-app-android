@@ -33,8 +33,12 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
@@ -352,6 +356,8 @@ private fun AdditionalButtons(
 
     val coroutineScope = rememberCoroutineScope()
     val resources = LocalContext.current.resources
+    val isRedesignEnabled = LocalRedesignEnabled.current
+    val tangemTopSnackbarHostState = LocalTopSnackbarHostState.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -366,10 +372,19 @@ private fun AdditionalButtons(
                 clipboardManager.setText(AnnotatedString(code))
 
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = resources.getStringSafe(R.string.referral_promo_code_copied),
-                        duration = SnackbarDuration.Short,
-                    )
+                    if (isRedesignEnabled) {
+                        tangemTopSnackbarHostState.showSnackbar(
+                            SnackbarMessage(
+                                startIconId = R.drawable.ic_check_24,
+                                message = resourceReference(R.string.referral_promo_code_copied),
+                            ),
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = resources.getStringSafe(R.string.referral_promo_code_copied),
+                            duration = SnackbarDuration.Short,
+                        )
+                    }
                 }
             },
             modifier = Modifier.weight(1f),
