@@ -8,7 +8,6 @@ import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -29,7 +28,6 @@ internal object ManageTokensDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
-        userTokensResponseStore: UserTokensResponseStore,
         testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
@@ -40,7 +38,6 @@ internal object ManageTokensDataModule {
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             manageTokensUpdateFetcher = manageTokensUpdateFetcher,
-            userTokensResponseStore = userTokensResponseStore,
             testnetTokensStorage = testnetTokensStorage,
             excludedBlockchains = excludedBlockchains,
             networkFactory = networkFactory,
@@ -54,7 +51,6 @@ internal object ManageTokensDataModule {
     fun provideCustomTokensRepository(
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
-        userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         excludedBlockchains: ExcludedBlockchains,
         networkFactory: NetworkFactory,
@@ -62,7 +58,6 @@ internal object ManageTokensDataModule {
         return DefaultCustomTokensRepository(
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
-            userTokensResponseStore = userTokensResponseStore,
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
             networkFactory = networkFactory,

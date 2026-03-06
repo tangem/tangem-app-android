@@ -3,7 +3,6 @@ package com.tangem.data.tokens.di
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
@@ -11,7 +10,6 @@ import com.tangem.data.tokens.repository.DefaultYieldSupplyWarningsViewedReposit
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
@@ -35,7 +33,6 @@ internal object TokensDataModule {
     @Singleton
     fun provideCurrenciesRepository(
         tangemTechApi: TangemTechApi,
-        userTokensResponseStore: UserTokensResponseStore,
         userWalletsListRepository: UserWalletsListRepository,
         walletManagersFacade: WalletManagersFacade,
         cacheRegistry: CacheRegistry,
@@ -43,7 +40,6 @@ internal object TokensDataModule {
         expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-        responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
@@ -51,12 +47,10 @@ internal object TokensDataModule {
             userWalletsListRepository = userWalletsListRepository,
             walletManagersFacade = walletManagersFacade,
             cacheRegistry = cacheRegistry,
-            userTokensResponseStore = userTokensResponseStore,
             expressServiceFetcher = expressServiceFetcher,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         )
     }
