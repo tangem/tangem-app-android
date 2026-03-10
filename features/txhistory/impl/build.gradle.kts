@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.account.status)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
