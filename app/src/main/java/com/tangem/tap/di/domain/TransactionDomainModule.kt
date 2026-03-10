@@ -1,13 +1,13 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.data.wallets.hot.TangemHotWalletSigner
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.notifications.repository.PushNotificationsRepository
 import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -344,13 +344,13 @@ internal object TransactionDomainModule {
     fun provideCreateAndSendGaslessTransactionUseCase(
         walletManagersFacade: WalletManagersFacade,
         gaslessTransactionRepository: GaslessTransactionRepository,
-        getSingCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+        singleAccountListSupplier: SingleAccountListSupplier,
         cardSdkConfigRepository: CardSdkConfigRepository,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): CreateAndSendGaslessTransactionUseCase {
         return CreateAndSendGaslessTransactionUseCase(
             walletManagersFacade = walletManagersFacade,
-            getSingleCryptoCurrencyStatusUseCase = getSingCryptoCurrencyStatusUseCase,
+            singleAccountListSupplier = singleAccountListSupplier,
             gaslessTransactionRepository = gaslessTransactionRepository,
             cardSdkConfigRepository = cardSdkConfigRepository,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
