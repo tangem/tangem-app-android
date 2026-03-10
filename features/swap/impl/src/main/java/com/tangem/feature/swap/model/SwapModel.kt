@@ -35,7 +35,9 @@ import com.tangem.core.ui.utils.InputNumberFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -69,7 +71,6 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
@@ -136,7 +137,6 @@ internal class SwapModel @Inject constructor(
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
@@ -153,6 +153,7 @@ internal class SwapModel @Inject constructor(
     router: AppRouter,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getTangemPayCurrencyStatusUseCase: GetTangemPayCurrencyStatusUseCase,
     private val tangemPayWithdrawUseCase: TangemPayWithdrawUseCase,
     private val iGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
@@ -386,10 +387,9 @@ internal class SwapModel @Inject constructor(
             } else {
                 val fromStatus = getFromStatus()
                 val toStatus = initialCurrencyTo?.let { currencyTo ->
-                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyId = currencyTo.id,
-                    ).getOrNull()
+                    singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
+                        .getCryptoCurrencyStatus(currencyTo)
+                        .getOrNull()
                 }
 
                 if (fromStatus == null) {
@@ -2305,10 +2305,9 @@ internal class SwapModel @Inject constructor(
                 depositAddress = tangemPayInput.depositAddress,
             )
         } else {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                userWalletId = userWalletId,
-                cryptoCurrencyId = initialCurrencyFrom.id,
-            ).getOrNull()
+            singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
+                .getCryptoCurrencyStatus(currency = initialCurrencyFrom)
+                .getOrNull()
         }
     }
 
