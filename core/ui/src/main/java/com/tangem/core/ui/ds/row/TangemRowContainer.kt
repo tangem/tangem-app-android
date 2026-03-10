@@ -54,13 +54,13 @@ fun TangemRowContainer(
         // Head composable measurement
         val headPlaceable = measurables.measure(
             layoutId = TangemRowLayoutId.HEAD,
-            constraints = constraints,
+            constraints = constraints.copy(minWidth = 0),
         )
 
         // Tail composable measurement
         val tailPlaceable = measurables.measure(
             layoutId = TangemRowLayoutId.TAIL,
-            constraints = constraints,
+            constraints = constraints.copy(minWidth = 0),
         )
 
         val availableWidthForBody = layoutWidth - headPlaceable.widthOrZero() - tailPlaceable.widthOrZero()
@@ -70,7 +70,7 @@ fun TangemRowContainer(
             layoutId = TangemRowLayoutId.END_TOP,
             constraints = constraints.copy(
                 minWidth = 0,
-                maxWidth = availableWidthForBody - startTopMinWidth,
+                maxWidth = max(0, availableWidthForBody - startTopMinWidth),
             ),
         )
 
@@ -79,7 +79,7 @@ fun TangemRowContainer(
             layoutId = TangemRowLayoutId.END_BOTTOM,
             constraints = constraints.copy(
                 minWidth = 0,
-                maxWidth = availableWidthForBody - startBottomMinWidth,
+                maxWidth = max(0, availableWidthForBody - startTopMinWidth),
             ),
         )
 
