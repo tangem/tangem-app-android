@@ -11,6 +11,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
@@ -21,7 +23,6 @@ import com.tangem.domain.models.currency.shouldShowNotSuppliedNotification
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyPendingStatus
 import com.tangem.domain.yield.supply.usecase.*
@@ -35,9 +36,9 @@ import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.properties.Delegates
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -48,7 +49,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val appRouter: AppRouter,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
@@ -109,32 +110,33 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         combine(
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = params.userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = false,
-            ),
-            yieldSupplyEnterStatusFlowUseCase(
+            flow = singleAccountStatusListSupplier(params.userWalletId).map {
+                it.getCryptoCurrencyStatus(currency = cryptoCurrency)
+            },
+            flow2 = yieldSupplyEnterStatusFlowUseCase(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ),
         ) { maybeCryptoCurrency, _ ->
             maybeCryptoCurrency
-        }.flowOn(dispatchers.io)
+        }
+            .flowOn(dispatchers.io)
+            .distinctUntilChanged()
             .onEach { maybeCryptoCurrency ->
                 maybeCryptoCurrency.fold(
-                    ifRight = { cryptoCurrencyStatus ->
+                    ifSome = { cryptoCurrencyStatus ->
                         latestCryptoCurrencyStatus = cryptoCurrencyStatus
                         if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
                             sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                         }
                         onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
                     },
-                    ifLeft = {
-                        Timber.w(it.toString())
+                    ifEmpty = {
+                        Timber.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
                     },
                 )
-            }.launchIn(modelScope)
+            }
+            .launchIn(modelScope)
     }
 
     private suspend fun loadTokenStatus() {
