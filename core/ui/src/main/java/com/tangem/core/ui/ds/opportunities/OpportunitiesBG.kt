@@ -121,7 +121,13 @@ private fun BoxScope.BackgroundLayer(icon: TangemIconUM, blurRadius: Dp = 26.dp)
         is TangemIconUM.Icon -> SolidColorBackground(icon.tintReference(), blurRadius)
         is TangemIconUM.Ident -> Unit
         is TangemIconUM.Image -> ResBackground(icon.imageRes, blurRadius)
-        is TangemIconUM.Url -> UrlColorBackground(icon.url, blurRadius)
+        is TangemIconUM.Url -> {
+            icon.url?.let { iconUrl ->
+                UrlColorBackground(iconUrl, blurRadius)
+            } ?: run {
+                ResBackground(icon.fallbackRes, blurRadius)
+            }
+        }
     }
 }
 
