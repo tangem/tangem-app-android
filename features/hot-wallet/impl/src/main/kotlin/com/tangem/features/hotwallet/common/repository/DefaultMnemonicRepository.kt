@@ -1,6 +1,5 @@
 package com.tangem.features.hotwallet.common.repository
 
-import android.content.Context
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.bip39.EntropyLength
 import com.tangem.crypto.bip39.Mnemonic
@@ -8,15 +7,13 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.MnemonicRepository.MnemonicType
 import com.tangem.sdk.extensions.getWordlist
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-internal class DefaultMnemonicRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
-) : MnemonicRepository {
-    private val wordlist = Wordlist.getWordlist(context)
+internal class DefaultMnemonicRepository @Inject constructor() : MnemonicRepository {
 
-    override val words: Set<String> = wordlist.words.toHashSet()
+    private val wordlist by lazy(LazyThreadSafetyMode.NONE) { Wordlist.getWordlist() }
+
+    override val words: Set<String> by lazy(LazyThreadSafetyMode.NONE) { wordlist.words.toHashSet() }
 
     override fun generateMnemonic(type: MnemonicType): Mnemonic = DefaultMnemonic(
         entropy = when (type) {
