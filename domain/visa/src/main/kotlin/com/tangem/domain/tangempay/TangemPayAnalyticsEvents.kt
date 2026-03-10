@@ -191,4 +191,14 @@ sealed class TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Canceled",
     )
+
+    class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Banner Clicked",
+    )
+
+    class DetailsVisaPermanentButtonClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Button Clicked",
+    )
 }
