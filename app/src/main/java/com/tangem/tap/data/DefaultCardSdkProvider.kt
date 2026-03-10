@@ -168,7 +168,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
             secureStorage = secureStorage,
             authenticationManager = authenticationManager,
             keystoreManager = keystoreManager,
-            wordlist = Wordlist.getWordlist(activity),
+            wordlist = Wordlist.getWordlist(),
             config = config.apply {
                 val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemTech)
                 tangemApiBaseUrl = apiConfig.baseUrl
