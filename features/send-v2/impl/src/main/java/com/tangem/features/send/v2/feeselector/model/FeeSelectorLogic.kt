@@ -8,11 +8,12 @@ import arrow.core.raise.either
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
@@ -55,7 +56,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorAlertFactory: FeeSelectorAlertFactory,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
     isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
@@ -294,11 +295,9 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private suspend fun getSelectedTokenStatus(tokenId: CryptoCurrency.ID): Either<GetFeeError, CryptoCurrencyStatus> =
         either {
             if (params.feeCryptoCurrencyStatus.currency.id != tokenId) {
-                getSingleCryptoCurrencyStatusUseCase
-                    .invokeMultiWalletSync(
-                        userWalletId = params.userWalletId,
-                        cryptoCurrencyId = tokenId,
-                    ).getOrElse {
+                singleAccountStatusListSupplier.getSyncOrNull(params.userWalletId)
+                    .getCryptoCurrencyStatus(currencyId = tokenId, network = null)
+                    .getOrElse {
                         raise(GetFeeError.DataError(IllegalStateException("No token found for id: $tokenId")))
                     }
             } else {
