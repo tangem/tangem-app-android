@@ -19,6 +19,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.background.northernlights.NorthernLightsBackground
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
@@ -130,6 +132,11 @@ private fun WalletContent2(
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     var walletBalance by remember { mutableStateOf<TextReference?>(TextReference.EMPTY) }
+    var pullToRefreshConfig by remember {
+        mutableStateOf(
+            state.wallets2.getOrNull(state.selectedWalletIndex)?.pullToRefreshConfig,
+        )
+    }
 
     BaseScaffoldWithMarkets(
         state = state,
@@ -164,6 +171,8 @@ private fun WalletContent2(
 
         val canPagerScroll by remember { derivedStateOf { behavior.state.heightOffset == 0f } }
 
+        val pullToRefreshState = rememberPullToRefreshState()
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -180,6 +189,8 @@ private fun WalletContent2(
 
             WalletPagerIndicator(
                 pagerState = walletsPagerState,
+                pullToRefreshState = pullToRefreshState,
+                pullToRefreshConfig = pullToRefreshConfig,
                 behavior = behavior,
             )
 
@@ -199,6 +210,11 @@ private fun WalletContent2(
                         walletBalance = (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
                     }
                 }
+                LaunchedEffect(walletsPagerState.currentPage, currentWallet.pullToRefreshConfig) {
+                    if (walletsPagerState.currentPage == currentWalletIndex) {
+                        pullToRefreshConfig = currentWallet.pullToRefreshConfig
+                    }
+                }
 
                 val isShowMarketsHint by remember {
                     derivedStateOf {
@@ -211,8 +227,13 @@ private fun WalletContent2(
 
                 val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
 
-                Box(
+                TangemPullToRefreshSlidingContainer(
+                    state = pullToRefreshState,
+                    config = currentWallet.pullToRefreshConfig,
                     modifier = Modifier.alpha(pageSlideAlpha),
+                    indicatorOffset = with(LocalDensity.current) {
+                        behavior.state.partialHeightLimit.toDp()
+                    },
                 ) {
                     TangemCollapsingTopBar(
                         state = behavior.state,
