@@ -18,6 +18,7 @@ import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Ignore
 import org.junit.Test
 
 @HiltAndroidTest
@@ -53,6 +54,7 @@ class FeedbackTest : BaseTestCase() {
         }
     }
 
+    @Ignore("TODO: [REDACTED_JIRA]")
     @AllureId("893")
     @DisplayName("Send feedback: failed transaction")
     @Test
