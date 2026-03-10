@@ -1,5 +1,6 @@
 package com.tangem.data.qrscanning.di
 
+import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import dagger.Module
@@ -15,6 +16,11 @@ internal object QrScanningDataModule {
     @Provides
     @Singleton
     fun provideQrScanningEventsRepository(): QrScanningEventsRepository {
-        return DefaultQrScanningEventsRepository()
+        return DefaultQrScanningEventsRepository(
+            qrContentClassifierParser = QrContentClassifierParser(
+                QrContentClassifierParser.DefaultBlockchainDataProvider
+                    (),
+            ),
+        )
     }
 }
