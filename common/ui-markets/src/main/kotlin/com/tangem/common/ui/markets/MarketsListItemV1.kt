@@ -38,8 +38,8 @@ import com.tangem.utils.StringsSigns.MINUS
 import kotlin.random.Random
 
 @Composable
-fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
-    MarketsListItemContent(
+fun MarketsListItemV1(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    MarketsListItemContentV1(
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
@@ -50,7 +50,7 @@ fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onC
 }
 
 @Composable
-private fun MarketsListItemContent(model: MarketsListItemUM, modifier: Modifier = Modifier) {
+private fun MarketsListItemContentV1(model: MarketsListItemUM, modifier: Modifier = Modifier) {
     val windowSize = LocalWindowSize.current
 
     Row(
@@ -273,11 +273,11 @@ private fun Preview(@PreviewParameter(MarketChartListItemPreviewDataProvider::cl
         }
 
         Column(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            MarketsListItem(
+            MarketsListItemV1(
                 modifier = Modifier,
                 model = state1,
             )
-            MarketsListItem(
+            MarketsListItemV1(
                 modifier = Modifier,
                 model = state2,
             )
