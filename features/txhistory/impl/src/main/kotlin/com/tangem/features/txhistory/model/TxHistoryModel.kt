@@ -1,22 +1,19 @@
 package com.tangem.features.txhistory.model
 
 import androidx.compose.runtime.Stable
-import arrow.core.Either
+import arrow.core.Option
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
@@ -40,8 +37,7 @@ internal class TxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val urlOpener: UrlOpener,
     private val txHistoryUpdateListener: TxHistoryUpdateListener,
@@ -184,26 +180,20 @@ internal class TxHistoryModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        val userWallet: UserWallet = requireNotNull(getUserWalletUseCase(params.userWalletId).getOrNull()) {
-            "User wallet not found"
-        }
-        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-            userWalletId = params.userWalletId,
-            currencyId = params.currency.id,
-            isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-        )
+        singleAccountStatusListSupplier(params.userWalletId)
+            .map { it.getCryptoCurrencyStatus(currency = params.currency) }
             .distinctUntilChanged()
             .onEach(::handlePendingTxsChanges)
-            .flowOn(dispatchers.main)
+            .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
-    private fun handlePendingTxsChanges(maybeCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>) {
-        maybeCurrencyStatus.onRight { status ->
+    private fun handlePendingTxsChanges(maybeCurrencyStatus: Option<CryptoCurrencyStatus>) {
+        maybeCurrencyStatus.onSome { status ->
             val pendingTxs = status.value.pendingTransactions
                 .map(txHistoryItemConverter::convert)
                 .toPersistentList()
+
             _uiState.update { state ->
                 if (state is TxHistoryUM.NotSupported) {
                     state.copy(pendingTransactions = pendingTxs)
