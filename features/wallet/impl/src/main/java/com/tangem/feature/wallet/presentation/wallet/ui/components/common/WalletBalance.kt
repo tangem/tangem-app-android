@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
@@ -75,7 +76,7 @@ internal fun WalletBalance(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .padding(vertical = 58.dp),
         ) {
             Balance(
                 walletBalanceUM = walletBalanceUM,
@@ -147,7 +148,6 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
                     text = "123456",
                     style = TangemTheme.typography2.titleRegular44,
                     radius = TangemTheme.dimens2.x25,
-                    textSizeHeight = true,
                 )
             }
         }
@@ -194,6 +194,7 @@ private fun WalletBalance_Preview(@PreviewParameter(WalletBalancePreviewProvider
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
             buttons = WalletPreviewData.actionButtons,
             isBalanceHidden = false,
+            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
         )
     }
 }
