@@ -1,17 +1,24 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
@@ -55,11 +62,32 @@ internal fun WalletTopBar(
 
         TangemTopBar(
             title = wrappedBalance,
-            startAction = TangemTopBarActionUM(
-                iconRes = R.drawable.ic_tangem_24,
-                isActionable = false,
-            ),
-            endActions = topBarConfig.endActions,
+            startContent = {
+                TangemTopBarActionContent(
+                    TangemTopBarActionUM(
+                        iconRes = R.drawable.ic_tangem_24,
+                        isActionable = false,
+                    ),
+                )
+            },
+            endContent = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x5),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(
+                            lerp(
+                                start = Color.Transparent,
+                                stop = TangemTheme.colors2.button.backgroundSecondary,
+                                fraction = behavior.state.collapsedFraction,
+                            ),
+                        ),
+                ) {
+                    topBarConfig.endActions.forEach { action ->
+                        TangemTopBarActionContent(action)
+                    }
+                }
+            },
             modifier = Modifier
                 .statusBarsPadding()
                 .testTag(MainScreenTestTags.TOP_BAR),
@@ -134,7 +162,7 @@ private fun WalletTopBar_WithQrButton_Preview() {
             topBarConfig = WalletTopBarConfig(
                 endActions = persistentListOf(
                     TangemTopBarActionUM(
-                        iconRes = com.tangem.core.ui.R.drawable.ic_qrcode_scaner_24,
+                        iconRes = R.drawable.ic_qrcode_scaner_24,
                         onClick = {},
                     ),
                     TangemTopBarActionUM(
