@@ -92,4 +92,7 @@ internal interface InnerWalletRouter {
 
     /** Open QR scanner screen */
     fun openQrScanner()
+
+    /** Open send screen with prefilled destination */
+    fun openSend(userWalletId: UserWalletId, currency: CryptoCurrency, address: String, amount: String?, tag: String?)
 }
