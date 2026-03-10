@@ -7,6 +7,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.SubcomposeMeasureScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
@@ -40,7 +41,10 @@ internal fun Tags(tags: ImmutableList<LabelUM>, modifier: Modifier = Modifier) {
                         text = tag.text,
                         tangemIconUM = when (val content = tag.leadingContent) {
                             LabelLeadingContentUM.None -> null
-                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(content.iconUrl)
+                            is LabelLeadingContentUM.Token -> TangemIconUM.Url(
+                                url = content.iconUrl,
+                                fallbackRes = R.drawable.ic_alert_24,
+                            )
                         },
                         shape = TangemBadgeShape.Rounded,
                         size = TangemBadgeSize.X6,
