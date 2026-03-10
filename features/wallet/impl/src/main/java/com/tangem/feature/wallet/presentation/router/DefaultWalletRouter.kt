@@ -179,6 +179,24 @@ internal class DefaultWalletRouter @Inject constructor(
         router.push(AppRoute.QrScanning(source = AppRoute.QrScanning.Source.MainScreen))
     }
 
+    override fun openSend(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        address: String,
+        amount: String?,
+        tag: String?,
+    ) {
+        router.push(
+            AppRoute.Send(
+                userWalletId = userWalletId,
+                currency = currency,
+                destinationAddress = address,
+                amount = amount,
+                tag = tag,
+            ),
+        )
+    }
+
     inner class OrganizeCallbacks : OrganizeTokensComponent.Callback {
         override fun onDismiss() {
             dialogNavigation.dismiss()

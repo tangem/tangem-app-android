@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
+import com.tangem.domain.qrscanning.usecases.ClassifyQrCodeUseCase
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
@@ -30,5 +31,11 @@ internal object QrScanningDomainModule {
     @Singleton
     fun provideParseQrCodeUseCase(repository: QrScanningEventsRepository): ParseQrCodeUseCase {
         return ParseQrCodeUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideClassifyQrCodeUseCase(repository: QrScanningEventsRepository): ClassifyQrCodeUseCase {
+        return ClassifyQrCodeUseCase(repository)
     }
 }
