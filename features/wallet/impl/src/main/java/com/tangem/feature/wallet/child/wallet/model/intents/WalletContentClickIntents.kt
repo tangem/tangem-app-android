@@ -8,6 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -18,7 +19,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -94,7 +94,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val currencyActionsClickIntents: WalletCurrencyActionsClickIntentsImplementor,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
@@ -269,7 +269,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onTransactionClick(txHash: String) {
         modelScope.launch(dispatchers.main) {
-            val currency = getSingleCryptoCurrencyStatusUseCase.unwrap(
+            val currency = singleAccountStatusListSupplier.unwrap(
                 userWalletId = stateHolder.getSelectedWalletId(),
             )
                 ?.currency
