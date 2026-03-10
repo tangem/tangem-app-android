@@ -1,5 +1,6 @@
 package com.tangem.data.walletconnect.network.ethereum
 
+import arrow.core.getOrElse
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.simultation.ApproveInfo
@@ -17,16 +18,17 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.data.common.currency.getCoinId
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.usecase.GetEthSpecificFeeUseCase
 import com.tangem.domain.walletconnect.model.WcApprovedAmount
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import javax.inject.Inject
 
 internal class WcEthTxHelper @Inject constructor(
-    private val getSingleCryptoCurrency: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val ethSpecificFee: GetEthSpecificFeeUseCase,
 ) {
 
@@ -34,10 +36,19 @@ internal class WcEthTxHelper @Inject constructor(
         val gasLimit = txParams.gas?.hexToBigInteger() ?: return null
         val gasPrice = txParams.gasPrice?.hexToBigInteger()
         val coinId = getCoinId(network, network.toBlockchain().toCoinId())
-        val currency = getSingleCryptoCurrency.invokeMultiWalletSync(userWallet.walletId, coinId)
-            .map { it.currency }
-            .getOrNull() ?: return null
-        return ethSpecificFee(userWallet, currency, gasLimit, gasPrice)
+
+        val currency = singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+            .getCryptoCurrency(currencyId = coinId, network = network)
+            .getOrElse {
+                return null
+            }
+
+        return ethSpecificFee(
+            userWallet = userWallet,
+            cryptoCurrency = currency,
+            gasLimit = gasLimit,
+            gasPrice = gasPrice,
+        )
             .map { it.minimum }
             .getOrNull()
     }
