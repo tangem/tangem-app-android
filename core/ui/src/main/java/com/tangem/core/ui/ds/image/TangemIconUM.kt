@@ -2,9 +2,6 @@ package com.tangem.core.ui.ds.image
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -50,7 +47,8 @@ sealed interface TangemIconUM {
 
     /** Image represented from network by url */
     data class Url(
-        val url: String,
+        val url: String?,
+        @DrawableRes val fallbackRes: Int,
     ) : TangemIconUM
 }
 
@@ -91,14 +89,12 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
                 .crossfade(enable = true)
                 .allowHardware(enable = false)
                 .build(),
-            loading = { CircleShimmer() },
+            loading = { CircleShimmer(modifier) },
             error = {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = TangemTheme.colors2.surface.level3,
-                            shape = CircleShape,
-                        ),
+                Icon(
+                    imageVector = ImageVector.vectorResource(tangemIconUM.fallbackRes),
+                    contentDescription = null,
+                    modifier = modifier,
                 )
             },
             contentDescription = null,
