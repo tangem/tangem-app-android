@@ -4,7 +4,8 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.store.NetworksStatusesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
@@ -28,7 +29,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: MultiNetworkStatusProducer.Params,
     override val flowProducerTools: FlowProducerTools,
     private val networksStatusesStore: NetworksStatusesStore,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusProducer {
@@ -39,7 +40,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
         return networksStatusesStore.get(userWalletId = params.userWalletId)
             .distinctUntilChanged()
             .mapNotNull { statuses ->
-                val userWallet = userWalletsStore.getSyncOrNull(params.userWalletId)
+                val userWallet = userWalletsListRepository.getSyncOrNull(params.userWalletId)
 
                 if (userWallet == null) {
                     Timber.e("Unable to get UserWallet with provided ID: ${params.userWalletId}")

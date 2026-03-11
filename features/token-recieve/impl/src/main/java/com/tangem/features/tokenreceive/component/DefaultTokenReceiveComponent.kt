@@ -52,9 +52,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
         )
     }
 
-    override fun dismiss() {
-        model.params.onDismiss()
-    }
+    override fun dismiss() = model.params.onDismiss()
 
     private fun onChildBack() {
         when (contentStack.value.active.configuration) {

@@ -9,9 +9,7 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Approver
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -25,7 +23,6 @@ import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -40,6 +37,7 @@ import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.IOException
@@ -52,19 +50,16 @@ internal class DefaultSwapRepository(
     private val tangemExpressApi: TangemExpressApi,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsStore: UserWalletsStore,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val appPreferencesStore: AppPreferencesStore,
     private val rampStateManager: RampStateManager,
     moshi: Moshi,
-    excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
 
     private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val exchangeStatusConverter = ExchangeStatusConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
@@ -130,21 +125,48 @@ internal class DefaultSwapRepository(
         userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
+        isIgnoreExpress: Boolean,
     ): PairsWithProviders {
         return withContext(coroutineDispatcher.io) {
-            try {
-                val initial = NetworkLeastTokenInfo(
-                    contractAddress = initialCurrency.contractAddress,
-                    network = initialCurrency.network,
-                )
-                val currenciesList = currencyList
-                    .filter { currency ->
-                        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
-                        val isAvailableForSwap = rampStateManager.checkAssetRequirements(requirements)
-                        isAvailableForSwap
-                    }
-                    .map { currency -> leastTokenInfoConverter.convert(currency) }
+            val currenciesList = filterByAssetRequirements(userWallet, currencyList)
 
+            if (isIgnoreExpress) {
+                buildLocalPairs(initialCurrency, currenciesList)
+            } else {
+                fetchExpressPairs(userWallet, initialCurrency, currenciesList)
+            }
+        }
+    }
+
+    private fun buildLocalPairs(
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<NetworkLeastTokenInfo>,
+    ): PairsWithProviders {
+        val pairs = currenciesList.map { tokenInfo ->
+            SwapPairLeast(
+                from = initialCurrency,
+                to = LeastTokenInfo(
+                    contractAddress = tokenInfo.contractAddress,
+                    network = tokenInfo.network,
+                ),
+                providers = emptyList(),
+            )
+        }
+        return PairsWithProviders(pairs = pairs, allProviders = emptyList())
+    }
+
+    private suspend fun fetchExpressPairs(
+        userWallet: UserWallet,
+        initialCurrency: LeastTokenInfo,
+        currenciesList: List<NetworkLeastTokenInfo>,
+    ): PairsWithProviders {
+        try {
+            val initial = NetworkLeastTokenInfo(
+                contractAddress = initialCurrency.contractAddress,
+                network = initialCurrency.network,
+            )
+
+            val allPairs = supervisorScope {
                 val pairsDeferred = async {
                     getPairsInternal(
                         userWallet = userWallet,
@@ -161,25 +183,34 @@ internal class DefaultSwapRepository(
                     )
                 }
 
-                val pairs = pairsDeferred.await().getOrThrow()
-                val reversedPairs = reversedPairsDeferred.await().getOrThrow()
+                pairsDeferred.await().getOrThrow() + reversedPairsDeferred.await().getOrThrow()
+            }
 
-                val allPairs = pairs + reversedPairs
-
-                return@withContext swapPairInfoConverter.convert(
-                    SwapPairsWithProviders(
-                        swapPair = allPairs,
-                        providers = emptyList(),
-                    ),
-                )
-            } catch (exception: Exception) {
-                if (exception is ApiResponseError.HttpException) {
-                    throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
-                } else {
-                    throw exception
-                }
+            return swapPairInfoConverter.convert(
+                SwapPairsWithProviders(
+                    swapPair = allPairs,
+                    providers = emptyList(),
+                ),
+            )
+        } catch (exception: Exception) {
+            if (exception is ApiResponseError.HttpException) {
+                throw ExpressException(errorsDataConverter.convert(exception.errorBody.orEmpty()))
+            } else {
+                throw exception
             }
         }
+    }
+
+    private suspend fun filterByAssetRequirements(
+        userWallet: UserWallet,
+        currencyList: List<CryptoCurrency>,
+    ): List<NetworkLeastTokenInfo> {
+        return currencyList
+            .filter { currency ->
+                val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, currency)
+                rampStateManager.checkAssetRequirements(requirements)
+            }
+            .map { currency -> leastTokenInfoConverter.convert(currency) }
     }
 
     private suspend fun getPairsInternal(
@@ -286,6 +317,7 @@ internal class DefaultSwapRepository(
         expressOperationType: ExpressOperationType,
         refundAddress: String?, // for cex only
         refundExtraId: String?, // for cex only
+        toExtraId: String?, // for networks with memo only
     ): Either<ExpressDataError, SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
             try {
@@ -311,6 +343,7 @@ internal class DefaultSwapRepository(
                         userWallet = userWallet,
                         appPreferencesStore = appPreferencesStore,
                     ),
+                    toExtraId = toExtraId?.ifEmpty { null },
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
@@ -403,18 +436,6 @@ internal class DefaultSwapRepository(
         return result.fold(
             onSuccess = { it },
             onFailure = { error(it) },
-        )
-    }
-
-    override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-
-        return requireNotNull(
-            cryptoCurrencyFactory.createCoin(
-                blockchain = blockchain,
-                extraDerivationPath = null,
-                userWallet = requireNotNull(userWalletsStore.selectedUserWalletOrNull),
-            ),
         )
     }
 

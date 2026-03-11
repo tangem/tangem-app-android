@@ -3,6 +3,7 @@ package com.tangem.features.account.selector
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorController
@@ -35,21 +36,23 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
         _selectedAccount.tryEmit(accountId)
     }
 
-    override fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?> =
-        combine(
-            flow = _selectedAccount,
-            flow2 = portfolioFetcher.data,
-            transform = { accountId, data ->
-                accountId ?: return@combine null
-                var result: Pair<UserWallet, AccountStatus>? = null
+    override fun selectedAccountWithData(
+        portfolioFetcher: PortfolioFetcher,
+    ): Flow<Pair<UserWallet, AccountStatus.CryptoPortfolio>?> = combine(
+        flow = _selectedAccount,
+        flow2 = portfolioFetcher.data,
+        transform = { accountId, data ->
+            accountId ?: return@combine null
+            var result: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null
 
-                data.balances.forEach { wallet, balance ->
-                    val accountStatuses = balance.accountsBalance.accountStatuses
-                        .find { accountId == it.account.accountId }
-                    if (accountStatuses != null) result = balance.userWallet to accountStatuses
-                }
+            data.balances.forEach { wallet, balance ->
+                val accountStatuses = balance.accountsBalance.accountStatuses
+                    .filterCryptoPortfolio()
+                    .find { accountId == it.account.accountId }
+                if (accountStatuses != null) result = balance.userWallet to accountStatuses
+            }
 
-                return@combine result
-            },
-        )
+            return@combine result
+        },
+    )
 }
