@@ -37,7 +37,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
     }
 
     private suspend fun createPortfolio(tokenToAdd: AddHotCryptoData): PortfolioSelectUM {
-        val accountIcon: AccountIconUM.CryptoPortfolio?
+        val accountIcon: AccountIconUM?
         val portfolioName: TextReference
         val isAccountMode = isAccountsModeEnabledUseCase.invokeSync()
         when (isAccountMode) {
@@ -50,6 +50,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
                 portfolioName = accountStatus.account.accountName.toUM().value
                 accountIcon = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> CryptoPortfolioIconConverter.convert(accountStatus.account.icon)
+                    is AccountStatus.Payment -> AccountIconUM.Payment
                 }
             }
         }

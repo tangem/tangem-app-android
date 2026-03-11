@@ -28,8 +28,9 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.utils.*
 import com.tangem.datasource.asset.loader.AssetLoader
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -60,7 +61,7 @@ import javax.inject.Inject
 @Suppress("LargeClass", "TooManyFunctions")
 internal class DefaultWalletManagersFacade @Inject constructor(
     private val walletManagersStore: WalletManagersStore,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val assetLoader: AssetLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
@@ -300,7 +301,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
-    private fun getUserWallet(userWalletId: UserWalletId) = userWalletsStore.getSyncStrict(userWalletId)
+    private fun getUserWallet(userWalletId: UserWalletId) = userWalletsListRepository.getSyncStrict(userWalletId)
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
