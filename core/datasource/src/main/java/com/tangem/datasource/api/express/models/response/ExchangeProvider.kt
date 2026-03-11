@@ -35,6 +35,9 @@ data class ExchangeProvider(
 
     @Json(name = "exchangeOnlyWithinSingleAddress")
     val isExchangeOnlyWithinSingleAddress: Boolean = false,
+
+    @Json(name = "isExtraIdSupported")
+    val isExtraIdSupported: Boolean = false,
 )
 
 @JsonClass(generateAdapter = false)

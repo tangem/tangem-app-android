@@ -10,7 +10,7 @@ import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -20,7 +20,7 @@ import timber.log.Timber
 internal class DefaultWalletsPromoRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val appsFlyerStore: AppsFlyerStore,
 ) : WalletsPromoRepository {
@@ -66,7 +66,7 @@ internal class DefaultWalletsPromoRepository(
     }
 
     private suspend fun bind(refcode: String, campaign: String?) {
-        val walletIds = userWalletsStore.userWalletsSync.map { it.walletId.stringValue }
+        val walletIds = userWalletsListRepository.userWallets.value.orEmpty().map { it.walletId.stringValue }
 
         val result = tangemTechApi.bindWalletsByReferralCode(
             body = BindWalletsByReferralCodeBody(walletIds = walletIds, refcode = refcode, campaign = campaign),

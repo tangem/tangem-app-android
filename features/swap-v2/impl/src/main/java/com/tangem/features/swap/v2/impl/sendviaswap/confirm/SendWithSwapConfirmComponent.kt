@@ -133,6 +133,10 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             swapNotificationData = SwapNotificationsComponent.Params.SwapNotificationData(
                 expressError = (model.confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                 fromCryptoCurrency = model.confirmData.fromCryptoCurrencyStatus?.currency,
+                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                memo = model.confirmData.enteredMemo,
+                toCryptoCurrencyStatus = model.confirmData.toCryptoCurrencyStatus,
+                userWalletId = params.userWallet.walletId,
             ),
         ),
     )
@@ -181,7 +185,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>, // doesn't change if select gasless fee
-        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val accountFlow: StateFlow<Account?>,
         val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
     )
