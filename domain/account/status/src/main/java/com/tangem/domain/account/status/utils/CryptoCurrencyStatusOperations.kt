@@ -4,6 +4,7 @@ import arrow.core.Option
 import arrow.core.toOption
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusFinder.getExpectedAccountStatuses
 import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusOperations.getAccountCryptoCurrencyStatus
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -67,6 +68,25 @@ object CryptoCurrencyStatusOperations {
     ): Option<CryptoCurrencyStatus> {
         return getAccountCryptoCurrencyStatus(currencyId = currencyId, network = network)
             .map(AccountCryptoCurrencyStatus::status)
+    }
+
+    fun AccountStatusList.getCoinStatus(currency: CryptoCurrency): Option<CryptoCurrencyStatus> {
+        return getCoinStatus(network = currency.network)
+    }
+
+    fun AccountStatusList.getCoinStatus(network: Network): Option<CryptoCurrencyStatus> {
+        return getCoinStatus(networkId = network.id)
+    }
+
+    fun AccountStatusList.getCoinStatus(networkId: Network.ID): Option<CryptoCurrencyStatus> {
+        return getExpectedAccountStatuses(networkId)
+            .flatMap { accountStatus ->
+                (accountStatus as? AccountStatus.CryptoPortfolio)
+                    ?.flattenCurrencies().orEmpty()
+                    .filter { it.currency is CryptoCurrency.Coin }
+            }
+            .firstOrNull { status -> status.currency.network.id == networkId }
+            .toOption()
     }
     // endregion
 
