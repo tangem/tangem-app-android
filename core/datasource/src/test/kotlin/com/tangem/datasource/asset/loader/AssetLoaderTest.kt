@@ -5,6 +5,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -23,9 +24,11 @@ class AssetLoaderTest {
 
     private val assetReader = mockk<AssetReader>()
     private val moshi = mockk<Moshi>()
+    private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>()
     private val assetLoader = AssetLoader(
         assetReader = assetReader,
         moshi = moshi,
+        analyticsExceptionHandler = analyticsExceptionHandler,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
