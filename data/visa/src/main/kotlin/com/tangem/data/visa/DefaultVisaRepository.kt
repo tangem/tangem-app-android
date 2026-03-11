@@ -16,8 +16,9 @@ import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.utils.*
 import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -40,7 +41,7 @@ internal class DefaultVisaRepository @Inject constructor(
     private val visaLibLoader: VisaLibLoader,
     private val quotesFetcher: QuotesFetcher,
     private val cacheRegistry: CacheRegistry,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val visaApiRequestMaker: VisaApiRequestMaker,
     private val visaApi: VisaApi,
@@ -176,7 +177,7 @@ internal class DefaultVisaRepository @Inject constructor(
         }
     }
 
-    private suspend fun makeAddress(userWalletId: UserWalletId): String {
+    private fun makeAddress(userWalletId: UserWalletId): String {
         if (VisaConstants.IS_DEMO_MODE_ENABLED) return getDemoAddress()
 
         val userWallet = findVisaUserWallet(userWalletId)
@@ -219,9 +220,7 @@ internal class DefaultVisaRepository @Inject constructor(
     }
 
     private fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "No user wallet found: $userWalletId"
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         if (!userWallet.requireColdWallet().scanResponse.cardTypesResolver.isVisaWallet()) {
             error("VISA wallet required: $userWalletId")
         }

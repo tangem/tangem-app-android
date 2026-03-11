@@ -14,8 +14,15 @@ data class TokenMarket(
     val tokenCharts: Charts,
     val yieldRate: BigDecimal?,
     val updateTimestamp: Long?,
+    val networks: List<Network>?,
     private val imageHost: String,
 ) {
+
+    data class Network(
+        val networkId: String,
+        val contractAddress: String?,
+        val decimalCount: Int?,
+    )
 
     data class Charts(
         val h24: TokenChart?,

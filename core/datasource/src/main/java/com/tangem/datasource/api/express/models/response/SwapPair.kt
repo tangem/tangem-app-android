@@ -24,7 +24,11 @@ data class SwapPairProvider(
 
     @Json(name = "rateTypes")
     val rateTypes: List<RateType>,
-)
+) {
+    fun hasOnlyFixedRateType(): Boolean {
+        return rateTypes.isNotEmpty() && rateTypes.all { it == RateType.FIXED }
+    }
+}
 
 @JsonClass(generateAdapter = false)
 enum class RateType {

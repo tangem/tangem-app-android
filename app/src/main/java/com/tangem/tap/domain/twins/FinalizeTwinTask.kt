@@ -20,7 +20,10 @@ class FinalizeTwinTask(
         WriteProtectedIssuerDataTask(twinPublicKey, issuerKeys).run(session) { result ->
             when (result) {
                 is CompletionResult.Success ->
-                    PreflightReadTask(PreflightReadMode.FullCardRead).run(session) { readResult ->
+                    PreflightReadTask(
+                        readMode = PreflightReadMode.FullCardRead,
+                        secureStorage = session.environment.secureStorage,
+                    ).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success ->
                                 ScanProductTask(
@@ -28,6 +31,7 @@ class FinalizeTwinTask(
                                     derivationsFinder = null,
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
+                                    shouldCheckIsAlreadyActivated = false,
                                     onboardingV2FeatureToggles = null,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->
