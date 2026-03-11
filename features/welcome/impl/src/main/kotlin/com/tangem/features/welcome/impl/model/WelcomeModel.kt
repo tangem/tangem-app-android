@@ -192,6 +192,7 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             scanCardProcessor.scan(
                 analyticsSource = AnalyticsParam.ScreensSources.SignIn,
+                shouldCheckIsAlreadyActivated = true,
                 onWalletNotCreated = {},
                 disclaimerWillShow = { router.pop() },
                 onSuccess = { scanResponse ->
@@ -257,7 +258,7 @@ internal class WelcomeModel @Inject constructor(
         return canUseBiometryUseCase.strict() && walletsRepository.useBiometricAuthentication()
     }
 
-    suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
+    private suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
         nonBiometricUnlockWalletUseCase(userWalletId)
             .onRight {
                 routedOut = true

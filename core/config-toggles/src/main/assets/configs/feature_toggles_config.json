@@ -12,10 +12,6 @@
         "version": "5.28.0"
     },
     {
-        "name": "NFT_MEDIA_CONTENT_ENABLED",
-        "version": "undefined"
-    },
-    {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "5.31.1"
     },
@@ -32,16 +28,8 @@
         "version": "undefined"
     },
     {
-        "name": "HOT_WALLET_ENABLED",
-        "version": "5.32.0"
-    },
-    {
         "name": "HOT_WALLET_CREATION_RESTRICTION_ENABLED",
         "version": "5.32.0"
-    },
-    {
-        "name": "HOT_WALLET_VISIBLE",
-        "version": "5.32.1"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
@@ -77,7 +65,7 @@
     },
     {
         "name": "SWAP_MARKET_LIST_ENABLED",
-        "version": "undefined"
+        "version": "5.34"
     },
     {
         "name": "EARN_BLOCK_ENABLED",
@@ -86,5 +74,9 @@
     {
         "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "WALLET_REORDER_FEATURE_ENABLED",
+        "version": "5.34"
     }
 ]
