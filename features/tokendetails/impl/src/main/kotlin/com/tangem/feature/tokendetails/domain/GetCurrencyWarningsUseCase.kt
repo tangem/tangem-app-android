@@ -1,17 +1,21 @@
-package com.tangem.domain.tokens
+package com.tangem.feature.tokendetails.domain
 
 import com.tangem.blockchainsdk.utils.isNeedToCreateAccountWithoutReserve
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
@@ -20,23 +24,22 @@ import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
+import javax.inject.Inject
 
-@Suppress("LongParameterList")
-class GetCurrencyWarningsUseCase(
+@Suppress("LongParameterList", "SuspendFunWithFlowReturnType")
+internal class GetCurrencyWarningsUseCase @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
-    private val currencyStatusOperations: BaseCurrencyStatusOperations,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
 ) {
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
         derivationPath: Network.DerivationPath,
-        isSingleWalletWithTokens: Boolean,
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
 
@@ -44,10 +47,7 @@ class GetCurrencyWarningsUseCase(
         return combine(
             flow = getCoinRelatedWarnings(
                 userWalletId = userWalletId,
-                networkId = currency.network.id,
-                currencyId = currency.id,
-                derivationPath = derivationPath,
-                isSingleWalletWithTokens = isSingleWalletWithTokens,
+                currency = currency,
             ),
             flow2 = flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flow3 = flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
@@ -68,44 +68,34 @@ class GetCurrencyWarningsUseCase(
         }.flowOn(dispatchers.io)
     }
 
-    @Suppress("LongParameterList")
     private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
-        networkId: Network.ID,
-        currencyId: CryptoCurrency.ID,
-        derivationPath: Network.DerivationPath,
-        isSingleWalletWithTokens: Boolean,
+        currency: CryptoCurrency,
     ): Flow<List<CryptoCurrencyWarning>> {
-        val currencyFlow = currencyStatusOperations.getCurrencyStatusFlow(
-            userWalletId = userWalletId,
-            currencyId = currencyId,
-            isSingleWalletWithTokens = isSingleWalletWithTokens,
-        )
+        return singleAccountStatusListSupplier(userWalletId)
+            .map { accountStatusList ->
+                val coin = accountStatusList.getCoinStatus(currency).getOrNull()
+                val token = accountStatusList.getCryptoCurrencyStatus(currency).getOrNull()
 
-        val networkFlow = if (isSingleWalletWithTokens) {
-            currencyStatusOperations.getNetworkCoinForSingleWalletWithTokenFlow(userWalletId, networkId)
-        } else {
-            currencyStatusOperations.getNetworkCoinFlow(userWalletId, networkId, derivationPath)
-        }
+                coin to token
+            }
+            .distinctUntilChanged()
+            .map { pair ->
+                val (coinStatus, tokenStatus) = pair
 
-        return combine(
-            currencyFlow.map { it.getOrNull() },
-            networkFlow.map { it.getOrNull() },
-        ) { tokenStatus, coinStatus ->
-            when {
-                tokenStatus != null && coinStatus != null -> {
-                    buildList {
-                        getUsedOutdatedDataWarning(tokenStatus)?.let(::add)
+                if (tokenStatus != null && coinStatus != null) {
+                    listOfNotNull(
+                        getUsedOutdatedDataWarning(tokenStatus),
                         getFeeWarning(
                             userWalletId = userWalletId,
                             coinStatus = coinStatus,
                             tokenStatus = tokenStatus,
-                        )?.let(::add)
-                    }
+                        ),
+                    )
+                } else {
+                    listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
                 }
-                else -> listOf(CryptoCurrencyWarning.SomeNetworksUnreachable)
             }
-        }
     }
 
     private suspend fun getFeeWarning(
@@ -161,10 +151,10 @@ class GetCurrencyWarningsUseCase(
         )
             .orEmpty()
 
-        val token = tokens.find {
-            it is CryptoCurrency.Token &&
-                it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                it.network.derivationPath == tokenStatus.currency.network.derivationPath
+        val token = tokens.find { currency ->
+            currency is CryptoCurrency.Token &&
+                currency.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                currency.network.derivationPath == tokenStatus.currency.network.derivationPath
         }
 
         return if (token != null) {
@@ -193,12 +183,12 @@ class GetCurrencyWarningsUseCase(
     }
 
     private fun getNetworkNoAccountWarning(currencyStatus: CryptoCurrencyStatus): CryptoCurrencyWarning? {
-        return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let {
+        return (currencyStatus.value as? CryptoCurrencyStatus.NoAccount)?.let { noAccountStatus ->
             if (isNeedToCreateAccountWithoutReserve(networkId = currencyStatus.currency.network.rawId)) {
                 CryptoCurrencyWarning.TopUpWithoutReserve
             } else {
                 CryptoCurrencyWarning.SomeNetworksNoAccount(
-                    amountToCreateAccount = it.amountToCreateAccount,
+                    amountToCreateAccount = noAccountStatus.amountToCreateAccount,
                     amountCurrency = currencyStatus.currency,
                 )
             }
