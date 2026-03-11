@@ -14,8 +14,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 
@@ -137,7 +135,6 @@ class ApplyTokenListSortingUseCaseV2(
                     errors[account.accountId] = it
                     return@map account
                 }
-                .toSet()
 
             account.copy(cryptoCurrencies = accountCurrencies)
         }
@@ -171,17 +168,13 @@ class ApplyTokenListSortingUseCaseV2(
 
     private suspend fun Raise<TokenListSortingError>.applySorting(accountList: AccountList) {
         coroutineScope {
-            val results = awaitAll(
-                async {
-                    Either.catch { accountsCRUDRepository.saveAccountsLocally(accountList) }
-                },
-                async {
-                    Either.catch { accountsCRUDRepository.syncTokens(accountList.userWalletId) }
-                },
-            )
+            val results = Either.catch {
+                accountsCRUDRepository.saveAccountsLocally(accountList)
+                accountsCRUDRepository.syncTokens(accountList.userWalletId)
+            }
 
-            ensure(results.none { it.isLeft() }) {
-                val message = results.mapNotNull { it.leftOrNull() }.joinToString()
+            ensure(results.isRight()) {
+                val message = results.leftOrNull()
                 raise(TokenListSortingError.DataError(IllegalStateException(message)))
             }
         }

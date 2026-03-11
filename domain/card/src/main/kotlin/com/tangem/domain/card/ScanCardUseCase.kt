@@ -49,9 +49,14 @@ class ScanCardUseCase(
         cardId: String?,
         allowRequestAccessCodeFromStorage: Boolean,
     ): Either<ScanCardException, ScanResponse> {
-        return Either.catch { scanCardRepository.scanCard(cardId, allowRequestAccessCodeFromStorage) }
-            .mapLeft { e ->
-                e as? ScanCardException ?: ScanCardException.UnknownException(e)
-            }
+        return Either.catch {
+            scanCardRepository.scanCard(
+                cardId = cardId,
+                allowRequestAccessCodeFromStorage = allowRequestAccessCodeFromStorage,
+                shouldCheckIsAlreadyActivated = true, // TODO use correct when enable NEW_CARD_SCANNING_ENABLED
+            )
+        }.mapLeft { e ->
+            e as? ScanCardException ?: ScanCardException.UnknownException(e)
+        }
     }
 }
