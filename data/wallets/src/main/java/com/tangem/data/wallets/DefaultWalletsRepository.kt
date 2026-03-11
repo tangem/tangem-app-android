@@ -20,9 +20,14 @@ import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
-import com.tangem.datasource.local.preferences.utils.*
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
@@ -44,7 +49,7 @@ typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotifica
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
@@ -53,21 +58,6 @@ internal class DefaultWalletsRepository(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override suspend fun shouldSaveUserWalletsSync(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
-    }
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override fun shouldSaveUserWallets(): Flow<Boolean> {
-        return appPreferencesStore.get(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
-    }
-
-    @Deprecated("Hot wallet feature makes app always save user wallets. Do not use this method")
-    override suspend fun saveShouldSaveUserWallets(item: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, value = item)
-    }
 
     override suspend fun useBiometricAuthentication(): Boolean {
         val shouldUseBiometricAuth = appPreferencesStore.getSyncOrNull(
@@ -163,7 +153,7 @@ internal class DefaultWalletsRepository(
     }
 
     private suspend fun fetchSeedPhraseNotificationStatus(userWalletId: UserWalletId) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
 
         if (userWallet != null && userWallet !is UserWallet.Cold) {
             updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
@@ -335,7 +325,7 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setWalletName(walletId: UserWalletId, walletName: String) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = walletId)
+        val userWallet = userWalletsListRepository.getSyncOrNull(id = walletId)
 
         tangemTechApi.updateWallet(
             walletId = walletId.stringValue,
@@ -344,7 +334,7 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun upgradeWallet(walletId: UserWalletId) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncStrict(key = walletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(id = walletId)
 
         tangemTechApi.updateWallet(
             walletId = walletId.stringValue,

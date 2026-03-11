@@ -8,10 +8,10 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.txhistory.repository.paging.TxHistoryPagingSource
 import com.tangem.datasource.local.txhistory.TxHistoryItemsStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.txhistory.models.Page
 import com.tangem.domain.txhistory.models.TxHistoryState
@@ -27,7 +27,7 @@ import timber.log.Timber
 class DefaultTxHistoryRepository(
     private val cacheRegistry: CacheRegistry,
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val txHistoryItemsStore: TxHistoryItemsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : TxHistoryRepository {
@@ -35,7 +35,7 @@ class DefaultTxHistoryRepository(
 
     override suspend fun getTxHistoryItemsCount(userWalletId: UserWalletId, currency: CryptoCurrency): Int {
         return withContext(dispatchers.io) {
-            val userWallet = getUserWallet(userWalletId)
+            val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
             val state = walletManagersFacade.getTxHistoryState(
                 userWalletId = userWallet.walletId,
                 currency = currency,
@@ -63,7 +63,12 @@ class DefaultTxHistoryRepository(
             ),
             pagingSourceFactory = {
                 TxHistoryPagingSource(
-                    sourceParams = TxHistoryPagingSource.Params(userWalletId, currency, pageSize, refresh),
+                    sourceParams = TxHistoryPagingSource.Params(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        pageSize = pageSize,
+                        refresh = refresh,
+                    ),
                     txHistoryItemsStore = txHistoryItemsStore,
                     walletManagersFacade = walletManagersFacade,
                     cacheRegistry = cacheRegistry,
@@ -98,11 +103,12 @@ class DefaultTxHistoryRepository(
                 skipCache = shouldRefresh,
                 block = { fetchFixedSizeTxHistoryItems(userWalletId, currency, pageSize) },
             )
-            val txs = txHistoryItemsStore.getSyncOrNull(
+
+            txHistoryItemsStore.getSyncOrNull(
                 key = TxHistoryItemsStore.Key(userWalletId, currency),
                 page = Page.Initial,
-            )?.items
-            txs ?: emptyList()
+            )
+                ?.items.orEmpty()
         } catch (e: Throwable) {
             Timber.e(e, "Unable to load the transaction history for the requested page: ${Page.Initial}")
             emptyList()
@@ -126,11 +132,5 @@ class DefaultTxHistoryRepository(
         )
 
         txHistoryItemsStore.store(TxHistoryItemsStore.Key(userWalletId, currency), wrappedItems)
-    }
-
-    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
-        return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find user wallet with provided ID: $userWalletId"
-        }
     }
 }

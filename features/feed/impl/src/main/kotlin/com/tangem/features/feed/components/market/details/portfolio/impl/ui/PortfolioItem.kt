@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -17,6 +18,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MarketTokenDetailsBottomSheetTestTags
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.preview.PreviewMyPortfolioUMProvider
 import com.tangem.features.feed.components.market.details.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.features.feed.impl.R
@@ -49,6 +51,7 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
                 start = TangemTheme.dimens.spacing10,
                 end = TangemTheme.dimens.spacing12,
             ),
+            modifier = Modifier.testTag(MarketTokenDetailsBottomSheetTestTags.PORTFOLIO_TOKEN_ITEM),
         )
 
         PortfolioQuickActions(
