@@ -87,8 +87,8 @@ fun TangemBadge(
             .heightIn(min = size.toHeightDp())
             .clip(shape.toShape(size))
             .getBackgroundColor(type = type, color = color, shape = shape.toShape(size))
-            .padding(size.toPaddingDp(position = iconPosition))
-            .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() }),
+            .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() })
+            .padding(size.toPaddingDp(position = iconPosition)),
     ) {
         StartIcon(
             tangemIconUM = tangemIconUM,
