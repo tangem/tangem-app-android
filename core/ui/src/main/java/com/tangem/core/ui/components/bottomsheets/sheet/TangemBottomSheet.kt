@@ -188,7 +188,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
         containerColor = containerColor,
         shape = TangemTheme.shapes.bottomSheetLarge,
         contentWindowInsets = { WindowInsetsZero },
-        dragHandle = { TangemBottomSheetDraggableHeader(color = containerColor) },
+        dragHandle = { TangemBottomSheetDraggableHeaderLegacy(color = containerColor) },
         onBack = onBack,
         content = bsContent,
         scrimColor = TangemTheme.colors.overlay.secondary,
