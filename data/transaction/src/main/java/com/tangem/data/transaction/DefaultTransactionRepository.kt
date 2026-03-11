@@ -422,7 +422,11 @@ internal class DefaultTransactionRepository(
         preparer.prepareAndSignMultiple(transactionData, signer)
     }
 
-    override suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto) {
+    override suspend fun sendTransactionHash(
+        hash: String,
+        transactionType: EventTransactionTypeDto,
+        userAddress: String?,
+    ) {
         runCatching(dispatchers.io) {
             val operationType = when (transactionType) {
                 EventTransactionTypeDto.DEPOSIT -> OperationType.YIELD_DEPOSIT
@@ -432,6 +436,7 @@ internal class DefaultTransactionRepository(
             val body = TransactionEventBody(
                 operationType = operationType,
                 transactionId = hash,
+                userAddress = userAddress,
             )
             val response = tangemTechApi.transactionEvents(body)
             response.fold(

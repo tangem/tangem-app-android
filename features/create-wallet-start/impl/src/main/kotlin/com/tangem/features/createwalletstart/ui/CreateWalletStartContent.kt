@@ -6,7 +6,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -165,74 +164,72 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         text = state.primaryButtonText.resolveReference(),
                         onClick = state.onPrimaryButtonClick,
                     )
-                    if (state.isHotWalletOptionVisible) {
-                        Row(
+
+                    Row(
+                        modifier = Modifier
+                            .padding(
+                                start = 16.dp,
+                                top = 24.dp,
+                                end = 16.dp,
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        DashedGradientLine(
                             modifier = Modifier
+                                .weight(1f)
+                                .height(16.dp),
+                        )
+                        Text(
+                            text = stringResourceSafe(R.string.common_or),
+                            style = TangemTheme.typography.caption1,
+                            color = TangemTheme.colors.text.secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                        DashedGradientLine(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(16.dp)
+                                .scale(scaleX = -1f, scaleY = 1f),
+                        )
+                    }
+
+                    if (state.otherMethodDescription != null) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(
                                     start = 16.dp,
-                                    top = 24.dp,
+                                    top = 16.dp,
                                     end = 16.dp,
                                 ),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            DashedGradientLine(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(16.dp),
-                            )
-                            Text(
-                                text = stringResourceSafe(R.string.common_or),
-                                style = TangemTheme.typography.caption1,
-                                color = TangemTheme.colors.text.secondary,
-                                textAlign = TextAlign.Center,
-                            )
-                            DashedGradientLine(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(16.dp)
-                                    .scale(scaleX = -1f, scaleY = 1f),
-                            )
-                        }
+                            text = state.otherMethodDescription.resolveReference(),
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    if (state.isHotWalletOptionVisible) {
-                        if (state.otherMethodDescription != null) {
-                            Text(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        start = 16.dp,
-                                        top = 16.dp,
-                                        end = 16.dp,
-                                    ),
-                                text = state.otherMethodDescription.resolveReference(),
-                                style = TangemTheme.typography.subtitle2,
-                                color = TangemTheme.colors.text.tertiary,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .wrapContentWidth()
-                                .clickable { state.otherMethodClick() }
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 12.dp,
-                                ),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                text = state.otherMethodTitle.resolveReference(),
-                                style = TangemTheme.typography.subtitle1,
-                                color = TangemTheme.colors.text.primary1,
-                                textAlign = TextAlign.Center,
-                            )
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_chevron_right_18x24),
-                                tint = TangemTheme.colors.icon.primary1,
-                                contentDescription = null,
-                            )
-                        }
+                    Row(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .clickable { state.otherMethodClick() }
+                            .padding(
+                                horizontal = 16.dp,
+                                vertical = 12.dp,
+                            ),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = state.otherMethodTitle.resolveReference(),
+                            style = TangemTheme.typography.subtitle1,
+                            color = TangemTheme.colors.text.primary1,
+                            textAlign = TextAlign.Center,
+                        )
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_chevron_right_18x24),
+                            tint = TangemTheme.colors.icon.primary1,
+                            contentDescription = null,
+                        )
                     }
                 },
                 minImageHeight = 160.dp,

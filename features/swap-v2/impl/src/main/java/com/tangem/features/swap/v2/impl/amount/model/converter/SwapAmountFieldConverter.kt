@@ -30,7 +30,7 @@ internal class SwapAmountFieldConverter(
     private val clickIntents: AmountScreenClickIntents,
     private val isSingleWallet: Boolean,
     private val isAccountsMode: Boolean,
-    private val account: Account.CryptoPortfolio?,
+    private val account: Account?,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()

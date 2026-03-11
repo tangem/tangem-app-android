@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.Either
+import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -10,7 +11,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
