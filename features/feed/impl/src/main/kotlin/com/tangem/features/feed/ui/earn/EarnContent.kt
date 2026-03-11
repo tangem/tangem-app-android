@@ -1,38 +1,38 @@
 package com.tangem.features.feed.ui.earn
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SmallButtonShimmer
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.SpacerWMax
-import com.tangem.core.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
@@ -40,18 +40,27 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.earn.components.EarnItemPlaceholder
 import com.tangem.features.feed.ui.earn.components.EarnListItem
 import com.tangem.features.feed.ui.earn.components.MostlyUsedPlaceholder
-import com.tangem.features.feed.ui.earn.state.EarnFilterUM
-import com.tangem.features.feed.ui.earn.state.EarnListItemUM
-import com.tangem.features.feed.ui.earn.state.EarnListUM
-import com.tangem.features.feed.ui.earn.state.EarnUM
+import com.tangem.features.feed.ui.earn.state.*
 import kotlinx.collections.immutable.persistentListOf
+
+private const val EARN_LOAD_MORE_BUFFER = 3
 
 @Composable
 internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
     val background = LocalMainBottomSheetColor.current.value
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val listState = rememberLazyListState()
+
+    if (state.bestOpportunities is EarnBestOpportunitiesUM.Content) {
+        PaginationHandler(
+            listState = listState,
+            state = state.bestOpportunities,
+        )
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .background(background),
@@ -65,7 +74,10 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
         }
 
         item(key = "mostly_used_content") {
-            MostlyUsedContent(state = state.mostlyUsed)
+            MostlyUsedContent(
+                state = state.mostlyUsed,
+                onScroll = state.onSliderScroll,
+            )
         }
 
         item(key = "best_opportunities_header") {
@@ -79,8 +91,12 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
             SpacerH(12.dp)
             BestOpportunitiesFilters(
                 state = state.bestOpportunities,
-                selectedNetworkFilter = state.selectedNetworkFilter,
-                selectedTypeFilter = state.selectedTypeFilter,
+                selectedNetworkFilterText = when (state.selectedNetworkFilter) {
+                    is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                    is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                    is EarnFilterNetworkUM.Network -> TextReference.Str(state.selectedNetworkFilter.text)
+                },
+                selectedTypeFilterText = state.selectedTypeFilterText,
                 onNetworkFilterClick = state.onNetworkFilterClick,
                 onTypeFilterClick = state.onTypeFilterClick,
             )
@@ -93,41 +109,56 @@ internal fun EarnContent(state: EarnUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MostlyUsedContent(state: EarnListUM) {
-    when (state) {
-        is EarnListUM.Loading -> {
-            MostlyUsedPlaceholder()
-        }
-        is EarnListUM.Content -> {
-            LazyRow(
-                contentPadding = PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 12.dp,
-                ),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(
-                    items = state.items,
-                    key = { "${it.tokenName}-${it.network}" },
-                ) { item ->
-                    MostlyUsedCard(
-                        item = item,
-                        onClick = item.onItemClick,
-                    )
-                }
+private fun MostlyUsedContent(state: EarnListUM, onScroll: () -> Unit) {
+    AnimatedContent(
+        targetState = state,
+        contentKey = { it::class.java },
+    ) { st ->
+        when (st) {
+            is EarnListUM.Loading -> {
+                MostlyUsedPlaceholder()
             }
-        }
-        is EarnListUM.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
+            is EarnListUM.Content -> {
+                LazyRow(
+                    contentPadding = PaddingValues(
                         horizontal = 16.dp,
                         vertical = 12.dp,
                     ),
-                contentAlignment = Alignment.Center,
-            ) {
-                UnableToLoadData(onRetryClick = state.onRetryClicked)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    itemsIndexed(
+                        items = st.items,
+                        key = { _, item -> "${item.tokenName}-${item.network}" },
+                    ) { index, item ->
+                        val cardModifier = Modifier.conditional(
+                            condition = index == FOURTH_ITEM_INDEX,
+                            modifier = {
+                                onFirstVisible(
+                                    minFractionVisible = 0.5f,
+                                    callback = onScroll,
+                                )
+                            },
+                        )
+                        MostlyUsedCard(
+                            modifier = cardModifier,
+                            item = item,
+                            onClick = item.onItemClick,
+                        )
+                    }
+                }
+            }
+            is EarnListUM.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 12.dp,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    UnableToLoadData(onRetryClick = st.onRetryClicked)
+                }
             }
         }
     }
@@ -157,9 +188,11 @@ private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
+                modifier = Modifier.weight(weight = 1f, fill = false),
                 text = item.tokenName.resolveReference(),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle2,
+                overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )
             SpacerW(4.dp)
@@ -184,40 +217,27 @@ private fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier: 
 
 @Composable
 private fun BestOpportunitiesFilters(
-    state: EarnListUM,
-    selectedNetworkFilter: EarnFilterUM?,
-    selectedTypeFilter: EarnFilterUM?,
+    state: EarnBestOpportunitiesUM,
+    selectedNetworkFilterText: TextReference,
+    selectedTypeFilterText: TextReference,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
 ) {
     when (state) {
-        is EarnListUM.Loading -> {
-            FilterButtonsShimmer()
-        }
-        is EarnListUM.Content -> {
-            FilterButtons(
-                selectedNetworkFilter = selectedNetworkFilter,
-                selectedTypeFilter = selectedTypeFilter,
-                isEnabled = true,
-                onNetworkFilterClick = onNetworkFilterClick,
-                onTypeFilterClick = onTypeFilterClick,
-            )
-        }
-        is EarnListUM.Error -> {
-            FilterButtons(
-                selectedNetworkFilter = selectedNetworkFilter,
-                selectedTypeFilter = selectedTypeFilter,
-                isEnabled = false,
-                onNetworkFilterClick = onNetworkFilterClick,
-                onTypeFilterClick = onTypeFilterClick,
-            )
-        }
+        is EarnBestOpportunitiesUM.Loading -> FilterButtonsShimmer()
+        else -> FilterButtons(
+            selectedNetworkFilterText = selectedNetworkFilterText,
+            selectedTypeFilterText = selectedTypeFilterText,
+            isEnabled = state is EarnBestOpportunitiesUM.Content || state is EarnBestOpportunitiesUM.EmptyFiltered,
+            onNetworkFilterClick = onNetworkFilterClick,
+            onTypeFilterClick = onTypeFilterClick,
+        )
     }
 }
 
-private fun LazyListScope.bestOpportunitiesItems(state: EarnListUM) {
+private fun LazyListScope.bestOpportunitiesItems(state: EarnBestOpportunitiesUM) {
     when (state) {
-        is EarnListUM.Loading -> {
+        is EarnBestOpportunitiesUM.Loading -> {
             val lastIndex = PLACEHOLDER_ITEMS_COUNT - 1
             items(
                 count = PLACEHOLDER_ITEMS_COUNT,
@@ -233,7 +253,19 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnListUM) {
                 )
             }
         }
-        is EarnListUM.Content -> {
+        is EarnBestOpportunitiesUM.Empty -> {
+            item(key = "best_opportunities_empty") {
+                SpacerH(12.dp)
+                BestOpportunitiesEmpty()
+            }
+        }
+        is EarnBestOpportunitiesUM.EmptyFiltered -> {
+            item(key = "best_opportunities_empty_filtered") {
+                SpacerH(12.dp)
+                BestOpportunitiesEmptyFiltered(onClearFilterClick = state.onClearFilterClick)
+            }
+        }
+        is EarnBestOpportunitiesUM.Content -> {
             if (state.items.isNotEmpty()) {
                 val lastIndex = state.items.lastIndex
                 itemsIndexed(
@@ -252,7 +284,7 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnListUM) {
                 }
             }
         }
-        is EarnListUM.Error -> {
+        is EarnBestOpportunitiesUM.Error -> {
             item(key = "best_opportunities_error") {
                 SpacerH(12.dp)
                 Box(
@@ -275,8 +307,8 @@ private fun LazyListScope.bestOpportunitiesItems(state: EarnListUM) {
 
 @Composable
 private fun FilterButtons(
-    selectedNetworkFilter: EarnFilterUM?,
-    selectedTypeFilter: EarnFilterUM?,
+    selectedNetworkFilterText: TextReference,
+    selectedTypeFilterText: TextReference,
     isEnabled: Boolean,
     onNetworkFilterClick: () -> Unit,
     onTypeFilterClick: () -> Unit,
@@ -287,8 +319,7 @@ private fun FilterButtons(
     ) {
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedNetworkFilter?.name
-                    ?: resourceReference(R.string.earn_filter_all_networks),
+                text = selectedNetworkFilterText,
                 onClick = onNetworkFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
                 isEnabled = isEnabled,
@@ -299,8 +330,7 @@ private fun FilterButtons(
 
         SecondarySmallButton(
             config = SmallButtonConfig(
-                text = selectedTypeFilter?.name
-                    ?: resourceReference(R.string.earn_filter_all_types),
+                text = selectedTypeFilterText,
                 onClick = onTypeFilterClick,
                 icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_chevron_24),
                 isEnabled = isEnabled,
@@ -327,14 +357,89 @@ private fun FilterButtonsShimmer(modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun BestOpportunitiesEmpty(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                color = TangemTheme.colors.background.action,
+                shape = TangemTheme.shapes.roundedCornersXMedium,
+            )
+            .padding(vertical = 32.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            modifier = Modifier
+                .fillMaxWidth(),
+            painter = painterResource(R.drawable.ic_empty_64),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
+        SpacerH(24.dp)
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 32.dp),
+            text = stringResourceSafe(R.string.earn_empty),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun BestOpportunitiesEmptyFiltered(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(
+                color = TangemTheme.colors.background.action,
+                shape = TangemTheme.shapes.roundedCornersXMedium,
+            )
+            .padding(vertical = 32.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResourceSafe(R.string.earn_no_results),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+        SpacerH(12.dp)
+        SecondarySmallButton(
+            config = SmallButtonConfig(
+                text = resourceReference(R.string.earn_clear_filter),
+                onClick = onClearFilterClick,
+            ),
+        )
+    }
+}
+
+@Composable
 private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(start = 20.dp, end = 16.dp),
         text = title,
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
+    )
+}
+
+@Composable
+private fun PaginationHandler(listState: LazyListState, state: EarnBestOpportunitiesUM.Content) {
+    InfiniteListHandler(
+        listState = listState,
+        buffer = EARN_LOAD_MORE_BUFFER,
+        triggerLoadMoreCheckOnItemsCountChange = true,
+        onLoadMore = remember(state) {
+            {
+                state.onLoadMore()
+                true
+            }
+        },
     )
 }
 
@@ -348,7 +453,7 @@ private fun EarnContentPreview() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
-                state = EarnUM(
+                state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
                             previewEarnListItemUM(),
@@ -359,7 +464,7 @@ private fun EarnContentPreview() {
                             ),
                         ),
                     ),
-                    bestOpportunities = EarnListUM.Content(
+                    bestOpportunities = EarnBestOpportunitiesUM.Content(
                         items = persistentListOf(
                             previewEarnListItemUM(
                                 tokenName = "Cosmos Hub",
@@ -372,14 +477,8 @@ private fun EarnContentPreview() {
                                 network = "Ethereum Network",
                             ),
                         ),
+                        onLoadMore = {},
                     ),
-                    selectedNetworkFilter = null,
-                    selectedTypeFilter = null,
-                    networkFilters = persistentListOf(),
-                    typeFilters = persistentListOf(),
-                    onBackClick = {},
-                    onNetworkFilterClick = {},
-                    onTypeFilterClick = {},
                 ),
             )
         }
@@ -396,16 +495,9 @@ private fun EarnContentLoadingPreview() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
-                state = EarnUM(
+                state = previewEarnUM(
                     mostlyUsed = EarnListUM.Loading,
-                    bestOpportunities = EarnListUM.Loading,
-                    selectedNetworkFilter = null,
-                    selectedTypeFilter = null,
-                    networkFilters = persistentListOf(),
-                    typeFilters = persistentListOf(),
-                    onBackClick = {},
-                    onNetworkFilterClick = {},
-                    onTypeFilterClick = {},
+                    bestOpportunities = EarnBestOpportunitiesUM.Loading,
                 ),
             )
         }
@@ -422,7 +514,7 @@ private fun EarnContentErrorPreview() {
             LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
         ) {
             EarnContent(
-                state = EarnUM(
+                state = previewEarnUM(
                     mostlyUsed = EarnListUM.Content(
                         items = persistentListOf(
                             previewEarnListItemUM(),
@@ -433,14 +525,35 @@ private fun EarnContentErrorPreview() {
                             ),
                         ),
                     ),
-                    bestOpportunities = EarnListUM.Error(onRetryClicked = {}),
-                    selectedNetworkFilter = null,
-                    selectedTypeFilter = null,
-                    networkFilters = persistentListOf(),
-                    typeFilters = persistentListOf(),
-                    onBackClick = {},
-                    onNetworkFilterClick = {},
-                    onTypeFilterClick = {},
+                    bestOpportunities = EarnBestOpportunitiesUM.Error(onRetryClicked = {}),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EarnContentEmptyPreview() {
+    TangemThemePreview {
+        val background = TangemTheme.colors.background.tertiary
+        CompositionLocalProvider(
+            LocalMainBottomSheetColor provides remember { mutableStateOf(background) },
+        ) {
+            EarnContent(
+                state = previewEarnUM(
+                    mostlyUsed = EarnListUM.Content(
+                        items = persistentListOf(
+                            previewEarnListItemUM(),
+                            previewEarnListItemUM(
+                                tokenName = "Cosmos",
+                                symbol = "ATOM",
+                                network = "Cosmos",
+                            ),
+                        ),
+                    ),
+                    bestOpportunities = EarnBestOpportunitiesUM.Empty,
                 ),
             )
         }
@@ -469,4 +582,19 @@ private fun previewEarnListItemUM(
     onItemClick = {},
 )
 
+private fun previewEarnUM(
+    mostlyUsed: EarnListUM = EarnListUM.Loading,
+    bestOpportunities: EarnBestOpportunitiesUM = EarnBestOpportunitiesUM.Loading,
+): EarnUM = EarnUM(
+    mostlyUsed = mostlyUsed,
+    bestOpportunities = bestOpportunities,
+    selectedTypeFilter = EarnFilterTypeUM.All,
+    selectedNetworkFilter = EarnFilterNetworkUM.AllNetworks(isSelected = true),
+    onBackClick = {},
+    onNetworkFilterClick = {},
+    onTypeFilterClick = {},
+    onSliderScroll = {},
+)
+
 private const val PLACEHOLDER_ITEMS_COUNT = 8
+private const val FOURTH_ITEM_INDEX = 3

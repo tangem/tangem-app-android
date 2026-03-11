@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.PersistentList
 
 data class ExpressTransactionsBlockState(
     val transactions: PersistentList<ExpressTransactionStateUM>,
+    val transactionsToDisplay: PersistentList<ExpressTransactionStateUM>,
     val bottomSheetSlot: BottomSheetSlot?,
     val dialogSlot: DialogSlot?,
 )
