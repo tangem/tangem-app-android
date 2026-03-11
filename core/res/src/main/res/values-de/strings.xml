@@ -1431,6 +1431,8 @@
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
   <string name="swap_promo_title">Neuer Swap-Anbieter verfügbar!</string>
+  <string name="swap_search_tooltip_description">Suchen Sie nach einem beliebigen Token, auch wenn es noch nicht in Ihrer Liste ist.</string>
+  <string name="swap_search_tooltip_title">Nutzen Sie die Suche, um zu finden, was Sie benötigen.</string>
   <string name="swap_story_fifth_subtitle">Vertraue auf den rund um die Uhr verfügbaren Support bei allen Problemen</string>
   <string name="swap_story_fifth_title">Immer für Dich da</string>
   <string name="swap_story_first_subtitle">Mehrere vertrauenswürdige Anbieter an einem Ort – tausche mühelos alle Vermögenswerte in Deiner Wallet</string>
@@ -1496,7 +1498,7 @@
   <string name="tangem_pay_unfreeze_card_success">Ihre Karte ist entsperrt.</string>
   <string name="tangem_pay_withdrawal">Abhebung</string>
   <string name="tangempay_account_unable_to_use_rooted">Auf gerooteten Geräten nicht nutzbar.</string>
-  <string name="tangempay_cancel_kyc">KYC abbrechen</string>
+  <string name="tangempay_cancel_kyc">KYC vom Hauptbildschirm ausblenden</string>
   <string name="tangempay_card_details_add_funds">Guthaben hinzufügen</string>
   <string name="tangempay_card_details_add_funds_subtitle">Aufladeoptionen</string>
   <string name="tangempay_card_details_card_number">Kartennummer</string>
@@ -1562,10 +1564,10 @@
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
   <string name="tangempay_kyc_in_progress_popup_description">Dokumente werden in der Regel innerhalb von 5 Minuten automatisch überprüft. In seltenen Fällen, wenn eine manuelle Überprüfung erforderlich ist, kann es bis zu 48 Stunden dauern.</string>
-  <string name="tangempay_kyc_rejected">KYC abgelehnt</string>
+  <string name="tangempay_kyc_rejected">Abgelehnt</string>
   <string name="tangempay_kyc_rejected_button_text">KYC-Sperre ausblenden</string>
-  <string name="tangempay_kyc_rejected_description">Entschuldigung, wir konnten dies nicht überprüfen.</string>
-  <string name="tangempay_kyc_rejected_description_span">Dein Profil.</string>
+  <string name="tangempay_kyc_rejected_description">Leider konnten wir Ihre Identität</string>
+  <string name="tangempay_kyc_rejected_description_span">nicht verifizieren.</string>
   <string name="tangempay_onboarding_banner_description">Holen Sie sich Ihre kostenlose virtuelle Tangem Visa-Karte</string>
   <string name="tangempay_onboarding_banner_title">Nutzen Sie USDC für alltägliche Zahlungen</string>
   <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
@@ -1888,6 +1890,8 @@
   <string name="warning_express_refresh_required_title">Service vorübergehend nicht verfügbar</string>
   <string name="warning_express_too_maximum_amount_title">Die Menge der zu tauschenden Token darf folgende Werte nicht überschreiten %s</string>
   <string name="warning_express_too_minimal_amount_title">Der zu tauschende Betrag muss mindestens %s betragen</string>
+  <string name="warning_express_unsupported_pair_description">Der Tausch ist für dieses Paar nicht verfügbar. Bitte wählen Sie ein anderes Token und versuchen Sie es erneut.</string>
+  <string name="warning_express_unsupported_pair_title">Nicht unterstütztes Swap-Paar.</string>
   <string name="warning_express_wrong_amount_description">Bitte änder den zu tauschenden Betrag</string>
   <string name="warning_failed_to_verify_card_message">Bei dieser Karte oder Ring kann es sich um ein Produktionsmuster oder eine Fälschung handeln</string>
   <string name="warning_failed_to_verify_card_title">Echtheitsprüfung fehlgeschlagen</string>

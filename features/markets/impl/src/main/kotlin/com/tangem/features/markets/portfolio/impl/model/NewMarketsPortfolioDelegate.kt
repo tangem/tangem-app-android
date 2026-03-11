@@ -203,6 +203,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
                     val currencyId = status.currency.id.rawCurrencyId ?: return@filter false
                     getTokenIdIfL2Network(currencyId.value) == currencyRawId.value
                 }
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return accountStatuses.map { accountStatus ->
             AccountWithAdded(
