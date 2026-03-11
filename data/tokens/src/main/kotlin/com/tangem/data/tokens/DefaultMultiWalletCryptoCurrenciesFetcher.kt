@@ -10,7 +10,8 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.express.ExpressServiceFetcher
@@ -26,7 +27,6 @@ import timber.log.Timber
 /**
  * Default implementation of [MultiWalletCryptoCurrenciesFetcher]
  *
- * @property userWalletsStore          [UserWallet]'s store
  * @property tangemTechApi             Tangem Tech API
  * @property userTokensResponseStore   store of [UserTokensResponse]
  * @property userTokensSaver           user tokens saver
@@ -39,7 +39,7 @@ import timber.log.Timber
 @Suppress("LongParameterList")
 internal class DefaultMultiWalletCryptoCurrenciesFetcher(
     private val demoConfig: DemoConfig,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemTechApi: TangemTechApi,
     private val customTokensMerger: CustomTokensMerger,
     private val userTokensResponseStore: UserTokensResponseStore,
@@ -52,7 +52,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
     private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override suspend fun invoke(params: Params) = Either.catchOn(dispatchers.default) {
-        val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(id = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
 

@@ -2,6 +2,11 @@ package com.tangem.features.feed.model.feed
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -12,20 +17,29 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.earn.usecase.FetchTopEarnTokensUseCase
+import com.tangem.domain.earn.usecase.GetTopEarnTokensUseCase
 import com.tangem.domain.markets.GetTopFiveMarketTokenUseCase
+import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.earn.EarnTokenWithCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
+import com.tangem.features.feed.components.feed.FeedBottomSheetRoute
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.model.feed.state.FeedMarketsBatchFlowManager
 import com.tangem.features.feed.model.feed.state.FeedStateController
-import com.tangem.features.feed.model.feed.state.transformers.UpdateGlobalFeedStateTransformer
-import com.tangem.features.feed.model.feed.state.transformers.UpdateMarketChartsTransformer
-import com.tangem.features.feed.model.feed.state.transformers.UpdateTrendingNewsStateTransformer
+import com.tangem.features.feed.model.feed.state.transformers.*
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.earn.state.EarnListUM
 import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,21 +55,25 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class FeedComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val fetchTrendingNewsUseCase: FetchTrendingNewsUseCase,
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val stateController: FeedStateController,
+    private val feedFeatureToggle: FeedFeatureToggle,
+    private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
+    private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
+    private val appRouter: AppRouter,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val params = paramsContainer.require<DefaultFeedComponent.FeedParams>()
-
     private var quotesUpdateJob: Job? = null
+
+    private val params = paramsContainer.require<DefaultFeedComponent.FeedParams>()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -72,7 +90,22 @@ internal class FeedComponentModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
-    internal val state: StateFlow<FeedListUM>
+    val bottomSheetNavigation: SlotNavigation<FeedBottomSheetRoute> = SlotNavigation()
+
+    val addToPortfolioCallback = object : AddToPortfolioPreselectedDataComponent.Callback {
+        override fun onDismiss() = bottomSheetNavigation.dismiss()
+        override fun onSuccess(addedToken: CryptoCurrency, walletId: UserWalletId) {
+            bottomSheetNavigation.dismiss()
+            appRouter.push(
+                AppRoute.CurrencyDetails(
+                    userWalletId = walletId,
+                    currency = addedToken,
+                ),
+            )
+        }
+    }
+
+    val state: StateFlow<FeedListUM>
         get() = stateController.uiState
 
     val isVisibleOnScreen = MutableStateFlow(false)
@@ -81,29 +114,38 @@ internal class FeedComponentModel @Inject constructor(
         initializeState()
         updateCallbacks()
         fetchTrendingNews()
+        fetchEarnData()
+        fetchCharts()
         subscribeOnCurrencyUpdate()
-        loadCharts()
+        subscribeOnDataState()
+    }
+
+    private fun subscribeOnDataState() {
         modelScope.launch(dispatchers.default) {
             combine(
                 flow = marketsBatchFlowManager.itemsByOrder,
                 flow2 = marketsBatchFlowManager.loadingStatesByOrder,
                 flow3 = marketsBatchFlowManager.errorStatesByOrder,
                 flow4 = manageTrendingNewsUseCase.observeTrendingNews(),
-            ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult ->
+                flow5 = getTopEarnTokensUseCase(),
+            ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult, earnResult ->
                 val globalStateTransformer = UpdateGlobalFeedStateTransformer(
                     loadingStatesByOrder = loadingStatesByOrder,
                     errorStatesByOrder = errorStatesByOrder,
                     trendingNewsResult = trendingNewsResult,
+                    earnResult = earnResult,
                     onRetryClicked = {
                         modelScope.launch(dispatchers.default) {
                             stateController.update { currentState ->
                                 currentState.copy(globalState = GlobalFeedState.Loading)
                             }
-                            fetchTrendingNewsUseCase.invoke()
+                            fetchTrendingNews()
+                            fetchEarnData()
                             marketsBatchFlowManager.reloadAll()
                         }
                     },
                     analyticsEventHandler = analyticsEventHandler,
+                    feedFeatureToggle = feedFeatureToggle,
                 )
 
                 val currentState = stateController.value
@@ -123,11 +165,14 @@ internal class FeedComponentModel @Inject constructor(
                         ),
                         UpdateTrendingNewsStateTransformer(
                             result = trendingNewsResult,
-                            onRetryClicked = {
-                                modelScope.launch(dispatchers.default) {
-                                    fetchTrendingNewsUseCase.invoke()
-                                }
-                            },
+                            onRetryClicked = ::fetchTrendingNews,
+                            analyticsEventHandler = analyticsEventHandler,
+                        ),
+                        UpdateEarnStateTransformer(
+                            isEarnEnabled = feedFeatureToggle.isEarnBlockEnabled,
+                            onItemClick = ::handleEarnTokenClick,
+                            onRetryClick = ::fetchEarnData,
+                            earnResult = earnResult,
                             analyticsEventHandler = analyticsEventHandler,
                         ),
                     )
@@ -144,12 +189,6 @@ internal class FeedComponentModel @Inject constructor(
         }
     }
 
-    private fun fetchTrendingNews() {
-        modelScope.launch(dispatchers.default) {
-            fetchTrendingNewsUseCase()
-        }
-    }
-
     private fun subscribeOnCurrencyUpdate() {
         modelScope.launch(dispatchers.default) {
             currentAppCurrency.drop(1).collect {
@@ -158,7 +197,21 @@ internal class FeedComponentModel @Inject constructor(
         }
     }
 
-    private fun loadCharts() {
+    private fun fetchTrendingNews() {
+        modelScope.launch(dispatchers.default) {
+            fetchTrendingNewsUseCase()
+        }
+    }
+
+    private fun fetchEarnData() {
+        if (!feedFeatureToggle.isEarnBlockEnabled) return
+        modelScope.launch(dispatchers.default) {
+            stateController.update(UpdateEarnLoadingStateTransformer())
+            fetchTopEarnTokensUseCase()
+        }
+    }
+
+    private fun fetchCharts() {
         modelScope.launch(dispatchers.default) {
             TokenMarketListConfig.Order.entries.forEach { order ->
                 marketsBatchFlowManager.getOnLastBatchLoadedSuccessFlow(order)?.collect { batchKey ->
@@ -198,6 +251,7 @@ internal class FeedComponentModel @Inject constructor(
                 onSliderEndReached = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.NewsCarouselEndReached())
                 },
+                onOpenEarnPageClick = ::handleEarnPageOpenClicked,
             ),
             news = NewsUM(
                 content = persistentListOf(),
@@ -214,39 +268,12 @@ internal class FeedComponentModel @Inject constructor(
                 currentSortByType = SortByTypeUM.TopGainers,
             ),
             globalState = GlobalFeedState.Loading,
+            earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
+                EarnListUM.Loading
+            } else {
+                null
+            },
         )
-    }
-
-    private fun getCurrentDate(): String {
-        val localDate = DateTime(DateTime.now(), DateTimeZone.getDefault())
-        return DateTimeFormatters.formatDate(formatter = DateTimeFormatters.dateDMMM, date = localDate)
-    }
-
-    private fun handleSortTypeClicked(sortByType: SortByTypeUM) {
-        stateController.update { currentState ->
-            val updatedCharts = currentState.marketChartConfig.marketCharts.mapValues { (chartSortType, chart) ->
-                when (chart) {
-                    is MarketChartUM.Content -> {
-                        chart.copy(
-                            sortChartConfig = chart.sortChartConfig.copy(
-                                isSelected = chartSortType == sortByType,
-                            ),
-                        )
-                    }
-                    else -> chart
-                }
-            }
-
-            currentState.copy(
-                marketChartConfig = currentState.marketChartConfig.copy(
-                    currentSortByType = sortByType,
-                    marketCharts = updatedCharts.toPersistentHashMap(),
-                ),
-            )
-        }
-        modelScope.launch(dispatchers.default) {
-            marketsBatchFlowManager.loadCharts(sortByType.toOrder())
-        }
     }
 
     private fun startQuotesUpdateTimer() {
@@ -271,6 +298,34 @@ internal class FeedComponentModel @Inject constructor(
                     onOpenAllNews = ::handleOpenAllNews,
                 ),
             )
+        }
+    }
+
+    /* start of clicks area */
+    private fun handleSortTypeClicked(sortByType: SortByTypeUM) {
+        stateController.update { currentState ->
+            val updatedCharts = currentState.marketChartConfig.marketCharts.mapValues { (chartSortType, chart) ->
+                when (chart) {
+                    is MarketChartUM.Content -> {
+                        chart.copy(
+                            sortChartConfig = chart.sortChartConfig.copy(
+                                isSelected = chartSortType == sortByType,
+                            ),
+                        )
+                    }
+                    else -> chart
+                }
+            }
+
+            currentState.copy(
+                marketChartConfig = currentState.marketChartConfig.copy(
+                    currentSortByType = sortByType,
+                    marketCharts = updatedCharts.toPersistentHashMap(),
+                ),
+            )
+        }
+        modelScope.launch(dispatchers.default) {
+            marketsBatchFlowManager.loadCharts(sortByType.toOrder())
         }
     }
 
@@ -342,6 +397,41 @@ internal class FeedComponentModel @Inject constructor(
         params.feedClickIntents.onOpenAllNews()
     }
 
+    private fun handleEarnTokenClick(earnTokenWithCurrency: EarnTokenWithCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.OpportunitySelected(
+                tokenSymbol = earnTokenWithCurrency.earnToken.tokenSymbol,
+                blockchain = earnTokenWithCurrency.cryptoCurrency.network.name,
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        )
+        bottomSheetNavigation.activate(
+            FeedBottomSheetRoute.AddToPortfolio(
+                tokenToAdd = AddToPortfolioPreselectedDataComponent.TokenToAdd(
+                    network = TokenMarketInfo.Network(
+                        networkId = earnTokenWithCurrency.earnToken.networkId,
+                        isExchangeable = false,
+                        contractAddress = earnTokenWithCurrency.earnToken.tokenAddress,
+                        decimalCount = earnTokenWithCurrency.earnToken.decimalCount,
+                    ),
+                    id = CryptoCurrency.RawID(earnTokenWithCurrency.earnToken.tokenId),
+                    name = earnTokenWithCurrency.earnToken.tokenName,
+                    symbol = earnTokenWithCurrency.earnToken.tokenSymbol,
+                ),
+                source = AnalyticsParam.ScreensSources.Markets.value,
+            ),
+        )
+    }
+
+    private fun handleEarnPageOpenClicked() {
+        if (state.value.earnListUM is EarnListUM.Content) {
+            params.feedClickIntents.onOpenEarnPage()
+            analyticsEventHandler.send(FeedAnalyticsEvent.EarnScreenOpened())
+        }
+    }
+    /* end of clicks area */
+
+    /* start of utils area */
     private fun SortByTypeUM.toOrder(): TokenMarketListConfig.Order {
         return when (this) {
             SortByTypeUM.Rating -> TokenMarketListConfig.Order.ByRating
@@ -353,6 +443,12 @@ internal class FeedComponentModel @Inject constructor(
             SortByTypeUM.YieldSupply -> TokenMarketListConfig.Order.YieldSupply
         }
     }
+
+    private fun getCurrentDate(): String {
+        val localDate = DateTime(DateTime.now(), DateTimeZone.getDefault())
+        return DateTimeFormatters.formatDate(formatter = DateTimeFormatters.dateDMMM, date = localDate)
+    }
+    /* end of utils area */
 
     companion object {
         private const val DELAY_TO_FETCH_QUOTES = 60_000L

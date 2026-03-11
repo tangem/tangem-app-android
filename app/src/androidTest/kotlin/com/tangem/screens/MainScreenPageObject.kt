@@ -1,5 +1,6 @@
 package com.tangem.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
@@ -186,7 +187,8 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     val totalBalanceText: KNode = child {
-        hasParent(withTestTag(MainScreenTestTags.WALLET_BALANCE))
+        hasAnyAncestor(withTestTag(MainScreenTestTags.WALLET_BALANCE))
+        addSemanticsMatcher(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text))
     }
 
     val notificationYesButton: KNode = child {
@@ -232,6 +234,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     val organizeTokensButtonWithoutLazySearch: KNode = child {
         hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
         hasText(getResourceString(R.string.organize_tokens_title))
+        useUnmergedTree = true
+    }
+
+    val searchThroughMarketPlaceholder: KNode = child {
+        hasText(getResourceString(R.string.markets_search_header_title))
         useUnmergedTree = true
     }
 
