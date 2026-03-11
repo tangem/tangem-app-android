@@ -69,6 +69,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
     implementation(deps.compose.coil)
+    implementation(deps.compose.reorderableV2)
 
     /* DI */
     implementation(deps.hilt.android)

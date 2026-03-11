@@ -295,13 +295,16 @@ internal class OnrampTokenListModel @Inject constructor(
         )
     }
 
-    private fun AccountStatusList.filterAccountsByQuery(query: String) = accountStatuses.asSequence()
+    private fun AccountStatusList.filterAccountsByQuery(
+        query: String,
+    ): Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>> = accountStatuses.asSequence()
         .associate { accountStatus ->
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> {
                     val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
                     accountStatus.account to filteredList
                 }
+                is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
             }
         }.filter { (_, value) -> value.isNotEmpty() }
 
