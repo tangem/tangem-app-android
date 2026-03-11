@@ -7,7 +7,16 @@ import com.tangem.core.ui.extensions.resourceReference
 
 sealed class SwapAlertUM : AlertUM {
 
-    data class GenericError(
+    data class DefaultError(
+        override val onConfirmClick: (() -> Unit),
+        override val message: TextReference = resourceReference(R.string.common_unknown_error),
+    ) : SwapAlertUM() {
+        override val title: TextReference? = null
+        override val confirmButtonText: TextReference =
+            resourceReference(id = R.string.common_ok)
+    }
+
+    data class SupportError(
         override val onConfirmClick: (() -> Unit),
         override val message: TextReference = resourceReference(R.string.common_unknown_error),
     ) : SwapAlertUM() {

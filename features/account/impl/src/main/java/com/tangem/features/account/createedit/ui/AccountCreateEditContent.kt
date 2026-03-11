@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
@@ -39,6 +40,7 @@ import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM.Account
@@ -53,11 +55,12 @@ internal fun AccountCreateEditContent(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
+
     Column(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
-            .imePadding()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -65,6 +68,7 @@ internal fun AccountCreateEditContent(
 
         Column(
             modifier = Modifier
+                .nestedScroll(nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .weight(1f),
