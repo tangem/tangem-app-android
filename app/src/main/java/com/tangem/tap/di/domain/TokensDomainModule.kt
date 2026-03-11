@@ -102,18 +102,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCurrencyStatusByNetworkUseCase(
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-        dispatchers: CoroutineDispatcherProvider,
-    ): GetNetworkCoinStatusUseCase {
-        return GetNetworkCoinStatusUseCase(
-            currencyStatusOperations = currencyStatusOperations,
-            dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
         currenciesRepository: CurrenciesRepository,
         currencyStatusOperations: BaseCurrencyStatusOperations,
