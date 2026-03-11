@@ -16,6 +16,10 @@ object EnvironmentConfigGenerator {
     private const val PACKAGE_NAME = "com.tangem.datasource.local.config.environment.generated"
     private const val CLASS_NAME = "GeneratedEnvironmentConfig"
 
+    private val stringEncryptionAnnotation = AnnotationSpec.builder(
+        ClassName("com.dexprotector.annotations", "StringEncryption")
+    ).build()
+
     /**
      * Generates GeneratedEnvironmentConfig object from JSON file.
      *
@@ -27,6 +31,7 @@ object EnvironmentConfigGenerator {
         val json = Json.parseToJsonElement(jsonText).jsonObject
 
         val objectBuilder = TypeSpec.objectBuilder(CLASS_NAME)
+            .addAnnotation(stringEncryptionAnnotation)
             .addKdoc("Generated from ${inputFile.name}\nAuto-generated - do not edit manually.")
 
         // Iterate over all JSON keys and generate properties
@@ -136,6 +141,7 @@ object EnvironmentConfigGenerator {
                 // Generate nested object with proper naming (convert dashes to camelCase)
                 val nestedClassName = name.toPascalCase()
                 val nestedObjectBuilder = TypeSpec.objectBuilder(nestedClassName)
+                    .addAnnotation(stringEncryptionAnnotation)
 
                 value.entries.forEach { (nestedKey, nestedValue) ->
                     addPropertyFromJsonValue(nestedObjectBuilder, nestedKey, nestedValue)

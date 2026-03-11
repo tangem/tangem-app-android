@@ -117,6 +117,9 @@ dependencies {
     /** Security */
     implementation(deps.spongecastle.core)
 
+    /** DexProtector annotations */
+    implementation(files("${rootProject.projectDir}/app/libs/dexprotector-annotations.jar"))
+
     /** Chucker */
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chucker)
