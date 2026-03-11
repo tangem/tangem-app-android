@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swap.SwapTransactionStatusStore
@@ -19,7 +20,6 @@ import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
 import com.tangem.utils.Provider
@@ -46,7 +46,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: ExpressTransactionsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
+    @Assisted private val currentStateProvider: Provider<ExpressTransactionsBlockState>,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
 ) {
@@ -81,7 +81,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
     suspend fun removeTransactionOnBottomSheetClosed(isForceDispose: Boolean = false) {
         val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
+        val bottomSheetConfig = state.bottomSheetSlot?.config?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExchangeUM ?: return
 
         val shouldDispose = selectedTx.activeStatus?.isAutoDisposable == true || isForceDispose
@@ -259,7 +259,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         fun create(
             clickIntents: ExpressTransactionsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
-            currentStateProvider: Provider<TokenDetailsState>,
+            currentStateProvider: Provider<ExpressTransactionsBlockState>,
             userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
         ): ExchangeStatusFactory

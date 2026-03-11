@@ -4,6 +4,8 @@ import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.feed.model.FeedEntryModel
 import com.tangem.features.feed.model.earn.EarnModel
+import com.tangem.features.feed.model.earn.filters.EarnNetworkFilterModel
+import com.tangem.features.feed.model.earn.filters.EarnTypeFilterModel
 import com.tangem.features.feed.model.feed.FeedComponentModel
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.list.MarketsListModel
@@ -53,4 +55,14 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(FeedEntryModel::class)
     fun provideFeedEntryModel(model: FeedEntryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnNetworkFilterModel::class)
+    fun provideEarnNetworkFilterModel(model: EarnNetworkFilterModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(EarnTypeFilterModel::class)
+    fun provideEarnTypeFilterModel(model: EarnTypeFilterModel): Model
 }

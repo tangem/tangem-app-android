@@ -12,6 +12,7 @@ import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -88,7 +89,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
 
                 val account = singleAccountSupplier.getSyncOrNull(
                     params = SingleAccountProducer.Params(accountId = mode.accountId),
-                )
+                ) as? Account.CryptoPortfolio
                     ?: return IllegalStateException("Account not found").left()
 
                 (account.cryptoCurrencies + added - removed).any {
@@ -123,7 +124,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         }
     }
 
-    suspend fun needColdWalletInteraction(network: Map<String, Nothing?>): Boolean = when (mode) {
+    suspend fun needColdWalletInteraction(network: Map<String, String?>): Boolean = when (mode) {
         is ManageTokensMode.Account -> coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = mode.accountId.userWalletId,
             networksWithDerivationPath = network,

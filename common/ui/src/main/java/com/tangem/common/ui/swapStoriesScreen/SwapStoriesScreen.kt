@@ -94,6 +94,7 @@ private fun SwapStoriesText(current: SwapStoriesUM.Content.Config) {
             ),
             color = TangemTheme.colors.text.constantWhite,
             textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(SwapStoriesScreenTestTags.TITLE),
         )
         Text(
             text = current.subtitle.resolveReference(),
@@ -105,6 +106,7 @@ private fun SwapStoriesText(current: SwapStoriesUM.Content.Config) {
             ),
             color = SubtitleColor,
             textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(SwapStoriesScreenTestTags.SUBTITLE),
         )
     }
 }
