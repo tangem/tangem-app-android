@@ -27,7 +27,6 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -105,7 +104,7 @@ internal class WcPairModel @Inject constructor(
     private val selectedUserWalletFlow: MutableStateFlow<UserWallet> by lazy {
         MutableStateFlow(getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId })
     }
-    private val selectedPortfolio = MutableSharedFlow<Pair<UserWallet, AccountStatus>>(
+    private val selectedPortfolio = MutableSharedFlow<Pair<UserWallet, AccountStatus.CryptoPortfolio>>(
         replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
@@ -171,7 +170,7 @@ internal class WcPairModel @Inject constructor(
     private suspend fun handlePairState(
         pairState: WcPairState,
         portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus>? = null,
+        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null,
         isAccountMode: Boolean? = null,
     ) {
         when (pairState) {
@@ -206,7 +205,7 @@ internal class WcPairModel @Inject constructor(
     private suspend fun handleProposalState(
         pairState: WcPairState.Proposal,
         portfolios: PortfolioFetcher.Data? = null,
-        selected: Pair<UserWallet, AccountStatus>? = null,
+        selected: Pair<UserWallet, AccountStatus.CryptoPortfolio>? = null,
     ) {
         val availableWallets = pairState.dAppSession.proposalNetwork.keys
             .filter { !it.isLocked && it.isMultiCurrency }
@@ -266,7 +265,7 @@ internal class WcPairModel @Inject constructor(
     }
 
     private suspend fun tryToCreatePortfolioSelectRow(
-        selectedPortfolio: Pair<UserWallet, AccountStatus>?,
+        selectedPortfolio: Pair<UserWallet, AccountStatus.CryptoPortfolio>?,
         portfolios: PortfolioFetcher.Data?,
     ): PortfolioSelectUM? {
         selectedPortfolio ?: return null
@@ -274,7 +273,6 @@ internal class WcPairModel @Inject constructor(
         val (wallet, portfolioAccount) = selectedPortfolio
         val account = when (val account = portfolioAccount.account) {
             is Account.CryptoPortfolio -> account
-            is Account.Payment -> TODO("[REDACTED_JIRA]")
         }
         val isAccountMode = selectorController.isAccountMode.first()
         val icon: AccountIconUM.CryptoPortfolio?

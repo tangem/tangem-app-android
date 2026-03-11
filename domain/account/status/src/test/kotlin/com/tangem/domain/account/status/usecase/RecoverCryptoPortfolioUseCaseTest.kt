@@ -266,7 +266,7 @@ class RecoverCryptoPortfolioUseCaseTest {
             accountName = AccountName(name).getOrNull()!!,
             icon = icon,
             derivationIndex = derivationIndex,
-            cryptoCurrencies = emptySet(),
+            cryptoCurrencies = emptyList(),
         )
     }
 

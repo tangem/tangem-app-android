@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.TangemSiteShareUrlBuilder
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -11,6 +12,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -83,6 +85,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
     private val urlOpener: UrlOpener,
     private val getNewsUseCase: GetNewsUseCase,
+    private val shareManager: ShareManager,
 ) : Model() {
 
     private val quotesJob = JobHolder()
@@ -247,6 +250,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 onFirstVisible = {},
                 onScroll = {},
             ),
+            onShareClick = ::onShareClick,
         ),
     )
 
@@ -660,6 +664,13 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             loadInfo()
             modelScope.loadQuotesWithTimer(QUOTES_UPDATE_INTERVAL_MILLIS)
         }
+    }
+
+    private fun onShareClick() {
+        val tokenId = params.token.id.value
+        val shareUrl = TangemSiteShareUrlBuilder.shareUrl(tokenId)
+        shareManager.shareText(shareUrl)
+        analyticsEventHandler.send(analyticsEventBuilder.shareClicked())
     }
 
     private fun onListedOnClick(exchangesCount: Int) {

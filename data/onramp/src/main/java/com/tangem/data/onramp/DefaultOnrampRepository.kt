@@ -138,7 +138,7 @@ internal class DefaultOnrampRepository(
                 }
             }
 
-            val country = onrampApi.getCountryByIp(
+            val response = onrampApi.getCountryByIp(
                 userWalletId = userWallet.walletId.stringValue,
                 refCode = ExpressUtils.getRefCode(
                     userWallet = userWallet,
@@ -146,7 +146,8 @@ internal class DefaultOnrampRepository(
                 ),
             )
                 .getOrThrow()
-                .let(countryConverter::convert)
+
+            val country = countryConverter.convert(response)
 
             onrampCurrentCountryByIPStore.store(country)
 
@@ -154,7 +155,7 @@ internal class DefaultOnrampRepository(
         }
 
     override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {
-        onrampApi.getStatus(
+        val response = onrampApi.getStatus(
             userWalletId = userWallet.walletId.stringValue,
             refCode = ExpressUtils.getRefCode(
                 userWallet = userWallet,
@@ -163,7 +164,8 @@ internal class DefaultOnrampRepository(
             txId = txId,
         )
             .getOrThrow()
-            .let(statusConverter::convert)
+
+        statusConverter.convert(response)
     }
 
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
@@ -218,9 +220,9 @@ internal class DefaultOnrampRepository(
                     ),
                 ).bind()
             },
-            onError = {
-                Timber.w(it, "Unable to fetch onramp payment methods")
-                throw it
+            onError = { error ->
+                Timber.w(error, "Unable to fetch onramp payment methods")
+                throw error
             },
         )
         paymentMethodsStore.store(PAYMENT_METHODS_KEY, response.removeApplePay())
@@ -253,9 +255,9 @@ internal class DefaultOnrampRepository(
                         ),
                     ).bind()
                 },
-                onError = {
-                    Timber.w(it, "Unable to fetch onramp pairs")
-                    throw it
+                onError = { error ->
+                    Timber.w(error, "Unable to fetch onramp pairs")
+                    throw error
                 },
             )
         }
@@ -270,9 +272,9 @@ internal class DefaultOnrampRepository(
                         ),
                     ).bind()
                 },
-                onError = {
-                    Timber.w(it, "Unable to fetch express providers")
-                    throw it
+                onError = { error ->
+                    Timber.w(error, "Unable to fetch express providers")
+                    throw error
                 },
             )
         }
@@ -291,10 +293,10 @@ internal class DefaultOnrampRepository(
                 cryptoCurrency = cryptoCurrency,
             )
 
-            val cachedValue = onrampSepaAvailabilityStore.getSyncOrNull(key)
+            val isCachedValue = onrampSepaAvailabilityStore.getSyncOrNull(key)
 
-            if (cachedValue != null) {
-                return@withContext cachedValue
+            if (isCachedValue != null) {
+                return@withContext isCachedValue
             }
 
             val onrampPairs =
@@ -318,9 +320,9 @@ internal class DefaultOnrampRepository(
                             ),
                         ).bind()
                     },
-                    onError = {
-                        Timber.w(it, "Unable to fetch onramp pairs")
-                        throw it
+                    onError = { error ->
+                        Timber.w(error, "Unable to fetch onramp pairs")
+                        throw error
                     },
                 )
 
@@ -525,9 +527,11 @@ internal class DefaultOnrampRepository(
     }
 
     private suspend fun getPaymentMethods(): List<OnrampPaymentMethod> {
-        return requireNotNull(paymentMethodsStore.getSyncOrNull(PAYMENT_METHODS_KEY)) {
+        val methods = requireNotNull(paymentMethodsStore.getSyncOrNull(PAYMENT_METHODS_KEY)) {
             "Onramp payment methods is absent in storage"
-        }.let(paymentMethodsConverter::convertList)
+        }
+
+        return paymentMethodsConverter.convertList(methods)
     }
 
     private fun createOnrampTransaction(

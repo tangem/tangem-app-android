@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.ds.row.token.internal.*
@@ -44,19 +44,19 @@ fun TangemTokenRow(
 ) {
     TangemRowContainer(
         content = {
-            CurrencyIcon(
-                state = tokenRowUM.iconState,
+            TangemIcon(
+                tangemIconUM = tokenRowUM.headIconUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
                     .padding(end = TangemTheme.dimens2.x2)
-                    .testTag(TokenElementsTestTags.TOKEN_ICON),
+                    .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
             TokenRowPromoBanner(
                 promoBannerUM = tokenRowUM.promoBannerUM,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.EXTRA_TOP)
-                    .testTag(TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
                     .padding(horizontal = TangemTheme.dimens2.x3)
                     .fillMaxWidth(),
             )
@@ -98,7 +98,89 @@ fun TangemTokenRow(
                 reorderableTokenListState = reorderableTokenListState,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.TAIL)
-                    .testTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
+                    .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
+            )
+        },
+        modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
+    )
+}
+
+/**
+ * Composable function that represents a Tangem token row in a list.
+ *
+ * [Token Row](https://www.figma.com/design/RU7AIgwHtGdMfy83T5UOoR/Core-Library?node-id=8207-17583&t=k8dyaykorsNocGVq-4)
+ *
+ * @param tokenRowUM                The user model containing the data for the token row.
+ * @param headComponent             The composable function representing the head component.
+ * @param titleComponent            The composable function representing the title component.
+ * @param isBalanceHidden           A boolean indicating whether the balance should be hidden.
+ * @param reorderableTokenListState The state of the reorderable lazy list, if applicable.
+ * @param modifier                  The modifier to be applied to the row.
+ */
+@Composable
+fun TangemTokenRow(
+    tokenRowUM: TangemTokenRowUM,
+    isBalanceHidden: Boolean,
+    reorderableTokenListState: ReorderableLazyListState?,
+    modifier: Modifier = Modifier,
+    headComponent: @Composable (Modifier) -> Unit,
+    titleComponent: @Composable (Modifier) -> Unit,
+) {
+    TangemRowContainer(
+        content = {
+            headComponent(
+                Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.HEAD)
+                    .padding(end = TangemTheme.dimens2.x2)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
+            )
+
+            TokenRowPromoBanner(
+                promoBannerUM = tokenRowUM.promoBannerUM,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.EXTRA_TOP)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
+                    .padding(horizontal = TangemTheme.dimens2.x3)
+                    .fillMaxWidth(),
+            )
+
+            titleComponent(
+                Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_TOP)
+                    .padding(end = TangemTheme.dimens2.x2)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_TITLE),
+            )
+
+            TokenRowSubtitle(
+                subtitleUM = tokenRowUM.subtitleUM,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM)
+                    .padding(end = TangemTheme.dimens2.x2)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_PRICE),
+            )
+
+            TokenRowEndTopContent(
+                endContentUM = tokenRowUM.topEndContentUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.END_TOP)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
+            )
+
+            TokenRowEndBottomContent(
+                endContentUM = tokenRowUM.bottomEndContentUM,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
+            )
+
+            TokenRowTail(
+                tailUM = tokenRowUM.tailUM,
+                reorderableTokenListState = reorderableTokenListState,
+                modifier = Modifier
+                    .layoutId(layoutId = TangemRowLayoutId.TAIL)
+                    .testTag(tag = TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK),
             )
         },
         modifier = modifier.tokenClickable(tokenRowUM = tokenRowUM),
@@ -114,7 +196,7 @@ private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = co
     val onHapticLongClick = if (onLongClick != null) {
         {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            onLongClick(tokenRowUM)
+            onLongClick()
         }
     } else {
         null
@@ -123,9 +205,9 @@ private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = co
     when {
         onClick == null && onLongClick == null -> this
         onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onHapticLongClick)
-        onClick != null && onLongClick == null -> combinedClickable(onClick = { onClick(tokenRowUM) })
+        onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
         onClick != null && onLongClick != null -> {
-            combinedClickable(onClick = { onClick(tokenRowUM) }, onLongClick = onHapticLongClick)
+            combinedClickable(onClick = onClick, onLongClick = onHapticLongClick)
         }
         else -> this
     }
