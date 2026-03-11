@@ -6,12 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.ExpressDataError
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
-import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
-import com.tangem.feature.swap.domain.models.domain.PairsWithProviders
-import com.tangem.feature.swap.domain.models.domain.QuoteModel
-import com.tangem.feature.swap.domain.models.domain.RateType
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.*
 import java.math.BigDecimal
 
 interface SwapRepository {
@@ -27,6 +22,7 @@ interface SwapRepository {
         userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
+        isIgnoreExpress: Boolean = false,
     ): PairsWithProviders
 
     suspend fun getExchangeStatus(userWallet: UserWallet, txId: String): Either<UnknownError, ExchangeStatusModel>
@@ -73,6 +69,7 @@ interface SwapRepository {
         expressOperationType: ExpressOperationType,
         refundAddress: String? = null, // for cex only
         refundExtraId: String? = null, // for cex only
+        toExtraId: String? = null, // for networks with memo only
     ): Either<ExpressDataError, SwapDataModel>
 
     // TODO: Add target error handling, remove either ([REDACTED_JIRA])
@@ -86,6 +83,4 @@ interface SwapRepository {
         txHash: String,
         payInExtraId: String?,
     ): Either<ExpressDataError, Unit>
-
-    fun getNativeTokenForNetwork(networkId: String): CryptoCurrency
 }

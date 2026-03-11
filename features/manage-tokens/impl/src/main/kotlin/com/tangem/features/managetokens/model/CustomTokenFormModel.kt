@@ -1,6 +1,7 @@
 package com.tangem.features.managetokens.model
 
 import arrow.core.getOrElse
+import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -8,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
 import com.tangem.domain.managetokens.FindTokenUseCase
@@ -146,7 +148,7 @@ internal class CustomTokenFormModel @Inject constructor(
                 is CustomCurrencyValidator.Status.Validating,
                 -> Unit
                 is CustomCurrencyValidator.Status.SearchingToken -> updateStateWithProgress()
-                is CustomCurrencyValidator.Status.UnexpectedException -> showErrorDialog()
+                is CustomCurrencyValidator.Status.UnexpectedException -> showErrorDialog(validatorState.cause)
                 is CustomCurrencyValidator.Status.FormValidationException -> updateStateWithExceptions(
                     exceptions = validatorState.exceptions,
                 )
@@ -236,9 +238,17 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
-    private fun showErrorDialog() {
+    private fun showErrorDialog(throwable: Throwable) {
+        Timber.e(throwable)
+        val message = when (throwable) {
+            is TangemSdkError -> resourceReference(
+                R.string.generic_error_code,
+                wrappedList(throwable.code.toString()),
+            )
+            else -> resourceReference(R.string.common_unknown_error)
+        }
         val dialog = DialogMessage(
-            message = resourceReference(R.string.common_unknown_error),
+            message = message,
         )
 
         messageSender.send(dialog)
@@ -341,8 +351,17 @@ internal class CustomTokenFormModel @Inject constructor(
     ) {
         val currency = createdCurrency
         if (currency == null) {
-            Timber.e("Trying to add currency without validation")
-            showErrorDialog()
+            showErrorDialog(IllegalStateException("Trying to add currency without validation"))
+            return@resource
+        }
+
+        useCasesFacade.derivePublicKeysUseCase(listOf(currency)).getOrElse {
+            showErrorDialog(IllegalStateException("Failed to derive public keys"))
+            return@resource
+        }
+
+        useCasesFacade.addCryptoCurrenciesUseCase(currency).getOrElse { throwable ->
+            showErrorDialog(throwable)
             return@resource
         }
 
@@ -352,18 +371,6 @@ internal class CustomTokenFormModel @Inject constructor(
             source = params.source,
         )
         analyticsEventHandler.send(event)
-
-        useCasesFacade.derivePublicKeysUseCase(listOf(currency)).getOrElse {
-            Timber.e(it, "Failed to derive public keys")
-            showErrorDialog()
-            return@resource
-        }
-
-        useCasesFacade.addCryptoCurrenciesUseCase(currency).getOrElse {
-            Timber.e(it, "Failed to add currency")
-            showErrorDialog()
-            return@resource
-        }
 
         params.onCurrencyAdded(currency)
     }

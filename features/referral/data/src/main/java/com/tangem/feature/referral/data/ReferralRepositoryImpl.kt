@@ -8,7 +8,8 @@ import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,8 +28,8 @@ typealias ExternalReferralRepository = com.tangem.domain.referral.ReferralReposi
 internal class ReferralRepositoryImpl @Inject constructor(
     private val referralApi: TangemTechApi,
     private val referralConverter: ReferralConverter,
-    private val coroutineDispatcher: CoroutineDispatcherProvider,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : ReferralRepository, ExternalReferralRepository {
 
@@ -38,7 +39,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
     private val referralStatus: ConcurrentHashMap<String, ReferralData> = ConcurrentHashMap()
 
     override suspend fun getReferralData(walletId: String): ReferralData {
-        return withContext(coroutineDispatcher.io) {
+        return withContext(dispatchers.io) {
             val referralData = referralConverter.convert(
                 referralApi.getReferralStatus(
                     walletId = walletId,
@@ -76,7 +77,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
         tokenId: String,
         address: String,
     ): ReferralData {
-        return withContext(coroutineDispatcher.io) {
+        return withContext(dispatchers.io) {
             val referralData = referralConverter.convert(
                 referralApi.startReferral(
                     startReferralBody = StartReferralBody(
@@ -97,9 +98,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
         tokenData: TokenData,
         accountIndex: DerivationIndex?,
     ): CryptoCurrency? {
-        val userWallet = withContext(coroutineDispatcher.io) {
-            userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
         val blockchain = Blockchain.fromNetworkId(tokenData.networkId)
             ?: error("Blockchain ${tokenData.networkId} not found")

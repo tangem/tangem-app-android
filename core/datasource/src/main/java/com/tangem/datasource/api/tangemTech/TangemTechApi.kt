@@ -203,6 +203,20 @@ interface TangemTechApi {
      * Used when yield operations generate intermediate transactions
      * that should not trigger notifications.
      */
-    @POST("v1/transaction-events")
+    @POST("v2/transaction-events")
     suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
+
+    // region Earn
+    @GET("v1/earn/markets")
+    suspend fun getEarnTokens(
+        @Query("isForEarn") isForEarn: Boolean?,
+        @Query("page") page: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("networkIds") networks: List<String>? = null,
+    ): ApiResponse<EarnListResponse>
+
+    @GET("v1/earn/networks")
+    suspend fun getEarnNetworks(@Query("type") type: String? = null): ApiResponse<EarnNetworkListResponse>
+    // endregion
 }
