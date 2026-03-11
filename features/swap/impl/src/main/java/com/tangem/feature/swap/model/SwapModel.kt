@@ -18,12 +18,15 @@ import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SwapAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.InputNumberFormatter
@@ -43,7 +46,9 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.GetTokenMarketInfoUseCase
+import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -73,7 +78,6 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
-import com.tangem.feature.swap.converters.TokenMarketInfoToParamsConverter
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.TransactionFeeResult
 import com.tangem.feature.swap.domain.TxFeeSealedState
@@ -88,7 +92,6 @@ import com.tangem.feature.swap.models.UiActions
 import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
-import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
@@ -105,11 +108,8 @@ import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -120,6 +120,7 @@ import javax.inject.Inject
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
@@ -154,9 +155,8 @@ internal class SwapModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val sendFeatureToggles: SendFeatureToggles,
     private val getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    swapFeatureToggles: SwapFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
     private val addToPortfolioManagerFactory: AddToPortfolioManager.Factory,
-    private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val getTangemPayCustomerIdUseCase: GetTangemPayCustomerIdUseCase,
@@ -259,10 +259,26 @@ internal class SwapModel @Inject constructor(
 
     private val searchQueryState = MutableStateFlow("")
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+    private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
+    private var latestMarketsState: SwapMarketState? = null
+
+    private val defaultMarketsListManager by lazy {
+        SwapMarketsListBatchFlowManager(
+            getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
+            batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Main,
+            order = TokenMarketListConfig.Order.Trending,
+            currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
+            currentSearchText = Provider { null },
+            modelScope = modelScope,
+            dispatchers = dispatchers,
+        )
+    }
+
     private val searchMarketsListManager by lazy {
         SwapMarketsListBatchFlowManager(
             getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
             batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
+            order = TokenMarketListConfig.Order.ByRating,
             currentAppCurrency = Provider { selectedAppCurrencyFlow.value },
             currentSearchText = Provider { searchQueryState.value },
             modelScope = modelScope,
@@ -280,13 +296,17 @@ internal class SwapModel @Inject constructor(
         override fun onSuccess(addedToken: CryptoCurrency) {
             modelScope.launch {
                 bottomSheetNavigation.dismiss()
-                uiState.selectTokenState?.let { currentSelectState ->
-                    uiState = uiState.copy(
-                        selectTokenState = currentSelectState.copy(
-                            marketsState = null,
-                        ),
-                    )
-                }
+                analyticsEventHandler.send(
+                    SwapEvents.ChooseTokenScreenResult(isTokenChosen = true, token = addedToken.symbol),
+                )
+                analyticsEventHandler.send(
+                    SwapAnalyticsEvent.TokenSelected(
+                        token = addedToken.symbol,
+                        source = ScreensSources.Markets,
+                        isSearched = searchQueryState.value.isNotEmpty(),
+                    ),
+                )
+                searchQueryState.value = ""
                 getAccountCurrencyStatusUseCase.invoke(userWalletId, addedToken)
                     .firstOrNull {
                         it.status.value is CryptoCurrencyStatus.Loaded
@@ -322,7 +342,7 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromAccountStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
                 } else {
                     fromAccountCurrencyStatus = fromAccountStatus
                     toAccountCurrencyStatus = toAccountStatus
@@ -340,7 +360,7 @@ internal class SwapModel @Inject constructor(
                 }
 
                 if (fromStatus == null) {
-                    uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
+                    uiState = stateBuilder.addDefaultAlert(uiState = uiState, onDismiss = swapRouter::back)
                 } else {
                     initialFromStatus = fromStatus
                     initialToStatus = toStatus
@@ -363,50 +383,7 @@ internal class SwapModel @Inject constructor(
             }
             .launchIn(modelScope)
 
-        if (swapFeatureToggles.isMarketListFeatureEnabled) {
-            combine(
-                flow = searchQueryState
-                    .onEach { searchQuery ->
-                        searchMarketsListManager.reload(searchQuery)
-                    },
-                flow2 = searchMarketsListManager.uiItems,
-                flow3 = searchMarketsListManager.isInInitialLoadingErrorState,
-                flow4 = searchMarketsListManager.isSearchNotFoundState,
-                flow5 = searchMarketsListManager.totalCount.filterNotNull(),
-            ) { searchQuery, uiItems, isError, isSearchNotFound, total ->
-                when {
-                    searchQuery.isEmpty() -> {
-                        visibleMarketItemIds.value = emptyList()
-                        null
-                    }
-                    isError -> SwapMarketState.LoadingError(
-                        onRetryClicked = { searchMarketsListManager.reload(searchQuery) },
-                    )
-                    isSearchNotFound -> SwapMarketState.SearchNothingFound
-                    uiItems.isEmpty() -> SwapMarketState.Loading
-                    else -> SwapMarketState.Content(
-                        items = uiItems,
-                        loadMore = { searchMarketsListManager.loadMore() },
-                        onItemClick = { item ->
-                            addToPortfolioItem(item)
-                        },
-                        visibleIdsChanged = { visibleMarketItemIds.value = it },
-                        total = total,
-                    )
-                }
-            }
-                .distinctUntilChanged()
-                .onEach { marketsState ->
-                    uiState.selectTokenState?.let { currentSelectState ->
-                        uiState = uiState.copy(
-                            selectTokenState = currentSelectState.copy(
-                                marketsState = marketsState,
-                            ),
-                        )
-                    }
-                }
-                .launchIn(modelScope)
-        }
+        subscribeMarketTokens()
 
         modelScope.launch {
             visibleMarketItemIds.mapNotNull { rawIDS ->
@@ -417,6 +394,18 @@ internal class SwapModel @Inject constructor(
                 }
             }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
                 searchMarketsListManager.loadCharts(visibleBatchKeys)
+            }
+        }
+
+        modelScope.launch {
+            visibleDefaultMarketItemIds.mapNotNull { rawIds ->
+                if (rawIds.isNotEmpty()) {
+                    defaultMarketsListManager.getBatchKeysByItemIds(rawIds)
+                } else {
+                    null
+                }
+            }.distinctUntilChanged().collectLatest { visibleBatchKeys ->
+                defaultMarketsListManager.loadCharts(visibleBatchKeys)
             }
         }
     }
@@ -442,6 +431,41 @@ internal class SwapModel @Inject constructor(
         val isAnyAvailableTokens = isAnyAvailableTokensTo || isAnyAvailableTokensFrom ||
             isAnyAvailableAccountTokensTo || isAnyAvailableAccountTokensFrom
         analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened(hasAvailableTokens = isAnyAvailableTokens))
+    }
+
+    private fun subscribeMarketTokens() {
+        if (swapFeatureToggles.isMarketListFeatureEnabled) {
+            // Switch between default and search market flows
+            searchQueryState
+                .map { it.isEmpty() }
+                .distinctUntilChanged()
+                .flatMapLatest { isDefaultMode ->
+                    if (isDefaultMode) {
+                        visibleMarketItemIds.value = emptyList()
+                        createDefaultMarketsFlow()
+                    } else {
+                        visibleDefaultMarketItemIds.value = emptyList()
+                        createSearchMarketsFlow()
+                    }
+                }
+                .onEach { marketsState ->
+                    latestMarketsState = marketsState
+                    applyMarketsState(marketsState)
+                }
+                .launchIn(modelScope)
+
+            // Reload search markets when query changes
+            searchQueryState
+                .onEach { searchQuery ->
+                    if (searchQuery.isNotEmpty()) {
+                        searchMarketsListManager.reload(searchQuery)
+                    }
+                }
+                .launchIn(modelScope)
+
+            // Initial load of default markets
+            defaultMarketsListManager.reload()
+        }
     }
 
     @Suppress("LongMethod")
@@ -486,14 +510,7 @@ internal class SwapModel @Inject constructor(
                     dataState.fromCryptoCurrency
                 }
 
-                fromCryptoCurrency?.let { cryptoCurrency ->
-                    dataState = dataState.copy(
-                        feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrency,
-                        ).getOrNull(),
-                    )
-                }
+                if (fromCryptoCurrency != null) updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
@@ -614,6 +631,18 @@ internal class SwapModel @Inject constructor(
             toAccount = toAccount,
             tokensDataState = state,
         )
+
+        if (handleSwapNotSupported(
+                state = state,
+                fromToken = fromCurrencyStatus,
+                toToken = toCurrencyStatus,
+                fromAccount = fromAccount,
+                toAccount = toAccount,
+            )
+        ) {
+            return
+        }
+
         startLoadingQuotes(
             fromToken = fromCurrencyStatus,
             fromAccount = fromAccount,
@@ -639,6 +668,17 @@ internal class SwapModel @Inject constructor(
                 uiState = uiState,
                 tokensDataState = tokensDataState,
                 fromToken = dataState.fromCryptoCurrency?.currency ?: initialCurrencyFrom,
+            )
+        }
+        latestMarketsState?.let(::applyMarketsState)
+    }
+
+    private fun applyMarketsState(marketsState: SwapMarketState) {
+        uiState.selectTokenState?.let { currentSelectState ->
+            uiState = uiState.copy(
+                selectTokenState = currentSelectState.copy(
+                    marketsState = marketsState,
+                ),
             )
         }
     }
@@ -698,6 +738,15 @@ internal class SwapModel @Inject constructor(
                 updateFeeBlock = updateFeeBlock,
             )
         }
+    }
+
+    private suspend fun updateFeePaidCryptoCurrencyFor(fromToken: CryptoCurrencyStatus) {
+        dataState = dataState.copy(
+            feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = fromToken,
+            ).getOrNull(),
+        )
     }
 
     private fun loadQuotesTask(
@@ -971,7 +1020,7 @@ internal class SwapModel @Inject constructor(
         val fee = getSelectedFee()
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
-            makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
                 startLoadingQuotesFromLastState()
@@ -997,7 +1046,7 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         if (fee == null) {
-                            makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                            makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
                         sendSuccessSwapEvent(
@@ -1075,6 +1124,7 @@ internal class SwapModel @Inject constructor(
             cryptoAmount = swapTransactionState.cryptoAmount,
             cryptoCurrencyId = swapTransactionState.cryptoCurrencyId,
             receiverCexAddress = swapTransactionState.cexAddress,
+            exchangeData = swapTransactionState.exchangeData,
         )
             .onLeft {
                 startLoadingQuotesFromLastState()
@@ -1155,7 +1205,7 @@ internal class SwapModel @Inject constructor(
                     }
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
-                        makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
+                        makeSupportAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                         Timber.e("Fee should not be Empty")
                         return@launch
                     }
@@ -1276,7 +1326,17 @@ internal class SwapModel @Inject constructor(
         val (foundToken, foundAccount) = getSelectedTokenAndAccount(tokens, id)
 
         foundToken?.currency?.symbol?.let { symbol ->
-            analyticsEventHandler.send(SwapEvents.ChooseTokenScreenResult(isTokenChosen = true, token = symbol))
+            analyticsEventHandler.send(
+                SwapEvents.ChooseTokenScreenResult(isTokenChosen = true, token = symbol),
+            )
+
+            analyticsEventHandler.send(
+                SwapAnalyticsEvent.TokenSelected(
+                    token = symbol,
+                    source = ScreensSources.Portfolio,
+                    isSearched = searchQueryState.value.isNotEmpty(),
+                ),
+            )
         }
 
         if (foundToken != null) {
@@ -1337,6 +1397,20 @@ internal class SwapModel @Inject constructor(
                 toAccount = toAccount,
                 selectedProvider = null,
             )
+            swapRouter.openScreen(SwapNavScreen.Main)
+            if (handleSwapNotSupported(
+                    state = tokens,
+                    fromToken = fromToken,
+                    toToken = toToken,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
+                )
+            ) {
+                return
+            }
+            modelScope.launch {
+                updateFeePaidCryptoCurrencyFor(fromToken)
+            }
             startLoadingQuotes(
                 fromToken = fromToken,
                 fromAccount = fromAccount,
@@ -1346,7 +1420,6 @@ internal class SwapModel @Inject constructor(
                 reduceBalanceBy = lastReducedBalanceBy.value,
                 toProvidersList = findSwapProviders(fromToken, toToken),
             )
-            swapRouter.openScreen(SwapNavScreen.Main)
             updateTokensState(tokens)
         }
     }
@@ -1479,6 +1552,7 @@ internal class SwapModel @Inject constructor(
                     toAccount = newToAccount,
                 )
                 isOrderReversed = !isOrderReversed
+                updateFeePaidCryptoCurrencyFor(newFromToken)
                 dataState.tokensDataState?.let { tokensDataState ->
                     updateTokensState(tokensDataState)
                 }
@@ -1584,11 +1658,15 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun makeDefaultAlert() {
-        uiState = stateBuilder.addAlert(uiState)
+        uiState = stateBuilder.addDefaultAlert(uiState = uiState)
     }
 
-    private fun makeDefaultAlert(message: TextReference) {
-        uiState = stateBuilder.addAlert(uiState, message)
+    private fun makeSupportAlert(message: TextReference) {
+        uiState = stateBuilder.addSupportAlert(
+            uiState = uiState,
+            message = message,
+            onSupportClick = { onFailedTxEmailClick("Fee calculation error") },
+        )
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -1872,6 +1950,59 @@ internal class SwapModel @Inject constructor(
             .orEmpty()
     }
 
+    /**
+     * @return true if swap is not supported and UI was updated to show error state
+     */
+    private fun handleSwapNotSupported(
+        state: TokensDataStateExpress,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
+    ): Boolean {
+        val selectedCurrency = if (isOrderReversed) fromToken else toToken
+        if (isTokenAvailableForSwap(state, selectedCurrency, isOrderReversed)) return false
+
+        analyticsEventHandler.send(
+            SwapEvents.NoticeUnavailableToSwapPair(
+                sendToken = fromToken.currency.symbol,
+                receiveToken = toToken.currency.symbol,
+                sendBlockchain = fromToken.currency.network.name,
+                receiveBlockchain = toToken.currency.network.name,
+            ),
+        )
+        uiState = stateBuilder.createSwapNotSupportedState(
+            uiStateHolder = uiState,
+            fromToken = fromToken,
+            toToken = toToken,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
+        )
+        return true
+    }
+
+    private fun isTokenAvailableForSwap(
+        state: TokensDataStateExpress,
+        selectedCurrency: CryptoCurrencyStatus,
+        isReverseFromTo: Boolean,
+    ): Boolean {
+        val group = if (isReverseFromTo) state.fromGroup else state.toGroup
+        val idToFind = selectedCurrency.currency.id.value
+
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            group.accountCurrencyList.any { (_, currencyList) ->
+                currencyList.any { accountSwapCurrency ->
+                    idToFind == accountSwapCurrency.cryptoCurrencyStatus.currency.id.value &&
+                        accountSwapCurrency.isAvailable
+                }
+            }
+        } else {
+            group.available.any { swapAvailability ->
+                idToFind == swapAvailability.currencyStatus.currency.id.value
+            }
+        }
+    }
+
     private fun List<SwapProvider>.filterForTangemPayWithdrawal(): List<SwapProvider> {
         return if (tangemPayInput?.isWithdrawal == true) {
             filter { it.type == ExchangeProviderType.CEX }
@@ -2059,24 +2190,90 @@ internal class SwapModel @Inject constructor(
         }
     }
 
+    private fun createDefaultMarketsFlow(): Flow<SwapMarketState> {
+        val marketsTitle = TextReference.Res(R.string.feed_trending_now)
+        return combine(
+            defaultMarketsListManager.uiItems,
+            defaultMarketsListManager.isInInitialLoadingErrorState,
+            defaultMarketsListManager.totalCount,
+        ) { uiItems, isError, total ->
+            when {
+                isError -> SwapMarketState.LoadingError(
+                    onRetryClicked = { defaultMarketsListManager.reload() },
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+                else -> SwapMarketState.Content(
+                    items = uiItems,
+                    loadMore = { defaultMarketsListManager.loadMore() },
+                    onItemClick = { item -> addToPortfolioItem(item) },
+                    visibleIdsChanged = { visibleDefaultMarketItemIds.value = it },
+                    total = total ?: uiItems.size,
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = false,
+                )
+            }
+        }
+    }
+
+    private fun createSearchMarketsFlow(): Flow<SwapMarketState> {
+        val marketsTitle = TextReference.Res(R.string.markets_common_title)
+        return combine(
+            flow = searchMarketsListManager.uiItems,
+            flow2 = searchMarketsListManager.isInInitialLoadingErrorState,
+            flow3 = searchMarketsListManager.isSearchNotFoundState,
+            flow4 = searchMarketsListManager.totalCount,
+        ) { uiItems, isError, isSearchNotFound, total ->
+            when {
+                isError -> SwapMarketState.LoadingError(
+                    onRetryClicked = { searchMarketsListManager.reload(searchQueryState.value) },
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
+                )
+                isSearchNotFound -> SwapMarketState.SearchNothingFound
+                uiItems.isEmpty() -> SwapMarketState.Loading(
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
+                )
+                else -> SwapMarketState.Content(
+                    items = uiItems,
+                    loadMore = { searchMarketsListManager.loadMore() },
+                    onItemClick = { item -> addToPortfolioItem(item) },
+                    visibleIdsChanged = { visibleMarketItemIds.value = it },
+                    total = total ?: uiItems.size,
+                    marketsTitle = marketsTitle,
+                    shouldAssetsCount = true,
+                )
+            }
+        }
+    }
+
     private fun addToPortfolioItem(item: MarketsListItemUM) {
         modelScope.launch {
-            val tokenInfo = getTokenMarketInfoUseCase(
-                selectedAppCurrencyFlow.value,
-                item.id,
-                item.currencySymbol,
-            ).getOrNull() ?: return@launch
+            val tokenMarket = defaultMarketsListManager.getTokenMarketById(item.id)
+                ?: searchMarketsListManager.getTokenMarketById(item.id)
+                ?: return@launch
 
-            val converter = TokenMarketInfoToParamsConverter()
-            val param = converter.convert(tokenInfo)
+            val param = tokenMarket.toSerializableParam()
             val hasOnlyHotWallets = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
 
-            val networks = tokenInfo.networks?.filter { network ->
+            val networks = tokenMarket.networks?.filter { network ->
                 BlockchainUtils.isSupportedNetworkId(
                     blockchainId = network.networkId,
                     excludedBlockchains = excludedBlockchains,
                     hotExcludedBlockchains = hotWalletExcludedBlockchains,
                     hasOnlyHotWallets = hasOnlyHotWallets,
+                )
+            }?.map { network ->
+                TokenMarketInfo.Network(
+                    networkId = network.networkId,
+                    isExchangeable = false,
+                    contractAddress = network.contractAddress,
+                    decimalCount = network.decimalCount,
                 )
             }.orEmpty()
 
@@ -2084,7 +2281,7 @@ internal class SwapModel @Inject constructor(
                 .create(
                     scope = modelScope,
                     token = param,
-                    analyticsParams = null,
+                    analyticsParams = AddToPortfolioManager.AnalyticsParams(source = ScreensSources.Swap.value),
                 ).apply {
                     setTokenNetworks(networks)
                 }
@@ -2166,6 +2363,8 @@ internal class SwapModel @Inject constructor(
             FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true),
         )
 
+        override val forceUpdateState = MutableSharedFlow<FeeSelectorUM>()
+
         override suspend fun loadFeeExtended(
             selectedToken: CryptoCurrencyStatus?,
         ): Either<GetFeeError, TransactionFeeExtended> {
@@ -2198,17 +2397,14 @@ internal class SwapModel @Inject constructor(
         }
 
         override fun onResult(newState: FeeSelectorUM) {
-            if (isPermissionNotificationShown()) {
-                state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                return
-            }
+            state.value = newState
 
             if (newState is FeeSelectorUM.Error) {
-                state.value = newState.copy(isHidden = true)
+                modelScope.launch {
+                    forceUpdateState.emit(newState.copy(isHidden = true))
+                }
                 return
             }
-
-            state.value = newState
 
             // If fee currency is same as from currency, we need to reload quotes to update fee info
             val isFeeCurrencySameAsFromCurrency = newState is FeeSelectorUM.Content &&
