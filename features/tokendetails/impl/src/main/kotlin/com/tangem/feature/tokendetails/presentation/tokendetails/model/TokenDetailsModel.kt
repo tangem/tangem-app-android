@@ -86,7 +86,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
@@ -137,7 +137,7 @@ internal class TokenDetailsModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
-    expressStatusFactory: ExpressStatusFactory.Factory,
+    tokenDetailsExpressStatusFactory: TokenDetailsExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     private val appRouter: AppRouter,
     private val router: InnerTokenDetailsRouter,
@@ -218,7 +218,7 @@ internal class TokenDetailsModel @Inject constructor(
     // endregion
 
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
-        expressStatusFactory.create(
+        tokenDetailsExpressStatusFactory.create(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             currentStateProvider = Provider { uiState.value },

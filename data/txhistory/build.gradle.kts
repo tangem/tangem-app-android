@@ -15,14 +15,17 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
     implementation(projects.core.pagination)
+
     implementation(projects.domain.legacy)
+    implementation(projects.domain.common)
     implementation(projects.domain.walletManager)
-    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
+
+    implementation(projects.libs.blockchainSdk)
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.androidx.paging.runtime)
