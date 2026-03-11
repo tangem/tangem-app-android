@@ -234,7 +234,7 @@ private fun TrendingArticleBackground(
                             Color(0xFF7C16F1).copy(alpha = .8f),
                             Color.Transparent,
                         ),
-                        center = Offset(w / 2f, 2.4f * h),
+                        center = Offset(w / 2f, 2.6f * h),
                         radius = radiusScale * 1.57f,
                     ),
                 )
