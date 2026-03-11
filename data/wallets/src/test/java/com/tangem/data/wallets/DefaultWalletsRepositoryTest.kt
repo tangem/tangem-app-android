@@ -54,7 +54,7 @@ class DefaultWalletsRepositoryTest {
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
             tangemTechApi = tangemTechApi,
-            userWalletsStore = mockk(),
+            userWalletsListRepository = mockk(),
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = mockk(),
@@ -222,7 +222,7 @@ class DefaultWalletsRepositoryTest {
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
             tangemTechApi = tangemTechApi,
-            userWalletsStore = mockk(),
+            userWalletsListRepository = mockk(),
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = authProvider,
