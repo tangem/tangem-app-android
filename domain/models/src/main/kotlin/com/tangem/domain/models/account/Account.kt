@@ -42,7 +42,7 @@ sealed interface Account {
         override val accountName: AccountName,
         val icon: CryptoPortfolioIcon,
         val derivationIndex: DerivationIndex,
-        val cryptoCurrencies: Set<CryptoCurrency>,
+        val cryptoCurrencies: List<CryptoCurrency>,
     ) : Account {
 
         /** Indicates if the account is the main account */
@@ -60,7 +60,7 @@ sealed interface Account {
         fun copy(
             accountName: AccountName = this.accountName,
             icon: CryptoPortfolioIcon = this.icon,
-            cryptoCurrencies: Set<CryptoCurrency> = this.cryptoCurrencies,
+            cryptoCurrencies: List<CryptoCurrency> = this.cryptoCurrencies,
         ): CryptoPortfolio {
             return CryptoPortfolio(
                 accountId = this.accountId,
@@ -102,14 +102,14 @@ sealed interface Account {
                 name: String,
                 icon: CryptoPortfolioIcon,
                 derivationIndex: Int,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): Either<Error, CryptoPortfolio> {
                 return either {
                     val accountName = AccountName(value = name).getOrElse {
                         raise(AccountNameError(cause = it))
                     }
 
-                    val derivationIndex = DerivationIndex(value = derivationIndex).getOrElse {
+                    val index = DerivationIndex(value = derivationIndex).getOrElse {
                         raise(DerivationIndexError(cause = it))
                     }
 
@@ -117,7 +117,7 @@ sealed interface Account {
                         accountId = accountId,
                         accountName = accountName,
                         icon = icon,
-                        derivationIndex = derivationIndex,
+                        derivationIndex = index,
                         cryptoCurrencies = cryptoCurrencies,
                     )
                 }
@@ -138,7 +138,7 @@ sealed interface Account {
                 accountName: AccountName,
                 icon: CryptoPortfolioIcon,
                 derivationIndex: DerivationIndex,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): CryptoPortfolio {
                 return CryptoPortfolio(
                     accountId = accountId,
@@ -157,7 +157,7 @@ sealed interface Account {
              */
             fun createMainAccount(
                 userWalletId: UserWalletId,
-                cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+                cryptoCurrencies: List<CryptoCurrency> = emptyList(),
             ): CryptoPortfolio {
                 val derivationIndex = DerivationIndex.Main
 
@@ -175,11 +175,12 @@ sealed interface Account {
         }
     }
 
-    class Payment : Account {
-        override val accountId: AccountId
-            get() = TODO("Not yet implemented")
-        override val accountName: AccountName
-            get() = TODO("Not yet implemented")
+    @Serializable
+    data class Payment(
+        override val accountId: AccountId,
+        override val accountName: AccountName,
+        val cryptoCurrencies: List<CryptoCurrency>,
+    ) : Account {
 
         init {
             error("Not yet implemented")
@@ -190,5 +191,5 @@ sealed interface Account {
 val Account.derivationIndex: DerivationIndex?
     get() = when (this) {
         is Account.CryptoPortfolio -> derivationIndex
-        is Account.Payment -> TODO("[REDACTED_JIRA]")
+        is Account.Payment -> null
     }
