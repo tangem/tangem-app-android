@@ -4,7 +4,7 @@
   <string name="access_code_alert_skip_ok">Saltar de todos modos</string>
   <string name="access_code_alert_skip_title">Código de acceso no establecido</string>
   <string name="access_code_alert_validation_cancel">Cambiar código</string>
-  <string name="access_code_alert_validation_description">Su código de acceso se utilizará para desbloquear su billetera y proteger el acceso a sus activos.</string>
+  <string name="access_code_alert_validation_description">Su código de acceso desbloquea y protege el acceso a su billetera</string>
   <string name="access_code_alert_validation_ok">Usar de todos modos</string>
   <string name="access_code_alert_validation_title">Este código de acceso se puede adivinar fácilmente.</string>
   <string name="access_code_check_title">Introduzca el código de acceso</string>
@@ -399,6 +399,7 @@
   <string name="common_unstake">Termine el staking</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Debido a limitaciones sobre %1$s, solo %2$d UTXO pueden caber en una sola transacción. Esto significa que solo puedes enviar %3$s o menos. Debe reducir la cantidad.</string>
   <string name="common_value_copied">Valor copiado</string>
+  <string name="common_wallets">Billeteras</string>
   <string name="common_week">semana</string>
   <string name="common_with">con</string>
   <string name="common_yes">Sí</string>
@@ -468,9 +469,15 @@
   <string name="domain_receive_assets_onboarding_network_name">Red de %s</string>
   <string name="domain_receive_assets_onboarding_title">Envíe fondos utilizando solo</string>
   <string name="earn_best_opportunities">Las mejores oportunidades</string>
+  <string name="earn_clear_filter">Limpiar filtro</string>
+  <string name="earn_empty">La lista está temporalmente vacía porque se está actualizando. Vuelva a consultarla en un momento.</string>
   <string name="earn_filter_all_networks">Todas las redes</string>
   <string name="earn_filter_all_types">Todos los tipos</string>
+  <string name="earn_filter_by">Filtrar por</string>
+  <string name="earn_filter_my_networks">Mis redes</string>
+  <string name="earn_filter_networks">Redes</string>
   <string name="earn_mostly_used">Mayormente usado</string>
+  <string name="earn_no_results">Sin resultados</string>
   <string name="earn_title">Ganar</string>
   <string name="email_preface_wc_error">Hola equipo de soporte, he encontrado un error con el código: %s</string>
   <string name="email_subject_wc_error">Error de WalletConnect</string>
@@ -543,7 +550,7 @@
   <string name="express_status_buying">Comprando %s</string>
   <string name="express_status_buying_active">Comprando %s...</string>
   <string name="express_status_hide_button_text">Ocultar esta transacción</string>
-  <string name="express_status_hide_dialog_text">Una vez oculto, el estado de la transacción no se puede volver a ver. En su lugar, basta con deslizar el dedo para descartarla.</string>
+  <string name="express_status_hide_dialog_text">Si oculta esta transacción, ya no aparecerá en la pantalla de estado. Si solo quieres cerrar la pantalla de estado y volver más tarde, solo tiene que deslizar el dedo hacia otro lado.</string>
   <string name="express_status_hide_dialog_title">¿Ocultar el estado de la transacción?</string>
   <string name="express_swap_not_supported_text">Este token no es compatible. Por favor, elige un token diferente para intercambiar.</string>
   <string name="express_swap_not_supported_title">%s no está soportado</string>
@@ -552,9 +559,9 @@
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transacción copiado</string>
   <string name="exсhange_token_description">Convierta una de sus activos de su portafolio por este token</string>
-  <string name="fee_selector_choose_speed_description">Una mayor velocidad significa una confirmación más rápida y una tarifa de red más alta. %s</string>
+  <string name="fee_selector_choose_speed_description">Una mayor velocidad significa una confirmación más rápida\ny una tarifa de red más alta. %s</string>
   <string name="fee_selector_choose_speed_title">Elija la velocidad</string>
-  <string name="fee_selector_choose_token_description">Elija qué token utilizar para pagar la tarifa de red. %s</string>
+  <string name="fee_selector_choose_token_description">Elige qué token utilizar para pagar\nla tarifa de red. %s</string>
   <string name="fee_selector_choose_token_title">Elija token</string>
   <string name="feed_market_and_news">Mercado y noticias</string>
   <string name="feed_trending_now">De actualidad</string>
@@ -577,7 +584,7 @@
   <string name="generic_error_code">Ocurrió un error. Código: %s</string>
   <string name="generic_requires_memo_error">Requiere memo</string>
   <string name="give_permission_current_transaction">Esta transacción</string>
-  <string name="give_permission_policy_type_footer">Especifique el límite aprobado para el token seleccionado.</string>
+  <string name="give_permission_policy_type_footer">Al aprobar, permite que el contrato inteligente utilice sus tokens en transacciones futuras.</string>
   <string name="give_permission_rows_amount">Montante %s</string>
   <string name="give_permission_staking_footer">La función Aprobar es necesaria para otorgar permiso a otra dirección para usar una cantidad específica de sus tokens. Por diseño, los contratos inteligentes no pueden acceder a sus tokens sin su aprobación. Al \"desbloquear\" sus tokens, autoriza al contrato inteligente de StakeKit a usarlos. Los mineros de la red reciben una tarifa de gas (pagada por usted) por registrar esta acción en la cadena de bloques. Puede apostar su token después de dar su aprobación.</string>
   <string name="give_permission_staking_subtitle">Para continuar, debe autorizar el contrato inteligente de Polygon para utilizar su %s</string>
@@ -733,7 +740,7 @@
   <string name="markets_loading_no_data_title">Sin datos</string>
   <string name="markets_pulse_common_title">Análisis del Mercado</string>
   <string name="markets_quick_actions">Acciones rápidas</string>
-  <string name="markets_search_header_title">Busque en el mercado</string>
+  <string name="markets_search_header_title">Buscar tokens</string>
   <string name="markets_search_result_title">Resultado</string>
   <string name="markets_search_see_tokens_under_100k">Ver tokens con marketcap inferior a 100.000$</string>
   <string name="markets_search_show_tokens">Mostrar tokens</string>
@@ -748,10 +755,10 @@
   <string name="markets_selector_interval_7d_title">7d</string>
   <string name="markets_selector_interval_all_title">Todo</string>
   <string name="markets_sort_by_experienced_buyers_title">Compradores experimentados</string>
-  <string name="markets_sort_by_rating_title">Evaluación</string>
+  <string name="markets_sort_by_rating_title">Capitalización de mercado</string>
   <string name="markets_sort_by_title">Ordenar por</string>
-  <string name="markets_sort_by_top_gainers_title">Top Ganadores</string>
-  <string name="markets_sort_by_top_losers_title">Top Perdedores</string>
+  <string name="markets_sort_by_top_gainers_title">Ganadores</string>
+  <string name="markets_sort_by_top_losers_title">Perdedores</string>
   <string name="markets_sort_by_trending_title">Tendencias</string>
   <string name="markets_sort_by_yield_mode_title">Modo Rendimiento</string>
   <string name="markets_staking_banner_description_placeholder">Staking es la forma más fácil de recibir recompensas por sus criptomonedas. %s</string>
@@ -801,7 +808,7 @@
   <string name="markets_token_details_market_capitalization">Capital. de mercado</string>
   <string name="markets_token_details_market_capitalization_description">El valor total de una criptomoneda calculado multiplicando su precio por la cantidad de monedas en circulación</string>
   <string name="markets_token_details_market_capitalization_full">Capital. de mercado</string>
-  <string name="markets_token_details_market_rating">Evaluación de mercado</string>
+  <string name="markets_token_details_market_rating">Posición en el mercado</string>
   <string name="markets_token_details_market_rating_description">Posición en la clasificación de criptomonedas entre todas las monedas según la capitalización de mercado</string>
   <string name="markets_token_details_market_rating_full">Evaluación de mercado</string>
   <string name="markets_token_details_max_supply">Suministro máximo</string>
@@ -823,6 +830,7 @@
   <string name="markets_token_details_volume">Volumen</string>
   <string name="markets_tooltip_message">Tire hacia arriba o toque la barra de búsqueda para agregar tokens directamente desde el mercado</string>
   <string name="markets_tooltip_title">Agregar tokens</string>
+  <string name="markets_tooltip_v2_title">Añadir más tokens</string>
   <string name="markets_yield_supply_banner_description">Potencie sus activos mientras los suministra con acceso inmediato. %s</string>
   <string name="markets_yield_supply_banner_title">Activar Modo Rendimiento</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Debes actualizar a %1$s para crear una mobile wallet</string>
@@ -840,7 +848,7 @@
   <string name="news_quick_recap">Resumen rápido</string>
   <string name="news_related_news">Noticias</string>
   <string name="news_related_tokens">Tokens relacionados</string>
-  <string name="news_sources">Fuentes</string>
+  <string name="news_sources">Noticias relacionadas</string>
   <string name="news_stay_in_the_loop">Manténgase informado</string>
   <string name="nfc_error_unavailable">NFC no está disponible en su dispositivo</string>
   <string name="nft_about_title">Acerca de NFT</string>
@@ -927,9 +935,9 @@
   <string name="onboarding_activation_error_message">Por favor repita la operación. La tarjeta/anillo se restablecerá a la configuración de fábrica.</string>
   <string name="onboarding_activation_error_title">Error de activación</string>
   <string name="onboarding_add_tokens">Agregar tokens</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">Ha agregado una tarjeta/anillo de backup. Cuando el proceso de backup finalice, no podrá añadir más dispositivos de backup. Si tiene otra tarjeta o anillo, agréguela al backup. ¿Quiere continuar el proceso de backup?</string>
-  <string name="onboarding_backup_exit_warning">El proceso de backup está parcialmente completo. No puede salir ahora.</string>
-  <string name="onboarding_bottom_sheet_passphrase_description">La frase de contraseña es una característica de seguridad avanzada utilizada por las billeteras criptográficas. Agrega una palabra o frase adicional de su elección a su frase de recuperación ya existente para desbloquear un conjunto completamente nuevo de direcciones.</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">Ha añadido una tarjeta o anillo como copia de seguridad. Una vez finalizada la copia de seguridad, no puedes añadir más dispositivos. Si tiene una tarjeta o anillo más, añádalo ahora. ¿Quiere continuar?</string>
+  <string name="onboarding_backup_exit_warning">La copia de seguridad está parcialmente completa y no se puede salir ahora.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">Una frase de contraseña es una función de seguridad opcional que añade una palabra o frase a su frase de recuperación, creando un nuevo conjunto de direcciones de billetera para una mayor protección.</string>
   <string name="onboarding_button_add_backup_card">Agregar una tarjeta o un anillo de backup</string>
   <string name="onboarding_button_backup_card">Escanee la tarjeta</string>
   <string name="onboarding_button_backup_card_format">Escanee la tarjeta núm. %d</string>
@@ -939,7 +947,7 @@
   <string name="onboarding_button_continue_wallet">Continuar a mi billetera</string>
   <string name="onboarding_button_finalize_backup">Finalizar el backup</string>
   <string name="onboarding_button_receive_crypto">Recibir cripto</string>
-  <string name="onboarding_button_scan_origin_card">Escanee la tarjeta principal</string>
+  <string name="onboarding_button_scan_origin_card">Escanee la tarjeta principal o anillo</string>
   <string name="onboarding_button_skip_backup">Finalizar más tarde</string>
   <string name="onboarding_button_what_does_it_mean">¿Cómo funciona?</string>
   <string name="onboarding_create_wallet_body">Vamos a generar todas las claves en su tarjeta o anillos y crear una billetera segura</string>
@@ -993,7 +1001,7 @@
   <string name="onboarding_title_no_backup_cards">Ningunos dispositivos de backup</string>
   <string name="onboarding_title_notifications">Notificaciones</string>
   <string name="onboarding_title_one_backup_card">Un dispositivo de backup agregado</string>
-  <string name="onboarding_title_scan_origin_card">Prepare su tarjeta</string>
+  <string name="onboarding_title_scan_origin_card">Prepare su tarjeta o anillo</string>
   <string name="onboarding_title_two_backup_cards">Dos dispositivos de backup agregados</string>
   <string name="onboarding_top_up_body">Para empezar, simplemente recargue la billetera con cualquier cantidad</string>
   <string name="onboarding_top_up_body_no_account_error">Para empezar, simplemente recargue la billetera con más de %1$s %2$s</string>
@@ -1028,7 +1036,7 @@
   <string name="onramp_max_amount_restriction">El monto de la compra no debe ser mayor a %s</string>
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
-  <string name="onramp_offer_type_fastet">Más rápido</string>
+  <string name="onramp_offer_type_fastet">Procesamiento más rápido</string>
   <string name="onramp_pay_with">Pagar con</string>
   <string name="onramp_payment_method_subtitle">Método de pago</string>
   <string name="onramp_provider_max_amount">Disponible hasta %s</string>
@@ -1299,7 +1307,7 @@
   <string name="staking_details_average_reward_rate">Tasa de recompensa promedio</string>
   <string name="staking_details_banner_text">¿Cómo funciona el staking?</string>
   <string name="staking_details_estimated_profit">%s beneficio estimado</string>
-  <string name="staking_details_market_rating">Calificación de mercado</string>
+  <string name="staking_details_market_rating">Posición en el mercado</string>
   <string name="staking_details_metrics_block_header">Métrica</string>
   <string name="staking_details_min_rewards_notification">Según las reglas de la red %1$s, se pueden reclamar recompensas desde %2$s. Las cantidades a continuación se acreditarán en su cuenta al deshacer el staking.</string>
   <string name="staking_details_minimum_requirement">Mínimo requerido</string>
@@ -1412,7 +1420,7 @@
   <string name="staking_your_stakes">Sus stakes</string>
   <string name="story_awe_description">Almacene sus criptomonedas de forma segura manteniendo las claves privadas almacenadas en su tarjeta</string>
   <string name="story_awe_title">Billetera de hardware revolucionaria</string>
-  <string name="story_backup_description">Hasta 3 tarjetas físicas o anillos por billetera</string>
+  <string name="story_backup_description">Añade hasta 3 tarjetas o anillos a una billetera</string>
   <string name="story_backup_title">Backup ultra seguro</string>
   <string name="story_currencies_description">Una billetera de hardware para su Bitcoin, Ethereum y muchas más monedas simultáneamente – todo en una sola tarjeta o anillo</string>
   <string name="story_currencies_title">Miles de monedas</string>
@@ -1428,6 +1436,9 @@
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
+  <string name="swap_search_suggestion_hint">¿Busca algo más?\n¡Intente buscar o explorar otra criptomoneda!</string>
+  <string name="swap_search_tooltip_description">Busque cualquier token, incluso si aún no está en su lista.</string>
+  <string name="swap_search_tooltip_title">Utilice la búsqueda para encontrar lo que necesite</string>
   <string name="swap_story_fifth_subtitle">Siéntase seguro con una asistencia permanente que le ayudará con cualquier problema</string>
   <string name="swap_story_fifth_title">Siempre aquí</string>
   <string name="swap_story_first_subtitle">Múltiples proveedores de confianza en un solo lugar: intercambie cualquier activo sin esfuerzo en su billetera</string>
@@ -1493,7 +1504,7 @@
   <string name="tangem_pay_unfreeze_card_success">Tu tarjeta está descongelada.</string>
   <string name="tangem_pay_withdrawal">Retirada</string>
   <string name="tangempay_account_unable_to_use_rooted">No se puede usar en un dispositivo rooteado</string>
-  <string name="tangempay_cancel_kyc">Cancelar KYC</string>
+  <string name="tangempay_cancel_kyc">Ocultar verificación de la pantalla</string>
   <string name="tangempay_card_details_add_funds">Agregar fondos</string>
   <string name="tangempay_card_details_add_funds_subtitle">Opciones de recarga</string>
   <string name="tangempay_card_details_card_number">Número de tarjeta</string>
@@ -1554,15 +1565,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">¿Seguro que desea detener el proceso KYC? Puede retomarlo en cualquier momento.</string>
   <string name="tangempay_kyc_failed_description">No pudimos verificar tu perfil. Si tienes alguna pregunta, contacta con el soporte.</string>
   <string name="tangempay_kyc_failed_title">Lamentablemente, no pudimos verificar tu identidad</string>
-  <string name="tangempay_kyc_has_failed">El proceso KYC ha fallado</string>
+  <string name="tangempay_kyc_has_failed">KYC rechazado</string>
   <string name="tangempay_kyc_in_progress">KYC en curso</string>
   <string name="tangempay_kyc_in_progress_notification_button">Ver estado</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC en progreso para Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_popup_description">Los documentos suelen verificarse automáticamente en menos de 5 minutos. En casos excepcionales que requieran revisión manual, el proceso puede tardar hasta 48 horas.</string>
-  <string name="tangempay_kyc_rejected">KYC rechazado</string>
+  <string name="tangempay_kyc_rejected">Rechazado</string>
   <string name="tangempay_kyc_rejected_button_text">Ocultar el bloque KYC</string>
-  <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificarle</string>
-  <string name="tangempay_kyc_rejected_description_span">su perfil.</string>
+  <string name="tangempay_kyc_rejected_description">Lo sentimos, no pudimos verificar</string>
+  <string name="tangempay_kyc_rejected_description_span">u identidad.</string>
   <string name="tangempay_onboarding_banner_description">Obtén tu tarjeta virtual Tangem Visa gratuita</string>
   <string name="tangempay_onboarding_banner_title">Usa USDC para pagos cotidianos</string>
   <string name="tangempay_onboarding_get_card_button_text">Obtener tarjeta</string>
@@ -1621,7 +1632,7 @@
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
   <string name="token_swap_changelly_promotion_title">Intercambie con Changelly, %s comisiones</string>
   <string name="token_swap_promotion_button">Intercambie ahora</string>
-  <string name="tokens_list_hot_crypto_header">Criptomonedas populares 🔥</string>
+  <string name="tokens_list_hot_crypto_header">Tendencia del mercado 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">No disponible para compra</string>
   <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
@@ -1670,7 +1681,7 @@
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
   <string name="user_push_notification_banner_subtitle">Active las notificaciones push y le avisaremos al instante cuando le lleguen fondos.</string>
   <string name="user_push_notification_banner_title">No se pierda ninguna transacción</string>
-  <string name="user_wallet_list_add_button">Agregar una nueva billetera</string>
+  <string name="user_wallet_list_add_button">Agregar billetera</string>
   <string name="user_wallet_list_delete_hw_prompt">Si olvida esta billetera sin una copia de seguridad, perderá permanentemente el acceso a sus fondos.</string>
   <string name="user_wallet_list_delete_prompt">¿Estás seguro de que deseas olvidar esta billetera?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Ha ocurrido un error, por favor escanee su tarjeta o anillo para iniciar sesión</string>
@@ -1748,7 +1759,7 @@
   <string name="visa_unlock_notification_button">Desbloquear</string>
   <string name="visa_unlock_notification_subtitle">Escanee su tarjeta para desbloquear el acceso</string>
   <string name="visa_unlock_notification_title">Desbloqueo necesario</string>
-  <string name="wallet_add_common_title">Elija cómo agregar su billetera</string>
+  <string name="wallet_add_common_title">Elige tu tipo de billetera</string>
   <string name="wallet_add_hardware_description">Escanee su tarjeta o anillo Tangem para restaurarlo o importarlo desde otra billetera.</string>
   <string name="wallet_add_hardware_info_create">Crear una billetera de hardware</string>
   <string name="wallet_add_hardware_purchase">¿Quiere comprar una  Billetera Tangem?</string>
@@ -1838,7 +1849,7 @@
   <string name="warning_access_denied_message">Use %s o escanee una tarjeta/anillo para desbloquear el acceso a su billetera</string>
   <string name="warning_approval_in_progress_message">El proceso de obtención de permisos está actualmente en marcha y se completará pronto.</string>
   <string name="warning_approval_in_progress_title">Aprobación en curso</string>
-  <string name="warning_backup_errors_message">Parece que la activación de la tarjeta no ha funcionado correctamente. Esto puede deberse a un problema con el módulo NFC de su dispositivo o a una mala conexión de la tarjeta con su dispositivo. Comuníquese con nuestro equipo de soporte para obtener ayuda.</string>
+  <string name="warning_backup_errors_message">La activación no se completó correctamente. Esto podría deberse a un problema de NFC o a una lectura incorrecta. Contacte con nuestro equipo de soporte para obtener ayuda.</string>
   <string name="warning_backup_errors_title">Error de activación</string>
   <string name="warning_beacon_chain_retirement_content">El 3 de diciembre de 2024, la red BEP-2 fue desactivada por decisión de los desarrolladores de la red y ya no es compatible</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain se cerrará</string>
@@ -1851,6 +1862,7 @@
   <string name="warning_button_refresh">Actualizar</string>
   <string name="warning_clore_migration_button">Iniciar migración</string>
   <string name="warning_clore_migration_copy_button">Copiar</string>
+  <string name="warning_clore_migration_description">Para mantener el acceso a sus fondos, comience la migración de acuerdo con las pautas oficiales de Clore.</string>
   <string name="warning_clore_migration_error_signing_not_supported">La firma de mensajes no es compatible con esta red</string>
   <string name="warning_clore_migration_error_wallet_manager_not_found">No se puede firmar el mensaje. Por favor, inténtelo de nuevo.</string>
   <string name="warning_clore_migration_message">Según la documentación oficial de Clore, todas las monedas recibidas antes del 21 de diciembre serán migradas a Clore (token ERC-20); las monedas recibidas después de esa fecha no lo serán. Se está desarrollando una solución de transferencia — mantente atento.</string>
@@ -1873,7 +1885,7 @@
   <string name="warning_express_approval_in_progress_title">Aprobación en proceso</string>
   <string name="warning_express_dust_message">El monto mínimo de transacción es %1$s. Asegúrese de que el saldo restante después del canje no sea inferior a %2$s.</string>
   <string name="warning_express_no_exchangeable_coins_description">No tienes tokens en tu portafolio a los que puedas intercambiar %s. Por favor, añade otro token para realizar el intercambio.</string>
-  <string name="warning_express_no_exchangeable_coins_title">No hay tokens disponibles para intercambiar</string>
+  <string name="warning_express_no_exchangeable_coins_title">No se agregaron tokens compatibles</string>
   <string name="warning_express_not_enough_fee_for_token_tx_description">Para realizar una transacción necesita depositar %1$s %2$s</string>
   <string name="warning_express_not_enough_fee_for_token_tx_title">No se pueden cubrir %s tarifa</string>
   <string name="warning_express_notification_invalid_reserve_amount_title">El monto a recibir debe ser de al menos %s</string>
@@ -1884,6 +1896,8 @@
   <string name="warning_express_refresh_required_title">Servicio no disponible temporalmente</string>
   <string name="warning_express_too_maximum_amount_title">La cantidad de tokens a intercambiar no debe exceder %s</string>
   <string name="warning_express_too_minimal_amount_title">El monto a cambiar debe ser de al menos %s</string>
+  <string name="warning_express_unsupported_pair_description">El intercambio no está disponible para este par. Por favor, seleccione otro token e inténtelo de nuevo.</string>
+  <string name="warning_express_unsupported_pair_title">Par de intercambio no compatible.</string>
   <string name="warning_express_wrong_amount_description">Por favor cambie la cantidad a cambiar</string>
   <string name="warning_failed_to_verify_card_message">Esta tarjeta podría ser una muestra de producción o una falsificación</string>
   <string name="warning_failed_to_verify_card_title">La verificación de autenticidad falló</string>
@@ -2045,11 +2059,11 @@
   <string name="welcome_create_wallet_mobile_description">Crear o importar una billetera de software</string>
   <string name="welcome_create_wallet_mobile_description_full">Cree o importe una billetera de software en su teléfono.</string>
   <string name="welcome_create_wallet_mobile_title">Empezar con Mobile Wallet</string>
-  <string name="welcome_create_wallet_other_method">Otro método</string>
+  <string name="welcome_create_wallet_other_method">Otros métodos</string>
   <string name="welcome_create_wallet_use_hardware_description">Utilice la billetera de hardware Tangem</string>
   <string name="welcome_create_wallet_use_hardware_title">Obtenga más información y compre</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorar</string>
-  <string name="welcome_interrupted_backup_alert_message">Tiene un backup interrumpido. ¿Quiere reanudarlo?</string>
+  <string name="welcome_interrupted_backup_alert_message">Su copia de seguridad se ha interrumpido. ¿Desea reanudarla?</string>
   <string name="welcome_interrupted_backup_alert_resume">Sí, reanudar</string>
   <string name="welcome_interrupted_backup_discard_discard">Descartar</string>
   <string name="welcome_interrupted_backup_discard_message">Si descarta el backup ahora, tendrá que restablecer los dispositivos a los ajustes de fábrica para empezar de nuevo</string>

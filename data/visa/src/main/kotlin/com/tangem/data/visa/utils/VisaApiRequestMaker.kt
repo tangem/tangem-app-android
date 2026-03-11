@@ -7,8 +7,10 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.request.RefreshTokenByCardWalletRequest
 import com.tangem.datasource.api.visa.VisaApi
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
+import com.tangem.domain.common.wallets.update
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -23,7 +25,7 @@ import javax.inject.Inject
 typealias VisaAuthorizationHeader = String
 
 internal class VisaApiRequestMaker @Inject constructor(
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val visaAuthApi: VisaApi,
     private val accessCodeDataConverter: AccessCodeDataConverter,
     private val dispatcherProvider: CoroutineDispatcherProvider,
@@ -47,11 +49,11 @@ internal class VisaApiRequestMaker @Inject constructor(
 
             val newTokens = runCatching {
                 refreshAccessTokens(authTokens.refreshToken)
-            }.getOrElse {
-                if (it is ApiResponseError.HttpException &&
-                    it.code == ApiResponseError.HttpException.Code.UNAUTHORIZED
+            }.getOrElse { throwable ->
+                if (throwable is ApiResponseError.HttpException &&
+                    throwable.code == ApiResponseError.HttpException.Code.UNAUTHORIZED
                 ) {
-                    userWalletsStore.update(userWalletId) { userWallet ->
+                    userWalletsListRepository.update(userWalletId) { userWallet ->
                         userWallet.requireColdWallet().copy(
                             scanResponse = userWallet.scanResponse.copy(
                                 // visaCardActivationStatus = VisaCardActivationStatus.RefreshTokenExpired,
@@ -62,7 +64,7 @@ internal class VisaApiRequestMaker @Inject constructor(
                 throw RefreshTokenExpiredException()
             }
 
-            userWalletsStore.update(userWalletId) { userWallet ->
+            userWalletsListRepository.update(userWalletId) { userWallet ->
                 userWallet.requireColdWallet().copy(
                     scanResponse = userWallet.scanResponse.copy(
                         // visaCardActivationStatus = VisaCardActivationStatus.Activated(
@@ -92,7 +94,7 @@ internal class VisaApiRequestMaker @Inject constructor(
 
     @Throws
     private fun getAuthTokens(userWalletId: UserWalletId): VisaAuthTokens {
-        val userWallet = findVisaUserWallet(userWalletId)
+        findVisaUserWallet(userWalletId)
         // val status = userWallet.requireColdWallet().scanResponse.visaCardActivationStatus
         //     ?: error("Visa card activation status not found")
         val status: VisaCardActivationStatus = TODO("Fix visaCardActivationStatus retrieval")
@@ -105,9 +107,7 @@ internal class VisaApiRequestMaker @Inject constructor(
     }
 
     private fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "No user wallet found: $userWalletId"
-        }
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         if (!userWallet.requireColdWallet().scanResponse.cardTypesResolver.isVisaWallet()) {
             error("VISA wallet required: $userWalletId")
         }

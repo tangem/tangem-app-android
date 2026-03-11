@@ -5,13 +5,20 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
+import com.tangem.features.onramp.swap.availablepairs.model.AddToPortfolioRoute
 import com.tangem.features.onramp.swap.model.SwapSelectTokensModel
 import com.tangem.features.onramp.swap.ui.SwapSelectTokens
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -25,6 +32,7 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
     tokenListComponentFactory: OnrampTokenListComponent.Factory,
     availableSwapPairsComponentFactory: AvailableSwapPairsComponent.Factory,
     analyticsEventHandler: AnalyticsEventHandler,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: SwapSelectTokensComponent.Params,
 ) : AppComponentContext by appComponentContext, SwapSelectTokensComponent {
@@ -49,8 +57,28 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         ),
     )
 
+    private val bottomSheetSlot = childSlot(
+        source = selectToTokenListComponent.bottomSheetNavigation,
+        serializer = AddToPortfolioRoute.serializer(),
+        key = "add_to_portfolio_bottom_sheet",
+        handleBackButton = false,
+        childFactory = { _, context -> bottomSheetChild(context) },
+    )
+
     init {
         analyticsEventHandler.send(event = MainScreenAnalyticsEvent.SwapScreenOpened())
+    }
+
+    @Suppress("UnsafeCallOnNullableType")
+    private fun bottomSheetChild(componentContext: ComponentContext): ComposableBottomSheetComponent {
+        return addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = selectToTokenListComponent.addToPortfolioManager!!,
+                callback = selectToTokenListComponent.addToPortfolioCallback,
+                shouldSkipTokenActionsScreen = true,
+            ),
+        )
     }
 
     @Composable
@@ -58,6 +86,7 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         val state by model.state.collectAsStateWithLifecycle()
         val fromTokensState by selectFromTokenListComponent.uiState.collectAsStateWithLifecycle()
         val toTokensState by selectToTokenListComponent.uiState.collectAsStateWithLifecycle()
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         SwapSelectTokens(
             state = state,
@@ -67,6 +96,8 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
             selectToTokenListState = toTokensState,
             modifier = modifier,
         )
+
+        bottomSheet.child?.instance?.BottomSheet()
     }
 
     @AssistedFactory

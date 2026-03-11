@@ -45,7 +45,8 @@ internal class SetButtonsStateTransformer(
         val isInProgress = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
 
-        val isIconVisible = isConfirmation && !isCompleted
+        val isHoldToConfirm = prevState.shouldShowHoldToConfirmButton && isConfirmation && !isCompleted
+        val isIconVisible = isConfirmation && !isCompleted && !isHoldToConfirm
         val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
             textReference = prevState.getButtonText(),
@@ -54,6 +55,7 @@ internal class SetButtonsStateTransformer(
             isIconVisible = isIconVisible,
             shouldShowProgress = isInProgress,
             isEnabled = prevState.isButtonEnabled(),
+            isHoldToConfirm = isHoldToConfirm,
             onClick = {
                 if (isPrimaryButtonDisabled) {
                     prevState.clickIntents.showPrimaryClickAlert()
@@ -111,23 +113,27 @@ internal class SetButtonsStateTransformer(
 
     private fun StakingUiState.getConfirmationButtonText(): TextReference {
         val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
+            ?: return resourceReference(R.string.common_close)
         val amountState = amountState as? AmountState.Data
-        return if (confirmationState != null && amountState != null) {
-            when (actionType) {
-                is StakingActionCommonType.Enter -> {
-                    val amount = amountState.amountTextField.cryptoAmount.value.orZero()
-                    if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
-                        resourceReference(R.string.give_permission_title)
-                    } else {
-                        resourceReference(R.string.common_stake)
-                    }
-                }
-                is StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
-                is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
+            ?: return resourceReference(R.string.common_close)
+
+        if (actionType is StakingActionCommonType.Enter) {
+            val amount = amountState.amountTextField.cryptoAmount.value.orZero()
+            if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
+                return resourceReference(R.string.give_permission_title)
             }
-        } else {
-            resourceReference(R.string.common_close)
         }
+
+        return getBaseActionText(confirmationState)
+            ?: resourceReference(R.string.common_close)
+    }
+
+    private fun StakingUiState.getBaseActionText(
+        confirmationState: StakingStates.ConfirmationState.Data,
+    ): TextReference? = when (actionType) {
+        is StakingActionCommonType.Enter -> resourceReference(R.string.common_stake)
+        is StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
+        is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
     }
 
     private fun StakingUiState.onPrimaryClick() {

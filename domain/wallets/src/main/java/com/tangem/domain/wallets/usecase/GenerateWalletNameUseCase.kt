@@ -1,19 +1,16 @@
 package com.tangem.domain.wallets.usecase
 
-import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.requireUserWalletsSync
+import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 /**
  * Use case for user wallet name generation
  */
 class GenerateWalletNameUseCase(
-    private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewRepository: Boolean,
 ) {
 
     private val CardDTO.isBackupNotAllowed: Boolean
@@ -38,11 +35,7 @@ class GenerateWalletNameUseCase(
     }
 
     private fun getNamesSet(): Set<String> {
-        return if (useNewRepository) {
-            userWalletsListRepository.requireUserWalletsSync().map { it.name }.toSet()
-        } else {
-            userWalletsListManager.userWalletsSync.map { it.name }.toSet()
-        }
+        return userWalletsListRepository.requireUserWalletsSync().map { it.name }.toSet()
     }
 
     private fun suggestedWalletName(defaultName: String, existingNames: Set<String>): String {

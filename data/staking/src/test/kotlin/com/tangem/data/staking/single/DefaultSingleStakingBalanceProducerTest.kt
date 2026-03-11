@@ -200,7 +200,7 @@ internal class DefaultSingleStakingBalanceProducerTest {
         val actual = getEmittedValues(flow = producerFlow)
 
         // Assert
-        Truth.assertThat(actual).isEmpty()
+        Truth.assertThat(actual).containsExactly(StakingBalance.Error(stakingId = tonId))
 
         verify(exactly = 1) { multiNetworkStatusSupplier(multiParams) }
     }
