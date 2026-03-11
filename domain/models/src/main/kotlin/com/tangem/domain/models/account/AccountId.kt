@@ -71,5 +71,9 @@ data class AccountId private constructor(
 
             return AccountId(value = value, userWalletId = userWalletId)
         }
+
+        fun forPaymentAccount(userWalletId: UserWalletId): AccountId {
+            return AccountId(value = "payment_$userWalletId", userWalletId = userWalletId)
+        }
     }
 }

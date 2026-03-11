@@ -65,9 +65,9 @@ private fun Content(
             ),
         )
 
-        when (endContentUM.priceChangeUM) {
+        when (val priceChangeUM = endContentUM.priceChangeUM) {
             is PriceChangeState.Content -> TokenRowPriceChangeContent(
-                priceChangeState = endContentUM.priceChangeUM,
+                priceChangeState = priceChangeUM,
                 isFlickering = endContentUM.isFlickering,
                 isAvailable = endContentUM.isAvailable,
             )

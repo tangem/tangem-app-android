@@ -66,7 +66,7 @@ class CheckCurrencyUnsupportedDelegate @Inject constructor(
                     formatArgs = wrappedList(unsupportedState.networkName),
                 )
                 is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
-                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    id = R.string.alert_manage_tokens_unsupported_blockchain_by_card_message,
                     formatArgs = wrappedList(unsupportedState.networkName),
                 )
             },
