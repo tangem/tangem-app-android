@@ -7,6 +7,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.swap.v2.impl.notifications.model.SwapNotificationsModel
 import com.tangem.features.swap.v2.impl.notifications.ui.swapNotifications
 import kotlinx.collections.immutable.ImmutableList
@@ -40,6 +42,10 @@ internal class SwapNotificationsComponent(
         data class SwapNotificationData(
             val expressError: ExpressError?,
             val fromCryptoCurrency: CryptoCurrency?,
+            val destinationAddress: String,
+            val memo: String? = null,
+            val toCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
+            val userWalletId: UserWalletId? = null,
         )
     }
 }

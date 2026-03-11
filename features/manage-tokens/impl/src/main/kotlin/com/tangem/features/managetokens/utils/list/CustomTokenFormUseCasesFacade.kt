@@ -44,7 +44,11 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
             either {
                 val accountId = getAccountId(currency)
 
-                manageCryptoCurrenciesUseCase(accountId = accountId, add = currency).bind()
+                manageCryptoCurrenciesUseCase(
+                    accountId = accountId,
+                    add = currency,
+                    skipDerivationErrors = false,
+                ).bind()
             }
         } else {
             addCryptoCurrenciesUseCase.invoke(userWalletId = userWalletId, currency = currency)
