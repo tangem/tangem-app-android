@@ -9,9 +9,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.card.DefaultDeleteSavedAccessCodesUseCase
 import com.tangem.tap.domain.card.DefaultResetCardUseCase
@@ -42,16 +40,8 @@ internal object CardDomainModule {
     }
 
     @Provides
-    fun provideIsNeedToBackupUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): IsNeedToBackupUseCase {
-        return IsNeedToBackupUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+    fun provideIsNeedToBackupUseCase(userWalletsListRepository: UserWalletsListRepository): IsNeedToBackupUseCase {
+        return IsNeedToBackupUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides

@@ -10,7 +10,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
+import com.tangem.common.getTotalWithRewardsStakingBalance
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupHeaderId
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getTokenItemId

@@ -83,6 +83,7 @@ interface SwapRepositoryV2 {
         toCryptoCurrency: CryptoCurrency,
         fromAmount: String,
         toAddress: String,
+        toExtraId: String?,
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
