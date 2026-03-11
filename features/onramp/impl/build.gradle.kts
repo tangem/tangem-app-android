@@ -15,9 +15,11 @@ dependencies {
     /** Project - API */
     implementation(projects.features.account.api)
     implementation(projects.features.onramp.api)
+    implementation(projects.features.swap.api)
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.features.feed.api)
 
     /** Project - Core */
     implementation(projects.core.analytics)
@@ -30,6 +32,8 @@ dependencies {
     /** Project - Common */
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+    implementation(projects.common.uiMarkets)
+    implementation(projects.common.uiCharts)
 
     /** Project - Domain */
     implementation(projects.domain.appCurrency)
@@ -51,6 +55,7 @@ dependencies {
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
     implementation(projects.data.common)
+    implementation(projects.domain.markets)
 
     /** DI */
     implementation(deps.hilt.android)

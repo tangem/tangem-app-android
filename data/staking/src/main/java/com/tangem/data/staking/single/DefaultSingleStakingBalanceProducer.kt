@@ -15,7 +15,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 /**
@@ -44,7 +44,7 @@ internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
         return multiStakingBalanceSupplier(
             params = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId),
         )
-            .mapNotNull { balances ->
+            .map { balances ->
                 val currentStakingId = params.stakingId
 
                 val currentBalances = balances.filter { it.stakingId == currentStakingId }
@@ -53,7 +53,7 @@ internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
                     currentStakingId = currentStakingId,
                     currentBalances = currentBalances,
                     analyticsExceptionHandler = analyticsExceptionHandler,
-                )
+                ) ?: StakingBalance.Error(stakingId = currentStakingId)
             }
             .flowOn(dispatchers.default)
     }

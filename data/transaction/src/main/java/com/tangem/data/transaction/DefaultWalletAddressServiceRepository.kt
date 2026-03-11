@@ -1,12 +1,14 @@
 package com.tangem.data.transaction
 
 import android.net.Uri
-import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.near.NearWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.NameResolver
 import com.tangem.blockchain.common.ResolveAddressResult
 import com.tangem.blockchain.common.ReverseResolveAddressResult
+import com.tangem.blockchain.common.TransactionValidator
+import com.tangem.blockchain.common.memo.MemoState
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -16,7 +18,6 @@ import com.tangem.domain.wallets.models.ParsedQrCode
 import com.tangem.domain.wallets.models.errors.ParsedQrCodeErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
-import java.math.BigInteger
 
 class DefaultWalletAddressServiceRepository(
     private val walletManagersFacade: WalletManagersFacade,
@@ -95,19 +96,28 @@ class DefaultWalletAddressServiceRepository(
             }
         }
 
-    override fun validateMemo(network: Network, memo: String): Boolean {
-        if (memo.isEmpty()) return true
-        return when (network.rawId) {
-            Blockchain.XRP.id -> {
-                val tag = memo.toLongOrNull()
-                tag != null && tag <= XRP_TAG_MAX_NUMBER
+    override suspend fun validateMemo(userWalletId: UserWalletId, network: Network, memo: String): Boolean =
+        withContext(dispatchers.io) {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                network = network,
+            ) ?: return@withContext true
+
+            val memoStateResult = (walletManager as? TransactionValidator)?.validateMemo(memo)
+            if (memoStateResult != null) {
+                when (memoStateResult) {
+                    is Result.Success -> when (memoStateResult.data) {
+                        MemoState.NotSupported,
+                        MemoState.Valid,
+                        -> true
+                        MemoState.Invalid -> false
+                    }
+                    is Result.Failure -> true
+                }
+            } else {
+                true
             }
-            Blockchain.Stellar.id -> {
-                isAssignableXlmValue(memo)
-            }
-            else -> true
         }
-    }
 
     override suspend fun parseSharedAddress(input: String, network: Network): ParsedQrCode {
         val blockchain = network.toBlockchain()
@@ -144,27 +154,5 @@ class DefaultWalletAddressServiceRepository(
 
     private fun Blockchain.isNear(): Boolean {
         return this == Blockchain.Near || this == Blockchain.NearTestnet
-    }
-
-    private fun isAssignableXlmValue(value: String): Boolean {
-        return when {
-            value.isNotEmpty() && value.isDigitsOnly() -> {
-                try {
-                    // from com.tangem.blockchain.blockchains.stellar.StellarMemo.toStellarSdkMemo
-                    value.toBigInteger() in BigInteger.ZERO..Long.MAX_VALUE.toBigInteger() * 2.toBigInteger()
-                } catch (ex: NumberFormatException) {
-                    false
-                }
-            }
-            else -> {
-                // from org.stellar.sdk.MemoText
-                value.toByteArray().size <= XLM_MEMO_MAX_LENGTH
-            }
-        }
-    }
-
-    companion object {
-        private const val XLM_MEMO_MAX_LENGTH = 28
-        private const val XRP_TAG_MAX_NUMBER = 4294967295
     }
 }
