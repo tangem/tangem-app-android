@@ -24,7 +24,7 @@ class NFTCleanerTest {
         nftRuntimeStoreFactory = nftRuntimeStoreFactory,
         walletManagersFacade = mockk(),
         dispatchers = mockk(),
-        userWalletsStore = mockk(),
+        userWalletsListRepository = mockk(),
         networkFactory = mockk(),
         excludedBlockchains = mockk(),
         context = mockk(),
