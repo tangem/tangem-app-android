@@ -17,5 +17,9 @@ interface ScanCardRepository {
      * @return a [ScanResponse] object with the result of the scan.
      * @throws [ScanCardException] if the scan process fails.
      */
-    suspend fun scanCard(cardId: String?, allowRequestAccessCodeFromStorage: Boolean): ScanResponse
+    suspend fun scanCard(
+        cardId: String?,
+        allowRequestAccessCodeFromStorage: Boolean,
+        shouldCheckIsAlreadyActivated: Boolean,
+    ): ScanResponse
 }

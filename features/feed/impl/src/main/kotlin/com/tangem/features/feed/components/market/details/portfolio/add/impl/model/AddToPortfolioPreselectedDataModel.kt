@@ -25,6 +25,7 @@ import com.tangem.features.feed.components.market.details.portfolio.add.*
 import com.tangem.features.feed.components.market.details.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.feed.components.market.details.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -112,8 +113,10 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             // suspend until all required data is selected
             val (selectedNetworkValue, selectedPortfolioValue) = allRequireForAdd.first()
 
-            val isTokenAlreadyAdded = selectedPortfolioValue.account.addedMarketNetworks
-                .any { it.networkId == selectedNetworkValue.selectedNetwork.networkId }
+            val isTokenAlreadyAdded = getAccountCurrencyStatusUseCase.invokeSync(
+                userWalletId = selectedPortfolioValue.userWallet.walletId,
+                currency = selectedNetworkValue.cryptoCurrency,
+            ).isSome()
 
             if (isTokenAlreadyAdded) {
                 finishSuccessFlow(
@@ -123,9 +126,11 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
                 return@channelFlow
             }
 
+            sendAddTokenOpenedAnalytics(selectedNetworkValue.cryptoCurrency)
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
             messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
+            sendSuccessAddedAnalytics(addedToken.currency)
             finishSuccessFlow(addedToken.currency, selectedPortfolioValue.userWallet.walletId)
         }
             .catch { throwable ->
@@ -165,13 +170,14 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     ): AvailableToAddData? {
         val portfolioData = portfolioFetcher.data.firstOrNull() ?: return null
 
-        val availableToOpenWallets = portfolioData.balances.mapNotNull { (walletId, balance) ->
+        val availableToAddInWallets = portfolioData.balances.mapNotNull { (walletId, balance) ->
             val wallet = balance.userWallet
             val accounts = balance.accountsBalance.accountStatuses
 
             val availableToAddAccounts = accounts.mapNotNull { accountStatus ->
                 val accountIndex = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
+                    is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                 }
 
                 val cryptoCurrency = getTokenMarketCryptoCurrency(
@@ -206,9 +212,9 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             )
         }.toMap()
 
-        if (availableToOpenWallets.isEmpty()) return null
+        if (availableToAddInWallets.isEmpty()) return null
 
-        return AvailableToAddData(availableToAddWallets = availableToOpenWallets)
+        return AvailableToAddData(availableToAddWallets = availableToAddInWallets)
     }
 
     private suspend fun createCryptoCurrency(
@@ -218,6 +224,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
     ): CryptoCurrency? {
         val accountIndex = when (val accountStatus = account.account) {
             is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
@@ -263,6 +270,25 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
         },
     )
         .filterNotNull()
+
+    private fun sendSuccessAddedAnalytics(cryptoCurrency: CryptoCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.TokenAdded(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+    }
+
+    private fun sendAddTokenOpenedAnalytics(cryptoCurrency: CryptoCurrency) {
+        analyticsEventHandler.send(
+            EarnAnalyticsEvent.AddTokenScreenOpened(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                source = params.analyticsParams.source,
+            ),
+        )
+    }
 }
 
 @ModelScoped

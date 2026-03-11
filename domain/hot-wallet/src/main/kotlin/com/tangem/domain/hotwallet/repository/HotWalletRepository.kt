@@ -12,4 +12,24 @@ interface HotWalletRepository {
     fun accessCodeSkipped(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setAccessCodeSkipped(userWalletId: UserWalletId, skipped: Boolean)
+
+    fun shouldShowUpgradeBanner(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun setShouldShowUpgradeBanner(userWalletId: UserWalletId, shouldShow: Boolean)
+
+    fun upgradeBannerClosureTimestamp(userWalletId: UserWalletId): Flow<Long?>
+
+    suspend fun setUpgradeBannerClosureTimestamp(userWalletId: UserWalletId, timestamp: Long?)
+
+    suspend fun getWalletCreationTimestamp(userWalletId: UserWalletId): Long?
+
+    suspend fun setWalletCreationTimestamp(userWalletId: UserWalletId, timestamp: Long)
+
+    suspend fun hasHadFirstTopUp(userWalletId: UserWalletId): Boolean
+
+    suspend fun setHasHadFirstTopUp(userWalletId: UserWalletId, hasTopUp: Boolean)
+
+    fun isFirstTopUpDetectedThisSession(userWalletId: UserWalletId): Boolean
+
+    fun markFirstTopUpDetectedThisSession(userWalletId: UserWalletId)
 }
