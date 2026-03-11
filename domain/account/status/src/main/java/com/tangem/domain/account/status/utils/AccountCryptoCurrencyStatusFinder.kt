@@ -218,7 +218,27 @@ internal object AccountCryptoCurrencyStatusFinder {
         return AccountCryptoCurrencyStatus(account = accountCurrency.account, status = currencyStatus)
     }
 
-    private fun AccountStatusList.getExpectedAccountStatuses(networks: List<Network>): List<AccountStatus> {
+    internal fun AccountStatusList.getExpectedAccountStatuses(networkId: Network.ID): List<AccountStatus> {
+        val possibleAccountIndex = getAccountIndexOrNull(
+            rawNetworkId = networkId.rawId.value,
+            derivationPath = networkId.derivationPath,
+        )
+
+        return when (possibleAccountIndex) {
+            null -> accountStatuses
+            DerivationIndex.Main.value -> listOf(mainAccount)
+            // currency only in the account with specific derivation index or in the main account
+            else -> {
+                val account = accountStatuses.firstOrNull { account ->
+                    val cryptoPortfolio = account as? AccountStatus.CryptoPortfolio ?: return@firstOrNull false
+                    cryptoPortfolio.account.derivationIndex.value == possibleAccountIndex
+                }
+                listOfNotNull(account, mainAccount)
+            }
+        }
+    }
+
+    internal fun AccountStatusList.getExpectedAccountStatuses(networks: List<Network>): List<AccountStatus> {
         val possibleAccountIndexes = networks.mapNotNull { getAccountIndexOrNull(it.rawId, it.derivationPath) }
 
         if (possibleAccountIndexes.isEmpty()) return accountStatuses
