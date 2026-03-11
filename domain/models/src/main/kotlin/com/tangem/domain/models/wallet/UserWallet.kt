@@ -111,3 +111,4 @@ val UserWallet.isLocked
     }
 
 inline val UserWallet.isHotWallet get() = this is UserWallet.Hot
+inline val UserWallet.isColdWallet get() = this is UserWallet.Cold

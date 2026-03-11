@@ -9,9 +9,14 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SwapTokenPageObject>(semanticsProvider = semanticsProvider) {
+
+    val container: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.CONTAINER)
+    }
 
     val title: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
@@ -76,10 +81,45 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
-    fun tokenSymbol(symbol: String): KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+    val youSwapBlock: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER)
+        hasAnyDescendant(withText(getResourceString(R.string.swapping_from_title)))
+        hasAnyDescendant(withTestTag(SwapTokenScreenTestTags.BALANCE))
+        useUnmergedTree = true
     }
 
+    val youReceiveBlock: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SWAP_BLOCK_HEADER)
+        hasAnyDescendant(withText(getResourceString(R.string.swapping_to_title)))
+        hasAnyDescendant(withTestTag(SwapTokenScreenTestTags.BALANCE))
+        useUnmergedTree = true
+    }
+
+    val receiveFiatAmount: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT)
+    }
+
+    val swapFiatAmount: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SWAP_FIAT_AMOUNT)
+    }
+
+    val changeTokenIcon: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.SELECT_TOKEN_ICON)
+    }
+
+    fun swapTokenSymbol(symbol: String): KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.SWAP_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+        hasText(symbol)
+        useUnmergedTree = true
+    }
+
+    fun receiveTokenSymbol(symbol: String): KNode = child {
+        hasAnyAncestor(withTestTag(SwapTokenScreenTestTags.RECEIVE_CARD))
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+        hasText(symbol)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onSwapTokenScreen(function: SwapTokenPageObject.() -> Unit) =
