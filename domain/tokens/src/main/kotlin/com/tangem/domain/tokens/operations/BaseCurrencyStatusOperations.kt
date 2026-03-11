@@ -2,15 +2,10 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.*
 import arrow.core.raise.*
-import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.network.NetworkStatus
-import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.StakingBalance
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -20,7 +15,6 @@ import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer
@@ -30,7 +24,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.firstOrNull
 
 /**
  * Base operations for working with currency status
@@ -53,112 +47,6 @@ class BaseCurrencyStatusOperations(
 ) {
 
     private val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
-
-    suspend fun getCurrencyStatusFlow(
-        userWalletId: UserWalletId,
-        currencyId: CryptoCurrency.ID,
-        isSingleWalletWithTokens: Boolean,
-    ): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val currency = recover(
-            block = {
-                if (isSingleWalletWithTokens) {
-                    getSingleCurrencyWalletWithCardTokensCurrency(userWalletId, currencyId)
-                } else {
-                    getMultiCurrencyWalletCurrency(userWalletId, currencyId)
-                }
-            },
-            recover = { return flowOf(it.left()) },
-        )
-
-        return getCurrencyStatusFlow(userWalletId = userWalletId, currency = currency)
-    }
-
-    suspend fun getCurrencyStatusFlow(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-        includeQuotes: Boolean = true,
-        subscribeOnStakingBalance: Boolean = true,
-    ): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val rawCurrencyId = currency.id.rawCurrencyId
-
-        val quoteFlow = if (includeQuotes && rawCurrencyId != null) {
-            getQuotes(rawCurrencyId)
-                .map { maybeQuotes ->
-                    maybeQuotes.flatMap { quotes ->
-                        quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }?.right()
-                            ?: Error.EmptyQuotes.left()
-                    }
-                }
-        } else {
-            // don't use emptyFlow()
-            flow { emit(Error.EmptyQuotes.left()) }
-        }
-
-        val statusFlow = getNetworkStatus(userWalletId = userWalletId, network = currency.network)
-
-        val isStakingSupported = currency.network.toBlockchain().isStakingSupported
-
-        val stakingBalanceFlow = if (isStakingSupported) {
-            val stakingId = stakingIdFactory.create(
-                userWalletId = userWalletId,
-                currencyId = currency.id,
-                network = currency.network,
-            )
-                .getOrNull()
-
-            stakingId?.let {
-                getStakingBalance(userWalletId = userWalletId, stakingId = it)
-            }
-        } else {
-            null
-        }
-
-        return if (subscribeOnStakingBalance && stakingBalanceFlow != null) {
-            combine(quoteFlow, statusFlow, stakingBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeStakingBalance ->
-                currencyStatusProxyCreator.createCurrencyStatus(
-                    currency = currency,
-                    maybeQuoteStatus = maybeQuote,
-                    maybeNetworkStatus = maybeNetworkStatus,
-                    maybeStakingBalance = maybeStakingBalance,
-                )
-            }
-        } else {
-            combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
-                currencyStatusProxyCreator.createCurrencyStatus(
-                    currency = currency,
-                    maybeQuoteStatus = maybeQuote,
-                    maybeNetworkStatus = maybeNetworkStatus,
-                    maybeStakingBalance = null,
-                )
-            }
-        }
-    }
-
-    suspend fun getNetworkCoinFlow(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-        includeQuotes: Boolean = true,
-    ): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val currency = recover(
-            block = { getNetworkCoin(userWalletId, networkId, derivationPath) },
-            recover = { return flowOf(it.left()) },
-        )
-
-        return getCurrencyStatusFlow(userWalletId, currency, includeQuotes)
-    }
-
-    suspend fun getNetworkCoinForSingleWalletWithTokenFlow(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-    ): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val currency = recover(
-            block = { getNetworkCoinForSingleWalletWithToken(userWalletId, networkId) },
-            recover = { return flowOf(it.left()) },
-        )
-
-        return getCurrencyStatusFlow(userWalletId, currency)
-    }
 
     suspend fun getNetworkCoinSync(
         userWalletId: UserWalletId,
@@ -217,32 +105,6 @@ class BaseCurrencyStatusOperations(
         }
     }
 
-    suspend fun getNetworkCoinForSingleWalletWithTokenSync(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-    ): Either<Error, CryptoCurrencyStatus> = either {
-        val currency = getNetworkCoinForSingleWalletWithToken(userWalletId, networkId)
-
-        return getCurrencyStatusSync(userWalletId, currency.id)
-    }
-
-    suspend fun getPrimaryCurrencyStatusFlow(
-        userWalletId: UserWalletId,
-        includeQuotes: Boolean = true,
-    ): Flow<Either<Error, CryptoCurrencyStatus>> {
-        val currency = recover(
-            block = { getPrimaryCurrency(userWalletId) },
-            recover = { return flowOf(it.left()) },
-        )
-
-        return getCurrencyStatusFlow(
-            userWalletId = userWalletId,
-            currency = currency,
-            includeQuotes = includeQuotes,
-            subscribeOnStakingBalance = false,
-        )
-    }
-
     suspend fun getCurrenciesStatusesSync(userWalletId: UserWalletId): Either<Error, List<CryptoCurrencyStatus>> {
         return either {
             catch(
@@ -279,35 +141,6 @@ class BaseCurrencyStatusOperations(
         }
     }
 
-    suspend fun getPrimaryCurrencyStatusSync(userWalletId: UserWalletId): Either<Error, CryptoCurrencyStatus> = either {
-        val currency = catch(
-            block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
-            catch = { raise(Error.DataError(it)) },
-        )
-
-        val quotes = currency.id.rawCurrencyId?.let {
-            singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = it))
-                .firstOrNull()
-        }
-            ?.right()
-            ?: Error.EmptyQuotes.left()
-
-        val networkStatus = singleNetworkStatusSupplier(
-            params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = currency.network),
-        )
-            .firstOrNull()
-            .right()
-
-        val stakingBalances = getStakingBalanceSync(userWalletId, currency)
-
-        return currencyStatusProxyCreator.createCurrencyStatus(
-            currency = currency,
-            maybeQuoteStatus = quotes,
-            maybeNetworkStatus = networkStatus,
-            maybeStakingBalance = stakingBalances,
-        )
-    }
-
     private suspend fun Raise<Error>.getMultiCurrencyWalletCurrency(
         userWalletId: UserWalletId,
         currencyId: CryptoCurrency.ID,
@@ -321,36 +154,6 @@ class BaseCurrencyStatusOperations(
         }
             .mapLeft(Error::DataError)
             .bind()
-    }
-
-    private suspend fun Raise<Error>.getSingleCurrencyWalletWithCardTokensCurrency(
-        userWalletId: UserWalletId,
-        currencyId: CryptoCurrency.ID,
-    ): CryptoCurrency {
-        return Either.catch { currenciesRepository.getSingleCurrencyWalletWithCardCurrency(userWalletId, currencyId) }
-            .mapLeft { Error.DataError(it) }
-            .bind()
-    }
-
-    private fun getStakingBalance(userWalletId: UserWalletId, stakingId: StakingID): EitherFlow<Error, StakingBalance> {
-        return singleStakingBalanceSupplier(
-            params = SingleStakingBalanceProducer.Params(
-                userWalletId = userWalletId,
-                stakingId = stakingId,
-            ),
-        )
-            .map<StakingBalance, Either<Error, StakingBalance>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
-            .onEmpty { emit(Error.EmptyStakingBalances.left()) }
-    }
-
-    private fun getNetworkStatus(userWalletId: UserWalletId, network: Network): EitherFlow<Error, NetworkStatus> {
-        return singleNetworkStatusSupplier(
-            params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = network),
-        )
-            .map<NetworkStatus, Either<Error, NetworkStatus>>(NetworkStatus::right)
-            .distinctUntilChanged()
-            .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
     private suspend fun Raise<Error>.getNetworkCoin(
@@ -368,27 +171,6 @@ class BaseCurrencyStatusOperations(
         }
             .mapLeft { Error.DataError(it) }
             .bind()
-    }
-
-    private suspend fun Raise<Error>.getNetworkCoinForSingleWalletWithToken(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-    ): CryptoCurrency {
-        return Either.catch {
-            currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(userWalletId)
-                .find { it.network.id == networkId && it is CryptoCurrency.Coin }
-                ?: raise(Error.DataError(IllegalStateException("Coin with network $networkId not found for this card")))
-        }
-            .mapLeft { Error.DataError(it) }
-            .bind()
-    }
-
-    private fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>> {
-        return singleQuoteStatusSupplier(
-            params = SingleQuoteStatusProducer.Params(rawCurrencyId = id),
-        )
-            .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
-            .distinctUntilChanged()
     }
 
     private suspend fun getStakingBalancesSync(
@@ -432,13 +214,6 @@ class BaseCurrencyStatusOperations(
         )
 
         ensureNotNull(yieldBalance) { Error.EmptyStakingBalances }
-    }
-
-    private suspend fun Raise<Error>.getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
-        return catch(
-            block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
-            catch = { raise(Error.DataError(it)) },
-        )
     }
 
     private fun getIds(currencies: List<CryptoCurrency>): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {
