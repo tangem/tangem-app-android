@@ -1,7 +1,9 @@
 package com.tangem.domain.account.status.utils
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.TokensGroupType
@@ -11,6 +13,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.assertNone
@@ -281,6 +284,227 @@ class CryptoCurrencyStatusOperationsTest {
             val expectedStatus = currencyStatuses.last()
             // Act
             val result = accountStatus.getCryptoCurrencyStatus(targetCurrency.id)
+            // Assert
+            assertSome(result, expectedStatus)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCoinStatusByCurrency {
+
+        @Test
+        fun `returns None when no coin exists for the currency network`() {
+            // Arrange
+            val token = cryptoCurrencyFactory.createToken(Blockchain.Ethereum)
+            val tokenStatus = CryptoCurrencyStatus(
+                currency = token,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(token),
+                currencyStatuses = listOf(tokenStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(token)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns Some when coin exists for the currency network`() {
+            // Arrange
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency),
+                currencyStatuses = listOf(coinStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency)
+            // Assert
+            assertSome(result, coinStatus)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCoinStatusByNetwork {
+
+        @Test
+        fun `returns None when AccountStatusList has empty token list`() {
+            // Arrange
+            val accountStatusList = createAccountStatusList(currencies = emptyList())
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns None when only tokens exist for network`() {
+            // Arrange
+            val token = cryptoCurrencyFactory.createToken(Blockchain.Ethereum)
+            val tokenStatus = CryptoCurrencyStatus(
+                currency = token,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(token),
+                currencyStatuses = listOf(tokenStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns Some when coin exists for network`() {
+            // Arrange
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency),
+                currencyStatuses = listOf(coinStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network)
+            // Assert
+            assertSome(result, coinStatus)
+        }
+
+        @Test
+        fun `returns coin status when both coin and token exist for same network`() {
+            // Arrange
+            val token = cryptoCurrencyFactory.createToken(Blockchain.Ethereum)
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val tokenStatus = CryptoCurrencyStatus(
+                currency = token,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency, token),
+                currencyStatuses = listOf(coinStatus, tokenStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network)
+            // Assert
+            assertSome(result, coinStatus)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetCoinStatusByNetworkId {
+
+        @Test
+        fun `returns None when AccountStatusList has empty token list`() {
+            // Arrange
+            val accountStatusList = createAccountStatusList(currencies = emptyList())
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network.id)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns None when network id does not match any currency`() {
+            // Arrange
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency),
+                currencyStatuses = listOf(coinStatus),
+            )
+            val otherNetworkId = Network.ID(value = "bitcoin", derivationPath = Network.DerivationPath.None)
+            // Act
+            val result = accountStatusList.getCoinStatus(otherNetworkId)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns None when only tokens exist for network id`() {
+            // Arrange
+            val token = cryptoCurrencyFactory.createToken(Blockchain.Ethereum)
+            val tokenStatus = CryptoCurrencyStatus(
+                currency = token,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(token),
+                currencyStatuses = listOf(tokenStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(token.network.id)
+            // Assert
+            assertNone(result)
+        }
+
+        @Test
+        fun `returns Some when coin exists for network id`() {
+            // Arrange
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency),
+                currencyStatuses = listOf(coinStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network.id)
+            // Assert
+            assertSome(result, coinStatus)
+        }
+
+        @Test
+        fun `returns coin status when both coin and token exist for same network id`() {
+            // Arrange
+            val token = cryptoCurrencyFactory.createToken(Blockchain.Ethereum)
+            val coinStatus = CryptoCurrencyStatus(
+                currency = currency,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val tokenStatus = CryptoCurrencyStatus(
+                currency = token,
+                value = CryptoCurrencyStatus.Loading,
+            )
+            val accountStatusList = createAccountStatusList(
+                currencies = listOf(currency, token),
+                currencyStatuses = listOf(coinStatus, tokenStatus),
+            )
+            // Act
+            val result = accountStatusList.getCoinStatus(currency.network.id)
+            // Assert
+            assertSome(result, coinStatus)
+        }
+
+        @Test
+        fun `returns correct coin when multiple networks exist`() {
+            // Arrange
+            val currencies = cryptoCurrencyFactory.ethereumAndStellar
+            val currencyStatuses = currencies.map {
+                CryptoCurrencyStatus(currency = it, value = CryptoCurrencyStatus.Loading)
+            }
+            val accountStatusList = createAccountStatusList(
+                currencies = currencies,
+                currencyStatuses = currencyStatuses,
+            )
+            val targetCurrency = currencies.last()
+            val expectedStatus = currencyStatuses.last()
+            // Act
+            val result = accountStatusList.getCoinStatus(targetCurrency.network.id)
             // Assert
             assertSome(result, expectedStatus)
         }
