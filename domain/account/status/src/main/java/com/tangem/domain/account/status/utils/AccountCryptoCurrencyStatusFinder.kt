@@ -7,6 +7,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatuses
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
@@ -49,7 +50,7 @@ internal object AccountCryptoCurrencyStatusFinder {
     ): AccountCryptoCurrencyStatus? {
         return accountStatusList.getExpectedAccountStatuses(network)
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterCryptoPortfolio()
             .mapNotNull { accountStatus ->
                 val status = accountStatus.flattenCurrencies().firstOrNull { it.currency.id == currencyId }
                     ?: return@mapNotNull null
@@ -78,7 +79,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
         return accountStatusList.getExpectedAccountStatuses(networks)
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterCryptoPortfolio()
             .associate { accountStatus ->
                 val statuses = accountStatus.flattenCurrencies()
                     .filter { it.currency.id in currencyIds }
@@ -108,7 +109,7 @@ internal object AccountCryptoCurrencyStatusFinder {
             derivationPath = derivationPath,
         )
             .asSequence()
-            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .filterCryptoPortfolio()
             .mapNotNull { accountStatus ->
                 val status = accountStatus.flattenCurrencies().firstOrNull {
                     val currency = it.currency
@@ -156,8 +157,8 @@ internal object AccountCryptoCurrencyStatusFinder {
             DerivationIndex.Main.value -> listOf(mainAccount)
             // currency only in the account with specific derivation index or in the main account
             else -> {
-                val accountStatus = accountStatuses.firstOrNull {
-                    val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@firstOrNull false
+                val accountStatus = accountStatuses.firstOrNull { accountStatus ->
+                    val cryptoPortfolio = accountStatus.account as? Account.CryptoPortfolio ?: return@firstOrNull false
 
                     cryptoPortfolio.derivationIndex.value == possibleAccountIndex
                 }
@@ -172,8 +173,8 @@ internal object AccountCryptoCurrencyStatusFinder {
 
         if (possibleAccountIndexes.isEmpty()) return this@getExpectedAccountStatuses.accountStatuses
 
-        val accountStatuses = this@getExpectedAccountStatuses.accountStatuses.filter {
-            val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@filter false
+        val accountStatuses = this@getExpectedAccountStatuses.accountStatuses.filter { accountStatus ->
+            val cryptoPortfolio = accountStatus.account as? Account.CryptoPortfolio ?: return@filter false
 
             cryptoPortfolio.derivationIndex.value in possibleAccountIndexes
         }

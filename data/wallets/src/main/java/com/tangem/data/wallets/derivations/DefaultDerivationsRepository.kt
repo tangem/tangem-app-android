@@ -1,9 +1,10 @@
 package com.tangem.data.wallets.derivations
 
-import com.tangem.common.CompletionResult
+import arrow.core.getOrElse
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -16,16 +17,22 @@ import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultDerivationsRepository @Inject constructor(
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val hotDerivationsRepository: HotMapDerivationsRepository,
     private val coldDerivationsRepository: ColdMapDerivationsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DerivationsRepository {
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) {
+            Timber.d("Nothing to derive")
+            return
+        }
+
         derivePublicKeysByNetworks(userWalletId = userWalletId, networks = currencies.map(CryptoCurrency::network))
     }
 
@@ -34,7 +41,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
         networkIds: List<Network.RawID>,
         accountIndex: DerivationIndex,
     ) {
-        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         when (userWallet) {
             is UserWallet.Cold -> coldDerivationsRepository.derivePublicKeysByNetworkIds(userWallet, networkIds)
             is UserWallet.Hot -> {
@@ -46,7 +53,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
     }
 
     override suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>) {
-        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         when (userWallet) {
             is UserWallet.Cold -> coldDerivationsRepository.derivePublicKeysByNetworks(userWallet, networks)
             is UserWallet.Hot -> hotDerivationsRepository.derivePublicKeysByNetworks(userWallet, networks)
@@ -59,7 +66,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
         userWalletId: UserWalletId,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): Map<ByteArrayKey, ExtendedPublicKeysMap> {
-        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         return when (userWallet) {
             is UserWallet.Cold -> coldDerivationsRepository.derivePublicKeys(userWallet, derivations)
             is UserWallet.Hot -> hotDerivationsRepository.derivePublicKeys(userWallet, derivations)
@@ -73,7 +80,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
         userWalletId: UserWalletId,
         networksWithDerivationPath: Map<BackendId, String?>,
     ): Boolean {
-        return when (val userWallet = userWalletsStore.getSyncStrict(userWalletId)) {
+        return when (val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)) {
             is UserWallet.Cold -> coldDerivationsRepository.hasMissedDerivations(userWallet, networksWithDerivationPath)
             is UserWallet.Hot -> hotDerivationsRepository.hasMissedDerivations(userWallet, networksWithDerivationPath)
         }
@@ -88,14 +95,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
             return@withContext // No update needed
         }
 
-        val updateResult = userWalletsStore.update(
-            userWalletId = newUserWallet.walletId,
-            update = { userWalletToUpdate -> newUserWallet },
-        )
-
-        when (updateResult) {
-            is CompletionResult.Failure -> throw updateResult.error
-            is CompletionResult.Success -> updateResult.data
-        }
+        userWalletsListRepository.saveWithoutLock(userWallet = newUserWallet, canOverride = true)
+            .getOrElse { throw IllegalStateException("Unable to update user wallet: $it") }
     }
 }

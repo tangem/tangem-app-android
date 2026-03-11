@@ -3,11 +3,15 @@ package com.tangem.features.onramp.swap.availablepairs
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
+import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
+import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioManager
+import com.tangem.features.onramp.swap.availablepairs.model.AddToPortfolioRoute
 import com.tangem.features.onramp.swap.availablepairs.model.AvailableSwapPairsModel
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
-import com.tangem.features.onramp.tokenlist.ui.onrampTokenList
+import com.tangem.features.onramp.tokenlist.ui.onrampSwapTokenList
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,11 +25,15 @@ internal class DefaultAvailableSwapPairsComponent @AssistedInject constructor(
 
     private val model: AvailableSwapPairsModel = getOrCreateModel(params)
 
+    override val bottomSheetNavigation: SlotNavigation<AddToPortfolioRoute> get() = model.bottomSheetNavigation
+    override val addToPortfolioManager: AddToPortfolioManager? get() = model.addToPortfolioManager
+    override val addToPortfolioCallback: AddToPortfolioComponent.Callback get() = model.addToPortfolioCallback
+
     override val uiState: StateFlow<TokenListUM>
         get() = model.state
 
     override fun LazyListScope.content(uiState: TokenListUM, modifier: Modifier) {
-        onrampTokenList(state = uiState)
+        onrampSwapTokenList(state = uiState)
     }
 
     @AssistedFactory
