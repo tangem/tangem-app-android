@@ -13,8 +13,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -36,7 +36,7 @@ internal object DataCommonModule {
     @Singleton
     fun provideCardCryptoCurrencyFactory(
         excludedBlockchains: ExcludedBlockchains,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         accountsFeatureToggles: AccountsFeatureToggles,
         walletAccountsFetcher: WalletAccountsFetcher,
         userTokensResponseStore: UserTokensResponseStore,
@@ -45,7 +45,7 @@ internal object DataCommonModule {
         return DefaultCardCryptoCurrencyFactory(
             demoConfig = DemoConfig,
             excludedBlockchains = excludedBlockchains,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             accountsFeatureToggles = accountsFeatureToggles,
             walletAccountsFetcher = walletAccountsFetcher,
             userTokensResponseStore = userTokensResponseStore,
@@ -71,7 +71,7 @@ internal object DataCommonModule {
     @Singleton
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
@@ -81,7 +81,7 @@ internal object DataCommonModule {
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
@@ -109,13 +109,13 @@ internal object DataCommonModule {
     @Provides
     @Singleton
     fun provideWalletServerBinder(
-        userWalletsStore: UserWalletsStore,
+        userWalletsListRepository: UserWalletsListRepository,
         appsFlyerStore: AppsFlyerStore,
         tangemTechApi: TangemTechApi,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletServerBinder {
         return DefaultWalletServerBinder(
-            userWalletsStore = userWalletsStore,
+            userWalletsListRepository = userWalletsListRepository,
             appsFlyerStore = appsFlyerStore,
             tangemTechApi = tangemTechApi,
             dispatchers = dispatchers,

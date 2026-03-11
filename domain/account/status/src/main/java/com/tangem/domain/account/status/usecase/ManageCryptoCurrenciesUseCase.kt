@@ -59,14 +59,21 @@ class ManageCryptoCurrenciesUseCase(
         accountId: AccountId,
         add: CryptoCurrency? = null,
         remove: CryptoCurrency? = null,
+        skipDerivationErrors: Boolean = true,
     ): Either<Throwable, Unit> {
-        return invoke(accountId = accountId, add = listOfNotNull(add), remove = listOfNotNull(remove))
+        return invoke(
+            accountId = accountId,
+            add = listOfNotNull(add),
+            remove = listOfNotNull(remove),
+            skipDerivationErrors = skipDerivationErrors,
+        )
     }
 
     suspend operator fun invoke(
         accountId: AccountId,
         add: List<CryptoCurrency> = emptyList(),
         remove: List<CryptoCurrency> = emptyList(),
+        skipDerivationErrors: Boolean = true,
     ): Either<Throwable, Unit> = eitherOn(dispatchers.default) {
         if (add.isEmpty() && remove.isEmpty()) {
             Timber.d("No currencies to add or remove, skipping")
@@ -77,7 +84,7 @@ class ManageCryptoCurrenciesUseCase(
         withContext(NonCancellable) {
             val accountStatus = getAccountStatus(accountId = accountId)
 
-            val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+            var modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = add, remove = remove)
 
             if (!modifiedCurrencyList.hasChanges) {
@@ -85,11 +92,20 @@ class ManageCryptoCurrenciesUseCase(
                 return@withContext
             }
 
-            saveAccount(
-                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
-            )
+            val derivingResult = derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
-            derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+            if (!skipDerivationErrors && derivingResult.isLeft()) {
+                modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+                    .modify(add = emptyList(), remove = remove)
+
+                if (!modifiedCurrencyList.hasChanges) {
+                    derivingResult.bind()
+                }
+            }
+
+            saveAccount(
+                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total),
+            )
 
             parallelUpdatingScope.launch {
                 syncTokens(userWalletId, modifiedCurrencyList)
@@ -97,6 +113,10 @@ class ManageCryptoCurrenciesUseCase(
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
+            }
+
+            if (!skipDerivationErrors) {
+                derivingResult.bind()
             }
         }
     }
@@ -126,7 +146,7 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
+            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total))
 
             parallelUpdatingScope.launch {
                 syncTokens(userWalletId, modifiedCurrencyList)

@@ -12,7 +12,6 @@ import com.tangem.core.ui.components.HoldToConfirmButton
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.R as CoreR
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -55,10 +54,7 @@ internal fun WcTransactionRequestButtons(
                 isHoldToConfirmEnabled -> {
                     HoldToConfirmButton(
                         modifier = buttonModifier,
-                        text = stringResourceSafe(
-                            CoreR.string.common_hold_to,
-                            activeButtonText.resolveReference(),
-                        ),
+                        text = activeButtonText.resolveReference(),
                         onConfirm = onClickActiveButton,
                         isLoading = isLoading,
                         enabled = enabled,
