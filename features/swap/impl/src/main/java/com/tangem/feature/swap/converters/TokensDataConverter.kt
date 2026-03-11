@@ -17,6 +17,7 @@ import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class TokensDataConverter(
@@ -31,14 +32,9 @@ internal class TokensDataConverter(
         val availableTitle = TokenToSelectState.Title(
             resourceReference(R.string.exchange_tokens_available_tokens_header),
         )
-        val unavailableTitle = TokenToSelectState.Title(
-            resourceReference(
-                R.string.exchange_tokens_unavailable_tokens_header,
-                wrappedList(value.fromCurrency.name),
-            ),
-        )
+        val allTokens = group.available + group.unavailable
         return SwapSelectTokenStateHolder(
-            availableTokens = group.available.map { tokenWithBalanceToTokenToSelect(it, true) }
+            availableTokens = allTokens.map { tokenWithBalanceToTokenToSelect(it, true) }
                 .toMutableList()
                 .apply {
                     if (this.isNotEmpty()) {
@@ -46,14 +42,7 @@ internal class TokensDataConverter(
                     }
                 }
                 .toImmutableList(),
-            unavailableTokens = group.unavailable.map { tokenWithBalanceToTokenToSelect(it, false) }
-                .toMutableList()
-                .apply {
-                    if (this.isNotEmpty()) {
-                        this.add(0, unavailableTitle)
-                    }
-                }
-                .toImmutableList(),
+            unavailableTokens = persistentListOf(),
             tokensListData = TokenListUMData.EmptyList,
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,

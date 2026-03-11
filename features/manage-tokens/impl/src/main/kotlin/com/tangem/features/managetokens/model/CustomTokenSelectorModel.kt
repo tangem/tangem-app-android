@@ -214,9 +214,10 @@ internal class CustomTokenSelectorModel @Inject constructor(
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
                         .first().accountStatuses
 
-                    val accountStatus = accounts.find {
-                        when (it) {
-                            is AccountStatus.CryptoPortfolio -> it.sameNodeAndNotMain()
+                    val accountStatus = accounts.find { account ->
+                        when (account) {
+                            is AccountStatus.CryptoPortfolio -> account.sameNodeAndNotMain()
+                            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
                         }
                     }
 

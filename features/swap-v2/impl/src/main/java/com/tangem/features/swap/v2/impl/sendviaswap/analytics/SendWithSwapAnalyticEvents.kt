@@ -3,6 +3,7 @@ package com.tangem.features.swap.v2.impl.sendviaswap.analytics
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_TO
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_BLOCKCHAIN
@@ -24,6 +25,7 @@ internal sealed class SendWithSwapAnalyticEvents(
         val fromToken: CryptoCurrency,
         val toToken: CryptoCurrency,
         val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
     ) : SendWithSwapAnalyticEvents(
         event = "Send With Swap In Progress Screen Opened",
         params = buildMap {
@@ -34,6 +36,7 @@ internal sealed class SendWithSwapAnalyticEvents(
             put(SEND_BLOCKCHAIN, fromToken.network.name)
             put(RECEIVE_BLOCKCHAIN, toToken.network.name)
             if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
         },
     ), AppsFlyerIncludedEvent
 
