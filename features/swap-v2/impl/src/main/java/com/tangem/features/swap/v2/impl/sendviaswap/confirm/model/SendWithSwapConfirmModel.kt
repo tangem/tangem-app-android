@@ -21,9 +21,10 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
@@ -91,6 +92,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val swapNotificationsUpdateTrigger: SwapNotificationsUpdateTrigger,
     private val sendNotificationsUpdateListener: SendNotificationsUpdateListener,
     private val swapNotificationsUpdateListener: SwapNotificationsUpdateListener,
+    private val getAccountCurrencyByAddressUseCase: GetAccountCurrencyByAddressUseCase,
     private val swapAmountReduceTrigger: SwapAmountReduceTrigger,
     private val swapAmountUpdateTrigger: SwapAmountUpdateTrigger,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
@@ -142,6 +144,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 reduceAmountBy = amountState?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
                 isIgnoreReduce = amountState?.isIgnoreReduce == true,
                 enteredDestination = destinationUM?.addressTextField?.actualAddress,
+                enteredMemo = destinationUM?.memoTextField?.value,
                 fee = feeSelectorUM?.selectedFeeItem?.fee.takeIf { isQuoteContent },
                 feeError = (uiState.value.feeSelectorUM as? FeeSelectorUM.Error)?.error.takeIf { isQuoteContent },
                 fromCryptoCurrencyStatus = amountUM?.swapDirection?.withSwapDirection(
@@ -345,7 +348,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         txHash = txHash,
                         currency = primaryCurrencyStatus.currency,
                     ).getOrNull().orEmpty()
-                    sendSuccessAnalytics()
+                    modelScope.launch(dispatchers.default) { sendSuccessAnalytics() }
                     uiState.transformerUpdate(
                         SendWithSwapConfirmSentStateTransformer(
                             timestamp = timestamp,
@@ -426,6 +429,10 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 data = SwapNotificationData(
                     expressError = (confirmData.quote as? SwapQuoteUM.Error)?.expressError,
                     fromCryptoCurrency = confirmData.fromCryptoCurrencyStatus?.currency,
+                    destinationAddress = confirmData.enteredDestination.orEmpty(),
+                    memo = confirmData.enteredMemo,
+                    toCryptoCurrencyStatus = confirmData.toCryptoCurrencyStatus,
+                    userWalletId = params.userWallet.walletId,
                 ),
             )
             uiState.transformerUpdate(
@@ -452,13 +459,17 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }.launchIn(modelScope)
     }
 
-    private fun sendSuccessAnalytics() {
+    private suspend fun sendSuccessAnalytics() {
         val selectedProvider = confirmData.quote?.provider ?: return
         val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency ?: return
         val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
         val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val feeType = feeSelectorUM.toAnalyticType()
         val fromDerivationIndex = confirmData.fromAccount?.derivationIndex?.value
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
+        val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
+            .getOrNull()?.account
+        val toDerivationIndex = destinationAccount?.derivationIndex?.value
 
         analyticsEventHandler.send(
             SendWithSwapAnalyticEvents.TransactionScreenOpened(
@@ -467,6 +478,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 fromToken = fromCurrency,
                 toToken = toCurrency,
                 fromDerivationIndex = fromDerivationIndex,
+                toDerivationIndex = toDerivationIndex,
             ),
         )
         analyticsEventHandler.send(
@@ -541,10 +553,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
 
     private fun getPrimaryButtonText(confirmUM: ConfirmUM, isHoldToConfirm: Boolean): TextReference {
         return when {
-            isHoldToConfirm -> resourceReference(
-                id = com.tangem.core.ui.R.string.common_hold_to,
-                formatArgs = wrappedList(resourceReference(R.string.common_send)),
-            )
+            isHoldToConfirm -> resourceReference(R.string.common_send)
             confirmUM is ConfirmUM.Success -> resourceReference(R.string.common_close)
             confirmUM is ConfirmUM.Content && confirmUM.isTransactionInProcess ->
                 resourceReference(R.string.send_sending)

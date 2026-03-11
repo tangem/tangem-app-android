@@ -1,9 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.ParseSharedAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
@@ -13,7 +13,6 @@ import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -23,7 +22,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -39,105 +37,61 @@ internal object WalletsDomainModule {
 
     @Provides
     fun providesUserWalletsSyncDelegate(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-        dispatchers: CoroutineDispatcherProvider,
     ): UserWalletsSyncDelegate {
-        return DefaultUserWalletsSyncDelegate(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-            dispatchers = dispatchers,
-        )
+        return DefaultUserWalletsSyncDelegate(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
-    fun providesGetWalletsUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): GetWalletsUseCase {
-        return GetWalletsUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+    fun providesGetWalletsUseCase(userWalletsListRepository: UserWalletsListRepository): GetWalletsUseCase {
+        return GetWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
     fun providesWalletNameMigrationUseCase(
-        userWalletsListManager: UserWalletsListManager,
         walletNamesMigrationRepository: WalletNamesMigrationRepository,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): WalletNameMigrationUseCase {
         return WalletNameMigrationUseCase(
-            userWalletsListManager = userWalletsListManager,
             walletNamesMigrationRepository = walletNamesMigrationRepository,
             userWalletsListRepository = userWalletsListRepository,
-            useNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
         )
     }
 
     @Provides
     @Singleton
-    fun providesGetUserWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): GetUserWalletUseCase {
-        return GetUserWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+    fun providesGetUserWalletUseCase(userWalletsListRepository: UserWalletsListRepository): GetUserWalletUseCase {
+        return GetUserWalletUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
     fun providesGetSelectedWalletSyncUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): GetSelectedWalletSyncUseCase {
-        return GetSelectedWalletSyncUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+        return GetSelectedWalletSyncUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
     fun providesGetSelectedWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): GetSelectedWalletUseCase {
-        return GetSelectedWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+        return GetSelectedWalletUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
     fun providesSaveWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
         walletsRepository: WalletsRepository,
         analyticsEventHandler: AnalyticsEventHandler,
     ): SaveWalletUseCase {
         return SaveWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             analyticsEventHandler = analyticsEventHandler,
         )
     }
@@ -145,15 +99,9 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun providesIsWalletAlreadySavedUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): IsWalletAlreadySavedUseCase {
-        return IsWalletAlreadySavedUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+        return IsWalletAlreadySavedUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
@@ -168,12 +116,6 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesGetExploreUrlUseCase(walletsManagersFacade: WalletManagersFacade): GetExploreUrlUseCase {
         return GetExploreUrlUseCase(walletsManagersFacade = walletsManagersFacade)
-    }
-
-    @Provides
-    @Singleton
-    fun providesUnlockWalletsUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
-        return UnlockWalletsUseCase(userWalletsListManager = userWalletsListManager)
     }
 
     @Provides
@@ -203,31 +145,19 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun providesSelectWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
         reduxStateHolder: ReduxStateHolder,
     ): SelectWalletUseCase {
         return SelectWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             reduxStateHolder = reduxStateHolder,
         )
     }
 
     @Provides
     @Singleton
-    fun providesUpdateWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): UpdateWalletUseCase {
-        return UpdateWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+    fun providesUpdateWalletUseCase(userWalletsListRepository: UserWalletsListRepository): UpdateWalletUseCase {
+        return UpdateWalletUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
@@ -244,44 +174,14 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesGetWalletsSyncUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): GetWalletNamesUseCase {
-        return GetWalletNamesUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+    fun providesGetWalletsSyncUseCase(userWalletsListRepository: UserWalletsListRepository): GetWalletNamesUseCase {
+        return GetWalletNamesUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
     @Singleton
-    fun providesDeleteWalletUseCase(
-        userWalletsListManager: UserWalletsListManager,
-        userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
-    ): DeleteWalletUseCase {
-        return DeleteWalletUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun providesShouldSaveUserWalletsSyncUseCase(
-        walletsRepository: WalletsRepository,
-    ): ShouldSaveUserWalletsSyncUseCase {
-        return ShouldSaveUserWalletsSyncUseCase(walletsRepository = walletsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun providesShouldSaveUserWalletsUseCase(walletsRepository: WalletsRepository): ShouldSaveUserWalletsUseCase {
-        return ShouldSaveUserWalletsUseCase(walletsRepository = walletsRepository)
+    fun providesDeleteWalletUseCase(userWalletsListRepository: UserWalletsListRepository): DeleteWalletUseCase {
+        return DeleteWalletUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
@@ -353,15 +253,9 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun providesGetSavedWalletChangesIdUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
     ): GetSavedWalletsCountUseCase {
-        return GetSavedWalletsCountUseCase(
-            userWalletsListManager = userWalletsListManager,
-            userWalletsListRepository = userWalletsListRepository,
-            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
-        )
+        return GetSavedWalletsCountUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 
     @Provides
@@ -378,11 +272,11 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesSetNotificationsEnabledUseCase(
         walletsRepository: WalletsRepository,
-        currenciesRepository: CurrenciesRepository,
+        accountsCRUDRepository: AccountsCRUDRepository,
     ): SetNotificationsEnabledUseCase {
         return SetNotificationsEnabledUseCase(
             walletsRepository = walletsRepository,
-            currenciesRepository = currenciesRepository,
+            accountsCRUDRepository = accountsCRUDRepository,
         )
     }
 
@@ -485,15 +379,11 @@ internal object WalletsDomainModule {
     @Provides
     @Singleton
     fun provideGetWalletsForAutomaticallyPushEnablingUseCase(
-        userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
-        hotWalletFeatureToggles: HotWalletFeatureToggles,
         dispatcherProvider: CoroutineDispatcherProvider,
     ): GetWalletsForAutomaticallyPushEnablingUseCase {
         return GetWalletsForAutomaticallyPushEnablingUseCase(
-            userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
-            shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             dispatchers = dispatcherProvider,
         )
     }
@@ -510,5 +400,13 @@ internal object WalletsDomainModule {
     @Singleton
     fun provideSyncWalletWithRemoteUseCase(walletsRepository: WalletsRepository): SyncWalletWithRemoteUseCase {
         return SyncWalletWithRemoteUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideApplyUserWalletListSortingUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): ApplyUserWalletListSortingUseCase {
+        return ApplyUserWalletListSortingUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 }

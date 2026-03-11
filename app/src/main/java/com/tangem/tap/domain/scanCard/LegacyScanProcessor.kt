@@ -19,15 +19,15 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.card.common.util.twinsIsTwinned
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
@@ -55,10 +55,12 @@ internal class LegacyScanProcessor @Inject constructor(
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
     ): CompletionResult<ScanResponse> {
         return tangemSdkManager.scanProduct(
             cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
         )
             .doOnFailure { error ->
                 onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
@@ -68,6 +70,7 @@ internal class LegacyScanProcessor @Inject constructor(
     @Suppress("LongParameterList")
     suspend fun scan(
         analyticsSource: AnalyticsParam.ScreensSources,
+        shouldCheckIsAlreadyActivated: Boolean,
         cardId: String?,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
@@ -80,7 +83,10 @@ internal class LegacyScanProcessor @Inject constructor(
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
 
-        val result = tangemSdkManager.scanProduct(cardId)
+        val result = tangemSdkManager.scanProduct(
+            cardId = cardId,
+            shouldCheckIsAlreadyActivated = shouldCheckIsAlreadyActivated,
+        )
 
         val analyticsEvent = Basic.CardWasScanned(analyticsSource)
         store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result, analyticsSource))
@@ -113,7 +119,6 @@ internal class LegacyScanProcessor @Inject constructor(
                             onProgressStateChange = onProgressStateChange,
                             onSuccess = onSuccess,
                             onWalletNotCreated = onWalletNotCreated,
-                            onCancel = onCancel,
                         )
                     },
                 )
@@ -198,87 +203,35 @@ internal class LegacyScanProcessor @Inject constructor(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline onWalletNotCreated: suspend () -> Unit,
-        crossinline onCancel: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
-        checkCardWasUsedInApp(
-            scanResponse = scanResponse,
-            onCancel = {
-                mainScope.launch {
-                    onProgressStateChange.invoke(false)
-                    onCancel()
-                }
-            },
-        ) {
-            if (OnboardingHelper.isOnboardingCase(scanResponse)) {
-                trackingContextProxy.addContext(scanResponse)
+        if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+            trackingContextProxy.addContext(scanResponse)
+            onWalletNotCreated()
+            navigateTo(
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    mode = AppRoute.Onboarding.Mode.Onboarding,
+                ),
+            ) { onProgressStateChange(it) }
+        } else {
+            trackingContextProxy.setContext(scanResponse)
+
+            val wasTwinsOnboardingShown =
+                store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
+
+            if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                 onWalletNotCreated()
                 navigateTo(
                     AppRoute.Onboarding(
                         scanResponse = scanResponse,
-                        mode = AppRoute.Onboarding.Mode.Onboarding,
+                        mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
                     ),
                 ) { onProgressStateChange(it) }
             } else {
-                trackingContextProxy.setContext(scanResponse)
-
-                val wasTwinsOnboardingShown =
-                    store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
-
-                if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
-                    onWalletNotCreated()
-                    navigateTo(
-                        AppRoute.Onboarding(
-                            scanResponse = scanResponse,
-                            mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
-                        ),
-                    ) { onProgressStateChange(it) }
-                } else {
-                    delay(DELAY_SDK_DIALOG_CLOSE)
-                    onSuccess(scanResponse)
-                }
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                onSuccess(scanResponse)
             }
-        }
-    }
-
-    /**
-     * Checks if card has password and never login at this app
-     * Show alert in this case
-     */
-    private suspend fun checkCardWasUsedInApp(
-        scanResponse: ScanResponse,
-        onCancel: () -> Unit,
-        onSuccess: suspend () -> Unit,
-    ) {
-        val userWalletId = runCatching { UserWalletIdBuilder.card(scanResponse.card).build() }.getOrNull()
-        if (userWalletId == null) {
-            onSuccess()
-            return
-        }
-
-        val userTokensResponseStore = store.inject(DaggerGraphState::userTokensResponseStore)
-        val tokens = userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
-
-        if (scanResponse.card.isAccessCodeSet && tokens == null) {
-            store.dispatchDialogShow(
-                AppDialog.WalletAlreadyWasUsedDialog(
-                    onOk = { mainScope.launch { onSuccess() } },
-                    onSupportClick = {
-                        val cardInfo =
-                            store.inject(DaggerGraphState::getWalletMetaInfoUseCase).invoke(scanResponse).getOrNull()
-                                ?: error("CardInfo must be not null")
-
-                        scope.launch {
-                            store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
-                                .invoke(type = FeedbackEmailType.PreActivatedWallet(cardInfo))
-                        }
-                        onCancel()
-                    },
-                    onCancel = { onCancel() },
-                ),
-            )
-        } else {
-            onSuccess()
         }
     }
 

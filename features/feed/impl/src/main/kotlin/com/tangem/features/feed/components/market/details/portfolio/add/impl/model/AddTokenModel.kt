@@ -52,7 +52,7 @@ internal class AddTokenModel @Inject constructor(
             flow = params.selectedNetwork.distinctUntilChanged(),
             flow2 = params.selectedPortfolio.distinctUntilChanged(),
             transform = { selectedNetwork, selectedPortfolio ->
-                addTokenJob.cancel()
+                addTokenJob.join()
                 val isTangemIconVisible = needColdWalletInteraction(selectedNetwork, selectedPortfolio)
                 uiBuilder.updateContent(
                     selectedPortfolio = selectedPortfolio,
@@ -88,6 +88,7 @@ internal class AddTokenModel @Inject constructor(
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
+            analyticsEventHandler.send(analyticsEventBuilder.addButtonClick())
 
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
                 .onLeft { throwable ->
@@ -110,6 +111,11 @@ internal class AddTokenModel @Inject constructor(
                     }
                     is Account.Payment -> TODO("[REDACTED_JIRA]")
                 }
+
+                analyticsEventHandler.send(
+                    event = analyticsEventBuilder.tokenAdded(status.status.currency.network.name),
+                )
+
                 params.callbacks.onTokenAdded(status.status)
             }
             uiState.value = um.toggleProgress(false)

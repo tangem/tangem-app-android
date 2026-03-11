@@ -24,11 +24,12 @@ dependencies {
     // endregion
 
     // region Project - Domain
-    implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
     implementation(projects.domain.card)
-    api(projects.domain.models)
+    implementation(projects.domain.common)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.walletManager)
     // endregion
 
     // region Project - Libs

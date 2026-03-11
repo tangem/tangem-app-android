@@ -74,13 +74,14 @@ private const val DEFAULT_SCALE = 1f
 
 private const val SHAKE_AMPLITUDE_DP = 5f
 private const val SHAKE_DURATION_MS = 120
-private const val FADE_DURATION_MS = 150
+private const val FADE_DURATION_MS = 100
 
 private const val BOUNCE_VELOCITY_MULTIPLIER = 1.25f
 
-private const val HAPTIC_INITIAL_INTERVAL_MS = 200L
-private const val HAPTIC_MIN_INTERVAL_MS = 30L
+private const val HAPTIC_INITIAL_INTERVAL_MS = 50L
+private const val HAPTIC_MIN_INTERVAL_MS = 15L
 private const val HAPTIC_HEARTBEAT_INTERVAL_MS = 100L
+private const val HAPTIC_SUCCESS_DELAY_MS = 300L
 
 // Easing: smooth acceleration, gradually picking up speed
 private val AccelerateEasing = CubicBezierEasing(
@@ -288,6 +289,7 @@ private fun Modifier.holdToConfirmGestures(
                 state.isProgressVisible = true
 
                 // Soft heartbeat on success
+                delay(HAPTIC_SUCCESS_DELAY_MS)
                 performSuccessHapticFeedback(config.hapticManager)
 
                 state.scaleProgress.animateTo(
@@ -324,7 +326,7 @@ private suspend fun performAcceleratingHapticFeedback(hapticManager: HapticManag
         // Exponential decrease: interval decreases faster as progress increases
         val interval = (maxInterval * (1f - progress * progress) + minInterval).toLong()
 
-        hapticManager.perform(TangemHapticEffect.View.SegmentTick)
+        hapticManager.perform(TangemHapticEffect.View.ClockTick)
         delay(interval)
     }
 }
@@ -333,18 +335,18 @@ private suspend fun performAcceleratingHapticFeedback(hapticManager: HapticManag
  * Performs strong heartbeat haptic feedback on release (two heavy clicks).
  */
 private suspend fun performReleaseHapticFeedback(hapticManager: HapticManager) {
-    hapticManager.perform(TangemHapticEffect.OneTime.HeavyClick)
+    hapticManager.perform(TangemHapticEffect.View.Reject)
     delay(HAPTIC_HEARTBEAT_INTERVAL_MS)
-    hapticManager.perform(TangemHapticEffect.OneTime.HeavyClick)
+    hapticManager.perform(TangemHapticEffect.View.Reject)
 }
 
 /**
  * Performs soft heartbeat haptic feedback on success (two light clicks).
  */
 private suspend fun performSuccessHapticFeedback(hapticManager: HapticManager) {
-    hapticManager.perform(TangemHapticEffect.OneTime.Click)
+    hapticManager.perform(TangemHapticEffect.View.Confirm)
     delay(HAPTIC_HEARTBEAT_INTERVAL_MS)
-    hapticManager.perform(TangemHapticEffect.OneTime.Click)
+    hapticManager.perform(TangemHapticEffect.View.Confirm)
 }
 
 private suspend fun CoroutineScope.handleReleaseAnimation(

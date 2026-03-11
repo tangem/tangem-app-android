@@ -46,7 +46,7 @@ object MockAccounts {
         derivationIndex: Int,
         name: String = "Account #$derivationIndex",
         icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-        cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
+        cryptoCurrencies: List<CryptoCurrency> = emptyList(),
         userWalletId: UserWalletId = this.userWalletId,
     ): Account.CryptoPortfolio {
         val derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!

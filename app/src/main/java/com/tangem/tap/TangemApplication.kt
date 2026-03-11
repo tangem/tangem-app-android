@@ -58,7 +58,6 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.attestation.api.TangemApiServiceSettings
@@ -145,9 +144,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val oneTimeEventFilter: OneTimeEventFilter
         get() = entryPoint.getOneTimeEventFilter()
-
-    private val generalUserWalletsListManager: UserWalletsListManager
-        get() = entryPoint.getGeneralUserWalletsListManager()
 
     private val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase
         get() = entryPoint.getWasTwinsOnboardingShownUseCase()
@@ -237,9 +233,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
     private val tangemHotSdk
         get() = entryPoint.getTangemHotSdk()
-
-    private val hotWalletFeatureToggles
-        get() = entryPoint.getHotWalletFeatureToggles()
 
     private val wcInitializeUseCase
         get() = entryPoint.getWcInitializeUseCase()
@@ -382,7 +375,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     appThemeModeRepository = appThemeModeRepository,
                     balanceHidingRepository = balanceHidingRepository,
                     walletsRepository = walletsRepository,
-                    generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
                     cardRepository = cardRepository,
@@ -407,7 +399,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     userTokensResponseStore = userTokensResponseStore,
                     userWalletsListRepository = userWalletsListRepository,
                     tangemHotSdk = tangemHotSdk,
-                    hotWalletFeatureToggles = hotWalletFeatureToggles,
                     trackingContextProxy = trackingContextProxy,
                 ),
             ),

@@ -4,12 +4,17 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,13 +46,7 @@ internal class WalletLoadingStateFactory(
     private fun createLoadingHotWalletContent(userWallet: UserWallet.Hot): WalletState.MultiCurrency.Content {
         return WalletState.MultiCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
-            walletCardState = WalletCardState.Loading(
-                id = userWallet.walletId,
-                title = userWallet.name,
-                additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = userWallet),
-                imageResId = null,
-                dropDownItems = persistentListOf(),
-            ),
+            walletCardState = createLoadingWalletCardState(userWallet),
             buttons = createMultiWalletActions(userWallet),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
@@ -61,7 +60,7 @@ internal class WalletLoadingStateFactory(
     private fun createLoadingMultiCurrencyContent(userWallet: UserWallet.Cold): WalletState.MultiCurrency.Content {
         return WalletState.MultiCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
-            walletCardState = userWallet.toLoadingWalletCardState(),
+            walletCardState = createLoadingWalletCardState(userWallet),
             buttons = createMultiWalletActions(userWallet),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
@@ -76,7 +75,7 @@ internal class WalletLoadingStateFactory(
         val currencySymbol = userWallet.scanResponse.cardTypesResolver.getBlockchain().currency
         return WalletState.SingleCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
-            walletCardState = userWallet.toLoadingWalletCardState(),
+            walletCardState = createLoadingWalletCardState(userWallet),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             buttons = createDimmedButtons(),
@@ -98,13 +97,21 @@ internal class WalletLoadingStateFactory(
         )
     }
 
-    private fun UserWallet.Cold.toLoadingWalletCardState(): WalletCardState {
+    private fun createLoadingWalletCardState(userWallet: UserWallet): WalletCardState {
         return WalletCardState.Loading(
-            id = walletId,
-            title = name,
-            additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
-            imageResId = walletImageResolver.resolve(userWallet = this),
-            dropDownItems = persistentListOf(),
+            id = userWallet.walletId,
+            title = userWallet.name,
+            additionalInfo = if (!userWallet.isMultiCurrency) {
+                null
+            } else {
+                WalletAdditionalInfoFactory.resolve(wallet = userWallet)
+            },
+            imageResId = if (userWallet is UserWallet.Cold) {
+                walletImageResolver.resolve(userWallet)
+            } else {
+                null
+            },
+            dropDownItems = createDropDownItems(userWalletId = userWallet.walletId),
         )
     }
 
@@ -148,6 +155,16 @@ internal class WalletLoadingStateFactory(
             WalletManageButton.Send(enabled = true, dimContent = true, onClick = {}),
             WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
             WalletManageButton.Sell(enabled = true, dimContent = true, onClick = {}),
+        )
+    }
+
+    private fun createDropDownItems(userWalletId: UserWalletId): ImmutableList<WalletDropDownItems> {
+        return persistentListOf(
+            WalletDropDownItems(
+                text = resourceReference(id = R.string.common_rename),
+                icon = R.drawable.ic_edit_24,
+                onClick = { clickIntents.onRenameBeforeConfirmationClick(userWalletId) },
+            ),
         )
     }
 }
