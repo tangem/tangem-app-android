@@ -17,6 +17,11 @@ internal class DeleteWalletTransformer(
         val deletedWalletUM = prevState.getDeletedWalletState2()
 
         return when {
+            deletedWalletUM != null && deletedWalletState != null -> prevState.copy(
+                selectedWalletIndex = selectedWalletIndex,
+                wallets = (prevState.wallets - deletedWalletState).toImmutableList(),
+                wallets2 = (prevState.wallets2 - deletedWalletUM).toImmutableList(),
+            )
             deletedWalletUM != null -> prevState.copy(
                 selectedWalletIndex = selectedWalletIndex,
                 wallets2 = (prevState.wallets2 - deletedWalletUM).toImmutableList(),
