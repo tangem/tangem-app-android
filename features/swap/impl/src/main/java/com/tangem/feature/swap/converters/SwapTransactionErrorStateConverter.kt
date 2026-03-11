@@ -17,7 +17,7 @@ internal class SwapTransactionErrorStateConverter(
             is SwapTransactionState.Error.TransactionError -> {
                 when (val error = value.error) {
                     is SendTransactionError.UserCancelledError -> return null
-                    null -> SwapAlertUM.GenericError(onDismiss)
+                    null -> SwapAlertUM.DefaultError(onDismiss)
                     else -> TransactionErrorAlertConverter(onDismiss, onSupportClick).convert(error)
                 }
             }
@@ -27,8 +27,8 @@ internal class SwapTransactionErrorStateConverter(
                     onConfirmClick = { onSupportClick(value.error.code.toString()) },
                 )
             }
-            SwapTransactionState.Error.UnknownError -> SwapAlertUM.GenericError(onDismiss)
-            is SwapTransactionState.Error.TangemPayWithdrawalError -> SwapAlertUM.GenericError(
+            SwapTransactionState.Error.UnknownError -> SwapAlertUM.DefaultError(onDismiss)
+            is SwapTransactionState.Error.TangemPayWithdrawalError -> SwapAlertUM.SupportError(
                 onConfirmClick = { onSupportClick(value.txId) },
             )
         }

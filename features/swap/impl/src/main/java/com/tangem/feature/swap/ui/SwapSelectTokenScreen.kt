@@ -189,7 +189,7 @@ private fun ListOfTokensWithMarkets(
         state = lazyListState,
     ) {
         if (state.tokensListData !is TokenListUMData.EmptyList) {
-            assetsTitle(count = state.tokensListData.totalTokensCount)
+            assetsTitle(count = state.tokensListData.totalTokensCount, showCount = marketsState.shouldAssetsCount)
         }
 
         tokensListItems(
@@ -197,10 +197,18 @@ private fun ListOfTokensWithMarkets(
             isBalanceHidden = state.isBalanceHidden,
         )
 
-        if (state.tokensListData is TokenListUMData.EmptyList) {
+        tokensToSelectItems(state.availableTokens, state.onTokenSelected)
+        if (state.unavailableTokens.isNotEmpty()) {
             item { SpacerH12() }
-        } else {
+            tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
+        }
+
+        val hasPortfolioContent = state.tokensListData !is TokenListUMData.EmptyList ||
+            state.availableTokens.isNotEmpty()
+        if (hasPortfolioContent) {
             item { SpacerH32() }
+        } else {
+            item { SpacerH12() }
         }
 
         swapMarketsListItems(marketsState)
@@ -242,13 +250,15 @@ private fun VisibleItemsTracker(lazyListState: LazyListState, marketState: SwapM
     }
 }
 
-private fun LazyListScope.assetsTitle(count: Int) {
+private fun LazyListScope.assetsTitle(count: Int, showCount: Boolean) {
     item(key = "assets_title") {
         Text(
             text = buildAnnotatedString {
                 append(stringResourceSafe(R.string.swap_your_assets_title))
-                withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-                    append(" $count")
+                if (showCount) {
+                    withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
+                        append(" $count")
+                    }
                 }
             },
             style = TangemTheme.typography.h3,
@@ -312,7 +322,7 @@ internal fun LazyListScope.portfolioTokensList(portfolio: TokensListItemUM.Portf
 
     portfolioItem(
         portfolio = portfolio,
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier,
         isBalanceHidden = isBalanceHidden,
     )
     if (!isExpanded) return

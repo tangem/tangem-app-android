@@ -2,14 +2,17 @@ package com.tangem.domain.account.status.producer
 
 import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coVerifySequence
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -21,7 +24,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultMultiAccountStatusListProducerTest {
 
-    private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
+    private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
     private val flowProducerTools: FlowProducerTools = mockk()
@@ -38,7 +41,7 @@ class DefaultMultiAccountStatusListProducerTest {
 
     private val producer = DefaultMultiAccountStatusListProducer(
         params = Unit,
-        accountsCRUDRepository = accountsCRUDRepository,
+        userWalletsListRepository = userWalletsListRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         dispatchers = dispatchers,
         flowProducerTools = flowProducerTools,
@@ -46,7 +49,7 @@ class DefaultMultiAccountStatusListProducerTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(accountsCRUDRepository, singleAccountStatusListSupplier)
+        clearMocks(userWalletsListRepository, singleAccountStatusListSupplier)
     }
 
     @Test
@@ -55,7 +58,7 @@ class DefaultMultiAccountStatusListProducerTest {
         val wallets = listOf(userWallet1, userWallet2)
         val walletsFlow = MutableStateFlow(wallets)
 
-        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
+        every { userWalletsListRepository.userWallets } returns walletsFlow
         val accountStatusList1 = mockk<AccountStatusList>()
         val accountStatusList2 = mockk<AccountStatusList>()
 
@@ -78,8 +81,9 @@ class DefaultMultiAccountStatusListProducerTest {
         val expected = listOf(accountStatusList1, accountStatusList2)
         Truth.assertThat(actual).containsExactly(expected)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            accountsCRUDRepository.getUserWallets()
+        coVerifySequence {
+            userWalletsListRepository.load()
+            userWalletsListRepository.userWallets
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )
@@ -93,7 +97,7 @@ class DefaultMultiAccountStatusListProducerTest {
     fun `produce returns empty flow if userWallets is empty list`() = runTest {
         // Arrange
         val walletsFlow = MutableStateFlow<List<UserWallet>>(emptyList())
-        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
+        every { userWalletsListRepository.userWallets } returns walletsFlow
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -101,28 +105,29 @@ class DefaultMultiAccountStatusListProducerTest {
         // Assert
         Truth.assertThat(actual).isEmpty()
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            accountsCRUDRepository.getUserWallets()
+        coVerifySequence {
+            userWalletsListRepository.load()
+            userWalletsListRepository.userWallets
         }
     }
 
-    // TODO: uncomment after migration on UserWalletsListRepository
-    // @Test
-    // fun `produce returns empty flow if userWallets is null`() = runTest {
-    //     // Arrange
-    //     val walletsFlow = MutableStateFlow<List<UserWallet>?>(null)
-    //     every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
-    //
-    //     // Act
-    //     val actual = producer.produce().let(::getEmittedValues)
-    //
-    //     // Assert
-    //     Truth.assertThat(actual).isEmpty()
-    //
-    //     coVerify(ordering = Ordering.SEQUENCE) {
-    //         accountsCRUDRepository.getUserWallets()
-    //     }
-    // }
+    @Test
+    fun `produce returns empty flow if userWallets is null`() = runTest {
+        // Arrange
+        val walletsFlow = MutableStateFlow<List<UserWallet>>(emptyList())
+        every { userWalletsListRepository.userWallets } returns walletsFlow
+
+        // Act
+        val actual = producer.produce().let(::getEmittedValues)
+
+        // Assert
+        Truth.assertThat(actual).isEmpty()
+
+        coVerifySequence {
+            userWalletsListRepository.load()
+            userWalletsListRepository.userWallets
+        }
+    }
 
     @Test
     fun `flow will updated if userWallets are updated`() = runTest {
@@ -131,7 +136,7 @@ class DefaultMultiAccountStatusListProducerTest {
         val userWallet3 = mockk<UserWallet> { every { walletId } returns userWalletId3 }
 
         val walletsFlow = MutableStateFlow(listOf(userWallet1, userWallet2))
-        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
+        every { userWalletsListRepository.userWallets } returns walletsFlow
 
         val accountStatusList1 = mockk<AccountStatusList>()
         val accountStatusList2 = mockk<AccountStatusList>()
@@ -170,8 +175,9 @@ class DefaultMultiAccountStatusListProducerTest {
         val expected2 = listOf(accountStatusList1, accountStatusList2, accountStatusList3)
         Truth.assertThat(actual2).containsExactly(expected2)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            accountsCRUDRepository.getUserWallets()
+        coVerifySequence {
+            userWalletsListRepository.load()
+            userWalletsListRepository.userWallets
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )
@@ -187,7 +193,8 @@ class DefaultMultiAccountStatusListProducerTest {
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId3),
             )
-            accountsCRUDRepository.getUserWallets()
+            userWalletsListRepository.load()
+            userWalletsListRepository.userWallets
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )
