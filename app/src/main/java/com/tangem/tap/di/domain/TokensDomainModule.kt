@@ -55,26 +55,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCurrencyWarningsUseCase(
-        walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
-        currencyChecksRepository: CurrencyChecksRepository,
-        dispatchers: CoroutineDispatcherProvider,
-        baseCurrencyStatusOperations: BaseCurrencyStatusOperations,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    ): GetCurrencyWarningsUseCase {
-        return GetCurrencyWarningsUseCase(
-            walletManagersFacade = walletManagersFacade,
-            currenciesRepository = currenciesRepository,
-            dispatchers = dispatchers,
-            currencyChecksRepository = currencyChecksRepository,
-            currencyStatusOperations = baseCurrencyStatusOperations,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideFetchCurrencyStatusUseCase(
         currenciesRepository: CurrenciesRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
