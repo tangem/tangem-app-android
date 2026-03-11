@@ -14,8 +14,8 @@ internal class DefaultYieldSupplyWarningsViewedRepository(
 ) : YieldSupplyWarningsViewedRepository {
 
     override suspend fun getViewedWarnings(): Set<String> = withContext(dispatchers.io) {
-        appPreferencesStore.getObjectSet<String>(PreferencesKeys.YIELD_SUPPLY_WARNINGS_STATES_KEY).firstOrNull()
-            ?: emptySet()
+        appPreferencesStore.getObjectSet<String>(PreferencesKeys.YIELD_SUPPLY_WARNINGS_STATES_KEY)
+            .firstOrNull().orEmpty()
     }
 
     override suspend fun view(symbol: String) = withContext(dispatchers.io) {

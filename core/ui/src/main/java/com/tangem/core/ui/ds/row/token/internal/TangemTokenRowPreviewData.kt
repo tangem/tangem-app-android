@@ -6,6 +6,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
@@ -63,49 +64,60 @@ internal object TangemTokenRowPreviewData {
             text = stringReference("Title"),
         )
 
-    private val accountResIcon: CurrencyIconState.CryptoPortfolio.Icon
-        get() = CurrencyIconState.CryptoPortfolio.Icon(
-            resId = R.drawable.ic_rounded_star_24,
-            color = Color.Blue,
-            isGrayscale = false,
-        )
-    private val accountLetterIcon: CurrencyIconState.CryptoPortfolio.Letter
-        get() = CurrencyIconState.CryptoPortfolio.Letter(
-            char = stringReference("A"),
-            color = Color.Blue,
-            isGrayscale = false,
+    private val accountResIcon: TangemIconUM.Currency
+        get() = TangemIconUM.Currency(
+            CurrencyIconState.CryptoPortfolio.Icon(
+                resId = R.drawable.ic_rounded_star_24,
+                color = Color.Blue,
+                isGrayscale = false,
+            ),
         )
 
-    private val coinIconState
-        get() = CurrencyIconState.CoinIcon(
-            url = null,
-            fallbackResId = R.drawable.img_polygon_22,
-            isGrayscale = false,
-            shouldShowCustomBadge = false,
+    private val accountLetterIcon: TangemIconUM.Currency
+        get() = TangemIconUM.Currency(
+            CurrencyIconState.CryptoPortfolio.Letter(
+                char = stringReference("A"),
+                color = Color.Blue,
+                isGrayscale = false,
+            ),
         )
 
-    private val tokenIconState
-        get() = CurrencyIconState.TokenIcon(
-            url = null,
-            topBadgeIconResId = R.drawable.img_polygon_22,
-            fallbackTint = TangemColorPalette.Black,
-            fallbackBackground = TangemColorPalette.Meadow,
-            isGrayscale = false,
-            shouldShowCustomBadge = false,
+    private val coinIconState: TangemIconUM.Currency
+        get() = TangemIconUM.Currency(
+            CurrencyIconState.CoinIcon(
+                url = null,
+                fallbackResId = R.drawable.img_polygon_22,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
         )
 
-    private val customTokenIconState
-        get() = CurrencyIconState.CustomTokenIcon(
-            tint = TangemColorPalette.Black,
-            background = TangemColorPalette.Meadow,
-            topBadgeIconResId = R.drawable.img_polygon_22,
-            isGrayscale = false,
+    private val tokenIconState: TangemIconUM.Currency
+        get() = TangemIconUM.Currency(
+            CurrencyIconState.TokenIcon(
+                url = null,
+                topBadgeIconResId = R.drawable.img_polygon_22,
+                fallbackTint = TangemColorPalette.Black,
+                fallbackBackground = TangemColorPalette.Meadow,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
+        )
+
+    private val customTokenIconState: TangemIconUM.Currency
+        get() = TangemIconUM.Currency(
+            CurrencyIconState.CustomTokenIcon(
+                tint = TangemColorPalette.Black,
+                background = TangemColorPalette.Meadow,
+                topBadgeIconResId = R.drawable.img_polygon_22,
+                isGrayscale = false,
+            ),
         )
 
     val defaultState: TangemTokenRowUM.Content
         get() = TangemTokenRowUM.Content(
             id = UUID.randomUUID().toString(),
-            iconState = coinIconState,
+            headIconUM = coinIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
             topEndContentUM = topEndContentUM,
@@ -131,9 +143,9 @@ internal object TangemTokenRowPreviewData {
                     }),
                 ),
                 icons = persistentListOf(
-                    TangemTokenRowUM.IconUM(R.drawable.ic_staking_mini_10),
-                    TangemTokenRowUM.IconUM(R.drawable.ic_attention_12),
-                    TangemTokenRowUM.IconUM(R.drawable.ic_error_sync_24),
+                    TangemIconUM.Icon(R.drawable.ic_staking_mini_10),
+                    TangemIconUM.Icon(R.drawable.ic_attention_12),
+                    TangemIconUM.Icon(R.drawable.ic_error_sync_24),
                 ),
             ),
             bottomEndContentUM = bottomEndContentUM,
@@ -146,7 +158,7 @@ internal object TangemTokenRowPreviewData {
     val tokenState: TangemTokenRowUM.Content
         get() = TangemTokenRowUM.Content(
             id = UUID.randomUUID().toString(),
-            iconState = tokenIconState,
+            headIconUM = tokenIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
             topEndContentUM = topEndContentUM,
@@ -160,7 +172,7 @@ internal object TangemTokenRowPreviewData {
     val customTokenState: TangemTokenRowUM.Content
         get() = TangemTokenRowUM.Content(
             id = UUID.randomUUID().toString(),
-            iconState = customTokenIconState,
+            headIconUM = customTokenIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
             topEndContentUM = topEndContentUM,
@@ -174,7 +186,7 @@ internal object TangemTokenRowPreviewData {
     val draggableState: TangemTokenRowUM.Actionable
         get() = TangemTokenRowUM.Actionable(
             id = UUID.randomUUID().toString(),
-            iconState = coinIconState,
+            headIconUM = coinIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
             tailUM = TangemTokenRowUM.TailUM.Draggable,
@@ -185,7 +197,7 @@ internal object TangemTokenRowPreviewData {
     val draggableStateV2: TangemTokenRowUM.Actionable
         get() = TangemTokenRowUM.Actionable(
             id = UUID.randomUUID().toString(),
-            iconState = coinIconState,
+            headIconUM = coinIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
             topEndContentUM = topEndContentUM,
@@ -198,12 +210,12 @@ internal object TangemTokenRowPreviewData {
     val loadingState: TangemTokenRowUM.Loading
         get() = TangemTokenRowUM.Loading(
             id = UUID.randomUUID().toString(),
-            iconState = coinIconState,
+            headIconUM = coinIconState,
             titleUM = TangemTokenRowUM.TitleUM.Loading,
             subtitleUM = TangemTokenRowUM.SubtitleUM.Loading,
         )
 
-    val unreachableState: TangemTokenRowUM.Content
+    val unreachableState: TangemTokenRowUM
         get() = defaultState.copy(
             topEndContentUM = TangemTokenRowUM.EndContentUM.Content(
                 text = stringReference(StringsSigns.DASH_SIGN),
@@ -219,7 +231,7 @@ internal object TangemTokenRowPreviewData {
     val accountState: TangemTokenRowUM.Content
         get() = TangemTokenRowUM.Content(
             id = UUID.randomUUID().toString(),
-            iconState = accountResIcon,
+            headIconUM = accountResIcon,
             titleUM = TangemTokenRowUM.TitleUM.Content(
                 text = stringReference(value = "Portfolio"),
             ),
@@ -239,7 +251,7 @@ internal object TangemTokenRowPreviewData {
 
     val accountLetterState: TangemTokenRowUM.Content
         get() = accountState.copy(
-            iconState = accountLetterIcon,
+            headIconUM = accountLetterIcon,
         )
 
     val accountEllipsisState: TangemTokenRowUM.Content

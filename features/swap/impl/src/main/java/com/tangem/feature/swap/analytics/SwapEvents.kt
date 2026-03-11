@@ -25,7 +25,7 @@ sealed class SwapEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(SWAP_CATEGORY, event, params) {
 
-    data class SwapScreenOpened(
+    class SwapScreenOpened(
         val token: String,
         val blockchain: String,
     ) : SwapEvents(
@@ -38,12 +38,15 @@ sealed class SwapEvents(
 
     class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
-    data class ChooseTokenScreenOpened(val hasAvailableTokens: Boolean) : SwapEvents(
+    class ChooseTokenScreenOpened(val hasAvailableTokens: Boolean) : SwapEvents(
         event = "Choose Token Screen Opened",
         params = mapOf("Available tokens" to if (hasAvailableTokens) "Yes" else "No"),
     )
 
-    data class ChooseTokenScreenResult(val isTokenChosen: Boolean, val token: String? = null) : SwapEvents(
+    class ChooseTokenScreenResult(
+        val isTokenChosen: Boolean,
+        val token: String? = null,
+    ) : SwapEvents(
         event = "Choose Token Screen Result",
         params = buildMap {
             put("Token Chosen", if (isTokenChosen) "Yes" else "No")
@@ -51,12 +54,12 @@ sealed class SwapEvents(
         },
     )
 
-    data class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
+    class ButtonSwapClicked(val sendToken: String, val receiveToken: String) : SwapEvents(
         event = "Button - Swap",
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
     )
 
-    data class ButtonGivePermissionClicked(
+    class ButtonGivePermissionClicked(
         val sendToken: String,
         val receiveToken: String,
         val provider: SwapProvider,
@@ -69,7 +72,7 @@ sealed class SwapEvents(
         ),
     )
 
-    data class ButtonPermissionApproveClicked(
+    class ButtonPermissionApproveClicked(
         val sendToken: String,
         val receiveToken: String,
         val approveType: ApproveType,
@@ -88,8 +91,8 @@ sealed class SwapEvents(
 
     class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
-    @Suppress("NullableToStringCall")
-    data class SwapInProgressScreen(
+    @Suppress("NullableToStringCall", "LongParameterList")
+    class SwapInProgressScreen(
         val provider: SwapProvider,
         val commission: FeeType, // Market / Fast
         val sendBlockchain: String,
@@ -118,24 +121,39 @@ sealed class SwapEvents(
 
     class ProviderClicked : SwapEvents("Provider Clicked")
 
-    data class ProviderChosen(val provider: SwapProvider) : SwapEvents(
+    class ProviderChosen(val provider: SwapProvider) : SwapEvents(
         event = "Provider Chosen",
         params = mapOf("Provider" to provider.name),
     )
 
-    data class ButtonStatus(val token: String) : SwapEvents(
+    class ButtonStatus(val token: String) : SwapEvents(
         event = "Button - Status",
         params = mapOf("Token" to token),
     )
 
-    data class ButtonExplore(val token: String) : SwapEvents(
+    class ButtonExplore(val token: String) : SwapEvents(
         event = "Button - Explore",
         params = mapOf("Token" to token),
     )
 
     class NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
 
-    data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
+    class NoticeUnavailableToSwapPair(
+        val sendToken: String,
+        val receiveToken: String,
+        val sendBlockchain: String,
+        val receiveBlockchain: String,
+    ) : SwapEvents(
+        event = "Notice - Unavailable To Swap Pair",
+        params = mapOf(
+            SEND_TOKEN to sendToken,
+            RECEIVE_TOKEN to receiveToken,
+            "Send Blockchain" to sendBlockchain,
+            "Receive Blockchain" to receiveBlockchain,
+        ),
+    )
+
+    class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
         event = "Notice - Not Enough Fee",
         params = mapOf(
             "Token" to token,
@@ -143,7 +161,7 @@ sealed class SwapEvents(
         ),
     )
 
-    data class NoticeProviderError(
+    class NoticeProviderError(
         val sendToken: String,
         val receiveToken: String,
         val provider: SwapProvider,
@@ -162,7 +180,7 @@ sealed class SwapEvents(
     // TODO parameters
 
     // region Promo activity
-    data class ChangellyActivity(
+    class ChangellyActivity(
         val promoState: PromoState,
     ) : AnalyticsEvent(
         category = PROMO_CATEGORY,
@@ -177,7 +195,7 @@ sealed class SwapEvents(
         }
     }
 
-    data class NoticePermissionNeeded(
+    class NoticePermissionNeeded(
         val sendToken: String,
         val receiveToken: String,
         val provider: SwapProvider,

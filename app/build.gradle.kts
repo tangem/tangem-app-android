@@ -167,6 +167,7 @@ dependencies {
     implementation(projects.domain.blockaid)
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.news)
+    implementation(projects.domain.earn)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -220,6 +221,7 @@ dependencies {
     implementation(projects.data.yieldSupply)
     implementation(projects.data.hotWallet)
     implementation(projects.data.news)
+    implementation(projects.data.earn)
 
     /** Features */
     implementation(projects.features.referral.impl)

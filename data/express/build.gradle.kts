@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.data.common)
 
     /** Domain */
+    implementation(projects.domain.common)
     implementation(projects.domain.express.models)
     implementation(projects.domain.express)
     implementation(projects.domain.wallets.models)

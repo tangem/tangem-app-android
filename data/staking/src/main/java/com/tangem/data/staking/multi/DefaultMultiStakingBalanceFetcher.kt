@@ -17,7 +17,8 @@ import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrap
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWallet
@@ -41,20 +42,20 @@ import javax.inject.Inject
  *
  * Supports both StakeKit and P2PEthPool staking providers.
  *
- * @property userWalletsStore        user wallets store
- * @property stakingYieldsStore      staking yields store
- * @property stakeKitBalancesStore    staking balances store (StakeKit)
- * @property p2PEthPoolBalancesStore        P2PEthPool balances store
- * @property stakeKitApi             stake kit API
- * @property p2pEthPoolApi           P2PEthPool API
- * @property p2pEthPoolVaultsStore   P2PEthPool vaults store
- * @property dispatchers             dispatchers
+ * @property userWalletsListRepository repository of user wallets
+ * @property stakingYieldsStore        staking yields store
+ * @property stakeKitBalancesStore     staking balances store (StakeKit)
+ * @property p2PEthPoolBalancesStore   P2PEthPool balances store
+ * @property stakeKitApi               stake kit API
+ * @property p2pEthPoolApi             P2PEthPool API
+ * @property p2pEthPoolVaultsStore     P2PEthPool vaults store
+ * @property dispatchers               dispatchers
  *
 [REDACTED_AUTHOR]
  */
 @Suppress("LongParameterList")
 internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakeKitBalancesStore: StakeKitBalancesStore,
     private val p2PEthPoolBalancesStore: P2PEthPoolBalancesStore,
@@ -238,7 +239,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
     }
 
     private inline fun checkIsSupportedByWalletOrElse(userWalletId: UserWalletId, ifNotSupported: (Throwable) -> Unit) {
-        val maybeUserWallet = userWalletsStore.getSyncOrNull(key = userWalletId).toOption()
+        val maybeUserWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId).toOption()
 
         val isSupportedByWallet = maybeUserWallet.isSome(UserWallet::isMultiCurrency)
 

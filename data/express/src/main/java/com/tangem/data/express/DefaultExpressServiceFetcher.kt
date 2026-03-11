@@ -10,7 +10,8 @@ import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.exchangeservice.swap.ExpressUtils.getRefCode
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.core.utils.lceContent
@@ -42,7 +43,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val expressAssetsStore: ExpressAssetsStore,
     private val appPreferencesStore: AppPreferencesStore,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ExpressServiceFetcher {
 
@@ -52,7 +53,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
     override suspend fun fetch(userWalletId: UserWalletId, assetIds: Set<ExpressAsset.ID>): Either<Throwable, Unit> =
         either {
             val userWallet = arrow.core.raise.catch(
-                block = { userWalletsStore.getSyncStrict(userWalletId) },
+                block = { userWalletsListRepository.getSyncStrict(userWalletId) },
                 catch = ::raise,
             )
 
