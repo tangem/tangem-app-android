@@ -341,6 +341,7 @@
   <string name="tangem_pay_unfreeze_card_failed">無法解凍卡片。請稍後再試。</string>
   <string name="tangem_pay_unfreeze_card_success">您的卡片已解凍。</string>
   <string name="tangem_pay_withdrawal">提現</string>
+  <string name="tangempay_cancel_kyc">在主畫面隱藏身份驗證</string>
   <string name="tangempay_card_details_add_funds">添加资金</string>
   <string name="tangempay_card_details_add_funds_subtitle">充值选项</string>
   <string name="tangempay_card_details_card_number">卡號</string>
@@ -394,10 +395,14 @@
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_failed_description">我们无法验证您的资料。如有任何疑问，请联系客服。</string>
   <string name="tangempay_kyc_failed_title">很抱歉，我们无法验证您的身份</string>
+  <string name="tangempay_kyc_has_failed">KYC 被拒絕</string>
   <string name="tangempay_kyc_in_progress">KYC进行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">查看状态</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem Pay 的 KYC 正在進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">文件通常會在 5 分鐘內自動驗證完成。如需人工審核的特殊情況，可能需要最長 48 小時。</string>
+  <string name="tangempay_kyc_rejected">已拒絕</string>
+  <string name="tangempay_kyc_rejected_description">抱歉，我們無法驗證</string>
+  <string name="tangempay_kyc_rejected_description_span">您的身份</string>
   <string name="tangempay_onboarding_banner_description">獲取您的免費 Tangem Visa 虛擬卡</string>
   <string name="tangempay_onboarding_banner_title">使用 USDC 進行日常支付</string>
   <string name="tangempay_onboarding_get_card_button_text">获取卡片</string>
