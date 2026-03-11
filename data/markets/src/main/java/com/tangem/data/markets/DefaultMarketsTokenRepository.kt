@@ -19,8 +19,9 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.datasource.local.datastore.RuntimeStateStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.account.DerivationIndex
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val quotesFetcher: QuotesFetcher,
-    private val userWalletsStore: UserWalletsStore,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
@@ -74,6 +75,7 @@ internal class DefaultMarketsTokenRepository(
                         offset = request.offset,
                         limit = request.limit,
                         timestamp = if (isFirstBatchFetching) null else requestTimeStamp.get(),
+                        showNetworks = request.params.shouldNetworks,
                     ).getOrThrow()
                 }
 
@@ -251,7 +253,7 @@ internal class DefaultMarketsTokenRepository(
         network: TokenMarketInfo.Network,
         accountIndex: DerivationIndex?,
     ): CryptoCurrency? {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("UserWalletId [$userWalletId] not found")
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
 
         return if (network.contractAddress == null) {

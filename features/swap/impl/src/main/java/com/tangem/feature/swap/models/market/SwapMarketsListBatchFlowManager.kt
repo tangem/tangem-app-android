@@ -22,12 +22,14 @@ import kotlinx.coroutines.flow.*
 internal class SwapMarketsListBatchFlowManager(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     private val batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
+    private val order: TokenMarketListConfig.Order,
     private val currentAppCurrency: Provider<AppCurrency>,
     private val currentSearchText: Provider<String?>,
     private val modelScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
-    private val actionsFlow = MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>()
+    private val actionsFlow =
+        MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(replay = 1)
     private val updateStateJob = JobHolder()
 
     private val batchFlow = getMarketsTokenListFlowUseCase(
@@ -183,7 +185,8 @@ internal class SwapMarketsListBatchFlowManager(
                             searchText ?: currentSearchText()
                         },
                         priceChangeInterval = TokenMarketListConfig.Interval.H24,
-                        order = TokenMarketListConfig.Order.ByRating,
+                        order = order,
+                        shouldNetworks = true,
                     ),
                 ),
             )
@@ -234,6 +237,13 @@ internal class SwapMarketsListBatchFlowManager(
             .filter { d -> d.data.any { ids.contains(it.id) } }
             .map { it.key }
             .toSet()
+    }
+
+    fun getTokenMarketById(id: CryptoCurrency.RawID): TokenMarket? {
+        return batchFlow.state.value.data
+            .asSequence()
+            .flatMap { it.data }
+            .firstOrNull { it.id == id }
     }
 
     private data class ResultBatches(

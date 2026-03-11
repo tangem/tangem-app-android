@@ -24,7 +24,7 @@ internal sealed class SwapAmountComponentParams {
     abstract val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
     abstract val secondaryCryptoCurrency: CryptoCurrency?
     abstract val filterProviderTypes: List<ExpressProviderType>
-    abstract val accountFlow: StateFlow<Account.CryptoPortfolio?>
+    abstract val accountFlow: StateFlow<Account?>
     abstract val isAccountModeFlow: StateFlow<Boolean>
 
     data class AmountParams(
@@ -37,7 +37,7 @@ internal sealed class SwapAmountComponentParams {
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
-        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
@@ -54,7 +54,7 @@ internal sealed class SwapAmountComponentParams {
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
-        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val accountFlow: StateFlow<Account?>,
         override val isAccountModeFlow: StateFlow<Boolean>,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SwapAmountComponentParams()

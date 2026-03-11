@@ -31,8 +31,8 @@ class TotalBalanceLongTapTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert 'Rename' button is not displayed") {
-                onMainScreen { totalBalanceMenuRenameWallet.assertIsNotDisplayed() }
+            step("Assert 'Rename' button is displayed") {
+                onMainScreen { totalBalanceMenuRenameWallet.assertIsDisplayed() }
             }
             step("Assert 'Delete' button is not displayed") {
                 onMainScreen { totalBalanceMenuDeleteWallet.assertIsNotDisplayed() }

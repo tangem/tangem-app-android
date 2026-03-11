@@ -86,7 +86,7 @@
   <string name="address_qr_code_message_format">このアドレスには%3$s ネットワークから%1$s (%2$s) のみを送信してください。他のトークンやネットワークを使用すると、資金を失う可能性があります。</string>
   <string name="address_type_default">デフォルト</string>
   <string name="address_type_legacy">レガシー</string>
-  <string name="alert_authentication_error_message">デバイスの生体認証をリセットするか、サポートにお問い合わせください</string>
+  <string name="alert_authentication_error_message">生体認証で問題が発生しました。端末の生体認証をリセットするか、サポートにお問い合わせください。</string>
   <string name="alert_authentication_error_title">認証エラー</string>
   <string name="alert_button_how_to_scan">スキャン方法</string>
   <string name="alert_button_request_support">サポートをリクエストする</string>
@@ -392,6 +392,7 @@
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
   <string name="common_value_copied">値がコピーされました</string>
+  <string name="common_wallets">ウォレット</string>
   <string name="common_week">週</string>
   <string name="common_with">で</string>
   <string name="common_yes">はい</string>
@@ -461,9 +462,15 @@
   <string name="domain_receive_assets_onboarding_network_name">%sネットワーク</string>
   <string name="domain_receive_assets_onboarding_title">下記のみを使用して資金を送金する</string>
   <string name="earn_best_opportunities">おすすめ</string>
+  <string name="earn_clear_filter">絞り込みを解除</string>
+  <string name="earn_empty">リストは現在更新中のため、一時的に空になっています。しばらくしてからご確認ください。</string>
   <string name="earn_filter_all_networks">すべてのネットワーク</string>
   <string name="earn_filter_all_types">すべての種類</string>
+  <string name="earn_filter_by">絞り込み</string>
+  <string name="earn_filter_my_networks">マイネットワーク</string>
+  <string name="earn_filter_networks">ネットワーク</string>
   <string name="earn_mostly_used">よく使われています</string>
+  <string name="earn_no_results">該当する結果はありません</string>
   <string name="earn_title">運用</string>
   <string name="email_preface_wc_error">こんにちは、サポートチームの皆さん、コード %s のエラーが発生しました。</string>
   <string name="email_subject_wc_error">WalletConnectエラー</string>
@@ -814,6 +821,7 @@
   <string name="markets_token_details_volume">取引量</string>
   <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
   <string name="markets_tooltip_title">トークンを追加</string>
+  <string name="markets_tooltip_v2_title">トークンを追加</string>
   <string name="markets_yield_supply_banner_description">資産を常時アクセス可能な状態に保ったまま、パワーアップさせよう。%s</string>
   <string name="markets_yield_supply_banner_title">利息モードを有効にする</string>
   <string name="mobile_wallet_requires_min_os_warning_body">モバイルウォレットを作成するには、%1$sにアップデートする必要があります</string>
@@ -827,7 +835,7 @@
     <item quantity="other">%d分前</item>
   </plurals>
   <string name="news_quick_recap">クイックまとめ</string>
-  <string name="news_related_news">関連ニュース</string>
+  <string name="news_related_news">ニュース</string>
   <string name="news_related_tokens">関連トークン</string>
   <string name="news_sources">関連ニュース</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
@@ -1409,6 +1417,9 @@
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
+  <string name="swap_search_suggestion_hint">他のものをお探しですか？\n検索してみるか、別の暗号資産をチェックしてみましょう！</string>
+  <string name="swap_search_tooltip_description">どのトークンでも検索できます。まだ一覧に表示されていないものでも検索可能です。</string>
+  <string name="swap_search_tooltip_title">必要なものは検索して見つけましょう。</string>
   <string name="swap_story_fifth_subtitle">24時間体制のサポートであらゆる問題に対応します。</string>
   <string name="swap_story_fifth_title">いつもここに</string>
   <string name="swap_story_first_subtitle">複数の信頼できるプロバイダーが一箇所に集結。ウォレット内で様々な暗号資産を簡単に交換できます。</string>
@@ -1474,7 +1485,7 @@
   <string name="tangem_pay_unfreeze_card_success">カードの凍結が解除されました</string>
   <string name="tangem_pay_withdrawal">出金</string>
   <string name="tangempay_account_unable_to_use_rooted">Root化された端末では使用できません</string>
-  <string name="tangempay_cancel_kyc">KYCをキャンセル</string>
+  <string name="tangempay_cancel_kyc">メイン画面からKYCを非表示にする</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
   <string name="tangempay_card_details_card_number">カード番号</string>
@@ -1535,15 +1546,15 @@
   <string name="tangempay_kyc_confirm_cancellation_description">KYC手続きを中止しますか？いつでも再開できます。</string>
   <string name="tangempay_kyc_failed_description">プロフィールを確認できませんでした。ご不明な点があればサポートまでお問い合わせください。</string>
   <string name="tangempay_kyc_failed_title">申し訳ございませんが、本人確認を行うことができませんでした</string>
-  <string name="tangempay_kyc_has_failed">KYCの認証に失敗しました</string>
+  <string name="tangempay_kyc_has_failed">KYCが承認されませんでした</string>
   <string name="tangempay_kyc_in_progress">KYC進行中</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
   <string name="tangempay_kyc_in_progress_popup_description">書類は通常、5分以内に自動で確認されます。手動での審査が必要な稀な場合は、最大48時間かかることがあります。</string>
-  <string name="tangempay_kyc_rejected">KYCが承認されませんでした</string>
+  <string name="tangempay_kyc_rejected">拒否されました</string>
   <string name="tangempay_kyc_rejected_button_text">KYCブロックを非表示</string>
-  <string name="tangempay_kyc_rejected_description">申し訳ありません、確認できませんでした</string>
-  <string name="tangempay_kyc_rejected_description_span">あなたのプロフィール。</string>
+  <string name="tangempay_kyc_rejected_description">申し訳ございませんが、</string>
+  <string name="tangempay_kyc_rejected_description_span">本人確認ができませんでした。</string>
   <string name="tangempay_onboarding_banner_description">無料のTangem Visaバーチャルカードを入手</string>
   <string name="tangempay_onboarding_banner_title">日常の支払いにUSDCを利用</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>

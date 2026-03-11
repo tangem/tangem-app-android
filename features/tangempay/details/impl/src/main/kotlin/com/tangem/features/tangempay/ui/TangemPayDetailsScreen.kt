@@ -149,7 +149,7 @@ internal fun TangemPayDetailsScreen(
                 )
                 with(expressTransactionsComponent) {
                     expressTransactionsContent(
-                        state = expressState.transactions,
+                        state = expressState.transactionsToDisplay,
                         modifier = modifier
                             .padding(start = 16.dp, end = 16.dp, top = 12.dp)
                             .fillMaxWidth(),

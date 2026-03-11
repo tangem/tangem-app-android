@@ -157,6 +157,8 @@ internal class AddToPortfolioModel @Inject constructor(
             allRequireForAdd.first()
             // line of navigation to AddToken screen is finished; cancel the job, select a new root screen
             firstPartOfNavigation.cancel()
+
+            analyticsEventHandler.send(event = eventBuilder.popupToConfirm())
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
             var middleNavigationJob: Job? = null
@@ -325,6 +327,7 @@ internal class AddToPortfolioModel @Inject constructor(
     ): CryptoCurrency? {
         val accountIndex = when (val accountStatus = account.account) {
             is AccountStatus.CryptoPortfolio -> accountStatus.account.derivationIndex
+            is AccountStatus.Payment -> TODO("[REDACTED_JIRA]")
         }
         return getTokenMarketCryptoCurrency(
             userWalletId = userWallet.walletId,
