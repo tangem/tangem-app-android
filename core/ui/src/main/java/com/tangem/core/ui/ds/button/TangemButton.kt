@@ -39,13 +39,26 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             state = buttonUM.state,
             shape = buttonUM.shape,
         )
-        TangemButtonType.Accent -> AccentTangemButton(
+        TangemButtonType.Accent -> StatusTangemButton(
             onClick = buttonUM.onClick,
             modifier = modifier,
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
             enabled = buttonUM.isEnabled,
+            type = TangemButtonType.Positive,
+            size = buttonUM.size,
+            state = buttonUM.state,
+            shape = buttonUM.shape,
+        )
+        TangemButtonType.Positive -> StatusTangemButton(
+            onClick = buttonUM.onClick,
+            modifier = modifier,
+            text = buttonUM.text,
+            iconRes = buttonUM.iconRes,
+            iconPosition = buttonUM.iconPosition,
+            enabled = buttonUM.isEnabled,
+            type = TangemButtonType.Positive,
             size = buttonUM.size,
             state = buttonUM.state,
             shape = buttonUM.shape,
