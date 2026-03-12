@@ -16,10 +16,8 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.IS_WALLET_SWAP_PR
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_RING_PROMO_KEY
 import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import com.tangem.utils.coroutines.AppCoroutineScope
 import timber.log.Timber
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Application preferences data store 'DataStore<Preferences>'.
@@ -35,15 +33,15 @@ internal object PreferencesDataStore {
 
     private var INSTANCE: DataStore<Preferences>? = null
 
-    fun getInstance(context: Context, dispatcher: CoroutineContext): DataStore<Preferences> {
-        return INSTANCE ?: create(context, dispatcher).also { INSTANCE = it }
+    fun getInstance(context: Context, appScope: AppCoroutineScope): DataStore<Preferences> {
+        return INSTANCE ?: create(context, appScope).also { INSTANCE = it }
     }
 
-    private fun create(context: Context, dispatcher: CoroutineContext): DataStore<Preferences> {
+    private fun create(context: Context, appScope: AppCoroutineScope): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
             corruptionHandler = createCorruptionHandler(),
             migrations = createMigrations(context = context),
-            scope = CoroutineScope(context = dispatcher + SupervisorJob()),
+            scope = appScope,
             produceFile = { context.preferencesDataStoreFile(name = PREFERENCES_FILE_NAME) },
         )
     }
