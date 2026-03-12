@@ -9,13 +9,14 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
@@ -31,8 +32,7 @@ class GetFeeForGaslessUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
-    private val currenciesRepository: CurrenciesRepository,
-    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getFeeUseCase: GetFeeUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
@@ -51,11 +51,12 @@ class GetFeeForGaslessUseCase(
         return either {
             catch(
                 block = {
-                    val nativeCurrency = currenciesRepository.getNetworkCoin(
-                        userWalletId = userWallet.walletId,
-                        networkId = network.id,
-                        derivationPath = network.derivationPath,
-                    )
+                    val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
+                        ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
+
+                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
+                        raiseIllegalStateError("No native currency found: ${network.id}")
+                    }
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         getFeeUseCase.invoke(userWallet, network, transactionData).fold(
@@ -63,7 +64,7 @@ class GetFeeForGaslessUseCase(
                             ifRight = { fee ->
                                 return@either TransactionFeeExtended(
                                     transactionFee = fee,
-                                    feeTokenId = nativeCurrency.id,
+                                    feeTokenId = nativeCurrencyStatus.currency.id,
                                 )
                             },
                         )
@@ -79,9 +80,9 @@ class GetFeeForGaslessUseCase(
                     ).bind()
 
                     selectFeePaymentStrategy(
-                        userWallet = userWallet,
+                        accountStatusList = accountStatusList,
                         walletManager = walletManager,
-                        nativeCurrency = nativeCurrency,
+                        nativeCurrencyStatus = nativeCurrencyStatus,
                         network = network,
                         initialFee = initialFee,
                     )
@@ -108,25 +109,17 @@ class GetFeeForGaslessUseCase(
     }
 
     private suspend fun Raise<GetFeeError>.selectFeePaymentStrategy(
-        userWallet: UserWallet,
+        accountStatusList: AccountStatusList,
         walletManager: EthereumWalletManager,
-        nativeCurrency: CryptoCurrency,
+        nativeCurrencyStatus: CryptoCurrencyStatus,
         network: Network,
         initialFee: TransactionFee,
     ): TransactionFeeExtended {
         val feeValue = initialFee.normal.amount.value ?: raise(GetFeeError.UnknownError)
 
-        val userCurrenciesStatuses = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-            userWallet.walletId,
-        ).getOrNull() ?: raiseIllegalStateError("currencies list is null for userWalletId=${userWallet.walletId}")
-
-        val networkCurrenciesStatuses = userCurrenciesStatuses.filter {
-            it.currency.network.id == network.id
-        }
-
-        val nativeCurrencyStatus = networkCurrenciesStatuses.find {
-            it.currency.id == nativeCurrency.id
-        } ?: raiseIllegalStateError("native currency not found for network ${network.id}")
+        val networkCurrenciesStatuses = accountStatusList
+            .flattenCurrencies()
+            .filter { it.currency.network.id == network.id }
 
         val nativeBalance = nativeCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val nativeCoinSelectedResult =
