@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Domain */
+    implementation(projects.domain.account.status)
     implementation(projects.domain.models)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.transaction.models)
