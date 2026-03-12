@@ -36,6 +36,7 @@ dependencies {
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
+    implementation(deps.kermit)
 
     implementation(tangemDeps.blockchain)
 
