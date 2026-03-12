@@ -23,6 +23,7 @@ class TangemColors2 internal constructor(
     val markers: Markers,
     val tabs: Tabs,
     val contextMenu: ContextMenu,
+    val shadow: Shadow,
 ) {
 
     @Stable
@@ -637,6 +638,30 @@ class TangemColors2 internal constructor(
         }
     }
 
+    @Stable
+    class Shadow internal constructor(
+        min: Color,
+        max: Color,
+        fadeMin: Color,
+        fadeMax: Color,
+    ) {
+        var min by mutableStateOf(min)
+            private set
+        var max by mutableStateOf(max)
+            private set
+        var fadeMin by mutableStateOf(fadeMin)
+            private set
+        var fadeMax by mutableStateOf(fadeMax)
+            private set
+
+        fun update(other: Shadow) {
+            min = other.min
+            max = other.max
+            fadeMin = other.fadeMin
+            fadeMax = other.fadeMax
+        }
+    }
+
     fun update(other: TangemColors2) {
         text.update(other.text)
         graphic.update(other.graphic)
@@ -651,5 +676,6 @@ class TangemColors2 internal constructor(
         markers.update(other.markers)
         tabs.update(other.tabs)
         contextMenu.update(other.contextMenu)
+        shadow.update(other.shadow)
     }
 }
