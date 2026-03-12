@@ -21,12 +21,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.features.feed.ui.market.detailed.state.ListedOnUM
 import kotlinx.coroutines.delay
 
@@ -99,7 +102,7 @@ internal fun ListedOnBlockPlaceholder(modifier: Modifier = Modifier) {
 private fun Description(state: ListedOnUM, modifier: Modifier = Modifier) {
     Text(
         text = state.description.resolveReference(),
-        modifier = modifier,
+        modifier = modifier.semantics { testTag = MarketsTestTags.LISTED_ON_EXCHANGES_COUNT },
         color = TangemTheme.colors.text.tertiary,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1,
