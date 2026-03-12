@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.redux.StateDialog
 import com.tangem.scenarios.checkFailedTransactionDialog
@@ -46,6 +47,7 @@ class FeedbackTest : BaseTestCase() {
                 onTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Contact support' button") {
+                waitForIdle()
                 onDetailsScreen { contactSupportButton.clickWithAssertion() }
             }
             step("Assert 'Gmail' app is open") {
@@ -96,17 +98,29 @@ class FeedbackTest : BaseTestCase() {
             step("Enter address") {
                 onSendAddressScreen { addressTextField.performTextInput(recipientAddress) }
             }
-            step("Click 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
+            step("Assert text field contains text: $recipientAddress") {
+                onSendAddressScreen { addressTextField.assertTextEquals(recipientAddress) }
             }
-            step("Assert sеnding text is displayed") {
-                onSendConfirmScreen { sendingText.assertIsDisplayed() }
+            step("Click 'Next' button") {
+                onSendAddressScreen {
+                    nextButton.clickAndWaitFor(
+                        rule = composeTestRule,
+                        expectedCondition = {
+                            onSendConfirmScreen { sendingText.assertIsDisplayed() }
+                        }
+                    )
+                }
             }
             step("Click 'Send' button") {
                 waitForIdle()
                 onSendConfirmScreen {
                     sendButton.assertIsEnabled()
-                    sendButton.performClick()
+                    sendButton.clickAndWaitFor(
+                        rule = composeTestRule,
+                        expectedCondition = {
+                            onFailedTransactionDialog { dialogContainer.assertIsDisplayed() }
+                        }
+                    )
                 }
             }
             step("Check 'Failed transaction' dialog") {
