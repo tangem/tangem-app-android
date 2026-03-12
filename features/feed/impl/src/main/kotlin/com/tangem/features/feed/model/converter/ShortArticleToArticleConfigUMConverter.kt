@@ -8,7 +8,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.news.ShortArticle
 import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.utils.mapFormattedDate
-import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -16,7 +15,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 
 internal class ShortArticleToArticleConfigUMConverter(
-    private val isTrending: Provider<Boolean>?,
+    private val isTrending: Boolean?,
 ) : Converter<List<ShortArticle>, ImmutableList<ArticleConfigUM>> {
 
     override fun convert(value: List<ShortArticle>): ImmutableList<ArticleConfigUM> {
@@ -25,7 +24,7 @@ internal class ShortArticleToArticleConfigUMConverter(
                 id = shortArticle.id,
                 title = shortArticle.title,
                 score = shortArticle.score,
-                isTrending = isTrending?.invoke() ?: shortArticle.isTrending,
+                isTrending = isTrending ?: shortArticle.isTrending,
                 tags = buildArticleTags(shortArticle),
                 createdAt = mapFormattedDate(shortArticle.createdAt),
                 isViewed = shortArticle.viewed,
