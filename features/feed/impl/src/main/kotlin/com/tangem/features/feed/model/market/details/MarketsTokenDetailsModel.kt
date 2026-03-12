@@ -151,7 +151,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     )
 
     private val shortArticleToArticleConfigUMConverter by lazy {
-        ShortArticleToArticleConfigUMConverter(isTrending = Provider { false })
+        ShortArticleToArticleConfigUMConverter(isTrending = false)
     }
 
     private val descriptionConverter = DescriptionConverter(
