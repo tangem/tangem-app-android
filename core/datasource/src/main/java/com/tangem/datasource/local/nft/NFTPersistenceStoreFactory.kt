@@ -10,12 +10,10 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.nft.custom.NFTPriceId
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import java.lang.reflect.ParameterizedType
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +22,7 @@ import javax.inject.Singleton
 class NFTPersistenceStoreFactory @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     @ApplicationContext private val context: Context,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appScope: AppCoroutineScope,
 ) {
 
     fun provide(userWalletId: UserWalletId, network: Network): NFTPersistenceStore {
@@ -61,7 +59,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
                 defaultValue = defaultValue,
             ),
             produceFile = { context.dataStoreFile(fileName = fileName) },
-            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
 
     private fun Network.ID.formatted(): String = rawId.value
