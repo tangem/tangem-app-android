@@ -12,7 +12,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
@@ -40,7 +39,6 @@ internal object TokensDataModule {
         expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -51,7 +49,6 @@ internal object TokensDataModule {
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         )
     }
 
