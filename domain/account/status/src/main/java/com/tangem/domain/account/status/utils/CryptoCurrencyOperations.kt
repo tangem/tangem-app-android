@@ -1,12 +1,17 @@
 package com.tangem.domain.account.status.utils
 
+import arrow.core.None
 import arrow.core.Option
+import arrow.core.raise.catch
+import arrow.core.raise.option
 import arrow.core.toOption
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.status.utils.AccountCryptoCurrencyOperations.getAccountCryptoCurrency
+import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusFinder.getExpectedAccounts
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import timber.log.Timber
 
 /**
  * Extension functions for retrieving [CryptoCurrency] from an [AccountList] or [Account.CryptoPortfolio].
@@ -46,6 +51,33 @@ object CryptoCurrencyOperations {
      */
     fun AccountList?.getCryptoCurrency(cryptoCurrency: CryptoCurrency): Option<CryptoCurrency> {
         return getCryptoCurrency(currencyId = cryptoCurrency.id, network = cryptoCurrency.network)
+    }
+
+    fun AccountList?.getCryptoCurrency(currencyIdValue: String): Option<CryptoCurrency> = option {
+        val currencyId = catch(
+            block = { CryptoCurrency.ID.fromValue(currencyIdValue) },
+            catch = { throwable ->
+                Timber.e("Error on converting currencyId: $throwable")
+                raise(None)
+            },
+        )
+
+        return getCryptoCurrency(currencyId = currencyId, network = null)
+    }
+
+    fun AccountList.getCoin(currency: CryptoCurrency): Option<CryptoCurrency.Coin> {
+        return getCoin(network = currency.network)
+    }
+
+    fun AccountList.getCoin(network: Network): Option<CryptoCurrency.Coin> {
+        return getExpectedAccounts(network = network)
+            .flatMap { account ->
+                (account as? Account.CryptoPortfolio)
+                    ?.cryptoCurrencies.orEmpty()
+                    .filterIsInstance<CryptoCurrency.Coin>()
+            }
+            .firstOrNull { currency -> currency.network.id == network.id }
+            .toOption()
     }
 
     /**
