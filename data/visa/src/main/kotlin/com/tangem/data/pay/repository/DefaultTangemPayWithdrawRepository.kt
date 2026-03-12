@@ -9,6 +9,7 @@ import com.tangem.datasource.api.pay.models.request.WithdrawDataRequest
 import com.tangem.datasource.api.pay.models.request.WithdrawRequest
 import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
@@ -46,9 +47,9 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val swapRepository: SwapRepository,
     private val orderRepository: CustomerOrderRepository,
+    private val withdrawPollingScope: AppCoroutineScope,
 ) : TangemPayWithdrawRepository {
 
-    private val withdrawPollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val withdrawPollingJobs = mutableMapOf<String, Job>()
     private val withdrawPollingMutex = Mutex()
 
