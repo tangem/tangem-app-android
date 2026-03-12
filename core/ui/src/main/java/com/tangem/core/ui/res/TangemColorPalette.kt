@@ -6,7 +6,9 @@ import androidx.compose.ui.graphics.Color
 object TangemColorPalette {
     // region Base
     val Black = Color(0xFF000000)
+    val BlackZero = Color(0x00000000)
     val White = Color(0xFFFFFFFF)
+    val WhiteZero = Color(0x00FFFFFF)
     // endregion Base
 
     // region Dark
@@ -17,6 +19,7 @@ object TangemColorPalette {
     val Dark5 = Color(0xFF303030)
     val Dark6 = Color(0xFF1E1E1E)
     val Dark7 = Color(0xFF171717)
+    val Dark8 = Color(0xFF0F0F0F)
     // endregion Dark
 
     // region Dark Alpha
