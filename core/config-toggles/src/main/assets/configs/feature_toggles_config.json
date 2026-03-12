@@ -34,11 +34,11 @@
     },
     {
         "name": "EARN_BLOCK_ENABLED",
-        "version": "undefined"
+        "version": "5.35"
     },
     {
         "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
-        "version": "undefined"
+        "version": "5.35"
     },
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
