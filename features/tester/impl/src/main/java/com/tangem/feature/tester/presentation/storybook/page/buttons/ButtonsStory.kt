@@ -82,11 +82,24 @@ internal fun ButtonsStory(modifier: Modifier = Modifier) {
         }
         item("accent") {
             ButtonSection(title = "Accent") { state, text, shape ->
-                AccentTangemButton(
+                StatusTangemButton(
                     onClick = {},
                     text = if (text) stringReference("Continue") else null,
                     iconRes = R.drawable.ic_tangem_24,
                     size = TangemButtonSize.X10,
+                    state = state,
+                    shape = shape,
+                )
+            }
+        }
+        item("positive") {
+            ButtonSection(title = "Positive") { state, text, shape ->
+                StatusTangemButton(
+                    onClick = {},
+                    text = if (text) stringReference("Continue") else null,
+                    iconRes = R.drawable.ic_tangem_24,
+                    size = TangemButtonSize.X10,
+                    type = TangemButtonType.Positive,
                     state = state,
                     shape = shape,
                 )
