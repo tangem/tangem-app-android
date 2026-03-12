@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,14 +28,15 @@ import com.tangem.core.ui.res.TangemThemePreviewRedesign
  * @param modifier     Modifier to be applied to the button.
  */
 @Composable
-fun AccentTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
-    AccentTangemButton(
+fun StatusTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
+    StatusTangemButton(
         onClick = buttonUM.onClick,
         modifier = modifier,
         text = buttonUM.text,
         iconRes = buttonUM.iconRes,
         iconPosition = buttonUM.iconPosition,
         enabled = buttonUM.isEnabled,
+        type = buttonUM.type,
         size = buttonUM.size,
         state = buttonUM.state,
         shape = buttonUM.shape,
@@ -57,35 +59,39 @@ fun AccentTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) 
 [REDACTED_AUTHOR]
  */
 @Composable
-fun AccentTangemButton(
+fun StatusTangemButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     enabled: Boolean = true,
+    type: TangemButtonType = TangemButtonType.Accent,
     size: TangemButtonSize = TangemButtonSize.X15,
     state: TangemButtonState = TangemButtonState.Default,
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
+    val statusColor = type.getStatusColor()
+    val contentColor = when (state) {
+        TangemButtonState.Disabled -> TangemTheme.colors2.text.status.disabled
+        else -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+    }
+    val backgroundModifier = when (state) {
+        TangemButtonState.Disabled -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
+        TangemButtonState.Default -> Modifier.background(statusColor)
+        TangemButtonState.Loading,
+        TangemButtonState.Pressed,
+        -> Modifier
+            .background(statusColor)
+            .background(TangemTheme.colors2.overlay.overlaySecondary)
+    }
     TangemButtonInternal(
         onClick = onClick,
         modifier = modifier
             .clip(shape.toShape(size))
-            .then(
-                when (state) {
-                    TangemButtonState.Disabled,
-                    TangemButtonState.Default,
-                    -> Modifier.background(TangemTheme.colors2.button.backgroundPositive)
-                    TangemButtonState.Loading,
-                    TangemButtonState.Pressed,
-                    -> Modifier
-                        .background(TangemTheme.colors2.button.backgroundPositive)
-                        .background(TangemTheme.colors2.overlay.overlaySecondary)
-                },
-            ),
+            .then(backgroundModifier),
         text = text,
-        contentColor = TangemTheme.colors2.text.neutral.primaryInvertedConstant,
+        contentColor = contentColor,
         iconRes = iconRes,
         enabled = enabled,
         size = size,
@@ -94,11 +100,19 @@ fun AccentTangemButton(
     )
 }
 
+@ReadOnlyComposable
+@Composable
+private fun TangemButtonType.getStatusColor() = when (this) {
+    TangemButtonType.Accent -> TangemTheme.colors2.button.backgroundAccent
+    TangemButtonType.Positive -> TangemTheme.colors2.button.backgroundPositive
+    else -> TangemTheme.colors2.button.backgroundPrimary
+}
+
 // region Preview
 @Composable
 @Preview(showBackground = true, widthDp = 480)
 @Preview(showBackground = true, widthDp = 480, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun AccentTangemButton_Preview(
+private fun StatusTangemButton_Preview(
     @PreviewParameter(AccentTangemButtonPreviewProvider::class) params: TangemButtonState,
 ) {
     TangemThemePreviewRedesign {
@@ -118,13 +132,14 @@ private fun AccentTangemButton_Preview(
                         } else {
                             TangemButtonIconPosition.End
                         }
-                        AccentTangemButton(
+                        StatusTangemButton(
                             onClick = {},
                             text = text,
                             size = TangemButtonSize.X15,
                             shape = shape,
                             iconPosition = iconPosition,
                             iconRes = R.drawable.ic_tangem_24,
+                            type = TangemButtonType.Accent,
                             state = params,
                         )
                     }
