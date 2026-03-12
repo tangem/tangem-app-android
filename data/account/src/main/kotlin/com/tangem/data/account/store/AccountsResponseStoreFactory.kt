@@ -10,11 +10,9 @@ import com.squareup.moshi.adapter
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,7 +33,7 @@ typealias AccountsResponseStore = DataStore<GetWalletAccountsResponse?>
 internal class AccountsResponseStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     @NetworkMoshi private val moshi: Moshi,
-    private val dispatchers: CoroutineDispatcherProvider,
+    private val appScope: AppCoroutineScope,
 ) {
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -53,7 +51,7 @@ internal class AccountsResponseStoreFactory @Inject constructor(
             DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(defaultValue = null, adapter = adapter),
                 produceFile = { context.dataStoreFile(fileName = "wallet_accounts_${userWalletId.stringValue}") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             )
         }
     }
