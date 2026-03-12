@@ -25,8 +25,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.models.wallet.requireColdWallet
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -46,7 +44,6 @@ internal class DefaultCurrenciesRepository(
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
@@ -119,23 +116,6 @@ internal class DefaultCurrenciesRepository(
             fetchExpressAssetsByNetworkIds(userWallet, listOf(currency))
             currency
         }
-    }
-
-    override suspend fun getNetworkCoin(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-    ): CryptoCurrency.Coin {
-        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
-        )
-            .orEmpty()
-            .find { currency ->
-                currency is CryptoCurrency.Coin &&
-                    currency.network.id.rawId == networkId.rawId &&
-                    currency.network.derivationPath == derivationPath
-            } as? CryptoCurrency.Coin
-            ?: error("Unable to find coin for network ID: $networkId")
     }
 
     override suspend fun isSendBlockedByPendingTransactions(

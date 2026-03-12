@@ -4,6 +4,8 @@ import arrow.core.Either
 import com.google.common.truth.Truth.assertThat
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -12,7 +14,6 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.utils.convertToSdkAmount
 import io.mockk.coEvery
@@ -30,7 +31,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
     private val feeRepository: FeeRepository = mockk()
     private val quotesRepository: QuotesRepository = mockk()
-    private val currenciesRepository: CurrenciesRepository = mockk()
+    private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     private lateinit var useCase: YieldSupplyGetCurrentFeeUseCase
 
@@ -41,7 +42,7 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
         useCase = YieldSupplyGetCurrentFeeUseCase(
             feeRepository = feeRepository,
             quotesRepository = quotesRepository,
-            currenciesRepository = currenciesRepository,
+            singleAccountListSupplier = singleAccountListSupplier,
         )
     }
 
@@ -65,12 +66,11 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
         coEvery { feeRepository.getEthereumFeeWithoutGas(userWalletId, token) } returns feeWithoutGas
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWalletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
+        } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
         coEvery {
             quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!))
         } returns setOf(
@@ -117,12 +117,11 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
 
         coEvery { feeRepository.getEthereumFeeWithoutGas(userWalletId, token) } returns feeWithoutGas
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWalletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
+        } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
         coEvery {
             quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!))
         } returns setOf(
@@ -186,12 +185,11 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoStatus),
         )
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWalletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
+        } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
         coEvery { quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!)) } returns null
 
         val result = useCase(userWalletId, cryptoStatus)
@@ -216,12 +214,11 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoStatus),
         )
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWalletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
+        } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
         coEvery { quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!)) } returns emptySet()
 
         val result = useCase(userWalletId, cryptoStatus)
@@ -246,12 +243,11 @@ class YieldSupplyGetCurrentFeeUseCaseTest {
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoStatus),
         )
         coEvery {
-            currenciesRepository.getNetworkCoin(
-                userWalletId = userWalletId,
-                networkId = token.network.id,
-                derivationPath = token.network.derivationPath,
-            )
-        } returns nativeCoin
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWalletId)
+        } returns AccountList.empty(
+            userWalletId = userWalletId,
+            cryptoCurrencies = listOf(nativeCoin, token),
+        )
         coEvery {
             quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!))
         } returns setOf(

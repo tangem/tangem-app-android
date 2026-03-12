@@ -255,7 +255,7 @@ internal object AccountCryptoCurrencyStatusFinder {
 
     // region AccountList helpers
 
-    private fun AccountList.getExpectedAccounts(network: Network?): List<Account> {
+    internal fun AccountList.getExpectedAccounts(network: Network?): List<Account> {
         return getExpectedAccounts(rawNetworkId = network?.rawId, derivationPath = network?.derivationPath)
     }
 
