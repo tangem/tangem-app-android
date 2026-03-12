@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 import androidx.compose.animation.*
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -214,6 +216,7 @@ private fun LazyListScope.portfolioItem(
     )
 }
 
+@Suppress("MagicNumber")
 private fun LazyListScope.accountItem(
     listItem: TokensListItemUM2.Portfolio,
     modifier: Modifier,
@@ -225,6 +228,18 @@ private fun LazyListScope.accountItem(
         key = listItem.tokenRowUM.id,
         contentType = listItem.tokenRowUM::class.java,
     ) {
+        // Snap immediately on expand; on collapse, hold the current value until all
+        // child items finish their shrink animation, then snap to fully-rounded shape.
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = if (listItem.isExpanded) lastIndex else 0,
+            animationSpec = if (listItem.isExpanded) {
+                snap()
+            } else {
+                snap(delayMillis = minOf(50 * maxOf(listItem.tokenList.lastIndex, 0), 250) + 150)
+            },
+            label = "lastIndex",
+        )
+
         val portfolioModifier = modifier
             .padding(top = if (index != 0) TangemTheme.dimens2.x2 else TangemTheme.dimens2.x3)
             .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
@@ -233,7 +248,7 @@ private fun LazyListScope.accountItem(
                 currentIndex = 0,
                 radius = 18.dp,
                 addDefaultPadding = false,
-                lastIndex = if (listItem.isExpanded) lastIndex else 0,
+                lastIndex = effectiveLastIndex,
                 backgroundColor = TangemTheme.colors2.surface.level3,
             )
         if (listItem.isCollapsable) {
@@ -288,10 +303,9 @@ internal fun PortfolioRowItem(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // TangemSharedTransitionLayout {
     ProvideSharedTransitionScope(modifier) {
-        val iconSharedContentState = rememberSharedContentState(key = "icon")
-        val titleSharedContentState = rememberSharedContentState(key = "title")
+        val iconSharedContentState = rememberSharedContentState(key = "icon_${item.tokenRowUM.id}")
+        val titleSharedContentState = rememberSharedContentState(key = "title_${item.tokenRowUM.id}")
         val boundsTransform = BoundsTransform { _, _ -> tween(250) }
 
         AnimatedContent(
@@ -382,7 +396,6 @@ internal fun PortfolioRowItem(
                 )
             }
         }
-        // }
     }
 }
 
