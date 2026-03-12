@@ -1,5 +1,6 @@
 package com.tangem.core.ui.ds.row.token
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
@@ -148,10 +149,17 @@ sealed class TangemTokenRowUM : TangemRowUM {
     sealed class PromoBannerUM {
         data class Content(
             val title: TextReference,
+            @param:DrawableRes val iconRes: Int,
+            val type: Type,
             val onPromoBannerClick: () -> Unit,
             val onCloseClick: () -> Unit,
             val onPromoShown: () -> Unit = {},
-        ) : PromoBannerUM()
+        ) : PromoBannerUM() {
+            enum class Type {
+                Yield,
+                Staking,
+            }
+        }
 
         data object Empty : PromoBannerUM()
     }
