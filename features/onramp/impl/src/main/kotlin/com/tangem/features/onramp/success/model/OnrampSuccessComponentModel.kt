@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.success.model
 
 import arrow.core.getOrElse
+import arrow.core.toOption
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,8 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
@@ -20,7 +23,6 @@ import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
@@ -48,7 +50,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getOnrampTransactionUseCase: GetOnrampTransactionUseCase,
     private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
-    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -97,14 +99,15 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             showErrorAlert(OnrampError.DomainError("UserWallet not found"))
                             return@launch
                         }
-                        cryptoCurrency = getCryptoCurrencyUseCase(
-                            userWallet = userWallet,
-                            cryptoCurrencyId = transaction.toCurrencyId,
-                        ).getOrElse {
-                            Timber.e("Crypto currency not found")
-                            showErrorAlert(OnrampError.DomainError(null))
-                            return@launch
-                        }
+
+                        cryptoCurrency = singleAccountListSupplier.getSyncOrNull(transaction.userWalletId)
+                            ?.getCryptoCurrency(currencyIdValue = transaction.toCurrencyId)?.getOrNull()
+                            .toOption()
+                            .getOrElse {
+                                Timber.e("Crypto currency not found")
+                                showErrorAlert(OnrampError.DomainError(null))
+                                return@launch
+                            }
 
                         startStatusUpdateTask(transaction)
                     },
