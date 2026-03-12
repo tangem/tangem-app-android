@@ -33,7 +33,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
-import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
