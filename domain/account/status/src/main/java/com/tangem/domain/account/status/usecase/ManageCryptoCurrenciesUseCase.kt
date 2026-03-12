@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
@@ -51,7 +52,7 @@ class ManageCryptoCurrenciesUseCase(
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
     private val expressServiceFetcher: ExpressServiceFetcher,
-    private val parallelUpdatingScope: CoroutineScope,
+    private val parallelUpdatingScope: AppCoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 

@@ -2,6 +2,7 @@ package com.tangem.data.networks.store
 
 import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
@@ -10,7 +11,6 @@ import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
@@ -33,7 +33,7 @@ internal class InitializationTest {
             context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            scope = TestAppCoroutineScope(),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(null)
@@ -48,7 +48,7 @@ internal class InitializationTest {
             context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            scope = TestAppCoroutineScope(),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptyMap<String, Set<SimpleNetworkStatus>>())
@@ -71,7 +71,7 @@ internal class InitializationTest {
             context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            scope = TestAppCoroutineScope(),
         )
 
         val expectedStatus = status.toSimple().copy(value = status.value.copySealed(source = StatusSource.CACHE))
