@@ -3,6 +3,7 @@ package com.tangem.domain.account.status.di
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
@@ -154,6 +155,18 @@ internal object AccountStatusUseCaseModule {
     ): ToggleTokenListGroupingUseCase {
         return ToggleTokenListGroupingUseCase(
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
+        currenciesRepository: CurrenciesRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
+        return GetFeePaidCryptoCurrencyStatusSyncUseCase(
+            currenciesRepository = currenciesRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         )
     }
 
