@@ -304,7 +304,7 @@ private inline fun BaseScaffoldWithMarkets(
     val peekHeight = bottomSheetHeaderHeightProvider() + TangemTheme.dimens2.x3 + bottomBarHeight
 
     val coroutineScope = rememberCoroutineScope()
-    val background = TangemTheme.colors2.surface.level3
+    val background = TangemTheme.colors2.surface.level2
 
     val bottomSheetState = rememberTangemStandardBottomSheetState()
     val scaffoldState = rememberTangemBottomSheetScaffoldState(bottomSheetState = bottomSheetState)

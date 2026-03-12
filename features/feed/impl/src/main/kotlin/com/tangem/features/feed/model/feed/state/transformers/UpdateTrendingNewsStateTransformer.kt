@@ -9,7 +9,6 @@ import com.tangem.features.feed.model.feed.analytics.FeedAnalyticsEvent
 import com.tangem.features.feed.ui.feed.state.FeedListUM
 import com.tangem.features.feed.ui.feed.state.NewsUM
 import com.tangem.features.feed.ui.feed.state.NewsUMState
-import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import org.joda.time.DateTime
@@ -92,6 +91,6 @@ internal class UpdateTrendingNewsStateTransformer(
     }
 
     private fun getShortArticleConfigConverter(isTrending: Boolean): ShortArticleToArticleConfigUMConverter {
-        return ShortArticleToArticleConfigUMConverter(isTrending = Provider { isTrending })
+        return ShortArticleToArticleConfigUMConverter(isTrending = isTrending)
     }
 }
