@@ -5,7 +5,6 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
@@ -70,7 +69,7 @@ internal class AccountTokenItemConverter(
                                         tokenItemState = AccountCryptoPortfolioItemStateConverter(
                                             appCurrency = appCurrency,
                                             account = accountStatus.account,
-                                        ).convert(TotalFiatBalance.Loading),
+                                        ).convert(accountStatus.tokenList.totalFiatBalance),
                                     ),
                                 )
                                 if (isGrouping) {
