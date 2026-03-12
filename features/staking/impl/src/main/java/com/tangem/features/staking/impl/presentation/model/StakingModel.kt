@@ -61,6 +61,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.*
