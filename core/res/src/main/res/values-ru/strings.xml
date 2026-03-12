@@ -843,6 +843,7 @@
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
   <string name="markets_token_details_trading_volume_full">Объем торгов (24ч)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s в сумме</string>
   <string name="markets_token_details_volume">Объем</string>
   <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
