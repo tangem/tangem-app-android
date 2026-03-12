@@ -55,5 +55,9 @@
     {
         "name": "MULTI_ADDRESS_UTXO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "CUSTOMER_IO_ENABLED",
+        "version": "undefined"
     }
 ]
