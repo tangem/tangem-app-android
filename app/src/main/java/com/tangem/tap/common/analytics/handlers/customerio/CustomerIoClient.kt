@@ -4,6 +4,7 @@ import android.app.Application
 import io.customer.messagingpush.ModuleMessagingPushFCM
 import io.customer.sdk.CustomerIO
 import io.customer.sdk.CustomerIOBuilder
+import io.customer.sdk.data.model.Region
 import timber.log.Timber
 
 /**
@@ -25,6 +26,7 @@ internal class CustomerIoClient(
             applicationContext = application,
             cdpApiKey = cdpApiKey,
         )
+            .region(Region.EU)
             .trackApplicationLifecycleEvents(false)
             .autoTrackActivityScreens(false)
             .addCustomerIOModule(ModuleMessagingPushFCM())
