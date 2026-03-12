@@ -1,10 +1,10 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
@@ -144,12 +144,12 @@ internal object YieldSupplyDomainModule {
     fun provideYieldSupplyMinAmountUseCase(
         feeRepository: FeeRepository,
         quotesRepository: QuotesRepository,
-        currenciesRepository: CurrenciesRepository,
+        singleAccountListSupplier: SingleAccountListSupplier,
     ): YieldSupplyMinAmountUseCase {
         return YieldSupplyMinAmountUseCase(
             feeRepository = feeRepository,
             quotesRepository = quotesRepository,
-            currenciesRepository = currenciesRepository,
+            singleAccountListSupplier = singleAccountListSupplier,
         )
     }
 
@@ -158,12 +158,12 @@ internal object YieldSupplyDomainModule {
     fun provideYieldSupplyGetCurrentFeeUseCase(
         feeRepository: FeeRepository,
         quotesRepository: QuotesRepository,
-        currenciesRepository: CurrenciesRepository,
+        singleAccountListSupplier: SingleAccountListSupplier,
     ): YieldSupplyGetCurrentFeeUseCase {
         return YieldSupplyGetCurrentFeeUseCase(
             feeRepository = feeRepository,
             quotesRepository = quotesRepository,
-            currenciesRepository = currenciesRepository,
+            singleAccountListSupplier = singleAccountListSupplier,
         )
     }
 
@@ -172,12 +172,12 @@ internal object YieldSupplyDomainModule {
     fun provideYieldSupplyGetMaxFeeUseCase(
         yieldSupplyRepository: YieldSupplyRepository,
         quotesRepository: QuotesRepository,
-        currenciesRepository: CurrenciesRepository,
+        singleAccountListSupplier: SingleAccountListSupplier,
     ): YieldSupplyGetMaxFeeUseCase {
         return YieldSupplyGetMaxFeeUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
             quotesRepository = quotesRepository,
-            currenciesRepository = currenciesRepository,
+            singleAccountListSupplier = singleAccountListSupplier,
         )
     }
 
