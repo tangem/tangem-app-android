@@ -15,8 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -28,10 +26,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.ds.button.TangemButton
@@ -75,7 +73,6 @@ internal fun OrganizeTokensContent(
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        addBottomInsets = false,
         containerColor = TangemTheme.colors2.surface.level2,
         title = {
             TangemTopBar(
@@ -99,11 +96,14 @@ internal fun OrganizeTokensContent(
                 },
             )
         },
+        footer = {
+            BottomButtons(organizeTokensUM = organizeTokensUM)
+        },
         content = {
             TokenList(
                 organizeTokensUM = organizeTokensUM,
                 dragAndDropIntents = dragAndDropIntents,
-                modifier = Modifier.hazeSourceTangem(hazeState),
+                modifier = Modifier.hazeSourceTangem(hazeState, zIndex = -1f),
             )
         },
     )
@@ -121,9 +121,7 @@ private fun TokenList(
     val hapticFeedback = LocalHapticFeedback.current
     val tokenList = organizeTokensUM.tokenList
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors2.surface.level2),
+        modifier = modifier.background(TangemTheme.colors2.surface.level2),
     ) {
         val onDragEnd: (Int, Int) -> Unit = remember {
             { _, _ ->
@@ -175,20 +173,11 @@ private fun TokenList(
                     isBalanceHidden = organizeTokensUM.isBalanceHidden,
                 )
             }
+
+            item {
+                SpacerH(TangemTheme.dimens2.x20)
+            }
         }
-
-        BottomFade(
-            gradientBrush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    TangemTheme.colors2.surface.level2.copy(0.9f),
-                    TangemTheme.colors2.surface.level2,
-                ),
-            ),
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-
-        BottomButtons(organizeTokensUM = organizeTokensUM)
     }
 }
 
