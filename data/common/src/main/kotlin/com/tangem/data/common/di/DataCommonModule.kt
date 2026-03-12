@@ -13,6 +13,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -22,8 +23,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -69,6 +68,7 @@ internal object DataCommonModule {
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
+        appScope: AppCoroutineScope,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -76,7 +76,7 @@ internal object DataCommonModule {
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
             pushTokensRetryerPool = RetryerPool(
-                coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+                coroutineScope = appScope,
             ),
             walletServerBinder = walletServerBinder,
         )
