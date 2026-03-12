@@ -51,7 +51,7 @@ internal object GeneratedEnvironmentConfigConverter {
             bffStaticTokenDev = GeneratedEnvironmentConfig.bffStaticTokenDev,
             gaslessTxApiKeyDev = GeneratedEnvironmentConfig.gaslessTxApiKeyDev,
             gaslessTxApiKey = GeneratedEnvironmentConfig.gaslessTxApiKey,
-            customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.appApiKey,
+            customerIoCdpApiKey = GeneratedEnvironmentConfig.CustomerIO.andriodApiKey,
             surveySparrowToken = GeneratedEnvironmentConfig.SurveySparrow.apiKey,
         )
     }
