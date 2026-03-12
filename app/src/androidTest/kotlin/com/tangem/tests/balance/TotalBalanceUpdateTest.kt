@@ -126,7 +126,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
             }
             step("Press 'Home' to collapse the app") {
-                device.uiDevice.pressHome()
+                collapseAppByHomeButton()
             }
             step("Open the app from recent apps") {
                 openTheAppFromRecents()
