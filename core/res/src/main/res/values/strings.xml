@@ -737,6 +737,8 @@
   <string name="markets_earn_common_title">Earn with Tangem</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
+  <string name="markets_hint_part_one">Swipe up to explore the market</string>
+  <string name="markets_hint_part_two">Find new hidden gems</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
@@ -826,9 +828,11 @@
   <string name="markets_token_details_total_supply">Total supply</string>
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
   <string name="markets_token_details_total_supply_full">Total supply</string>
+  <string name="markets_token_details_trading_interval">24h</string>
   <string name="markets_token_details_trading_volume">Trading volume (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">The total amount of a cryptocurrency that has been traded within the last 24 hours, indicating the level of activity and liquidity in the market</string>
   <string name="markets_token_details_trading_volume_full">Trading volume (24h)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s in total</string>
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
