@@ -267,28 +267,31 @@ class SendConfirmScreenTest : BaseTestCase() {
             step("Click on 'Next' button") {
                 onSendScreen { nextButton.clickWithAssertion() }
             }
-            step("Type address in input text field") {
-                onSendAddressScreen { addressTextField.performTextReplacement(POLKADOT_RECIPIENT_ADDRESS) }
-            }
             step("Turn off internet") {
                 disableWiFi()
                 disableMobileData()
             }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(POLKADOT_RECIPIENT_ADDRESS) }
+            }
             step("Click on 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
-            step("Turn on internet") {
-                enableWiFi()
-                enableMobileData()
-            }
             step("Assert 'Network fee info unreachable' warning title is displayed") {
-                onSendConfirmScreen { warningTitle(warningTitle).assertIsDisplayed() }
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    waitForIdle()
+                    onSendConfirmScreen { warningTitle(warningTitle).assertIsDisplayed() }
+                }
             }
             step("Assert 'Check your internet connection' warning message is displayed") {
                 onSendConfirmScreen { warningMessage(warningMessageResId).assertIsDisplayed() }
             }
             step("Assert warning icon is displayed") {
                 onSendConfirmScreen { warningIcon(warningTitle).assertIsDisplayed() }
+            }
+            step("Turn on internet") {
+                enableWiFi()
+                enableMobileData()
             }
             step("Click on 'Refresh' button") {
                 waitForIdle()
