@@ -66,7 +66,7 @@ fun TangemMessage(
                                 Alignment.Top
                             },
                         )
-                        .size(TangemTheme.dimens2.x7),
+                        .size(messageUM.iconSize),
                 )
             }
         },
