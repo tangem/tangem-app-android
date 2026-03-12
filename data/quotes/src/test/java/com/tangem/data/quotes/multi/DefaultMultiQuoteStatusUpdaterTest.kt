@@ -2,12 +2,12 @@ package com.tangem.data.quotes.multi
 
 import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.test.core.getEmittedValues
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.runTest
@@ -26,7 +26,7 @@ internal class DefaultMultiQuoteStatusUpdaterTest {
         appCurrencyResponseStore = appCurrencyResponseStore,
         quotesStatusesStore = quotesStore,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        coroutineScope = TestAppCoroutineScope(),
     )
 
     @Test
