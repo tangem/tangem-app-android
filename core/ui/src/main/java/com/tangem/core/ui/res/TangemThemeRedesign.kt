@@ -192,6 +192,12 @@ private fun lightThemeColors2(): TangemColors2 {
     val contextMenu = TangemColors2.ContextMenu(
         background = TangemColorPalette.Dark_05,
     )
+    val shadow = TangemColors2.Shadow(
+        min = TangemColorPalette.BlackZero,
+        max = TangemColorPalette.Dark_20,
+        fadeMin = TangemColorPalette.WhiteZero,
+        fadeMax = TangemColorPalette.White,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -206,6 +212,7 @@ private fun lightThemeColors2(): TangemColors2 {
         markers = markers,
         tabs = tabs,
         contextMenu = contextMenu,
+        shadow = shadow,
     )
 }
 
@@ -361,6 +368,12 @@ private fun darkThemeColors2(): TangemColors2 {
     val contextMenu = TangemColors2.ContextMenu(
         background = TangemColorPalette.Light_10,
     )
+    val shadow = TangemColors2.Shadow(
+        min = TangemColorPalette.BlackZero,
+        max = TangemColorPalette.Dark8,
+        fadeMin = TangemColorPalette.BlackZero,
+        fadeMax = TangemColorPalette.Black,
+    )
     return TangemColors2(
         text = text,
         graphic = graphic,
@@ -375,5 +388,6 @@ private fun darkThemeColors2(): TangemColors2 {
         markers = markers,
         tabs = tabs,
         contextMenu = contextMenu,
+        shadow = shadow,
     )
 }
