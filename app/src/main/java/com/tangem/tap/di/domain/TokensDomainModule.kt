@@ -3,18 +3,15 @@ package com.tangem.tap.di.domain
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
@@ -71,15 +68,6 @@ internal object TokensDomainModule {
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             stakingIdFactory = stakingIdFactory,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetCryptoCurrencyUseCase(
-        currenciesRepository: CurrenciesRepository,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    ): GetCryptoCurrencyUseCase {
-        return GetCryptoCurrencyUseCase(currenciesRepository, multiWalletCryptoCurrenciesSupplier)
     }
 
     @Provides
@@ -199,23 +187,17 @@ internal object TokensDomainModule {
     @Singleton
     fun provideBaseCurrencyStatusOperations(
         currenciesRepository: CurrenciesRepository,
-        quotesRepository: QuotesRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
-        multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
         singleStakingBalanceSupplier: SingleStakingBalanceSupplier,
-        multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         stakingIdFactory: StakingIdFactory,
     ): BaseCurrencyStatusOperations {
         return BaseCurrencyStatusOperations(
             currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             singleStakingBalanceSupplier = singleStakingBalanceSupplier,
-            multiStakingBalanceSupplier = multiStakingBalanceSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             stakingIdFactory = stakingIdFactory,
         )
