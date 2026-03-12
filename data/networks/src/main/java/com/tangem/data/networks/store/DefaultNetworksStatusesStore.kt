@@ -7,11 +7,11 @@ import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -33,10 +33,8 @@ internal class DefaultNetworksStatusesStore(
     context: Context,
     private val runtimeStore: RuntimeSharedStore<WalletIdWithSimpleStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithStatusDM>,
-    dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) : NetworksStatusesStore {
-
-    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
     init {
         scope.launch {
