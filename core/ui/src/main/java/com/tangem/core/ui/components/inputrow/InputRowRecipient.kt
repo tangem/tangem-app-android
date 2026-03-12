@@ -124,7 +124,8 @@ fun InputRowRecipient(
                         onClick = onPasteClick,
                         modifier = Modifier
                             .align(CenterVertically)
-                            .padding(start = TangemTheme.dimens.spacing8),
+                            .padding(start = TangemTheme.dimens.spacing8)
+                            .testTag(SendAddressScreenTestTags.CROSS_ICON),
                     )
                 }
                 Row(

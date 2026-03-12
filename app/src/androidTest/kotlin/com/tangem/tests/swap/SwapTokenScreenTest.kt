@@ -557,9 +557,6 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
-    @ApiEnv(
-        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
-    )
     @AllureId("8536")
     @DisplayName("Swap: check switch fee type (unable to cover 'Market' and 'Fast' fee)")
     @Test
