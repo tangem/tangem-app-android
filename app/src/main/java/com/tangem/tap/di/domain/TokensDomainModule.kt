@@ -5,18 +5,14 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
-import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
-import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
-import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
@@ -85,18 +81,6 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             promoRepository = promoRepository,
             dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
-        currenciesRepository: CurrenciesRepository,
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-    ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
-        return GetFeePaidCryptoCurrencyStatusSyncUseCase(
-            currenciesRepository = currenciesRepository,
-            currencyStatusOperations = currencyStatusOperations,
         )
     }
 
@@ -181,26 +165,6 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): GetCurrencyCheckUseCase {
         return GetCurrencyCheckUseCase(currencyChecksRepository, dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideBaseCurrencyStatusOperations(
-        currenciesRepository: CurrenciesRepository,
-        singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
-        singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
-        singleStakingBalanceSupplier: SingleStakingBalanceSupplier,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory: StakingIdFactory,
-    ): BaseCurrencyStatusOperations {
-        return BaseCurrencyStatusOperations(
-            currenciesRepository = currenciesRepository,
-            singleNetworkStatusSupplier = singleNetworkStatusSupplier,
-            singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-            singleStakingBalanceSupplier = singleStakingBalanceSupplier,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
     }
 
     @Provides
