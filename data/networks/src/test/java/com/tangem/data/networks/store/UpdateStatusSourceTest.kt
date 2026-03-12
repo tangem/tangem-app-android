@@ -1,6 +1,7 @@
 package com.tangem.data.networks.store
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
@@ -13,7 +14,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
@@ -31,7 +31,7 @@ internal class UpdateStatusSourceTest {
         context = mockk(),
         runtimeStore = runtimeStore,
         persistenceDataStore = persistenceStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        scope = TestAppCoroutineScope(),
     )
 
     @Test
