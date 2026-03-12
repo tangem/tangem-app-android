@@ -8,6 +8,7 @@ import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -26,8 +27,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -104,6 +103,7 @@ internal object AccountStatusUseCaseModule {
         cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
         expressServiceFetcher: ExpressServiceFetcher,
         dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -114,7 +114,7 @@ internal object AccountStatusUseCaseModule {
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             cryptoCurrencyMetadataCleaner = cryptoCurrencyMetadataCleaner,
             expressServiceFetcher = expressServiceFetcher,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            parallelUpdatingScope = appScope,
             dispatchers = dispatchers,
         )
     }
@@ -126,14 +126,14 @@ internal object AccountStatusUseCaseModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): CryptoCurrencyBalanceFetcher {
         return CryptoCurrencyBalanceFetcher(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            parallelUpdatingScope = appScope,
         )
     }
 
