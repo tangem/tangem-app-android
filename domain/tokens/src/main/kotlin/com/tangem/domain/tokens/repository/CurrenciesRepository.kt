@@ -58,19 +58,6 @@ interface CurrenciesRepository {
     ): CryptoCurrency
 
     /**
-     * Get the coin for a specific network.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param networkId    The unique identifier of the network.
-     * @param derivationPath currency derivation path.
-     */
-    suspend fun getNetworkCoin(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-    ): CryptoCurrency.Coin
-
-    /**
      * Determines whether the currency sending is blocked by network pending transaction
      *
      * @param userWalletId         the unique identifier of the user wallet
