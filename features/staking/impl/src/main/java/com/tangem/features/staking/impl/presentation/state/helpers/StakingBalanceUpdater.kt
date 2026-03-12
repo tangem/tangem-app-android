@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
@@ -10,7 +11,6 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
-import com.tangem.utils.coroutines.DelayedWork
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,7 +24,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
-    @DelayedWork private val coroutineScope: CoroutineScope,
+    private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val integration: StakingIntegration,

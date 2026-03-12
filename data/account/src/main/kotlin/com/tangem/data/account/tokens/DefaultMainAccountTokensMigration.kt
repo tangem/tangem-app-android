@@ -20,12 +20,10 @@ import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -43,10 +41,8 @@ internal class DefaultMainAccountTokensMigration(
     private val accountTokenMigrationStore: AccountTokenMigrationStore,
     private val userTokensSaver: UserTokensSaver,
     private val eTagsStore: ETagsStore,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) : MainAccountTokensMigration {
-
-    private val coroutineScope = CoroutineScope(dispatchers.default + SupervisorJob())
 
     internal suspend fun migrate(userWalletId: UserWalletId): Either<Throwable, GetWalletAccountsResponse> = either {
         val store = accountsResponseStoreFactory.create(userWalletId)

@@ -4,6 +4,7 @@ import com.tangem.data.wallets.hot.TangemHotWalletSigner
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
@@ -18,13 +19,10 @@ import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -55,8 +53,8 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
-        dispatchers: CoroutineDispatcherProvider,
         pushNotificationsRepository: PushNotificationsRepository,
+        appScope: AppCoroutineScope,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             demoConfig = DemoConfig,
@@ -64,7 +62,7 @@ internal object TransactionDomainModule {
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.io),
+            parallelUpdatingScope = appScope,
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
             pushNotificationsRepository = pushNotificationsRepository,
         )

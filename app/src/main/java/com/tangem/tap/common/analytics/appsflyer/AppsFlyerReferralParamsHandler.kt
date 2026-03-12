@@ -2,11 +2,9 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -20,10 +18,9 @@ import kotlin.contracts.contract
 class AppsFlyerReferralParamsHandler @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val setShouldShowMobileWalletPromoUseCase: SetShouldShowMobileWalletPromoUseCase,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) {
 
-    private val coroutineScope = CoroutineScope(dispatchers.io + SupervisorJob())
     private val mutex = Mutex()
 
     fun handle(deepLink: DeepLink) {
