@@ -4,14 +4,12 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.staking.converters.ethpool.P2PEthPoolStakingBalanceConverter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -33,10 +31,8 @@ internal typealias WalletIdWithP2PEthPoolResponses = Map<String, Set<P2PEthPoolA
 internal class DefaultP2PEthPoolBalancesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithP2PStakingBalances>,
     private val persistenceStore: DataStore<WalletIdWithP2PEthPoolResponses>,
-    dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) : P2PEthPoolBalancesStore {
-
-    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
     init {
         scope.launch {

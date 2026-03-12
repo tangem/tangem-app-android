@@ -21,6 +21,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -28,8 +29,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -75,12 +74,12 @@ internal object BlockchainSDKFactoryModule {
     fun provideChangedBlockchainProvidersResponseDataStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): DataStore<BlockchainProvidersResponse> {
         return DataStoreFactory.create(
             serializer = BlockchainProvidersResponseSerializer(moshi),
             produceFile = { context.dataStoreFile("changed_providers") },
-            scope = CoroutineScope(dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
     }
 
