@@ -20,14 +20,12 @@ import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -39,7 +37,7 @@ internal object StakingStoreModule {
     fun provideStakingTokensStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): StakingYieldsStore {
         return DefaultStakingYieldsStore(
             dataStore = DataStoreFactory.create(
@@ -49,7 +47,7 @@ internal object StakingStoreModule {
                     defaultValue = emptyList(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "yields_cache") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
         )
     }
@@ -59,7 +57,7 @@ internal object StakingStoreModule {
     fun provideYieldsBalancesPersistenceStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): DataStore<Map<String, Set<YieldBalanceWrapperDTO>>> {
         return DataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
@@ -68,7 +66,7 @@ internal object StakingStoreModule {
                 defaultValue = emptyMap(),
             ),
             produceFile = { context.dataStoreFile(fileName = "yield_balances") },
-            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
     }
 
@@ -83,7 +81,7 @@ internal object StakingStoreModule {
     fun provideP2PEthPoolBalancesPersistenceStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): DataStore<Map<String, Set<P2PEthPoolAccountResponse>>> {
         return DataStoreFactory.create(
             serializer = MoshiDataStoreSerializer(
@@ -92,7 +90,7 @@ internal object StakingStoreModule {
                 defaultValue = emptyMap(),
             ),
             produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_balances") },
-            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
     }
 
@@ -101,7 +99,7 @@ internal object StakingStoreModule {
     fun provideP2PEthPoolVaultsStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): P2PEthPoolVaultsStore {
         return DefaultP2PEthPoolVaultsStore(
             dataStore = DataStoreFactory.create(
@@ -111,7 +109,7 @@ internal object StakingStoreModule {
                     defaultValue = emptyList(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_vaults") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
         )
     }
