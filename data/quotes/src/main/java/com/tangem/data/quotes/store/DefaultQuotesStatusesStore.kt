@@ -4,13 +4,11 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.quotes.converter.QuoteStatusConverter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -29,10 +27,8 @@ internal typealias CurrencyIdWithQuote = Map<String, QuotesResponse.Quote>
 internal class DefaultQuotesStatusesStore(
     private val runtimeStore: RuntimeSharedStore<Set<QuoteStatus>>,
     private val persistenceDataStore: DataStore<CurrencyIdWithQuote>,
-    dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) : QuotesStatusesStore {
-
-    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
     init {
         scope.launch {
