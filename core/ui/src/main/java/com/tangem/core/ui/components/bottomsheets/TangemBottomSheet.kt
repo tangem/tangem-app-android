@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.bottomsheets
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -212,14 +211,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
             Modal -> windowSize.height * MODAL_SHEET_MAX_HEIGHT
         }
 
-        val buttonHeight by animateDpAsState(
-            if (footer != null) {
-                80.dp
-            } else {
-                0.dp
-            },
-        )
-
         val contentModifier = when (type) {
             Default -> Modifier.clip(
                 RoundedCornerShape(
@@ -260,7 +251,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(buttonHeight)
                         .align(Alignment.BottomCenter),
                 ) {
                     if (footer != null) {
