@@ -1,6 +1,7 @@
 package com.tangem.data.staking.store
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
@@ -10,7 +11,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -26,7 +26,7 @@ internal class StakingBalancesStoreUpdateMethodsTest {
     private val store = DefaultStakeKitBalancesStore(
         runtimeStore = runtimeStore,
         persistenceStore = persistenceStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        scope = TestAppCoroutineScope(),
     )
 
     @Test

@@ -15,6 +15,7 @@ import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -24,8 +25,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -37,7 +36,7 @@ internal object NetworkDataModule {
     fun provideNetworksStatusesStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): NetworksStatusesStore {
         return DefaultNetworksStatusesStore(
             context = context,
@@ -49,9 +48,9 @@ internal object NetworkDataModule {
                     defaultValue = emptyMap(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "networks_statuses_2") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
-            dispatchers = dispatchers,
+            scope = appScope,
         )
     }
 
