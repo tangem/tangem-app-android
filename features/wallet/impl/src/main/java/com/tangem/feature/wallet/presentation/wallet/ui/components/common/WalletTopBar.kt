@@ -115,6 +115,7 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
                         Icon(
                             painter = painterResource(id = action.iconRes),
                             contentDescription = null,
+                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
                         )
                     }
                 }
