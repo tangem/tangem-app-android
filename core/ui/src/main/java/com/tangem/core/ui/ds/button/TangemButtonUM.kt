@@ -39,6 +39,7 @@ enum class TangemButtonType {
     Primary,
     Secondary,
     Accent,
+    Positive,
     Outline,
     PrimaryInverse,
     Ghost,
