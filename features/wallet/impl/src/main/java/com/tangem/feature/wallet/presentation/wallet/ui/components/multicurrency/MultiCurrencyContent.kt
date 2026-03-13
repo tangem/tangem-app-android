@@ -31,6 +31,7 @@ import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
@@ -321,17 +322,21 @@ internal fun PortfolioRowItem(
                 SharedTokenRowComposables(
                     icon = { modifier ->
                         val size = if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
-                        val currencyIconState =
-                            when (val currencyIconState = item.tokenRowUM.headIconUM.currencyIconState) {
-                                is CurrencyIconState.CryptoPortfolio.Icon ->
-                                    currencyIconState.copy(size = size)
-                                is CurrencyIconState.CryptoPortfolio.Letter ->
-                                    currencyIconState.copy(size = size)
-                                else -> currencyIconState
-                            }
+                        val headIcon = item.tokenRowUM.headIconUM
+                        val sizedHeadIcon = if (headIcon is TangemIconUM.Currency) {
+                            headIcon.copy(
+                                currencyIconState = when (val currencyIconState = headIcon.currencyIconState) {
+                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(size = size)
+                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
+                                    else -> currencyIconState
+                                },
+                            )
+                        } else {
+                            headIcon
+                        }
 
                         TangemIcon(
-                            tangemIconUM = item.tokenRowUM.headIconUM.copy(currencyIconState = currencyIconState),
+                            tangemIconUM = sizedHeadIcon,
                             modifier = modifier.sharedBounds(
                                 sharedContentState = iconSharedContentState,
                                 animatedVisibilityScope = animatedContentScope,
