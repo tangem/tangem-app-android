@@ -217,6 +217,7 @@
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_add_tokens">Add tokens</string>
   <string name="common_added">Added</string>
   <string name="common_address">Address</string>
   <string name="common_all">All</string>
@@ -383,6 +384,7 @@
   <string name="common_to">To</string>
   <string name="common_to_wallet_name">To %s</string>
   <string name="common_today">Today</string>
+  <string name="common_token_send">Token to send</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
@@ -395,6 +397,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
+  <string name="common_unlock">Unlock</string>
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
@@ -1207,6 +1210,10 @@
   <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
+  <plurals name="send_network_selection_hidden_tokens">
+    <item quantity="one">%d token isn\'t compatible with this address</item>
+    <item quantity="other">%d tokens aren\'t compatible with this address</item>
+  </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Unique number for each transaction. Use it to resend or cancel a pending transaction.</string>
   <string name="send_nonce_hint">Enter nonce…</string>
