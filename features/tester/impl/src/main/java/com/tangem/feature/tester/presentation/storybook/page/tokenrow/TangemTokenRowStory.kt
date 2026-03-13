@@ -15,13 +15,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.row.token.TangemTokenRow
-import com.tangem.core.ui.ds.row.token.TangemTokenRow_PreviewProvider
+import com.tangem.core.ui.ds.row.token.internal.TangemTokenRowPreviewData
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemTokenRowStory
 
 @Composable
 internal fun TangemTokenRowStory(state: TangemTokenRowStory, modifier: Modifier = Modifier) {
-    val rows = remember { TangemTokenRow_PreviewProvider().values.toList() }
+    val rows = remember {
+        listOf(
+            TangemTokenRowPreviewData.defaultState,
+            TangemTokenRowPreviewData.defaultEllipsisState,
+            TangemTokenRowPreviewData.tokenState,
+            TangemTokenRowPreviewData.customTokenState,
+            TangemTokenRowPreviewData.draggableState,
+            TangemTokenRowPreviewData.draggableStateV2,
+            TangemTokenRowPreviewData.loadingState,
+            TangemTokenRowPreviewData.emptyState,
+            TangemTokenRowPreviewData.unreachableState,
+            TangemTokenRowPreviewData.accountState,
+            TangemTokenRowPreviewData.accountLetterState,
+            TangemTokenRowPreviewData.accountEllipsisState,
+            TangemTokenRowPreviewData.promoBannerState,
+        )
+    }
 
     LazyColumn(
         contentPadding = PaddingValues(bottom = 16.dp),
