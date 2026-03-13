@@ -1,4 +1,4 @@
-package com.tangem.data.common.currency
+package com.tangem.domain.common.tokens
 
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
