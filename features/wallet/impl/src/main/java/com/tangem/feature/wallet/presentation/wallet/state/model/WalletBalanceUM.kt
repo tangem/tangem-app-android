@@ -69,11 +69,24 @@ internal sealed interface WalletBalanceUM {
         override val deviceIcon: DeviceIconUM,
     ) : WalletBalanceUM
 
+    /**
+     * Wallet card loading state
+     *
+     * @property id            wallet id
+     * @property name          wallet name
+     */
+    data class Empty(
+        override val id: UserWalletId,
+        override val name: String,
+        override val deviceIcon: DeviceIconUM,
+    ) : WalletBalanceUM
+
     fun copySealed(name: String): WalletBalanceUM {
         return when (this) {
             is Content -> copy(name = name)
             is Error -> copy(name = name)
             is Loading -> copy(name = name)
+            is Empty -> copy(name = name)
         }
     }
 }
