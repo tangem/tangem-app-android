@@ -35,6 +35,10 @@ class CryptoCurrencyBalanceFetcher(
 
     private val mutex = Mutex()
 
+    operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        invoke(userWalletId = userWalletId, currencies = listOf(currency))
+    }
+
     operator fun invoke(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
 
@@ -42,6 +46,18 @@ class CryptoCurrencyBalanceFetcher(
             mutex.withLock {
                 refreshBalances(userWalletId, currencies)
             }
+        }
+    }
+
+    suspend fun invokeAndAwait(userWalletId: UserWalletId, currency: CryptoCurrency) {
+        invokeAndAwait(userWalletId = userWalletId, currencies = listOf(currency))
+    }
+
+    suspend fun invokeAndAwait(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
+
+        mutex.withLock {
+            refreshBalances(userWalletId, currencies)
         }
     }
 
