@@ -22,7 +22,7 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 
 private const val MIN_SCALE = 0.75f
 private const val MAX_SCALE = 1f
-private const val WALLET_INDICATOR_OFFSET = 0.63f
+private const val WALLET_INDICATOR_OFFSET = 0.6f
 
 @Composable
 internal fun WalletPagerIndicator(

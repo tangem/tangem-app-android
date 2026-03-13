@@ -79,6 +79,8 @@ internal class CommonActionsFactory(
             null
         }
 
+        val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
+
         actionAvailabilityBuilder {
             // region Analytics
             if (cryptoCurrencyStatus.currency.id.rawCurrencyId != null) {
@@ -129,7 +131,7 @@ internal class CommonActionsFactory(
             // endregion
 
             // region HideToken
-            addHideTokenAction()
+            ActionState.HideToken(unavailabilityReason = hideTokenUnavailabilityReason).addByReason()
             // endregion
 
             // region YieldMode
