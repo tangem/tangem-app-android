@@ -42,6 +42,8 @@ internal class UnreachableActionsFactory(
                     requirementsDeferred = requirementsDeferred,
                 )
             }
+
+            val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
             // endregion
 
             actionAvailabilityBuilder {
@@ -70,7 +72,7 @@ internal class UnreachableActionsFactory(
                 // endregion
 
                 // region HideToken
-                addHideTokenAction()
+                ActionState.HideToken(hideTokenUnavailabilityReason).addByReason()
                 // endregion
             }
         }
