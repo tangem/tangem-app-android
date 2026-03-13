@@ -343,7 +343,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     resourceReference(R.string.common_biometrics),
                 ),
             ),
-            onClick = onClick,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.common_unlock),
+                    onClick = onClick,
+                    type = TangemButtonType.Primary,
+                ),
+            ),
             messageEffect = TangemMessageEffect.Card,
             isCentered = true,
         ),
