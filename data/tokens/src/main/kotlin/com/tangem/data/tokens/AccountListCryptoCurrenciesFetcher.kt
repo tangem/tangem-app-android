@@ -1,35 +1,30 @@
 package com.tangem.data.tokens
 
 import arrow.core.Either
-import arrow.core.right
 import com.tangem.data.common.account.WalletAccountsFetcher
-import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.utils.catchOn
-import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher.Params
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher.Params
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 /**
- * Implementation of [MultiWalletCryptoCurrenciesFetcher] that fetches crypto currencies of all accounts
+ * Implementation of [MultiWalletAccountListFetcher] that fetches the account list for a multi-currency wallet
+ * by delegating to [WalletAccountsFetcher].
  *
  * @property userWalletsListRepository repository to get user wallets
  * @property walletAccountsFetcher instance of [WalletAccountsFetcher] to fetch accounts for a multi wallet
- * @property expressServiceFetcher fetcher of express service
- * @property dispatchers           dispatchers
+ * @property dispatchers provider for coroutine dispatchers used to run fetch operations
  *
 [REDACTED_AUTHOR]
  */
 internal class AccountListCryptoCurrenciesFetcher(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletAccountsFetcher: WalletAccountsFetcher,
-    private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
-) : MultiWalletCryptoCurrenciesFetcher {
+) : MultiWalletAccountListFetcher {
 
     override suspend fun invoke(params: Params): Either<Throwable, Unit> {
         return Either.catchOn(dispatchers.default) {
@@ -37,16 +32,7 @@ internal class AccountListCryptoCurrenciesFetcher(
 
             if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
 
-            val response = walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
-
-            expressServiceFetcher.fetch(
-                userWallet = userWallet,
-                assetIds = response.flattenTokens().mapTo(hashSetOf()) {
-                    ExpressAsset.ID(networkId = it.networkId, contractAddress = it.contractAddress)
-                },
-            )
-
-            Unit.right()
+            walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
         }
     }
 }
