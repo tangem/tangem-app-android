@@ -6,6 +6,7 @@ import com.tangem.domain.pay.model.MainCustomerInfoContentState
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.TangemPayCustomerInfoError
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -19,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -28,10 +30,14 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     private val clickIntents: WalletClickIntents,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val tangemPayWithdrawRepository: TangemPayWithdrawRepository,
     private val analytics: WalletTangemPayAnalyticsEventSender,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
+        coroutineScope.launch {
+            tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
+        }
         return subscribeOnTangemPayInfoUpdates()
     }
 
