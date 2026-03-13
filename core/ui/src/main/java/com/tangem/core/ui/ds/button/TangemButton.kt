@@ -23,9 +23,9 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             descriptionText = buttonUM.descriptionText,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.Secondary -> SecondaryTangemButton(
@@ -34,9 +34,9 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.Accent -> StatusTangemButton(
@@ -45,10 +45,10 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             type = TangemButtonType.Positive,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.Positive -> StatusTangemButton(
@@ -57,10 +57,10 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             type = TangemButtonType.Positive,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.Outline -> OutlineTangemButton(
@@ -69,9 +69,9 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.PrimaryInverse -> PrimaryInverseTangemButton(
@@ -80,9 +80,9 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             size = buttonUM.size,
-            state = buttonUM.state,
             shape = buttonUM.shape,
         )
         TangemButtonType.Ghost -> GhostTangemButton(
@@ -91,9 +91,9 @@ fun TangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
             text = buttonUM.text,
             iconRes = buttonUM.iconRes,
             iconPosition = buttonUM.iconPosition,
-            enabled = buttonUM.isEnabled,
+            isEnabled = buttonUM.isEnabled,
+            isLoading = buttonUM.isLoading,
             size = buttonUM.size,
-            state = buttonUM.state,
         )
     }
 }
