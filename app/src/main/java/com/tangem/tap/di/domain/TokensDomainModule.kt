@@ -11,7 +11,6 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -29,7 +28,6 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-@Suppress("TooManyFunctions", "LargeClass")
 internal object TokensDomainModule {
 
     @Provides
@@ -44,26 +42,6 @@ internal object TokensDomainModule {
     @Singleton
     fun provideTokensFeatureToggles(featureTogglesManager: FeatureTogglesManager): TokensFeatureToggles {
         return DefaultTokensFeatureToggles(featureTogglesManager = featureTogglesManager)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFetchCurrencyStatusUseCase(
-        currenciesRepository: CurrenciesRepository,
-        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory: StakingIdFactory,
-    ): FetchCurrencyStatusUseCase {
-        return FetchCurrencyStatusUseCase(
-            currenciesRepository = currenciesRepository,
-            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
     }
 
     @Provides
