@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.repository.DefaultNetworksRepository
 import com.tangem.data.networks.store.DefaultNetworksStatusesStore
 import com.tangem.data.networks.store.NetworksStatusesStore
