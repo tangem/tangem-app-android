@@ -1,15 +1,13 @@
 package com.tangem.data.tokens
 
 import arrow.core.left
-import arrow.core.right
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.test.core.assertEither
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -25,13 +23,11 @@ internal class AccountListCryptoCurrenciesFetcherTest {
 
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk(relaxUnitFun = true)
-    private val expressServiceFetcher: ExpressServiceFetcher = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val fetcher = AccountListCryptoCurrenciesFetcher(
         userWalletsListRepository = userWalletsListRepository,
         walletAccountsFetcher = walletAccountsFetcher,
-        expressServiceFetcher = expressServiceFetcher,
         dispatchers = dispatchers,
     )
 
@@ -43,7 +39,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
     @Test
     fun `returns failure if wallet is not multi-currency`() = runTest {
         // Arrange
-        val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
+        val params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId)
         val mockUserWallet = mockk<UserWallet> {
             every { walletId } returns userWalletId
             every { isMultiCurrency } returns false
@@ -68,7 +64,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
     @Test
     fun `returns accounts if wallet is multi-currency`() = runTest {
         // Arrange
-        val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
+        val params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId)
         val mockUserWallet = mockk<UserWallet> {
             every { walletId } returns userWalletId
             every { isMultiCurrency } returns true
@@ -79,7 +75,6 @@ internal class AccountListCryptoCurrenciesFetcherTest {
 
         every { userWalletsListRepository.userWallets } returns userWalletsFlow
         coEvery { walletAccountsFetcher.fetch(userWalletId = params.userWalletId) } returns response
-        coEvery { expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet()) } returns Unit.right()
 
         // Act
         val actual = fetcher(params)
@@ -90,14 +85,13 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsListRepository.userWallets
             walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
-            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet())
         }
     }
 
     @Test
     fun `returns error if walletAccountsFetcher returns error`() = runTest {
         // Arrange
-        val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
+        val params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId)
         val mockUserWallet = mockk<UserWallet> {
             every { walletId } returns userWalletId
             every { isMultiCurrency } returns true
