@@ -3,7 +3,7 @@ package com.tangem.data.account.producer
 import com.tangem.data.account.converter.AccountListConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.wallets.UserWalletsListRepository
