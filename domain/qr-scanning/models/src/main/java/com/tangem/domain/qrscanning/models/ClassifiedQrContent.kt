@@ -8,10 +8,10 @@ sealed class ClassifiedQrContent {
     data class WalletConnect(val uri: String) : ClassifiedQrContent()
 
     data class PaymentUri(
-        val currency: CryptoCurrency,
         val address: String,
         val amount: BigDecimal?,
         val memo: String?,
+        val matchingCurrencies: List<CryptoCurrency>,
     ) : ClassifiedQrContent()
 
     data class PlainAddress(
