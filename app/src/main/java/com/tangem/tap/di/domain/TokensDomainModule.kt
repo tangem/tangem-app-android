@@ -1,7 +1,10 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -148,8 +151,10 @@ internal object TokensDomainModule {
     @Provides
     @Singleton
     fun provideWalletBalanceFetcher(
-        currenciesRepository: CurrenciesRepository,
-        multiWalletCryptoCurrenciesFetcher: MultiWalletCryptoCurrenciesFetcher,
+        userWalletsListRepository: UserWalletsListRepository,
+        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+        expressServiceFetcher: ExpressServiceFetcher,
+        multiWalletAccountListFetcher: MultiWalletAccountListFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -159,8 +164,10 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
         return WalletBalanceFetcher(
-            currenciesRepository = currenciesRepository,
-            multiWalletCryptoCurrenciesFetcher = multiWalletCryptoCurrenciesFetcher,
+            userWalletsListRepository = userWalletsListRepository,
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+            expressServiceFetcher = expressServiceFetcher,
+            multiWalletAccountListFetcher = multiWalletAccountListFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
