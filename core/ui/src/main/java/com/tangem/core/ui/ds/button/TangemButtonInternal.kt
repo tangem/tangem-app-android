@@ -43,10 +43,10 @@ private const val LOADING_ANIMATION_DURATION = 150
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param enabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled       Boolean indicating whether the button is enabled.
+ * @param isLoading     Boolean indicating whether the button is in a loading state.
  * @param contentColor  Color of the button content (text and icon).
  * @param size          TangemButtonSize defining the size of the button.
- * @param state         TangemButtonState defining the current state of the button.
  *
 [REDACTED_AUTHOR]
  */
@@ -58,16 +58,16 @@ internal fun TangemButtonInternal(
     descriptionText: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
-    enabled: Boolean = true,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
     contentColor: Color = TangemTheme.colors2.text.neutral.primary,
     size: TangemButtonSize = TangemButtonSize.X15,
-    state: TangemButtonState = TangemButtonState.Default,
 ) {
     ProvideButtonRippleConfiguration {
         Box(
             modifier = modifier
                 .testTag(BaseButtonTestTags.BUTTON)
-                .clickableSingle(enabled = enabled, onClick = onClick, role = Role.Button)
+                .clickableSingle(enabled = isEnabled, onClick = onClick, role = Role.Button)
                 .height(size.toHeightDp())
                 .conditionalCompose(text == null) {
                     width(size.toHeightDp())
@@ -81,7 +81,7 @@ internal fun TangemButtonInternal(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .conditional(state == TangemButtonState.Loading) {
+                    .conditional(isLoading) {
                         alpha(0f)
                     },
             ) {
@@ -118,7 +118,7 @@ internal fun TangemButtonInternal(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(size.toContentSize()),
-                visible = state == TangemButtonState.Loading,
+                visible = isLoading,
                 exit = fadeOut(animationSpec = tween(LOADING_ANIMATION_DURATION)),
                 enter = fadeIn(animationSpec = tween(LOADING_ANIMATION_DURATION)),
             ) {
@@ -321,16 +321,6 @@ enum class TangemButtonSize {
         X15,
         -> TangemTheme.typography2.bodySemibold16
     }
-}
-
-/**
- * Defines the state of the Tangem button.
- */
-enum class TangemButtonState {
-    Default,
-    Disabled,
-    Pressed,
-    Loading,
 }
 
 /**
