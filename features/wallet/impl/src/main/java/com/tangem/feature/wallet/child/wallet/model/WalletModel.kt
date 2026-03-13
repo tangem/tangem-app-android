@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
@@ -25,13 +26,12 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
-import com.tangem.domain.qrscanning.usecases.ClassifyQrCodeUseCase
+import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -40,7 +40,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
@@ -115,8 +114,7 @@ internal class WalletModel @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
-    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val classifyQrCodeUseCase: ClassifyQrCodeUseCase,
+    private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -752,16 +750,8 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun handleQrResult(qrCode: String, resultSource: QrResultSource) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-
-        val currencies = multiWalletCryptoCurrenciesSupplier
-            .getSyncOrNull(MultiWalletCryptoCurrenciesProducer.Params(userWalletId))
-            ?.toList()
-            .orEmpty()
-        val classified = classifyQrCodeUseCase(qrCode, currencies)
-
-        when (classified) {
-            is ClassifiedQrContent.WalletConnect -> {
+        when (val target = resolveQrSendTargetsUseCase(qrCode)) {
+            is QrSendTarget.WalletConnect -> {
                 val source = when (resultSource) {
                     QrResultSource.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
                     QrResultSource.CAMERA,
@@ -770,34 +760,25 @@ internal class WalletModel @Inject constructor(
                 }
                 wcPairService.pair(
                     WcPairRequest(
-                        userWalletId = userWalletId,
-                        uri = classified.uri,
+                        userWalletId = stateHolder.getSelectedWalletId(),
+                        uri = target.uri,
                         source = source,
                     ),
                 )
             }
-            is ClassifiedQrContent.PaymentUri -> {
+            is QrSendTarget.Single -> {
                 innerWalletRouter.openSend(
-                    userWalletId = userWalletId,
-                    currency = classified.currency,
-                    address = classified.address,
-                    amount = classified.amount?.toPlainString(),
-                    tag = classified.memo,
+                    userWalletId = target.userWalletId,
+                    currency = target.currency,
+                    address = target.address,
+                    amount = target.amount?.parseBigDecimal(target.currency.decimals),
+                    tag = target.memo,
                 )
             }
-            is ClassifiedQrContent.PlainAddress -> {
-                if (classified.matchingCurrencies.size == 1) {
-                    innerWalletRouter.openSend(
-                        userWalletId = userWalletId,
-                        currency = classified.matchingCurrencies.first(),
-                        address = classified.address,
-                        amount = null,
-                        tag = null,
-                    )
-                }
-                // TODO: [REDACTED_TASK_KEY] Network selection bottom sheet for multiple network matches
+            is QrSendTarget.Multiple -> {
+                // TODO: [REDACTED_TASK_KEY] Bottom sheet: Wallets (dropdown) → Accounts → Tokens
             }
-            is ClassifiedQrContent.Unknown -> {
+            is QrSendTarget.Unknown -> {
                 // TODO: [REDACTED_TASK_KEY] Error handling for unsupported and invalid QR codes
             }
         }
