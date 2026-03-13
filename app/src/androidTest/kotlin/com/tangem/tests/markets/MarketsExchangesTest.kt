@@ -8,7 +8,10 @@ import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.scenarios.*
+import com.tangem.scenarios.assertMarketsExchangesScreen
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openMarketsExchangesScreen
+import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMarketsExchangesScreen
 import com.tangem.screens.onMarketsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -26,21 +29,8 @@ class MarketsExchangesTest : BaseTestCase() {
     fun marketsExchangesListTest() {
         val tokenName = "Solana"
         setupHooks().run {
-            step("Open 'Markets' screen") {
-                openMarketsScreen()
-            }
-            step("Click on 'See all' button") {
-                onMarketsScreen { seeAllButton.clickWithAssertion() }
-            }
-            step("Click on '$tokenName' token") {
-                onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
-                waitForIdle()
-            }
-            step("Scroll down") {
-                swipeVertical(SwipeDirection.UP)
-            }
-            step("Click on 'Listed on exchanges' block") {
-                onMarketsScreen { listedOnBlockContainer.performClick() }
+            step("Open 'Markets Exhanges Screen with token: $tokenName'") {
+                openMarketsExchangesScreen(tokenName = tokenName, shouldClickSeeAllButton = true)
             }
             step("Assert 'Exchanges' list screen is displayed") {
                 assertMarketsExchangesScreen()
@@ -70,6 +60,7 @@ class MarketsExchangesTest : BaseTestCase() {
                 waitForIdle()
             }
             step("Scroll down") {
+                swipeVertical(SwipeDirection.UP)
                 swipeVertical(SwipeDirection.UP)
             }
             step("Assert 'Listed on exchanges' block has title") {
