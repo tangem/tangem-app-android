@@ -1,8 +1,6 @@
 package com.tangem.data.tokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
@@ -11,7 +9,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
@@ -34,21 +31,15 @@ internal object TokensDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         walletManagersFacade: WalletManagersFacade,
-        cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
-        expressServiceFetcher: ExpressServiceFetcher,
         excludedBlockchains: ExcludedBlockchains,
-        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
             walletManagersFacade = walletManagersFacade,
-            cacheRegistry = cacheRegistry,
-            expressServiceFetcher = expressServiceFetcher,
             dispatchers = dispatchers,
             excludedBlockchains = excludedBlockchains,
-            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         )
     }
 
