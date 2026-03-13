@@ -18,7 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
@@ -40,7 +40,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -122,9 +122,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         userWallet is UserWallet.Cold &&
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         when {
-            isMultiCurrency -> fetchCurrencyStatusUseCase.invoke(
+            isMultiCurrency -> cryptoCurrencyBalanceFetcher(
                 userWalletId = userWallet.walletId,
-                id = cryptoCurrency.id,
+                currency = cryptoCurrency,
             )
             !isMultiCurrency -> walletBalanceFetcher(
                 params = WalletBalanceFetcher.Params(
