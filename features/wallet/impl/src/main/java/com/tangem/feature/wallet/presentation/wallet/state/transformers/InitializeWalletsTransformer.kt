@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import com.tangem.core.ui.R as CoreUiR
 import com.tangem.common.ui.userwallet.converter.WalletIconUMConverter
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
@@ -20,6 +19,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import com.tangem.core.ui.R as CoreUiR
 
 internal class InitializeWalletsTransformer(
     private val selectedWalletIndex: Int,
@@ -128,7 +128,7 @@ internal class InitializeWalletsTransformer(
 
     private fun UserWallet.toLockedWalletUM(): WalletUM.Locked {
         return WalletUM.Locked(
-            walletsBalanceUM = WalletBalanceUM.Loading(
+            walletsBalanceUM = WalletBalanceUM.Empty(
                 id = walletId,
                 name = name,
                 deviceIcon = getWalletIconUseCase.invoke(userWallet = this)
