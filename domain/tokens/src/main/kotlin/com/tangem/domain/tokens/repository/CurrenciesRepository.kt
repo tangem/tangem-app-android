@@ -1,7 +1,5 @@
 package com.tangem.domain.tokens.repository
 
-import com.tangem.domain.card.CardTypesResolver
-import com.tangem.domain.core.error.DataError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -11,51 +9,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 /**
  * Repository for everything related to the tokens of user wallet
  * */
-@Suppress("TooManyFunctions")
 interface CurrenciesRepository {
-
-    /**
-     * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh Indicates whether to force a refresh of the status data.
-     * @return The primary cryptocurrency associated with the user wallet.
-     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
-     * ID provided.
-     */
-    suspend fun getSingleCurrencyWalletPrimaryCurrency(
-        userWalletId: UserWalletId,
-        refresh: Boolean = false,
-    ): CryptoCurrency
-
-    /**
-     * Retrieves the cryptocurrencies for a specific single-currency user wallet with tokens on the card.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param refresh Indicates whether to force a refresh of the status data.
-     * @return The primary cryptocurrency associated with the user wallet.
-     * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
-     * ID provided.
-     */
-    suspend fun getSingleCurrencyWalletWithCardCurrencies(
-        userWalletId: UserWalletId,
-        refresh: Boolean = false,
-    ): List<CryptoCurrency>
-
-    /**
-     * Retrieves the cryptocurrency for a specific single-currency user old wallet
-     * that stores token on card
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param id The unique identifier of the cryptocurrency to be retrieved.
-     * @return The cryptocurrency associated with the user wallet and ID.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    suspend fun getSingleCurrencyWalletWithCardCurrency(
-        userWalletId: UserWalletId,
-        id: CryptoCurrency.ID,
-    ): CryptoCurrency
 
     /**
      * Determines whether the currency sending is blocked by network pending transaction
@@ -88,7 +42,4 @@ interface CurrenciesRepository {
     ): CryptoCurrency.Token
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
-
-    @Throws
-    fun getCardTypesResolver(userWalletId: UserWalletId): CardTypesResolver?
 }

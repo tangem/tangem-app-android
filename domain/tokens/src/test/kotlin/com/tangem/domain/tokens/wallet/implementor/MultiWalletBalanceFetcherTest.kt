@@ -5,11 +5,12 @@ import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -29,10 +30,10 @@ class MultiWalletBalanceFetcherTest {
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
 
-    private val multiWalletFetcher: MultiWalletCryptoCurrenciesFetcher = mockk()
+    private val multiWalletFetcher: MultiWalletAccountListFetcher = mockk()
     private val multiWalletSupplier: MultiWalletCryptoCurrenciesSupplier = mockk()
     private val fetcher = MultiWalletBalanceFetcher(
-        multiWalletCryptoCurrenciesFetcher = multiWalletFetcher,
+        multiWalletAccountListFetcher = multiWalletFetcher,
         multiWalletCryptoCurrenciesSupplier = multiWalletSupplier,
     )
 
@@ -63,7 +64,7 @@ class MultiWalletBalanceFetcherTest {
         val supplierFlow = flowOf(currencies)
 
         coEvery {
-            multiWalletFetcher(params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId))
+            multiWalletFetcher(params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId))
         } returns Unit.right()
 
         every {
@@ -71,7 +72,7 @@ class MultiWalletBalanceFetcherTest {
         } returns supplierFlow
 
         // Act
-        val actual = fetcher.getCryptoCurrencies(userWalletId = userWalletId)
+        val actual = fetcher.getCryptoCurrencies(userWallet = userWallet)
 
         // Assert
         val expected = currencies.toSet()
@@ -85,7 +86,7 @@ class MultiWalletBalanceFetcherTest {
         val supplierFlow = flowOf(currencies)
 
         coEvery {
-            multiWalletFetcher(params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId))
+            multiWalletFetcher(params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId))
         } returns IllegalStateException().left()
 
         every {
@@ -93,7 +94,7 @@ class MultiWalletBalanceFetcherTest {
         } returns supplierFlow
 
         // Act
-        val actual = fetcher.getCryptoCurrencies(userWalletId = userWalletId)
+        val actual = fetcher.getCryptoCurrencies(userWallet = userWallet)
 
         // Assert
         val expected = currencies.toSet()
@@ -106,7 +107,7 @@ class MultiWalletBalanceFetcherTest {
         val supplierFlow = emptyFlow<Set<CryptoCurrency>>()
 
         coEvery {
-            multiWalletFetcher(params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId))
+            multiWalletFetcher(params = MultiWalletAccountListFetcher.Params(userWalletId = userWalletId))
         } returns Unit.right()
 
         every {
@@ -114,7 +115,7 @@ class MultiWalletBalanceFetcherTest {
         } returns supplierFlow
 
         // Act
-        val actual = fetcher.getCryptoCurrencies(userWalletId = userWalletId)
+        val actual = fetcher.getCryptoCurrencies(userWallet = userWallet)
 
         // Assert
         val expected = emptySet<CryptoCurrency>()
@@ -123,5 +124,8 @@ class MultiWalletBalanceFetcherTest {
 
     private companion object {
         val userWalletId = UserWalletId("011")
+        val userWallet: UserWallet = mockk {
+            every { walletId } returns userWalletId
+        }
     }
 }
