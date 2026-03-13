@@ -223,6 +223,7 @@
   <string name="common_add">Добавить</string>
   <string name="common_add_to_portfolio">Добавить в портфель</string>
   <string name="common_add_token">Добавить токен</string>
+  <string name="common_add_tokens">Добавьте токены</string>
   <string name="common_added">Добавлен</string>
   <string name="common_address">Адрес</string>
   <string name="common_all">Все</string>
@@ -408,6 +409,7 @@
   <string name="common_understand">Я понял</string>
   <string name="common_understand_continue">Я понимаю, продолжить</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
+  <string name="common_unlock">Разблокировать</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$d UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
