@@ -1,6 +1,7 @@
 package com.tangem.data.qrscanning
 
 import com.google.common.truth.Truth.assertThat
+import com.tangem.data.qrscanning.parser.PaymentUriParser
 import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -15,8 +16,15 @@ internal class QrContentClassifierTest {
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
         every { getShareSchemes(any()) } returns emptyList()
         every { validateAddress(any(), any()) } returns false
+        every { getChainId(any()) } returns null
     }
-    private val classifier = QrContentClassifierParser(blockchainDataProvider)
+    private val paymentUriParser = mockk<PaymentUriParser> {
+        every { parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.NotRecognized
+    }
+    private val classifier = QrContentClassifierParser(
+        blockchainDataProvider = blockchainDataProvider,
+        paymentUriParsers = setOf(paymentUriParser),
+    )
 
     // region WalletConnect
 
@@ -69,91 +77,37 @@ internal class QrContentClassifierTest {
 
     // endregion
 
-    // region PaymentUri
+    // region PaymentUri delegation
 
     @Test
-    fun `Bitcoin BIP-021 URI with amount is parsed`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
+    fun `PaymentUri is returned when parser matches`() {
+        val expectedUri = ClassifiedQrContent.PaymentUri(
+            address = "0xRecipient",
+            amount = BigDecimal("1.5"),
+            memo = null,
+            matchingCurrencies = listOf(ethereumCoin),
+        )
+        every { paymentUriParser.parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.Success(expectedUri)
 
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5"
-        val result = classifier.parse(qr, listOf(bitcoinCoin, ethereumCoin))
+        val result = classifier.parse("ethereum:0xRecipient@1?value=1500000000000000000", listOf(ethereumCoin))
+
+        assertThat(result).isEqualTo(expectedUri)
+    }
+
+    @Test
+    fun `PaymentUri takes priority over plain address match`() {
+        val expectedUri = ClassifiedQrContent.PaymentUri(
+            address = "0xRecipient",
+            amount = null,
+            memo = null,
+            matchingCurrencies = listOf(ethereumCoin),
+        )
+        every { paymentUriParser.parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.Success(expectedUri)
+        every { blockchainDataProvider.validateAddress(ethereumCoin.network, any()) } returns true
+
+        val result = classifier.parse("ethereum:0xRecipient", listOf(ethereumCoin))
 
         assertThat(result).isInstanceOf(ClassifiedQrContent.PaymentUri::class.java)
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.currency).isEqualTo(bitcoinCoin)
-        assertThat(paymentUri.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
-        assertThat(paymentUri.amount).isEqualTo(BigDecimal("0.5"))
-        assertThat(paymentUri.memo).isNull()
-    }
-
-    @Test
-    fun `Bitcoin URI without params returns address only`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-        val result = classifier.parse(qr, listOf(bitcoinCoin))
-
-        assertThat(result).isInstanceOf(ClassifiedQrContent.PaymentUri::class.java)
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
-        assertThat(paymentUri.amount).isNull()
-        assertThat(paymentUri.memo).isNull()
-    }
-
-    @Test
-    fun `Bitcoin URI with message param is parsed as memo`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1.0&message=test%20memo"
-        val result = classifier.parse(qr, listOf(bitcoinCoin))
-
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.amount).isEqualTo(BigDecimal("1.0"))
-        assertThat(paymentUri.memo).isEqualTo("test memo")
-    }
-
-    @Test
-    fun `URI with memo parameter is parsed`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?memo=hello"
-        val result = classifier.parse(qr, listOf(bitcoinCoin))
-
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.memo).isEqualTo("hello")
-    }
-
-    @Test
-    fun `Ethereum ERC-681 URI with chain_id and function is parsed`() {
-        every { blockchainDataProvider.getShareSchemes(ethereumCoin.network) } returns listOf("ethereum:")
-
-        val qr = "ethereum:0x1234567890abcdef1234567890abcdef12345678@1/transfer?amount=1.5"
-        val result = classifier.parse(qr, listOf(ethereumCoin))
-
-        assertThat(result).isInstanceOf(ClassifiedQrContent.PaymentUri::class.java)
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.address).isEqualTo("0x1234567890abcdef1234567890abcdef12345678")
-        assertThat(paymentUri.amount).isEqualTo(BigDecimal("1.5"))
-    }
-
-    @Test
-    fun `URI scheme not matching user currencies falls through`() {
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-        val result = classifier.parse(qr, listOf(ethereumCoin))
-
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
-    }
-
-    @Test
-    fun `Longest matching scheme is preferred`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns
-            listOf("bitcoin:", "bitcoin://")
-
-        val qr = "bitcoin://1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-        val result = classifier.parse(qr, listOf(bitcoinCoin))
-
-        val paymentUri = result as ClassifiedQrContent.PaymentUri
-        assertThat(paymentUri.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
     }
 
     // endregion
@@ -186,6 +140,20 @@ internal class QrContentClassifierTest {
         assertThat(plain.matchingCurrencies).hasSize(2)
     }
 
+    @Test
+    fun `PlainAddress includes tokens on matching networks`() {
+        val address = "0x1234567890abcdef1234567890abcdef12345678"
+        every { blockchainDataProvider.validateAddress(ethereumCoin.network, address) } returns true
+
+        val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        val result = classifier.parse(address, listOf(ethereumCoin, usdcToken))
+
+        assertThat(result).isInstanceOf(ClassifiedQrContent.PlainAddress::class.java)
+        val plain = result as ClassifiedQrContent.PlainAddress
+        assertThat(plain.matchingCurrencies).containsExactly(ethereumCoin, usdcToken)
+    }
+
     // endregion
 
     // region Unknown
@@ -212,53 +180,13 @@ internal class QrContentClassifierTest {
         assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
     }
 
-    // endregion
-
-    // region Edge cases
-
     @Test
-    fun `Tokens are filtered out, only Coins are used`() {
-        val token = CryptoCurrency.Token(
-            id = CryptoCurrency.ID(
-                prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
-                body = CryptoCurrency.ID.Body.NetworkId("ethereum"),
-                suffix = CryptoCurrency.ID.Suffix.RawID("ethereum"),
-            ),
-            network = buildNetwork("ethereum"),
-            name = "USDT",
-            symbol = "USDT",
-            decimals = 6,
-            iconUrl = null,
-            isCustom = false,
-            contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        )
+    fun `Tokens alone without Coins cannot match addresses`() {
+        val token = buildToken("ethereum", "USDT", "0xdAC17F958D2ee523a2206206994597C13D831ec7")
 
         val result = classifier.parse("0x1234", listOf(token))
 
         assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
-    }
-
-    @Test
-    fun `Duplicate coins with same network are deduplicated`() {
-        val address = "0x1234567890abcdef1234567890abcdef12345678"
-        every { blockchainDataProvider.validateAddress(ethereumCoin.network, address) } returns true
-
-        val result = classifier.parse(address, listOf(ethereumCoin, ethereumCoin))
-
-        assertThat(result).isInstanceOf(ClassifiedQrContent.PlainAddress::class.java)
-        val plain = result as ClassifiedQrContent.PlainAddress
-        assertThat(plain.matchingCurrencies).hasSize(1)
-    }
-
-    @Test
-    fun `Payment URI takes priority over plain address match`() {
-        every { blockchainDataProvider.getShareSchemes(bitcoinCoin.network) } returns listOf("bitcoin:")
-        every { blockchainDataProvider.validateAddress(bitcoinCoin.network, any()) } returns true
-
-        val qr = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.1"
-        val result = classifier.parse(qr, listOf(bitcoinCoin))
-
-        assertThat(result).isInstanceOf(ClassifiedQrContent.PaymentUri::class.java)
     }
 
     // endregion
@@ -282,6 +210,23 @@ internal class QrContentClassifierTest {
             decimals = 8,
             iconUrl = null,
             isCustom = false,
+        )
+    }
+
+    private fun buildToken(rawNetworkId: String, symbol: String, contractAddress: String): CryptoCurrency.Token {
+        return CryptoCurrency.Token(
+            id = CryptoCurrency.ID(
+                prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+                body = CryptoCurrency.ID.Body.NetworkId(rawNetworkId),
+                suffix = CryptoCurrency.ID.Suffix.RawID(contractAddress),
+            ),
+            network = buildNetwork(rawNetworkId),
+            name = symbol,
+            symbol = symbol,
+            decimals = 6,
+            iconUrl = null,
+            isCustom = false,
+            contractAddress = contractAddress,
         )
     }
 
