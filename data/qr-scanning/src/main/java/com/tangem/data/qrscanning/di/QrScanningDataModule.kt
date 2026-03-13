@@ -1,5 +1,7 @@
 package com.tangem.data.qrscanning.di
 
+import com.tangem.data.qrscanning.parser.Bip321PaymentUriParser
+import com.tangem.data.qrscanning.parser.Eip681PaymentUriParser
 import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
@@ -16,10 +18,14 @@ internal object QrScanningDataModule {
     @Provides
     @Singleton
     fun provideQrScanningEventsRepository(): QrScanningEventsRepository {
+        val blockchainDataProvider = QrContentClassifierParser.DefaultBlockchainDataProvider()
         return DefaultQrScanningEventsRepository(
             qrContentClassifierParser = QrContentClassifierParser(
-                QrContentClassifierParser.DefaultBlockchainDataProvider
-                    (),
+                blockchainDataProvider = blockchainDataProvider,
+                paymentUriParsers = setOf(
+                    Eip681PaymentUriParser(blockchainDataProvider),
+                    Bip321PaymentUriParser(blockchainDataProvider),
+                ),
             ),
         )
     }
