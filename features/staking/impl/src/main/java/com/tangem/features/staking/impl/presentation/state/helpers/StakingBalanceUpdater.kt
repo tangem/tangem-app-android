@@ -1,16 +1,16 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
-import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.FetchActionsUseCase
 import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.StakingIntegration
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -22,7 +22,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val fetchActionsUseCase: FetchActionsUseCase,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val fetchStakingYieldBalanceUseCase: FetchStakingYieldBalanceUseCase,
     private val coroutineScope: AppCoroutineScope,
     @Assisted private val userWallet: UserWallet,
@@ -83,9 +83,9 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
 
     private suspend fun fetchCurrencyStatus(delayMillis: Long = 0L) {
         delay(delayMillis)
-        fetchCurrencyStatusUseCase(
+        cryptoCurrencyBalanceFetcher.invokeAndAwait(
             userWalletId = userWallet.walletId,
-            id = cryptoCurrencyStatus.currency.id,
+            currency = cryptoCurrencyStatus.currency,
         )
     }
 

@@ -35,6 +35,7 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -110,7 +111,7 @@ import javax.inject.Inject
 internal class TokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val isCryptoCurrencyCoinCouldHideUseCase: IsCryptoCurrencyCoinCouldHideUseCase,
@@ -838,7 +839,9 @@ internal class TokenDetailsModel @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             listOf(
-                async { fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id) },
+                async {
+                    cryptoCurrencyBalanceFetcher.invokeAndAwait(userWalletId = userWalletId, currency = cryptoCurrency)
+                },
                 async {
                     updateTxHistory()
                     subscribeOnExpressTransactionsUpdates()
