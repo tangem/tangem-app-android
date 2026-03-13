@@ -8,7 +8,7 @@ import java.net.URLDecoder
 
 internal class QrContentClassifierParser(
     private val blockchainDataProvider: BlockchainDataProvider,
-    private val paymentUriParser: QrSentUriParser = QrSentUriParser(),
+    private val paymentUriParsers: Set<PaymentUriParser>,
 ) {
 
     fun parse(qrCode: String, userCurrencies: List<CryptoCurrency>): ClassifiedQrContent {
@@ -23,14 +23,19 @@ internal class QrContentClassifierParser(
         val coins = userCurrencies.filterIsInstance<CryptoCurrency.Coin>()
         val uniqueCoins = coins.distinctBy { it.network.id }
 
-        val paymentUri = tryParsePaymentUri(qrCode, uniqueCoins)
-        if (paymentUri != null) return paymentUri
-
-        val matchingCurrencies = uniqueCoins.filter { coin ->
-            blockchainDataProvider.validateAddress(coin.network, qrCode)
+        when (val paymentUriResult = tryParsePaymentUri(qrCode, uniqueCoins, userCurrencies)) {
+            is PaymentUriParser.ParseResult.Success -> return paymentUriResult.content
+            is PaymentUriParser.ParseResult.RecognizedButNoMatch -> return ClassifiedQrContent.Unknown(qrCode)
+            is PaymentUriParser.ParseResult.NotRecognized -> Unit
         }
 
-        if (matchingCurrencies.isNotEmpty()) {
+        val matchingNetworkIds = uniqueCoins
+            .filter { coin -> blockchainDataProvider.validateAddress(coin.network, qrCode) }
+            .map { it.network.id }
+            .toSet()
+
+        if (matchingNetworkIds.isNotEmpty()) {
+            val matchingCurrencies = userCurrencies.filter { it.network.id in matchingNetworkIds }
             return ClassifiedQrContent.PlainAddress(
                 address = qrCode,
                 matchingCurrencies = matchingCurrencies,
@@ -40,29 +45,21 @@ internal class QrContentClassifierParser(
         return ClassifiedQrContent.Unknown(qrCode)
     }
 
-    private fun tryParsePaymentUri(qrCode: String, coins: List<CryptoCurrency.Coin>): ClassifiedQrContent.PaymentUri? {
-        return coins.firstNotNullOfOrNull { coin ->
-            val matchedScheme = blockchainDataProvider.getShareSchemes(coin.network)
-                .sortedByDescending { it.length }
-                .firstOrNull { qrCode.startsWith(it) }
-                ?: return@firstNotNullOfOrNull null
-
-            val withoutScheme = qrCode.removePrefix(matchedScheme)
-            val parsed = paymentUriParser.parse(withoutScheme) ?: return@firstNotNullOfOrNull null
-
-            ClassifiedQrContent.PaymentUri(
-                currency = coin,
-                address = parsed.address,
-                amount = parsed.amount,
-                memo = parsed.memo,
-            )
-        }
+    private fun tryParsePaymentUri(
+        qrCode: String,
+        coins: List<CryptoCurrency.Coin>,
+        allCurrencies: List<CryptoCurrency>,
+    ): PaymentUriParser.ParseResult {
+        return paymentUriParsers.firstNotNullOfOrNull { parser ->
+            parser.parse(qrCode, coins, allCurrencies).takeUnless { it is PaymentUriParser.ParseResult.NotRecognized }
+        } ?: PaymentUriParser.ParseResult.NotRecognized
     }
 
     private fun isDAppWcUrl(qrCode: String): Boolean {
         if (!qrCode.startsWith(HTTP_PREFIX) && !qrCode.startsWith(HTTPS_PREFIX)) return false
 
-        val uriParam = paymentUriParser.extractParameters(qrCode)[PARAM_URI] ?: return false
+        val uriParser = QrSentUriParser()
+        val uriParam = uriParser.extractParameters(qrCode)[PARAM_URI] ?: return false
         val decodedUri = runCatching { URLDecoder.decode(
             uriParam,
             QrSentUriParser.CHARSET_UTF8,
@@ -73,6 +70,7 @@ internal class QrContentClassifierParser(
     internal interface BlockchainDataProvider {
         fun getShareSchemes(network: Network): List<String>
         fun validateAddress(network: Network, address: String): Boolean
+        fun getChainId(network: Network): Long?
     }
 
     internal class DefaultBlockchainDataProvider : BlockchainDataProvider {
@@ -82,6 +80,10 @@ internal class QrContentClassifierParser(
 
         override fun validateAddress(network: Network, address: String): Boolean {
             return runCatching { network.toBlockchain().validateAddress(address) }.getOrDefault(false)
+        }
+
+        override fun getChainId(network: Network): Long? {
+            return runCatching { network.toBlockchain().getChainId()?.toLong() }.getOrNull()
         }
     }
 
