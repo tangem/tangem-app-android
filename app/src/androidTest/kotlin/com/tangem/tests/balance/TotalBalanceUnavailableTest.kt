@@ -113,6 +113,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
         val scenarioName = "user_tokens_api"
         val scenarioState = "CustomTokenAdded"
         val tokenTitle = "Myria"
+        val balance = "$3,299.18"
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(scenarioName)
@@ -134,8 +135,8 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert dash sign is displayed in total balance") {
-                onMainScreen { totalBalanceText.assertTextContains(DASH_SIGN) }
+            step("Assert correct balance is displayed in total balance") {
+                onMainScreen { totalBalanceText.assertTextContains(balance) }
             }
             step("Assert $tokenTitle is unreachable") {
                 onMainScreen { tokenWithTitleAndPosition(tokenTitle, 4).assertIsUnreachable() }
