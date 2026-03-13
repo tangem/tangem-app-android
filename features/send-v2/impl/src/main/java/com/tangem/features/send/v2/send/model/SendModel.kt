@@ -267,29 +267,45 @@ internal class SendModel @Inject constructor(
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
         val predefinedValues = predefinedValues
         val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
-        return if (predefinedValues is PredefinedValues.Content.Deeplink) {
-            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
-            createTransferTransactionUseCase(
-                amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus) ?: error("Invalid amount"),
-                memo = predefinedValues.memo,
-                destination = predefinedValues.address,
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-            )
-        } else {
-            val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
-            val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
-            val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
-            val enteredMemo = destinationUM.memoTextField?.value
-            val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+        return when (predefinedValues) {
+            is PredefinedValues.Content.Deeplink -> {
+                val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
+                createTransferTransactionUseCase(
+                    amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus)
+                        ?: error("Invalid amount"),
+                    memo = predefinedValues.memo,
+                    destination = predefinedValues.address,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
+            is PredefinedValues.Content.QrCode -> {
+                val predefinedAmount = predefinedValues.amount?.parseBigDecimalOrNull()
+                createTransferTransactionUseCase(
+                    amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus)
+                        ?: error("Invalid amount"),
+                    memo = predefinedValues.memo,
+                    destination = predefinedValues.address,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
+            PredefinedValues.Empty -> {
+                val destinationUM = uiState.value.destinationUM as? DestinationUM.Content
+                    ?: error("Invalid destination")
+                val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+                val enteredDestinationAddress = destinationUM.addressTextField.actualAddress
+                val enteredMemo = destinationUM.memoTextField?.value
+                val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
-            createTransferTransactionUseCase(
-                amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
-                memo = enteredMemo,
-                destination = enteredDestinationAddress,
-                userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
-            )
+                createTransferTransactionUseCase(
+                    amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                    memo = enteredMemo,
+                    destination = enteredDestinationAddress,
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                )
+            }
         }
     }
 
@@ -347,6 +363,12 @@ internal class SendModel @Inject constructor(
                 address = predefinedAddress,
                 memo = params.tag,
                 transactionId = predefinedTxId,
+            )
+        } else if (predefinedAddress != null) {
+            PredefinedValues.Content.QrCode(
+                amount = predefinedAmount,
+                address = predefinedAddress,
+                memo = params.tag,
             )
         } else {
             PredefinedValues.Empty
