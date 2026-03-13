@@ -97,7 +97,7 @@ private fun FilterButtonsV2(
             iconPosition = com.tangem.core.ui.ds.button.TangemButtonIconPosition.End,
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
-            enabled = earnFilterUM.isNetworkFilterEnabled,
+            isEnabled = earnFilterUM.isNetworkFilterEnabled,
         )
 
         SpacerWMax()
@@ -109,7 +109,7 @@ private fun FilterButtonsV2(
             iconPosition = com.tangem.core.ui.ds.button.TangemButtonIconPosition.End,
             size = TangemButtonSize.X9,
             shape = TangemButtonShape.Rounded,
-            enabled = earnFilterUM.isTypeFilterEnabled,
+            isEnabled = earnFilterUM.isTypeFilterEnabled,
         )
     }
 }
