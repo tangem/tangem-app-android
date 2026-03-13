@@ -692,6 +692,7 @@
   <string name="koinos_mana_level_title">Manaレベル</string>
   <string name="main_empty_tokens_list_message">暗号資産および取引の追跡を開始するには、トークンを追加してください</string>
   <string name="main_manage_tokens">トークンの管理</string>
+  <string name="main_qr_scan_hint">QRコードをスキャンして送金するか、アプリに接続します。</string>
   <string name="main_scan_card_warning_view_subtitle">すべてのネットワークにアクセスするには、カードをスキャンする必要があります。</string>
   <string name="main_scan_card_warning_view_title">カードまたはリングをスキャンする</string>
   <string name="main_swap_changelly_promotion_message">2月%2$s - %3$sの期間、Changelly経由のスワップは%1$sのサービス手数料となります。</string>
