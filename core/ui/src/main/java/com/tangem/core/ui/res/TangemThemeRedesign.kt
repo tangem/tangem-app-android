@@ -147,7 +147,7 @@ private fun lightThemeColors2(): TangemColors2 {
         borderInvalid = border.status.warning,
     )
     val skeleton = TangemColors2.Skeleton(
-        backgroundPrimary = TangemColorPalette.Light1V2,
+        backgroundPrimary = TangemColorPalette.Dark_10,
     )
     val markers = TangemColors2.Markers(
         backgroundSolidGray = TangemColorPalette.Light3,
@@ -324,7 +324,7 @@ private fun darkThemeColors2(): TangemColors2 {
         borderInvalid = border.status.warning,
     )
     val skeleton = TangemColors2.Skeleton(
-        backgroundPrimary = TangemColorPalette.Dark5,
+        backgroundPrimary = TangemColorPalette.Light_10,
     )
     val markers = TangemColors2.Markers(
         backgroundSolidGray = TangemColorPalette.Dark5,
