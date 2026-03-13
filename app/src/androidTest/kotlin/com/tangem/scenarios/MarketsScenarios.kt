@@ -60,13 +60,18 @@ fun BaseTestCase.openMarketsScreen() {
     }
 }
 
-fun BaseTestCase.openMarketsExchangesScreen(tokenName: String) {
+fun BaseTestCase.openMarketsExchangesScreen(tokenName: String, shouldClickSeeAllButton: Boolean = false) {
     openMarketsScreen()
+    if (shouldClickSeeAllButton)
+        step("Click on 'See all' button") {
+            onMarketsScreen { seeAllButton.clickWithAssertion() }
+        }
     step("Click on '$tokenName' token") {
         onMarketsScreen { tokenWithTitle(tokenName).clickWithAssertion() }
         waitForIdle()
     }
     step("Scroll down") {
+        swipeVertical(SwipeDirection.UP)
         swipeVertical(SwipeDirection.UP)
     }
     step("Click on 'Listed on exchanges' block") {
