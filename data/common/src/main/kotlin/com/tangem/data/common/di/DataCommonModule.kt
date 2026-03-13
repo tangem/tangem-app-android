@@ -5,6 +5,7 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.*
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.common.quote.DefaultQuotesFetcher
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.wallet.DefaultWalletServerBinder

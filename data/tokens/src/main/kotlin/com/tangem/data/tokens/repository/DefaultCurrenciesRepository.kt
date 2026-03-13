@@ -6,7 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getTokenId
 import com.tangem.datasource.api.common.response.getOrThrow
