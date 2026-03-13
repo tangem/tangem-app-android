@@ -46,38 +46,38 @@ internal class WalletTokenCurrencyItemConverter(
         stakingApyMap = stakingAvailabilityMap,
     )
 
-    override fun convert(currencyStatus: CryptoCurrencyStatus): TangemTokenRowUM {
-        val earnApyInfo = earnApyConverter.convert(currencyStatus)
+    override fun convert(value: CryptoCurrencyStatus): TangemTokenRowUM {
+        val earnApyInfo = earnApyConverter.convert(value)
 
         return TangemTokenRowUM.Content(
-            id = currencyStatus.currency.id.value,
+            id = value.currency.id.value,
             headIconUM = TangemIconUM.Currency(
-                currencyIconState = currencyToIconStateConverter.convert(currencyStatus),
+                currencyIconState = currencyToIconStateConverter.convert(value),
             ),
-            titleUM = toCurrencyRowTitle(currencyStatus, earnApyInfo),
-            subtitleUM = toCurrencyRowSubtitle(currencyStatus),
-            topEndContentUM = toCurrencyRowTopEnd(currencyStatus),
-            bottomEndContentUM = toCurrencyRowBottomEnd(currencyStatus),
+            titleUM = toCurrencyRowTitle(value, earnApyInfo),
+            subtitleUM = toCurrencyRowSubtitle(value),
+            topEndContentUM = toCurrencyRowTopEnd(value),
+            bottomEndContentUM = toCurrencyRowBottomEnd(value),
             promoBannerUM = toPromoBannerUM(
                 accountId,
-                currencyStatus,
+                value,
                 earnApyInfo.takeIf { shouldShowPromo },
             ),
-            onItemClick = when (currencyStatus.value) {
+            onItemClick = when (value.value) {
                 CryptoCurrencyStatus.Loading,
                 is CryptoCurrencyStatus.MissedDerivation,
                 -> null
                 else -> {
                     {
-                        clickIntents.onTokenItemClick(accountId, currencyStatus)
+                        clickIntents.onTokenItemClick(accountId, value)
                     }
                 }
             },
-            onItemLongClick = when (currencyStatus.value) {
+            onItemLongClick = when (value.value) {
                 CryptoCurrencyStatus.Loading -> null
                 else -> {
                     {
-                        clickIntents.onTokenItemLongClick(accountId, currencyStatus)
+                        clickIntents.onTokenItemLongClick(accountId, value)
                     }
                 }
             },
@@ -280,6 +280,8 @@ internal class WalletTokenCurrencyItemConverter(
                 R.string.yield_module_main_screen_promo_banner_message,
                 wrappedList(earnApyInfo.apy),
             ),
+            iconRes = R.drawable.ic_yield_mode_mini_12,
+            type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {
                 clickIntents.onYieldPromoClicked(currency)
                 clickIntents.onApyLabelClick(

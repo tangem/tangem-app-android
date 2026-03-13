@@ -30,6 +30,8 @@ internal object TangemTokenRowPreviewData {
     val promoBannerUM: TangemTokenRowUM.PromoBannerUM.Content
         get() = TangemTokenRowUM.PromoBannerUM.Content(
             title = stringReference("Earn yield by supplying your crypto assets"),
+            iconRes = R.drawable.ic_yield_mode_mini_12,
+            type = TangemTokenRowUM.PromoBannerUM.Content.Type.Yield,
             onPromoBannerClick = {},
             onPromoShown = {},
             onCloseClick = {},
