@@ -2,7 +2,7 @@ package com.tangem.data.tokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
