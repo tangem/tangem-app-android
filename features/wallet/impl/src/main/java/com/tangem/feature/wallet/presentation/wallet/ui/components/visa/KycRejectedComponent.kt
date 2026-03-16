@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import dagger.assisted.Assisted
@@ -26,7 +26,7 @@ internal class KycRejectedComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        MessageBottomSheetV2(state = state, onDismissRequest = ::dismiss)
+        MessageBottomSheet(state = state, onDismissRequest = ::dismiss)
     }
 
     data class Params(
