@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +27,7 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
@@ -32,6 +36,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
 import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.persistentListOf
 
 private const val VISIBILITY_THRESHOLD = 0.5f
@@ -52,12 +57,14 @@ internal fun WalletTopBar(
     Surface(
         color = Color.Unspecified,
         contentColor = Color.Unspecified,
-        modifier = Modifier.hazeEffectTangem {
-            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-        },
+        modifier = Modifier.hazeEffectTangemTopBar(behavior),
     ) {
-        val wrappedBalance = remember(behavior.state.collapsedFraction) {
-            if (behavior.state.collapsedFraction > VISIBILITY_THRESHOLD) walletBalance else null
+        val isWrappedBalanceShown by remember {
+            derivedStateOf { behavior.state.collapsedFraction > VISIBILITY_THRESHOLD }
+        }
+
+        val wrappedBalance = remember(walletBalance, isWrappedBalanceShown) {
+            walletBalance.takeIf { isWrappedBalanceShown }
         }
 
         TangemTopBar(
@@ -129,6 +136,21 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
         scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(),
         modifier = Modifier.testTag(MainScreenTestTags.TOP_BAR),
     )
+}
+
+@Composable
+private fun Modifier.hazeEffectTangemTopBar(behavior: TangemCollapsingAppBarBehavior): Modifier {
+    val rootBackground by LocalRootBackgroundColor.current
+    val intensity by animateFloatAsState(targetValue = behavior.state.collapsedFraction * 2f)
+
+    return hazeEffectTangem {
+        fallbackTint = HazeTint(rootBackground.copy(alpha = intensity / 2))
+        progressive = HazeProgressive.verticalGradient(
+            startIntensity = intensity,
+            endIntensity = 0f,
+            preferPerformance = true,
+        )
+    }
 }
 
 @Preview
