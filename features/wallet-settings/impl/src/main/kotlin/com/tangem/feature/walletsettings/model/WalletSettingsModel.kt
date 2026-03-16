@@ -408,8 +408,8 @@ internal class WalletSettingsModel @Inject constructor(
         val message = bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_passcode_lock_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    type = MessageBottomSheetUM.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.hw_backup_need_finish_first)
                 body = resourceReference(R.string.hw_backup_to_secure_description)
@@ -509,8 +509,8 @@ internal class WalletSettingsModel @Inject constructor(
                 bottomSheetMessage {
                     infoBlock {
                         icon(R.drawable.ic_alert_circle_24) {
-                            type = MessageBottomSheetUMV2.Icon.Type.Warning
-                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                            type = MessageBottomSheetUM.Icon.Type.Warning
+                            backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                         }
                         title = resourceReference(R.string.hw_remove_wallet_notification_title)
                         body = if (userWallet.backedUp) {
