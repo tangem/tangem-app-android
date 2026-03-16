@@ -23,6 +23,8 @@ import com.tangem.core.ui.components.powersaving.rememberPowerSavingState
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
+import com.tangem.core.ui.ds.message.MessageEffectAnimation
+import com.tangem.core.ui.ds.message.rememberMessageEffectAnimationAngle
 import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
@@ -128,6 +130,7 @@ fun TangemTheme(
             LocalBladeAnimation provides rememberBladeAnimation(),
             LocalSystemBarsIconsController provides systemBarsIconsController,
             LocalPowerSavingState provides rememberPowerSavingState(),
+            LocalMessageEffectAnimation provides rememberMessageEffectAnimationAngle(),
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -431,6 +434,10 @@ val LocalRedesignEnabled = staticCompositionLocalOf<Boolean> {
 
 val LocalPowerSavingState = compositionLocalOf<PowerSavingState> {
     error("No PowerSavingState provided")
+}
+
+val LocalMessageEffectAnimation = compositionLocalOf<MessageEffectAnimation> {
+    error("No MessageEffectAnimation provided")
 }
 
 /**
