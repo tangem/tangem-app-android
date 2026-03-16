@@ -189,11 +189,11 @@ class WalletBalanceFetcher internal constructor(
         userWalletId: UserWalletId,
         currencies: Set<CryptoCurrency>,
     ): Either<Throwable, Unit> = either {
-        val maybeStakingIds = currencies.map {
-            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it)
+        val maybeStakingIds = currencies.map { currency ->
+            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
 
             if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${it.id}")
+                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
             }
 
             stakingId
