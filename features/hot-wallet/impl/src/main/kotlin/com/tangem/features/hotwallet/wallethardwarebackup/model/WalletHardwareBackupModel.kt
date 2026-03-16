@@ -12,7 +12,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.bottomsheets.message.icon
 import com.tangem.core.ui.components.bottomsheets.message.infoBlock
 import com.tangem.core.ui.components.bottomsheets.message.onClick
@@ -66,8 +66,8 @@ internal class WalletHardwareBackupModel @Inject constructor(
             bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.ic_passcode_lock_32) {
-                        type = MessageBottomSheetUMV2.Icon.Type.Accent
-                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                        type = MessageBottomSheetUM.Icon.Type.Accent
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                     }
                     title = resourceReference(R.string.hw_backup_need_finish_first)
                     body = resourceReference(R.string.hw_backup_to_upgrade_description)
