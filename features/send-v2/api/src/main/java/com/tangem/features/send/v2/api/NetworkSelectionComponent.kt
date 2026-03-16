@@ -1,30 +1,23 @@
-package com.tangem.domain.qrscanning.models
+package com.tangem.features.send.v2.api
 
+import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
-sealed class QrSendTarget {
+interface NetworkSelectionComponent : ComposableDialogComponent {
 
-    /** Single match — navigate directly to Send */
-    data class Single(
-        val userWalletId: UserWalletId,
-        val currency: CryptoCurrency,
-        val address: String,
-        val amount: BigDecimal?,
-        val memo: String?,
-    ) : QrSendTarget()
-
-    /** Multiple matches — data for bottom sheet selection */
-    data class Multiple(
+    data class Params(
         val address: String,
         val amount: BigDecimal?,
         val memo: String?,
         val walletGroups: List<WalletGroup>,
-    ) : QrSendTarget() {
-
+        val onTokenSelected: (UserWalletId, CryptoCurrency) -> Unit,
+        val onDismiss: () -> Unit,
+    ) {
         data class WalletGroup(
             val userWalletId: UserWalletId,
             val walletName: String,
@@ -39,7 +32,5 @@ sealed class QrSendTarget {
         )
     }
 
-    data class WalletConnect(val uri: String) : QrSendTarget()
-
-    data class Unknown(val raw: String) : QrSendTarget()
+    interface Factory : ComponentFactory<Params, NetworkSelectionComponent>
 }
