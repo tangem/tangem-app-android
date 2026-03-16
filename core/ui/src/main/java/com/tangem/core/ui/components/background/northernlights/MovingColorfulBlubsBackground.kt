@@ -16,16 +16,18 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import com.tangem.core.ui.res.LocalIsInDarkTheme
 
 @Suppress("LongMethod")
 @Composable
 internal fun MovingColorfulBlubsBackground(modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "FluidMeshGradient")
+    val isDark = LocalIsInDarkTheme.current
 
-    // ── Circle 1 (left) ──────────────────────────────────────────────────────
+    // ── Circle 1 (left) — matches dc1 / lc1 from shader version ─────────────
     val color1 by transition.animateColor(
-        initialValue = Color(0xFF3355EE),
-        targetValue = Color(0xFF5577FF),
+        initialValue = if (isDark) Color(0xFF0D0D3A) else Color(0xFFCCB8EE),
+        targetValue = if (isDark) Color(0xFF1C1C6E) else Color(0xFFBBA0E8),
         animationSpec = infiniteRepeatable(
             animation = tween(4_000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
@@ -51,10 +53,10 @@ internal fun MovingColorfulBlubsBackground(modifier: Modifier = Modifier) {
         label = "y1",
     )
 
-    // ── Circle 2 (right) ─────────────────────────────────────────────────────
+    // ── Circle 2 (right) — matches dc2 / lc2 from shader version ────────────
     val color2 by transition.animateColor(
-        initialValue = Color(0xFF7733CC),
-        targetValue = Color(0xFF4455EE),
+        initialValue = if (isDark) Color(0xFF0A1238) else Color(0xFFB8C8F0),
+        targetValue = if (isDark) Color(0xFF112266) else Color(0xFF9AAEE8),
         animationSpec = infiniteRepeatable(
             animation = tween(5_000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
@@ -82,10 +84,10 @@ internal fun MovingColorfulBlubsBackground(modifier: Modifier = Modifier) {
         label = "y2",
     )
 
-    // ── Oval (center) ────────────────────────────────────────────────────────
+    // ── Oval (center) — matches dc4 / lc4 from shader version ───────────────
     val ovalColor by transition.animateColor(
-        initialValue = Color(0xFF5533CC),
-        targetValue = Color(0xFF8844EE),
+        initialValue = if (isDark) Color(0xFF081A30) else Color(0xFFB8C4EE),
+        targetValue = if (isDark) Color(0xFF113355) else Color(0xFFA8B4E8),
         animationSpec = infiniteRepeatable(
             animation = tween(7_000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
@@ -93,10 +95,10 @@ internal fun MovingColorfulBlubsBackground(modifier: Modifier = Modifier) {
         ),
         label = "ovalColor",
     )
-    // ── Circle 3 (center) ────────────────────────────────────────────────────
+    // ── Circle 3 (center) — matches dc3 / lc3 from shader version ───────────
     val color3 by transition.animateColor(
-        initialValue = Color(0xFF9933BB),
-        targetValue = Color(0xFFBB44DD),
+        initialValue = if (isDark) Color(0xFF110A38) else Color(0xFFDDC8F5),
+        targetValue = if (isDark) Color(0xFF2A1666) else Color(0xFFCCB0EE),
         animationSpec = infiniteRepeatable(
             animation = tween(6_000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
