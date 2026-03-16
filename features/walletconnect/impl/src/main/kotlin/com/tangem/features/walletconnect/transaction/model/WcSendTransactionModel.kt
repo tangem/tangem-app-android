@@ -20,8 +20,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM.Icon.Type
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -377,7 +377,7 @@ internal class WcSendTransactionModel @Inject constructor(
             description = description,
             onClick = ::signFromAlert,
             iconType = Type.Warning,
-            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning,
+            iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Warning,
         )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }
@@ -387,7 +387,7 @@ internal class WcSendTransactionModel @Inject constructor(
             description = description,
             onClick = ::signFromAlert,
             iconType = Type.Attention,
-            iconBgType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention,
+            iconBgType = MessageBottomSheetUM.Icon.BackgroundType.Attention,
         )
         stackNavigation.pushNew(WcTransactionRoutes.Alert(type))
     }
