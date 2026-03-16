@@ -58,3 +58,12 @@ fun KNode.clickAndWaitFor(
 
     throw AssertionError("Condition not met after $maxRetries click attempts")
 }
+
+fun KNode.performTextInputInChunks(
+    text: String,
+    chunkSize: Int = 2
+) {
+    text.chunked(chunkSize).forEach { chunk ->
+        performTextInput(chunk)
+    }
+}
