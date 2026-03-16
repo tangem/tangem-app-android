@@ -6,10 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -25,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.haze.hazeForegroundEffectTangem
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.LocalIsInDarkTheme
+import com.tangem.core.ui.res.LocalMessageEffectAnimation
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.utils.toPx
@@ -32,6 +30,10 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+data class MessageEffectAnimation(
+    val offsetState: State<Float>,
+)
 
 /**
  * Different visual effects for [Tangem message component].
@@ -222,7 +224,6 @@ enum class TangemMessageEffect(val isAnimatable: Boolean) {
         }
     }
 
-    // todo redesign replace with proper color when design is ready
     @Suppress("MagicNumber")
     fun fallbackColor(isInDarkTheme: Boolean): Color {
         return when (this) {
@@ -242,12 +243,16 @@ internal fun Modifier.messageEffectBackground(
     contentColor: Color,
 ): Modifier {
     val isInDarkTheme = LocalIsInDarkTheme.current
-    val borderGradientColors = remember { messageEffect.getBorderGradient(isInDarkTheme) }
-    val gradientColors = remember { messageEffect.getColorGradient(isInDarkTheme) }
-    val gradientTint = remember { messageEffect.getGradientTint(isInDarkTheme) }
+    val borderGradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getBorderGradient(isInDarkTheme) }
+    val gradientColors = remember(messageEffect, isInDarkTheme) { messageEffect.getColorGradient(isInDarkTheme) }
+    val gradientTint = remember(messageEffect, isInDarkTheme) { messageEffect.getGradientTint(isInDarkTheme) }
 
-    val angle by rememberAnimationAngle(messageEffect.isAnimatable)
-    val brush = remember { Brush.sweepGradient(messageEffect.getColorGradient(isInDarkTheme)) }
+    val angle by if (messageEffect.isAnimatable) {
+        LocalMessageEffectAnimation.current.offsetState
+    } else {
+        remember { mutableFloatStateOf(0f) }
+    }
+    val brush = remember(gradientColors) { Brush.sweepGradient(gradientColors) }
     val padding = 1.dp.toPx()
 
     return this
@@ -278,12 +283,14 @@ internal fun Modifier.messageEffectBackground(
         }
         .conditionalCompose(gradientColors.isNotEmpty()) {
             drawWithContent {
-                rotate(angle) {
-                    drawCircle(
-                        brush = brush,
-                        radius = size.width,
-                        blendMode = BlendMode.SrcIn,
-                    )
+                if (messageEffect.isAnimatable) {
+                    rotate(angle) {
+                        drawCircle(
+                            brush = brush,
+                            radius = size.width,
+                            blendMode = BlendMode.SrcIn,
+                        )
+                    }
                 }
                 drawRect(
                     color = contentColor,
@@ -296,9 +303,9 @@ internal fun Modifier.messageEffectBackground(
 }
 
 @Composable
-private fun rememberAnimationAngle(isAnimatable: Boolean) = if (isAnimatable) {
+internal fun rememberMessageEffectAnimationAngle(): MessageEffectAnimation {
     val infiniteTransition = rememberInfiniteTransition()
-    infiniteTransition.animateFloat(
+    val offsetState = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
@@ -306,8 +313,10 @@ private fun rememberAnimationAngle(isAnimatable: Boolean) = if (isAnimatable) {
             repeatMode = RepeatMode.Restart,
         ),
     )
-} else {
-    remember { mutableFloatStateOf(0f) }
+
+    return remember(offsetState) {
+        MessageEffectAnimation(offsetState)
+    }
 }
 
 // region Preview
