@@ -31,6 +31,7 @@ import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -188,7 +189,9 @@ private fun WalletContent2(
                 } else {
                     TangemTheme.colors2.surface.level2
                 },
-                modifier = Modifier.matchParentSize(),
+                modifier = Modifier
+                    .graphicsLayer { alpha = 1 - behavior.state.collapsedFraction * 2 }
+                    .matchParentSize(),
             )
 
             WalletPagerIndicator(
