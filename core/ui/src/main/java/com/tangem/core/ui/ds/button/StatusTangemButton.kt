@@ -3,10 +3,7 @@ package com.tangem.core.ui.ds.button
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
@@ -15,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -35,10 +33,10 @@ fun StatusTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) 
         text = buttonUM.text,
         iconRes = buttonUM.iconRes,
         iconPosition = buttonUM.iconPosition,
-        enabled = buttonUM.isEnabled,
+        isEnabled = buttonUM.isEnabled,
+        isLoading = buttonUM.isLoading,
         type = buttonUM.type,
         size = buttonUM.size,
-        state = buttonUM.state,
         shape = buttonUM.shape,
     )
 }
@@ -51,9 +49,9 @@ fun StatusTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) 
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param enabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled     Boolean indicating whether the button is enabled.
+ * @param isLoading     Boolean indicating whether the button is in a loading state.
  * @param size          TangemButtonSize defining the size of the button.
- * @param state         TangemButtonState defining the current state of the button.
  * @param shape         TangemButtonShape defining the shape of the button.
  *
 [REDACTED_AUTHOR]
@@ -65,25 +63,20 @@ fun StatusTangemButton(
     text: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
-    enabled: Boolean = true,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
     type: TangemButtonType = TangemButtonType.Accent,
     size: TangemButtonSize = TangemButtonSize.X15,
-    state: TangemButtonState = TangemButtonState.Default,
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
     val statusColor = type.getStatusColor()
-    val contentColor = when (state) {
-        TangemButtonState.Disabled -> TangemTheme.colors2.text.status.disabled
-        else -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+    val contentColor = when {
+        isEnabled -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+        else -> TangemTheme.colors2.text.status.disabled
     }
-    val backgroundModifier = when (state) {
-        TangemButtonState.Disabled -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
-        TangemButtonState.Default -> Modifier.background(statusColor)
-        TangemButtonState.Loading,
-        TangemButtonState.Pressed,
-        -> Modifier
-            .background(statusColor)
-            .background(TangemTheme.colors2.overlay.overlaySecondary)
+    val backgroundModifier = when {
+        isEnabled -> Modifier.background(statusColor)
+        else -> Modifier.background(TangemTheme.colors2.button.backgroundDisabled)
     }
     TangemButtonInternal(
         onClick = onClick,
@@ -93,9 +86,9 @@ fun StatusTangemButton(
         text = text,
         contentColor = contentColor,
         iconRes = iconRes,
-        enabled = enabled,
+        isEnabled = isEnabled,
+        isLoading = isLoading,
         size = size,
-        state = state,
         iconPosition = iconPosition,
     )
 }
@@ -113,35 +106,42 @@ private fun TangemButtonType.getStatusColor() = when (this) {
 @Preview(showBackground = true, widthDp = 480)
 @Preview(showBackground = true, widthDp = 480, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun StatusTangemButton_Preview(
-    @PreviewParameter(AccentTangemButtonPreviewProvider::class) params: TangemButtonState,
+    @PreviewParameter(StatusTangemButtonPreviewProvider::class) params: StatusTangemButtonPreviewData,
 ) {
     TangemThemePreviewRedesign {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(21.dp),
+        Column(
             modifier = Modifier
-                .background(TangemTheme.colors2.surface.level1)
-                .padding(8.dp),
+                .fillMaxWidth()
+                .background(TangemTheme.colors2.surface.level1),
         ) {
-            repeat(4) { yIndex ->
-                val shape = if (yIndex < 2) TangemButtonShape.Default else TangemButtonShape.Rounded
-                val text = if (yIndex % 2 == 1) null else stringReference("Button")
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    repeat(2) { xIndex ->
-                        val iconPosition = if (xIndex == 1) {
-                            TangemButtonIconPosition.Start
-                        } else {
-                            TangemButtonIconPosition.End
+            params.statuses.fastForEach { (isEnabled, isLoading) ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(21.dp),
+                    modifier = Modifier.padding(8.dp),
+                ) {
+                    repeat(4) { yIndex ->
+                        val shape = if (yIndex < 2) TangemButtonShape.Default else TangemButtonShape.Rounded
+                        val text = if (yIndex % 2 == 1) null else stringReference("Button")
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            repeat(2) { xIndex ->
+                                val iconPosition = if (xIndex == 1) {
+                                    TangemButtonIconPosition.Start
+                                } else {
+                                    TangemButtonIconPosition.End
+                                }
+                                StatusTangemButton(
+                                    onClick = {},
+                                    text = text,
+                                    size = TangemButtonSize.X15,
+                                    shape = shape,
+                                    iconPosition = iconPosition,
+                                    iconRes = R.drawable.ic_tangem_24,
+                                    type = params.type,
+                                    isEnabled = isEnabled,
+                                    isLoading = isLoading,
+                                )
+                            }
                         }
-                        StatusTangemButton(
-                            onClick = {},
-                            text = text,
-                            size = TangemButtonSize.X15,
-                            shape = shape,
-                            iconPosition = iconPosition,
-                            iconRes = R.drawable.ic_tangem_24,
-                            type = TangemButtonType.Accent,
-                            state = params,
-                        )
                     }
                 }
             }
@@ -149,13 +149,28 @@ private fun StatusTangemButton_Preview(
     }
 }
 
-private class AccentTangemButtonPreviewProvider : PreviewParameterProvider<TangemButtonState> {
-    override val values: Sequence<TangemButtonState>
+private data class StatusTangemButtonPreviewData(
+    val type: TangemButtonType,
+    val statuses: List<Pair<Boolean, Boolean>>,
+)
+
+private class StatusTangemButtonPreviewProvider : PreviewParameterProvider<StatusTangemButtonPreviewData> {
+    val statuses = listOf(
+        true to false,
+        false to false,
+        true to true,
+        false to true,
+    )
+    override val values: Sequence<StatusTangemButtonPreviewData>
         get() = sequenceOf(
-            TangemButtonState.Default,
-            TangemButtonState.Pressed,
-            TangemButtonState.Loading,
-            TangemButtonState.Disabled,
+            StatusTangemButtonPreviewData(
+                type = TangemButtonType.Positive,
+                statuses = statuses,
+            ),
+            StatusTangemButtonPreviewData(
+                type = TangemButtonType.Accent,
+                statuses = statuses,
+            ),
         )
 }
 // endregion
