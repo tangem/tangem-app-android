@@ -2,6 +2,9 @@ package com.tangem.core.ui.ds.image
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -24,6 +27,9 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Immutable
 sealed interface TangemIconUM {
+
+    /** Empty icon */
+    data object Empty : TangemIconUM
 
     /** Icon representing a currency. */
     data class Currency(
@@ -99,6 +105,10 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
                 )
             },
             contentDescription = null,
+        )
+        TangemIconUM.Empty -> Box(
+            modifier = modifier
+                .background(TangemTheme.colors2.skeleton.backgroundPrimary, shape = CircleShape),
         )
     }
 }
