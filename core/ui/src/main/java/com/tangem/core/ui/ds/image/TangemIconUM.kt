@@ -8,6 +8,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -74,7 +75,7 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
             tint = tangemIconUM.tintReference(),
         )
         is TangemIconUM.Image -> Image(
-            imageVector = ImageVector.vectorResource(tangemIconUM.imageRes),
+            painter = painterResource(tangemIconUM.imageRes),
             contentDescription = null,
             modifier = modifier,
         )
