@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
  *
  * @param multiAccountStatusListSupplier Supplier that provides the status list for multiple accounts.
  */
-class GetWalletTotalBalanceUseCaseV2(
+class GetWalletTotalBalanceUseCase(
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) {
 

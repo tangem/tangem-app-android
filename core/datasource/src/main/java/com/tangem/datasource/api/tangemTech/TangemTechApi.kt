@@ -45,15 +45,6 @@ interface TangemTechApi {
     @GET("v1/geo")
     suspend fun getUserCountryCode(): GeoResponse
 
-    @GET("v1/user-tokens/{user-id}")
-    suspend fun getUserTokens(@Path(value = "user-id") userId: String): ApiResponse<UserTokensResponse>
-
-    @PUT("v1/user-tokens/{user-id}")
-    suspend fun saveUserTokens(
-        @Path(value = "user-id") userId: String,
-        @Body userTokens: UserTokensResponse,
-    ): ApiResponse<Unit>
-
     @PUT("/v1/wallets/{walletId}/tokens")
     suspend fun saveTokens(
         @Path(value = "walletId") userId: String,
@@ -138,14 +129,8 @@ interface TangemTechApi {
     @PATCH("v1/user-wallets/wallets/{wallet_id}")
     suspend fun updateWallet(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
 
-    @POST("v1/user-wallets/wallets/create-and-connect-by-appuid/{application_id}")
-    suspend fun associateApplicationIdWithWallets(
-        @Path("application_id") applicationId: String,
-        @Body body: List<WalletIdBody>,
-    ): ApiResponse<Unit>
-
     @PUT("/v1/user-wallets/applications/{application_id}/wallets")
-    suspend fun associateApplicationIdWithWalletsV2(
+    suspend fun associateApplicationIdWithWallets(
         @Path("application_id") applicationId: String,
         @Body body: AssociateApplicationIdWithWalletsBody,
     ): ApiResponse<Unit>
