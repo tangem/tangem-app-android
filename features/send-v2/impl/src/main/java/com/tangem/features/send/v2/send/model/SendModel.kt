@@ -281,9 +281,11 @@ internal class SendModel @Inject constructor(
             }
             is PredefinedValues.Content.QrCode -> {
                 val predefinedAmount = predefinedValues.amount?.parseBigDecimalOrNull()
+                val amount = predefinedAmount
+                    ?: (uiState.value.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+                    ?: error("Invalid amount")
                 createTransferTransactionUseCase(
-                    amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus)
-                        ?: error("Invalid amount"),
+                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                     memo = predefinedValues.memo,
                     destination = predefinedValues.address,
                     userWalletId = userWallet.walletId,
@@ -422,11 +424,22 @@ internal class SendModel @Inject constructor(
             feeCryptoCurrencyStatusFlow,
         ) { cryptoCurrencyStatus, feeCryptoCurrencyStatus ->
             if (isAvailableForSend && currentRoute.value == initialRoute) {
-                router.replaceAll(Confirm)
+                if (isPredefinedAmountExceedsBalance(cryptoCurrencyStatus)) {
+                    router.replaceAll(Amount(isEditMode = false))
+                } else {
+                    router.replaceAll(Confirm)
+                }
             } else if (isUnavailableForSend) {
                 showAlertError()
             }
         }.launchIn(modelScope)
+    }
+
+    private fun isPredefinedAmountExceedsBalance(cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+        val predefinedAmount = (predefinedValues as? PredefinedValues.Content)?.amount
+            ?.parseBigDecimalOrNull() ?: return false
+        val balance = cryptoCurrencyStatus.value.amount ?: return false
+        return predefinedAmount > balance
     }
 
     private fun CryptoCurrencyStatus.hasAvailableStatus(): Boolean = this.value is CryptoCurrencyStatus.Loaded ||
