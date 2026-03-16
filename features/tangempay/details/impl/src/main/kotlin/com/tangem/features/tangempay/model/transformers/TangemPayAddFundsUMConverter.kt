@@ -22,7 +22,7 @@ internal class TangemPayAddFundsUMConverter(
                 dismiss = listener::onDismissAddFunds,
                 errorMessage = TangemPayMessagesFactory.createErrorMessage(
                     errorType = TangemPayDetailsErrorType.Receive,
-                ).messageBottomSheetUMV2,
+                ).messageBottomSheetUM,
             )
         } else {
             TangemPayAddFundsUM(
