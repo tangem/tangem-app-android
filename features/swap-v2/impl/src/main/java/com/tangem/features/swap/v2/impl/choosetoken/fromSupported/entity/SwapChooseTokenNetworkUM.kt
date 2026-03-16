@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
@@ -15,18 +15,18 @@ internal data class SwapChooseTokenNetworkUM(
 @Immutable
 internal sealed class SwapChooseTokenNetworkContentUM : TangemBottomSheetConfigContent {
 
-    abstract val messageContent: MessageBottomSheetUMV2
+    abstract val messageContent: MessageBottomSheetUM
 
     data class Loading(
-        override val messageContent: MessageBottomSheetUMV2,
+        override val messageContent: MessageBottomSheetUM,
     ) : SwapChooseTokenNetworkContentUM()
 
     data class Error(
-        override val messageContent: MessageBottomSheetUMV2,
+        override val messageContent: MessageBottomSheetUM,
     ) : SwapChooseTokenNetworkContentUM()
 
     data class Content(
-        override val messageContent: MessageBottomSheetUMV2,
+        override val messageContent: MessageBottomSheetUM,
         val swapNetworks: ImmutableList<SwapChooseNetworkUM>,
     ) : SwapChooseTokenNetworkContentUM()
 }
