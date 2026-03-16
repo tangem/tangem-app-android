@@ -270,11 +270,7 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
             iconPosition = TangemButtonIconPosition.End,
             shape = TangemButtonShape.Rounded,
             size = TangemButtonSize.X9,
-            state = if (buttonState.shouldShowProgress) {
-                TangemButtonState.Loading
-            } else {
-                TangemButtonState.Default
-            },
+            isLoading = buttonState.shouldShowProgress,
             modifier = Modifier.weight(1f),
         )
         is ButtonsState.SecondaryButtonConfig -> PrimaryInverseTangemButton(
@@ -284,11 +280,7 @@ private fun RowScope.TangemMessageLegacyButtons(buttonState: ButtonsState) {
             iconPosition = TangemButtonIconPosition.End,
             shape = TangemButtonShape.Rounded,
             size = TangemButtonSize.X9,
-            state = if (buttonState.shouldShowProgress) {
-                TangemButtonState.Loading
-            } else {
-                TangemButtonState.Default
-            },
+            isLoading = buttonState.shouldShowProgress,
             modifier = Modifier.weight(1f),
         )
         is ButtonsState.PairButtonsConfig -> {
