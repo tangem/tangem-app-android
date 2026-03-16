@@ -64,7 +64,7 @@ internal class UnreachableActionsFactory(
                     ActionState.Send(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable),
                     ActionState.Swap(
                         unavailabilityReason = ScenarioUnavailabilityReason.Unreachable,
-                        showBadge = false,
+                        shouldShowBadge = false,
                     ),
                     ActionState.Sell(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable),
                     ActionState.Stake(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable, option = null),
