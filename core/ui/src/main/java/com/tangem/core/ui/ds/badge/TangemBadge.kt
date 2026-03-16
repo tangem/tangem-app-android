@@ -137,6 +137,7 @@ private fun StartIcon(
                 is TangemIconUM.Ident,
                 is TangemIconUM.Image,
                 is TangemIconUM.Url,
+                TangemIconUM.Empty,
                 -> wrappedIconRes
                 is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
             },
@@ -164,6 +165,7 @@ private fun EndIcon(
                 is TangemIconUM.Ident,
                 is TangemIconUM.Image,
                 is TangemIconUM.Url,
+                TangemIconUM.Empty,
                 -> wrappedIconRes
                 is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
             },
