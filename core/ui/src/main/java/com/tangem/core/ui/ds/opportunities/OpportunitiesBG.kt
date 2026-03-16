@@ -128,6 +128,7 @@ private fun BoxScope.BackgroundLayer(icon: TangemIconUM, blurRadius: Dp = 26.dp)
                 ResBackground(icon.fallbackRes, blurRadius)
             }
         }
+        TangemIconUM.Empty -> SolidColorBackground(TangemTheme.colors2.skeleton.backgroundPrimary, blurRadius)
     }
 }
 
