@@ -19,7 +19,7 @@ sealed class TangemTokenRowUM : TangemRowUM {
     abstract override val id: String
 
     /** Token icon state */
-    abstract val headIconUM: TangemIconUM.Currency
+    abstract val headIconUM: TangemIconUM
 
     /** Token title UM (in one row with [topEndContentUM]) */
     abstract val titleUM: TitleUM
@@ -79,6 +79,23 @@ sealed class TangemTokenRowUM : TangemRowUM {
     }
 
     /**
+     * Loading state of [TangemTokenRowUM]
+     */
+    data class Empty(
+        override val id: String,
+    ) : TangemTokenRowUM() {
+        override val headIconUM: TangemIconUM = TangemIconUM.Empty
+        override val subtitleUM: SubtitleUM = SubtitleUM.Placeholder
+        override val titleUM: TitleUM = TitleUM.Placeholder
+        override val topEndContentUM: EndContentUM = EndContentUM.Placeholder
+        override val bottomEndContentUM: EndContentUM = EndContentUM.Placeholder
+        override val promoBannerUM: PromoBannerUM = PromoBannerUM.Empty
+        override val tailUM: TangemRowTailUM = TangemRowTailUM.Empty
+        override val onItemClick: (() -> Unit)? = null
+        override val onItemLongClick: (() -> Unit)? = null
+    }
+
+    /**
      * Actionable state of [TangemTokenRowUM]
      */
     data class Actionable(
@@ -108,6 +125,8 @@ sealed class TangemTokenRowUM : TangemRowUM {
 
         data object Loading : TitleUM()
 
+        data object Placeholder : TitleUM()
+
         data object Empty : TitleUM()
     }
 
@@ -125,6 +144,8 @@ sealed class TangemTokenRowUM : TangemRowUM {
 
         data object Loading : SubtitleUM()
 
+        data object Placeholder : SubtitleUM()
+
         data object Empty : SubtitleUM()
     }
 
@@ -141,6 +162,8 @@ sealed class TangemTokenRowUM : TangemRowUM {
         ) : EndContentUM()
 
         data object Loading : EndContentUM()
+
+        data object Placeholder : EndContentUM()
 
         data object Empty : EndContentUM()
     }
