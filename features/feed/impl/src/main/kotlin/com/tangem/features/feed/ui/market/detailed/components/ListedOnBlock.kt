@@ -156,17 +156,17 @@ internal fun ListedOnBlockPlaceholderV1(modifier: Modifier = Modifier) {
 @Composable
 internal fun ListedOnBlockPlaceholderV2(modifier: Modifier = Modifier) {
     TokenMarketInformationBlock(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextShimmer(
                     style = TangemTheme.typography2.headingSemibold20,
-                    modifier = Modifier.fillMaxWidth(fraction = 0.5f),
+                    modifier = Modifier.width(120.dp),
                     radius = TangemTheme.dimens2.x25,
                 )
                 TextShimmer(
                     style = TangemTheme.typography2.captionSemibold13,
-                    modifier = Modifier.fillMaxWidth(fraction = 0.5f),
+                    modifier = Modifier.width(66.dp),
                     radius = TangemTheme.dimens2.x25,
                 )
             }
