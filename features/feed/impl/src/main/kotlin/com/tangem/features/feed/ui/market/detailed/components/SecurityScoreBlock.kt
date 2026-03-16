@@ -129,7 +129,7 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
     TangemRowContainer(modifier = modifier) {
         TextShimmer(
             modifier = Modifier
-                .width(74.dp)
+                .width(114.dp)
                 .layoutId(layoutId = TangemRowLayoutId.START_TOP),
             style = TangemTheme.typography2.headingBold28,
             radius = TangemTheme.dimens2.x25,
@@ -137,7 +137,8 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
 
         TextShimmer(
             modifier = Modifier
-                .width(96.dp)
+                .width(74.dp)
+                .padding(top = 8.dp)
                 .layoutId(layoutId = TangemRowLayoutId.START_BOTTOM),
             style = TangemTheme.typography2.captionSemibold12,
             radius = TangemTheme.dimens2.x25,
@@ -145,7 +146,7 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
 
         TextShimmer(
             modifier = Modifier
-                .width(120.dp)
+                .width(116.dp)
                 .layoutId(layoutId = TangemRowLayoutId.END_TOP),
             style = TangemTheme.typography2.headingBold28,
             radius = TangemTheme.dimens2.x25,
@@ -153,7 +154,8 @@ private fun SecurityScoreBlockPlaceholderV2(modifier: Modifier = Modifier) {
 
         TextShimmer(
             modifier = Modifier
-                .width(72.dp)
+                .width(96.dp)
+                .padding(top = 8.dp)
                 .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM),
             style = TangemTheme.typography2.captionSemibold12,
             radius = TangemTheme.dimens2.x25,
