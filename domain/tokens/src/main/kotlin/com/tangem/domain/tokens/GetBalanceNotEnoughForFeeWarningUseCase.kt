@@ -89,10 +89,10 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         )
             .orEmpty()
 
-        val token = tokens.find {
-            it is CryptoCurrency.Token &&
-                it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
-                it.network.derivationPath == tokenStatus.currency.network.derivationPath
+        val token = tokens.find { currency ->
+            currency is CryptoCurrency.Token &&
+                currency.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &&
+                currency.network.derivationPath == tokenStatus.currency.network.derivationPath
         }
 
         return if (token != null) {
