@@ -2,7 +2,7 @@ package com.tangem.features.walletconnect.connections.utils
 
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM.Icon.Type
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -23,16 +23,16 @@ internal object WcAlertsFactory {
             createUnknownErrorAlert(alertType.errorMessage, alertType.onDismiss, alertType.onRetry)
     }
 
-    fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
+    fun createUnknownDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                 }
                 title = resourceReference(R.string.security_alert_title)
                 body = resourceReference(R.string.wc_alert_domain_issues_description)
                 chip(resourceReference(R.string.wc_alert_audit_unknown_domain)) {
-                    type = MessageBottomSheetUMV2.Chip.Type.Unspecified
+                    type = MessageBottomSheetUM.Chip.Type.Unspecified
                 }
             }
             primaryButton {
@@ -48,12 +48,12 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createInvalidDomainAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun createInvalidDomainAlert(onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_wallet_connect_24) {
                     type = Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_errors_invalid_domain_title)
                 body = resourceReference(R.string.wc_errors_invalid_domain_subtitle)
@@ -66,17 +66,17 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createUnsafeDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUMV2 {
+    fun createUnsafeDomainAlert(activeButtonOnClick: (() -> Unit)? = null): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
                     type = Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Warning
                 }
                 title = resourceReference(R.string.security_alert_title)
                 body = resourceReference(R.string.wc_alert_domain_issues_description)
                 chip(resourceReference(R.string.wc_alert_audit_malicious_domain)) {
-                    type = MessageBottomSheetUMV2.Chip.Type.Warning
+                    type = MessageBottomSheetUM.Chip.Type.Warning
                 }
             }
             primaryButton {
@@ -92,12 +92,12 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createUnsupportedDomainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun createUnsupportedDomainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_wallet_connect_24) {
                     type = Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_alert_unsupported_dapps_title)
                 body = resourceReference(R.string.wc_alert_unsupported_dapps_description, wrappedList(appName))
@@ -110,12 +110,12 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createUriAlreadyUsedAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun createUriAlreadyUsedAlert(onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_wallet_connect_24) {
                     type = Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_uri_already_used_title)
                 body = resourceReference(R.string.wc_uri_already_used_description)
@@ -128,12 +128,12 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createTimeoutExceptionAlert(onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun createTimeoutExceptionAlert(onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_wallet_connect_24) {
                     type = Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_alert_request_timeout_title)
                 body = resourceReference(R.string.wc_alert_request_timeout_description)
@@ -145,12 +145,12 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createUnsupportedChainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun createUnsupportedChainAlert(appName: String, onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_network_new_24) {
                     type = Type.Informative
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.wc_alert_unsupported_networks_title)
                 body = resourceReference(R.string.wc_alert_unsupported_networks_description, wrappedList(appName))
@@ -167,11 +167,11 @@ internal object WcAlertsFactory {
         errorMessage: String?,
         onDismiss: () -> Unit,
         onRetry: () -> Unit,
-    ): MessageBottomSheetUMV2 {
+    ): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_attention_20) {
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                 }
                 title = resourceReference(R.string.wc_alert_unknown_error_title)
                 body = if (errorMessage.isNullOrEmpty()) {
@@ -199,8 +199,8 @@ internal object WcAlertsFactory {
         description: String?,
         activeButtonOnClick: (() -> Unit),
         iconType: Type,
-        iconBgType: MessageBottomSheetUMV2.Icon.BackgroundType,
-    ): MessageBottomSheetUMV2 {
+        iconBgType: MessageBottomSheetUM.Icon.BackgroundType,
+    ): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
@@ -223,11 +223,11 @@ internal object WcAlertsFactory {
         }
     }
 
-    fun createVerifiedDomainAlert(appName: String): MessageBottomSheetUMV2 {
+    fun createVerifiedDomainAlert(appName: String): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.img_approvale2_20) {
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
                 }
                 title = resourceReference(R.string.wc_alert_verified_domain_title)
                 body = resourceReference(R.string.wc_alert_verified_domain_description, wrappedList(appName))
