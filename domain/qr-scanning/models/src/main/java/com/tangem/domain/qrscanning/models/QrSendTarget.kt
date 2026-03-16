@@ -35,6 +35,7 @@ sealed class QrSendTarget {
             val accountId: AccountId,
             val accountName: AccountName,
             val currencies: List<CryptoCurrency>,
+            val hiddenTokensCount: Int = 0,
         )
     }
 
