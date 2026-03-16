@@ -80,8 +80,11 @@ fun BottomFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier) {
                     backgroundColor = Color.Transparent,
                 ),
             ) {
-                progressive =
-                    HazeProgressive.verticalGradient(startIntensity = 0f, endIntensity = 1f)
+                progressive = HazeProgressive.verticalGradient(
+                    startIntensity = 0f,
+                    endIntensity = 1f,
+                    preferPerformance = true,
+                )
             },
     )
 }
@@ -110,7 +113,11 @@ fun HorizontalFadeWithBlur(backgroundColor: Color, modifier: Modifier = Modifier
                 ),
             ) {
                 progressive =
-                    HazeProgressive.horizontalGradient(startIntensity = 0f, endIntensity = 1f)
+                    HazeProgressive.horizontalGradient(
+                        startIntensity = 0f,
+                        endIntensity = 1f,
+                        preferPerformance = true,
+                    )
             },
     )
 }
