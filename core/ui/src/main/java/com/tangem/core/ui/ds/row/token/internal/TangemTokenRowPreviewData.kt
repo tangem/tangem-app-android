@@ -19,7 +19,7 @@ import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 import java.util.UUID
 
-internal object TangemTokenRowPreviewData {
+object TangemTokenRowPreviewData {
 
     private val priceChangeState: PriceChangeState.Content
         get() = PriceChangeState.Content(
@@ -217,6 +217,9 @@ internal object TangemTokenRowPreviewData {
             titleUM = TangemTokenRowUM.TitleUM.Loading,
             subtitleUM = TangemTokenRowUM.SubtitleUM.Loading,
         )
+
+    val emptyState: TangemTokenRowUM.Empty
+        get() = TangemTokenRowUM.Empty(id = UUID.randomUUID().toString())
 
     val unreachableState: TangemTokenRowUM
         get() = defaultState.copy(
