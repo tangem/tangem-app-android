@@ -29,7 +29,7 @@ data class TokenActionsState(
 
         data class Swap(
             override val unavailabilityReason: ScenarioUnavailabilityReason,
-            val showBadge: Boolean,
+            val shouldShowBadge: Boolean,
         ) : ActionState()
 
         data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
