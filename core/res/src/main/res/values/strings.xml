@@ -801,6 +801,10 @@
   <string name="markets_token_details_holders">Holders</string>
   <string name="markets_token_details_holders_description">The change in the number of token holders within a specific timeframe</string>
   <string name="markets_token_details_holders_full">Holders</string>
+  <string name="markets_token_details_insight_day_timeline">D</string>
+  <string name="markets_token_details_insight_month_timeline">M</string>
+  <string name="markets_token_details_insight_week_timeline">W</string>
+  <string name="markets_token_details_insight_year_timeline">Y</string>
   <string name="markets_token_details_insights">Insights</string>
   <string name="markets_token_details_links">Links</string>
   <string name="markets_token_details_liquidity">Liquidity</string>
