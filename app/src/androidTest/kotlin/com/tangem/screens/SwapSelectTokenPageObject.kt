@@ -3,10 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.SearchBarTestTags
-import com.tangem.core.ui.test.SwapSelectTokenScreenTestTags
-import com.tangem.core.ui.test.TokenElementsTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.*
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -48,6 +45,11 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
+    val searchBarBlock: KNode = child {
+        hasTestTag(BaseSearchBarTestTags.SEARCH_BAR)
+        useUnmergedTree = true
+    }
+
     val searchBarIcon: KNode = child {
         hasTestTag(SearchBarTestTags.ICON)
         useUnmergedTree = true
@@ -58,12 +60,28 @@ class SwapSelectTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
+    val tryAgainButton: KNode = child {
+        hasText(getResourceString(R.string.alert_button_try_again))
+        useUnmergedTree = true
+    }
+
+    val unableToLoadData: KNode = child {
+        hasText(getResourceString(R.string.markets_loading_error_title))
+        useUnmergedTree = true
+    }
+
     fun tokenWithName(tokenName: String): KNode = child {
         hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
         hasAnyChild(withText(tokenName))
         useUnmergedTree = true
     }
 
+    fun marketsTokenWithName(title: String): KNode {
+        return child {
+            hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)
+            hasText(title)
+        }
+    }
 }
 
 internal fun BaseTestCase.onSwapSelectTokenScreen(function: SwapSelectTokenPageObject.() -> Unit) =
