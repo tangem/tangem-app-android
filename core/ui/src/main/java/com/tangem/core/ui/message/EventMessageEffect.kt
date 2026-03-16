@@ -19,18 +19,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.SpacerHMax
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheet
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2
 import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.LocalEventMessageHandler
-import com.tangem.core.ui.res.LocalRedesignEnabled
-import com.tangem.core.ui.res.LocalSnackbarHostState
-import com.tangem.core.ui.res.LocalTopSnackbarHostState
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.*
 
 @Composable
 fun EventMessageEffect(
@@ -50,7 +43,6 @@ fun EventMessageEffect(
 
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
-    var bottomSheetMessageV2: BottomSheetMessageV2? by remember { mutableStateOf(value = null) }
     var loadingMessage: GlobalLoadingMessage? by remember { mutableStateOf(value = null) }
     val isRedesignEnabled = LocalRedesignEnabled.current
 
@@ -68,9 +60,6 @@ fun EventMessageEffect(
             }
             is BottomSheetMessage -> {
                 bottomSheetMessage = message
-            }
-            is BottomSheetMessageV2 -> {
-                bottomSheetMessageV2 = message
             }
             is ToastMessage -> {
                 onShowToast(message, context)
@@ -97,18 +86,8 @@ fun EventMessageEffect(
 
     bottomSheetMessage?.let { message ->
         MessageBottomSheet(
-            message = message,
-            onDismissRequest = {
-                bottomSheetMessage = null
-                message.onDismissRequest()
-            },
-        )
-    }
-
-    bottomSheetMessageV2?.let { message ->
-        MessageBottomSheetV2(
-            state = message.messageBottomSheetUMV2,
-            onDismissRequest = { bottomSheetMessageV2 = null },
+            state = message.messageBottomSheetUM,
+            onDismissRequest = { bottomSheetMessage = null },
         )
     }
 
@@ -139,41 +118,6 @@ private fun LoadingDialog() {
             SpacerHMax()
         }
     }
-}
-
-@Composable
-private fun MessageBottomSheet(message: BottomSheetMessage, onDismissRequest: () -> Unit) {
-    val config = TangemBottomSheetConfig(
-        isShown = true,
-        content = MessageBottomSheetUM(
-            iconResId = message.iconResId,
-            title = message.title,
-            message = message.message,
-            primaryAction = message.firstAction?.let { action ->
-                MessageBottomSheetUM.ActionUM(
-                    text = action.title,
-                    isEnabled = action.isEnabled,
-                    onClick = {
-                        action.onClick()
-                        onDismissRequest()
-                    },
-                )
-            },
-            secondaryAction = message.secondAction?.let { action ->
-                MessageBottomSheetUM.ActionUM(
-                    text = action.title,
-                    isEnabled = action.isEnabled,
-                    onClick = {
-                        action.onClick()
-                        onDismissRequest()
-                    },
-                )
-            },
-        ),
-        onDismissRequest = onDismissRequest,
-    )
-
-    MessageBottomSheet(config)
 }
 
 @Composable
