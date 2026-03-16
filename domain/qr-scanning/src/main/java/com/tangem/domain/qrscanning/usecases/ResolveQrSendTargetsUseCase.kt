@@ -6,6 +6,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import java.math.BigDecimal
@@ -14,41 +15,41 @@ import com.tangem.domain.qrscanning.models.QrSendTarget
 class ResolveQrSendTargetsUseCase(
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val qrScanningEventsRepository: QrScanningEventsRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) {
 
     suspend operator fun invoke(qrCode: String): QrSendTarget {
         val allAccountLists = multiAccountListSupplier.getSyncOrNull(Unit).orEmpty()
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        val walletNamesMap = userWallets.associate { it.walletId to it.name }
 
-        val currencyEntries = allAccountLists.flatMap { accountList ->
-            accountList.accounts
-                .filterIsInstance<Account.CryptoPortfolio>()
-                .flatMap { account ->
-                    account.cryptoCurrencies.map { currency ->
-                        currency to CurrencyLocation(
-                            userWalletId = accountList.userWalletId,
-                            walletName = accountList.userWalletId.stringValue,
-                            accountId = account.accountId,
-                            accountName = account.accountName,
-                        )
-                    }
+        val allCurrencies = mutableListOf<CryptoCurrency>()
+        val currencyLocations = mutableMapOf<CryptoCurrency.ID, MutableList<CurrencyLocation>>()
+        val totalPerAccount = mutableMapOf<AccountId, Int>()
+
+        for (accountList in allAccountLists) {
+            for (account in accountList.accounts.filterIsInstance<Account.CryptoPortfolio>()) {
+                val location = CurrencyLocation(
+                    walletName = walletNamesMap[account.accountId.userWalletId]
+                        ?: account.accountId.userWalletId.stringValue,
+                    accountId = account.accountId,
+                    accountName = account.accountName,
+                )
+                totalPerAccount[account.accountId] = account.cryptoCurrencies.size
+                for (currency in account.cryptoCurrencies) {
+                    allCurrencies.add(currency)
+                    currencyLocations.getOrPut(currency.id) { mutableListOf() }.add(location)
                 }
+            }
         }
 
-        val allCurrencies = currencyEntries.map { it.first }
-        val currencyLocations = currencyEntries.groupBy(
-            keySelector = { it.first.id },
-            valueTransform = { it.second },
-        )
-
         val classified = qrScanningEventsRepository.classify(qrCode, allCurrencies)
+        val portfolioIndex = PortfolioIndex(currencyLocations, totalPerAccount)
 
-        return resolve(classified, currencyLocations)
+        return resolve(classified, portfolioIndex)
     }
 
-    private fun resolve(
-        classified: ClassifiedQrContent,
-        currencyLocations: Map<CryptoCurrency.ID, List<CurrencyLocation>>,
-    ): QrSendTarget {
+    private fun resolve(classified: ClassifiedQrContent, portfolioIndex: PortfolioIndex): QrSendTarget {
         return when (classified) {
             is ClassifiedQrContent.WalletConnect -> QrSendTarget.WalletConnect(classified.uri)
             is ClassifiedQrContent.Unknown -> QrSendTarget.Unknown(classified.raw)
@@ -57,14 +58,14 @@ class ResolveQrSendTargetsUseCase(
                 amount = null,
                 memo = null,
                 matchingCurrencies = classified.matchingCurrencies,
-                currencyLocations = currencyLocations,
+                portfolioIndex = portfolioIndex,
             )
             is ClassifiedQrContent.PaymentUri -> resolveAddressTarget(
                 address = classified.address,
                 amount = classified.amount,
                 memo = classified.memo,
                 matchingCurrencies = classified.matchingCurrencies,
-                currencyLocations = currencyLocations,
+                portfolioIndex = portfolioIndex,
             )
         }
     }
@@ -74,9 +75,9 @@ class ResolveQrSendTargetsUseCase(
         amount: BigDecimal?,
         memo: String?,
         matchingCurrencies: List<CryptoCurrency>,
-        currencyLocations: Map<CryptoCurrency.ID, List<CurrencyLocation>>,
+        portfolioIndex: PortfolioIndex,
     ): QrSendTarget {
-        val walletGroups = buildWalletGroups(matchingCurrencies, currencyLocations)
+        val walletGroups = buildWalletGroups(matchingCurrencies, portfolioIndex)
 
         val singleGroup = walletGroups.singleOrNull()
         val singleCurrency = singleGroup?.accounts?.singleOrNull()?.currencies?.singleOrNull()
@@ -101,15 +102,15 @@ class ResolveQrSendTargetsUseCase(
 
     private fun buildWalletGroups(
         matchingCurrencies: List<CryptoCurrency>,
-        currencyLocations: Map<CryptoCurrency.ID, List<CurrencyLocation>>,
+        portfolioIndex: PortfolioIndex,
     ): List<QrSendTarget.Multiple.WalletGroup> {
         val walletMap = linkedMapOf<UserWalletId, WalletInfo>()
         val uniqueCurrencies = matchingCurrencies.distinctBy { it.id }
 
         for (currency in uniqueCurrencies) {
-            val locations = currencyLocations[currency.id] ?: continue
+            val locations = portfolioIndex.currencyLocations[currency.id].orEmpty()
             for (location in locations) {
-                val walletInfo = walletMap.getOrPut(location.userWalletId) {
+                val walletInfo = walletMap.getOrPut(location.accountId.userWalletId) {
                     WalletInfo(location.walletName, linkedMapOf())
                 }
                 val accountInfo = walletInfo.accounts.getOrPut(location.accountId) {
@@ -124,18 +125,24 @@ class ResolveQrSendTargetsUseCase(
                 userWalletId = walletId,
                 walletName = walletInfo.walletName,
                 accounts = walletInfo.accounts.map { (accountId, accountInfo) ->
+                    val total = portfolioIndex.totalPerAccount[accountId] ?: 0
                     QrSendTarget.Multiple.AccountGroup(
                         accountId = accountId,
                         accountName = accountInfo.accountName,
                         currencies = accountInfo.currencies,
+                        hiddenTokensCount = total - accountInfo.currencies.size,
                     )
                 },
             )
         }
     }
 
+    private class PortfolioIndex(
+        val currencyLocations: Map<CryptoCurrency.ID, List<CurrencyLocation>>,
+        val totalPerAccount: Map<AccountId, Int>,
+    )
+
     private data class CurrencyLocation(
-        val userWalletId: UserWalletId,
         val walletName: String,
         val accountId: AccountId,
         val accountName: AccountName,
