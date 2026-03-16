@@ -137,6 +137,7 @@ internal open class BaseActionsFactory(
      * @param isAddressAvailable   indicates whether the address is available
      * @param requirementsDeferred a deferred object containing the asset requirements condition
      */
+    @Suppress("CanBeNonNullable")
     protected suspend fun ActionAvailabilityBuilder.addReceiveAction(
         isAddressAvailable: Boolean,
         requirementsDeferred: Deferred<AssetRequirementsCondition?>?,

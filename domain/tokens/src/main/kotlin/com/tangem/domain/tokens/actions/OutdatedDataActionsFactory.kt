@@ -150,7 +150,7 @@ internal class OutdatedDataActionsFactory(
                 sources.networkSource == StatusSource.ONLY_CACHE -> ScenarioUnavailabilityReason.UsedOutdatedData
                 else -> ScenarioUnavailabilityReason.DataLoading // CACHE source always when loading
             },
-            showBadge = false,
+            shouldShowBadge = false,
         )
     }
 
