@@ -362,7 +362,7 @@ internal class DefaultWalletsRepository(
     override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
         withContext(dispatchers.io) {
             val associateApplicationIdWithWallets: suspend () -> ApiResponse<Unit> = {
-                tangemTechApi.associateApplicationIdWithWalletsV2(
+                tangemTechApi.associateApplicationIdWithWallets(
                     applicationId = applicationId,
                     body = AssociateApplicationIdWithWalletsBody(
                         walletIds = wallets.map { it.walletId.stringValue }.distinct(),

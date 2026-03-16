@@ -3,13 +3,11 @@ package com.tangem.domain.account.status.di
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -23,6 +21,7 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -76,10 +75,10 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideGetWalletTotalBalanceUseCaseV2(
+    fun provideGetWalletTotalBalanceUseCase(
         multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    ): GetWalletTotalBalanceUseCaseV2 {
-        return GetWalletTotalBalanceUseCaseV2(
+    ): GetWalletTotalBalanceUseCase {
+        return GetWalletTotalBalanceUseCase(
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         )
     }
