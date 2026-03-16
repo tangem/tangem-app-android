@@ -11,23 +11,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
  */
 class UserTokensBackwardCompatibility {
 
-    fun applyCompatibilityAndGetUpdated(userTokensResponse: UserTokensResponse): UserTokensResponse {
-        return userTokensResponse.copy(
-            tokens = userTokensResponse.tokens.map { token ->
-                val oldSavedId = NETWORKS_TO_OLD_SAVED_IDS[token.networkId]
-                if (oldSavedId != null && token.id == oldSavedId) {
-                    Blockchain.fromNetworkId(token.networkId)?.let { blockchain ->
-                        token.copy(
-                            id = blockchain.toCoinId(),
-                        )
-                    } ?: token
-                } else {
-                    token
-                }
-            },
-        )
-    }
-
     fun applyCompatibilityAndGetUpdated(tokens: List<UserTokensResponse.Token>): List<UserTokensResponse.Token> {
         return tokens.map { token ->
             val oldSavedId = NETWORKS_TO_OLD_SAVED_IDS[token.networkId]
