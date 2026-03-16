@@ -18,7 +18,7 @@ import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Content
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.extensions.TextReference
@@ -51,7 +51,7 @@ internal fun TangemPayViewPinContent(state: TangemPayViewPinUM) {
                 PinSuccessContent(state)
             }
             is TangemPayViewPinUM.Error -> {
-                MessageBottomSheetV2Content(state.errorMessage)
+                MessageBottomSheetContent(state.errorMessage)
             }
             is TangemPayViewPinUM.Loading -> {
                 PinLoadingContent()
