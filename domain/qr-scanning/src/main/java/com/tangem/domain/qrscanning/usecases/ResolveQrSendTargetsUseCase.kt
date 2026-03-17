@@ -52,7 +52,7 @@ class ResolveQrSendTargetsUseCase(
     private fun resolve(classified: ClassifiedQrContent, portfolioIndex: PortfolioIndex): QrSendTarget {
         return when (classified) {
             is ClassifiedQrContent.WalletConnect -> QrSendTarget.WalletConnect(classified.uri)
-            is ClassifiedQrContent.Unknown -> QrSendTarget.Unknown(classified.raw)
+            is ClassifiedQrContent.Error -> QrSendTarget.Error(classified)
             is ClassifiedQrContent.PlainAddress -> resolveAddressTarget(
                 address = classified.address,
                 amount = null,
