@@ -11,6 +11,7 @@ import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDataModel
 import com.tangem.domain.swap.models.SwapDataTransactionModel
 import com.tangem.domain.swap.models.SwapTxType
@@ -101,7 +102,8 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
-            fromAmount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
+            amount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
+            amountType = SwapAmountType.From,
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
             toExtraId = confirmData.enteredMemo,
