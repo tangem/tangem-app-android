@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import java.math.BigDecimal
@@ -21,4 +22,5 @@ internal data class ConfirmData(
     val fromAccount: Account?,
     val quote: SwapQuoteUM?,
     val rateType: ExpressRateType?,
+    val amountType: SwapAmountType,
 )
