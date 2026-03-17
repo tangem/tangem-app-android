@@ -98,6 +98,7 @@ internal fun LazyListScope.tokensListItems2(
     when (walletTokensListUM) {
         is WalletTokensListUM.Loading,
         is WalletTokensListUM.Content,
+        WalletTokensListUM.Locked,
         -> {
             walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
                 when (listItem) {
@@ -337,11 +338,15 @@ internal fun PortfolioRowItem(
 
                         TangemIcon(
                             tangemIconUM = sizedHeadIcon,
-                            modifier = modifier.sharedBounds(
-                                sharedContentState = iconSharedContentState,
-                                animatedVisibilityScope = animatedContentScope,
-                                boundsTransform = boundsTransform,
-                            ),
+                            modifier = modifier
+                                .conditionalCompose(headIcon is TangemIconUM.Empty) {
+                                    size(TangemTheme.dimens2.x9)
+                                }
+                                .sharedBounds(
+                                    sharedContentState = iconSharedContentState,
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = boundsTransform,
+                                ),
                         )
                     },
                     title = { modifier ->
