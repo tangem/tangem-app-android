@@ -248,7 +248,7 @@ internal class DevFeatureTogglesManagerTest {
         @ProvideTestModels
         fun isFeatureEnabled(model: IsFeatureEnabledModel) {
             // Act
-            val actual = manager.isFeatureEnabled(name = model.name)
+            val actual = manager.isFeatureEnabledByName(name = model.name)
 
             // Assert
             Truth.assertThat(actual).isEqualTo(model.expected)
