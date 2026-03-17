@@ -23,10 +23,17 @@ internal class Eip681PaymentUriParser(
 
         val matchingCoins = findMatchingCoins(parsed.chainId, coins)
         if (matchingCoins.isEmpty()) {
-            return PaymentUriParser.ParseResult.RecognizedButNoMatch
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.UnsupportedNetwork,
+            )
         }
 
         val result = if (parsed.functionName == FUNCTION_TRANSFER) {
+            if (PARAM_ADDRESS !in parsed.params) {
+                return PaymentUriParser.ParseResult.RecognizedError(
+                    ClassifiedQrContent.Error.Unrecognized(qrCode),
+                )
+            }
             resolveErc20Transfer(parsed, matchingCoins, allCurrencies)
         } else {
             resolveNativeTransfer(parsed, matchingCoins, allCurrencies)
@@ -34,7 +41,9 @@ internal class Eip681PaymentUriParser(
         return if (result != null) {
             PaymentUriParser.ParseResult.Success(result)
         } else {
-            PaymentUriParser.ParseResult.RecognizedButNoMatch
+            PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.UnsupportedNetwork,
+            )
         }
     }
 
