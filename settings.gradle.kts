@@ -305,6 +305,9 @@ include(":features:approval:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:promo-banners:api")
+include(":features:promo-banners:impl")
 // endregion Feature modules
 
 // region Domain modules
