@@ -578,7 +578,8 @@ private class WalletScreen2PreviewProvider : PreviewParameterProvider<WalletScre
     override val values: Sequence<WalletScreenState>
         get() = sequenceOf(
             WalletScreenPreviewData.defaultState,
-            WalletScreenPreviewData.defaultState.copy(selectedWalletIndex = 1),
+            WalletScreenPreviewData.emptyState,
+            WalletScreenPreviewData.lockedState,
         )
 }
 // endregion
