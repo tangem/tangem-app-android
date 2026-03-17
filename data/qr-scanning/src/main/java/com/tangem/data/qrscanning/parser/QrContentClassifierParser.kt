@@ -1,5 +1,6 @@
 package com.tangem.data.qrscanning.parser
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -25,7 +26,7 @@ internal class QrContentClassifierParser(
 
         when (val paymentUriResult = tryParsePaymentUri(qrCode, uniqueCoins, userCurrencies)) {
             is PaymentUriParser.ParseResult.Success -> return paymentUriResult.content
-            is PaymentUriParser.ParseResult.RecognizedButNoMatch -> return ClassifiedQrContent.Unknown(qrCode)
+            is PaymentUriParser.ParseResult.RecognizedError -> return paymentUriResult.error
             is PaymentUriParser.ParseResult.NotRecognized -> Unit
         }
 
@@ -35,13 +36,18 @@ internal class QrContentClassifierParser(
 
         if (matchingNetworkIds.isNotEmpty()) {
             val matchingCurrencies = userCurrencies.filter { it.network.id in matchingNetworkIds }
+
             return ClassifiedQrContent.PlainAddress(
                 address = qrCode,
                 matchingCurrencies = matchingCurrencies,
             )
         }
 
-        return ClassifiedQrContent.Unknown(qrCode)
+        if (blockchainDataProvider.isSupportedAddress(qrCode)) {
+            return ClassifiedQrContent.Error.UnsupportedNetwork
+        }
+
+        return ClassifiedQrContent.Error.Unrecognized(qrCode)
     }
 
     private fun tryParsePaymentUri(
@@ -70,6 +76,7 @@ internal class QrContentClassifierParser(
         fun getShareSchemes(network: Network): List<String>
         fun validateAddress(network: Network, address: String): Boolean
         fun getChainId(network: Network): Long?
+        fun isSupportedAddress(address: String): Boolean
     }
 
     internal class DefaultBlockchainDataProvider : BlockchainDataProvider {
@@ -83,6 +90,14 @@ internal class QrContentClassifierParser(
 
         override fun getChainId(network: Network): Long? {
             return runCatching { network.toBlockchain().getChainId()?.toLong() }.getOrNull()
+        }
+
+        override fun isSupportedAddress(address: String): Boolean {
+            return Blockchain.entries
+                .filter { !it.isTestnet() }
+                .any { blockchain ->
+                    runCatching { blockchain.validateAddress(address) }.getOrDefault(false)
+                }
         }
     }
 
