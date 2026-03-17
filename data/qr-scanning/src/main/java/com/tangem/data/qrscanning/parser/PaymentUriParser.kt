@@ -11,8 +11,8 @@ internal interface PaymentUriParser {
         /** URI format not recognized by this parser. */
         data object NotRecognized : ParseResult()
 
-        /** URI format recognized but no matching currencies found. */
-        data object RecognizedButNoMatch : ParseResult()
+        /** URI format recognized but resulted in an error. */
+        data class RecognizedError(val error: ClassifiedQrContent.Error) : ParseResult()
 
         /** Successfully parsed with matching currencies. */
         data class Success(val content: ClassifiedQrContent.PaymentUri) : ParseResult()

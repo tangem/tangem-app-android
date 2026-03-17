@@ -19,5 +19,12 @@ sealed class ClassifiedQrContent {
         val matchingCurrencies: List<CryptoCurrency>,
     ) : ClassifiedQrContent()
 
-    data class Unknown(val raw: String) : ClassifiedQrContent()
+    sealed class Error : ClassifiedQrContent() {
+
+        /** QR code not recognized by any parser */
+        data class Unrecognized(val raw: String) : Error()
+
+        /** Network or token recognized but not available in user's wallet */
+        data object UnsupportedNetwork : Error()
+    }
 }
