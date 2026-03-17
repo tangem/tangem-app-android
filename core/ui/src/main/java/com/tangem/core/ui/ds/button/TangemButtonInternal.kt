@@ -43,8 +43,9 @@ private const val LOADING_ANIMATION_DURATION = 150
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param isEnabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled     Boolean indicating whether the button is enabled.
  * @param isLoading     Boolean indicating whether the button is in a loading state.
+ * @param hasPadding    Boolean indicating whether the button should have padding around its content.
  * @param contentColor  Color of the button content (text and icon).
  * @param size          TangemButtonSize defining the size of the button.
  *
@@ -60,6 +61,7 @@ internal fun TangemButtonInternal(
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
+    hasPadding: Boolean = true,
     contentColor: Color = TangemTheme.colors2.text.neutral.primary,
     size: TangemButtonSize = TangemButtonSize.X15,
 ) {
@@ -72,7 +74,7 @@ internal fun TangemButtonInternal(
                 .conditionalCompose(text == null) {
                     width(size.toHeightDp())
                 }
-                .conditionalCompose(text != null) {
+                .conditionalCompose(text != null && hasPadding) {
                     padding(size.toPaddingDp())
                 }
                 .animateContentSize(),
