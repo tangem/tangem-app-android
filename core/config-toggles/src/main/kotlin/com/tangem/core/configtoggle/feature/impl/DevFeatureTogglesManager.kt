@@ -1,6 +1,7 @@
 package com.tangem.core.configtoggle.feature.impl
 
 import androidx.annotation.VisibleForTesting
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
@@ -38,7 +39,10 @@ internal class DevFeatureTogglesManager(
             .toMutableMap()
     }
 
-    override fun isFeatureEnabled(name: String): Boolean = featureTogglesMap[name] == true
+    override fun isFeatureEnabled(toggle: FeatureToggles): Boolean = featureTogglesMap[toggle.rawName] == true
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun isFeatureEnabledByName(name: String): Boolean = featureTogglesMap[name] == true
 
     override fun getFeatureToggles(): Map<String, Boolean> = featureTogglesMap
 
