@@ -1,5 +1,6 @@
 package com.tangem.data.staking.toggles
 
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 
@@ -8,5 +9,5 @@ internal class DefaultStakingFeatureToggles(
 ) : StakingFeatureToggles {
 
     override val isEthStakingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("STAKING_ETH_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.STAKING_ETH_ENABLED)
 }
