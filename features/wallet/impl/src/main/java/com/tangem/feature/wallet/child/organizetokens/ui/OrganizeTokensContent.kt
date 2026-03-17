@@ -38,6 +38,7 @@ import com.tangem.core.ui.ds.row.token.TangemTokenRow
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionContent
 import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
@@ -77,6 +78,7 @@ internal fun OrganizeTokensContent(
         title = {
             TangemTopBar(
                 title = resourceReference(R.string.organize_tokens_title),
+                type = TangemTopBarType.BottomSheet,
                 endContent = {
                     TangemTopBarActionContent(
                         actionUM = TangemTopBarActionUM(
@@ -85,7 +87,7 @@ internal fun OrganizeTokensContent(
                             onClick = { isShowDropdownMenu = true },
                             ghostModeProgress = 0f,
                         ),
-                        iconSize = TangemTheme.dimens2.x7,
+                        type = TangemTopBarType.BottomSheet,
                     )
                     OrganizeDropDownMenu(
                         organizeMenuUM = organizeTokensUM.organizeMenuUM,
