@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
@@ -40,6 +41,8 @@ internal inline fun <reified T : TangemBottomSheetConfigContent> EarnFilterBotto
                     style = TangemTheme.typography2.headingSemibold17,
                     color = TangemTheme.colors2.text.neutral.primary,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 SecondaryTangemButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
