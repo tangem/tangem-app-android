@@ -3,6 +3,8 @@
 package com.tangem.core.ui.res
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -31,14 +33,26 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             LocalTangemTypography2 provides TangemTypography2(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
-            ProvideHaze {
-                Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
-                    content()
+            CompositionLocalProvider(
+                LocalTextSelectionColors provides TangemTextSelectionColors2,
+            ) {
+                ProvideHaze {
+                    Box(Modifier.hazeSourceTangem(zIndex = 1f)) {
+                        content()
+                    }
                 }
             }
         }
     }
 }
+
+private val TangemTextSelectionColors2: TextSelectionColors
+    @Composable
+    @ReadOnlyComposable
+    get() = TextSelectionColors(
+        handleColor = TangemTheme.colors2.text.neutral.primary,
+        backgroundColor = TangemTheme.colors2.text.neutral.primary.copy(alpha = 0.3f),
+    )
 
 @Composable
 @ReadOnlyComposable
@@ -48,7 +62,7 @@ private fun lightThemeColors2(): TangemColors2 {
             primary = TangemColorPalette.Dark6,
             primaryInverted = TangemColorPalette.White,
             secondary = TangemColorPalette.Dark2,
-            tertiary = TangemColorPalette.Dark3,
+            tertiary = TangemColorPalette.Dark1,
             primaryInvertedConstant = TangemColorPalette.White,
         ),
         status = TangemColors2.Text.Status(
@@ -67,7 +81,7 @@ private fun lightThemeColors2(): TangemColors2 {
             tertiary = TangemColorPalette.Dark3,
             quaternary = TangemColorPalette.Light4,
             primaryInvertedConstant = TangemColorPalette.White,
-            tertiaryConstant = TangemColorPalette.Dark3,
+            tertiaryConstant = TangemColorPalette.Dark1,
         ),
         status = TangemColors2.Graphic.Status(
             accent = TangemColorPalette.Azure,
@@ -243,7 +257,7 @@ private fun darkThemeColors2(): TangemColors2 {
             secondary = TangemColorPalette.Light5,
             tertiary = TangemColorPalette.Dark3,
             quaternary = TangemColorPalette.Dark3,
-            tertiaryConstant = TangemColorPalette.Dark3,
+            tertiaryConstant = TangemColorPalette.Dark1,
             primaryInvertedConstant = TangemColorPalette.White,
         ),
         status = TangemColors2.Graphic.Status(
