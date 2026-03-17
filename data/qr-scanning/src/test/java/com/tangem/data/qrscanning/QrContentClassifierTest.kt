@@ -17,6 +17,7 @@ internal class QrContentClassifierTest {
         every { getShareSchemes(any()) } returns emptyList()
         every { validateAddress(any(), any()) } returns false
         every { getChainId(any()) } returns null
+        every { isSupportedAddress(any()) } returns false
     }
     private val paymentUriParser = mockk<PaymentUriParser> {
         every { parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.NotRecognized
@@ -63,7 +64,7 @@ internal class QrContentClassifierTest {
 
         val result = classifier.parse(url, listOf(bitcoinCoin))
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     @Test
@@ -72,7 +73,7 @@ internal class QrContentClassifierTest {
 
         val result = classifier.parse(url, listOf(bitcoinCoin))
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     // endregion
@@ -162,22 +163,22 @@ internal class QrContentClassifierTest {
     fun `Random string returns Unknown`() {
         val result = classifier.parse("hello world", listOf(bitcoinCoin, ethereumCoin))
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
-        assertThat((result as ClassifiedQrContent.Unknown).raw).isEqualTo("hello world")
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+        assertThat((result as ClassifiedQrContent.Error.Unrecognized).raw).isEqualTo("hello world")
     }
 
     @Test
     fun `Empty string returns Unknown`() {
         val result = classifier.parse("", listOf(bitcoinCoin))
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     @Test
     fun `Empty currencies list returns Unknown`() {
         val result = classifier.parse("0x1234567890abcdef1234567890abcdef12345678", emptyList())
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     @Test
@@ -186,7 +187,7 @@ internal class QrContentClassifierTest {
 
         val result = classifier.parse("0x1234", listOf(token))
 
-        assertThat(result).isInstanceOf(ClassifiedQrContent.Unknown::class.java)
+        assertThat(result).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     // endregion
