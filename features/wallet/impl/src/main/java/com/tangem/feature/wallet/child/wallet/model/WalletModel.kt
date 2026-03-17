@@ -11,6 +11,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
@@ -26,6 +27,7 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
@@ -47,6 +49,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
@@ -115,6 +118,7 @@ internal class WalletModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
+    private val uiMessageSender: UiMessageSender,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -778,8 +782,17 @@ internal class WalletModel @Inject constructor(
             is QrSendTarget.Multiple -> {
                 innerWalletRouter.openNetworkSelectionBottomSheet(target)
             }
-            is QrSendTarget.Unknown -> {
-                // TODO: [REDACTED_TASK_KEY] Error handling for unsupported and invalid QR codes
+            is QrSendTarget.Error -> handleQrError(target.error)
+        }
+    }
+
+    private fun handleQrError(error: ClassifiedQrContent.Error) {
+        when (error) {
+            is ClassifiedQrContent.Error.Unrecognized -> {
+                uiMessageSender.send(WalletAlertUM.qrCodeUnrecognized())
+            }
+            is ClassifiedQrContent.Error.UnsupportedNetwork -> {
+                uiMessageSender.send(WalletAlertUM.qrCodeUnsupportedNetwork())
             }
         }
     }
