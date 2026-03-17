@@ -1,5 +1,6 @@
 package com.tangem.data.feedback
 
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 
@@ -8,5 +9,5 @@ internal class DefaultFeedbackFeatureToggles(
 ) : FeedbackFeatureToggles {
 
     override val isUsedeskEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "USEDESK_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled(toggle = FeatureToggles.USEDESK_ENABLED)
 }
