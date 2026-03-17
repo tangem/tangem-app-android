@@ -142,7 +142,7 @@ internal class Eip681PaymentUriParserTest {
     }
 
     @Test
-    fun `ERC-20 transfer with unknown token returns RecognizedButNoMatch`() {
+    fun `ERC-20 transfer with unknown token returns UnsupportedNetwork error`() {
         every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val result = parser.parse(
@@ -151,11 +151,13 @@ internal class Eip681PaymentUriParserTest {
             allCurrencies = listOf(ethereumCoin),
         )
 
-        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedButNoMatch::class.java)
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.UnsupportedNetwork::class.java)
     }
 
     @Test
-    fun `ERC-20 transfer without address param returns RecognizedButNoMatch`() {
+    fun `ERC-20 transfer without address param returns Unrecognized error`() {
         every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
@@ -166,7 +168,9 @@ internal class Eip681PaymentUriParserTest {
             allCurrencies = listOf(ethereumCoin, usdcToken),
         )
 
-        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedButNoMatch::class.java)
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
     }
 
     // endregion
@@ -192,7 +196,7 @@ internal class Eip681PaymentUriParserTest {
     // region Chain ID matching
 
     @Test
-    fun `chain_id mismatch returns RecognizedButNoMatch`() {
+    fun `chain_id mismatch returns UnsupportedNetwork error`() {
         every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val result = parser.parse(
@@ -201,7 +205,9 @@ internal class Eip681PaymentUriParserTest {
             allCurrencies = listOf(ethereumCoin),
         )
 
-        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedButNoMatch::class.java)
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.UnsupportedNetwork::class.java)
     }
 
     @Test
