@@ -217,6 +217,7 @@
   <string name="common_add">Hinzufügen</string>
   <string name="common_add_to_portfolio">Zum Portfolio hinzufügen</string>
   <string name="common_add_token">Token hinzufügen</string>
+  <string name="common_add_tokens">Token hinzufügen</string>
   <string name="common_added">Hinzugefügt</string>
   <string name="common_address">Vertragsadresse</string>
   <string name="common_all">Alle</string>
@@ -1107,9 +1108,9 @@
     <item quantity="one">für %d Wallet</item>
     <item quantity="other">für %d Wallets</item>
   </plurals>
-  <string name="referral_point_currencies_description">Du bekommst ^^%1$s^^ für jede von einem Freund gekaufte Wallet auf deine %2$s Netzwerkadresse %3$s ^^30 Tage nach^^ dem</string>
-  <string name="referral_point_currencies_title">Du</string>
-  <string name="referral_point_discount_description_prefix">Bekommt eine</string>
+  <string name="referral_point_currencies_description">Du erhältst ^^%1$s^^ für jede Wallet, die ein Freund kauft.\nDie Auszahlung erfolgt ^^30 Tage^^ nach dem Kauf an deine%2$s Adresse.%3$s</string>
+  <string name="referral_point_currencies_title">Du erhältst</string>
+  <string name="referral_point_discount_description_prefix">Er erhält</string>
   <string name="referral_point_discount_description_suffix">beim Kauf einer Wallet auf tangem.com</string>
   <string name="referral_point_discount_description_value">%s Rabatt</string>
   <string name="referral_point_discount_title">Dein Freund</string>

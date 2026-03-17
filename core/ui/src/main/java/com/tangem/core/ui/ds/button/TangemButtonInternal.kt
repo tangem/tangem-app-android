@@ -68,7 +68,7 @@ internal fun TangemButtonInternal(
             modifier = modifier
                 .testTag(BaseButtonTestTags.BUTTON)
                 .clickableSingle(enabled = isEnabled, onClick = onClick, role = Role.Button)
-                .height(size.toHeightDp())
+                .heightIn(min = size.toHeightDp())
                 .conditionalCompose(text == null) {
                     width(size.toHeightDp())
                 }
