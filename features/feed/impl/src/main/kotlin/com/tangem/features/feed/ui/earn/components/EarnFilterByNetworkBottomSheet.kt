@@ -161,6 +161,8 @@ private fun NetworksTypesBlock(
                     }.resolveReference(),
                     style = TangemTheme.typography2.bodySemibold16,
                     color = TangemTheme.colors2.text.neutral.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 TangemCheckbox(
@@ -189,6 +191,8 @@ private fun SpecificNetworksBlock(
                 text = stringResourceSafe(id = R.string.earn_filter_networks),
                 style = TangemTheme.typography2.bodyRegular14,
                 color = TangemTheme.colors2.text.neutral.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             specificNetworks.fastForEachIndexed { index, item ->
                 TangemRowContainer(
@@ -215,6 +219,8 @@ private fun SpecificNetworksBlock(
                         text = item.text,
                         style = TangemTheme.typography2.bodySemibold16,
                         color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
 
                     TangemCheckbox(
