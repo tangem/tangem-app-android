@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.common.preview
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemIconUM
@@ -50,14 +52,19 @@ internal object WalletScreenPreviewData {
             text = resourceReference(R.string.organize_tokens_title),
             type = TangemButtonType.Secondary,
             onClick = {},
+            iconRes = R.drawable.ic_filter_default_24,
+            size = TangemButtonSize.X9,
+            shape = TangemButtonShape.Rounded,
         ),
     )
 
     private val walletLocked = WalletUM.Locked(
-        walletsBalanceUM = WalletBalancePreview.content,
-        buttons = WalletPreviewData.actionButtons,
+        walletsBalanceUM = WalletBalancePreview.empty,
+        buttons = WalletPreviewData.disabledActionButtons,
         type = WalletType.Cold,
-        notifications = persistentListOf(),
+        notifications = persistentListOf(
+            WalletNotificationUM.UnlockWallets({}),
+        ),
     )
 
     private val walletDefault = WalletUM.Content(
@@ -82,18 +89,42 @@ internal object WalletScreenPreviewData {
         tangemPayState = TangemPayState.Loading,
     )
 
-    internal val defaultState = WalletScreenState(
+    private val walletEmpty = WalletUM.Content(
+        walletsBalanceUM = WalletBalancePreview.empty,
+        buttons = WalletPreviewData.disabledActionButtons,
+        type = WalletType.Cold,
+        pullToRefreshConfig = PullToRefreshConfig(
+            isRefreshing = false,
+            onRefresh = {},
+        ),
+        notifications = persistentListOf(),
+        notificationsCarousel = persistentListOf(),
+        tokensListUM = WalletTokensListUM.Empty,
+        nftState = WalletNFTItemUM.Hidden,
+        tangemPayState = TangemPayState.Empty,
+    )
+
+    val defaultState = WalletScreenState(
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
         wallets = persistentListOf(),
         wallets2 = persistentListOf(
-            walletLocked,
             walletDefault,
+            walletEmpty,
+            walletLocked,
         ),
         onWalletChange = { _, _ -> },
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
+    )
+
+    val emptyState = defaultState.copy(
+        selectedWalletIndex = 1,
+    )
+
+    val lockedState = defaultState.copy(
+        selectedWalletIndex = 2,
     )
 }
