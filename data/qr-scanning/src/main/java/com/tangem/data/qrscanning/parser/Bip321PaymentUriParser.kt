@@ -17,11 +17,17 @@ internal class Bip321PaymentUriParser(
         val (matchingCoins, withoutScheme) = schemeAndRest
 
         val parsed = QrSentUriParser().parse(withoutScheme)
-            ?: return PaymentUriParser.ParseResult.RecognizedButNoMatch
+            ?: return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.Unrecognized(qrCode),
+            )
 
         val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
         val matchingCurrencies = allCurrencies.filter { it.network.id in matchingNetworkIds }
-        if (matchingCurrencies.isEmpty()) return PaymentUriParser.ParseResult.RecognizedButNoMatch
+        if (matchingCurrencies.isEmpty()) {
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.UnsupportedNetwork,
+            )
+        }
 
         return PaymentUriParser.ParseResult.Success(
             ClassifiedQrContent.PaymentUri(
