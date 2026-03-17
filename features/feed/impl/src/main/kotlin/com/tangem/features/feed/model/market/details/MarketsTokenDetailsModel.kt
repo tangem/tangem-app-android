@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -77,6 +78,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
+    designFeatureToggles: DesignFeatureToggles,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
@@ -147,6 +149,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         needApplyFCARestrictions = Provider {
             userCountry.needApplyFCARestrictions()
         },
+        isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         // ==================
     )
 
