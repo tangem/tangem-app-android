@@ -1,6 +1,7 @@
 package com.tangem.core.configtoggle.feature.impl
 
 import androidx.annotation.VisibleForTesting
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.utils.defineTogglesAvailability
@@ -19,7 +20,10 @@ internal class ProdFeatureTogglesManager(
 
     private val featureToggles: Map<String, Boolean> = getFileFeatureToggles()
 
-    override fun isFeatureEnabled(name: String): Boolean = featureToggles[name] == true
+    override fun isFeatureEnabled(toggle: FeatureToggles): Boolean = featureToggles[toggle.rawName] == true
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun isFeatureEnabledByName(name: String): Boolean = featureToggles[name] == true
 
     private fun getFileFeatureToggles(): Map<String, Boolean> {
         val appVersion = versionProvider.get()
