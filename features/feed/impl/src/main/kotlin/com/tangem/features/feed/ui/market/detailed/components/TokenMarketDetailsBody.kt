@@ -307,9 +307,7 @@ private fun LazyListScope.loadingInfoBlocksV2() {
     }
 
     item("insights-loading") {
-        InsightsBlockPlaceholder(
-            modifier = Modifier.blockPaddings(),
-        )
+        InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
 
     item(key = "listedOn-loading") {
