@@ -63,5 +63,9 @@
     {
         "name": "NEW_PROMO_BANNERS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "VIRTUAL_ACCOUNTS_ENABLED",
+        "version": "undefined"
     }
 ]
