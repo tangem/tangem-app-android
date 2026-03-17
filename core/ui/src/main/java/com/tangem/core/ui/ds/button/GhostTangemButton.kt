@@ -80,6 +80,7 @@ fun GhostTangemButton(
         contentColor = contentColor,
         isEnabled = isEnabled,
         isLoading = isLoading,
+        hasPadding = false,
         size = size,
         iconPosition = iconPosition,
         iconRes = iconRes,
