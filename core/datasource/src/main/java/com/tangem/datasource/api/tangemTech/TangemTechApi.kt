@@ -5,6 +5,9 @@ import com.tangem.datasource.api.promotion.models.PromoBannerResponse
 import com.tangem.datasource.api.promotion.models.PromoBannerV2Response
 import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -195,6 +198,21 @@ interface TangemTechApi {
         @Query("walletId") walletId: String,
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromoBannerV2Response>
+    // endregion
+
+    // region promo banners
+    @GET("v1/banner/displays")
+    suspend fun getPromoBannerDisplays(
+        @Query("walletId") walletId: String,
+        @Query("placeholder") placeholder: String,
+        @Query("locale") locale: String,
+    ): ApiResponse<PromoBannerDisplaysResponse>
+
+    @PATCH("v1/displays/{displayId}")
+    suspend fun dismissPromoBannerDisplay(
+        @Path("displayId") displayId: String,
+        @Body body: DismissPromoBannerRequest,
+    ): ApiResponse<DismissPromoBannerResponse>
     // endregion
 
     /**
