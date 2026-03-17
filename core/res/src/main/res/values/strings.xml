@@ -482,7 +482,7 @@
   <string name="earn_filter_networks">Networks</string>
   <string name="earn_mostly_used">Mostly used</string>
   <string name="earn_no_results">No results</string>
-  <string name="earn_title">Earn</string>
+  <string name="earn_title">Staking &amp; Yield mode</string>
   <string name="email_preface_wc_error">Hi support team, I\'ve encountered an error with code: %s</string>
   <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
@@ -706,7 +706,7 @@
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
-  <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
+  <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
   <string name="main_scan_card_warning_view_title">Scan your card or ring</string>
   <string name="main_swap_changelly_promotion_message">Enjoy %1$s service fees on swaps via Changelly from February %2$s-%3$s</string>
@@ -741,7 +741,7 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
-  <string name="markets_earn_common_title">Earn with Tangem</string>
+  <string name="markets_earn_common_title">Staking &amp; Yield mode</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
   <string name="markets_hint_part_one">Swipe up to explore the market</string>
@@ -1054,7 +1054,7 @@
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
-  <string name="onramp_offer_type_fastet">Quickest Processing</string>
+  <string name="onramp_offer_type_fastet">Quickest processing</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_payment_method_subtitle">Payment method</string>
   <string name="onramp_provider_max_amount">Available up to %s</string>
@@ -1104,6 +1104,12 @@
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
+  <string name="qr_scanner_error_token_not_added_message">Requested token is not added to your wallet. Please add it and try again.</string>
+  <string name="qr_scanner_error_token_not_added_title">Token not added</string>
+  <string name="qr_scanner_error_unrecognized_message">Sorry, this QR code could not be recognized.</string>
+  <string name="qr_scanner_error_unrecognized_title">Unrecognized QR Code</string>
+  <string name="qr_scanner_error_unsupported_network_message">This network isn\'t supported by any of your added tokens. Add a supported token to send crypto.</string>
+  <string name="qr_scanner_error_unsupported_network_title">No supported tokens found</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s on %2$s network</string>
@@ -1249,6 +1255,11 @@
   <string name="send_notification_transaction_limit_title">Transaction limitation</string>
   <string name="send_optional_field">Optional</string>
   <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
+  <string name="send_rate_fixed_info_description">When you use a fixed rate, the amount you receive is locked in at the time of the swap. This protects you from price changes during the transaction.</string>
+  <string name="send_rate_fixed_info_title">Fixed rate</string>
+  <string name="send_rate_floating_info_description">A floating rate means the final amount you receive may change slightly based on market conditions between the time you start and complete the swap.</string>
+  <string name="send_rate_floating_info_title">Floating rate</string>
+  <string name="send_rate_is_fixed">Rate is fixed</string>
   <string name="send_recent_transactions">Recent</string>
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
@@ -1292,6 +1303,7 @@
   <string name="send_with_swap_recipient_get_amount">Recipient gets %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? Your previous data will be cleared.</string>
   <string name="send_with_swap_remove_convert_alert_title">Remove Conversion</string>
+  <string name="send_with_swap_something_went_wrong">Something went wrong. Try again.</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1458,8 +1470,8 @@
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
-  <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
-  <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
+  <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
+  <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
   <string name="swap_search_tooltip_title">Use search to find what you need</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
