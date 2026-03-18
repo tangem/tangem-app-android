@@ -12,7 +12,6 @@ import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.express.ExpressRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
@@ -71,7 +70,6 @@ internal object SwapDataModule {
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
         networkFactory: NetworkFactory,
         multiAccountListSupplier: MultiAccountListSupplier,
-        accountsFeatureToggles: AccountsFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
@@ -79,7 +77,6 @@ internal object SwapDataModule {
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
             networkFactory = networkFactory,
             multiAccountListSupplier = multiAccountListSupplier,
-            accountsFeatureToggles = accountsFeatureToggles,
             dispatchers = dispatchers,
         )
     }

@@ -9,7 +9,6 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -18,11 +17,15 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
+import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionTrigger
 import dagger.assisted.Assisted
@@ -39,7 +42,6 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger,
@@ -47,7 +49,7 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
 ) : TokenDetailsDeepLinkHandler {
 
@@ -128,7 +130,10 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 id = cryptoCurrency.id,
             )
             !isMultiCurrency -> walletBalanceFetcher(
-                params = WalletBalanceFetcher.Params(userWalletId = userWallet.walletId),
+                params = WalletBalanceFetcher.Params(
+                    userWalletId = userWallet.walletId,
+                    isPaymentAccountRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
+                ),
             )
         }
     }
@@ -137,12 +142,12 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         if (userWallet.isMultiCurrency) {
             val derivationPath = queryParams[DERIVATION_PATH_KEY]
 
-            getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull {
-                val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true)
-                val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
+            getCryptoCurrencies(userWalletId = userWallet.walletId)?.firstOrNull { currency ->
+                val isNetwork = currency.network.backendId.equals(networkId, ignoreCase = true)
+                val isCurrency = currency.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true
 
-                val isDefaultDerivation = it.network.derivationPath is Network.DerivationPath.Card
-                val isCustomDerivation = derivationPath?.equals(it.network.derivationPath.value) == true
+                val isDefaultDerivation = currency.network.derivationPath is Network.DerivationPath.Card
+                val isCustomDerivation = derivationPath?.equals(currency.network.derivationPath.value) == true
                 val isCorrectDerivation = isDefaultDerivation || isCustomDerivation
                 isNetwork && isCurrency && isCorrectDerivation
             }
@@ -151,14 +156,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         }
 
     private suspend fun getCryptoCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>? {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
-            )
-                ?.toList()
-        } else {
-            getCryptoCurrenciesUseCase(userWalletId = userWalletId).getOrNull()
-        }
+        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
+        )?.toList()
     }
 
     @AssistedFactory

@@ -1,6 +1,6 @@
 package com.tangem.feature.referral.domain
 
-import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -11,7 +11,7 @@ interface ReferralInteractor {
 
     suspend fun getReferralStatus(userWalletId: UserWalletId): ReferralData
 
-    suspend fun startReferral(portfolioId: PortfolioId): ReferralData
+    suspend fun startReferral(accountId: AccountId): ReferralData
 
     suspend fun getCryptoCurrency(
         userWalletId: UserWalletId,
