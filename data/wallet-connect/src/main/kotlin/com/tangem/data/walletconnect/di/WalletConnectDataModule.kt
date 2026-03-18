@@ -20,12 +20,10 @@ import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
@@ -95,7 +93,6 @@ internal object WalletConnectDataModule {
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
         analytics: AnalyticsEventHandler,
-        accountsFeatureToggles: AccountsFeatureToggles,
         wcScope: WcScope,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
@@ -104,7 +101,6 @@ internal object WalletConnectDataModule {
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
-            accountsFeatureToggles = accountsFeatureToggles,
             scope = wcScope,
         )
     }
@@ -184,14 +180,12 @@ internal object WalletConnectDataModule {
     fun wcNetworksConverter(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         singleAccountSupplier: SingleAccountSupplier,
     ): WcNetworksConverter = WcNetworksConverter(
         namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-        multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         singleAccountSupplier = singleAccountSupplier,
     )
 

@@ -18,7 +18,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.qrscanning.models.QrResultSource
@@ -55,7 +54,6 @@ internal class WcConnectionsModel @Inject constructor(
     private val wcDisconnectUseCase: WcDisconnectUseCase,
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    accountsFeatureToggles: AccountsFeatureToggles,
     private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
     analytics: AnalyticsEventHandler,
@@ -70,11 +68,7 @@ internal class WcConnectionsModel @Inject constructor(
     init {
         analytics.send(WcAnalyticEvents.ScreenOpened())
         listenQrUpdates()
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            listenWcSessions()
-        } else {
-            listenWcSessionsOld()
-        }
+        listenWcSessions()
     }
 
     private fun listenQrUpdates() {
@@ -92,21 +86,6 @@ internal class WcConnectionsModel @Inject constructor(
                         userWalletId = params.userWalletId,
                         uri = result.qrCode,
                         source = source,
-                    ),
-                )
-            }
-            .launchIn(modelScope)
-    }
-
-    private fun listenWcSessionsOld() {
-        wcSessionsUseCase.invoke()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach { sessionsMap ->
-                uiState.update(
-                    WcSessionsTransformer(
-                        sessionsMap = sessionsMap,
-                        openAppInfoModal = ::openAppInfoModal,
                     ),
                 )
             }
