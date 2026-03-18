@@ -21,13 +21,12 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -76,10 +75,10 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideGetWalletTotalBalanceUseCaseV2(
+    fun provideGetWalletTotalBalanceUseCase(
         multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    ): GetWalletTotalBalanceUseCaseV2 {
-        return GetWalletTotalBalanceUseCaseV2(
+    ): GetWalletTotalBalanceUseCase {
+        return GetWalletTotalBalanceUseCase(
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         )
     }
@@ -104,6 +103,7 @@ internal object AccountStatusUseCaseModule {
         cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
         expressServiceFetcher: ExpressServiceFetcher,
         dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -114,7 +114,7 @@ internal object AccountStatusUseCaseModule {
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             cryptoCurrencyMetadataCleaner = cryptoCurrencyMetadataCleaner,
             expressServiceFetcher = expressServiceFetcher,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            parallelUpdatingScope = appScope,
             dispatchers = dispatchers,
         )
     }
@@ -126,14 +126,14 @@ internal object AccountStatusUseCaseModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): CryptoCurrencyBalanceFetcher {
         return CryptoCurrencyBalanceFetcher(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            parallelUpdatingScope = appScope,
         )
     }
 
@@ -154,6 +154,18 @@ internal object AccountStatusUseCaseModule {
     ): ToggleTokenListGroupingUseCase {
         return ToggleTokenListGroupingUseCase(
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
+        currenciesRepository: CurrenciesRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
+        return GetFeePaidCryptoCurrencyStatusSyncUseCase(
+            currenciesRepository = currenciesRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         )
     }
 

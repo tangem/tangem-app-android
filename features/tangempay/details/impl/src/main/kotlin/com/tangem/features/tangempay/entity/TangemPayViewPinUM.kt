@@ -1,6 +1,6 @@
 package com.tangem.features.tangempay.entity
 
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 
 internal sealed class TangemPayViewPinUM {
 
@@ -17,7 +17,7 @@ internal sealed class TangemPayViewPinUM {
     ) : TangemPayViewPinUM()
 
     data class Error(
-        val errorMessage: MessageBottomSheetUMV2,
+        val errorMessage: MessageBottomSheetUM,
         override val onDismiss: () -> Unit,
     ) : TangemPayViewPinUM()
 }

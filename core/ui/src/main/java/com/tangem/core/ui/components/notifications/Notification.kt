@@ -2,6 +2,7 @@ package com.tangem.core.ui.components.notifications
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
+import coil.compose.SubcomposeAsyncImage
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
@@ -86,6 +87,7 @@ fun Notification(
             subtitleColor = subtitleColor,
             showArrowIcon = isEnabled && config.shouldShowArrowIcon,
             hasCloseButton = config.onCloseClick != null,
+            iconUrl = config.iconUrl,
         )
     }
 }
@@ -150,16 +152,29 @@ private fun MainContent(
     subtitleColor: Color,
     showArrowIcon: Boolean,
     hasCloseButton: Boolean,
+    iconUrl: String? = null,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            iconResId = iconResId,
-            tint = iconTint,
-            modifier = Modifier
-                .size(size = iconSize)
-                .align(alignment = Alignment.Top)
-                .testTag(NotificationTestTags.ICON),
-        )
+        if (iconUrl != null) {
+            UrlIcon(
+                iconUrl = iconUrl,
+                fallbackIconResId = iconResId,
+                fallbackIconTint = iconTint,
+                modifier = Modifier
+                    .size(size = iconSize)
+                    .align(alignment = Alignment.Top)
+                    .testTag(NotificationTestTags.ICON),
+            )
+        } else {
+            Icon(
+                iconResId = iconResId,
+                tint = iconTint,
+                modifier = Modifier
+                    .size(size = iconSize)
+                    .align(alignment = Alignment.Top)
+                    .testTag(NotificationTestTags.ICON),
+            )
+        }
 
         SpacerW(width = TangemTheme.dimens.spacing10)
 
@@ -210,6 +225,30 @@ private fun Icon(@DrawableRes iconResId: Int, tint: Color?, modifier: Modifier =
             modifier = modifier,
         )
     }
+}
+
+@Composable
+private fun UrlIcon(
+    iconUrl: String,
+    @DrawableRes fallbackIconResId: Int,
+    fallbackIconTint: Color?,
+    modifier: Modifier = Modifier,
+) {
+    SubcomposeAsyncImage(
+        model = iconUrl,
+        contentDescription = null,
+        modifier = modifier.clip(CircleShape),
+        loading = {
+            CircleShimmer(modifier = Modifier.matchParentSize())
+        },
+        error = {
+            Icon(
+                iconResId = fallbackIconResId,
+                tint = fallbackIconTint,
+                modifier = Modifier.matchParentSize(),
+            )
+        },
+    )
 }
 
 @Composable

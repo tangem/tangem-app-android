@@ -10,4 +10,7 @@ internal class DefaultWalletFeatureToggles @Inject constructor(
 
     override val isWalletReorderFeatureEnabled: Boolean
         get() = featureToggles.isFeatureEnabled("WALLET_REORDER_FEATURE_ENABLED")
+
+    override val isMainScreenQrScanningEnabled: Boolean
+        get() = featureToggles.isFeatureEnabled("MAIN_SCREEN_QR_SCANNING_ENABLED")
 }

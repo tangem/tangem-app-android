@@ -5,6 +5,7 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.*
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.common.quote.DefaultQuotesFetcher
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.common.wallet.DefaultWalletServerBinder
@@ -12,8 +13,8 @@ import com.tangem.data.common.wallet.WalletServerBinder
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -23,8 +24,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -67,19 +66,18 @@ internal object DataCommonModule {
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
-        userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
+        appScope: AppCoroutineScope,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
             userWalletsListRepository = userWalletsListRepository,
-            userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
             pushTokensRetryerPool = RetryerPool(
-                coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+                coroutineScope = appScope,
             ),
             walletServerBinder = walletServerBinder,
         )

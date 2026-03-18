@@ -305,6 +305,22 @@ include(":features:approval:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:promo-banners:api")
+include(":features:promo-banners:impl")
+
+include(":features:payment:api")
+include(":features:payment:impl")
+
+/* Virtual Accounts */
+include(":features:virtual-accounts:onboarding:api")
+include(":features:virtual-accounts:onboarding:impl")
+
+include(":features:virtual-accounts:main:api")
+include(":features:virtual-accounts:main:impl")
+
+include(":features:virtual-accounts:details:api")
+include(":features:virtual-accounts:details:impl")
 // endregion Feature modules
 
 // region Domain modules
