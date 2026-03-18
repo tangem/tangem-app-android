@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
@@ -95,4 +96,7 @@ internal interface InnerWalletRouter {
 
     /** Open send screen with prefilled destination */
     fun openSend(userWalletId: UserWalletId, currency: CryptoCurrency, address: String, amount: String?, tag: String?)
+
+    /** Open network selection bottom sheet for multiple QR matches */
+    fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple)
 }
