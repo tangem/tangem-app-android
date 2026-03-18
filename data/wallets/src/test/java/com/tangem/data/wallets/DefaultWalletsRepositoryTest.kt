@@ -186,7 +186,7 @@ class DefaultWalletsRepositoryTest {
     inner class AssociateWallets {
 
         @Test
-        fun `should convert and send to API V2`() = runTest {
+        fun `should convert and send to associateApplicationIdWithWallets`() = runTest {
             // Arrange
             val applicationId = "test_app_id"
             val wallet1Id = "1234567890abcdef"
@@ -202,7 +202,7 @@ class DefaultWalletsRepositoryTest {
             )
 
             coEvery {
-                tangemTechApi.associateApplicationIdWithWalletsV2(eq(applicationId), any())
+                tangemTechApi.associateApplicationIdWithWallets(eq(applicationId), any())
             } returns ApiResponse.Success(Unit)
 
             // Act
@@ -210,7 +210,7 @@ class DefaultWalletsRepositoryTest {
 
             // Assert
             coVerify(exactly = 1) {
-                tangemTechApi.associateApplicationIdWithWalletsV2(
+                tangemTechApi.associateApplicationIdWithWallets(
                     applicationId = eq(applicationId),
                     body = match { body ->
                         body.walletIds.size == 2 &&
