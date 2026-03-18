@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 sealed class TokenReceiveAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Token / Receive", event, params) {
 
     class ReceiveScreenOpened(token: String) : TokenReceiveAnalyticsEvent(

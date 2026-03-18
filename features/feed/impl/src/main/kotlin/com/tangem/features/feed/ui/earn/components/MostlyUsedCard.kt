@@ -44,7 +44,7 @@ internal fun MostlyUsedCard(item: EarnListItemUM, onClick: () -> Unit, modifier:
 private fun MostlyUsedCardV2(item: EarnListItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
     OpportunitiesBG(
         modifier = modifier
-            .width(148.dp)
+            .width(178.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .clickable(onClick = onClick),
         icon = TangemIconUM.Currency(item.currencyIconState),
