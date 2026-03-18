@@ -11,14 +11,12 @@ import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -30,7 +28,7 @@ internal object ExpressAssetsStoreModule {
     fun provideExpressAssetsStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ExpressAssetsStore {
         return DefaultExpressAssetsStore(
             persistenceStore = DataStoreFactory.create(
@@ -40,7 +38,7 @@ internal object ExpressAssetsStoreModule {
                     defaultValue = emptyMap(),
                 ),
                 produceFile = { context.dataStoreFile("express_assets") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
             runtimeStore = RuntimeDataStore(),
         )
