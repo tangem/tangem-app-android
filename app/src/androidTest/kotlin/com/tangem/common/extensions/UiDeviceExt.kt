@@ -1,6 +1,7 @@
 package com.tangem.common.extensions
 
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.wallet.R
@@ -46,12 +47,36 @@ fun BaseTestCase.swipeMarketsBlock(direction: SwipeDirection) {
 }
 
 fun BaseTestCase.openTheAppFromRecents() {
+    device.uiDevice.waitForIdle()
+
     device.uiDevice.pressRecentApps()
+    device.uiDevice.waitForIdle()
+
+    val recentsOpened = device.uiDevice.wait(
+        Until.hasObject(By.res("com.android.launcher3:id/snapshot")),
+        3_000
+    )
+
+    if (!recentsOpened) {
+        device.uiDevice.pressRecentApps()
+        device.uiDevice.wait(
+            Until.hasObject(By.res("com.android.launcher3:id/snapshot")),
+            3_000
+        )
+    }
 
     val centerX = device.uiDevice.displayWidth / 2
     val centerY = device.uiDevice.displayHeight / 3
     device.uiDevice.click(centerX, centerY)
     device.uiDevice.click(centerX, centerY)
+}
+
+fun BaseTestCase.collapseAppByHomeButton() {
+    device.uiDevice.pressHome()
+    device.uiDevice.wait(
+        Until.hasObject(By.pkg(device.uiDevice.launcherPackageName)),
+        3_000
+    )
 }
 
 fun BaseTestCase.disableWiFi() {

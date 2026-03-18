@@ -8,16 +8,14 @@ import com.tangem.datasource.local.walletconnect.DefaultWalletConnectStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -29,9 +27,8 @@ object WalletConnectModule {
     fun provideWalletConnectStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        scope: AppCoroutineScope,
     ): WalletConnectStore {
-        val scope = CoroutineScope(context = dispatchers.io + SupervisorJob())
         return DefaultWalletConnectStore(
             persistenceStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
