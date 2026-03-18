@@ -1,14 +1,15 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -27,18 +28,23 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
                     return@map false
                 }
 
-                return@map walletManagersFacade.validateSignatureCount(
-                    userWalletId = userWallet.walletId,
-                    network = network,
-                    signedHashes = userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes ?: 0,
-                )
-                    .fold(
-                        ifLeft = { true },
-                        ifRight = {
-                            cardRepository.setCardWasScanned(cardId = userWallet.cardId)
-                            false
-                        },
+                return@map try {
+                    walletManagersFacade.validateSignatureCount(
+                        userWalletId = userWallet.walletId,
+                        network = network,
+                        signedHashes = userWallet.scanResponse.card.wallets.firstOrNull()?.totalSignedHashes ?: 0,
                     )
+                        .fold(
+                            ifLeft = { true },
+                            ifRight = {
+                                cardRepository.setCardWasScanned(cardId = userWallet.cardId)
+                                false
+                            },
+                        )
+                } catch (e: IllegalArgumentException) {
+                    Timber.w(e, "Unable to validate signature count: user wallet not found")
+                    false
+                }
             }
     }
 

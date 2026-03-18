@@ -4,16 +4,16 @@ import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
+import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.resetWireMockScenarios
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.scenarios.SwapEntryPoint
-import com.tangem.scenarios.openMainScreen
-import com.tangem.scenarios.openSwapScreen
-import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -266,6 +266,9 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
     @AllureId("2828")
     @DisplayName("Swap: network fee")
     @Test
@@ -317,6 +320,9 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
     @AllureId("575")
     @DisplayName("Swap: check UI")
     @Test
@@ -354,7 +360,7 @@ class SwapTokenScreenTest : BaseTestCase() {
                 onSwapTokenScreen { receiveTokenSymbol(receiveTokenSymbol).assertIsDisplayed() }
             }
             step("Click on 'Select token' icon") {
-                onSwapTokenScreen { changeTokenIcon.performClick() }
+                onSwapTokenScreen { selectTokenIcon.performClick() }
             }
             step("Select new receive token: $newReceiveToken") {
                 onSwapChooseTokenScreen { tokenWithTitle(newReceiveToken).performClick() }
@@ -401,6 +407,9 @@ class SwapTokenScreenTest : BaseTestCase() {
         }
     }
 
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
     @AllureId("5162")
     @DisplayName("Swap: check swap tokens switch")
     @Test
@@ -441,6 +450,264 @@ class SwapTokenScreenTest : BaseTestCase() {
             }
             step("Assert new receive token symbol: '$swapTokenSymbol' is displayed") {
                 onSwapTokenScreen { receiveTokenSymbol(swapTokenSymbol).assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("573")
+    @DisplayName("Swap: check 'Swap' button availability")
+    @Test
+    fun checkSwapButtonAvailabilityTest() {
+        val polygon = "Polygon"
+        val bitcoin = "Bitcoin"
+        val salam = "Salam"
+        val scenarioState = "CustomTokenAndJesusAdded"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$polygon'") {
+                onMainScreen { tokenWithTitleAndAddress(polygon).clickWithAssertion() }
+            }
+            step("Assert 'Swap' button is not dimmed. Swap available") {
+                onTokenDetailsScreen { swapButton().assertIsDimmed(false) }
+            }
+            step("Press 'Back' button") {
+                device.uiDevice.pressBack()
+            }
+            step("Click on token with name: '$bitcoin'. Swap unavailable") {
+                onMainScreen { tokenWithTitleAndAddress(bitcoin).clickWithAssertion() }
+            }
+            step("Assert 'Swap' button is dimmed") {
+                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+            }
+            step("Press 'Back' button") {
+                device.uiDevice.pressBack()
+            }
+            step("Click on unknown custom token with name: '$salam'. Swap unavailable") {
+                onMainScreen { tokenWithTitleAndAddress(salam).clickWithAssertion() }
+            }
+            step("Assert 'Swap' button is dimmed") {
+                onTokenDetailsScreen { swapButton().assertIsDimmed(true) }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
+    @AllureId("583")
+    @DisplayName("Swap: check switch fee type (enable to cover 'Market' and 'Fast' fee)")
+    @Test
+    fun enableToCoverMarketAndFastFeeTest() {
+        val tokenName = "Ethereum"
+        val inputAmount = "0.99"
+        val market = "Market"
+        val fast = "Fast"
+        val marketFeeAmount = "$1.12"
+        val fastFeeAmount = "$1.43"
+
+        setupHooks().run {
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Select '$market' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeType(FeeType.Market, selectedFeeAmount = marketFeeAmount)
+                }
+            }
+            step("Select '$fast' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeType(FeeType.Fast, selectedFeeAmount = fastFeeAmount)
+                }
+            }
+        }
+    }
+
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
+    @AllureId("8536")
+    @DisplayName("Swap: check switch fee type (unable to cover 'Market' and 'Fast' fee)")
+    @Test
+    fun unableToCoverMarketAndFastFeeTest() {
+        val tokenName = "POL (ex-MATIC)"
+        val inputAmount = "0.0001"
+        val marketFeeType = "Market"
+        val fastFeeType = "Fast"
+        val feeAmount = "$"
+        val scenarioName = "eth_network_balance"
+        val scenarioState = "LessThanDollar"
+        val networkName = "Ethereum"
+        val currencySymbol = "ETH"
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(scenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Select '$marketFeeType' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeType(feeType = FeeType.Market, feeAmount)
+                }
+            }
+            step("Check 'Unable to cover '$networkName' fee notification") {
+                chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
+            }
+            step("Assert 'Swap' button is disabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
+            }
+            step("Select '$fastFeeType' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeType(feeType = FeeType.Fast, feeAmount)
+                }
+            }
+            step("Check 'Unable to cover '$networkName' fee notification") {
+                chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
+            }
+            step("Assert 'Swap' button is disabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("8537")
+    @DisplayName("Swap: check switch fee type (unable to cover 'Fast' fee)")
+    @Test
+    fun unableToCoverFastFeeTest() {
+        val tokenName = "POL (ex-MATIC)"
+        val inputAmount = "3000"
+        val fastFeeType = "Fast"
+        val fastFeeAmount = "$2,"
+        val marketFeeType = "Market"
+        val marketFeeAmount = "$1."
+        val scenarioName = "eth_fee_history"
+        val scenarioState = "UnableToCoverFastFee"
+        val networkName = "Ethereum"
+        val currencySymbol = "ETH"
+
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(scenarioName)
+            }
+        ).run {
+
+            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Open 'Swap' screen") {
+                openSwapScreen(from = SwapEntryPoint.TokenDetails)
+            }
+            step("Assert 'You swap' block is displayed") {
+                onSwapTokenScreen { youSwapBlock.assertIsDisplayed() }
+            }
+            step("Input swap amount = '$inputAmount'") {
+                waitForIdle()
+                onSwapTokenScreen {
+                    textInput.clickWithAssertion()
+                    textInput.performTextReplacement(inputAmount)
+                }
+            }
+            step("Assert 'Swap' button is enabled") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    onSwapTokenScreen { swapButton.assertIsEnabled() }
+                }
+            }
+            step("Select '$fastFeeType' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeTypeWithGasless(feeType = FeeType.Fast, fastFeeAmount)
+                }
+            }
+            step("Assert fee amount is equal to '$fastFeeType' fee:'$fastFeeAmount'") {
+                onSwapTokenScreen { feeAmount.assertTextContains(fastFeeAmount, substring = true) }
+            }
+            step("Check 'Unable to cover '$networkName' fee notification") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    chackUnableToCoverFeeNotification(networkName = networkName, currencySymbol = currencySymbol)
+                }
+            }
+            step("Assert 'Swap' button is disabled") {
+                onSwapTokenScreen { swapButton.assertIsNotEnabled() }
+            }
+            step("Select '$marketFeeType' fee type") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    selectFeeTypeWithGasless(feeType = FeeType.Market, marketFeeAmount)
+                }
+            }
+            step("Assert 'Swap' button is enabled") {
+                waitForIdle()
+                onSwapTokenScreen { swapButton.assertIsEnabled() }
             }
         }
     }

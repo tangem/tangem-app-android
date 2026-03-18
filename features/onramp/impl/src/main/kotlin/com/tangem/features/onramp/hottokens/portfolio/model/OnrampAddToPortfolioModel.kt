@@ -1,12 +1,11 @@
 package com.tangem.features.onramp.hottokens.portfolio.model
 
-import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioUM
@@ -21,11 +20,10 @@ import javax.inject.Inject
 /**
  * Model for adding token to portfolio
  *
- * @param paramsContainer               params container
- * @property dispatchers                dispatchers
- * @property derivePublicKeysUseCase    use case for deriving public key
- * @property addCryptoCurrenciesUseCase use case for adding crypto currency
- * @property getUserWalletUseCase       use case for getting user wallet by id
+ * @param paramsContainer                  params container
+ * @property dispatchers                   dispatchers
+ * @property manageCryptoCurrenciesUseCase use case for managing crypto currencies
+ * @property getUserWalletUseCase          use case for getting user wallet by id
  *
 [REDACTED_AUTHOR]
  */
@@ -33,8 +31,7 @@ import javax.inject.Inject
 internal class OnrampAddToPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
@@ -72,21 +69,14 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     private fun onAddClick() {
         modelScope.launch {
             changeAddButtonProgressStatus(isProgress = true)
-            derivePublicKeysUseCase(
-                userWalletId = params.userWalletId,
-                currencies = listOf(params.cryptoCurrency),
-            ).getOrElse { throwable ->
-                Timber.e("Failed to derive public keys: $throwable")
 
-                changeAddButtonProgressStatus(isProgress = false)
-            }
-
-            addCryptoCurrenciesUseCase(
-                userWalletId = params.userWalletId,
-                currency = params.cryptoCurrency,
-            )
+            val accountId = AccountId.forMainCryptoPortfolio(params.userWalletId)
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = params.cryptoCurrency)
                 .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
-                .onLeft { changeAddButtonProgressStatus(isProgress = false) }
+                .onLeft { throwable ->
+                    Timber.e("Failed to add crypto currency: $throwable")
+                    changeAddButtonProgressStatus(isProgress = false)
+                }
         }
     }
 
