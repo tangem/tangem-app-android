@@ -2,34 +2,27 @@ package com.tangem.features.feed.ui.market.detailed.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.news.ArticleCard
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.items.DescriptionPlaceholder
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
+import com.tangem.features.feed.ui.feed.components.NewsSlider
+import com.tangem.features.feed.ui.feed.state.NewsSliderCallbacks
+import com.tangem.features.feed.ui.feed.state.NewsSliderConfig
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM.RelatedNews
 
-private const val FOURTH_ITEM_INDEX = 3
-
-@Suppress("CanBeNonNullable") // TODO will be removed after [REDACTED_JIRA]
+@Suppress("CanBeNonNullable")
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
-    isAccountEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     relatedNews: RelatedNews,
 ) {
@@ -45,9 +38,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 }
             }
 
-            if (isAccountEnabled) {
-                aboutCoinHeader()
-            }
+            aboutCoinHeader()
 
             loadingInfoBlocks()
         }
@@ -66,9 +57,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 relatedNews(relatedNews)
             }
 
-            if (isAccountEnabled) {
-                aboutCoinHeader()
-            }
+            aboutCoinHeader()
 
             infoBlocksList(state.infoBlocks)
         }
@@ -207,13 +196,6 @@ private fun LazyListScope.loadingInfoBlocks() {
 
 private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
     item("related-news") {
-        val listState = rememberLazyListState()
-        val articlesReadStatus = remember(relatedNews.articles) {
-            relatedNews.articles.map { it.isViewed }
-        }
-        LaunchedEffect(articlesReadStatus) {
-            listState.requestScrollToItem(0)
-        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -231,35 +213,18 @@ private fun LazyListScope.relatedNews(relatedNews: RelatedNews) {
                 color = TangemTheme.colors.text.primary1,
             )
 
-            LazyRow(
-                verticalAlignment = Alignment.CenterVertically,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                state = listState,
-            ) {
-                itemsIndexed(
-                    items = relatedNews.articles,
-                    key = { index, article -> article.id },
-                ) { index, article ->
-                    val articleModifier = if (index == FOURTH_ITEM_INDEX) {
-                        Modifier.onFirstVisible(
-                            minFractionVisible = 0.5f,
-                            callback = relatedNews.onScroll,
-                        )
-                    } else {
-                        Modifier
-                    }
-
-                    ArticleCard(
-                        articleConfigUM = article,
-                        onArticleClick = { relatedNews.onArticledClicked(article.id) },
-                        modifier = articleModifier
-                            .heightIn(min = 164.dp)
-                            .width(216.dp),
-                        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
-                    )
-                }
-            }
+            NewsSlider(
+                NewsSliderConfig(
+                    callbacks = NewsSliderCallbacks(
+                        onOpenAllNews = {}, // not applicable here
+                        onSliderScroll = relatedNews.onScroll,
+                        onSliderEndReached = {}, // not applicable here
+                        onArticleClick = relatedNews.onArticledClicked,
+                    ),
+                    content = relatedNews.articles,
+                    shouldShowSeeAllNewsItem = false,
+                ),
+            )
         }
     }
 }
