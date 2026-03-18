@@ -1,7 +1,6 @@
 package com.tangem.datasource.asset.reader
 
 import android.content.res.AssetManager
-import java.io.BufferedReader
 
 /**
  * Implementation of asset file reader
@@ -13,7 +12,8 @@ internal class AndroidAssetReader(
 ) : AssetReader {
 
     override suspend fun read(fullFileName: String): String {
-        return assetManager.open(fullFileName).bufferedReader()
-            .use(BufferedReader::readText)
+        return assetManager.open(fullFileName, AssetManager.ACCESS_BUFFER).use { inputStream ->
+            inputStream.readBytes().toString(Charsets.UTF_8)
+        }
     }
 }
