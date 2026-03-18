@@ -13,6 +13,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
@@ -193,6 +194,30 @@ internal class DefaultWalletRouter @Inject constructor(
                 destinationAddress = address,
                 amount = amount,
                 tag = tag,
+            ),
+        )
+    }
+
+    override fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.NetworkSelection(
+                address = target.address,
+                amount = target.amount,
+                memo = target.memo,
+                walletGroups = target.walletGroups.map { walletGroup ->
+                    WalletDialogConfig.NetworkSelection.WalletGroupData(
+                        userWalletId = walletGroup.userWalletId,
+                        walletName = walletGroup.walletName,
+                        accounts = walletGroup.accounts.map { accountGroup ->
+                            WalletDialogConfig.NetworkSelection.AccountGroupData(
+                                accountId = accountGroup.accountId,
+                                accountName = accountGroup.accountName,
+                                currencies = accountGroup.currencies,
+                                hiddenTokensCount = accountGroup.hiddenTokensCount,
+                            )
+                        },
+                    )
+                },
             ),
         )
     }
