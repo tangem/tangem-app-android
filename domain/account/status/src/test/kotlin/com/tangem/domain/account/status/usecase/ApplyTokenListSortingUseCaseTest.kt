@@ -30,7 +30,7 @@ internal class ApplyTokenListSortingUseCaseTest {
 
     private val accountsCRUDRepository = mockk<AccountsCRUDRepository>(relaxUnitFun = true)
 
-    private val useCase = ApplyTokenListSortingUseCaseV2(
+    private val useCase = ApplyTokenListSortingUseCase(
         accountsCRUDRepository = accountsCRUDRepository,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )

@@ -17,6 +17,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("Will be removed in favor of getWalletIconUseCase")
 internal class WalletImageResolver @Inject constructor(
     private val walletsRepository: WalletsRepository,
 ) {

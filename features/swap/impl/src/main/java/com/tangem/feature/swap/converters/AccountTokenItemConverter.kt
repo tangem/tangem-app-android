@@ -3,6 +3,7 @@ package com.tangem.feature.swap.converters
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
+import com.tangem.common.ui.account.TokensListPortfolioItemConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -27,7 +28,7 @@ internal class AccountTokenItemConverter(
 ) : Converter<AccountSwapAvailability, TokensListItemUM.Portfolio> {
 
     override fun convert(value: AccountSwapAvailability): TokensListItemUM.Portfolio {
-        return TokensListItemUM.Portfolio(
+        return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
                 account = value.account,
@@ -39,7 +40,7 @@ internal class AccountTokenItemConverter(
                 createAvailableItemConverter()
                     .convert(accountSwapCurrency.cryptoCurrencyStatus)
             }.map(TokensListItemUM::Token).toPersistentList(),
-        )
+        ).convert(Unit)
     }
 
     fun createAvailableItemConverter(): TokenItemStateConverter {
