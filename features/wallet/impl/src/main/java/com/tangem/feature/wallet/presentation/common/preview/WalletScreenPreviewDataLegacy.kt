@@ -138,7 +138,7 @@ internal object WalletScreenPreviewDataLegacy {
             TokensListItemUM.Portfolio(
                 content = PortfolioItemContentUM.Empty(
                     action = PortfolioItemContentUM.Empty.Action(
-                        text = stringReference("Manage tokens"),
+                        text = resourceReference(id = R.string.onboarding_add_tokens),
                         onClick = {},
                     ),
                 ),
