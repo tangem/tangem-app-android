@@ -6,6 +6,7 @@ import com.tangem.core.decompose.ui.DefaultUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.components.snackbar.TangemTopSnackbarHostState
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.theme.AppThemeModeHolder
@@ -30,6 +31,7 @@ internal object UiDependenciesModule {
             override val vibratorHapticManager = vibratorHapticManager
             override val appThemeModeHolder = appThemeModeHolder
             override val globalSnackbarHostState: SnackbarHostState = SnackbarHostState()
+            override val globalTopSnackbarHostState: TangemTopSnackbarHostState = TangemTopSnackbarHostState()
             override val eventMessageHandler: EventMessageHandler = EventMessageHandler()
             override val designFeatureToggles: DesignFeatureToggles = designFeatureToggles
         }

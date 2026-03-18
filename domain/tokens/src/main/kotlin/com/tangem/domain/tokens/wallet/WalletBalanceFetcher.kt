@@ -3,18 +3,24 @@ package com.tangem.domain.tokens.wallet
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.core.utils.catchOn
+import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
@@ -27,7 +33,8 @@ import timber.log.Timber
 /**
  * Fetcher of wallet balance by [UserWalletId]
  *
- * @property currenciesRepository                currencies repository
+ * @property userWalletsListRepository           user wallets list repository
+ * @property expressServiceFetcher               express service fetcher
  * @property multiWalletBalanceFetcher           balance fetcher of multi-currency wallet
  * @property singleWalletWithTokenBalanceFetcher balance fetcher of single-currency wallet with token
  * @property singleWalletBalanceFetcher          balance fetcher of single-currency wallet
@@ -40,7 +47,8 @@ import timber.log.Timber
  */
 @Suppress("LongParameterList")
 class WalletBalanceFetcher internal constructor(
-    private val currenciesRepository: CurrenciesRepository,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val expressServiceFetcher: ExpressServiceFetcher,
     private val multiWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val singleWalletWithTokenBalanceFetcher: BaseWalletBalanceFetcher,
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
@@ -54,8 +62,10 @@ class WalletBalanceFetcher internal constructor(
 
     /** Additional constructor without internal dependencies */
     constructor(
-        currenciesRepository: CurrenciesRepository,
-        multiWalletCryptoCurrenciesFetcher: MultiWalletCryptoCurrenciesFetcher,
+        userWalletsListRepository: UserWalletsListRepository,
+        cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+        expressServiceFetcher: ExpressServiceFetcher,
+        multiWalletAccountListFetcher: MultiWalletAccountListFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -64,15 +74,18 @@ class WalletBalanceFetcher internal constructor(
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
-        currenciesRepository = currenciesRepository,
+        userWalletsListRepository = userWalletsListRepository,
+        expressServiceFetcher = expressServiceFetcher,
         multiWalletBalanceFetcher = MultiWalletBalanceFetcher(
-            multiWalletCryptoCurrenciesFetcher = multiWalletCryptoCurrenciesFetcher,
+            multiWalletAccountListFetcher = multiWalletAccountListFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
         ),
         singleWalletWithTokenBalanceFetcher = SingleWalletWithTokenBalanceFetcher(
-            currenciesRepository = currenciesRepository,
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         ),
-        singleWalletBalanceFetcher = SingleWalletBalanceFetcher(currenciesRepository = currenciesRepository),
+        singleWalletBalanceFetcher = SingleWalletBalanceFetcher(
+            cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+        ),
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
@@ -83,18 +96,26 @@ class WalletBalanceFetcher internal constructor(
 
     override suspend fun invoke(params: Params) = Either.catchOn(dispatchers.default) {
         val userWalletId = params.userWalletId
-        val cardTypesResolver = currenciesRepository.getCardTypesResolver(userWalletId = userWalletId)
+        val userWallet = userWalletsListRepository.getSyncStrict(userWalletId)
 
-        val fetcher = when {
-            cardTypesResolver == null || cardTypesResolver.isMultiwalletAllowed() -> multiWalletBalanceFetcher
-            cardTypesResolver.isSingleWalletWithToken() -> singleWalletWithTokenBalanceFetcher
-            cardTypesResolver.isSingleWallet() -> singleWalletBalanceFetcher
-            else -> error("Unknown type of wallet: $userWalletId")
+        val fetcher = when (userWallet) {
+            is UserWallet.Hot -> multiWalletBalanceFetcher
+            is UserWallet.Cold -> {
+                val cardTypesResolver = userWallet.cardTypesResolver
+                when {
+                    cardTypesResolver.isMultiwalletAllowed() -> multiWalletBalanceFetcher
+                    cardTypesResolver.isSingleWalletWithToken() -> singleWalletWithTokenBalanceFetcher
+                    cardTypesResolver.isSingleWallet() -> singleWalletBalanceFetcher
+                    else -> error("Unknown type of wallet: $userWalletId")
+                }
+            }
         }
 
-        val currencies = fetcher.getCryptoCurrencies(userWalletId = userWalletId).ifEmpty {
+        val currencies = fetcher.getCryptoCurrencies(userWallet = userWallet).ifEmpty {
             error("UserWallet doesn't contain crypto-currencies: $userWalletId")
         }
+
+        fetchExpressAssets(userWallet = userWallet, currencies = currencies)
 
         fetcher.fetch(
             userWalletId = userWalletId,
@@ -168,11 +189,11 @@ class WalletBalanceFetcher internal constructor(
         userWalletId: UserWalletId,
         currencies: Set<CryptoCurrency>,
     ): Either<Throwable, Unit> = either {
-        val maybeStakingIds = currencies.map {
-            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it)
+        val maybeStakingIds = currencies.map { currency ->
+            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
 
             if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${it.id}")
+                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
             }
 
             stakingId
@@ -188,6 +209,16 @@ class WalletBalanceFetcher internal constructor(
         } else {
             Timber.i("No staking IDs found for user wallet $userWalletId with currencies: $currencies")
         }
+    }
+
+    private suspend fun fetchExpressAssets(userWallet: UserWallet, currencies: Set<CryptoCurrency>) {
+        val assetIds = currencies.mapTo(hashSetOf()) { currency ->
+            ExpressAsset.ID(
+                networkId = currency.network.backendId,
+                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+            )
+        }
+        expressServiceFetcher.fetch(userWallet = userWallet, assetIds = assetIds)
     }
 
     private suspend fun fetchPaymentAccount(
