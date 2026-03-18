@@ -6,10 +6,17 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.utils.*
+import com.tangem.data.walletconnect.utils.WC_TAG
+import com.tangem.data.walletconnect.utils.WcNetworksConverter
+import com.tangem.data.walletconnect.utils.WcScope
+import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
@@ -28,7 +35,8 @@ import kotlin.coroutines.resume
 @Suppress("LongParameterList")
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
-    private val getWallets: GetWalletsUseCase,
+    getWallets: GetWalletsUseCase,
+    multiAccountListSupplier: MultiAccountListSupplier,
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
@@ -37,18 +45,31 @@ internal class DefaultWcSessionsManager(
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
 
-    override val sessions: Flow<Map<UserWallet, List<WcSession>>>
-        get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
-            .transform { pair ->
-                val (wallets, inStore) = pair
-                val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
-                val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
-                val someRemove = removeUnknownSessions(inStore, inSdk, associatedSessions)
-                if (someRemove) return@transform // ignore emit, wait next one
-                emit(associatedSessions.groupBy { it.wallet })
-            }
-            .distinctUntilChanged()
-            .flowOn(dispatchers.io)
+    override val sessions: Flow<Map<UserWallet, List<WcSession>>> = combine(
+        flow = getWallets(),
+        flow2 = store.sessions,
+        flow3 = multiAccountListSupplier.invokeMap(),
+        transform = ::Triple,
+    )
+        .transformLatest { triple ->
+            val (wallets, inStore, allWalletsAccounts) = triple
+            val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
+            val associatedSessions: List<WcSession> = associate(
+                inSdk = inSdk,
+                inStore = inStore,
+                wallets = wallets,
+                allWalletsAccounts = allWalletsAccounts,
+            )
+            removeUnknownSessions(inStore, inSdk, associatedSessions)
+            emit(associatedSessions.groupBy { it.wallet })
+        }
+        .distinctUntilChanged()
+        .flowOn(dispatchers.io)
+        .shareIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),
+            replay = 1,
+        )
 
     override fun onWcSdkInit() {
         listenOnSessionDelete()
@@ -78,6 +99,7 @@ internal class DefaultWcSessionsManager(
         inSdk: List<Wallet.Model.Session>,
         inStore: Set<WcSessionDTO>,
         wallets: List<UserWallet>,
+        allWalletsAccounts: LinkedHashMap<UserWalletId, AccountList>,
     ): List<WcSession> {
         // if the WcSdk `onSessionSettleResponse` callback arrives late, merge pending approvals with WcSdk sessions
         val savedPending = store.pendingApproval.first()
@@ -91,7 +113,9 @@ internal class DefaultWcSessionsManager(
         val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
-            val account = wcNetworksConverter.getAccount(storeSession.accountId) as? Account.CryptoPortfolio
+            val walletAccounts = allWalletsAccounts[storeSession.walletId] ?: return@mapNotNull null
+            val account = walletAccounts.accounts
+                .find { account -> account.accountId == storeSession.accountId } as? Account.CryptoPortfolio
                 ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
             val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
