@@ -37,6 +37,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
 
+@Deprecated("Use GiveApprovalComponent")
 @Composable
 fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
     var isPermissionAlertShow by remember { mutableStateOf(false) }
