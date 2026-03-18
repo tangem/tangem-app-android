@@ -8,7 +8,6 @@ import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -63,9 +62,7 @@ internal object NFTDomainModule {
     fun providesGetNFTAvailableNetworksUseCase(
         nftRepository: NFTRepository,
         singleAccountListSupplier: SingleAccountListSupplier,
-        currenciesRepository: CurrenciesRepository,
     ): GetNFTNetworksUseCase = GetNFTNetworksUseCase(
-        currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
         singleAccountListSupplier = singleAccountListSupplier,
     )

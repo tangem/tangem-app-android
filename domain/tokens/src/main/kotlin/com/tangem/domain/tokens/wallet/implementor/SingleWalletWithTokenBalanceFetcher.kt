@@ -1,20 +1,21 @@
 package com.tangem.domain.tokens.wallet.implementor
 
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.tokens.wallet.BaseWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.FetchingSource
-import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Implementation of [BaseWalletBalanceFetcher] for SINGLE-CURRENCY wallet WITH TOKEN (like, NODL)
  *
- * @property currenciesRepository currencies repository
+ * @property cardCryptoCurrencyFactory card crypto currency factory
  *
 [REDACTED_AUTHOR]
  */
 internal class SingleWalletWithTokenBalanceFetcher(
-    private val currenciesRepository: CurrenciesRepository,
+    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
 ) : BaseWalletBalanceFetcher {
 
     override val fetchingSources: Set<FetchingSource> = setOf(
@@ -22,10 +23,11 @@ internal class SingleWalletWithTokenBalanceFetcher(
         FetchingSource.QUOTE,
     )
 
-    override suspend fun getCryptoCurrencies(userWalletId: UserWalletId): Set<CryptoCurrency> {
-        return currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(
-            userWalletId = userWalletId,
-            refresh = true,
-        ).toSet()
+    override suspend fun getCryptoCurrencies(userWallet: UserWallet): Set<CryptoCurrency> {
+        val coldWallet = userWallet.requireColdWallet()
+
+        val currencies = cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(coldWallet)
+
+        return currencies.toSet()
     }
 }

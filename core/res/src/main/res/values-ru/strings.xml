@@ -223,6 +223,7 @@
   <string name="common_add">Добавить</string>
   <string name="common_add_to_portfolio">Добавить в портфель</string>
   <string name="common_add_token">Добавить токен</string>
+  <string name="common_add_tokens">Добавьте токены</string>
   <string name="common_added">Добавлен</string>
   <string name="common_address">Адрес</string>
   <string name="common_all">Все</string>
@@ -408,6 +409,7 @@
   <string name="common_understand">Я понял</string>
   <string name="common_understand_continue">Я понимаю, продолжить</string>
   <string name="common_unknown_error">Произошла ошибка. Пожалуйста, попробуйте снова.</string>
+  <string name="common_unlock">Разблокировать</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Из-за ограничений %1$s в одну транзакцию может поместиться только %2$d UTXO. Это означает, что вы можете отправить только %3$s или меньше. Вам нужно уменьшить сумму.</string>
@@ -733,13 +735,13 @@
   <string name="manage_tokens_remove">Удалить</string>
   <string name="manage_tokens_search_placeholder">Например Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Ваш портфель был обновлен</string>
-  <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
+  <string name="manage_tokens_unavailable_description">Выбранный токен недоступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
   <string name="markets_about_coin_header">О монете</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
-  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен не доступен для данного кошелька</string>
+  <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен недоступен для данного кошелька</string>
   <string name="markets_add_token">Добавить</string>
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">Мой портфель</string>
@@ -843,6 +845,7 @@
   <string name="markets_token_details_trading_volume">Объем торгов (24ч)</string>
   <string name="markets_token_details_trading_volume_24h_description">Общая сумма криптовалюты, которая была продана за последние 24 часа, показывающая уровень активности и ликвидности на рынке.</string>
   <string name="markets_token_details_trading_volume_full">Объем торгов (24ч)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s в сумме</string>
   <string name="markets_token_details_volume">Объем</string>
   <string name="markets_tooltip_message">Потяните вверх или коснитесь поисковой строки, чтобы добавить токены напрямую из рынка</string>
   <string name="markets_tooltip_title">Добавить токены</string>
@@ -1499,7 +1502,7 @@
   <string name="swapping_swap_action_in_progress">Обмен…</string>
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
-  <string name="swapping_token_not_available">не доступен</string>
+  <string name="swapping_token_not_available">недоступен</string>
   <string name="tangem_pay_beta_notification_subtitle">Будем рады вашей обратной связи</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay в режиме beta</string>
   <string name="tangem_pay_card_frozen">Карта заморожена</string>

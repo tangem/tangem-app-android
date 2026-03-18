@@ -71,6 +71,8 @@ internal class OutdatedDataActionsFactory(
             null
         }
 
+        val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
+
         actionAvailabilityBuilder {
             // region Copy
             addCopyAction(isAddressAvailable = isAddressAvailable)
@@ -130,7 +132,7 @@ internal class OutdatedDataActionsFactory(
             // endregion
 
             // region HideToken
-            addHideTokenAction()
+            ActionState.HideToken(hideTokenUnavailabilityReason).addByReason()
             // endregion
 
             // region Yield Mode
@@ -148,7 +150,7 @@ internal class OutdatedDataActionsFactory(
                 sources.networkSource == StatusSource.ONLY_CACHE -> ScenarioUnavailabilityReason.UsedOutdatedData
                 else -> ScenarioUnavailabilityReason.DataLoading // CACHE source always when loading
             },
-            showBadge = false,
+            shouldShowBadge = false,
         )
     }
 

@@ -284,7 +284,7 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
                 indication = ripple(),
                 interactionSource = remember { MutableInteractionSource() },
             )
-            .testTag(SwapTokenScreenTestTags.SWAP_BUTTON),
+            .testTag(SwapTokenScreenTestTags.REPLACE_TOKENS_BUTTON),
     ) {
         when (state.changeCardsButtonState) {
             ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
