@@ -1,24 +1,23 @@
 package com.tangem.domain.transaction.usecase.gasless
 
 import arrow.core.Either
-import arrow.core.raise.Raise
+import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCoinStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.raiseIllegalStateError
 
 class GetAvailableFeeTokensUseCase(
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val gaslessTransactionRepository: GaslessTransactionRepository,
-    private val currenciesRepository: CurrenciesRepository,
-    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
 
@@ -34,12 +33,14 @@ class GetAvailableFeeTokensUseCase(
         return either {
             catch(
                 block = {
-                    val userCurrenciesStatuses = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                        userWallet.walletId,
-                    ).getOrNull()
-                        ?: raiseIllegalStateError("currencies list is null for userWalletId=${userWallet.walletId}")
+                    val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(userWallet.walletId)
+                        ?: raiseIllegalStateError("AccountStatusList is null for ${userWallet.walletId}")
 
-                    val nativeCurrencyStatus = getNativeCurrencyStatus(userWallet, network, userCurrenciesStatuses)
+                    val userCurrenciesStatuses = accountStatusList.flattenCurrencies()
+
+                    val nativeCurrencyStatus = accountStatusList.getCoinStatus(network).getOrElse {
+                        raiseIllegalStateError("No native currency found: ${network.id}")
+                    }
 
                     if (!currencyChecksRepository.isNetworkSupportedForGaslessTx(network)) {
                         return@either listOf(nativeCurrencyStatus)
@@ -56,21 +57,6 @@ class GetAvailableFeeTokensUseCase(
                 },
             )
         }
-    }
-
-    private suspend fun Raise<GetFeeError>.getNativeCurrencyStatus(
-        userWallet: UserWallet,
-        network: Network,
-        userCurrenciesStatuses: List<CryptoCurrencyStatus>,
-    ): CryptoCurrencyStatus {
-        val nativeCurrency = currenciesRepository.getNetworkCoin(
-            userWalletId = userWallet.walletId,
-            networkId = network.id,
-            derivationPath = network.derivationPath,
-        )
-        return userCurrenciesStatuses.find {
-            it.currency.id == nativeCurrency.id
-        } ?: raiseIllegalStateError("no native currency found")
     }
 
     private suspend fun getGaslessTokens(

@@ -1,6 +1,7 @@
 package com.tangem.feature.tester.presentation.storybook.entity
 
 import com.tangem.core.ui.ds.badge.TangemBadgeColor
+import com.tangem.core.ui.ds.field.search.TangemFieldShape
 import com.tangem.core.ui.ds.message.TangemMessageEffect
 
 internal sealed interface StoryBookPage
@@ -53,4 +54,9 @@ internal data class TangemContextMenuStory(
 internal data class TangemHeaderRowStory(
     val isBalanceHidden: Boolean,
     val onBalanceHiddenToggle: () -> Unit,
+) : StoryBookPage
+
+internal data class TangemSearchFieldStory(
+    val selectedShape: TangemFieldShape,
+    val onShapeChange: (TangemFieldShape) -> Unit,
 ) : StoryBookPage

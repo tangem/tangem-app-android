@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
@@ -28,6 +29,7 @@ import com.tangem.core.ui.ds.button.SecondaryTangemButton
 import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
+import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
@@ -75,7 +77,7 @@ internal fun WalletBalance(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .padding(vertical = 58.dp),
         ) {
             Balance(
                 walletBalanceUM = walletBalanceUM,
@@ -112,44 +114,40 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
         },
     ) { balanceUM ->
         when (balanceUM) {
-            is WalletBalanceUM.Content -> {
-                Text(
-                    text = balanceUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
-                    style = TangemTheme.typography2.titleRegular44.applyBladeBrush(
-                        isEnabled = balanceUM.isBalanceFlickering,
-                        textColor = TangemTheme.colors2.text.neutral.primary,
-                    ),
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
-                        maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
-                    ),
-                )
-            }
-            is WalletBalanceUM.Error -> {
-                Text(
-                    text = StringsSigns.DASH_SIGN,
-                    style = TangemTheme.typography2.titleRegular44,
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(
-                        minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
-                        maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
-                    ),
-                )
-            }
-            is WalletBalanceUM.Loading,
-            -> {
-                TextShimmer(
-                    text = "123456",
-                    style = TangemTheme.typography2.titleRegular44,
-                    radius = TangemTheme.dimens2.x25,
-                    textSizeHeight = true,
-                )
-            }
+            is WalletBalanceUM.Content -> Text(
+                text = balanceUM.balance.orMaskWithStars(isBalanceHidden).resolveAnnotatedReference(),
+                style = TangemTheme.typography2.titleRegular44.applyBladeBrush(
+                    isEnabled = balanceUM.isBalanceFlickering,
+                    textColor = TangemTheme.colors2.text.neutral.primary,
+                ),
+                color = TangemTheme.colors2.text.neutral.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
+                    maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
+                ),
+            )
+            is WalletBalanceUM.Error -> Text(
+                text = StringsSigns.DASH_SIGN,
+                style = TangemTheme.typography2.titleRegular44,
+                color = TangemTheme.colors2.text.neutral.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = TangemTheme.typography2.bodySemibold15.fontSize,
+                    maxFontSize = TangemTheme.typography2.titleRegular44.fontSize,
+                ),
+            )
+            is WalletBalanceUM.Loading -> TextShimmer(
+                text = "123456",
+                style = TangemTheme.typography2.titleRegular44,
+                radius = TangemTheme.dimens2.x25,
+            )
+            is WalletBalanceUM.Empty -> TextPlaceholder(
+                textStyle = TangemTheme.typography2.titleRegular44,
+                width = 200.dp,
+            )
         }
     }
 }
@@ -162,6 +160,11 @@ private fun ActionButtons(buttons: ImmutableList<TangemButtonUM>) {
     ) {
         buttons.fastForEach { button ->
             key(button.text) {
+                val textColor = if (button.isEnabled) {
+                    TangemTheme.colors2.text.neutral.primary
+                } else {
+                    TangemTheme.colors2.text.status.disabled
+                }
                 Column(
                     modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2_5),
                     verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
@@ -170,12 +173,13 @@ private fun ActionButtons(buttons: ImmutableList<TangemButtonUM>) {
                     SecondaryTangemButton(
                         iconRes = button.iconRes,
                         onClick = button.onClick,
+                        isEnabled = button.isEnabled,
                         shape = TangemButtonShape.Rounded,
                     )
                     Text(
                         text = button.text.orEmpty().resolveReference(),
                         style = TangemTheme.typography2.bodySemibold15,
-                        color = TangemTheme.colors2.text.neutral.primary,
+                        color = textColor,
                     )
                 }
             }
@@ -187,24 +191,34 @@ private fun ActionButtons(buttons: ImmutableList<TangemButtonUM>) {
 @Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun WalletBalance_Preview(@PreviewParameter(WalletBalancePreviewProvider::class) params: WalletBalanceUM) {
+private fun WalletBalance_Preview(
+    @PreviewParameter(WalletBalancePreviewProvider::class)
+    params: WalletBalancePreviewData,
+) {
     TangemThemePreviewRedesign {
         WalletBalance(
-            walletBalanceUM = params,
+            walletBalanceUM = params.walletBalanceUM,
             behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
-            buttons = WalletPreviewData.actionButtons,
+            buttons = params.actionsList,
             isBalanceHidden = false,
+            modifier = Modifier.background(TangemTheme.colors2.surface.level1),
         )
     }
 }
 
-private class WalletBalancePreviewProvider : PreviewParameterProvider<WalletBalanceUM> {
-    override val values: Sequence<WalletBalanceUM>
+private data class WalletBalancePreviewData(
+    val walletBalanceUM: WalletBalanceUM,
+    val actionsList: ImmutableList<TangemButtonUM>,
+)
+
+private class WalletBalancePreviewProvider : PreviewParameterProvider<WalletBalancePreviewData> {
+    override val values: Sequence<WalletBalancePreviewData>
         get() = sequenceOf(
-            WalletBalancePreview.content,
-            WalletBalancePreview.content.copy(isBalanceFlickering = true),
-            WalletBalancePreview.loading,
-            WalletBalancePreview.error,
+            WalletBalancePreviewData(WalletBalancePreview.content, WalletPreviewData.actionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.hiddenBalanceContent, WalletPreviewData.actionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.loading, WalletPreviewData.disabledActionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.error, WalletPreviewData.disabledActionButtons),
+            WalletBalancePreviewData(WalletBalancePreview.empty, WalletPreviewData.disabledActionButtons),
         )
 }
 // endregion
