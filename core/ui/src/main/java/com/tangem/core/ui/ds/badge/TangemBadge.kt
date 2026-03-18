@@ -87,8 +87,8 @@ fun TangemBadge(
             .heightIn(min = size.toHeightDp())
             .clip(shape.toShape(size))
             .getBackgroundColor(type = type, color = color, shape = shape.toShape(size))
-            .padding(size.toPaddingDp(position = iconPosition))
-            .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() }),
+            .clickableSingle(enabled = onClick != null, onClick = { onClick?.invoke() })
+            .padding(size.toPaddingDp(position = iconPosition)),
     ) {
         StartIcon(
             tangemIconUM = tangemIconUM,
@@ -137,6 +137,7 @@ private fun StartIcon(
                 is TangemIconUM.Ident,
                 is TangemIconUM.Image,
                 is TangemIconUM.Url,
+                TangemIconUM.Empty,
                 -> wrappedIconRes
                 is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
             },
@@ -164,6 +165,7 @@ private fun EndIcon(
                 is TangemIconUM.Ident,
                 is TangemIconUM.Image,
                 is TangemIconUM.Url,
+                TangemIconUM.Empty,
                 -> wrappedIconRes
                 is TangemIconUM.Icon -> wrappedIconRes.copy(tintReference = ColorReference2 { iconColor })
             },
@@ -289,6 +291,7 @@ enum class TangemBadgeColor {
     Red,
     Gray,
     Green,
+    GreenAlt,
 }
 
 @ReadOnlyComposable
@@ -311,6 +314,12 @@ private fun getIconColor(type: TangemBadgeType, color: TangemBadgeColor) = when 
         TangemBadgeType.Outline,
         TangemBadgeType.Tinted,
         -> TangemTheme.colors2.markers.iconGreen
+        TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
+    }
+    TangemBadgeColor.GreenAlt -> when (type) {
+        TangemBadgeType.Outline,
+        TangemBadgeType.Tinted,
+        -> TangemTheme.colors2.markers.iconGreenAlt
         TangemBadgeType.Solid -> TangemTheme.colors2.graphic.neutral.primaryInvertedConstant
     }
 }
@@ -337,6 +346,12 @@ private fun getTextColor(type: TangemBadgeType, color: TangemBadgeColor) = when 
         -> TangemTheme.colors2.markers.textGreen
         TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
     }
+    TangemBadgeColor.GreenAlt -> when (type) {
+        TangemBadgeType.Outline,
+        TangemBadgeType.Tinted,
+        -> TangemTheme.colors2.markers.textGreenAlt
+        TangemBadgeType.Solid -> TangemTheme.colors2.text.neutral.primaryInvertedConstant
+    }
 }
 
 @Suppress("CyclomaticComplexMethod")
@@ -349,6 +364,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
             TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundSolidBlue
             TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundSolidRed
             TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundSolidGreen
+            TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.backgroundSolidGreenAlt
         },
     )
     TangemBadgeType.Tinted -> background(
@@ -357,6 +373,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
             TangemBadgeColor.Blue -> TangemTheme.colors2.markers.backgroundTintedBlue
             TangemBadgeColor.Red -> TangemTheme.colors2.markers.backgroundTintedRed
             TangemBadgeColor.Green -> TangemTheme.colors2.markers.backgroundTintedGreen
+            TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.backgroundTintedGreenAlt
         },
     )
     TangemBadgeType.Outline -> {
@@ -366,6 +383,7 @@ private fun Modifier.getBackgroundColor(type: TangemBadgeType, color: TangemBadg
                 TangemBadgeColor.Blue -> TangemTheme.colors2.markers.borderTintedBlue
                 TangemBadgeColor.Red -> TangemTheme.colors2.markers.borderTintedRed
                 TangemBadgeColor.Green -> TangemTheme.colors2.markers.borderTintedGreen
+                TangemBadgeColor.GreenAlt -> TangemTheme.colors2.markers.borderTintedGreenAlt
             },
             shape = shape,
             width = 1.dp,
@@ -410,6 +428,7 @@ private class TangemBadgePreviewProvider : PreviewParameterProvider<TangemBadgeC
             TangemBadgeColor.Blue,
             TangemBadgeColor.Red,
             TangemBadgeColor.Green,
+            TangemBadgeColor.GreenAlt,
         )
 }
 // endregion

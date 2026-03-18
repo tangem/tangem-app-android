@@ -217,6 +217,7 @@
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_add_tokens">Add tokens</string>
   <string name="common_added">Added</string>
   <string name="common_address">Address</string>
   <string name="common_all">All</string>
@@ -325,6 +326,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
+  <string name="common_no_results">No results</string>
   <string name="common_not_added">Not Added</string>
   <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
@@ -383,6 +385,7 @@
   <string name="common_to">To</string>
   <string name="common_to_wallet_name">To %s</string>
   <string name="common_today">Today</string>
+  <string name="common_token_send">Token to send</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
@@ -395,6 +398,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
+  <string name="common_unlock">Unlock</string>
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
@@ -699,6 +703,7 @@
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
+  <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
   <string name="main_scan_card_warning_view_title">Scan your card or ring</string>
   <string name="main_swap_changelly_promotion_message">Enjoy %1$s service fees on swaps via Changelly from February %2$s-%3$s</string>
@@ -736,6 +741,8 @@
   <string name="markets_earn_common_title">Earn with Tangem</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
+  <string name="markets_hint_part_one">Swipe up to explore the market</string>
+  <string name="markets_hint_part_two">Find new hidden gems</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
@@ -798,6 +805,10 @@
   <string name="markets_token_details_holders">Holders</string>
   <string name="markets_token_details_holders_description">The change in the number of token holders within a specific timeframe</string>
   <string name="markets_token_details_holders_full">Holders</string>
+  <string name="markets_token_details_insight_day_timeline">D</string>
+  <string name="markets_token_details_insight_month_timeline">M</string>
+  <string name="markets_token_details_insight_week_timeline">W</string>
+  <string name="markets_token_details_insight_year_timeline">Y</string>
   <string name="markets_token_details_insights">Insights</string>
   <string name="markets_token_details_links">Links</string>
   <string name="markets_token_details_liquidity">Liquidity</string>
@@ -825,9 +836,11 @@
   <string name="markets_token_details_total_supply">Total supply</string>
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
   <string name="markets_token_details_total_supply_full">Total supply</string>
+  <string name="markets_token_details_trading_interval">24h</string>
   <string name="markets_token_details_trading_volume">Trading volume (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">The total amount of a cryptocurrency that has been traded within the last 24 hours, indicating the level of activity and liquidity in the market</string>
   <string name="markets_token_details_trading_volume_full">Trading volume (24h)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s in total</string>
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
@@ -1202,6 +1215,10 @@
   <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
+  <plurals name="send_network_selection_hidden_tokens">
+    <item quantity="one">%d token isn\'t compatible with this address</item>
+    <item quantity="other">%d tokens aren\'t compatible with this address</item>
+  </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Unique number for each transaction. Use it to resend or cancel a pending transaction.</string>
   <string name="send_nonce_hint">Enter nonce…</string>
@@ -1509,6 +1526,7 @@
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">Change PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>
