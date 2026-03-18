@@ -24,8 +24,10 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 private const val LOG_EVENTS = true
 
@@ -305,8 +307,6 @@ internal class MarketsListBatchFlowManager(
             SortByTypeUM.ExperiencedBuyers -> TokenMarketListConfig.Order.Buyers
             SortByTypeUM.TopGainers -> TokenMarketListConfig.Order.TopGainers
             SortByTypeUM.TopLosers -> TokenMarketListConfig.Order.TopLosers
-            SortByTypeUM.Staking -> TokenMarketListConfig.Order.Staking
-            SortByTypeUM.YieldSupply -> TokenMarketListConfig.Order.YieldSupply
         }
     }
 
