@@ -26,7 +26,7 @@ internal sealed class EarnAnalyticsEvent(
         event = "Best Opportunities Filter Network Applied",
         params = mapOf(
             "Network Filter Type" to filterType.value,
-            "NetworkId" to networkId.orEmpty(),
+            "Network Id" to networkId.orEmpty(),
         ),
     )
 
