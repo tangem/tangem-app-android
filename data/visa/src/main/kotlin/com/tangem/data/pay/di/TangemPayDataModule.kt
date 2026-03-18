@@ -1,13 +1,28 @@
 package com.tangem.data.pay.di
 
+import android.content.Context
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.dataStoreFile
+import com.squareup.moshi.Moshi
 import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.DefaultTangemPayEligibilityManager
+import com.tangem.data.pay.flow.DefaultPaymentAccountStatusFetcher
+import com.tangem.data.pay.flow.DefaultPaymentAccountStatusProducer
 import com.tangem.data.pay.repository.*
+import com.tangem.data.pay.store.PaymentAccountStatusesStore
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
+import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
+import com.tangem.domain.pay.flow.PaymentAccountStatusProducer
+import com.tangem.domain.pay.flow.PaymentAccountStatusSupplier
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -16,11 +31,15 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -75,7 +94,51 @@ internal interface TangemPayDataModule {
     @Singleton
     fun bindTangemPayEligibilityManager(impl: DefaultTangemPayEligibilityManager): TangemPayEligibilityManager
 
+    @Binds
+    @Singleton
+    fun bindPaymentAccountStatusProducerFactory(
+        impl: DefaultPaymentAccountStatusProducer.Factory,
+    ): PaymentAccountStatusProducer.Factory
+
+    @Binds
+    @Singleton
+    fun bindPaymentAccountStatusFetcher(impl: DefaultPaymentAccountStatusFetcher): PaymentAccountStatusFetcher
+
     companion object {
+
+        @Provides
+        @Singleton
+        fun providePaymentAccountStatusesStore(
+            @NetworkMoshi moshi: Moshi,
+            @ApplicationContext context: Context,
+            dispatchers: CoroutineDispatcherProvider,
+        ): PaymentAccountStatusesStore {
+            return PaymentAccountStatusesStore(
+                runtimeStore = RuntimeSharedStore(),
+                persistenceDataStore = DataStoreFactory.create(
+                    serializer = MoshiDataStoreSerializer(
+                        moshi = moshi,
+                        types = mapWithStringKeyTypes<PaymentAccountStatusDM>(),
+                        defaultValue = emptyMap(),
+                    ),
+                    produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
+                    scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                ),
+                dispatchers = dispatchers,
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun providePaymentAccountStatusSupplier(
+            factory: PaymentAccountStatusProducer.Factory,
+        ): PaymentAccountStatusSupplier {
+            return object : PaymentAccountStatusSupplier(
+                factory = factory,
+                keyCreator = { "payment_account_status_${it.userWalletId.stringValue}" },
+            ) {}
+        }
+
         @Provides
         @Singleton
         fun provideTangemPayMainScreenCustomerInfoUseCase(
