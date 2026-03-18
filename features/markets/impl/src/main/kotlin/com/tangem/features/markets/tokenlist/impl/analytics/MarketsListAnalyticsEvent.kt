@@ -23,8 +23,6 @@ internal sealed class MarketsListAnalyticsEvent(
                 SortByTypeUM.ExperiencedBuyers -> "Buyers"
                 SortByTypeUM.TopGainers -> "Gainers"
                 SortByTypeUM.TopLosers -> "Losers"
-                SortByTypeUM.Staking -> "Staking"
-                SortByTypeUM.YieldSupply -> "Yield Supply"
             },
             "Period" to when (interval) {
                 MarketsListUM.TrendInterval.H24 -> "24h"
