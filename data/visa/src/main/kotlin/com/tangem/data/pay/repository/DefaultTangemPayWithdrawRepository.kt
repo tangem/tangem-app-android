@@ -9,7 +9,6 @@ import com.tangem.datasource.api.pay.models.request.WithdrawDataRequest
 import com.tangem.datasource.api.pay.models.request.WithdrawRequest
 import com.tangem.datasource.api.pay.models.response.WithdrawResponse
 import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayWithdrawExchangeState
@@ -23,8 +22,12 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.addHexPrefix
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -37,6 +40,9 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPaySwapRepository"
+private const val MAX_POLLING_ATTEMPTS = 6
+
+private data class PollingKey(val userWalletId: String, val orderId: String)
 
 @Suppress("LongParameterList")
 internal class DefaultTangemPayWithdrawRepository @Inject constructor(
@@ -50,8 +56,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val withdrawPollingScope: AppCoroutineScope,
 ) : TangemPayWithdrawRepository {
 
-    private val withdrawPollingJobs = mutableMapOf<String, Job>()
-    private val withdrawPollingMutex = Mutex()
+    private val pollingJobs = mutableMapOf<PollingKey, Job>()
+    private val pollingMutex = Mutex()
 
     override suspend fun withdraw(
         userWallet: UserWallet,
@@ -122,6 +128,76 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
                 )
             } else {
                 tangemPayStorage.storeWithdrawOrder(userWalletId = userWallet.walletId, data = storeData)
+                startPollingForOrder(userWallet, orderId, exchangeData)
+            }
+        }
+    }
+
+    private fun startPollingForOrder(
+        userWallet: UserWallet,
+        orderId: String,
+        exchangeData: TangemPayWithdrawExchangeState,
+    ) {
+        withdrawPollingScope.launch {
+            startWithdrawOrderPolling(userWallet, orderId, exchangeData)
+        }
+    }
+
+    private suspend fun startWithdrawOrderPolling(
+        userWallet: UserWallet,
+        orderId: String,
+        exchangeData: TangemPayWithdrawExchangeState,
+    ) {
+        val key = PollingKey(userWallet.walletId.stringValue, orderId)
+
+        pollingMutex.withLock {
+            if (pollingJobs.containsKey(key)) return@withLock
+
+            val pollingJob = withdrawPollingScope.launch {
+                try {
+                    var attemptCount = 0
+                    while (isActive && attemptCount < MAX_POLLING_ATTEMPTS) {
+                        delay(duration = 3.seconds)
+                        attemptCount++
+                        val result = orderRepository.getOrderData(
+                            userWalletId = userWallet.walletId,
+                            orderId = orderId,
+                        )
+                        val txHash = result.getOrNull()?.withdrawTxHash?.ifEmpty { null }
+                        if (!txHash.isNullOrEmpty()) {
+                            finalizeWithdraw(
+                                userWallet = userWallet,
+                                txHash = txHash,
+                                exchangeData = exchangeData,
+                                orderId = orderId,
+                            )
+                            pollingMutex.withLock { pollingJobs.remove(key) }
+                            return@launch
+                        }
+                    }
+                    if (attemptCount >= MAX_POLLING_ATTEMPTS) {
+                        Timber.tag(TAG).e("Polling stopped after $attemptCount unsuccessful attempts")
+                        tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
+                        pollingMutex.withLock { pollingJobs.remove(key) }
+                    }
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    Timber.tag(TAG).e(exception)
+                    tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
+                    pollingMutex.withLock { pollingJobs.remove(key) }
+                }
+            }
+            pollingJobs[key] = pollingJob
+        }
+    }
+
+    private fun stopPolling(userWalletId: String, orderId: String) {
+        withdrawPollingScope.launch {
+            pollingMutex.withLock {
+                val key = PollingKey(userWalletId, orderId)
+                pollingJobs[key]?.cancel()
+                pollingJobs.remove(key)
             }
         }
     }
@@ -141,7 +217,8 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
             txHash = txHash,
             payInExtraId = exchangeData.payInExtraId,
         ).also {
-            tangemPayStorage.deleteWithdrawOrder(userWallet.walletId, orderId)
+            tangemPayStorage.deleteWithdrawOrder(userWalletId = userWallet.walletId, orderId = orderId)
+            stopPolling(userWalletId = userWallet.walletId.stringValue, orderId = orderId)
         }
     }
 
@@ -158,14 +235,12 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
 
     override suspend fun pollWithdrawOrdersIfNeeds(userWallet: UserWallet) {
         tangemPayStorage.getWithdrawOrders(userWalletId = userWallet.walletId)?.forEach { state ->
-            withdrawPollingScope.launch {
-                try {
-                    pollWithdrawOrderIfNeeds(userWallet = userWallet, data = state)
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    Timber.tag(TAG).e(exception)
-                }
+            try {
+                pollWithdrawOrderIfNeeds(userWallet = userWallet, data = state)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                Timber.tag(TAG).e(exception)
             }
         }
     }
@@ -190,51 +265,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         if (!txHash.isNullOrEmpty()) {
             finalizeWithdraw(userWallet = userWallet, txHash = txHash, exchangeData = exchangeData, orderId = orderId)
         } else {
-            startWithdrawOrderPolling(userWallet = userWallet, orderId = orderId, exchangeData = exchangeData)
-        }
-        return
-    }
-
-    private suspend fun startWithdrawOrderPolling(
-        userWallet: UserWallet,
-        orderId: String,
-        exchangeData: TangemPayWithdrawExchangeState,
-    ) {
-        withdrawPollingMutex.withLock {
-            if (withdrawPollingJobs.containsKey(orderId)) return
-
-            val pollingJob = withdrawPollingScope.launch {
-                try {
-                    while (isActive) {
-                        delay(duration = 5.seconds)
-
-                        orderRepository.getOrderData(userWalletId = userWallet.walletId, orderId = orderId)
-                            .onRight { order ->
-                                val txHash = order.withdrawTxHash
-                                if (txHash.isNullOrEmpty()) return@onRight
-                                finalizeWithdraw(
-                                    userWallet = userWallet,
-                                    txHash = txHash,
-                                    exchangeData = exchangeData,
-                                    orderId = orderId,
-                                )
-                                withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
-                                return@launch
-                            }
-                            .onLeft { error ->
-                                Timber.tag(TAG).e("getOrderData error ${error.errorCode}")
-                                withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
-                                return@launch
-                            }
-                    }
-                } catch (exception: CancellationException) {
-                    throw exception
-                } catch (exception: Exception) {
-                    Timber.tag(TAG).e(exception)
-                    withdrawPollingMutex.withLock { withdrawPollingJobs.remove(orderId) }
-                }
-            }
-            withdrawPollingJobs[orderId] = pollingJob
+            startPollingForOrder(userWallet, orderId, exchangeData)
         }
     }
 
