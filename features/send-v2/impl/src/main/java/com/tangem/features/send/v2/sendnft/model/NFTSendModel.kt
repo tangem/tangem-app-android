@@ -6,17 +6,18 @@ import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -27,7 +28,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.transaction.error.GetFeeError
@@ -66,7 +66,6 @@ internal class NFTSendModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
@@ -77,7 +76,7 @@ internal class NFTSendModel @Inject constructor(
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -186,31 +185,24 @@ internal class NFTSendModel @Inject constructor(
                         ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
                         ?: return@launch
 
-                    if (accountsFeatureToggles.isFeatureEnabled) {
-                        getAccountCurrencyStatusUseCase(
-                            userWalletId,
-                            cryptoCurrency,
-                        ).onEach { (maybeAccount, cryptoStatus) ->
-                            account = maybeAccount
-                            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+                    getAccountCurrencyStatusUseCase(
+                        userWalletId,
+                        cryptoCurrency,
+                    ).onEach { (maybeAccount, cryptoStatus) ->
+                        account = maybeAccount
+                        isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
 
-                            cryptoCurrencyStatus = cryptoStatus
-                            feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                                userWalletId = userWalletId,
-                                cryptoCurrencyStatus = cryptoStatus,
-                            ).getOrNull() ?: cryptoStatus
+                        cryptoCurrencyStatus = cryptoStatus
+                        feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                            userWalletId = userWalletId,
+                            cryptoCurrencyStatus = cryptoStatus,
+                        ).getOrNull() ?: cryptoStatus
 
-                            if (uiState.value.destinationUM is DestinationUM.Empty) {
-                                router.replaceAll(Destination(isEditMode = false))
-                            }
-                        }.flowOn(dispatchers.default)
-                            .launchIn(modelScope)
-                    } else {
-                        getCurrenciesStatusUpdates(
-                            isSingleWalletWithToken = wallet is UserWallet.Cold &&
-                                wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-                        )
-                    }
+                        if (uiState.value.destinationUM is DestinationUM.Empty) {
+                            router.replaceAll(Destination(isEditMode = false))
+                        }
+                    }.flowOn(dispatchers.default)
+                        .launchIn(modelScope)
                 },
                 ifLeft = {
                     alertFactory.getGenericErrorState(::onFailedTxEmailClick)
@@ -242,36 +234,9 @@ internal class NFTSendModel @Inject constructor(
 
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Send))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
-    }
-
-    private fun getCurrenciesStatusUpdates(isSingleWalletWithToken: Boolean) {
-        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrency.id,
-            isSingleWalletWithTokens = isSingleWalletWithToken,
-        ).onEach { maybeCryptoCurrency ->
-            maybeCryptoCurrency.fold(
-                ifRight = { cryptoStatus ->
-                    cryptoCurrencyStatus = cryptoStatus
-                    feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyStatus = cryptoStatus,
-                    ).getOrNull() ?: cryptoStatus
-
-                    if (uiState.value.destinationUM is DestinationUM.Empty) {
-                        router.replaceAll(Destination(isEditMode = false))
-                    }
-                },
-                ifLeft = {
-                    alertFactory.getGenericErrorState(
-                        onFailedTxEmailClick = { onFailedTxEmailClick(it.toString()) },
-                        popBack = { router.pop() },
-                    )
-                },
-            )
-        }.launchIn(modelScope)
     }
 
     private fun initialState(): NFTSendUM = NFTSendUM(

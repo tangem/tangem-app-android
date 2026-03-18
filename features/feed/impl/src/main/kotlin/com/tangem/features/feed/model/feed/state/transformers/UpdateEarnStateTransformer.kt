@@ -47,7 +47,7 @@ internal class UpdateEarnStateTransformer(
     }
 
     private fun handleEmptyState(currentState: FeedListUM): FeedListUM {
-        return currentState.copy(earnListUM = null)
+        return currentState.copy(earnListUM = EarnListUM.Empty)
     }
 
     private fun handleErrorState(currentState: FeedListUM, result: EarnError): FeedListUM {
@@ -69,6 +69,8 @@ internal class UpdateEarnStateTransformer(
         currentState: FeedListUM,
         earnTokensWithCurrency: List<EarnTokenWithCurrency>,
     ): FeedListUM {
+        if (earnTokensWithCurrency.isEmpty()) return currentState.copy(earnListUM = EarnListUM.Empty)
+
         val newItems = earnTokensWithCurrency
             .sortedWith(
                 compareByDescending<EarnTokenWithCurrency> {
