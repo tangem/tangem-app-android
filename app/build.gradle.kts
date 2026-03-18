@@ -366,6 +366,7 @@ dependencies {
     implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
     implementation(deps.timber)
+    implementation(deps.kermit)
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)

@@ -4,7 +4,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.yield.supply.YieldSupplyRepository
-import kotlinx.coroutines.CoroutineScope
+import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
 class YieldSupplyPendingTracker(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
-    private val coroutineScope: CoroutineScope,
+    private val coroutineScope: AppCoroutineScope,
 ) {
 
     private data class TrackedKey(
