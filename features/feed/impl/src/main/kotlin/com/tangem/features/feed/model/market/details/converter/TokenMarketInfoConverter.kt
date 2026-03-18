@@ -15,6 +15,7 @@ import com.tangem.utils.converter.Converter
 @Stable
 @Suppress("LongParameterList")
 internal class TokenMarketInfoConverter(
+    private val isRedesignEnabled: Boolean,
     private val appCurrency: Provider<AppCurrency>,
     private val needApplyFCARestrictions: Provider<Boolean>,
     private val onInfoClick: (TangemBottomSheetConfigContent) -> Unit,
@@ -47,6 +48,7 @@ internal class TokenMarketInfoConverter(
             tokenSymbol = value.symbol,
             appCurrency = appCurrency,
             onInfoClick = onInfoClick,
+            isRedesignEnabled = isRedesignEnabled,
         )
 
         val exchangesAmount = value.exchangesAmount

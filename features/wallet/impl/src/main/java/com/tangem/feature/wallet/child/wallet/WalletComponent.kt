@@ -21,6 +21,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
@@ -29,10 +30,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
+import com.tangem.features.send.v2.api.NetworkSelectionComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -51,6 +54,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
+    private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -142,6 +146,50 @@ internal class WalletComponent @AssistedInject constructor(
                         appComponentContext = childByContext(componentContext),
                         params = TokenActionsComponent.Params(
                             actions = dialogConfig.actionList,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.OrganizeTokens -> {
+                    OrganizeTokensComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = OrganizeTokensComponent.Params(
+                            userWalletId = dialogConfig.userWalletId,
+                            callback = model.innerWalletRouter.organizeCallbacks,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.NetworkSelection -> {
+                    networkSelectionComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = NetworkSelectionComponent.Params(
+                            address = dialogConfig.address,
+                            amount = dialogConfig.amount,
+                            memo = dialogConfig.memo,
+                            walletGroups = dialogConfig.walletGroups.map { walletGroup ->
+                                NetworkSelectionComponent.Params.WalletGroup(
+                                    userWalletId = walletGroup.userWalletId,
+                                    walletName = walletGroup.walletName,
+                                    accounts = walletGroup.accounts.map { accountGroup ->
+                                        NetworkSelectionComponent.Params.AccountGroup(
+                                            accountId = accountGroup.accountId,
+                                            accountName = accountGroup.accountName,
+                                            currencies = accountGroup.currencies,
+                                            hiddenTokensCount = accountGroup.hiddenTokensCount,
+                                        )
+                                    },
+                                )
+                            },
+                            onTokenSelected = { userWalletId, currency ->
+                                model.innerWalletRouter.dialogNavigation.dismiss()
+                                model.innerWalletRouter.openSend(
+                                    userWalletId = userWalletId,
+                                    currency = currency,
+                                    address = dialogConfig.address,
+                                    amount = dialogConfig.amount?.parseBigDecimal(currency.decimals),
+                                    tag = dialogConfig.memo,
+                                )
+                            },
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
                         ),
                     )
