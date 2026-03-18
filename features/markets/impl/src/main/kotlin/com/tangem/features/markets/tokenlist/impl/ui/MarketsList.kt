@@ -38,16 +38,16 @@ import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.model.MarketsNotificationUM
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListSortByBottomSheet
-import com.tangem.features.markets.tokenlist.impl.ui.components.YieldSupplyInMarketsPromoNotification
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListUM
@@ -55,8 +55,6 @@ import com.tangem.features.markets.tokenlist.impl.ui.state.SortByBottomSheetCont
 import com.tangem.features.markets.tokenlist.impl.ui.state.SortByTypeUM
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-
-private const val SHOW_MORE_KEY = "privacyPolicy"
 
 @Composable
 internal fun MarketsList(
@@ -174,40 +172,6 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                     onIntervalClick = state.onIntervalClick,
                     onSortByClick = state.onSortByButtonClick,
                 )
-            }
-
-            val marketsNotificationUM = state.marketsNotificationUM
-            AnimatedVisibility(
-                state.list !is ListUM.LoadingError &&
-                    state.isInSearchMode.not() && state.selectedSortBy != SortByTypeUM.YieldSupply,
-            ) {
-                val showMore = stringResourceSafe(R.string.common_show_more)
-
-                when (marketsNotificationUM) {
-                    is MarketsNotificationUM.YieldSupplyPromo -> {
-                        val description = stringResourceSafe(
-                            R.string.markets_yield_supply_banner_description,
-                            showMore,
-                        )
-
-                        val clickableDescription = annotatedReference {
-                            append(description.substringBefore(showMore))
-
-                            pushStringAnnotation(SHOW_MORE_KEY, "")
-                            appendColored(showMore, TangemTheme.colors.text.accent)
-                            pop()
-                        }
-
-                        YieldSupplyInMarketsPromoNotification(
-                            config = marketsNotificationUM.config.copy(
-                                subtitle = clickableDescription,
-                            ),
-                            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                        )
-                    }
-                    else -> { /* no-op */
-                    }
-                }
             }
         }
     }
@@ -415,10 +379,6 @@ private fun Preview() {
                         isShown = false,
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
-                    ),
-                    marketsNotificationUM = MarketsNotificationUM.YieldSupplyPromo(
-                        onClick = {},
-                        onCloseClick = {},
                     ),
                 ),
                 onHeaderSizeChange = {},
