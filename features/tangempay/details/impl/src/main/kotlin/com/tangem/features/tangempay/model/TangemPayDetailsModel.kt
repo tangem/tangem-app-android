@@ -125,7 +125,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
         }
-        subscribeToWithdrawOrder()
     }
 
     fun onPause() {
@@ -148,14 +147,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                 )
             }
             .launchIn(modelScope)
-    }
-
-    private fun subscribeToWithdrawOrder() {
-        modelScope.launch {
-            val userWallet = userWallet ?: getUserWalletUseCase(params.userWalletId).getOrNull()
-                ?: return@launch
-            tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
-        }
     }
 
     override fun onClickPinCode() {
