@@ -26,14 +26,13 @@ import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.repository.AccountsExpandedRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -69,7 +68,7 @@ internal object AccountDataModule {
     fun provideAccountsExpandedRepository(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): AccountsExpandedRepository {
         val store = DataStoreFactory.create<Map<String, Set<AccountsExpandedDTO>>>(
             serializer = MoshiDataStoreSerializer(
@@ -78,7 +77,7 @@ internal object AccountDataModule {
                 defaultValue = emptyMap(),
             ),
             produceFile = { context.dataStoreFile(fileName = "account_expanded_store") },
-            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            scope = appScope,
         )
 
         return DefaultAccountsExpandedRepository(
@@ -107,14 +106,14 @@ internal object AccountDataModule {
         userTokensSaver: UserTokensSaver,
         accountTokenMigrationStore: AccountTokenMigrationStore,
         eTagsStore: ETagsStore,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): DefaultMainAccountTokensMigration {
         return DefaultMainAccountTokensMigration(
             accountsResponseStoreFactory = accountsResponseStoreFactory,
             accountTokenMigrationStore = accountTokenMigrationStore,
             userTokensSaver = userTokensSaver,
             eTagsStore = eTagsStore,
-            dispatchers = dispatchers,
+            coroutineScope = appScope,
         )
     }
 }

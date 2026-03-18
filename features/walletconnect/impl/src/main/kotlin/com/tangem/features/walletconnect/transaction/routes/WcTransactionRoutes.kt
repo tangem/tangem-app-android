@@ -3,7 +3,7 @@ package com.tangem.features.walletconnect.transaction.routes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -31,8 +31,8 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
             data class BlockAidErrorInfo(
                 val description: String?,
                 val onClick: () -> Unit,
-                val iconType: MessageBottomSheetUMV2.Icon.Type,
-                val iconBgType: MessageBottomSheetUMV2.Icon.BackgroundType,
+                val iconType: MessageBottomSheetUM.Icon.Type,
+                val iconBgType: MessageBottomSheetUM.Icon.BackgroundType,
             ) : Type()
 
             data class UnknownError(

@@ -1,6 +1,7 @@
 package com.tangem.common
 
 import androidx.test.core.app.ApplicationProvider
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.tap.ApplicationEntryPoint
 import com.tangem.tap.TangemApplication
 import dagger.hilt.android.testing.OnComponentReadyRunner
@@ -10,7 +11,7 @@ import org.junit.runners.model.Statement
 import timber.log.Timber
 
 class ApplicationInjectionExecutionRule(
-    private val toggleStates: Map<String, Boolean>
+    private val toggleStates: Map<String, Boolean>,
 ) : TestRule {
 
     private val tangemApplication: TangemApplication
@@ -25,7 +26,7 @@ class ApplicationInjectionExecutionRule(
                 overrideFeatureToggles()
 
                 OnComponentReadyRunner.addListener(
-                    tangemApplication, ApplicationEntryPoint::class.java
+                    tangemApplication, ApplicationEntryPoint::class.java,
                 ) { _: ApplicationEntryPoint ->
                     tangemApplication.preInit()
                     tangemApplication.init()
@@ -43,25 +44,15 @@ class ApplicationInjectionExecutionRule(
     @Suppress("UNCHECKED_CAST")
     private fun saveOriginalFeatureToggles() {
         try {
-            val featureTogglesClass = Class.forName("com.tangem.core.configtoggle.FeatureToggles")
-            val valuesField = featureTogglesClass.getDeclaredField("values")
-            valuesField.isAccessible = true
-            originalFeatureTogglesValues = valuesField.get(null) as Map<String, String>
+            originalFeatureTogglesValues = FeatureToggles.values as Map<String, String>
         } catch (e: Exception) {
             Timber.e("Failed to save original toggles values: ${e.message}")
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun overrideFeatureToggles() {
         try {
-            val featureTogglesClass = Class.forName("com.tangem.core.configtoggle.FeatureToggles")
-            val valuesField = featureTogglesClass.getDeclaredField("values")
-            valuesField.isAccessible = true
-
-            val originalValues = originalFeatureTogglesValues ?:
-            (valuesField.get(null) as Map<String, String>)
-
+            val originalValues = originalFeatureTogglesValues ?: FeatureToggles.values
             val newValues = originalValues.toMutableMap()
 
             toggleStates.forEach { (toggle, enabled) ->
@@ -72,10 +63,12 @@ class ApplicationInjectionExecutionRule(
                 }
             }
 
-            valuesField.set(null, newValues)
+            val companionClass = FeatureToggles.Companion::class.java
+            val valuesField = companionClass.getDeclaredField("values")
+            valuesField.isAccessible = true
+            valuesField.set(FeatureToggles.Companion, newValues)
 
             Timber.i("FeatureToggles.values updated: $toggleStates")
-
         } catch (e: Exception) {
             Timber.e("FeatureToggles.values didn't change with error: ${e.message}")
         }
@@ -84,10 +77,10 @@ class ApplicationInjectionExecutionRule(
     private fun restoreOriginalFeatureToggles() {
         try {
             if (originalFeatureTogglesValues != null) {
-                val featureTogglesClass = Class.forName("com.tangem.core.configtoggle.FeatureToggles")
-                val valuesField = featureTogglesClass.getDeclaredField("values")
+                val companionClass = FeatureToggles.Companion::class.java
+                val valuesField = companionClass.getDeclaredField("values")
                 valuesField.isAccessible = true
-                valuesField.set(null, originalFeatureTogglesValues)
+                valuesField.set(FeatureToggles.Companion, originalFeatureTogglesValues)
                 Timber.i("FeatureToggles.values restored")
             }
         } catch (e: Exception) {
