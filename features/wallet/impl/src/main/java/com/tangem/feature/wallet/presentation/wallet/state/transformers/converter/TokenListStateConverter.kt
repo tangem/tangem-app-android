@@ -142,7 +142,7 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.Empty -> listOf()
             }
             val onEmptyAction = PortfolioItemContentUM.Empty.Action(
-                text = resourceReference(id = R.string.main_manage_tokens),
+                text = resourceReference(id = R.string.onboarding_add_tokens),
                 onClick = { clickIntents.onManageTokensClick(account.accountId) },
             )
             return TokensListPortfolioItemConverter(
