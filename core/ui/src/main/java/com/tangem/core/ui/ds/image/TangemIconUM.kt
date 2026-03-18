@@ -11,6 +11,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -26,6 +27,9 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Immutable
 sealed interface TangemIconUM {
+
+    /** Empty icon */
+    data object Empty : TangemIconUM
 
     /** Icon representing a currency. */
     data class Currency(
@@ -50,7 +54,8 @@ sealed interface TangemIconUM {
 
     /** Image represented from network by url */
     data class Url(
-        val url: String,
+        val url: String?,
+        @DrawableRes val fallbackRes: Int,
     ) : TangemIconUM
 }
 
@@ -76,7 +81,7 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
             tint = tangemIconUM.tintReference(),
         )
         is TangemIconUM.Image -> Image(
-            imageVector = ImageVector.vectorResource(tangemIconUM.imageRes),
+            painter = painterResource(tangemIconUM.imageRes),
             contentDescription = null,
             modifier = modifier,
         )
@@ -91,17 +96,19 @@ fun TangemIcon(tangemIconUM: TangemIconUM, modifier: Modifier = Modifier) {
                 .crossfade(enable = true)
                 .allowHardware(enable = false)
                 .build(),
-            loading = { CircleShimmer() },
+            loading = { CircleShimmer(modifier) },
             error = {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = TangemTheme.colors2.surface.level3,
-                            shape = CircleShape,
-                        ),
+                Icon(
+                    imageVector = ImageVector.vectorResource(tangemIconUM.fallbackRes),
+                    contentDescription = null,
+                    modifier = modifier,
                 )
             },
             contentDescription = null,
+        )
+        TangemIconUM.Empty -> Box(
+            modifier = modifier
+                .background(TangemTheme.colors2.skeleton.backgroundPrimary, shape = CircleShape),
         )
     }
 }
