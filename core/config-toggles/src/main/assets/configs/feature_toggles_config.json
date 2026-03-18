@@ -34,11 +34,11 @@
     },
     {
         "name": "EARN_BLOCK_ENABLED",
-        "version": "undefined"
+        "version": "5.35"
     },
     {
         "name": "HOLD_TO_CONFIRM_BUTTON_ENABLED",
-        "version": "undefined"
+        "version": "5.35"
     },
     {
         "name": "WALLET_REORDER_FEATURE_ENABLED",
@@ -55,6 +55,10 @@
     {
         "name": "MULTI_ADDRESS_UTXO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "CUSTOMER_IO_ENABLED",
+        "version": "5.35"
     },
     {
         "name": "MAIN_SCREEN_QR_SCANNING_ENABLED",

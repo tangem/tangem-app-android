@@ -245,6 +245,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
         modelScope.launch {
+            analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
             val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
             if (isEligible) {
                 router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
