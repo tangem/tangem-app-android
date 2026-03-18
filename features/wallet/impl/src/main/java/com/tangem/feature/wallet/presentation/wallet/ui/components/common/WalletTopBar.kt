@@ -1,24 +1,82 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarActionUM
+import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
+import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.common.WalletPreviewData
+import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTopBarConfig
+import dev.chrisbanes.haze.HazeProgressive
+
+private const val VISIBILITY_THRESHOLD = 0.5f
+
+/**
+ * Wallet screen collapsing top bar
+ *
+ * @param topBarConfig top bar config
+ * @param walletBalance wallet balance text reference
+ * @param behavior collapsing behavior
+ */
+@Composable
+internal fun WalletTopBar(
+    topBarConfig: WalletTopBarConfig,
+    walletBalance: TextReference?,
+    behavior: TangemCollapsingAppBarBehavior,
+) {
+    Surface(
+        color = Color.Unspecified,
+        contentColor = Color.Unspecified,
+        modifier = Modifier.hazeEffectTangem {
+            progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
+        },
+    ) {
+        val wrappedBalance = remember(behavior.state.collapsedFraction) {
+            if (behavior.state.collapsedFraction > VISIBILITY_THRESHOLD) walletBalance else null
+        }
+
+        TangemTopBar(
+            title = wrappedBalance,
+            startActionUM = TangemTopBarActionUM(
+                iconRes = R.drawable.ic_tangem_24,
+                isActionable = false,
+            ),
+            endActionUM = TangemTopBarActionUM(
+                iconRes = R.drawable.ic_more_default_24,
+                isActionable = true,
+                onClick = topBarConfig.onDetailsClick,
+                ghostModeProgress = behavior.state.collapsedFraction,
+            ),
+            modifier = Modifier
+                .statusBarsPadding()
+                .testTag(MainScreenTestTags.TOP_BAR),
+        )
+    }
+}
 
 /**
  * Wallet screen top bar
  *
  * @param config component config
  */
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WalletTopBar(config: WalletTopBarConfig) {
@@ -46,6 +104,21 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
 @Composable
 private fun Preview_WalletTopBar() {
     TangemThemePreview {
-        WalletTopBar(config = WalletPreviewData.topBarConfig)
+        WalletTopBar(config = WalletPreviewDataLegacy.topBarConfig)
     }
 }
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun WalletTopBar_Preview() {
+    TangemThemePreviewRedesign {
+        WalletTopBar(
+            topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
+            walletBalance = stringReference("$ 8923,05"),
+            behavior = rememberTangemExitUntilCollapsedScrollBehavior(),
+        )
+    }
+}
+// endregion

@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -37,6 +38,7 @@ internal class AccountListSubscriber @AssistedInject constructor(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingAvailabilityListUseCase: StakingAvailabilityListUseCase,
     private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : BasicAccountListSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> = combine7(
@@ -51,15 +53,27 @@ internal class AccountListSubscriber @AssistedInject constructor(
             accountList, appCurrency, expandedAccounts, isAccountMode,
             yieldSupplyApyMap, shouldShowMainPromo, stakingAvailabilityMap,
         ->
-        updateState(
-            accountList = accountList,
-            appCurrency = appCurrency,
-            expandedAccounts = expandedAccounts,
-            isAccountMode = isAccountMode,
-            yieldSupplyApyMap = yieldSupplyApyMap,
-            stakingAvailabilityMap = stakingAvailabilityMap,
-            shouldShowMainPromo = shouldShowMainPromo,
-        )
+        if (designFeatureToggles.isRedesignEnabled) {
+            updateState2(
+                accountList = accountList,
+                appCurrency = appCurrency,
+                expandedAccounts = expandedAccounts,
+                isAccountMode = isAccountMode,
+                yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
+            )
+        } else {
+            updateState(
+                accountList = accountList,
+                appCurrency = appCurrency,
+                expandedAccounts = expandedAccounts,
+                isAccountMode = isAccountMode,
+                yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
+            )
+        }
     }
 
     private fun stakingAvailabilityFlow(): Flow<Map<CryptoCurrency, StakingAvailability>> = getAccountStatusListFlow()

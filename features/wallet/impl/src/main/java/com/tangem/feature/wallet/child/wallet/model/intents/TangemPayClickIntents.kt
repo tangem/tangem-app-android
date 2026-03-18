@@ -2,6 +2,9 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
@@ -22,12 +25,12 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHideOnboardingStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshShowProgressTransformer
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,7 +67,6 @@ internal interface TangemPayIntents {
 @ModelScoped
 internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
-    private val featureToggles: TangemPayFeatureToggles,
     private val onboardingRepository: OnboardingRepository,
     private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
@@ -73,13 +75,12 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val tangemPayEligibilityManager: TangemPayEligibilityManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
     override suspend fun onPullToRefresh() {
         val userWalletId = stateHolder.getSelectedWalletId()
-        if (!featureToggles.isTangemPayEnabled ||
-            !onboardingRepository.isTangemPayInitialDataProduced(userWalletId)
-        ) {
+        if (!onboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
             return
         }
         tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
@@ -173,6 +174,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     private fun goToSupportForRejectKyc(customerId: String) {
         modelScope.launch {
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
             sendFeedbackEmailUseCase(
                 type = FeedbackEmailType.Visa.KycRejected(
                     walletMetaInfo = WalletMetaInfo(
@@ -231,6 +233,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 userWalletId = stateHolder.getSelectedWalletId(),
             ).getOrNull() ?: return@launch
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
             sendFeedbackEmailUseCase(
                 FeedbackEmailType.Visa.FailedIssueCard(
                     walletMetaInfo = cardInfo,
@@ -242,6 +245,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun onOnboardingBannerClick(userWalletId: UserWalletId) {
         modelScope.launch {
+            analyticsEventHandler.send(TangemPayAnalyticsEvents.MainVisaPermanentBannerClicked())
             val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
             if (isEligible) {
                 router.openTangemPayOnboarding(mode = AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain)
@@ -259,6 +263,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     private fun disableTangemPay(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(TangemPayAnalyticsEvents.KycCancelled())
         modelScope.launch {
             tangemPayOnboardingRepository.disableTangemPay(userWalletId)
                 .onRight { tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId) }
