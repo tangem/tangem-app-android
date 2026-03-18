@@ -55,11 +55,6 @@ internal sealed interface WalletState : WalletStateHolder {
             override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
             override val tangemPayState: TangemPayState = TangemPayState.Empty
         }
-
-        enum class WalletType {
-            Hot,
-            Cold,
-        }
     }
 
     sealed class SingleCurrency : WalletState, TxHistoryStateHolder {
@@ -96,4 +91,9 @@ internal sealed interface WalletState : WalletStateHolder {
             override val marketPriceBlockState: MarketPriceBlockState? = null
         }
     }
+}
+
+enum class WalletType {
+    Hot,
+    Cold,
 }
