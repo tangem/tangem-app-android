@@ -49,7 +49,9 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -161,10 +163,6 @@ internal class DefaultStakeKitRepository(
 
     private fun getAvailableStakeKitIntegrationsIds(): List<StakingIntegrationID.StakeKit> {
         return StakingIntegrationID.StakeKit.entries
-        // load all integrations for now and filter in use cases if needed
-        // .filterNot {
-        // it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
-        // }
     }
 
     private fun NetworkTypeDTO.extractJsonName(): String {
