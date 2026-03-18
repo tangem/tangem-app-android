@@ -8,11 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,17 +45,9 @@ fun ModalBottomSheetWithBackHandling(
         ),
         content = {
             content()
-
             BackHandler(enabled = onBack != null && sheetState.targetValue != SheetValue.Hidden) {
                 onBack?.invoke()
             }
         },
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-suspend fun SheetState.collapse(onCollapsed: () -> Unit) {
-    coroutineScope {
-        launch { hide() }.invokeOnCompletion { onCollapsed() }
-    }
 }
