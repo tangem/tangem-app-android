@@ -14,11 +14,13 @@ import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.configs.MultiWalletCardConfig
 import com.tangem.domain.card.configs.Wallet2CardConfig
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class MissedDerivationsFinderTest {
 
     @Test
@@ -97,9 +99,8 @@ internal class MissedDerivationsFinderTest {
         val currencies = MockCryptoCurrencyFactory(userWallet).cardano.let(::listOf)
         val actual = finder.find(currencies)
 
-        Truth.assertThat(actual).containsExactly(
-            ByteArrayKey(EllipticCurve.Ed25519.name.toByteArray()),
-            listOf(
+        val expected = mapOf(
+            ByteArrayKey(EllipticCurve.Ed25519.name.toByteArray()) to listOf(
                 DerivationConfigV2.derivations(Blockchain.Cardano).values.first(),
                 CardanoUtils.extendedDerivationPath(
                     derivationPath = DerivationPath(
@@ -108,7 +109,12 @@ internal class MissedDerivationsFinderTest {
                     ),
                 ),
             ),
+            ByteArrayKey(EllipticCurve.Secp256k1.name.toByteArray()) to listOf(
+                DerivationConfigV2.derivations(Blockchain.Ethereum).values.first(),
+            ),
         )
+
+        Truth.assertThat(actual).containsExactlyEntriesIn(expected)
     }
 
     @Test

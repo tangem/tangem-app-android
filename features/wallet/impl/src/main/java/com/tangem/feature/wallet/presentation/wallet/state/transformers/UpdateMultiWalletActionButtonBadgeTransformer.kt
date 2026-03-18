@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.showSwapBadge
 
 internal class UpdateMultiWalletActionButtonBadgeTransformer(
@@ -15,5 +16,9 @@ internal class UpdateMultiWalletActionButtonBadgeTransformer(
             }
             else -> prevState
         }
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletUM // todo redesign main
     }
 }

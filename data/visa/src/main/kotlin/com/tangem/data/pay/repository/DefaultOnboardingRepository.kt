@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import arrow.core.raise.catch
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
@@ -10,6 +11,7 @@ import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
@@ -17,6 +19,7 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -27,13 +30,11 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
-private const val APPROVED_KYC_STATUS = "approved"
-private const val IN_PROGRESS_KYC_STATUS = "in_progress"
-private const val DECLINED_KYC_STATUS = "declined"
 private const val TAG = "TangemPay: OnboardingRepository"
 
 @Suppress("LongParameterList")
 internal class DefaultOnboardingRepository @Inject constructor(
+    private val analytics: AnalyticsEventHandler,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
@@ -137,6 +138,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
         userWalletId: UserWalletId,
         response: CustomerMeResponse.Result?,
     ): CustomerInfo {
+        val kycStatus = KycStatus.fromString(status = response?.kyc?.status)
+        sendKycAnalytics(kycStatus)
+
         val card = response?.card
         val fiatBalance = response?.balance?.fiat
         val paymentAccount = response?.paymentAccount
@@ -145,7 +149,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 lastFourDigits = card.cardNumberEnd,
                 balance = fiatBalance.availableBalance,
                 currencyCode = fiatBalance.currency,
-                customerWalletAddress = paymentAccount.customerWalletAddress,
                 depositAddress = response.depositAddress,
                 isPinSet = response.card?.isPinSet == true,
             )
@@ -159,19 +162,30 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             cardFrozenStateStore.store(key = instance.cardId, value = cardFrozenState)
 
-            ProductInstance(id = instance.id, cardId = instance.cardId, cardFrozenState = cardFrozenState)
+            ProductInstance(id = instance.id, cardId = instance.cardId)
         }
         return CustomerInfo(
             customerId = response?.id,
             productInstance = productInstance,
-            kycStatus = getKycStatus(status = response?.kyc?.status),
+            kycStatus = kycStatus,
             cardInfo = cardInfo,
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
         }
     }
 
-    override suspend fun checkCustomerWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> {
+    private fun sendKycAnalytics(kycStatus: KycStatus) {
+        val event = when (kycStatus) {
+            KycStatus.APPROVED -> TangemPayAnalyticsEvents.KycPassedAndOrderCreated()
+            KycStatus.REJECTED -> TangemPayAnalyticsEvents.KycRejected()
+            KycStatus.INIT,
+            KycStatus.PENDING,
+            -> return
+        }
+        analytics.send(event)
+    }
+
+    override suspend fun hasTangemPayInWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> {
         val hasTangemPay = tangemPayStorage.checkCustomerWalletResult(userWalletId)
         if (hasTangemPay != null) {
             return Either.Right(hasTangemPay)
@@ -226,15 +240,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val address = requestHelper.getCustomerWalletAddress(userWalletId)
             tangemPayStorage.clearAll(userWalletId = userWalletId, customerWalletAddress = address)
             setHideMainOnboardingBanner(userWalletId)
-        }
-    }
-
-    private fun getKycStatus(status: String?): CustomerInfo.KycStatus {
-        return when (status?.lowercase()) {
-            IN_PROGRESS_KYC_STATUS -> CustomerInfo.KycStatus.PENDING
-            DECLINED_KYC_STATUS -> CustomerInfo.KycStatus.REJECTED
-            APPROVED_KYC_STATUS -> CustomerInfo.KycStatus.APPROVED
-            else -> CustomerInfo.KycStatus.INIT
         }
     }
 }

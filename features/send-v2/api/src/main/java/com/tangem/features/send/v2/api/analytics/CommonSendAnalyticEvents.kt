@@ -211,6 +211,7 @@ sealed class CommonSendAnalyticEvents(
         const val SEND_CATEGORY = "Token / Send"
         const val SWAP_CATEGORY = "Swap"
         const val NFT_SEND_CATEGORY = "NFT"
+        const val APPROVE_CATEGORY = "Approve"
     }
 
     enum class SendScreenSource {
@@ -226,5 +227,6 @@ sealed class CommonSendAnalyticEvents(
         SendWithSwap("Send&Swap"),
         WalletConnect("WalletConnect"),
         NFT("NFT"),
+        Approve("Approve"),
     }
 }

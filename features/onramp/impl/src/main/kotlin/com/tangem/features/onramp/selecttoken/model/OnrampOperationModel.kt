@@ -3,25 +3,25 @@ package com.tangem.features.onramp.selecttoken.model
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.models.event.OfframpAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.offramp.GetOfframpUrlUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
@@ -43,7 +43,8 @@ internal class OnrampOperationModel @Inject constructor(
     private val router: AppRouter,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val reduxStateHolder: ReduxStateHolder,
+    private val getOfframpUrlUseCase: GetOfframpUrlUseCase,
+    private val urlOpener: UrlOpener,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val rampStateManager: RampStateManager,
@@ -119,9 +120,13 @@ internal class OnrampOperationModel @Inject constructor(
                     val appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync()
                         .getOrElse { AppCurrency.Default }.code
 
-                    reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.Sell(status, appCurrencyCode),
-                    )
+                    getOfframpUrlUseCase(
+                        cryptoCurrencyStatus = status,
+                        appCurrencyCode = appCurrencyCode,
+                    ).onRight { url ->
+                        urlOpener.openUrl(url)
+                        analyticsEventHandler.send(OfframpAnalyticsEvent.ScreenOpened)
+                    }
                 }
             }
         }
@@ -153,18 +158,9 @@ internal class OnrampOperationModel @Inject constructor(
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
         if (selectedUserWallet is UserWallet.Cold && isDemoCardUseCase(cardId = selectedUserWallet.cardId)) {
-            val alertUM = AlertDemoModeUM(onConfirmClick = {})
-
             val message = DialogMessage(
-                title = alertUM.title,
-                message = alertUM.message,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = alertUM.confirmButtonText,
-                        onClick = alertUM.onConfirmClick,
-                    )
-                },
-                secondActionBuilder = { cancelAction() },
+                title = resourceReference(id = R.string.warning_demo_mode_title),
+                message = resourceReference(id = R.string.warning_demo_mode_message),
             )
 
             messageSender.send(message)

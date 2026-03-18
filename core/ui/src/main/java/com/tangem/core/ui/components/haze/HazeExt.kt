@@ -32,15 +32,15 @@ internal fun ProvideHaze(content: @Composable () -> Unit) {
  */
 @Composable
 fun Modifier.hazeEffectTangem(
+    state: HazeState = LocalHazeState.current,
     style: HazeStyle = HazeStyle.Unspecified,
     configure: HazeEffectScope.() -> Unit = {},
 ): Modifier {
     val powerSavingEnabled = LocalPowerSavingState.current.isPowerSavingModeEnabled.collectAsState()
-    val hazeState = LocalHazeState.current
-    val isGlobalBlurEnabled = hazeState.blurEnabled && !powerSavingEnabled.value
+    val isGlobalBlurEnabled = state.blurEnabled && !powerSavingEnabled.value
     val rootBackground by LocalRootBackgroundColor.current
 
-    return hazeEffect(hazeState, style) {
+    return hazeEffect(state, style) {
         fallbackTint = HazeTint(rootBackground)
         if (isGlobalBlurEnabled) {
             configure()
@@ -78,5 +78,5 @@ fun Modifier.hazeForegroundEffectTangem(
  * Applies a haze source to the [Modifier] using the current global haze state.
  */
 @Composable
-fun Modifier.hazeSourceTangem(zIndex: Float = 0f, key: Any? = null) =
-    this.hazeSource(LocalHazeState.current, zIndex, key)
+fun Modifier.hazeSourceTangem(state: HazeState = LocalHazeState.current, zIndex: Float = 0f, key: Any? = null) =
+    this.hazeSource(state, zIndex, key)

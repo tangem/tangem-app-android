@@ -305,6 +305,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         modelScope.launch {
             uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(true))
             val feeExtended = feeUMV2?.feeExtraInfo?.transactionFeeExtended
+            modelScope.launch(dispatchers.default) { sendClickAnalytics() }
             swapTransactionSender.sendTransaction(
                 feeExtended = feeExtended,
                 confirmData = confirmData,
@@ -490,6 +491,30 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     feeToken = getSelectedFeeToken().symbol,
                 ),
                 memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+    }
+
+    private suspend fun sendClickAnalytics() {
+        val selectedProvider = confirmData.quote?.provider ?: return
+        val fromCurrency = confirmData.fromCryptoCurrencyStatus?.currency ?: return
+        val toCurrency = confirmData.toCryptoCurrencyStatus?.currency ?: return
+        val feeSelectorUM = uiState.value.feeSelectorUM as? FeeSelectorUM.Content ?: return
+        val feeType = feeSelectorUM.toAnalyticType()
+        val fromDerivationIndex = confirmData.fromAccount?.derivationIndex?.value
+        val destination = destinationUM?.addressTextField?.actualAddress ?: return
+        val destinationAccount = getAccountCurrencyByAddressUseCase(destination)
+            .getOrNull()?.account
+        val toDerivationIndex = destinationAccount?.derivationIndex?.value
+
+        analyticsEventHandler.send(
+            SendWithSwapAnalyticEvents.OnSendClick(
+                providerName = selectedProvider.name,
+                feeType = feeType,
+                fromToken = fromCurrency,
+                toToken = toCurrency,
+                fromDerivationIndex = fromDerivationIndex,
+                toDerivationIndex = toDerivationIndex,
             ),
         )
     }

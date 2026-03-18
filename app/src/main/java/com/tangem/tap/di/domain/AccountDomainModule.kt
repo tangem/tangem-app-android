@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -97,12 +96,10 @@ internal object AccountDomainModule {
     fun provideIsAccountsModeEnabledUseCase(
         userWalletsListRepository: UserWalletsListRepository,
         accountsCRUDRepository: AccountsCRUDRepository,
-        accountsFeatureToggles: AccountsFeatureToggles,
     ): IsAccountsModeEnabledUseCase {
         return IsAccountsModeEnabledUseCase(
             userWalletsListRepository = userWalletsListRepository,
             crudRepository = accountsCRUDRepository,
-            accountsFeatureToggles = accountsFeatureToggles,
         )
     }
 

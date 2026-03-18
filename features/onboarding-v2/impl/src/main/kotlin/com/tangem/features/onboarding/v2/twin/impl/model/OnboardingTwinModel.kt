@@ -9,6 +9,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -358,6 +359,9 @@ internal class OnboardingTwinModel @Inject constructor(
                 errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
                 onRequestSupport = {
                     modelScope.launch {
+                        analyticsEventHandler.send(
+                            Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Onboarding),
+                        )
                         sendFeedbackEmailUseCase(type = FeedbackEmailType.CardAttestationFailed)
                     }
                 },

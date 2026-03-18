@@ -3,7 +3,8 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.TokenElementsTestTags
+import com.tangem.core.ui.test.AppBarWithSearchTestTags
+import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -21,11 +22,30 @@ class SwapChooseTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         hasText(getResourceString(R.string.exchange_tokens_available_tokens_header))
     }
 
-    fun tokenWithTitle(tokenTitle: String): KNode = child {
-            hasTestTag(TokenElementsTestTags.TOKEN_TITLE)
-            hasAnyDescendant(withText(tokenTitle))
-            useUnmergedTree = true
+    val searchIcon: KNode = child {
+        hasTestTag(AppBarWithSearchTestTags.SEARCH_ICON)
+    }
+
+    val searchTextField: KNode = child {
+        hasTestTag(AppBarWithSearchTestTags.TEXT_FIELD)
+    }
+
+    val noTokensFoundText: KNode = child {
+        hasText(getResourceString(R.string.express_token_list_empty_search))
+    }
+
+    fun tokenWithTitle(tokenTitle: String, availableForSwap: Boolean = true): KNode = child {
+        hasTestTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+        hasAnyDescendant(withText(tokenTitle))
+        if (!availableForSwap) {
+            hasAnyDescendant(
+                withText(
+                    getResourceString(R.string.tokens_list_unavailable_to_swap_source_header)
+                )
+            )
         }
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onSwapChooseTokenScreen(function: SwapChooseTokenPageObject.() -> Unit) =
