@@ -49,7 +49,7 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
-    implementation(deps.compose.reorderable)
+    api(deps.compose.reorderable)
 
     /** Other libraries */
     implementation(deps.compose.accompanist.systemUiController)
@@ -61,12 +61,12 @@ dependencies {
     api(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.markdown)
-    implementation(deps.haze) {
+    api(deps.haze) {
         exclude(module = "activity-compose")
         exclude(module = "activity")
         exclude(module = "activity-ktx")
     }
-    implementation(deps.haze.materials) {
+    api(deps.haze.materials) {
         exclude(module = "activity-compose")
         exclude(module = "activity")
         exclude(module = "activity-ktx")
