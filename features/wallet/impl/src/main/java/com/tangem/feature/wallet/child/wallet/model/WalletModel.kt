@@ -776,7 +776,7 @@ internal class WalletModel @Inject constructor(
                 )
             }
             is QrSendTarget.Multiple -> {
-                // TODO: [REDACTED_TASK_KEY] Bottom sheet: Wallets (dropdown) → Accounts → Tokens
+                innerWalletRouter.openNetworkSelectionBottomSheet(target)
             }
             is QrSendTarget.Unknown -> {
                 // TODO: [REDACTED_TASK_KEY] Error handling for unsupported and invalid QR codes
