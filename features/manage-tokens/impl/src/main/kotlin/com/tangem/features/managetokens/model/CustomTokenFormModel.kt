@@ -181,7 +181,7 @@ internal class CustomTokenFormModel @Inject constructor(
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
     ) = modelScope.launch {
-        val needColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
+        val isNeedColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = params.mode.userWalletId,
             networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
         )
@@ -195,7 +195,7 @@ internal class CustomTokenFormModel @Inject constructor(
                     clearNotifications = true,
                     clearFieldErrors = true,
                     disableSecondaryFields = !isCustom,
-                    walletInteractionIcon = R.drawable.ic_tangem_24.takeIf { needColdWalletInteraction },
+                    walletInteractionIcon = R.drawable.ic_tangem_24.takeIf { isNeedColdWalletInteraction },
                 )
 
             if (fillForm) {
@@ -352,11 +352,6 @@ internal class CustomTokenFormModel @Inject constructor(
         val currency = createdCurrency
         if (currency == null) {
             showErrorDialog(IllegalStateException("Trying to add currency without validation"))
-            return@resource
-        }
-
-        useCasesFacade.derivePublicKeysUseCase(listOf(currency)).getOrElse {
-            showErrorDialog(IllegalStateException("Failed to derive public keys"))
             return@resource
         }
 

@@ -81,6 +81,10 @@ dependencies {
     /** Feature modules */
     implementation(projects.features.staking.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.approval.api)
+
+    /** Decompose */
+    implementation(deps.decompose.ext.compose)
 
     /** DI */
     implementation(deps.hilt.android)
