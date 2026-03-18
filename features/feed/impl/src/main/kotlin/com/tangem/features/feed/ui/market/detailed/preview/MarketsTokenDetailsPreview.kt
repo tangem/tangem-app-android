@@ -104,6 +104,7 @@ internal object MarketsTokenDetailsPreview {
                         infoPoint,
                         infoPoint,
                     ),
+                    metricsV2 = null,
                 ),
                 pricePerformance = PricePerformanceUM(
                     h24 = PricePerformanceUM.Value(

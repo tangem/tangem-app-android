@@ -1,6 +1,8 @@
 package com.tangem.common.extensions
 
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import io.github.kakaocup.compose.node.element.KNode
 
 fun KNode.clickWithAssertion() {
@@ -32,5 +34,36 @@ fun KNode.assertVisibility(shouldBeDisplayed: Boolean) {
         assertIsDisplayed()
     } else {
         assertIsNotDisplayed()
+    }
+}
+
+fun KNode.clickAndWaitFor(
+    rule: ComposeTestRule,
+    timeoutMs: Long = 5_000,
+    maxRetries: Int = 3,
+    expectedCondition: () -> Unit,
+) {
+    for (attempt in 1..maxRetries) {
+        performClick()
+        rule.waitForIdle()
+
+        try {
+            rule.waitUntil(timeoutMs) {
+                runCatching { expectedCondition() }.isSuccess
+            }
+            return
+        } catch (_: ComposeTimeoutException) {
+        }
+    }
+
+    throw AssertionError("Condition not met after $maxRetries click attempts")
+}
+
+fun KNode.performTextInputInChunks(
+    text: String,
+    chunkSize: Int = 2
+) {
+    text.chunked(chunkSize).forEach { chunk ->
+        performTextInput(chunk)
     }
 }

@@ -7,12 +7,12 @@ import com.tangem.features.swap.v2.impl.R
 
 internal object SwapChooseTokenFactory {
 
-    fun getErrorMessage(tokenName: String, onDismiss: () -> Unit): MessageBottomSheetUMV2 {
+    fun getErrorMessage(tokenName: String, onDismiss: () -> Unit): MessageBottomSheetUM {
         return messageBottomSheetUM {
             infoBlock {
                 icon(R.drawable.ic_alert_triangle_20) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Attention
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    type = MessageBottomSheetUM.Icon.Type.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.express_swap_not_supported_title, wrappedList(tokenName))
                 body = resourceReference(R.string.express_swap_not_supported_text)
