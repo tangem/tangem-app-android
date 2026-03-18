@@ -21,7 +21,6 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
-import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
@@ -92,6 +91,7 @@ internal object WalletConnectDataModule {
         dispatchers: CoroutineDispatcherProvider,
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
+        multiAccountListSupplier: MultiAccountListSupplier,
         analytics: AnalyticsEventHandler,
         appScope: AppCoroutineScope,
     ): DefaultWcSessionsManager {
@@ -102,6 +102,7 @@ internal object WalletConnectDataModule {
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
             scope = appScope,
+            multiAccountListSupplier = multiAccountListSupplier,
         )
     }
 
@@ -177,12 +178,10 @@ internal object WalletConnectDataModule {
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
         singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
-        singleAccountSupplier: SingleAccountSupplier,
     ): WcNetworksConverter = WcNetworksConverter(
         namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
-        singleAccountSupplier = singleAccountSupplier,
     )
 
     @Provides

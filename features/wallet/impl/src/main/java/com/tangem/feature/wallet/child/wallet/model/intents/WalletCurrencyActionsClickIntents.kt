@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
@@ -292,7 +293,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         )
                     },
                     ifRight = {
-                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = accountId.userWalletId))
+                        router.dialogNavigation.dismiss()
                     },
                 )
         }
