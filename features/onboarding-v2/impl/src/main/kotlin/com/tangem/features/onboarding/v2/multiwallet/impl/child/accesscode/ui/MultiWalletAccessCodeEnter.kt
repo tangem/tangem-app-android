@@ -59,7 +59,7 @@ internal fun MultiWalletAccessCodeEnter(
         val focusRequester = remember { FocusRequester() }
 
         OutlineTextField(
-            modifier = modifier
+            modifier = Modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
             value = if (reEnterAccessCodeState) {
@@ -73,12 +73,14 @@ internal fun MultiWalletAccessCodeEnter(
                 state.onAccessCodeFirstChange
             },
             label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
-            isError = state.codesNotMatchError,
+            isError = state.codesNotMatchError || state.atLeast4CharError,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
+                state.atLeast4CharError && !reEnterAccessCodeState ->
+                    stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },
         )
