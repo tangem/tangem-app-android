@@ -14,18 +14,22 @@ internal class Eip681PaymentUriParser(
         coins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): PaymentUriParser.ParseResult {
-        if (!qrCode.startsWith(SCHEME)) return PaymentUriParser.ParseResult.NotRecognized
+        if (!qrCode.startsWith(SCHEME)) {
+            return PaymentUriParser.ParseResult.NotRecognized
+        }
 
         val withoutScheme = qrCode.removePrefix(SCHEME)
         val parsed = parseEip681(withoutScheme) ?: return PaymentUriParser.ParseResult.NotRecognized
 
         val matchingCoins = findMatchingCoins(parsed.chainId, coins)
-        if (matchingCoins.isEmpty()) return PaymentUriParser.ParseResult.RecognizedButNoMatch
+        if (matchingCoins.isEmpty()) {
+            return PaymentUriParser.ParseResult.RecognizedButNoMatch
+        }
 
         val result = if (parsed.functionName == FUNCTION_TRANSFER) {
             resolveErc20Transfer(parsed, matchingCoins, allCurrencies)
         } else {
-            resolveNativeTransfer(parsed, matchingCoins)
+            resolveNativeTransfer(parsed, matchingCoins, allCurrencies)
         }
         return if (result != null) {
             PaymentUriParser.ParseResult.Success(result)
@@ -37,6 +41,7 @@ internal class Eip681PaymentUriParser(
     private fun resolveNativeTransfer(
         parsed: Eip681Result,
         matchingCoins: List<CryptoCurrency.Coin>,
+        allCurrencies: List<CryptoCurrency>,
     ): ClassifiedQrContent.PaymentUri? {
         val valueWei = parsed.params[PARAM_VALUE]?.toBigDecimalOrNull()
 
@@ -45,11 +50,20 @@ internal class Eip681PaymentUriParser(
         val decimals = matchingCoins.first().decimals
         val amount = valueWei?.fromSmallestUnit(decimals)
 
+        val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
+        // If value is specified, this is a native coin transfer — return only coins
+        // If no value, it's just an address with scheme — return all currencies on the network
+        val matchingCurrencies = if (valueWei != null) {
+            matchingCoins
+        } else {
+            allCurrencies.filter { it.network.id in matchingNetworkIds }
+        }
+
         return ClassifiedQrContent.PaymentUri(
             address = parsed.targetAddress,
             amount = amount,
             memo = null,
-            matchingCurrencies = matchingCoins,
+            matchingCurrencies = matchingCurrencies,
         )
     }
 
@@ -63,22 +77,22 @@ internal class Eip681PaymentUriParser(
 
         val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
 
-        val tokens = allCurrencies.filterIsInstance<CryptoCurrency.Token>()
-
-        val token = tokens
-            .firstOrNull { token ->
+        val matchingTokens = allCurrencies.filterIsInstance<CryptoCurrency.Token>()
+            .filter { token ->
                 token.network.id in matchingNetworkIds &&
                     token.contractAddress.equals(contractAddress, ignoreCase = true)
-            } ?: return null
+            }
+
+        if (matchingTokens.isEmpty()) return null
 
         val rawAmount = parsed.params[PARAM_UINT256]?.toBigDecimalOrNull()
-        val amount = rawAmount?.fromSmallestUnit(token.decimals)
+        val amount = rawAmount?.fromSmallestUnit(matchingTokens.first().decimals)
 
         return ClassifiedQrContent.PaymentUri(
             address = recipient,
             amount = amount,
             memo = null,
-            matchingCurrencies = listOf(token),
+            matchingCurrencies = matchingTokens,
         )
     }
 
