@@ -176,4 +176,29 @@ sealed class TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Support On Transaction Popup",
     )
+
+    class KycPassedAndOrderCreated : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa KYC Passed And Order Created",
+    )
+
+    class KycRejected : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa KYC Rejected",
+    )
+
+    class KycCancelled : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa KYC Canceled",
+    )
+
+    class MainVisaPermanentBannerClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Banner Clicked",
+    )
+
+    class DetailsVisaPermanentButtonClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Onboarding",
+        event = "Visa Permanent Button Clicked",
+    )
 }

@@ -328,6 +328,9 @@ private fun Content(
                                 ),
                                 color = TangemTheme.colors.text.tertiary,
                                 style = TangemTheme.typography.body2,
+                                modifier = Modifier.testTag(
+                                    SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_WITH_PRICE_IMPACT_WARNING,
+                                ),
                             )
                         } else {
                             AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
@@ -355,7 +358,9 @@ private fun Content(
                                     } else {
                                         TangemTheme.colors.text.tertiary
                                     },
-                                    modifier = Modifier.align(Alignment.CenterVertically),
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_INFORMATION_ICON),
                                 )
                             }
                         }

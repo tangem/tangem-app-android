@@ -13,7 +13,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -37,18 +36,14 @@ internal object DataCommonModule {
     fun provideCardCryptoCurrencyFactory(
         excludedBlockchains: ExcludedBlockchains,
         userWalletsListRepository: UserWalletsListRepository,
-        accountsFeatureToggles: AccountsFeatureToggles,
         walletAccountsFetcher: WalletAccountsFetcher,
-        userTokensResponseStore: UserTokensResponseStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
             demoConfig = DemoConfig,
             excludedBlockchains = excludedBlockchains,
             userWalletsListRepository = userWalletsListRepository,
-            accountsFeatureToggles = accountsFeatureToggles,
             walletAccountsFetcher = walletAccountsFetcher,
-            userTokensResponseStore = userTokensResponseStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
     }
@@ -76,8 +71,6 @@ internal object DataCommonModule {
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
         walletServerBinder: WalletServerBinder,
-        appsFlyerStore: AppsFlyerStore,
-        accountsFeatureToggles: AccountsFeatureToggles,
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
@@ -85,12 +78,10 @@ internal object DataCommonModule {
             userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
-            accountsFeatureToggles = accountsFeatureToggles,
             pushTokensRetryerPool = RetryerPool(
                 coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             ),
             walletServerBinder = walletServerBinder,
-            appsFlyerStore = appsFlyerStore,
         )
     }
 
