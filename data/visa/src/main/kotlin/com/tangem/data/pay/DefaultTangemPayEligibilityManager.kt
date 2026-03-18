@@ -104,7 +104,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             map { wallet ->
                 async {
                     val isCustomer = onboardingRepository
-                        .checkCustomerWallet(wallet.walletId)
+                        .hasTangemPayInWallet(wallet.walletId)
                         .getOrNull() == true
                     wallet to isCustomer
                 }

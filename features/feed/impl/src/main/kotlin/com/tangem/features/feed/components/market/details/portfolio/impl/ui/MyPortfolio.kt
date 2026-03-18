@@ -70,11 +70,6 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
             is MyPortfolioUM.Content -> PortfolioList(state = state)
         }
     }
-
-    val bsConfig = state.addToPortfolioBSConfig
-    if (bsConfig != null) {
-        AddToPortfolioBottomSheet(config = bsConfig)
-    }
 }
 
 @Composable
