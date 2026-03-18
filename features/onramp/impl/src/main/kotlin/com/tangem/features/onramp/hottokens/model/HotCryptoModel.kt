@@ -1,9 +1,6 @@
 package com.tangem.features.onramp.hottokens.model
 
-import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.popToFirst
 import com.arkivanov.decompose.router.stack.pushNew
@@ -13,7 +10,6 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.data.common.currency.getCoinId
@@ -21,18 +17,11 @@ import com.tangem.data.common.currency.getTokenId
 import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.common.currency.isCustomToken
 import com.tangem.data.common.network.NetworkFactory
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.account.derivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.onramp.GetHotCryptoUseCase
 import com.tangem.domain.onramp.model.HotCryptoCurrency
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.features.onramp.hottokens.HotCryptoComponent
@@ -52,7 +41,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -60,9 +48,6 @@ import javax.inject.Inject
  * Hot crypto model
  *
  * @param paramsContainer                       params container
- * @param getHotCryptoUseCase                   use case for getting hot crypto
- * @param getSelectedAppCurrencyUseCase         use case for getting selected app currency
- * @property getCryptoCurrencyStatusSyncUseCase use case for getting crypto currency status by id
  * @property dispatchers                        dispatchers
  *
 [REDACTED_AUTHOR]
@@ -71,22 +56,17 @@ import javax.inject.Inject
 @ModelScoped
 internal class HotCryptoModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val getHotCryptoUseCase: GetHotCryptoUseCase,
     private val callbackDelegate: HotCryptoModelCallbackDelegate,
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotCryptoPortfolioDataLoader: HotCryptoPortfolioDataLoader,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     val portfolioSelectorController: PortfolioSelectorController,
     private val networkFactory: NetworkFactory,
-    private val portfolioFetcherFactory: PortfolioFetcher.Factory,
+    portfolioFetcherFactory: PortfolioFetcher.Factory,
 ) : Model(), OnrampAddTokenComponent.Callbacks by callbackDelegate {
 
     val bottomSheetNavigation: SlotNavigation<OnrampAddToPortfolioBSConfig> = SlotNavigation()
 
-    val portfolioFetcher: PortfolioFetcher?
+    val portfolioFetcher: PortfolioFetcher
     val bottomSheetNavigationV2 = StackNavigation<OnrampAddTokenRoute>()
     private val addHotCryptoJob = JobHolder()
     val hotCryptoToAddDataFlow: MutableSharedFlow<AddHotCryptoData> = MutableSharedFlow(
@@ -100,50 +80,27 @@ internal class HotCryptoModel @Inject constructor(
     private val params: HotCryptoComponent.Params = paramsContainer.require()
 
     init {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            portfolioFetcher = portfolioFetcherFactory.create(
-                mode = PortfolioFetcher.Mode.Wallet(params.userWalletId),
-                scope = modelScope,
-            )
-            combineData()
-        } else {
-            portfolioFetcher = null
-            combineDataOld()
-        }
+        portfolioFetcher = portfolioFetcherFactory.create(
+            mode = PortfolioFetcher.Mode.Wallet(params.userWalletId),
+            scope = modelScope,
+        )
+        combineData()
     }
 
     private fun combineData() {
-        combine(
-            flow = hotCryptoPortfolioDataLoader.loadPortfolioData(params.userWalletId),
-            flow2 = isAccountsModeEnabledUseCase.invoke(),
-            transform = { data, isAccountMode ->
+        hotCryptoPortfolioDataLoader.loadPortfolioData(params.userWalletId)
+            .map { data ->
                 HotTokenItemStateConverter(
                     appCurrency = data.appCurrency,
-                    onItemClick = { tokenItemState, hotCryptoCurrency ->
+                    onItemClick = { _, hotCryptoCurrency ->
                         startAddTokenFlow(currency = hotCryptoCurrency, hotCryptoPortfolioData = data)
                     },
                 )
                     .convertList(data.allHotCrypto)
                     .map(TokensListItemUM::Token)
-            },
-        )
+            }
             .onEach { items -> state.update { HotCryptoUM(items = it.buildItems(items)) } }
             .flowOn(dispatchers.default)
-            .launchIn(modelScope)
-    }
-
-    private fun combineDataOld() {
-        combine(
-            flow = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } },
-            flow2 = getHotCryptoUseCase(params.userWalletId),
-        ) { appCurrency, currencies ->
-            HotTokenItemStateConverter(appCurrency = appCurrency, onItemClick = ::onTokenClick)
-                .convertList(currencies)
-                .map(TokensListItemUM::Token)
-        }
-            .onEach { items ->
-                state.update { HotCryptoUM(items = it.buildItems(items)) }
-            }
             .launchIn(modelScope)
     }
 
@@ -162,16 +119,6 @@ internal class HotCryptoModel @Inject constructor(
                 id = R.string.tokens_list_hot_crypto_header,
                 text = resourceReference(id = R.string.tokens_list_hot_crypto_header),
             )
-    }
-
-    private fun onTokenClick(tokenItemState: TokenItemState, currency: HotCryptoCurrency) {
-        bottomSheetNavigation.activate(
-            configuration = OnrampAddToPortfolioBSConfig.AddToPortfolio(
-                cryptoCurrency = currency.cryptoCurrency,
-                currencyIconState = tokenItemState.iconState,
-                onSuccessAdding = ::onSuccessAdding,
-            ),
-        )
     }
 
     private fun startAddTokenFlow(currency: HotCryptoCurrency, hotCryptoPortfolioData: HotCryptoPortfolioData) {
@@ -201,7 +148,7 @@ internal class HotCryptoModel @Inject constructor(
                 bottomSheetNavigationV2.replaceAll(OnrampAddTokenRoute.PortfolioSelector)
 
                 val tokenToAddStateFlow = portfolioSelectorController
-                    .selectedAccountWithData(requireNotNull(portfolioFetcher))
+                    .selectedAccountWithData(portfolioFetcher)
                     .filterNotNull()
                     .map { (_, selectedAccount) ->
                         val cryptoCurrency = updateCryptoCurrency(
@@ -247,20 +194,6 @@ internal class HotCryptoModel @Inject constructor(
             .saveIn(addHotCryptoJob)
     }
 
-    private fun onSuccessAdding(id: CryptoCurrency.ID) {
-        modelScope.launch {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                userWalletId = params.userWalletId,
-                cryptoCurrencyId = id,
-            )
-                .onRight { status ->
-                    bottomSheetNavigation.dismiss()
-                    params.onTokenClick(status)
-                }
-                .onLeft { Timber.d("Unable to get CryptoCurrencyStatus[$id]: $it") }
-        }
-    }
-
     private fun setupPortfolioSelector(hotCrypto: HotCryptoCurrency, hotCryptoPortfolioData: HotCryptoPortfolioData) {
         portfolioSelectorController.selectAccount(null)
         portfolioSelectorController.isEnabled.value = isEnabled@{ _, accountStatus ->
@@ -277,9 +210,9 @@ internal class HotCryptoModel @Inject constructor(
     private fun updateCryptoCurrency(
         cryptoCurrency: CryptoCurrency,
         userWallet: UserWallet,
-        account: AccountStatus,
+        account: AccountStatus.CryptoPortfolio,
     ): CryptoCurrency? {
-        val derivationIndex = account.account.derivationIndex ?: return null
+        val derivationIndex = account.account.derivationIndex
         val blockchain = cryptoCurrency.network.toBlockchain()
 
         val network = networkFactory.create(

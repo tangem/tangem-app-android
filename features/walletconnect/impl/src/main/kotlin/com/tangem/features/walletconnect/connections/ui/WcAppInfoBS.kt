@@ -22,8 +22,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -273,19 +271,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         val itemsModifier = Modifier
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
-        if (state.portfolioSelectRow != null) {
-            PortfolioRowItem(portfolioSelectRow = state.portfolioSelectRow)
-        } else {
-            WalletRowItem(
-                modifier = if (state.onWalletClick != null) {
-                    Modifier.clickableSingle(onClick = state.onWalletClick)
-                } else {
-                    Modifier
-                }.then(itemsModifier),
-                walletName = state.walletName,
-                showEndIcon = state.onWalletClick != null,
-            )
-        }
+        PortfolioRowItem(portfolioSelectRow = state.portfolioSelectRow)
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
             modifier = Modifier
@@ -338,56 +324,6 @@ private fun PortfolioRowItem(portfolioSelectRow: PortfolioSelectUM, modifier: Mo
             tint = TangemTheme.colors.icon.accent,
         )
         SpacerW4()
-    }
-}
-
-@Composable
-private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            modifier = Modifier
-                .size(24.dp)
-                .testTag(WalletConnectBottomSheetTestTags.WALLET_ICON),
-            painter = painterResource(R.drawable.ic_wallet_new_24),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.accent,
-        )
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing4)
-                    .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME_TITLE),
-                text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-                maxLines = 1,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing16)
-                    .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME),
-                text = walletName,
-                textAlign = TextAlign.End,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (showEndIcon) {
-            Icon(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing12)
-                    .size(width = 18.dp, height = 24.dp),
-                painter = painterResource(R.drawable.ic_select_18_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
-            )
-        }
     }
 }
 
@@ -673,9 +609,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Verified {},
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.SecurityRisk,
-            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
-            onWalletClick = null,
-            portfolioSelectRow = null,
+            portfolioSelectRow = PortfolioSelectRowPreviewData.account,
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
                     WcNetworkInfoItem.Required(
@@ -720,9 +654,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Unknown,
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
-            portfolioSelectRow = null,
-            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
-            onWalletClick = {},
+            portfolioSelectRow = PortfolioSelectRowPreviewData.wallet,
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
             onDismiss = {},
@@ -735,8 +667,6 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
             portfolioSelectRow = PortfolioSelectRowPreviewData.account,
-            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
-            onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onNetworksClick = {},
             onDismiss = {},

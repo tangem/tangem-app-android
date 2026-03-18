@@ -3,7 +3,6 @@ package com.tangem.domain.account.usecase
 import arrow.core.none
 import arrow.core.some
 import com.google.common.truth.Truth
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -12,7 +11,6 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -26,17 +24,15 @@ class IsAccountsModeEnabledUseCaseTest {
 
     private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
-    private val featureToggles: AccountsFeatureToggles = mockk()
 
     private val useCase = IsAccountsModeEnabledUseCase(
         crudRepository = accountsCRUDRepository,
         userWalletsListRepository = userWalletsListRepository,
-        accountsFeatureToggles = featureToggles,
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, accountsCRUDRepository, featureToggles)
+        clearMocks(userWalletsListRepository, accountsCRUDRepository)
     }
 
     @Nested
@@ -44,29 +40,10 @@ class IsAccountsModeEnabledUseCaseTest {
     inner class Invoke {
 
         @Test
-        fun `returns false when feature is disabled`() = runTest {
-            // Arrange
-            every { featureToggles.isFeatureEnabled } returns false
-
-            // Act
-            val actual = useCase.invoke().firstOrNull()
-
-            // Assert
-            Truth.assertThat(actual).isFalse()
-
-            verify(exactly = 1) { featureToggles.isFeatureEnabled }
-            coVerify(inverse = true) { 
-                userWalletsListRepository.load()
-                userWalletsListRepository.userWallets
-            }
-        }
-
-        @Test
         fun `returns false when loadAndGet emits one wallet with isMultiCurrency false`() = runTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = false)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
 
             // Act
@@ -76,7 +53,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isFalse()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.load()
                 userWalletsListRepository.userWallets
             }
@@ -89,7 +65,6 @@ class IsAccountsModeEnabledUseCaseTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
             every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(2.some())
 
@@ -100,7 +75,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isTrue()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.load()
                 userWalletsListRepository.userWallets
                 accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
@@ -112,7 +86,6 @@ class IsAccountsModeEnabledUseCaseTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet))
             every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(none())
 
@@ -123,7 +96,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isFalse()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.load()
                 userWalletsListRepository.userWallets
                 accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
@@ -136,7 +108,6 @@ class IsAccountsModeEnabledUseCaseTest {
             val wallet1 = createUserWallet(isMultiCurrency = false)
             val wallet2 = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(wallet1, wallet2))
             every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId) } returns flowOf(2.some())
 
@@ -147,7 +118,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isTrue()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.load()
                 userWalletsListRepository.userWallets
                 accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId)
@@ -162,24 +132,8 @@ class IsAccountsModeEnabledUseCaseTest {
     inner class InvokeSync {
 
         @Test
-        fun `returns false when feature is disabled`() = runTest {
-            // Arrange
-            every { featureToggles.isFeatureEnabled } returns false
-
-            // Act
-            val actual = useCase.invokeSync()
-
-            // Assert
-            Truth.assertThat(actual).isFalse()
-
-            verify(exactly = 1) { featureToggles.isFeatureEnabled }
-            verify(inverse = true) { userWalletsListRepository.userWallets.value }
-        }
-
-        @Test
         fun `returns false when getUserWalletsSync returns empty list`() = runTest {
             // Arrange
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets.value } returns emptyList()
 
             // Act
@@ -189,7 +143,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isFalse()
 
             verifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.userWallets.value
             }
 
@@ -201,7 +154,6 @@ class IsAccountsModeEnabledUseCaseTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = false)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
 
             // Act
@@ -211,7 +163,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isFalse()
 
             verifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.userWallets.value
             }
 
@@ -223,7 +174,6 @@ class IsAccountsModeEnabledUseCaseTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
             coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns 2.some()
 
@@ -234,7 +184,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isTrue()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.userWallets.value
                 accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
             }
@@ -245,7 +194,6 @@ class IsAccountsModeEnabledUseCaseTest {
             // Arrange
             val wallet = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets.value } returns listOf(wallet)
             coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns none()
 
@@ -256,7 +204,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isFalse()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.userWallets.value
                 accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
             }
@@ -268,7 +215,6 @@ class IsAccountsModeEnabledUseCaseTest {
             val wallet1 = createUserWallet(isMultiCurrency = false)
             val wallet2 = createUserWallet(isMultiCurrency = true)
 
-            every { featureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets.value } returns listOf(wallet1, wallet2)
             coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId) } returns 2.some()
 
@@ -279,7 +225,6 @@ class IsAccountsModeEnabledUseCaseTest {
             Truth.assertThat(actual).isTrue()
 
             coVerifyOrder {
-                featureToggles.isFeatureEnabled
                 userWalletsListRepository.userWallets.value
                 accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId)
             }
