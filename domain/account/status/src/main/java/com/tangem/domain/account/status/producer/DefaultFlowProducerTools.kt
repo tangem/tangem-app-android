@@ -16,7 +16,7 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 class DefaultFlowProducerAppScope @Inject constructor(
-    private val dispatchers: CoroutineDispatcherProvider,
+    dispatchers: CoroutineDispatcherProvider,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : FlowProducerScope {
 
@@ -76,10 +76,13 @@ class DefaultFlowProducerTools @Inject constructor(
             .shareIn(
                 scope = scope,
                 replay = 1,
-                // params control flow cleanup
+                // stopTimeoutMillis = 0: upstream collection stops immediately when the last subscriber disappears.
+                // replayExpirationMillis = 0: replay cache is cleared immediately after upstream stops.
+                // This ensures that when there are no subscribers, the first subscriber always triggers a fresh
+                // upstream collection instead of receiving a stale replay.
                 started = SharingStarted.WhileSubscribed(
-                    stopTimeoutMillis = 5_000,
-                    replayExpirationMillis = 30_000,
+                    stopTimeoutMillis = 0,
+                    replayExpirationMillis = 0,
                 ),
             )
     }

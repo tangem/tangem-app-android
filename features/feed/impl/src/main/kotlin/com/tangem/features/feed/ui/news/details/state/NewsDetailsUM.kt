@@ -25,6 +25,7 @@ internal sealed interface ArticlesStateUM {
     data class LoadingError(val onRetryClicked: () -> Unit) : ArticlesStateUM
 }
 
+@Immutable
 internal data class ArticleUM(
     val id: Int,
     val title: String,
@@ -37,6 +38,7 @@ internal data class ArticleUM(
     val newsUrl: String,
     val relatedTokens: ImmutableList<RelatedToken>,
     val isLiked: Boolean,
+    val isTrending: Boolean,
 )
 
 internal data class RelatedArticleUM(

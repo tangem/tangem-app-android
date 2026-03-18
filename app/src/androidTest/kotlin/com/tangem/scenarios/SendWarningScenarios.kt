@@ -1,8 +1,8 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.screens.onSendConfirmScreen
-import io.github.kakaocup.compose.node.element.KNode
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.checkSendWarning(
@@ -45,12 +45,4 @@ fun BaseTestCase.checkSendWarning(
                 sendButton.assertIsEnabled()
             }
         }
-}
-
-private fun KNode.assertVisibility(shouldBeDisplayed: Boolean) {
-    if (shouldBeDisplayed) {
-        assertIsDisplayed()
-    } else {
-        assertIsNotDisplayed()
-    }
 }

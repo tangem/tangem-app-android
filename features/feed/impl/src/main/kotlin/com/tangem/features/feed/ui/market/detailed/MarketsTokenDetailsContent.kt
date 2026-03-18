@@ -42,7 +42,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.market.detailed.components.*
-import com.tangem.core.ui.R as CoreR
 import com.tangem.features.feed.ui.market.detailed.preview.MarketsTokenDetailsPreview
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.InfoBottomSheetContent
@@ -50,13 +49,13 @@ import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.features.feed.ui.market.detailed.state.SecurityScoreBottomSheetContent
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.tangem.core.ui.R as CoreR
 
 @Suppress("LongParameterList")
 @Composable
 internal fun MarketsTokenDetailsContent(
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
-    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -65,7 +64,6 @@ internal fun MarketsTokenDetailsContent(
         backgroundColor = backgroundColor,
         state = state,
         portfolioBlock = portfolioBlock,
-        isAccountEnabled = isAccountEnabled,
     )
 
     when (state.bottomSheetConfig.content) {
@@ -80,7 +78,6 @@ internal fun MarketsTokenDetailsContent(
 private fun Content(
     state: MarketsTokenDetailsUM,
     backgroundColor: Color,
-    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -134,7 +131,6 @@ private fun Content(
 
             tokenMarketDetailsBody(
                 state = state.body,
-                isAccountEnabled = isAccountEnabled,
                 portfolioBlock = portfolioBlock,
                 relatedNews = state.relatedNews,
             )
@@ -322,7 +318,6 @@ private fun MarketsTokenDetailsContent_Preview(
             state = params,
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
-            isAccountEnabled = true,
         )
     }
 }

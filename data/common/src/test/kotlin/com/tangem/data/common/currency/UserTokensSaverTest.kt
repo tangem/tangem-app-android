@@ -6,9 +6,7 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletType
-import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -27,11 +25,7 @@ class UserTokensSaverTest {
     private val userWalletsListRepository: UserWalletsListRepository = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxed = true)
     private val enricher: UserTokensResponseAddressesEnricher = mockk()
-    private val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
-        every { this@mockk.isFeatureEnabled } returns true
-    }
     private val walletServerBinder: WalletServerBinder = mockk()
-    private val appsFlyerStore: AppsFlyerStore = mockk()
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
@@ -40,8 +34,6 @@ class UserTokensSaverTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
         walletServerBinder = walletServerBinder,
-        appsFlyerStore = appsFlyerStore,
-        accountsFeatureToggles = accountsFeatureToggles,
         pushTokensRetryerPool = mockk(),
     )
 
@@ -121,7 +113,6 @@ class UserTokensSaverTest {
 
             val userWalletsFlow = MutableStateFlow(listOf(userWallet))
 
-            every { accountsFeatureToggles.isFeatureEnabled } returns true
             every { userWalletsListRepository.userWallets } returns userWalletsFlow
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
             coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
