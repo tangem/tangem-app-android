@@ -73,7 +73,7 @@ class ScanCardTest : BaseTestCase() {
 
         setupHooks().run {
             step("Open 'Main Screen' on $card") {
-                openMainScreen(mockContent = cardType, alreadyActivatedDialogIsShown = true)
+                openMainScreen(mockContent = cardType)
             }
             step("Check 'Main' screen for $card curve with devices count = '$devicesCount'") {
                 checkMultiCurrencyMainScreen(
@@ -119,7 +119,7 @@ class ScanCardTest : BaseTestCase() {
 
         setupHooks().run {
             step("Open 'Main Screen' on '$card' card") {
-                openMainScreen(mockContent = cardType, alreadyActivatedDialogIsShown = true)
+                openMainScreen(mockContent = cardType)
             }
             step("Check 'Main' screen for '$card' card with devices count = '$devicesCount'") {
                 checkMultiCurrencyMainScreen(devicesCount, cardName)
@@ -138,7 +138,7 @@ class ScanCardTest : BaseTestCase() {
 
         setupHooks().run {
             step("Open 'Main Screen' on '$ring'") {
-                openMainScreen(productType = cardType, alreadyActivatedDialogIsShown = true)
+                openMainScreen(productType = cardType)
             }
             step("Check 'Main' screen for '$ring' with devices count = '$devicesCount'") {
                 checkMultiCurrencyMainScreen(devicesCount, cardName)
@@ -175,7 +175,7 @@ class ScanCardTest : BaseTestCase() {
 
         setupHooks().run {
             step("Open 'Main Screen' on '$card' card") {
-                openMainScreen(mockContent = cardType, alreadyActivatedDialogIsShown = true)
+                openMainScreen(mockContent = cardType)
             }
             step("Check 'Main' screen for '$card' card with devices count = '$devicesCount'") {
                 checkMultiCurrencyMainScreen(devicesCount, cardName)

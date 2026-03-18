@@ -22,4 +22,8 @@ abstract class SingleAccountSupplier(
     fun filterPaymentAccount(accountId: AccountId): Flow<Account.Payment> {
         return invoke(params = SingleAccountProducer.Params(accountId)).filterIsInstance()
     }
+
+    fun filterCryptoPortfolioAccount(accountId: AccountId): Flow<Account.CryptoPortfolio> {
+        return invoke(params = SingleAccountProducer.Params(accountId)).filterIsInstance()
+    }
 }
