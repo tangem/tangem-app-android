@@ -10,10 +10,8 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUIL
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
-import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
-import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
-import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_GASLESS_API_KEY
-import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_PAY_BFF_KEY_DEV
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
+import com.tangem.datasource.local.config.environment.models.ExpressModel
 import com.tangem.domain.staking.model.ethpool.P2PEthPoolStakingConfig
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
@@ -39,7 +37,7 @@ import java.util.TimeZone
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ProdApiConfigsManagerTest {
 
-    private val environmentConfigStorage = MockEnvironmentConfigStorage()
+    private val environmentConfig = createMockEnvironmentConfig()
     private val appVersionProvider = mockk<AppVersionProvider>()
     private val expressAuthProvider = mockk<ExpressAuthProvider>()
     private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
@@ -94,7 +92,7 @@ internal class ProdApiConfigsManagerTest {
             when (it) {
                 ApiConfig.ID.Express -> {
                     Express(
-                        environmentConfigStorage = environmentConfigStorage,
+                        environmentConfig = environmentConfig,
                         expressAuthProvider = expressAuthProvider,
                         appVersionProvider = appVersionProvider,
                         appInfoProvider = appInfoProvider,
@@ -102,7 +100,7 @@ internal class ProdApiConfigsManagerTest {
                 }
                 ApiConfig.ID.YieldSupply -> {
                     YieldSupply(
-                        environmentConfigStorage = environmentConfigStorage,
+                        environmentConfig = environmentConfig,
                         appVersionProvider = appVersionProvider,
                         authProvider = appAuthProvider,
                         appInfoProvider = appInfoProvider,
@@ -117,14 +115,14 @@ internal class ProdApiConfigsManagerTest {
                 }
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
                 ApiConfig.ID.TangemPay -> TangemPay.Bff(
+                    environmentConfig = environmentConfig,
                     appVersionProvider = appVersionProvider,
-                    environmentConfigStorage = environmentConfigStorage,
                 )
                 ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
+                    environmentConfig = environmentConfig,
                     appVersionProvider = appVersionProvider,
-                    environmentConfigStorage = environmentConfigStorage,
                 )
-                ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
+                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
                 ApiConfig.ID.News -> News(
@@ -188,9 +186,9 @@ internal class ProdApiConfigsManagerTest {
                 headers = mapOf(
                     "api-key" to ProviderSuspend {
                         if (environment == ApiEnvironment.PROD) {
-                            MockEnvironmentConfigStorage.EXPRESS_API_KEY
+                            EXPRESS_API_KEY
                         } else {
-                            MockEnvironmentConfigStorage.EXPRESS_DEV_API_KEY
+                            EXPRESS_DEV_API_KEY
                         }
                     },
                     "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
@@ -237,7 +235,7 @@ internal class ProdApiConfigsManagerTest {
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://yield.tangem.org/",
                 headers = mapOf(
-                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.YIELD_MODULE_KEY },
+                    "api-key" to ProviderSuspend { YIELD_MODULE_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
@@ -426,5 +424,48 @@ internal class ProdApiConfigsManagerTest {
         const val P2P_API_KEY = "p2p_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "Bearer app_public_key"
+
+        // Mock config values
+        const val TANGEM_API_KEY = "tangem_api_key"
+        const val TANGEM_GASLESS_API_KEY = "tangem_gasless_api_key"
+        const val TANGEM_PAY_BFF_KEY_DEV = "tangem_pay_bff_key_dev"
+        const val BLOCK_AID_API_KEY = "block_aid_api_key"
+        const val EXPRESS_API_KEY = "express_api_key"
+        const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
+        const val YIELD_MODULE_KEY = "yield_module_key"
+
+        fun createMockEnvironmentConfig(): EnvironmentConfig {
+            return EnvironmentConfig(
+                moonPayApiKey = "moon_pay_api_key",
+                moonPayApiSecretKey = "moon_pay_secret_key",
+                mercuryoWidgetId = "mercuryo_widget_id",
+                mercuryoSecret = "mercuryo_secret",
+                blockchainSdkConfig = mockk(relaxed = true),
+                amplitudeApiKey = "amplitude_api_key",
+                appsFlyerApiKey = "appsflyer_api_key",
+                appsAppId = "apps_app_id",
+                walletConnectProjectId = "wallet_connect_project_id",
+                express = ExpressModel(
+                    apiKey = EXPRESS_API_KEY,
+                    signVerifierPublicKey = "express_public_key",
+                ),
+                devExpress = ExpressModel(
+                    apiKey = EXPRESS_DEV_API_KEY,
+                    signVerifierPublicKey = "express_dev_public_key",
+                ),
+                stakeKitApiKey = STAKE_KIT_API_KEY,
+                p2pApiKey = null,
+                blockAidApiKey = BLOCK_AID_API_KEY,
+                tangemApiKey = TANGEM_API_KEY,
+                tangemApiKeyDev = TANGEM_API_KEY,
+                tangemApiKeyStage = TANGEM_API_KEY,
+                yieldModuleApiKey = YIELD_MODULE_KEY,
+                yieldModuleApiKeyDev = YIELD_MODULE_KEY,
+                bffStaticToken = TANGEM_PAY_BFF_KEY_DEV,
+                bffStaticTokenDev = TANGEM_PAY_BFF_KEY_DEV,
+                gaslessTxApiKeyDev = TANGEM_GASLESS_API_KEY,
+                gaslessTxApiKey = TANGEM_GASLESS_API_KEY,
+            )
+        }
     }
 }

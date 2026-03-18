@@ -4,7 +4,6 @@ import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swap.SwapTransactionStatusStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -13,7 +12,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.QuotesRepository
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -39,8 +37,6 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
-    private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
@@ -118,30 +114,22 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
 
-                    val accountId = if (accountsFeatureToggles.isFeatureEnabled) {
-                        getAccountCurrencyStatusUseCase.invokeSync(
-                            userWalletId = userWallet.walletId,
-                            currency = cryptoCurrency,
-                        )
-                            .map { it.account.accountId }
-                            .getOrNull()
-                    } else {
-                        null
-                    }
+                    val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+                        userWalletId = userWallet.walletId,
+                        currency = cryptoCurrency,
+                    )
+                        .map { it.account.accountId }
+                        .getOrNull()
 
-                    val refundTokenCurrency = if (accountsFeatureToggles.isFeatureEnabled) {
-                        if (accountId != null) {
-                            addRefundCurrencyIfNeededNew(
-                                accountId = accountId,
-                                status = statusModel,
-                                type = provider.type,
-                            )
-                        } else {
-                            Timber.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
-                            null
-                        }
+                    val refundTokenCurrency = if (accountId != null) {
+                        addRefundCurrencyIfNeeded(
+                            accountId = accountId,
+                            status = statusModel,
+                            type = provider.type,
+                        )
                     } else {
-                        addRefundCurrencyIfNeededLegacy(status = statusModel, type = provider.type)
+                        Timber.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+                        null
                     }
 
                     swapTransactionRepository.storeTransactionState(
@@ -171,28 +159,7 @@ internal class TokenDetailsExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    /**
-     * For now do it only for dex-bridge provider
-     */
-    private suspend fun addRefundCurrencyIfNeededLegacy(
-        status: ExchangeStatusModel?,
-        type: ExchangeProviderType,
-    ): CryptoCurrency? {
-        status ?: return null
-        if (type != ExchangeProviderType.DEX_BRIDGE) return null
-        val refundNetwork = status.refundNetwork
-        val refundContractAddress = status.refundContractAddress
-        if (refundNetwork != null && refundContractAddress != null) {
-            return addCryptoCurrenciesUseCase(
-                userWalletId = userWallet.walletId,
-                contractAddress = refundContractAddress,
-                networkId = refundNetwork,
-            ).getOrNull()
-        }
-        return null
-    }
-
-    private suspend fun addRefundCurrencyIfNeededNew(
+    private suspend fun addRefundCurrencyIfNeeded(
         accountId: AccountId,
         status: ExchangeStatusModel?,
         type: ExchangeProviderType,

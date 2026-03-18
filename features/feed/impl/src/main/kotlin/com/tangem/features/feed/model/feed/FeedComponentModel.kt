@@ -271,7 +271,7 @@ internal class FeedComponentModel @Inject constructor(
             earnListUM = if (feedFeatureToggle.isEarnBlockEnabled) {
                 EarnListUM.Loading
             } else {
-                null
+                EarnListUM.Empty
             },
         )
     }

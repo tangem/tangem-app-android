@@ -40,6 +40,27 @@ internal sealed class SendWithSwapAnalyticEvents(
         },
     ), AppsFlyerIncludedEvent
 
+    data class OnSendClick(
+        val providerName: String,
+        val feeType: AnalyticsParam.FeeType,
+        val fromToken: CryptoCurrency,
+        val toToken: CryptoCurrency,
+        val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
+    ) : SendWithSwapAnalyticEvents(
+        event = "Button - Send with Swap",
+        params = buildMap {
+            put(PROVIDER, providerName)
+            put(FEE_TYPE, if (feeType is AnalyticsParam.FeeType.Normal) "Market" else "Fast")
+            put(SEND_TOKEN, fromToken.symbol)
+            put(RECEIVE_TOKEN, toToken.symbol)
+            put(SEND_BLOCKCHAIN, fromToken.network.name)
+            put(RECEIVE_BLOCKCHAIN, toToken.network.name)
+            if (fromDerivationIndex != null) put(ACCOUNT_DERIVATION_FROM, fromDerivationIndex.toString())
+            if (toDerivationIndex != null) put(ACCOUNT_DERIVATION_TO, toDerivationIndex.toString())
+        },
+    ), AppsFlyerIncludedEvent
+
     data class NoticeCanNotSwapToken(
         val fromToken: CryptoCurrency,
         val toTokenSymbol: String,
