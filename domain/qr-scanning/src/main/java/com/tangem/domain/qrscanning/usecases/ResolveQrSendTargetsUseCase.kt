@@ -27,19 +27,19 @@ class ResolveQrSendTargetsUseCase(
         val currencyLocations = mutableMapOf<CryptoCurrency.ID, MutableList<CurrencyLocation>>()
         val totalPerAccount = mutableMapOf<AccountId, Int>()
 
-        for (accountList in allAccountLists) {
-            for (account in accountList.accounts.filterIsInstance<Account.CryptoPortfolio>()) {
-                val location = CurrencyLocation(
-                    walletName = walletNamesMap[account.accountId.userWalletId]
-                        ?: account.accountId.userWalletId.stringValue,
-                    accountId = account.accountId,
-                    accountName = account.accountName,
-                )
-                totalPerAccount[account.accountId] = account.cryptoCurrencies.size
-                for (currency in account.cryptoCurrencies) {
-                    allCurrencies.add(currency)
-                    currencyLocations.getOrPut(currency.id) { mutableListOf() }.add(location)
-                }
+        val allAccounts = allAccountLists.flatMap { it.accounts }.filterIsInstance<Account.CryptoPortfolio>()
+
+        for (account in allAccounts) {
+            val location = CurrencyLocation(
+                walletName = walletNamesMap[account.accountId.userWalletId]
+                    ?: account.accountId.userWalletId.stringValue,
+                accountId = account.accountId,
+                accountName = account.accountName,
+            )
+            totalPerAccount[account.accountId] = account.cryptoCurrencies.size
+            for (currency in account.cryptoCurrencies) {
+                allCurrencies.add(currency)
+                currencyLocations.getOrPut(currency.id) { mutableListOf() }.add(location)
             }
         }
 
