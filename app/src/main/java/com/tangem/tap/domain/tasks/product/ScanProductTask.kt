@@ -13,16 +13,14 @@ import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
 import com.tangem.crypto.hdWallet.DerivationPath
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.data.wallets.derivations.MissedDerivationsFinder
 import com.tangem.domain.card.common.TapWorkarounds.isExcluded
 import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
 import com.tangem.domain.card.common.TwinsHelper
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
-import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
@@ -45,11 +43,10 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.collections.set
 
 internal class ScanProductTask(
     private val card: Card?,
-    private val derivationsFinder: DerivationsFinder?,
+    private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
     private val visaCardScanHandler: VisaCardScanHandler?,
     private val visaCoroutineScope: CoroutineScope?,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
@@ -81,7 +78,7 @@ internal class ScanProductTask(
             readVisaCard(
                 session = session,
                 cardDto = cardDto,
-                scanWalletProcessor = ScanWalletProcessor(derivationsFinder),
+                scanWalletProcessor = ScanWalletProcessor(blockchainToDeriveFinder),
                 callback = callback,
             )
             return
@@ -89,7 +86,7 @@ internal class ScanProductTask(
 
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(derivationsFinder)
+            else -> ScanWalletProcessor(blockchainToDeriveFinder)
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
@@ -170,7 +167,7 @@ internal class ScanProductTask(
 }
 
 private class ScanWalletProcessor(
-    private val derivationsFinder: DerivationsFinder?,
+    private val blockchainToDeriveFinder: BlockchainToDeriveFinder?,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -293,7 +290,6 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         val productType = getWalletProductType(card)
-        val config = CardConfig.createConfig(card)
         scope.launch {
             val scanResponse = ScanResponse(
                 card = card,
@@ -301,8 +297,7 @@ private class ScanWalletProcessor(
                 walletData = session.environment.walletData,
                 primaryCard = primaryCard,
             )
-            val derivations =
-                collectDerivations(card, config, scanResponse.derivationStyleProvider)
+            val derivations = collectDerivations(card, scanResponse)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
                 callback(CompletionResult.Success(scanResponse))
                 return@launch
@@ -332,32 +327,13 @@ private class ScanWalletProcessor(
 
     private suspend fun collectDerivations(
         card: CardDTO,
-        config: CardConfig,
-        derivationStyleProvider: DerivationStyleProvider,
+        scanResponse: ScanResponse,
     ): Map<ByteArrayKey, List<DerivationPath>> {
-        val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
-        val blockchains = derivationsFinder
-            ?.findBlockchainsToDerive(card, derivationStyleProvider)
-            ?: return derivations
+        val blockchains = blockchainToDeriveFinder
+            ?.find(card)
+            ?: return emptyMap()
 
-        blockchains.forEach { blockchain ->
-            val curve = config.primaryCurve(blockchain.blockchain)
-            val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
-            if (wallet.chainCode == null) return@forEach
-
-            val key = wallet.publicKey.toMapKey()
-            val path = blockchain.derivationPath
-            if (path != null) {
-                val addedDerivations = derivations[key]
-                if (addedDerivations != null) {
-                    derivations[key] = addedDerivations + path
-                } else {
-                    derivations[key] = listOf(path)
-                }
-            }
-        }
-
-        return derivations
+        return MissedDerivationsFinder(scanResponse).findByBlockchainsToDerive(blockchains)
     }
 }
 
