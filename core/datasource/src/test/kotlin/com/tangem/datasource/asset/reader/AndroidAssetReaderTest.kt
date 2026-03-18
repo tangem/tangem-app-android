@@ -18,7 +18,7 @@ internal class AndroidAssetReaderTest {
 
     @Test
     fun read_content() = runTest {
-        every { assetManager.open(FILE_NAME) } returns json.byteInputStream()
+        every { assetManager.open(FILE_NAME, AssetManager.ACCESS_BUFFER) } returns json.byteInputStream()
 
         val actual = assetReader.read(fullFileName = FILE_NAME)
 
@@ -28,7 +28,7 @@ internal class AndroidAssetReaderTest {
     @Test
     fun read_error() = runTest {
         val exception = IOException("Error")
-        every { assetManager.open(FILE_NAME) } throws exception
+        every { assetManager.open(FILE_NAME, AssetManager.ACCESS_BUFFER) } throws exception
 
         runCatching { assetReader.read(fullFileName = FILE_NAME) }
             .onSuccess { throw IllegalStateException("Error should be thrown") }
