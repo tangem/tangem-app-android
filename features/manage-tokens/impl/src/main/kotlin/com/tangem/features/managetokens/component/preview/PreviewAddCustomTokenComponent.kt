@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class PreviewAddCustomTokenComponent(
     initialState: AddCustomTokenConfig = AddCustomTokenConfig(
-        mode = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321")),
+        mode = AddCustomTokenMode(UserWalletId(stringValue = "321")),
         step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
     ),
 ) : AddCustomTokenComponent {
@@ -61,8 +61,8 @@ internal class PreviewAddCustomTokenComponent(
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
                                 mode = config.mode,
-                                selectedNetwork = config.selectedNetwork!!,
-                                selectedDerivationPath = config.selectedDerivationPath!!,
+                                selectedNetwork = requireNotNull(config.selectedNetwork),
+                                selectedDerivationPath = requireNotNull(config.selectedDerivationPath),
                                 onDerivationPathSelected = { _, _ -> },
                             ),
                         ).Content(modifier)

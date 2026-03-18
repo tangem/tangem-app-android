@@ -1,32 +1,35 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.RemoveNFTCollectionsTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetNFTCollectionsTransformer
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
-@Deprecated("Use WalletNFTListSubscriberV2 instead")
-internal class WalletNFTListSubscriber(
-    private val userWallet: UserWallet,
-    private val stateHolder: WalletStateController,
+internal class WalletNFTListSubscriber @AssistedInject constructor(
+    @Assisted override val userWallet: UserWallet,
+    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val walletsRepository: WalletsRepository,
-    private val currenciesRepository: CurrenciesRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
+    private val stateController: WalletStateController,
     private val clickIntents: WalletClickIntents,
-) : WalletSubscriber() {
+) : BasicWalletSubscriber() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun create(coroutineScope: CoroutineScope): Flow<*> = combine(
-        walletsRepository.nftEnabledStatus(userWallet.walletId),
-        currenciesRepository.getWalletCurrenciesUpdates(userWallet.walletId),
-    ) { nftEnabled, currencies -> nftEnabled to currencies }
+        flow = walletsRepository.nftEnabledStatus(userWallet.walletId),
+        flow2 = getCryptoCurrencyStatusesFlow(),
+        transform = ::Pair,
+    )
         .distinctUntilChanged()
         .flatMapLatest { (nftEnabled, currencies) ->
             // if NFT is enabled for this wallet and there are currencies,
@@ -38,21 +41,26 @@ internal class WalletNFTListSubscriber(
                         started = SharingStarted.WhileSubscribed(),
                         replay = 1,
                     )
-                    .onEach {
-                        stateHolder.update(
+                    .onEach { walletNFTCollections ->
+                        stateController.update(
                             SetNFTCollectionsTransformer(
                                 userWalletId = userWallet.walletId,
-                                nftCollections = it,
+                                nftCollections = walletNFTCollections.flattenCollections,
                                 onItemClick = { clickIntents.onNFTClick(userWallet) },
                             ),
                         )
                     }
             } else {
                 // otherwise, hide NFT from wallet
-                stateHolder.update(
+                stateController.update(
                     RemoveNFTCollectionsTransformer(userWallet.walletId),
                 )
                 emptyFlow()
             }
         }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(userWallet: UserWallet): WalletNFTListSubscriber
+    }
 }

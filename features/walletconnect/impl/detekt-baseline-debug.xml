@@ -27,12 +27,10 @@
     <ID>MultilineLambdaItParameter:WcSwitchNetworkModel.kt$WcSwitchNetworkModel${ if (it.isExistInWcSession) { router.pop() } else { showErrorDialog(HandleMethodError.RequiredNetwork(it.network.name)) } }</ID>
     <ID>NamedArguments:WcAddEthereumChainModalBottomSheetContent.kt$WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})</ID>
     <ID>NamedArguments:WcAlertsFactory.kt$WcAlertsFactory$createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)</ID>
-    <ID>NamedArguments:WcPairModel.kt$WcPairModel$handlePairState( pairState, portfolios, selected, isAccountMode, )</ID>
     <ID>NamedArguments:WcSendTransactionModel.kt$WcSendTransactionModel$buildUiState(securityCheck, useCase, signState, isApprovalMethod)</ID>
     <ID>NestedScopeFunctions:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter$let { spendAllowanceUMConverter.convert( WcSpendAllowanceUMConverter.Input( approvedAmount = it, onLearnMoreClick = value.onApproveLearnMoreClick, ), ) }</ID>
     <ID>NoNameShadowing:WcNavigationUtils.kt$model</ID>
     <ID>NullCheckOnMutableProperty:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$if (contentStack != null) { val content by contentStack!!.subscribeAsState() BackHandler(onBack = ::onChildBack) content.active.instance.BottomSheet() }</ID>
-    <ID>NullableBooleanCheck:WcPairModel.kt$WcPairModel$isAccountMode ?: false</ID>
     <ID>NullableToStringCall:WcEstimatedWalletChangeUMConverter.kt$WcEstimatedWalletChangeUMConverter$${value.sign}</ID>
     <ID>ReusedModifierInstance:DefaultWalletConnectEntryComponent.kt$DefaultWalletConnectEntryComponent$Content(modifier = modifier)</ID>
     <ID>ReusedModifierInstance:WcAppInfoBS.kt$Box( modifier = modifier .padding(start = 48.dp) .border( width = 2.dp, color = TangemTheme.colors.background.action, shape = CircleShape, ) .padding(2.dp) .background(color = TangemTheme.colors.background.action) .size(20.dp) .clip(CircleShape) .background(color = TangemTheme.colors.icon.primary1.copy(alpha = 0.1F)), ) { Text( modifier = Modifier.align(Alignment.Center), text = "+$remainingCount", style = TangemTheme.typography.overline, color = TangemTheme.colors.text.secondary, ) }</ID>
@@ -46,7 +44,6 @@
     <ID>UnsafeCallOnNullableType:WcPairComponent.kt$WcPairComponent$model.portfolioFetcher!!</ID>
     <ID>UnsafeCallOnNullableType:WcSignTransactionComponent.kt$WcSignTransactionComponent$content!!</ID>
     <ID>UnsafeCallOnNullableType:WcTransactionRequestInfoComponent.kt$WcTransactionRequestInfoComponent$content!!</ID>
-    <ID>UseEmptyCounterpart:WcPairModel.kt$WcPairModel$setOf&lt;Network&gt;()</ID>
     <ID>UseOrEmpty:WcSpendAllowanceUMConverter.kt$WcSpendAllowanceUMConverter$value.approvedAmount.amount?.currencySymbol ?: ""</ID>
     <ID>UseOrEmpty:WcTransactionCheckErrorItem.kt$notification.text?.resolveReference() ?: ""</ID>
   </CurrentIssues>
