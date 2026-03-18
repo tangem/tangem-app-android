@@ -737,15 +737,20 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
         modelScope.launch {
-            val canHide = cryptoCurrency is CryptoCurrency.Coin && isCryptoCurrencyCoinCouldHideUseCase(
-                userWalletId = userWalletId,
-                cryptoCurrencyCoin = cryptoCurrency,
-            )
+            val canHide = when (cryptoCurrency) {
+                is CryptoCurrency.Coin -> {
+                    isCryptoCurrencyCoinCouldHideUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrencyCoin = cryptoCurrency,
+                    )
+                }
+                is CryptoCurrency.Token -> true
+            }
 
-            internalUiState.value = if (!canHide) {
-                stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
-            } else {
+            internalUiState.value = if (canHide) {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
+            } else {
+                stateFactory.getStateWithLinkedTokensDialog(cryptoCurrency)
             }
         }
     }
