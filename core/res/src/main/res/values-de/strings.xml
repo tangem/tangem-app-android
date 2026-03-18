@@ -217,6 +217,7 @@
   <string name="common_add">Hinzufügen</string>
   <string name="common_add_to_portfolio">Zum Portfolio hinzufügen</string>
   <string name="common_add_token">Token hinzufügen</string>
+  <string name="common_add_tokens">Token hinzufügen</string>
   <string name="common_added">Hinzugefügt</string>
   <string name="common_address">Vertragsadresse</string>
   <string name="common_all">Alle</string>
@@ -399,6 +400,7 @@
   <string name="common_unstake">Staking beenden</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Aufgrund der Beschränkungen von %1$s können nur %2$d UTXOs in eine einzige Transaktion passen. Das bedeutet, dass du nur %3$s oder weniger senden kannst. Du musst den Betrag reduzieren.</string>
   <string name="common_value_copied">Wert kopiert</string>
+  <string name="common_wallets">Meine Wallet</string>
   <string name="common_week">Woche</string>
   <string name="common_with">mit</string>
   <string name="common_yes">Ja</string>
@@ -469,9 +471,12 @@
   <string name="domain_receive_assets_onboarding_title">Sende Geld nur mit</string>
   <string name="earn_best_opportunities">Beste Gelegenheiten</string>
   <string name="earn_clear_filter">Filter löschen</string>
+  <string name="earn_empty">Die Liste ist vorübergehend leer, da sie gerade aktualisiert wird. Schauen Sie in Kürze wieder rein.</string>
   <string name="earn_filter_all_networks">Alle Netzwerke</string>
   <string name="earn_filter_all_types">Alle Arten</string>
   <string name="earn_filter_by">Filtern nach</string>
+  <string name="earn_filter_my_networks">Meine Netzwerke</string>
+  <string name="earn_filter_networks">Netzwerke</string>
   <string name="earn_mostly_used">Meist verwendet</string>
   <string name="earn_no_results">Keine Ergebnisse</string>
   <string name="earn_title">Verdienen</string>
@@ -826,6 +831,7 @@
   <string name="markets_token_details_volume">Volumen</string>
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
+  <string name="markets_tooltip_v2_title">Token hinzufügen</string>
   <string name="markets_yield_supply_banner_description">Steiger die Leistung Deiner Assets und ermögliche Dir gleichzeitig den sofortigen Zugriff. %s</string>
   <string name="markets_yield_supply_banner_title">Yield-Modus aktivieren</string>
   <string name="mobile_wallet_requires_min_os_warning_body">Du musst auf die folgende Version aktualisieren: %1$s um eine mobile Wallet zu erstellen</string>
@@ -845,6 +851,7 @@
   <string name="news_related_tokens">Verwandte Token</string>
   <string name="news_sources">Verwandte Nachrichten</string>
   <string name="news_stay_in_the_loop">Auf dem Laufenden bleiben</string>
+  <string name="news_trending_score">Trend-Score</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
   <string name="nft_about_title">Über NFT</string>
   <string name="nft_asset">NFT-Vermögenswert</string>
@@ -963,12 +970,12 @@
   <string name="onboarding_navbar_upgrade_wallet_biometrics">Biometrische Daten</string>
   <string name="onboarding_seed_button_read_more">Lese mehr über die Seed-Phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">.</item>
     <item quantity="other">Schreibe diese %d-Wörter in der unten angegebenen Reihenfolge auf und bewahre sie an einem sicheren und geheimen Ort auf.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Deine Seed-Phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">.</item>
     <item quantity="other">%d Wörter</item>
   </plurals>
   <string name="onboarding_seed_import_message">Um deine Wallets zu importieren, gib bitte deine Seed-Phrase in das folgende Feld ein</string>
@@ -1101,9 +1108,9 @@
     <item quantity="one">für %d Wallet</item>
     <item quantity="other">für %d Wallets</item>
   </plurals>
-  <string name="referral_point_currencies_description">Du bekommst ^^%1$s^^ für jede von einem Freund gekaufte Wallet auf deine %2$s Netzwerkadresse %3$s ^^30 Tage nach^^ dem</string>
-  <string name="referral_point_currencies_title">Du</string>
-  <string name="referral_point_discount_description_prefix">Bekommt eine</string>
+  <string name="referral_point_currencies_description">Du erhältst ^^%1$s^^ für jede Wallet, die ein Freund kauft.\nDie Auszahlung erfolgt ^^30 Tage^^ nach dem Kauf an deine%2$s Adresse.%3$s</string>
+  <string name="referral_point_currencies_title">Du erhältst</string>
+  <string name="referral_point_discount_description_prefix">Er erhält</string>
   <string name="referral_point_discount_description_suffix">beim Kauf einer Wallet auf tangem.com</string>
   <string name="referral_point_discount_description_value">%s Rabatt</string>
   <string name="referral_point_discount_title">Dein Freund</string>
@@ -1222,6 +1229,7 @@
   <string name="send_notification_transaction_limit_title">Begrenzung der Transaktionen</string>
   <string name="send_optional_field">Optional</string>
   <string name="send_qrcode_scan_info">Bitte richte den QR-Code auf das Quadrat aus, um ihn zu scannen. Stell sicher, dass du die Netzwerkadresse %s scannen.</string>
+  <string name="send_rate_floating_info_description">Ein variabler Zinssatz bedeutet, dass sich der endgültige Betrag, den Sie erhalten, je nach Marktbedingungen zwischen dem Beginn und dem Abschluss des Swaps geringfügig ändern kann.</string>
   <string name="send_recent_transactions">Jüngste</string>
   <string name="send_recipient">Empfänger</string>
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
@@ -1431,6 +1439,7 @@
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
   <string name="swap_promo_title">Neuer Swap-Anbieter verfügbar!</string>
+  <string name="swap_search_suggestion_hint">Suchen Sie etwas anderes?\n Versuchen Sie es mit der Suche oder erkunden Sie eine andere Kryptowährung!</string>
   <string name="swap_search_tooltip_description">Suchen Sie nach einem beliebigen Token, auch wenn es noch nicht in Ihrer Liste ist.</string>
   <string name="swap_search_tooltip_title">Nutzen Sie die Suche, um zu finden, was Sie benötigen.</string>
   <string name="swap_story_fifth_subtitle">Vertraue auf den rund um die Uhr verfügbaren Support bei allen Problemen</string>
