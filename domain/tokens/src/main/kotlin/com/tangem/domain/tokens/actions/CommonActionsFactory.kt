@@ -79,6 +79,8 @@ internal class CommonActionsFactory(
             null
         }
 
+        val hideTokenUnavailabilityReason = getTokenHideUnavailabilityReason(userWallet)
+
         actionAvailabilityBuilder {
             // region Analytics
             if (cryptoCurrencyStatus.currency.id.rawCurrencyId != null) {
@@ -129,7 +131,7 @@ internal class CommonActionsFactory(
             // endregion
 
             // region HideToken
-            addHideTokenAction()
+            ActionState.HideToken(unavailabilityReason = hideTokenUnavailabilityReason).addByReason()
             // endregion
 
             // region YieldMode
@@ -138,6 +140,7 @@ internal class CommonActionsFactory(
         }
     }
 
+    @Suppress("CanBeNonNullable")
     private suspend fun createSwapAction(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -151,7 +154,7 @@ internal class CommonActionsFactory(
         if (!isMultiCurrency) {
             return ActionState.Swap(
                 unavailabilityReason = ScenarioUnavailabilityReason.SingleWallet,
-                showBadge = false,
+                shouldShowBadge = false,
             )
         }
 
@@ -159,21 +162,23 @@ internal class CommonActionsFactory(
             cryptoCurrency.isCustom -> {
                 ActionState.Swap(
                     unavailabilityReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrency.name),
-                    showBadge = false,
+                    shouldShowBadge = false,
                 )
             }
             cryptoCurrencyStatus.value is CryptoCurrencyStatus.NoQuote -> {
                 ActionState.Swap(
                     unavailabilityReason = ScenarioUnavailabilityReason.TokenNoQuotes(cryptoCurrency.name),
-                    showBadge = false,
+                    shouldShowBadge = false,
                 )
             }
             else -> {
-                val reason = swapUnavailableReasonDeferred!!.await()
+                val reason = requireNotNull(swapUnavailableReasonDeferred) {
+                    "swapUnavailableReasonDeferred must not be null for available swap action"
+                }.await()
 
                 return ActionState.Swap(
                     unavailabilityReason = reason,
-                    showBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories,
+                    shouldShowBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories,
                 )
             }
         }
