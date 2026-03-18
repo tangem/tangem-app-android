@@ -2,6 +2,7 @@ package com.tangem.data.qrscanning
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.repository.DefaultQrScanningEventsRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -13,7 +14,8 @@ import java.math.BigDecimal
 
 internal class DefaultQrScanningEventsRepositoryTest {
 
-    private val repository = DefaultQrScanningEventsRepository()
+    private val qrContentClassifier: QrContentClassifierParser = mockk()
+    private val repository = DefaultQrScanningEventsRepository(qrContentClassifier)
 
     private val cryptoCurrencyId = mockk<CryptoCurrency.ID>()
     private val network = mockk<Network>()

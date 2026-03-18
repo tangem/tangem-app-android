@@ -17,7 +17,6 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
@@ -33,6 +32,7 @@ import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -79,8 +79,8 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(wcScope: WcScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
-        scope = wcScope,
+    fun sdkDelegate(appScope: AppCoroutineScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
+        scope = appScope,
         store = store,
     )
 
@@ -93,7 +93,7 @@ internal object WalletConnectDataModule {
         wcNetworksConverter: WcNetworksConverter,
         multiAccountListSupplier: MultiAccountListSupplier,
         analytics: AnalyticsEventHandler,
-        wcScope: WcScope,
+        appScope: AppCoroutineScope,
     ): DefaultWcSessionsManager {
         return DefaultWcSessionsManager(
             store = store,
@@ -101,7 +101,7 @@ internal object WalletConnectDataModule {
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
-            scope = wcScope,
+            scope = appScope,
             multiAccountListSupplier = multiAccountListSupplier,
         )
     }
@@ -109,10 +109,6 @@ internal object WalletConnectDataModule {
     @Provides
     @Singleton
     fun wcSessionsManager(default: DefaultWcSessionsManager): WcSessionsManager = default
-
-    @Provides
-    @Singleton
-    fun wcScope(dispatchers: CoroutineDispatcherProvider): WcScope = WcScope(dispatchers)
 
     @Provides
     @Singleton

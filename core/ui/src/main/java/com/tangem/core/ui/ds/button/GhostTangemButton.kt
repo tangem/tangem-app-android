@@ -34,9 +34,9 @@ fun GhostTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
         text = buttonUM.text,
         iconRes = buttonUM.iconRes,
         iconPosition = buttonUM.iconPosition,
-        enabled = buttonUM.isEnabled,
+        isEnabled = buttonUM.isEnabled,
+        isLoading = buttonUM.isLoading,
         size = buttonUM.size,
-        state = buttonUM.state,
         shape = buttonUM.shape,
     )
 }
@@ -49,9 +49,9 @@ fun GhostTangemButton(buttonUM: TangemButtonUM, modifier: Modifier = Modifier) {
  * @param text          TextReference for the button label.
  * @param iconRes       Drawable resource ID for the icon to be displayed in the button.
  * @param iconPosition  Position of the icon (Start or End).
- * @param enabled       Boolean indicating whether the button is enabled.
+ * @param isEnabled     Boolean indicating whether the button is enabled.
+ * @param isLoading     Boolean indicating whether the button is in a loading state.
  * @param size          TangemButtonSize defining the size of the button.
- * @param state         TangemButtonState defining the current state of the button.
  *
 [REDACTED_AUTHOR]
  */
@@ -61,15 +61,16 @@ fun GhostTangemButton(
     modifier: Modifier = Modifier,
     text: TextReference? = null,
     @DrawableRes iconRes: Int? = null,
-    enabled: Boolean = true,
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
     size: TangemButtonSize = TangemButtonSize.X15,
-    state: TangemButtonState = TangemButtonState.Default,
     iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     shape: TangemButtonShape = TangemButtonShape.Default,
 ) {
-    val contentColor = when (state) {
-        TangemButtonState.Disabled -> TangemTheme.colors2.text.status.disabled
-        else -> TangemTheme.colors2.text.neutral.primary
+    val contentColor = if (isEnabled) {
+        TangemTheme.colors2.text.neutral.primary
+    } else {
+        TangemTheme.colors2.text.status.disabled
     }
     TangemButtonInternal(
         onClick = onClick,
@@ -77,9 +78,10 @@ fun GhostTangemButton(
             .clip(shape = shape.toShape(size)),
         text = text,
         contentColor = contentColor,
-        enabled = enabled,
+        isEnabled = isEnabled,
+        isLoading = isLoading,
+        hasPadding = false,
         size = size,
-        state = state,
         iconPosition = iconPosition,
         iconRes = iconRes,
     )
@@ -90,9 +92,10 @@ fun GhostTangemButton(
 @Preview(showBackground = true, widthDp = 480)
 @Preview(showBackground = true, widthDp = 480, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun GhostTangemButton_Preview(
-    @PreviewParameter(GhostTangemButtonPreviewProvider::class) params: TangemButtonState,
+    @PreviewParameter(GhostTangemButtonPreviewProvider::class) params: Pair<Boolean, Boolean>,
 ) {
     TangemThemePreviewRedesign {
+        val (isEnabled, isLoading) = params
         Row(
             horizontalArrangement = Arrangement.spacedBy(21.dp),
             modifier = Modifier
@@ -114,7 +117,8 @@ private fun GhostTangemButton_Preview(
                             size = TangemButtonSize.X15,
                             iconPosition = iconPosition,
                             iconRes = R.drawable.ic_tangem_24,
-                            state = params,
+                            isEnabled = isEnabled,
+                            isLoading = isLoading,
                         )
                     }
                 }
@@ -123,13 +127,13 @@ private fun GhostTangemButton_Preview(
     }
 }
 
-private class GhostTangemButtonPreviewProvider : PreviewParameterProvider<TangemButtonState> {
-    override val values: Sequence<TangemButtonState>
+private class GhostTangemButtonPreviewProvider : PreviewParameterProvider<Pair<Boolean, Boolean>> {
+    override val values: Sequence<Pair<Boolean, Boolean>>
         get() = sequenceOf(
-            TangemButtonState.Default,
-            TangemButtonState.Pressed,
-            TangemButtonState.Loading,
-            TangemButtonState.Disabled,
+            true to false,
+            false to false,
+            true to true,
+            false to true,
         )
 }
 // endregion
