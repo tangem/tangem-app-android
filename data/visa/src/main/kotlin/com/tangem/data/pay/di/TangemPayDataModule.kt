@@ -18,6 +18,7 @@ import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -38,8 +39,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -112,6 +111,7 @@ internal interface TangemPayDataModule {
             @NetworkMoshi moshi: Moshi,
             @ApplicationContext context: Context,
             dispatchers: CoroutineDispatcherProvider,
+            scope: AppCoroutineScope,
         ): PaymentAccountStatusesStore {
             return PaymentAccountStatusesStore(
                 runtimeStore = RuntimeSharedStore(),
@@ -122,9 +122,9 @@ internal interface TangemPayDataModule {
                         defaultValue = emptyMap(),
                     ),
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },
-                    scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                    scope = scope,
                 ),
-                dispatchers = dispatchers,
+                scope = scope,
             )
         }
 
