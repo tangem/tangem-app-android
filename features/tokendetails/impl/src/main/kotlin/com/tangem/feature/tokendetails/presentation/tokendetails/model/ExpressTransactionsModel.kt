@@ -2,24 +2,20 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import arrow.core.right
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionsBlockState
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.ExpressStateFactory
@@ -43,10 +39,8 @@ internal class ExpressTransactionsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val router: InnerTokenDetailsRouter,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val expressTransactionsEventListener: ExpressTransactionsEventListener,
 ) : Model(), ExpressTransactionsClickIntents {
@@ -163,22 +157,10 @@ internal class ExpressTransactionsModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
-                .onEach { account = it.account }
-                .map { it.status.right() }
-        } else {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                userWalletId = userWalletId,
-                currencyId = cryptoCurrency.id,
-                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-        }
+        getAccountCryptoCurrencyStatusUseCase(userWalletId, cryptoCurrency)
+            .onEach { account = it.account }
             .distinctUntilChanged()
-            .onEach { maybeCurrencyStatus ->
-                maybeCurrencyStatus.onRight { status -> cryptoCurrencyStatus = status }
-            }
+            .onEach { cryptoCurrencyStatus = it.status }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
             .saveIn(marketPriceJobHolder)

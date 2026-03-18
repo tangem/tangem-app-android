@@ -18,3 +18,19 @@ fun KNode.assertTextContainsSafe(
     )
 }
 
+fun KNode.isDisplayedSafely(): Boolean {
+    return try {
+        assertIsDisplayed()
+        true
+    } catch (_: AssertionError) {
+        false
+    }
+}
+
+fun KNode.assertVisibility(shouldBeDisplayed: Boolean) {
+    if (shouldBeDisplayed) {
+        assertIsDisplayed()
+    } else {
+        assertIsNotDisplayed()
+    }
+}
