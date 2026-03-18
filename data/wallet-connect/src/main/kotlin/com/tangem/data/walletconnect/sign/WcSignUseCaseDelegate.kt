@@ -71,7 +71,7 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
                         network = context.network,
                         errorCode = error.code(),
                         errorMessage = errorMessage,
-                        accountDerivation = context.session.account?.derivationIndex?.value,
+                        accountDerivation = context.session.account.derivationIndex.value,
                     )
                     analytics.send(event)
                 }
