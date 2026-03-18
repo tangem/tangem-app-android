@@ -2,6 +2,7 @@ package com.tangem.data.pay
 
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -9,7 +10,6 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.sync.Mutex
@@ -17,15 +17,14 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 internal class DefaultTangemPayEligibilityManager @Inject constructor(
-    dispatchers: CoroutineDispatcherProvider,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val coroutineScope: AppCoroutineScope,
     private val onboardingRepository: OnboardingRepository,
 ) : TangemPayEligibilityManager {
 
     private var cachedEligibleWallets: List<UserWalletData>? = null
     private var eligibleWalletsDeferred: Deferred<List<UserWalletData>>? = null
     private val loadMutex = Mutex()
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     init {
         resetDataWhenWalletsUpdate()

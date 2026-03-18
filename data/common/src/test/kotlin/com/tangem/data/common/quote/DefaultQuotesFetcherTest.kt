@@ -151,7 +151,7 @@ internal class DefaultQuotesFetcherTest {
             quotes = setOf(
                 QuoteMetadata(
                     cryptoCurrencyId = "ethereum",
-                    timestamp = DateTime.now().millis - 10_000,
+                    timestamp = DateTime.now().millis - 20_000,
                     value = cachedQuote,
                 ),
             ),
@@ -194,7 +194,7 @@ internal class DefaultQuotesFetcherTest {
             quotes = setOf(
                 QuoteMetadata(
                     cryptoCurrencyId = "ethereum",
-                    timestamp = DateTime.now().millis - 10_000,
+                    timestamp = DateTime.now().millis - 20_000,
                     value = cachedQuote,
                 ),
                 QuoteMetadata(
@@ -385,7 +385,7 @@ internal class DefaultQuotesFetcherTest {
             quotes = setOf(
                 QuoteMetadata(
                     cryptoCurrencyId = "solana",
-                    timestamp = DateTime.now().millis - 10_000,
+                    timestamp = DateTime.now().millis - 20_000,
                     value = MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO),
                 ),
             ),
