@@ -70,7 +70,7 @@ internal class Eip681PaymentUriParserTest {
     }
 
     @Test
-    fun `native transfer includes only coins, not tokens`() {
+    fun `native transfer with value returns only coins`() {
         every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
@@ -83,6 +83,22 @@ internal class Eip681PaymentUriParserTest {
 
         assertThat(result).isNotNull()
         assertThat(result!!.matchingCurrencies).containsExactly(ethereumCoin)
+    }
+
+    @Test
+    fun `native transfer without value returns all currencies on matching network`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+
+        val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xRecipient@1",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin, usdcToken),
+        ).asSuccess()
+
+        assertThat(result).isNotNull()
+        assertThat(result!!.matchingCurrencies).containsExactly(ethereumCoin, usdcToken)
     }
 
     // endregion
