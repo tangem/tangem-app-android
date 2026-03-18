@@ -33,7 +33,9 @@ import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -42,12 +44,10 @@ import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.model.market.list.state.*
 import com.tangem.features.feed.ui.market.list.components.MarketsListLazyColumn
 import com.tangem.features.feed.ui.market.list.components.MarketsListSortByBottomSheet
-import com.tangem.features.feed.ui.market.list.components.YieldSupplyInMarketsPromoNotification
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 
-private const val SHOW_MORE_KEY = "privacyPolicy"
 private const val DELAY_FOR_FOCUS_REQUEST = 500L
 
 @Composable
@@ -151,40 +151,6 @@ private fun ColumnScope.Content(state: MarketsListUM, modifier: Modifier = Modif
                     onIntervalClick = state.onIntervalClick,
                     onSortByClick = state.onSortByButtonClick,
                 )
-            }
-
-            AnimatedVisibility(
-                state.list !is ListUM.LoadingError && state.isInSearchMode.not() &&
-                    state.selectedSortBy != SortByTypeUM.YieldSupply,
-            ) {
-                val wrappedNotification = remember(state.list) { state.marketsNotificationUM }
-                val showMore = stringResourceSafe(R.string.common_show_more)
-
-                when (wrappedNotification) {
-                    is MarketsNotificationUM.YieldSupplyPromo -> {
-                        val description = stringResourceSafe(
-                            R.string.markets_yield_supply_banner_description,
-                            showMore,
-                        )
-
-                        val clickableDescription = annotatedReference {
-                            append(description.substringBefore(showMore))
-
-                            pushStringAnnotation(SHOW_MORE_KEY, "")
-                            appendColored(showMore, TangemTheme.colors.text.accent)
-                            pop()
-                        }
-
-                        YieldSupplyInMarketsPromoNotification(
-                            config = wrappedNotification.config.copy(
-                                subtitle = clickableDescription,
-                            ),
-                            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                        )
-                    }
-                    else -> { /* no-op */
-                    }
-                }
             }
         }
     }
@@ -375,10 +341,6 @@ private fun Preview() {
                         isShown = false,
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
-                    ),
-                    marketsNotificationUM = MarketsNotificationUM.YieldSupplyPromo(
-                        onClick = {},
-                        onCloseClick = {},
                     ),
                     onSearchClicked = {},
                 ),
