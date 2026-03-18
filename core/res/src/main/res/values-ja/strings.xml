@@ -214,6 +214,7 @@
   <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
+  <string name="common_add_tokens">トークンの追加</string>
   <string name="common_added">追加済み</string>
   <string name="common_address">アドレス</string>
   <string name="common_all">すべて</string>
@@ -692,6 +693,7 @@
   <string name="koinos_mana_level_title">Manaレベル</string>
   <string name="main_empty_tokens_list_message">暗号資産および取引の追跡を開始するには、トークンを追加してください</string>
   <string name="main_manage_tokens">トークンの管理</string>
+  <string name="main_qr_scan_hint">QRコードをスキャンして送金するか、アプリに接続します。</string>
   <string name="main_scan_card_warning_view_subtitle">すべてのネットワークにアクセスするには、カードをスキャンする必要があります。</string>
   <string name="main_scan_card_warning_view_title">カードまたはリングをスキャンする</string>
   <string name="main_swap_changelly_promotion_message">2月%2$s - %3$sの期間、Changelly経由のスワップは%1$sのサービス手数料となります。</string>
@@ -839,6 +841,7 @@
   <string name="news_related_tokens">関連トークン</string>
   <string name="news_sources">関連ニュース</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
+  <string name="news_trending_score">トレンドスコア</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="nft_about_title">NFTについて</string>
   <string name="nft_asset">NFTアセット</string>
@@ -1488,6 +1491,7 @@
   <string name="tangempay_cancel_kyc">メイン画面からKYCを非表示にする</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Googleウォレットに追加</string>
   <string name="tangempay_card_details_card_number">カード番号</string>
   <string name="tangempay_card_details_change_pin">PINを変更する</string>
   <string name="tangempay_card_details_change_pin_success_description">カードは支払いの準備が整いました。</string>
@@ -1876,6 +1880,8 @@
   <string name="warning_express_refresh_required_title">サービスは一時的に利用できません</string>
   <string name="warning_express_too_maximum_amount_title">スワップするトークンの量は %s を超えないでください</string>
   <string name="warning_express_too_minimal_amount_title">スワップ金額は %s 以上である必要があります</string>
+  <string name="warning_express_unsupported_pair_description">このペアではスワップを利用できません。別のトークンを選択して、もう一度お試しください。</string>
+  <string name="warning_express_unsupported_pair_title">スワップ非対応のペアです</string>
   <string name="warning_express_wrong_amount_description">スワップの金額を変更してください</string>
   <string name="warning_failed_to_verify_card_message">このカードは、サンプル品または偽造品である可能性があります</string>
   <string name="warning_failed_to_verify_card_title">真正性チェックに失敗しました</string>

@@ -2,12 +2,10 @@ package com.tangem.feature.walletsettings.utils
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.account.usecase.ApplyAccountListSortingUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,14 +25,12 @@ import kotlin.time.Duration.Companion.seconds
 internal class AccountListSortingSaver @Inject constructor(
     private val applyAccountListSortingUseCase: ApplyAccountListSortingUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) {
 
     /** Flow to hold the account IDs for sorting, with an initial null value. */
     val accountsOrderFlow: StateFlow<List<AccountId>?>
         private field = MutableStateFlow<List<AccountId>?>(value = null)
-
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
 
     init {
         accountsOrderFlow

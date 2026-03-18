@@ -3,6 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 import androidx.compose.animation.*
 import androidx.compose.animation.SharedTransitionScope.ResizeMode.Companion.scaleToBounds
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +31,7 @@ import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.ds.image.TangemIcon
+import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
 import com.tangem.core.ui.ds.row.header.TangemHeaderRowUM
 import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
@@ -95,6 +98,7 @@ internal fun LazyListScope.tokensListItems2(
     when (walletTokensListUM) {
         is WalletTokensListUM.Loading,
         is WalletTokensListUM.Content,
+        WalletTokensListUM.Locked,
         -> {
             walletTokensListUM.tokenList.fastForEachIndexed { index, listItem ->
                 when (listItem) {
@@ -214,6 +218,7 @@ private fun LazyListScope.portfolioItem(
     )
 }
 
+@Suppress("MagicNumber")
 private fun LazyListScope.accountItem(
     listItem: TokensListItemUM2.Portfolio,
     modifier: Modifier,
@@ -225,6 +230,18 @@ private fun LazyListScope.accountItem(
         key = listItem.tokenRowUM.id,
         contentType = listItem.tokenRowUM::class.java,
     ) {
+        // Snap immediately on expand; on collapse, hold the current value until all
+        // child items finish their shrink animation, then snap to fully-rounded shape.
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = if (listItem.isExpanded) lastIndex else 0,
+            animationSpec = if (listItem.isExpanded) {
+                snap()
+            } else {
+                snap(delayMillis = minOf(50 * maxOf(listItem.tokenList.lastIndex, 0), 250) + 150)
+            },
+            label = "lastIndex",
+        )
+
         val portfolioModifier = modifier
             .padding(top = if (index != 0) TangemTheme.dimens2.x2 else TangemTheme.dimens2.x3)
             .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
@@ -233,7 +250,7 @@ private fun LazyListScope.accountItem(
                 currentIndex = 0,
                 radius = 18.dp,
                 addDefaultPadding = false,
-                lastIndex = if (listItem.isExpanded) lastIndex else 0,
+                lastIndex = effectiveLastIndex,
                 backgroundColor = TangemTheme.colors2.surface.level3,
             )
         if (listItem.isCollapsable) {
@@ -288,10 +305,9 @@ internal fun PortfolioRowItem(
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // TangemSharedTransitionLayout {
     ProvideSharedTransitionScope(modifier) {
-        val iconSharedContentState = rememberSharedContentState(key = "icon")
-        val titleSharedContentState = rememberSharedContentState(key = "title")
+        val iconSharedContentState = rememberSharedContentState(key = "icon_${item.tokenRowUM.id}")
+        val titleSharedContentState = rememberSharedContentState(key = "title_${item.tokenRowUM.id}")
         val boundsTransform = BoundsTransform { _, _ -> tween(250) }
 
         AnimatedContent(
@@ -307,22 +323,30 @@ internal fun PortfolioRowItem(
                 SharedTokenRowComposables(
                     icon = { modifier ->
                         val size = if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
-                        val currencyIconState =
-                            when (val currencyIconState = item.tokenRowUM.headIconUM.currencyIconState) {
-                                is CurrencyIconState.CryptoPortfolio.Icon ->
-                                    currencyIconState.copy(size = size)
-                                is CurrencyIconState.CryptoPortfolio.Letter ->
-                                    currencyIconState.copy(size = size)
-                                else -> currencyIconState
-                            }
+                        val headIcon = item.tokenRowUM.headIconUM
+                        val sizedHeadIcon = if (headIcon is TangemIconUM.Currency) {
+                            headIcon.copy(
+                                currencyIconState = when (val currencyIconState = headIcon.currencyIconState) {
+                                    is CurrencyIconState.CryptoPortfolio.Icon -> currencyIconState.copy(size = size)
+                                    is CurrencyIconState.CryptoPortfolio.Letter -> currencyIconState.copy(size = size)
+                                    else -> currencyIconState
+                                },
+                            )
+                        } else {
+                            headIcon
+                        }
 
                         TangemIcon(
-                            tangemIconUM = item.tokenRowUM.headIconUM.copy(currencyIconState = currencyIconState),
-                            modifier = modifier.sharedBounds(
-                                sharedContentState = iconSharedContentState,
-                                animatedVisibilityScope = animatedContentScope,
-                                boundsTransform = boundsTransform,
-                            ),
+                            tangemIconUM = sizedHeadIcon,
+                            modifier = modifier
+                                .conditionalCompose(headIcon is TangemIconUM.Empty) {
+                                    size(TangemTheme.dimens2.x9)
+                                }
+                                .sharedBounds(
+                                    sharedContentState = iconSharedContentState,
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = boundsTransform,
+                                ),
                         )
                     },
                     title = { modifier ->
@@ -382,7 +406,6 @@ internal fun PortfolioRowItem(
                 )
             }
         }
-        // }
     }
 }
 

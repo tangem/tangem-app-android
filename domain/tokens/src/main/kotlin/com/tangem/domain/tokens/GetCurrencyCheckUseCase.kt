@@ -36,13 +36,15 @@ class GetCurrencyCheckUseCase(
                 currencyStatus = feeCurrencyStatus,
                 balanceAfterTransaction = feeCurrencyBalanceAfterTransaction ?: BigDecimal.ZERO,
             )
-            val isAccountFunded = recipientAddress?.let {
+            val isAccountFunded = if (recipientAddress != null) {
                 currencyChecksRepository.checkIfAccountFunded(
-                    userWalletId,
-                    network,
-                    recipientAddress,
+                    userWalletId = userWalletId,
+                    network = network,
+                    address = recipientAddress,
                 )
-            } ?: false
+            } else {
+                false
+            }
             val utxoAmountLimit = if (currency is CryptoCurrency.Coin && amount != null && fee != null) {
                 currencyChecksRepository.checkUtxoAmountLimit(
                     userWalletId = userWalletId,
