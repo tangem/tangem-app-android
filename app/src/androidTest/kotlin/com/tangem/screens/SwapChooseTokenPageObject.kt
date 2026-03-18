@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.AppBarWithSearchTestTags
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
+import com.tangem.core.ui.test.MarketsTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
@@ -45,6 +46,13 @@ class SwapChooseTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProv
             )
         }
         useUnmergedTree = true
+    }
+
+    fun marketsTokenWithTitle(title: String): KNode {
+        return child {
+            hasTestTag(MarketsTestTags.TOKENS_LIST_ITEM)
+            hasText(title)
+        }
     }
 }
 
