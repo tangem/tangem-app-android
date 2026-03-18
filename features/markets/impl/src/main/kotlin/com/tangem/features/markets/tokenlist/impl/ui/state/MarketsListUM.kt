@@ -8,7 +8,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.model.MarketsNotificationUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class MarketsListUM(
@@ -19,7 +18,6 @@ internal data class MarketsListUM(
     val selectedInterval: TrendInterval,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
-    val marketsNotificationUM: MarketsNotificationUM?,
 ) {
     val isInSearchMode
         get() = searchBar.isActive
@@ -37,8 +35,6 @@ enum class SortByTypeUM(val text: TextReference) {
     ExperiencedBuyers(resourceReference(R.string.markets_sort_by_experienced_buyers_title)),
     TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
     TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
-    Staking(resourceReference(R.string.common_staking)),
-    YieldSupply(resourceReference(R.string.yield_module_earn_sheet_title)),
 }
 
 @Immutable
