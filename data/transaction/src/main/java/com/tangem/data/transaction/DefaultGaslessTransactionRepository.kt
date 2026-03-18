@@ -13,7 +13,6 @@ import com.tangem.domain.transaction.GaslessTransactionRepository
 import com.tangem.domain.transaction.models.Eip7702Authorization
 import com.tangem.domain.transaction.models.GaslessSignedTransactionResult
 import com.tangem.domain.transaction.models.GaslessTransactionData
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -26,7 +25,6 @@ class DefaultGaslessTransactionRepository(
     private val gaslessTxServiceApi: GaslessTxServiceApi,
     private val coroutineDispatcherProvider: CoroutineDispatcherProvider,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) : GaslessTransactionRepository {
 
     private val supportedTokensState = MutableStateFlow<Map<Network.ID, Set<CryptoCurrency>>>(hashMapOf())
@@ -131,9 +129,6 @@ class DefaultGaslessTransactionRepository(
     }
 
     override suspend fun getGaslessFeeAddresses(): Set<String> {
-        if (!sendFeatureToggles.isGaslessTransactionsEnabled) {
-            return EMPTY_ADDRESSES
-        }
         return allAddressesMutex.withLock {
             allFeeRecipientAddress.ifEmpty {
                 val allFeeAddresses = getAllFeeRecipientAddresses()
@@ -150,6 +145,5 @@ class DefaultGaslessTransactionRepository(
 
     private companion object {
         val BASE_GAS_FOR_TRANSACTION: BigInteger = BigInteger("60000")
-        val EMPTY_ADDRESSES = emptySet<String>()
     }
 }
