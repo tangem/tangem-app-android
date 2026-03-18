@@ -24,6 +24,8 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
         minSdk = AppConfig.minSdkVersion
         targetSdk = AppConfig.targetSdkVersion
 
+        ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+
         versionCode = if (project.hasProperty("versionCode")) {
             (project.property("versionCode") as String).toInt()
         } else {
@@ -70,6 +72,7 @@ private fun AppExtension.configureBuildTypes() {
 }
 
 private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, buildType: BuildType) {
+    val x86_64 = "x86_64"
     when (buildType) {
         BuildType.Release -> {
             isDebuggable = false
@@ -77,6 +80,7 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
         BuildType.Debug -> {
             isDebuggable = true
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
+            ndk.abiFilters += x86_64
         }
         BuildType.Internal,
         BuildType.External
@@ -84,12 +88,14 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
             initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
+            ndk.abiFilters += x86_64
         }
         BuildType.Mocked -> {
             initWith(appExtension.buildTypes.getByName(BuildType.Release.id))
             matchingFallbacks.add(BuildType.Release.id)
             signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
             isDebuggable = true
+            ndk.abiFilters += x86_64
         }
     }
 
