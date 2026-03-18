@@ -24,12 +24,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
@@ -87,7 +85,6 @@ internal class WalletSettingsModel @Inject constructor(
     private val permissionsRepository: PermissionRepository,
     private val notificationsRepository: NotificationsRepository,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
@@ -159,8 +156,7 @@ internal class WalletSettingsModel @Inject constructor(
                         accountList = accountList,
                     ),
                     accountReorderUM = AccountReorderUM(
-                        isDragEnabled = accountsFeatureToggles.isFeatureEnabled &&
-                            accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        isDragEnabled = accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
                         onMove = ::onAccountReorder,
                         onDragStopped = ::onAccountDragStopped,
                     ),
@@ -237,13 +233,7 @@ internal class WalletSettingsModel @Inject constructor(
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
-                        portfolioId = if (accountsFeatureToggles.isFeatureEnabled) {
-                            PortfolioId(
-                                accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
-                            )
-                        } else {
-                            PortfolioId(userWalletId = userWallet.walletId)
-                        },
+                        accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
                     ),
                 )
             },
@@ -378,7 +368,7 @@ internal class WalletSettingsModel @Inject constructor(
             if (!state.value.isWalletBackedUp) {
                 showMakeBackupAtFirstAlertBS()
             } else {
-                unlockWalletIfNeedAndProceed { authorizationRequired ->
+                unlockWalletIfNeedAndProceed { _ ->
                     router.push(
                         route = AppRoute.UpdateAccessCode(
                             userWalletId = params.userWalletId,
