@@ -19,7 +19,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.connection.NetworkConnectionManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -43,12 +43,12 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
+import com.tangem.tap.common.analytics.CustomerIoFeatureToggles
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerClient
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -58,11 +58,11 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("TooManyFunctions")
 interface ApplicationEntryPoint {
 
-    fun getEnvironmentConfigStorage(): EnvironmentConfigStorage
-
     fun getAppStateHolder(): AppStateHolder
 
     fun getIssuersConfigStorage(): IssuersConfigStorage
+
+    fun getEnvironmentConfig(): EnvironmentConfig
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
 
@@ -120,8 +120,6 @@ interface ApplicationEntryPoint {
 
     fun getOnboardingRepository(): OnboardingRepository
 
-    fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
-
     fun getExcludedBlockchains(): ExcludedBlockchains
 
     fun getAppLogsStore(): AppLogsStore
@@ -154,4 +152,6 @@ interface ApplicationEntryPoint {
     fun getABTestsManager(): ABTestsManager
 
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
+
+    fun getCustomerIoFeatureToggles(): CustomerIoFeatureToggles
 }

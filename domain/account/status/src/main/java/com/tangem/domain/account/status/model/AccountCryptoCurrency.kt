@@ -4,7 +4,7 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import kotlinx.serialization.Serializable
 
-typealias AccountCryptoCurrencies = Map<Account, List<CryptoCurrency>>
+typealias AccountCryptoCurrencies = Map<out Account, List<CryptoCurrency>>
 
 /**
  * Combines an [Account] with its corresponding [CryptoCurrency].

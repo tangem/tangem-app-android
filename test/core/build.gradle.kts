@@ -10,4 +10,5 @@ dependencies {
     api(deps.test.junit5)
     api(deps.test.mockk)
     api(deps.test.truth)
+    api(deps.test.turbine)
 }

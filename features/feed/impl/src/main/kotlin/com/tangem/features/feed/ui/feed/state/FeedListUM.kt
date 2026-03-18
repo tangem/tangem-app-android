@@ -2,7 +2,7 @@ package com.tangem.features.feed.ui.feed.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
@@ -18,7 +18,7 @@ internal data class FeedListUM(
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
     val globalState: GlobalFeedState = GlobalFeedState.Content,
-    val earnListUM: EarnListUM?,
+    val earnListUM: EarnListUM,
 )
 
 internal data class FeedListCallbacks(
