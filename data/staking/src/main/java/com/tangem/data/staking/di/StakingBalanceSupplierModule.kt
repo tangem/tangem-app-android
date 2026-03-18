@@ -8,11 +8,11 @@ import com.tangem.data.staking.store.StakeKitBalancesStore
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
 import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,12 +27,12 @@ internal object StakingBalanceSupplierModule {
     @Singleton
     fun provideStakingBalancesStore(
         persistenceStore: DataStore<Map<String, Set<YieldBalanceWrapperDTO>>>,
-        dispatchers: CoroutineDispatcherProvider,
+        scope: AppCoroutineScope,
     ): StakeKitBalancesStore {
         return DefaultStakeKitBalancesStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceStore = persistenceStore,
-            dispatchers = dispatchers,
+            scope = scope,
         )
     }
 
@@ -40,12 +40,12 @@ internal object StakingBalanceSupplierModule {
     @Singleton
     fun provideP2PEthPoolBalancesStore(
         persistenceStore: DataStore<Map<String, Set<P2PEthPoolAccountResponse>>>,
-        dispatchers: CoroutineDispatcherProvider,
+        scope: AppCoroutineScope,
     ): P2PEthPoolBalancesStore {
         return DefaultP2PEthPoolBalancesStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceStore = persistenceStore,
-            dispatchers = dispatchers,
+            scope = scope,
         )
     }
 

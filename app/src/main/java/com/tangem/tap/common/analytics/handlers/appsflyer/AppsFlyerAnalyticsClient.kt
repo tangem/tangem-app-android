@@ -6,16 +6,14 @@ import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.api.UserIdHolder
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.analytics.appsflyer.AppsFlyerDeepLinkListener
 import com.tangem.tap.common.analytics.appsflyer.TangemAFConversionListener
 import com.tangem.tap.common.analytics.handlers.firebase.UnderscoreAnalyticsEventConverter
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -26,14 +24,12 @@ class AppsFlyerClient @AssistedInject constructor(
     @ApplicationContext private val context: Context,
     appsFlyerDeepLinkListener: AppsFlyerDeepLinkListener,
     tangemAFConversionListener: TangemAFConversionListener,
-    dispatchers: CoroutineDispatcherProvider,
     private val appsFlyerStore: AppsFlyerStore,
+    private val coroutineScope: AppCoroutineScope,
 ) : AppsFlyerAnalyticsClient {
 
     private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
     private val eventConverter = UnderscoreAnalyticsEventConverter()
-
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     init {
         with(appsFlyerLib) {
