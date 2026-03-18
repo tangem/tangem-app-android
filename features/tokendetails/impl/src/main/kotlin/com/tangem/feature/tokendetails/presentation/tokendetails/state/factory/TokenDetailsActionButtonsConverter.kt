@@ -54,7 +54,7 @@ internal class TokenDetailsActionButtonsConverter(
                         TokenDetailsActionButton.Swap(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = { clickIntents.onSwapClick(action.unavailabilityReason) },
-                            showBadge = action.showBadge,
+                            showBadge = action.shouldShowBadge,
                         )
                     }
                     else -> {

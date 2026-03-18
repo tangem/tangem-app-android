@@ -59,5 +59,13 @@
     {
         "name": "CUSTOMER_IO_ENABLED",
         "version": "5.35"
+    },
+    {
+        "name": "MAIN_SCREEN_QR_SCANNING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NEW_PROMO_BANNERS_ENABLED",
+        "version": "undefined"
     }
 ]

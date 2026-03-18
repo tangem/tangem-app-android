@@ -1,9 +1,9 @@
 package com.tangem.domain.swap.usecase
 
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapTransactionRepository
+import com.tangem.domain.swap.models.SwapCryptoCurrency
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapCurrenciesGroup
 import com.tangem.domain.swap.models.SwapDirection
@@ -30,22 +30,22 @@ class SelectInitialPairUseCase(
         secondaryCryptoCurrency: CryptoCurrency?,
         swapCurrencies: SwapCurrencies,
         swapDirection: SwapDirection,
-    ): CryptoCurrencyStatus? {
+    ): SwapCryptoCurrency? {
         val swapCurrenciesGroup = swapCurrencies.getGroupWithDirection(swapDirection)
         return tryToGetAlreadySelectedCurrency(secondaryCryptoCurrency, swapCurrenciesGroup)
             ?: tryGetFromCache(userWallet, primaryCryptoCurrency, swapCurrenciesGroup)
             ?: tryGetWithMaxAmount(swapCurrenciesGroup)
-            ?: swapCurrenciesGroup.available.firstOrNull()?.currencyStatus
+            ?: swapCurrenciesGroup.available.firstOrNull()
     }
 
     private fun tryToGetAlreadySelectedCurrency(
         secondaryCryptoCurrency: CryptoCurrency?,
         swapCurrenciesGroup: SwapCurrenciesGroup,
-    ): CryptoCurrencyStatus? {
+    ): SwapCryptoCurrency? {
         return secondaryCryptoCurrency?.let {
             swapCurrenciesGroup.available.firstOrNull { currency ->
                 secondaryCryptoCurrency.id == currency.currencyStatus.currency.id
-            }?.currencyStatus
+            }
         }
     }
 
@@ -53,19 +53,19 @@ class SelectInitialPairUseCase(
         userWallet: UserWallet,
         primaryCryptoCurrency: CryptoCurrency,
         swapCurrenciesGroup: SwapCurrenciesGroup,
-    ): CryptoCurrencyStatus? {
+    ): SwapCryptoCurrency? {
         val id = swapTransactionRepository.getLastSwappedCryptoCurrencyId(userWallet.walletId) ?: return null
 
         return if (id != primaryCryptoCurrency.id.value) {
-            swapCurrenciesGroup.available.find { it.currencyStatus.currency.id.value == id }?.currencyStatus
+            swapCurrenciesGroup.available.find { it.currencyStatus.currency.id.value == id }
         } else {
             null
         }
     }
 
-    private fun tryGetWithMaxAmount(swapCurrenciesGroup: SwapCurrenciesGroup): CryptoCurrencyStatus? {
+    private fun tryGetWithMaxAmount(swapCurrenciesGroup: SwapCurrenciesGroup): SwapCryptoCurrency? {
         return swapCurrenciesGroup.available.maxByOrNull {
             it.currencyStatus.value.fiatAmount.orZero()
-        }?.currencyStatus
+        }
     }
 }

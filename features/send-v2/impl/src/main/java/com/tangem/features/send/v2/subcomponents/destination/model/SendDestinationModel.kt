@@ -96,7 +96,7 @@ internal class SendDestinationModel @Inject constructor(
                 ),
             )
             val params = params as? DestinationBlockParams
-            val predefinedValues = params?.predefinedValues as? PredefinedValues.Content.Deeplink
+            val predefinedValues = params?.predefinedValues as? PredefinedValues.Content
             if (predefinedValues?.address != null) {
                 _uiState.update(
                     SendDestinationPredefinedStateTransformer(
