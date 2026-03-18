@@ -10,7 +10,6 @@ import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
@@ -35,7 +34,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     private val sdkDelegate: WcPairSdkDelegate,
     private val blockAidVerifier: BlockAidVerifier,
     private val analytics: AnalyticsEventHandler,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     @Assisted private val pairRequest: WcPairRequest,
 ) : WcPairUseCase {
 
@@ -113,7 +111,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             val sessionDTO = WcSessionDTO(
                 topic = "",
                 walletId = sessionForApprove.wallet.walletId,
-                accountId = sessionForApprove.account?.accountId,
+                accountId = sessionForApprove.account.accountId,
                 url = sdkVerifyContext.getDappOriginUrl(),
                 securityStatus = proposalState.dAppSession.securityStatus,
                 connectingTime = connectingTime,
@@ -128,7 +126,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 pendingSessionForSave = pendingSessionForSave,
                 sessionForApprove = sessionForApprove,
                 sdkSessionProposal = sdkSessionProposal,
-            ).map { settledSession ->
+            ).map { _ ->
                 analytics.send(
                     WcAnalyticEvents.DAppConnected(
                         sessionProposal = proposalState.dAppSession,
@@ -197,12 +195,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
-        val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
-        val proposalAccountNetwork = if (accountsFeatureToggles.isFeatureEnabled) {
-            associateNetworksDelegate.associateAccounts(sessionProposal)
-        } else {
-            null
-        }
+        val proposalAccountNetwork = associateNetworksDelegate.associateAccounts(sessionProposal)
         val verificationInfo = when {
             verifyContext.validation == Wallet.Model.Validation.INVALID -> CheckDAppResult.UNSAFE
             verifyContext.isScam == true -> CheckDAppResult.UNSAFE
@@ -211,7 +204,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                 CheckDAppResult.FAILED_TO_VERIFY
             }
         }
-        val requestedNetworks = (proposalAccountNetwork ?: proposalNetwork)
+        val requestedNetworks = proposalAccountNetwork
             .values.map { it.available.plus(it.required) }.flatten().toSet()
         analytics.send(
             WcAnalyticEvents.PairRequested(
@@ -230,7 +223,6 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
         )
         val dAppSession = WcSessionProposal(
             dAppMetaData = appMetaData,
-            proposalNetwork = proposalNetwork,
             securityStatus = verificationInfo,
             proposalAccountNetwork = proposalAccountNetwork,
         )
