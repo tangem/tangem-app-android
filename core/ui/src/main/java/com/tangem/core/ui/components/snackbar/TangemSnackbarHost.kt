@@ -27,6 +27,10 @@ import com.tangem.core.ui.res.TangemThemePreview
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated(
+    "With redesign, this component is no longer used. " +
+        "Please use both TangemSnackbarHost and TangemTopSnackbarHost",
+)
 @Composable
 fun TangemSnackbarHost(
     modifier: Modifier = Modifier,

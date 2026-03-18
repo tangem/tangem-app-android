@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.message.TangemMessageButtonUM
@@ -196,7 +197,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     onClick = onConfirmClick,
                 ),
             ),
-
         ),
         type = WalletNotificationType.Critical,
     )
@@ -343,7 +343,13 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
                     resourceReference(R.string.common_biometrics),
                 ),
             ),
-            onClick = onClick,
+            buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.common_unlock),
+                    onClick = onClick,
+                    type = TangemButtonType.Primary,
+                ),
+            ),
             messageEffect = TangemMessageEffect.Card,
             isCentered = true,
         ),
@@ -379,8 +385,14 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             title = resourceReference(R.string.notification_one_plus_one_title),
             subtitle = resourceReference(R.string.notification_one_plus_one_text),
             messageEffect = TangemMessageEffect.Magic,
-            onCloseClick = onCloseClick,
+            iconUM = TangemIconUM.Image(R.drawable.img_one_plus_one_promo),
+            iconSize = 54.dp,
             buttonsUM = persistentListOf(
+                TangemMessageButtonUM(
+                    text = resourceReference(R.string.common_later),
+                    type = TangemButtonType.PrimaryInverse,
+                    onClick = onCloseClick,
+                ),
                 TangemMessageButtonUM(
                     text = resourceReference(R.string.notification_one_plus_one_button),
                     type = TangemButtonType.Primary,
@@ -452,7 +464,8 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
             id = "PushNotificationsNotification",
             title = resourceReference(R.string.user_push_notification_banner_title),
             subtitle = resourceReference(R.string.user_push_notification_banner_subtitle),
-            onCloseClick = onCloseClick,
+            iconUM = TangemIconUM.Image(R.drawable.img_push_reminder),
+            iconSize = 54.dp,
             messageEffect = TangemMessageEffect.Magic,
             buttonsUM = persistentListOf(
                 TangemMessageButtonUM(

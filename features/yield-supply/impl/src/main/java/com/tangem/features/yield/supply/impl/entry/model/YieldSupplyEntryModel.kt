@@ -5,9 +5,10 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
@@ -24,7 +25,7 @@ internal class YieldSupplyEntryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
 ) : Model() {
 
     private val params = paramsContainer.require<YieldSupplyEntryComponent.Params>()
@@ -39,22 +40,22 @@ internal class YieldSupplyEntryModel @Inject constructor(
         val userWalletId = params.userWalletId
         val cryptoCurrency = params.cryptoCurrency
         modelScope.launch(dispatchers.default) {
-            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                userWalletId = userWalletId,
-                cryptoCurrencyId = cryptoCurrency.id,
-            ).onLeft { error ->
-                Timber.e("Failed to get CryptoCurrencyStatus: $error")
-                withContext(dispatchers.mainImmediate) {
-                    router.pop()
-                }
-            }.onRight { cryptoCurrencyStatus ->
-                withContext(dispatchers.mainImmediate) {
-                    val route = getInitialRoute(cryptoCurrencyStatus)
-                    if (route != null) {
-                        router.replaceCurrent(route)
+            singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
+                .getCryptoCurrencyStatus(currency = cryptoCurrency)
+                .onNone {
+                    Timber.e("Failed to get CryptoCurrencyStatus: ${cryptoCurrency.id}")
+                    withContext(dispatchers.mainImmediate) {
+                        router.pop()
                     }
                 }
-            }
+                .onSome { cryptoCurrencyStatus ->
+                    withContext(dispatchers.mainImmediate) {
+                        val route = getInitialRoute(cryptoCurrencyStatus)
+                        if (route != null) {
+                            router.replaceCurrent(route)
+                        }
+                    }
+                }
         }
     }
 
