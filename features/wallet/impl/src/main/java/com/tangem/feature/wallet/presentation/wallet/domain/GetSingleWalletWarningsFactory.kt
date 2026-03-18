@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import arrow.core.Either
 import arrow.core.right
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.card.CardTypesResolver
@@ -15,7 +14,6 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
@@ -27,11 +25,10 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
+@Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @ModelScoped
 @Suppress("LongParameterList")
 internal class GetSingleWalletWarningsFactory @Inject constructor(
-    private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val singleAccountStatusSupplier: SingleAccountStatusSupplier,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
@@ -40,7 +37,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private val getWalletsUseCase: GetWalletsUseCase,
 ) {
 
-    private var readyForRateAppNotification = false
+    private var isReadyForRateAppNotification = false
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         if (userWallet !is UserWallet.Cold) {
@@ -54,7 +51,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
             flow4 = getWalletsUseCase().conflate(),
         ) { maybePrimaryCurrencyStatus, isReadyToShowRating, isNeedToBackup, userWallets ->
-            readyForRateAppNotification = true
+            isReadyForRateAppNotification = true
             buildList {
                 addUsedOutdatedDataNotification(maybePrimaryCurrencyStatus)
 
@@ -120,8 +117,8 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         cardTypesResolver: CardTypesResolver,
         clickIntents: WalletClickIntents,
     ) {
-        val userHasWalletOrWallet2 = userWallets.filterIsInstance<UserWallet.Cold>().any {
-            val typesResolver = it.scanResponse.cardTypesResolver
+        val hasWalletOrWallet2 = userWallets.filterIsInstance<UserWallet.Cold>().any { coldWallet ->
+            val typesResolver = coldWallet.scanResponse.cardTypesResolver
             typesResolver.isTangemWallet() || typesResolver.isWallet2()
         }
 
@@ -129,7 +126,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
             ),
-            condition = cardTypesResolver.isTangemNote() && !userHasWalletOrWallet2,
+            condition = cardTypesResolver.isTangemNote() && !hasWalletOrWallet2,
         )
 
         addIf(
@@ -191,8 +188,8 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         selectedWallet: UserWallet.Cold,
         cryptoCurrencyStatus: CryptoCurrencyStatus?,
     ): Boolean {
-        return cryptoCurrencyStatus?.currency?.network?.let {
-            hasSingleWalletSignedHashesUseCase(userWallet = selectedWallet, network = it)
+        return cryptoCurrencyStatus?.currency?.network?.let { network ->
+            hasSingleWalletSignedHashesUseCase(userWallet = selectedWallet, network = network)
                 .conflate()
                 .distinctUntilChanged()
                 .firstOrNull()
@@ -209,7 +206,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
                 onDislikeClick = clickIntents::onDislikeAppClick,
                 onCloseClick = clickIntents::onCloseRateAppWarningClick,
             ),
-            condition = isReadyToShowRating && readyForRateAppNotification,
+            condition = isReadyToShowRating && isReadyForRateAppNotification,
         )
     }
 
@@ -219,7 +216,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
                 element is WalletNotification.Warning ||
                 element is WalletNotification.NoteMigration
             ) {
-                readyForRateAppNotification = false
+                isReadyForRateAppNotification = false
             }
 
             element
@@ -229,16 +226,12 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private fun getPrimaryCurrencyStatusFlow(
         userWallet: UserWallet,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
-            getAccountStatusFlow(userWallet).mapNotNull { accountStatus ->
-                accountStatus.flattenCurrencies().firstOrNull()
-            }
-                .distinctUntilChanged()
-                .conflate()
-                .map { it.right() }
-        } else {
-            getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
+        return getAccountStatusFlow(userWallet).mapNotNull { accountStatus ->
+            accountStatus.flattenCurrencies().firstOrNull()
         }
+            .distinctUntilChanged()
+            .conflate()
+            .map { it.right() }
     }
 
     private fun getAccountStatusFlow(userWallet: UserWallet): Flow<AccountStatus.CryptoPortfolio> {

@@ -3,7 +3,9 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
 
 /**
@@ -25,8 +27,16 @@ internal class RenameWalletsTransformer(
                 } else {
                     walletState
                 }
-            }
-                .toImmutableList(),
+            }.toImmutableList(),
+            wallets2 = prevState.wallets2.map { walletUM ->
+                val renamedWallet = renamedWallets.firstOrNull { it.walletId == walletUM.walletsBalanceUM.id }
+
+                if (renamedWallet != null) {
+                    transform(prevState = walletUM, newName = renamedWallet.name)
+                } else {
+                    walletUM
+                }
+            }.toPersistentList(),
         )
     }
 
@@ -41,6 +51,18 @@ internal class RenameWalletsTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             -> {
+                Timber.e("Impossible to rename wallet in locked state")
+                prevState
+            }
+        }
+    }
+
+    private fun transform(prevState: WalletUM, newName: String): WalletUM {
+        return when (prevState) {
+            is WalletUM.Content -> {
+                prevState.copy(walletsBalanceUM = prevState.walletsBalanceUM.copySealed(name = newName))
+            }
+            is WalletUM.Locked -> {
                 Timber.e("Impossible to rename wallet in locked state")
                 prevState
             }

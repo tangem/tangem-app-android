@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -31,6 +32,12 @@ class SwapSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNode
 
     val readMoreTextBlock: KNode = child {
         hasTestTag(SelectNetworkFeeBottomSheetTestTags.LEARN_MORE_TEXT)
+        useUnmergedTree = true
+    }
+
+    val applyButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_apply))
         useUnmergedTree = true
     }
 }

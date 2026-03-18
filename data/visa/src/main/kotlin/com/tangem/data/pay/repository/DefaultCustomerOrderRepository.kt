@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.OrderData
 import com.tangem.domain.pay.model.OrderStatus
@@ -19,11 +20,11 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
             tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
         }.map { response ->
             val status = when (response.result?.status) {
-                null -> OrderStatus.UNKNOWN
-                OrderStatus.NEW.apiName -> OrderStatus.NEW
-                OrderStatus.PROCESSING.apiName -> OrderStatus.PROCESSING
-                OrderStatus.COMPLETED.apiName -> OrderStatus.COMPLETED
-                else -> OrderStatus.CANCELED
+                null -> OrderStatus.PROCESSING
+                OrderResponse.Result.Status.NEW -> OrderStatus.NEW
+                OrderResponse.Result.Status.PROCESSING -> OrderStatus.PROCESSING
+                OrderResponse.Result.Status.COMPLETED -> OrderStatus.COMPLETED
+                OrderResponse.Result.Status.CANCELED -> OrderStatus.CANCELED
             }
             OrderData(
                 status = status,
