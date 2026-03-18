@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
@@ -22,8 +23,15 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.qrscanning.models.QrResultSource
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.models.QrSendTarget
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -50,6 +58,7 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -102,6 +111,10 @@ internal class WalletModel @Inject constructor(
     private val appsFlyerStore: AppsFlyerStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletIconUseCase: GetWalletIconUseCase,
+    private val walletFeatureToggles: WalletFeatureToggles,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val wcPairService: WcPairService,
+    private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -132,6 +145,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
+        subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -522,6 +536,7 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                isMainScreenQrScanningEnabled = walletFeatureToggles.isMainScreenQrScanningEnabled,
                 getWalletIconUseCase = getWalletIconUseCase,
             ),
         )
@@ -724,6 +739,48 @@ internal class WalletModel @Inject constructor(
          */
         modelScope.launch {
             walletContentFetcher(userWalletId = userWallet.walletId)
+        }
+    }
+
+    private fun subscribeToMainScreenQrScanning() {
+        listenToQrScanningUseCase.listen(SourceType.MAIN_SCREEN)
+            .getOrElse { emptyFlow() }
+            .onEach { rawResult -> handleQrResult(rawResult.qrCode, rawResult.resultSource) }
+            .launchIn(modelScope)
+    }
+
+    private suspend fun handleQrResult(qrCode: String, resultSource: QrResultSource) {
+        when (val target = resolveQrSendTargetsUseCase(qrCode)) {
+            is QrSendTarget.WalletConnect -> {
+                val source = when (resultSource) {
+                    QrResultSource.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
+                    QrResultSource.CAMERA,
+                    QrResultSource.GALLERY,
+                    -> WcPairRequest.Source.QR
+                }
+                wcPairService.pair(
+                    WcPairRequest(
+                        userWalletId = stateHolder.getSelectedWalletId(),
+                        uri = target.uri,
+                        source = source,
+                    ),
+                )
+            }
+            is QrSendTarget.Single -> {
+                innerWalletRouter.openSend(
+                    userWalletId = target.userWalletId,
+                    currency = target.currency,
+                    address = target.address,
+                    amount = target.amount?.parseBigDecimal(target.currency.decimals),
+                    tag = target.memo,
+                )
+            }
+            is QrSendTarget.Multiple -> {
+                innerWalletRouter.openNetworkSelectionBottomSheet(target)
+            }
+            is QrSendTarget.Unknown -> {
+                // TODO: [REDACTED_TASK_KEY] Error handling for unsupported and invalid QR codes
+            }
         }
     }
 

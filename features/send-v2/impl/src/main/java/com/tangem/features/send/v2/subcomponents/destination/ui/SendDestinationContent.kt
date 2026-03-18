@@ -234,6 +234,7 @@ private fun LazyListScope.listHeaderItem(
                         TextShimmer(
                             style = TangemTheme.typography.subtitle2,
                             text = stringResourceSafe(titleRes),
+                            modifier = Modifier.testTag(SendAddressScreenTestTags.ADDRESSES_SHIMMER),
                         )
                     }
                 } else {

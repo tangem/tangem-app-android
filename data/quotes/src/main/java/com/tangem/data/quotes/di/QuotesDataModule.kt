@@ -14,17 +14,15 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -36,7 +34,7 @@ internal object QuotesDataModule {
     fun provideQuotesStoreV2(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): QuotesStatusesStore {
         return DefaultQuotesStatusesStore(
             runtimeStore = RuntimeSharedStore(),
@@ -47,9 +45,9 @@ internal object QuotesDataModule {
                     defaultValue = emptyMap(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "quotes") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
-            dispatchers = dispatchers,
+            scope = appScope,
         )
     }
 
@@ -65,13 +63,13 @@ internal object QuotesDataModule {
         appCurrencyResponseStore: AppCurrencyResponseStore,
         quotesStatusesStore: QuotesStatusesStore,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        dispatchers: CoroutineDispatcherProvider,
+        coroutineScope: AppCoroutineScope,
     ): MultiQuoteUpdater {
         return DefaultMultiQuoteUpdater(
             appCurrencyResponseStore = appCurrencyResponseStore,
             quotesStatusesStore = quotesStatusesStore,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            dispatchers = dispatchers,
+            coroutineScope = coroutineScope,
         )
     }
 }

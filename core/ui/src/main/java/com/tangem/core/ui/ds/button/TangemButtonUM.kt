@@ -11,9 +11,9 @@ import com.tangem.core.ui.extensions.TextReference
  * @param descriptionText    TextReference for the button description (optional).
  * @param iconRes            Drawable resource ID for the icon to be displayed in the button (optional).
  * @param iconPosition       Position of the icon (Start or End).
- * @param isEnabled            Boolean indicating whether the button is enabled.
+ * @param isEnabled          Boolean indicating whether the button is enabled.
+ * @param isLoading          Boolean indicating whether the button is in a loading state.
  * @param size               TangemButtonSize defining the size of the button.
- * @param state              TangemButtonState defining the current state of the button.
  * @param shape              TangemButtonShape defining the shape of the button.
  * @param type               TangemButtonType defining the style type of the button.
  * @param onClick            Lambda to be invoked when the button is clicked.
@@ -27,8 +27,8 @@ data class TangemButtonUM(
     @DrawableRes val iconRes: Int? = null,
     val iconPosition: TangemButtonIconPosition = TangemButtonIconPosition.Start,
     val isEnabled: Boolean = true,
+    val isLoading: Boolean = false,
     val size: TangemButtonSize = TangemButtonSize.X15,
-    val state: TangemButtonState = TangemButtonState.Default,
     val shape: TangemButtonShape = TangemButtonShape.Default,
     val type: TangemButtonType,
     val onClick: () -> Unit,
@@ -39,6 +39,7 @@ enum class TangemButtonType {
     Primary,
     Secondary,
     Accent,
+    Positive,
     Outline,
     PrimaryInverse,
     Ghost,

@@ -114,8 +114,8 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
         val message = bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.img_knight_shield_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    type = MessageBottomSheetUM.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.hw_activation_need_title)
                 body = resourceReference(R.string.hw_activation_need_description)
