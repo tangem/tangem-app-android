@@ -2,6 +2,7 @@ package com.tangem.data.quotes.store
 
 import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.common.test.data.quote.toDomain
 import com.tangem.common.test.datastore.MockStateDataStore
@@ -11,7 +12,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.test.core.ProvideTestModels
 import com.tangem.test.core.getEmittedValues
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
@@ -53,7 +53,7 @@ internal class QuotesStatusesStoreTest {
         store = DefaultQuotesStatusesStore(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            scope = TestAppCoroutineScope(),
         )
     }
 
@@ -73,7 +73,7 @@ internal class QuotesStatusesStoreTest {
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
-                dispatchers = TestingCoroutineDispatcherProvider(),
+                scope = TestAppCoroutineScope(),
             )
 
             val actual = runtimeStore.getSyncOrNull()
@@ -93,7 +93,7 @@ internal class QuotesStatusesStoreTest {
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
-                dispatchers = TestingCoroutineDispatcherProvider(),
+                scope = TestAppCoroutineScope(),
             )
 
             val actual = runtimeStore.getSyncOrNull()
@@ -120,7 +120,7 @@ internal class QuotesStatusesStoreTest {
             DefaultQuotesStatusesStore(
                 runtimeStore = runtimeStore,
                 persistenceDataStore = persistenceStore,
-                dispatchers = TestingCoroutineDispatcherProvider(),
+                scope = TestAppCoroutineScope(),
             )
 
             val actual = runtimeStore.getSyncOrNull()

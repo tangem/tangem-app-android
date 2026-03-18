@@ -52,8 +52,8 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasTestTag(SwapTokenScreenTestTags.RECEIVE_AMOUNT_SHIMMER)
     }
 
-    val swapTokensOnscreenButton: KNode = child {
-        hasTestTag(SwapTokenScreenTestTags.SWAP_BUTTON)
+    val replaceTokensButton: KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.REPLACE_TOKENS_BUTTON)
     }
 
     val receiveAmount: KNode = child {

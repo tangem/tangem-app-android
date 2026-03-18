@@ -4,16 +4,14 @@ import androidx.annotation.VisibleForTesting
 import arrow.core.left
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteUpdater
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -32,10 +30,9 @@ internal class DefaultMultiQuoteUpdater(
     private val appCurrencyResponseStore: AppCurrencyResponseStore,
     private val quotesStatusesStore: QuotesStatusesStore,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) : MultiQuoteUpdater {
 
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
     private val updaterHolder = JobHolder()
 
     override fun subscribe() {

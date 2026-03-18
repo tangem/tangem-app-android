@@ -34,6 +34,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
@@ -65,7 +66,6 @@ import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -86,7 +86,7 @@ internal class DefaultTangemSdkManager(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) : TangemSdkManager {
 
     private val awaitInitializationMutex = Mutex()
@@ -114,8 +114,6 @@ internal class DefaultTangemSdkManager(
 
     override val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = tangemSdk.config.userCodeRequestPolicy
-
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
 
     override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
         return try {
