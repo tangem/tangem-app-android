@@ -8,7 +8,6 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.tokenlist.impl.model.MarketsNotificationUM
 import com.tangem.features.markets.tokenlist.impl.ui.state.*
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
@@ -94,7 +93,6 @@ internal class MarketsListUMStateManager(
         isInErrorState: Boolean,
         isSearchNotFound: Boolean,
         uiItems: ImmutableList<MarketsListItemUM>,
-        marketsNotificationUM: MarketsNotificationUM?,
     ) {
         state.update { currentState ->
             when {
@@ -110,19 +108,13 @@ internal class MarketsListUMStateManager(
                     currentState.copy(list = ListUM.Loading)
                 }
                 else -> {
-                    currentState.updateItems(
-                        newItems = uiItems,
-                        marketsNotificationUM = marketsNotificationUM,
-                    )
+                    currentState.updateItems(newItems = uiItems)
                 }
             }
         }
     }
 
-    private fun MarketsListUM.updateItems(
-        newItems: ImmutableList<MarketsListItemUM>,
-        marketsNotificationUM: MarketsNotificationUM?,
-    ): MarketsListUM {
+    private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
         val currentState = this
 
         if (isInSearchMode.not() || currentState.showUnder100kButtonAlreadyPressed()) {
@@ -133,7 +125,6 @@ internal class MarketsListUMStateManager(
                     .copy(
                         wasUnder100kTokensNotificationHidden = currentState.showUnder100kButtonAlreadyPressed(),
                     ),
-                marketsNotificationUM = marketsNotificationUM,
             )
         }
 
@@ -255,6 +246,5 @@ internal class MarketsListUMStateManager(
                 onOptionClicked = ::onBottomSheetOptionClicked,
             ),
         ),
-        marketsNotificationUM = null,
     )
 }
