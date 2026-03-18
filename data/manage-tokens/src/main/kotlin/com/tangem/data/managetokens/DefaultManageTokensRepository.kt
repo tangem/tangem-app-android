@@ -17,7 +17,6 @@ import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.extensions.*
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -28,7 +27,6 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.BatchFetchResult
@@ -44,7 +42,6 @@ internal class DefaultManageTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
-    private val userTokensResponseStore: UserTokensResponseStore,
     private val testnetTokensStorage: TestnetTokensStorage,
     private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -279,52 +276,6 @@ internal class DefaultManageTokensRepository(
             }
     }
     // endregion
-
-    override suspend fun hasLinkedTokens(
-        userWalletId: UserWalletId,
-        network: Network,
-        tempAddedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-        tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-    ): Boolean {
-        val addedTokens = tempAddedTokens.mapToResponseTokens()
-        val removedTokens = tempRemovedTokens.mapToResponseTokens()
-
-        val storedTokens = requireNotNull(
-            value = getSavedUserTokensResponseSync(userWalletId),
-            lazyMessage = { "Unable to find tokens response for user wallet with provided ID: $userWalletId" },
-        )
-        val newTokensList = storedTokens.tokens + addedTokens - removedTokens.toSet()
-
-        return newTokensList.any { token ->
-            token.contractAddress != null &&
-                token.networkId == network.backendId &&
-                token.derivationPath == network.derivationPath.value
-        }
-    }
-
-    private fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToResponseTokens(): List<UserTokensResponse.Token> {
-        return flatMap { (token, networks) ->
-            token.availableNetworks
-                .filter { sourceNetwork -> networks.contains(sourceNetwork.network) }
-                .map { sourceNetwork ->
-                    val networkId = sourceNetwork.network.toBlockchain().toNetworkId()
-
-                    UserTokensResponse.Token(
-                        id = token.id.value,
-                        networkId = networkId,
-                        derivationPath = sourceNetwork.network.derivationPath.value,
-                        name = token.name,
-                        symbol = token.symbol,
-                        decimals = sourceNetwork.decimals,
-                        contractAddress = (sourceNetwork as? SourceNetwork.Default)?.contractAddress,
-                    )
-                }
-        }
-    }
-
-    private suspend fun getSavedUserTokensResponseSync(key: UserWalletId): UserTokensResponse? {
-        return userTokensResponseStore.getSyncOrNull(userWalletId = key)
-    }
 
     override suspend fun checkCurrencyUnsupportedState(
         userWalletId: UserWalletId,

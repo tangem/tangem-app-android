@@ -34,6 +34,11 @@ dependencies {
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.demo.models)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.qrScanning)
+    // endregion
+
+    // region Domain modules
+    implementation(projects.domain.qrScanning.models)
     // endregion
 
     implementation(projects.common)
