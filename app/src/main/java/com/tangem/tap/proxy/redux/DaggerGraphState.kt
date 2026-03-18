@@ -13,7 +13,6 @@ import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
@@ -71,7 +70,6 @@ data class DaggerGraphState(
     val uiMessageSender: UiMessageSender? = null,
     val cardArworksProvider: CardArtworksProvider? = null,
     val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory? = null,
-    val userTokensResponseStore: UserTokensResponseStore? = null,
     val userWalletsListRepository: UserWalletsListRepository? = null,
     val tangemHotSdk: TangemHotSdk? = null,
     val trackingContextProxy: TrackingContextProxy? = null,

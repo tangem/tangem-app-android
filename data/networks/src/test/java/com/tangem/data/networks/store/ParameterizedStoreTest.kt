@@ -1,6 +1,7 @@
 package com.tangem.data.networks.store
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
@@ -9,7 +10,6 @@ import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
@@ -30,7 +30,7 @@ internal class ParameterizedStoreTest(private val model: Model) {
         context = mockk(),
         runtimeStore = runtimeStore,
         persistenceDataStore = persistenceStore,
-        dispatchers = TestingCoroutineDispatcherProvider(),
+        scope = TestAppCoroutineScope(),
     )
 
     @Test

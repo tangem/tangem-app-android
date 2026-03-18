@@ -27,6 +27,7 @@ dependencies {
     api(projects.domain.referral)
     api(projects.domain.staking)
     api(projects.domain.tokens)
+    api(projects.domain.tokens.models)
     api(projects.domain.walletManager)
     api(projects.domain.wallets)
 
@@ -36,6 +37,7 @@ dependencies {
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
+    implementation(deps.kermit)
 
     implementation(tangemDeps.blockchain)
 
