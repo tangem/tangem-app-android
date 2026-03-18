@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber", "LongMethod")
+
 package com.tangem.feature.tester.presentation.storybook.page.message
 
 import androidx.compose.foundation.background
@@ -16,7 +17,10 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.image.TangemIconUM
-import com.tangem.core.ui.ds.message.*
+import com.tangem.core.ui.ds.message.TangemMessage
+import com.tangem.core.ui.ds.message.TangemMessageButtonUM
+import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.ds.message.TangemMessageUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.presentation.storybook.entity.TangemMessageStory
