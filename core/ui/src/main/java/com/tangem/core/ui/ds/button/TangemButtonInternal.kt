@@ -7,10 +7,10 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -60,72 +60,91 @@ internal fun TangemButtonInternal(
     size: TangemButtonSize = TangemButtonSize.X15,
     state: TangemButtonState = TangemButtonState.Default,
 ) {
-    Row(
-        modifier = modifier
-            .testTag(BaseButtonTestTags.BUTTON)
-            .height(size.toHeightDp())
-            .conditionalCompose(text == null) {
-                width(size.toHeightDp())
+    ProvideButtonRippleConfiguration {
+        Row(
+            modifier = modifier
+                .testTag(BaseButtonTestTags.BUTTON)
+                .clickableSingle(enabled = enabled, onClick = onClick, role = Role.Button)
+                .height(size.toHeightDp())
+                .conditionalCompose(text == null) {
+                    width(size.toHeightDp())
+                }
+                .conditionalCompose(text != null) {
+                    padding(horizontal = size.toPaddingDp())
+                }
+                .animateContentSize(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AnimatedVisibility(
+                visible = iconRes != null && iconPosition == TangemButtonIconPosition.Start,
+                modifier = Modifier.size(size = size.toContentSize()),
+            ) {
+                val wrappedIconRes = remember(this, iconRes) { requireNotNull(iconRes) }
+                TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
             }
-            .clickableSingle(enabled = enabled, onClick = onClick, role = Role.Button)
-            .conditionalCompose(text != null) {
-                padding(horizontal = size.toPaddingDp())
+
+            AnimatedVisibility(text != null && state != TangemButtonState.Loading) {
+                val wrappedText = remember(this) { requireNotNull(text) }
+                val textStyle = size.toTextStyle()
+                Text(
+                    text = wrappedText.resolveReference(),
+                    style = textStyle,
+                    color = contentColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 12.sp,
+                        maxFontSize = textStyle.fontSize,
+                    ),
+                    modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+                )
             }
-            .animateContentSize(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+
+            AnimatedVisibility(descriptionText != null && state != TangemButtonState.Loading) {
+                val wrappedText = remember(this) { requireNotNull(descriptionText) }
+                val textStyle = TangemTheme.typography2.captionSemibold12
+                Text(
+                    text = wrappedText.resolveReference(),
+                    style = textStyle,
+                    color = TangemTheme.colors2.text.status.disabled,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 12.sp,
+                        maxFontSize = textStyle.fontSize,
+                    ),
+                    modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
+                )
+            }
+
+            AnimatedVisibility(
+                visible = iconRes != null && iconPosition == TangemButtonIconPosition.End,
+                modifier = Modifier.size(size = size.toContentSize()),
+            ) {
+                val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
+                TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
+            }
+        }
+    }
+}
+
+@Composable
+private inline fun ProvideButtonRippleConfiguration(crossinline content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides RippleConfiguration(
+            color = TangemTheme.colors2.overlay.overlaySecondary,
+            RippleAlpha(
+                pressedAlpha = 0.4f,
+                focusedAlpha = 0.4f,
+                draggedAlpha = 0.4f,
+                hoveredAlpha = 0.4f,
+            ),
+        ),
     ) {
-        AnimatedVisibility(
-            visible = iconRes != null && iconPosition == TangemButtonIconPosition.Start,
-            modifier = Modifier.size(size = size.toContentSize()),
-        ) {
-            val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
-            TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
-        }
-
-        AnimatedVisibility(text != null && state != TangemButtonState.Loading) {
-            val wrappedText = remember(this) { requireNotNull(text) }
-            val textStyle = size.toTextStyle()
-            Text(
-                text = wrappedText.resolveReference(),
-                style = textStyle,
-                color = contentColor,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                autoSize = TextAutoSize.StepBased(
-                    minFontSize = 12.sp,
-                    maxFontSize = textStyle.fontSize,
-                ),
-                modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
-            )
-        }
-
-        AnimatedVisibility(descriptionText != null && state != TangemButtonState.Loading) {
-            val wrappedText = remember(this) { requireNotNull(descriptionText) }
-            val textStyle = TangemTheme.typography2.captionSemibold12
-            Text(
-                text = wrappedText.resolveReference(),
-                style = textStyle,
-                color = TangemTheme.colors2.text.status.disabled,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                autoSize = TextAutoSize.StepBased(
-                    minFontSize = 12.sp,
-                    maxFontSize = textStyle.fontSize,
-                ),
-                modifier = Modifier.testTag(BaseButtonTestTags.TEXT),
-            )
-        }
-
-        AnimatedVisibility(
-            visible = iconRes != null && iconPosition == TangemButtonIconPosition.End,
-            modifier = Modifier.size(size = size.toContentSize()),
-        ) {
-            val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
-            TangemButtonIcon(iconRes = wrappedIconRes, state = state, iconColor = contentColor, size = size)
-        }
+        content()
     }
 }
 
