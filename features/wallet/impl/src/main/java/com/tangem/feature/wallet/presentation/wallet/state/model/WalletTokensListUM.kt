@@ -25,6 +25,24 @@ internal sealed class WalletTokensListUM {
         override val organizeButtonUM: TangemButtonUM? = null
     }
 
+    data object Locked : WalletTokensListUM() {
+        override val tokenList: ImmutableList<TokensListItemUM2.Portfolio> = persistentListOf(
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = TangemTokenRowUM.Empty(id = "0"),
+                tokenList = persistentListOf(),
+                isExpanded = false,
+                isCollapsable = true,
+            ),
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = TangemTokenRowUM.Empty(id = "1"),
+                tokenList = persistentListOf(),
+                isExpanded = false,
+                isCollapsable = true,
+            ),
+        )
+        override val organizeButtonUM: TangemButtonUM? = null
+    }
+
     data object Loading : WalletTokensListUM() {
         override val tokenList: ImmutableList<TokensListItemUM2> = persistentListOf(
             TokensListItemUM2.Portfolio(
