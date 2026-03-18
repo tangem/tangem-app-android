@@ -29,10 +29,9 @@ internal class QrContentClassifierParser(
             is PaymentUriParser.ParseResult.NotRecognized -> Unit
         }
 
-        val matchingNetworkIds = uniqueCoins
+        val matchingCoins = uniqueCoins
             .filter { coin -> blockchainDataProvider.validateAddress(coin.network, qrCode) }
-            .map { it.network.id }
-            .toSet()
+        val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
 
         if (matchingNetworkIds.isNotEmpty()) {
             val matchingCurrencies = userCurrencies.filter { it.network.id in matchingNetworkIds }
