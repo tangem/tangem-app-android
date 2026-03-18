@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
@@ -92,9 +93,4 @@ sealed class PriceImpactUM {
     data object Empty : PriceImpactUM()
 
     data class Value(val value: Float) : PriceImpactUM()
-}
-
-enum class SwapAmountType {
-    From,
-    To,
 }
