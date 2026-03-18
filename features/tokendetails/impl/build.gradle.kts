@@ -69,10 +69,10 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
-    implementation(projects.domain.legacy)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.offramp)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo)
@@ -108,6 +108,7 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.tangempay.details.api)
 
     implementation(deps.decompose.ext.compose)
 

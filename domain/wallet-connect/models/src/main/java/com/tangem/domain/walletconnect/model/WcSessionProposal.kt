@@ -9,8 +9,7 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 
 data class WcSessionProposal(
     val dAppMetaData: WcAppMetaData,
-    val proposalNetwork: Map<UserWallet, ProposalNetwork>,
-    val proposalAccountNetwork: Map<AccountId, ProposalNetwork>?,
+    val proposalAccountNetwork: Map<AccountId, ProposalNetwork>,
     val securityStatus: CheckDAppResult,
 ) {
 
