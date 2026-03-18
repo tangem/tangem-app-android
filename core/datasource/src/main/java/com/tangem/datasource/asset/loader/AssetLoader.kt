@@ -3,10 +3,13 @@ package com.tangem.datasource.asset.loader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
-import com.tangem.utils.coroutines.runCatching
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.asset.reader.AssetReader
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,25 +28,44 @@ import javax.inject.Singleton
 class AssetLoader @Inject constructor(
     val assetReader: AssetReader,
     @NetworkMoshi val moshi: Moshi,
+    val analyticsExceptionHandler: AnalyticsExceptionHandler,
     val dispatchers: CoroutineDispatcherProvider,
 ) {
     /** Load content [Content] of asset file [fileName] */
+    @Suppress("SuspendFunSwallowedCancellation")
     @OptIn(ExperimentalStdlibApi::class)
-    suspend inline fun <reified Content> load(fileName: String): Content? = runCatching(dispatchers.io) {
-        val json = assetReader.read(fullFileName = "$fileName.json")
+    suspend inline fun <reified Content> load(fileName: String): Content? = withContext(dispatchers.io) {
+        val json = runCatching { assetReader.read(fullFileName = "$fileName.json") }.getOrNull()
 
-        moshi.adapter<Content>().fromJson(json)
+        runCatching {
+            moshi.adapter<Content>().fromJson(json)
+        }
+            .fold(
+                onSuccess = { parsedConfig ->
+                    if (parsedConfig == null) {
+                        sendException(
+                            fileName = fileName,
+                            isParsingSuccess = true,
+                            json = json,
+                        )
+
+                        Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
+                    }
+
+                    parsedConfig
+                },
+                onFailure = { throwable ->
+                    sendException(
+                        fileName = fileName,
+                        isParsingSuccess = false,
+                        json = json,
+                    )
+
+                    Timber.e(throwable, "Failed to load config [$fileName] from assets")
+                    null
+                },
+            )
     }
-        .fold(
-            onSuccess = { parsedConfig ->
-                if (parsedConfig == null) Timber.e(IllegalStateException("Parsed config [$fileName] is null"))
-                parsedConfig
-            },
-            onFailure = { throwable ->
-                Timber.e(throwable, "Failed to load config [$fileName] from assets")
-                null
-            },
-        )
 
     /** Load list [V] values of asset file [fileName] */
     suspend inline fun <reified V> loadList(fileName: String): List<V> = runCatching(dispatchers.io) {
@@ -84,4 +106,18 @@ class AssetLoader @Inject constructor(
                 emptyMap()
             },
         )
+
+    fun sendException(fileName: String, isParsingSuccess: Boolean, json: String?) {
+        analyticsExceptionHandler.sendException(
+            ExceptionAnalyticsEvent(
+                exception = IllegalStateException("Parsing config is failed"),
+                params = mapOf(
+                    "filename" to fileName,
+                    "isParsingSuccess" to isParsingSuccess.toString(),
+                    "json_size" to json?.length.toString(),
+                    "json" to json?.take(n = 30).toString(),
+                ),
+            ),
+        )
+    }
 }
