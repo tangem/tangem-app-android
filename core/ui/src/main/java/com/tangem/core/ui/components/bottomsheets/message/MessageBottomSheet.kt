@@ -1,156 +1,293 @@
 package com.tangem.core.ui.components.bottomsheets.message
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.isNullOrEmpty
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM.Button.IconOrder
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.icons.HighlightedIcon
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-fun MessageBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(config) { notification: MessageBottomSheetUM ->
-        Content(model = notification)
+fun MessageBottomSheet(state: MessageBottomSheetUM, onDismissRequest: () -> Unit) {
+    val stateWithOnDismiss = remember(state) {
+        state.copy(
+            onDismissRequest = {
+                state.onDismissRequest.invoke()
+                onDismissRequest()
+            },
+        )
+    }
+
+    val config = TangemBottomSheetConfig(
+        isShown = true,
+        content = stateWithOnDismiss,
+        onDismissRequest = stateWithOnDismiss.onDismissRequest,
+    )
+
+    TangemModalBottomSheet(
+        config = config,
+        title = {
+            TangemModalBottomSheetTitle(
+                endIconRes = R.drawable.ic_close_24,
+                onEndClick = stateWithOnDismiss.onDismissRequest,
+            )
+        },
+        content = { content: MessageBottomSheetUM -> MessageBottomSheetContent(content) },
+    )
+}
+
+@Composable
+fun MessageBottomSheetContent(state: MessageBottomSheetUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        state.elements.fastForEach { element ->
+            when (element) {
+                is MessageBottomSheetUM.InfoBlock -> {
+                    ContentContainer(
+                        modifier = Modifier
+                            .heightIn(min = TangemTheme.dimens.size180)
+                            .fillMaxWidth()
+                            .padding(horizontal = TangemTheme.dimens.spacing16)
+                            .padding(bottom = 32.dp),
+                        state = element,
+                    )
+                }
+                else -> Unit
+            }
+        }
+
+        ButtonsContainer(
+            modifier = Modifier.fillMaxWidth(),
+            closeScope = state.closeScope,
+            buttons = state.elements.filterIsInstance<MessageBottomSheetUM.Button>().toPersistentList(),
+        )
     }
 }
 
 @Composable
-internal fun Content(model: MessageBottomSheetUM, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(modifier = Modifier)
-
-        if (model.iconResId != null) {
-            Icon(
-                modifier = Modifier.size(48.dp),
-                painter = painterResource(model.iconResId),
-                tint = TangemTheme.colors.icon.primary1,
-                contentDescription = null,
+private fun ContentContainer(state: MessageBottomSheetUM.InfoBlock, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        BottomSheetIconContainer(state.icon, state.iconImage)
+        state.title?.let { title ->
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TangemTheme.dimens.spacing24),
+                text = title.resolveReference(),
+                style = TangemTheme.typography.h3,
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.Center,
             )
         }
-
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (!model.title.isNullOrEmpty()) {
-                Text(
-                    text = model.title.resolveReference(),
-                    style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
+        state.body?.let { body ->
             Text(
-                text = model.message.resolveReference(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TangemTheme.dimens.spacing8),
+                text = body.resolveAnnotatedReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }
-
-        Column(
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (model.primaryAction != null) {
-                PrimaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = model.primaryAction.text.resolveReference(),
-                    enabled = model.primaryAction.isEnabled,
-                    onClick = model.primaryAction.onClick,
-                )
-            }
-
-            if (model.secondaryAction != null) {
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = model.secondaryAction.text.resolveReference(),
-                    enabled = model.secondaryAction.isEnabled,
-                    onClick = model.secondaryAction.onClick,
-                )
-            }
+        state.chip?.let { chip ->
+            BottomSheetChip(
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing16),
+                chip = chip,
+            )
         }
     }
 }
 
-// region Preview
 @Composable
-@Preview(showBackground = true, widthDp = 360)
-@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun Preview_NotificationBottomSheet(
-    @PreviewParameter(MessageBottomSheetUMPreviewProvider::class) params: MessageBottomSheetUM,
+private fun BottomSheetIconContainer(
+    icon: MessageBottomSheetUM.Icon?,
+    iconImage: MessageBottomSheetUM.IconImage?,
+    modifier: Modifier = Modifier,
 ) {
-    TangemThemePreview {
-        MessageBottomSheet(
-            config = TangemBottomSheetConfig(
-                content = params,
-                isShown = true,
-                onDismissRequest = {},
-            ),
+    if (icon != null) {
+        BottomSheetIcon(icon, modifier)
+    } else if (iconImage != null) {
+        Image(
+            modifier = modifier
+                .size(TangemTheme.dimens.size56)
+                .clip(CircleShape),
+            painter = painterResource(id = iconImage.res),
+            contentDescription = null,
         )
     }
 }
 
-private class MessageBottomSheetUMPreviewProvider : PreviewParameterProvider<MessageBottomSheetUM> {
-    val balancesHiddenMessage = MessageBottomSheetUM(
-        iconResId = R.drawable.ic_eye_off_outline_24,
-        title = resourceReference(R.string.balance_hidden_title),
-        message = resourceReference(R.string.balance_hidden_description),
-        primaryAction = MessageBottomSheetUM.ActionUM(
-            text = resourceReference(R.string.balance_hidden_got_it_button),
-            onClick = {},
-        ),
-        secondaryAction = MessageBottomSheetUM.ActionUM(
-            text = resourceReference(R.string.balance_hidden_do_not_show_button),
-            onClick = {},
-        ),
-    )
+@Composable
+private fun BottomSheetIcon(icon: MessageBottomSheetUM.Icon, modifier: Modifier = Modifier) {
+    val tint = when (icon.type) {
+        MessageBottomSheetUM.Icon.Type.Unspecified -> Color.Unspecified
+        MessageBottomSheetUM.Icon.Type.Accent -> TangemTheme.colors.icon.accent
+        MessageBottomSheetUM.Icon.Type.Informative -> TangemTheme.colors.icon.informative
+        MessageBottomSheetUM.Icon.Type.Attention -> TangemTheme.colors.icon.attention
+        MessageBottomSheetUM.Icon.Type.Warning -> TangemTheme.colors.icon.warning
+    }
 
-    override val values: Sequence<MessageBottomSheetUM>
-        get() = sequenceOf(
-            balancesHiddenMessage,
-            balancesHiddenMessage.copy(title = null),
-            balancesHiddenMessage.copy(iconResId = null),
-            balancesHiddenMessage.copy(primaryAction = null),
-            balancesHiddenMessage.copy(secondaryAction = null),
-            balancesHiddenMessage.copy(
-                primaryAction = null,
-                secondaryAction = null,
-            ),
-            balancesHiddenMessage.copy(
-                title = null,
-                iconResId = null,
-                primaryAction = null,
-                secondaryAction = null,
-            ),
-        )
+    val backgroundColor = when (icon.backgroundType) {
+        MessageBottomSheetUM.Icon.BackgroundType.Unspecified -> TangemTheme.colors.icon.informative
+        MessageBottomSheetUM.Icon.BackgroundType.SameAsTint -> tint
+        MessageBottomSheetUM.Icon.BackgroundType.Accent -> TangemTheme.colors.icon.accent
+        MessageBottomSheetUM.Icon.BackgroundType.Informative -> TangemTheme.colors.icon.informative
+        MessageBottomSheetUM.Icon.BackgroundType.Attention -> TangemTheme.colors.icon.attention
+        MessageBottomSheetUM.Icon.BackgroundType.Warning -> TangemTheme.colors.icon.warning
+    }
+
+    HighlightedIcon(
+        modifier = modifier,
+        icon = icon.res,
+        iconTint = tint,
+        backgroundColor = backgroundColor,
+    )
 }
-// endregion Preview
+
+@Composable
+private fun BottomSheetChip(chip: MessageBottomSheetUM.Chip, modifier: Modifier = Modifier) {
+    val color = when (chip.type) {
+        MessageBottomSheetUM.Chip.Type.Unspecified -> TangemTheme.colors.text.primary1
+        MessageBottomSheetUM.Chip.Type.Warning -> TangemTheme.colors.text.warning
+    }
+
+    Text(
+        modifier = modifier
+            .background(
+                shape = RoundedCornerShape(TangemTheme.dimens.radius16),
+                color = color.copy(alpha = 0.1F),
+            )
+            .padding(vertical = TangemTheme.dimens.spacing4, horizontal = TangemTheme.dimens.spacing12),
+        text = chip.text.resolveReference(),
+        style = TangemTheme.typography.caption1,
+        color = color,
+    )
+}
+
+@Suppress("LongMethod")
+@Composable
+private fun ButtonsContainer(
+    buttons: ImmutableList<MessageBottomSheetUM.Button>,
+    closeScope: MessageBottomSheetUM.CloseScope,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(all = TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        buttons.fastForEach { button ->
+            val icon = button.icon?.let { iconResId ->
+                when (button.iconOrder) {
+                    IconOrder.Start -> TangemButtonIconPosition.Start(iconResId)
+                    IconOrder.End -> TangemButtonIconPosition.End(iconResId)
+                }
+            } ?: TangemButtonIconPosition.None
+
+            TangemButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = button.text?.resolveReference().orEmpty(),
+                icon = icon,
+                onClick = { button.onClick?.invoke(closeScope) },
+                colors = if (button.isPrimary) {
+                    TangemButtonsDefaults.primaryButtonColors
+                } else {
+                    TangemButtonsDefaults.secondaryButtonColors
+                },
+                enabled = true,
+                showProgress = false,
+                textStyle = TangemTheme.typography.subtitle1,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview() {
+    TangemThemePreview {
+        MessageBottomSheet(
+            messageBottomSheetUM {
+                infoBlock {
+                    icon(R.drawable.img_knight_shield_32) {
+                        type = MessageBottomSheetUM.Icon.Type.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
+                    }
+                    title = TextReference.Str("Title Title Title")
+                    body = TextReference.Str("Body")
+                    chip(text = TextReference.Str("Some chip information"))
+                }
+                primaryButton {
+                    text = TextReference.Str("Test")
+                    icon = R.drawable.ic_tangem_24
+                }
+                secondaryButton {
+                    icon = R.drawable.ic_tangem_24
+                    text = TextReference.Str("asdasd")
+                    onClick {
+                        closeBs()
+                    }
+                }
+            },
+            onDismissRequest = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview2() {
+    TangemThemePreview {
+        MessageBottomSheet(
+            messageBottomSheetUM {
+                infoBlock {
+                    iconImage = MessageBottomSheetUM.IconImage(R.drawable.img_visa_notification)
+                    title = TextReference.Str("Title Title Title")
+                    body = TextReference.Str("Body")
+                    chip(text = TextReference.Str("Some chip information"))
+                }
+                primaryButton {
+                    text = TextReference.Str("Test")
+                    icon = R.drawable.ic_tangem_24
+                }
+                secondaryButton {
+                    icon = R.drawable.ic_tangem_24
+                    text = TextReference.Str("asdasd")
+                    onClick {
+                        closeBs()
+                    }
+                }
+            },
+            onDismissRequest = {},
+        )
+    }
+}

@@ -9,6 +9,7 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.TRANSACTION_ID_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.TYPE_KEY
 import com.tangem.common.routing.deeplink.DeeplinkConst.WALLET_ID_KEY
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -17,10 +18,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.notifications.models.NotificationType
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
-import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
@@ -42,15 +40,14 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
     @Assisted private val isFromOnNewIntent: Boolean,
     private val appRouter: AppRouter,
     private val selectWalletUseCase: SelectWalletUseCase,
-    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val tokenDetailsDeepLinkActionTrigger: TokenDetailsDeepLinkActionTrigger,
     private val walletDeepLinkActionTrigger: WalletDeepLinkActionTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val walletBalanceFetcher: WalletBalanceFetcher,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
-    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
 ) : TokenDetailsDeepLinkHandler {
 
     init {
@@ -125,9 +122,9 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
         userWallet is UserWallet.Cold &&
             userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
         when {
-            isMultiCurrency -> fetchCurrencyStatusUseCase.invoke(
+            isMultiCurrency -> cryptoCurrencyBalanceFetcher(
                 userWalletId = userWallet.walletId,
-                id = cryptoCurrency.id,
+                currency = cryptoCurrency,
             )
             !isMultiCurrency -> walletBalanceFetcher(
                 params = WalletBalanceFetcher.Params(
@@ -152,13 +149,12 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
                 isNetwork && isCurrency && isCorrectDerivation
             }
         } else {
-            getCryptoCurrencyUseCase(userWalletId = userWallet.walletId).getOrNull()
+            singleAccountListSupplier.getSyncOrNull(userWalletId = userWallet.walletId)
+                ?.mainAccount?.cryptoCurrencies?.first()
         }
 
     private suspend fun getCryptoCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>? {
-        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
-        )?.toList()
+        return singleAccountListSupplier.getSyncOrNull(userWalletId)?.flattenCurrencies()
     }
 
     @AssistedFactory
