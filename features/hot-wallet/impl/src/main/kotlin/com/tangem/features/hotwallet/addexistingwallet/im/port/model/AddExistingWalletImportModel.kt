@@ -53,8 +53,8 @@ internal class AddExistingWalletImportModel @Inject constructor(
         get() = bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_passcode_lock_56) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    type = MessageBottomSheetUM.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
                 }
                 title = resourceReference(R.string.common_passphrase)
                 body = resourceReference(R.string.onboarding_bottom_sheet_passphrase_description)

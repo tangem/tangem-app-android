@@ -7,7 +7,7 @@ import com.tangem.data.account.converter.AccountListConverter
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.common.wallets.UserWalletsListRepository

@@ -42,14 +42,6 @@ internal object ManageTokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideCheckIsCurrencyNotAddedUseCase(
-        customTokensRepository: CustomTokensRepository,
-    ): CheckIsCurrencyNotAddedUseCase {
-        return CheckIsCurrencyNotAddedUseCase(customTokensRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetSupportedNetworksUseCase(
         customTokensRepository: CustomTokensRepository,
     ): GetSupportedNetworksUseCase {
@@ -62,12 +54,6 @@ internal object ManageTokensDomainModule {
         customTokensRepository: CustomTokensRepository,
     ): ValidateDerivationPathUseCase {
         return ValidateDerivationPathUseCase(customTokensRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCheckHasLinkedTokensUseCase(repository: ManageTokensRepository): CheckHasLinkedTokensUseCase {
-        return CheckHasLinkedTokensUseCase(repository)
     }
 
     @Provides
