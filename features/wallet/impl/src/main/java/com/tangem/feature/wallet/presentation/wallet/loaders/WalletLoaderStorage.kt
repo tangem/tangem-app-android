@@ -18,8 +18,8 @@ internal class WalletLoaderStorage @Inject constructor() {
     }
 
     fun remove(id: UserWalletId) {
-        loaders[id]?.let {
-            it.forEach(Job::cancel)
+        loaders[id]?.let { jobs ->
+            jobs.forEach(Job::cancel)
             loaders.remove(id)
         }
     }

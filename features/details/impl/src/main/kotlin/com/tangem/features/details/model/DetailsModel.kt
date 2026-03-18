@@ -23,6 +23,7 @@ import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -150,6 +151,7 @@ internal class DetailsModel @Inject constructor(
                 }
             }
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
         }
     }
@@ -230,6 +232,7 @@ internal class DetailsModel @Inject constructor(
                 }
             }
 
+            analyticsEventHandler.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.Settings))
             sendFeedbackEmailUseCase(feedbackType)
         }
     }
@@ -262,6 +265,7 @@ internal class DetailsModel @Inject constructor(
 
     private fun onTangemPayItemClicked() {
         modelScope.launch {
+            analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
             val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
             if (isEligible) {
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
