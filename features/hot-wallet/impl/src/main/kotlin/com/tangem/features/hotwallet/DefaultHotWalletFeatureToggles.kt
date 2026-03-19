@@ -8,4 +8,7 @@ internal class DefaultHotWalletFeatureToggles(
 
     override val isWalletCreationRestrictionEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "HOT_WALLET_CREATION_RESTRICTION_ENABLED")
+
+    override val isTokenSyncEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "TOKEN_SYNC_ENABLED")
 }
