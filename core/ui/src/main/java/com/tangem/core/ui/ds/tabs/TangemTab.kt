@@ -59,7 +59,6 @@ fun TangemTab(
                 shape = shape,
             )
             .clip(shape = shape)
-            .padding(all = TangemTheme.dimens2.x3)
             .toggleable(
                 value = isChecked,
                 onValueChange = onCheckedChange,
@@ -67,7 +66,8 @@ fun TangemTab(
                 role = Role.Checkbox,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
-            ),
+            )
+            .padding(all = TangemTheme.dimens2.x3),
     ) {
         Text(
             text = text.resolveReference(),
