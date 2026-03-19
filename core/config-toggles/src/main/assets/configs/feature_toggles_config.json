@@ -71,5 +71,9 @@
     {
         "name": "VIRTUAL_ACCOUNTS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TOKEN_SYNC_ENABLED",
+        "version": "undefined"
     }
 ]
