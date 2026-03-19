@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.wallet
 
 import arrow.core.Either
-import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
@@ -19,6 +18,8 @@ import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
+import com.tangem.domain.tokens.BalanceFetchingOperations
+import com.tangem.domain.tokens.FetchErrorFormatter
 import com.tangem.domain.tokens.MultiWalletAccountListFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
@@ -33,14 +34,15 @@ import timber.log.Timber
 /**
  * Fetcher of wallet balance by [UserWalletId]
  *
+ * Uses [BalanceFetchingOperations] for shared fetching logic.
+ *
  * @property userWalletsListRepository           user wallets list repository
  * @property expressServiceFetcher               express service fetcher
  * @property multiWalletBalanceFetcher           balance fetcher of multi-currency wallet
  * @property singleWalletWithTokenBalanceFetcher balance fetcher of single-currency wallet with token
  * @property singleWalletBalanceFetcher          balance fetcher of single-currency wallet
- * @property multiNetworkStatusFetcher           networks statuses fetcher
- * @property multiQuoteStatusFetcher             quotes statuses fetcher
- * @property multiStakingBalanceFetcher            yields balances fetcher
+ * @property balanceFetchingOperations           shared operations for fetching balance data
+ * @property paymentAccountStatusFetcher         payment account status fetcher
  * @property dispatchers                         dispatchers
  *
 [REDACTED_AUTHOR]
@@ -52,13 +54,39 @@ class WalletBalanceFetcher internal constructor(
     private val multiWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val singleWalletWithTokenBalanceFetcher: BaseWalletBalanceFetcher,
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
-    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+    private val balanceFetchingOperations: BalanceFetchingOperations,
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
-    private val stakingIdFactory: StakingIdFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
+
+    /** Test constructor with direct fetcher dependencies for unit testing */
+    internal constructor(
+        userWalletsListRepository: UserWalletsListRepository,
+        expressServiceFetcher: ExpressServiceFetcher,
+        multiWalletBalanceFetcher: BaseWalletBalanceFetcher,
+        singleWalletWithTokenBalanceFetcher: BaseWalletBalanceFetcher,
+        singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
+        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+        paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+        stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
+    ) : this(
+        userWalletsListRepository = userWalletsListRepository,
+        expressServiceFetcher = expressServiceFetcher,
+        multiWalletBalanceFetcher = multiWalletBalanceFetcher,
+        singleWalletWithTokenBalanceFetcher = singleWalletWithTokenBalanceFetcher,
+        singleWalletBalanceFetcher = singleWalletBalanceFetcher,
+        balanceFetchingOperations = BalanceFetchingOperations(
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
+        ),
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
+        dispatchers = dispatchers,
+    )
 
     /** Additional constructor without internal dependencies */
     constructor(
@@ -86,11 +114,13 @@ class WalletBalanceFetcher internal constructor(
         singleWalletBalanceFetcher = SingleWalletBalanceFetcher(
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
         ),
-        multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-        multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        balanceFetchingOperations = BalanceFetchingOperations(
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
+        ),
         paymentAccountStatusFetcher = paymentAccountStatusFetcher,
-        stakingIdFactory = stakingIdFactory,
         dispatchers = dispatchers,
     )
 
@@ -130,84 +160,33 @@ class WalletBalanceFetcher internal constructor(
         paymentAccountRefactorEnabled: Boolean,
     ) {
         coroutineScope {
-            val results = fetchingSources.map { source ->
+            val errorDeferreds = fetchingSources.map { source ->
                 async {
-                    val maybeResult = when (source) {
-                        FetchingSource.NETWORK -> fetchNetworks(userWalletId = userWalletId, currencies = currencies)
-                        FetchingSource.QUOTE -> fetchQuotes(currencies = currencies)
-                        FetchingSource.STAKING -> fetchStaking(userWalletId = userWalletId, currencies = currencies)
-                        FetchingSource.TANGEM_PAY -> fetchPaymentAccount(
-                            userWalletId = userWalletId,
-                            paymentAccountRefactorEnabled = paymentAccountRefactorEnabled,
-                        )
+                    when (source) {
+                        is WalletFetchingSource.Balance -> {
+                            balanceFetchingOperations.fetchAll(
+                                userWalletId = userWalletId,
+                                currencies = currencies,
+                                sources = source.sources,
+                            ).mapKeys { (fetchingSource, _) -> fetchingSource.name }
+                        }
+                        is WalletFetchingSource.TangemPay -> {
+                            fetchPaymentAccount(userWalletId, paymentAccountRefactorEnabled)
+                                .leftOrNull()
+                                ?.let { error -> mapOf(FetchErrorFormatter.TANGEM_PAY_SOURCE_NAME to error) }
+                                .orEmpty()
+                        }
                     }
-
-                    source to maybeResult
                 }
             }
-                .awaitAll()
 
-            val errors = results.mapNotNull { (source, maybeResult) ->
-                val error = maybeResult.leftOrNull() ?: return@mapNotNull null
-
-                source to error
-            }
+            val errors = errorDeferreds.awaitAll().fold(emptyMap<String, Throwable>()) { acc, map -> acc + map }
 
             check(errors.isEmpty()) {
-                val message = "Failed to fetch next sources for $userWalletId:\n" +
-                    errors.joinToString(separator = "\n") { "${it.first.name} – ${it.second}" }
-
+                val message = FetchErrorFormatter.formatWalletErrors(userWalletId, errors)
                 Timber.e(message)
-
                 message
             }
-        }
-    }
-
-    private suspend fun fetchNetworks(
-        userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
-    ): Either<Throwable, Unit> {
-        return multiNetworkStatusFetcher(
-            params = MultiNetworkStatusFetcher.Params(
-                userWalletId = userWalletId,
-                networks = currencies.mapTo(destination = hashSetOf(), transform = CryptoCurrency::network),
-            ),
-        )
-    }
-
-    private suspend fun fetchQuotes(currencies: Set<CryptoCurrency>): Either<Throwable, Unit> {
-        return multiQuoteStatusFetcher(
-            params = MultiQuoteStatusFetcher.Params(
-                currenciesIds = currencies.mapNotNullTo(destination = hashSetOf(), transform = { it.id.rawCurrencyId }),
-                appCurrencyId = null,
-            ),
-        )
-    }
-
-    private suspend fun fetchStaking(
-        userWalletId: UserWalletId,
-        currencies: Set<CryptoCurrency>,
-    ): Either<Throwable, Unit> = either {
-        val maybeStakingIds = currencies.map { currency ->
-            val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = currency)
-
-            if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) {
-                Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${currency.id}")
-            }
-
-            stakingId
-        }
-
-        val stakingIds = maybeStakingIds.mapNotNullTo(hashSetOf()) { it.getOrNull() }
-
-        if (stakingIds.isNotEmpty()) {
-            multiStakingBalanceFetcher(
-                params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
-            )
-                .bind()
-        } else {
-            Timber.i("No staking IDs found for user wallet $userWalletId with currencies: $currencies")
         }
     }
 
