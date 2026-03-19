@@ -7,7 +7,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletBalanceUMTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMConverter
@@ -99,7 +98,13 @@ internal class SetTokenListTransformer(
     }
 
     private fun toLoadedState(): WalletTokensListUM {
-        if (params !is TokenConverterParams.Account) return WalletTokensListUM.Empty
+        if (params !is TokenConverterParams.Account) {
+            return WalletTokensListUM.Empty(
+                onEmptyClick = {
+                    clickIntents.onManageTokensClick(userWallet.walletId)
+                },
+            )
+        }
 
         return WalletTokensListUMConverter(
             selectedWallet = userWallet,
