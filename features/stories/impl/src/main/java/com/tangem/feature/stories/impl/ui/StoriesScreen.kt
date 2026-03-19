@@ -1,4 +1,4 @@
-package com.tangem.common.ui.swapStoriesScreen
+package com.tangem.feature.stories.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -31,14 +31,15 @@ import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapStoriesScreenTestTags
+import com.tangem.feature.stories.api.StoriesUM
 import kotlinx.collections.immutable.persistentListOf
 
 private val SubtitleColor = Color(0xFFB0B0B0)
 private const val STORIES_RELATIVE_PADDING = 0.7
 
 @Composable
-fun SwapStoriesScreen(config: SwapStoriesUM) {
-    if (config !is SwapStoriesUM.Content) return
+internal fun StoriesScreen(config: StoriesUM) {
+    if (config !is StoriesUM.Content) return
 
     SystemBarsIconsDisposable(darkIcons = false)
 
@@ -65,13 +66,13 @@ fun SwapStoriesScreen(config: SwapStoriesUM) {
                 error = { },
                 contentDescription = null,
             )
-            SwapStoriesText(current)
+            StoriesText(current)
         }
     }
 }
 
 @Composable
-private fun SwapStoriesText(current: SwapStoriesUM.Content.Config) {
+private fun StoriesText(current: StoriesUM.Content.Config) {
     val height = LocalWindowSize.current.height.value
     val textAlign = (height.dp.value * STORIES_RELATIVE_PADDING).dp
     Column(
@@ -115,12 +116,12 @@ private fun SwapStoriesText(current: SwapStoriesUM.Content.Config) {
 @Preview(showBackground = true, widthDp = 360, heightDp = 720)
 @Preview(showBackground = true, widthDp = 360, heightDp = 720, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun SwapStoriesScreen_Preview() {
+private fun Preview() {
     TangemThemePreview {
-        SwapStoriesScreen(
-            SwapStoriesUM.Content(
+        StoriesScreen(
+            StoriesUM.Content(
                 stories = persistentListOf(
-                    SwapStoriesUM.Content.Config(
+                    StoriesUM.Content.Config(
                         imageUrl = "https://devweb.tangem.com/images/stories/swap/image1.png",
                         title = stringReference("Exchange With Us"),
                         subtitle = stringReference(
