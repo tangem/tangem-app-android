@@ -1,17 +1,18 @@
 package com.tangem.feature.stories.impl.model
 
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
-import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.feature.stories.api.StoriesComponent
+import com.tangem.feature.stories.api.StoriesUM
+import com.tangem.feature.stories.impl.StoriesSlideConfigs
 import com.tangem.feature.stories.impl.analytics.StoriesEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -28,8 +29,8 @@ internal class StoriesModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
-    val state: StateFlow<SwapStoriesUM>
-        field = MutableStateFlow<SwapStoriesUM>(value = SwapStoriesUM.Empty)
+    val state: StateFlow<StoriesUM>
+        field = MutableStateFlow<StoriesUM>(value = StoriesUM.Empty)
 
     private val params = paramsContainer.require<StoriesComponent.Params>()
 
@@ -40,10 +41,10 @@ internal class StoriesModel @Inject constructor(
     private fun openScreen(hideStories: Boolean = true) {
         modelScope.launch {
             if (hideStories) {
-                shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
+                shouldShowStoriesUseCase.neverToShow(params.storyId)
             }
             router.pop()
-            router.push(params.nextScreen)
+            params.nextScreen?.let { router.push(it) }
         }
     }
 
@@ -51,17 +52,32 @@ internal class StoriesModel @Inject constructor(
         modelScope.launch {
             getStoryContentUseCase.invokeSync(params.storyId).fold(
                 ifLeft = {
-                    Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
-                    openScreen(hideStories = false) // Fallback to target screen
+                    Timber.e("Unable to load stories for ${params.storyId}")
+                    openScreen(hideStories = false)
                 },
-                ifRight = { swapStory ->
-                    if (swapStory == null) {
-                        openScreen(hideStories = false) // Fallback to target screen
+                ifRight = { story ->
+                    if (story == null) {
+                        openScreen(hideStories = false)
                     } else {
+                        val slides = StoriesSlideConfigs.getSlides(params.storyId)
+                        val imageUrls = story.getImageUrls()
+                        val configs = slides.zip(imageUrls) { slide, imageUrl ->
+                            StoriesUM.Content.Config(
+                                imageUrl = imageUrl,
+                                title = resourceReference(slide.titleResId),
+                                subtitle = resourceReference(slide.subtitleResId),
+                            )
+                        }.toImmutableList()
+
+                        if (configs.isEmpty()) {
+                            openScreen(hideStories = false)
+                            return@launch
+                        }
+
                         state.update {
-                            SwapStoriesFactory.createStoriesState(
-                                swapStory = swapStory,
-                                onStoriesClose = { watchCount ->
+                            StoriesUM.Content(
+                                stories = configs,
+                                onClose = { watchCount ->
                                     analyticsEventHandler.send(
                                         StoriesEvents.SwapStories(
                                             source = params.screenSource,
