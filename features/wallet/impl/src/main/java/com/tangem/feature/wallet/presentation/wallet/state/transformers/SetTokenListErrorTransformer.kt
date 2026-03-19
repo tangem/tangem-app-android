@@ -9,6 +9,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.getCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
@@ -19,6 +20,7 @@ internal class SetTokenListErrorTransformer(
     private val selectedWallet: UserWallet,
     private val error: TokenListError,
     private val appCurrency: AppCurrency,
+    private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(selectedWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -57,7 +59,11 @@ internal class SetTokenListErrorTransformer(
             is WalletUM.Content -> {
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState(),
-                    tokensListUM = WalletTokensListUM.Empty,
+                    tokensListUM = WalletTokensListUM.Empty(
+                        onEmptyClick = {
+                            clickIntents.onManageTokensClick(walletUM.walletsBalanceUM.id)
+                        },
+                    ),
                     buttons = walletUM.disableButtons(),
                 )
             }
