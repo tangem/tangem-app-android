@@ -208,7 +208,7 @@ private fun TangemButtonIcon(
         visible = isVisible,
         modifier = Modifier.size(size = size.toContentSize()),
     ) {
-        val wrappedIconRes = remember(this) { requireNotNull(iconRes) }
+        val wrappedIconRes = remember(iconRes) { requireNotNull(iconRes) }
         Icon(
             painter = painterResource(id = wrappedIconRes),
             contentDescription = null,
