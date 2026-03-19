@@ -17,6 +17,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
+import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -121,18 +122,28 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideCryptoCurrencyBalanceFetcher(
+    fun provideBalanceFetchingOperations(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
-        appScope: AppCoroutineScope,
-    ): CryptoCurrencyBalanceFetcher {
-        return CryptoCurrencyBalanceFetcher(
+    ): BalanceFetchingOperations {
+        return BalanceFetchingOperations(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCryptoCurrencyBalanceFetcher(
+        balanceFetchingOperations: BalanceFetchingOperations,
+        appScope: AppCoroutineScope,
+    ): CryptoCurrencyBalanceFetcher {
+        return CryptoCurrencyBalanceFetcher(
+            balanceFetchingOperations = balanceFetchingOperations,
             parallelUpdatingScope = appScope,
         )
     }
