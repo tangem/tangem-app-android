@@ -127,6 +127,7 @@ fun TangemPagerIndicator(
 
     Box(
         modifier = modifier
+            .width(getSize(totalPages))
             .conditionalCompose(colors.overlay != null) {
                 colors.overlay?.let { overlay ->
                     background(
@@ -167,6 +168,19 @@ fun TangemPagerIndicator(
                 }
             }
         }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun getSize(pageCount: Int): Dp {
+    return when (pageCount) {
+        0 -> TangemTheme.dimens2.x0
+        1 -> TangemTheme.dimens2.x8
+        2 -> TangemTheme.dimens2.x12
+        3 -> TangemTheme.dimens2.x16
+        4 -> TangemTheme.dimens2.x20
+        else -> TangemTheme.dimens2.x24
     }
 }
 
