@@ -54,18 +54,14 @@ private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
  *
  * @param pagerState             state of the pager to observe
  * @param modifier               modifier for styling
- * @param hasBackground          whether to show a background behind the indicators
- * @param activeIndicatorColor   color for the active page indicator
- * @param inactiveIndicatorColor color for the inactive page indicators
+ * @param colors                 colors of indicators(active/inactive) and overlay
  */
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun TangemPagerIndicator(
     pagerState: PagerState,
     modifier: Modifier = Modifier,
-    hasBackground: Boolean = false,
-    activeIndicatorColor: Color = TangemTheme.colors2.graphic.neutral.primary,
-    inactiveIndicatorColor: Color = TangemTheme.colors2.graphic.neutral.tertiary,
+    colors: PagerIndicatorColors = TangemPagerIndicatorColors,
 ) {
     val totalPages = pagerState.pageCount
     val currentIndex = pagerState.currentPage
@@ -131,11 +127,13 @@ fun TangemPagerIndicator(
 
     Box(
         modifier = modifier
-            .conditionalCompose(hasBackground) {
-                background(
-                    color = TangemTheme.colors2.tabs.backgroundSecondary,
-                    shape = CircleShape,
-                )
+            .conditionalCompose(colors.overlay != null) {
+                colors.overlay?.let { overlay ->
+                    background(
+                        color = overlay,
+                        shape = CircleShape,
+                    )
+                } ?: this
             }
             .padding(TangemTheme.dimens2.x3),
         contentAlignment = Alignment.Center,
@@ -162,8 +160,8 @@ fun TangemPagerIndicator(
                         index = index,
                         currentIndex = currentIndex,
                         totalPages = totalPages,
-                        activeColor = activeIndicatorColor,
-                        inactiveColor = inactiveIndicatorColor,
+                        activeColor = colors.active,
+                        inactiveColor = colors.inactive,
                         modifier = Modifier.graphicsLayer { alpha = dotAlpha },
                     )
                 }
@@ -297,6 +295,22 @@ private fun Dot(
     }
 }
 
+val TangemPagerIndicatorColors: PagerIndicatorColors
+    @Composable
+    @ReadOnlyComposable
+    get() = PagerIndicatorColors(
+        active = TangemTheme.colors2.graphic.neutral.primary,
+        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
+        overlay = null,
+    )
+
+@Immutable
+data class PagerIndicatorColors(
+    val active: Color,
+    val inactive: Color,
+    val overlay: Color?,
+)
+
 // region Preview
 @Composable
 @Preview(showBackground = true)
@@ -312,7 +326,13 @@ private fun TangemPagerIndicator_Preview(@PreviewParameter(TangemPagerIndicatorP
             repeat(params) { index ->
                 TangemPagerIndicator(
                     pagerState = rememberPagerState(index) { params },
-                    hasBackground = index % 2 == 0,
+                    colors = TangemPagerIndicatorColors.copy(
+                        overlay = if (index % 2 == 0) {
+                            TangemTheme.colors2.tabs.backgroundSecondary
+                        } else {
+                            null
+                        },
+                    ),
                 )
             }
         }
