@@ -4,7 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.wallet.FetchingSource
+import com.tangem.domain.tokens.FetchingSource
+import com.tangem.domain.tokens.wallet.WalletFetchingSource
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -38,7 +39,11 @@ class SingleWalletBalanceFetcherTest {
         val actual = fetcher.fetchingSources
 
         // Assert
-        val expected = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)
+        val expected = setOf(
+            WalletFetchingSource.Balance(
+                sources = setOf(FetchingSource.NETWORK, FetchingSource.QUOTE),
+            ),
+        )
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
