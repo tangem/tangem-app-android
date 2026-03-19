@@ -1,13 +1,14 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
-import arrow.core.raise.catch
+import arrow.core.right
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.request.SetTangemPayEnabledRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -23,14 +24,11 @@ import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
-private const val TAG = "TangemPay: OnboardingRepository"
 
 @Suppress("LongParameterList")
 internal class DefaultOnboardingRepository @Inject constructor(
@@ -109,25 +107,31 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return lastFetchedCustomerInfoMap[userWalletId]
     }
 
-    override suspend fun createOrder(userWalletId: UserWalletId) = withContext(dispatcherProvider.io) {
-        launch {
-            catch(
-                block = {
-                    val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
-                    val response = requestHelper.performRequest(userWalletId) { authHeader ->
-                        tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
-                    }.getOrNull()
+    override suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String> =
+        withContext(dispatcherProvider.io) {
+            val existingOrderId = getOrderId(userWalletId)
+            if (existingOrderId != null) {
+                val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
+                    tangemPayApi.getOrder(authHeader, existingOrderId)
+                }.map { it.result?.status }.getOrNull()
 
-                    val result = requireNotNull(response?.result)
-                    val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
-                    tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
-                },
-                catch = {
-                    Timber.tag(TAG).e("createOrder: $it")
-                },
-            )
+                if (orderStatus == OrderResponse.Result.Status.NEW ||
+                    orderStatus == OrderResponse.Result.Status.PROCESSING
+                ) {
+                    return@withContext existingOrderId.right()
+                }
+            }
+
+            val walletAddress = requestHelper.getCustomerWalletAddress(userWalletId)
+            requestHelper.performRequest(userWalletId) { authHeader ->
+                val data = OrderRequest.Data(customerWalletAddress = walletAddress)
+                tangemPayApi.createOrder(authHeader, body = OrderRequest(data = data))
+            }.map { response ->
+                val result = requireNotNull(response.result)
+                tangemPayStorage.storeOrderId(walletAddress, result.id)
+                result.id
+            }
         }
-    }
 
     private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return userWalletsListRepository.userWallets.value?.firstOrNull { it.walletId == userWalletId }
