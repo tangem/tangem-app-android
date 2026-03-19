@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.exchange.RampStateManager
@@ -14,6 +15,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -77,11 +79,11 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsCryptoCurrencyCoinCouldHideUseCase(
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    ): IsCryptoCurrencyCoinCouldHideUseCase {
-        return IsCryptoCurrencyCoinCouldHideUseCase(
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+    fun provideIsCryptoCurrencyCouldHideUseCase(
+        singleAccountListSupplier: SingleAccountListSupplier,
+    ): IsCryptoCurrencyCouldHideUseCase {
+        return IsCryptoCurrencyCouldHideUseCase(
+            singleAccountListSupplier = singleAccountListSupplier,
         )
     }
 
