@@ -25,7 +25,9 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
+import com.tangem.core.ui.ds.tabs.TangemTab
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.feed.state.FeedListCallbacks
@@ -34,6 +36,7 @@ import com.tangem.features.feed.ui.feed.state.MarketChartUM
 
 @Composable
 internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedListCallbacks) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     AnimatedContent(
         targetState = marketChart,
         label = "MarketBlockChartAnimation",
@@ -49,8 +52,16 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
                         title = {
                             Text(
                                 text = stringResourceSafe(R.string.markets_common_title),
-                                style = TangemTheme.typography.h3,
-                                color = TangemTheme.colors.text.primary1,
+                                style = if (isRedesignEnabled) {
+                                    TangemTheme.typography2.headingSemibold20
+                                } else {
+                                    TangemTheme.typography.h3
+                                },
+                                color = if (isRedesignEnabled) {
+                                    TangemTheme.colors2.text.neutral.primary
+                                } else {
+                                    TangemTheme.colors.text.primary1
+                                },
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
                             )
@@ -76,8 +87,10 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val onSeeAllClick by rememberUpdatedState {
         feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType)
     }
@@ -86,8 +99,16 @@ internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCall
             title = {
                 Text(
                     text = stringResourceSafe(R.string.markets_pulse_common_title),
-                    style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
+                    style = if (isRedesignEnabled) {
+                        TangemTheme.typography2.headingSemibold20
+                    } else {
+                        TangemTheme.typography.h3
+                    },
+                    color = if (isRedesignEnabled) {
+                        TangemTheme.colors2.text.neutral.primary
+                    } else {
+                        TangemTheme.colors.text.primary1
+                    },
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
@@ -98,9 +119,13 @@ internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCall
         )
 
         LazyRow(
-            modifier = Modifier.padding(vertical = 4.dp),
+            modifier = Modifier.padding(vertical = if (isRedesignEnabled) 12.dp else 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = if (isRedesignEnabled) {
+                PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+            } else {
+                PaddingValues(16.dp)
+            },
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             state = rememberLazyListState(),
         ) {
@@ -108,15 +133,21 @@ internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCall
                 items = marketChartConfig.getFilterPreset(),
                 key = SortByTypeUM::name,
             ) { sortByTypeUM ->
-                ChartsFilterChip(
-                    sortByTypeUM = sortByTypeUM,
-                    isSelected = sortByTypeUM == marketChartConfig.currentSortByType,
-                    onClick = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
-                )
+                if (isRedesignEnabled) {
+                    TangemTab(
+                        text = sortByTypeUM.text,
+                        isChecked = sortByTypeUM == marketChartConfig.currentSortByType,
+                        onCheckedChange = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
+                    )
+                } else {
+                    ChartsFilterChip(
+                        sortByTypeUM = sortByTypeUM,
+                        isSelected = sortByTypeUM == marketChartConfig.currentSortByType,
+                        onClick = { feedListCallbacks.onSortTypeClick(sortByTypeUM) },
+                    )
+                }
             }
         }
-
-        SpacerH(12.dp)
 
         AnimatedContent(
             targetState = marketChartConfig.currentSortByType,
@@ -141,9 +172,16 @@ private fun Charts(
     onItemClick: (MarketsListItemUM) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     BlockCard(
         modifier = modifier,
-        colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
+        colors = TangemBlockCardColors.copy(
+            containerColor = if (isRedesignEnabled) {
+                TangemTheme.colors2.surface.level3
+            } else {
+                TangemTheme.colors.background.action
+            },
+        ),
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {
