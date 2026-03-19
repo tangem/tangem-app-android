@@ -579,6 +579,8 @@ private class WalletScreen2PreviewProvider : PreviewParameterProvider<WalletScre
         get() = sequenceOf(
             WalletScreenPreviewData.defaultState,
             WalletScreenPreviewData.emptyState,
+            WalletScreenPreviewData.defaultAccountState,
+            WalletScreenPreviewData.emptyAccountState,
             WalletScreenPreviewData.lockedState,
         )
 }
