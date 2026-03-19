@@ -1,4 +1,4 @@
-package com.tangem.domain.tokens.wallet
+package com.tangem.domain.tokens
 
 /**
  * Source type that is necessary to load cryptocurrency data
@@ -9,5 +9,4 @@ enum class FetchingSource {
     NETWORK,
     QUOTE,
     STAKING,
-    TANGEM_PAY,
 }
