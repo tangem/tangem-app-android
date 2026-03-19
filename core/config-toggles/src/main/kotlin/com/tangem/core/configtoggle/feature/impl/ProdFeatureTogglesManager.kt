@@ -1,18 +1,20 @@
 package com.tangem.core.configtoggle.feature.impl
 
 import androidx.annotation.VisibleForTesting
-import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.provider.FeatureTogglesProvider
 import com.tangem.core.configtoggle.utils.defineTogglesAvailability
 import com.tangem.core.configtoggle.version.VersionProvider
 
 /**
  * Feature toggles manager implementation in PROD build
  *
- * @property versionProvider application version provider
+ * @property versionProvider         application version provider
+ * @property featureTogglesProvider  provider for feature toggle entries
  */
 internal class ProdFeatureTogglesManager(
     private val versionProvider: VersionProvider,
+    private val featureTogglesProvider: FeatureTogglesProvider,
 ) : FeatureTogglesManager {
 
     private val featureToggles: Map<String, Boolean> = getFileFeatureToggles()
@@ -22,7 +24,8 @@ internal class ProdFeatureTogglesManager(
     private fun getFileFeatureToggles(): Map<String, Boolean> {
         val appVersion = versionProvider.get()
 
-        return FeatureToggles.values.defineTogglesAvailability(appVersion = appVersion)
+        return featureTogglesProvider.getToggles()
+            .defineTogglesAvailability(appVersion = appVersion)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
