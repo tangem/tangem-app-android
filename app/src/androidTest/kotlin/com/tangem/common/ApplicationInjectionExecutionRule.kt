@@ -9,6 +9,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import timber.log.Timber
+import java.lang.reflect.Field
 
 class ApplicationInjectionExecutionRule(
     private val toggleStates: Map<String, Boolean>,
@@ -17,7 +18,7 @@ class ApplicationInjectionExecutionRule(
     private val tangemApplication: TangemApplication
         get() = ApplicationProvider.getApplicationContext()
 
-    private var originalFeatureTogglesValues: Map<String, String>? = null
+    private var originalVersionValues: Map<FeatureToggles, String>? = null
 
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
@@ -41,10 +42,9 @@ class ApplicationInjectionExecutionRule(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun saveOriginalFeatureToggles() {
         try {
-            originalFeatureTogglesValues = FeatureToggles.values as Map<String, String>
+            originalVersionValues = FeatureToggles.entries.associateWith { it.version }
         } catch (e: Exception) {
             Timber.e("Failed to save original toggles values: ${e.message}")
         }
@@ -52,21 +52,13 @@ class ApplicationInjectionExecutionRule(
 
     private fun overrideFeatureToggles() {
         try {
-            val originalValues = originalFeatureTogglesValues ?: FeatureToggles.values
-            val newValues = originalValues.toMutableMap()
+            val versionField = getVersionField()
 
-            toggleStates.forEach { (toggle, enabled) ->
-                if (enabled) {
-                    newValues[toggle] = "1.0.0"
-                } else {
-                    newValues.remove(toggle)
-                }
+            FeatureToggles.entries.forEach { toggle ->
+                val enabled = toggleStates[toggle.rawName] ?: return@forEach
+                val newVersion = if (enabled) ENABLED_VERSION else DISABLED_VERSION
+                versionField.set(toggle, newVersion)
             }
-
-            val companionClass = FeatureToggles.Companion::class.java
-            val valuesField = companionClass.getDeclaredField("values")
-            valuesField.isAccessible = true
-            valuesField.set(FeatureToggles.Companion, newValues)
 
             Timber.i("FeatureToggles.values updated: $toggleStates")
         } catch (e: Exception) {
@@ -76,15 +68,27 @@ class ApplicationInjectionExecutionRule(
 
     private fun restoreOriginalFeatureToggles() {
         try {
-            if (originalFeatureTogglesValues != null) {
-                val companionClass = FeatureToggles.Companion::class.java
-                val valuesField = companionClass.getDeclaredField("values")
-                valuesField.isAccessible = true
-                valuesField.set(FeatureToggles.Companion, originalFeatureTogglesValues)
-                Timber.i("FeatureToggles.values restored")
+            val saved = originalVersionValues ?: return
+            val versionField = getVersionField()
+
+            saved.forEach { (toggle, originalVersion) ->
+                versionField.set(toggle, originalVersion)
             }
+
+            Timber.i("FeatureToggles.values restored")
         } catch (e: Exception) {
             Timber.e("FeatureToggles.values didn't restored with error: ${e.message}")
         }
+    }
+
+    private fun getVersionField(): Field {
+        val field = FeatureToggles::class.java.getDeclaredField("version")
+        field.isAccessible = true
+        return field
+    }
+
+    private companion object {
+        const val ENABLED_VERSION = "1.0.0"
+        const val DISABLED_VERSION = "undefined"
     }
 }
