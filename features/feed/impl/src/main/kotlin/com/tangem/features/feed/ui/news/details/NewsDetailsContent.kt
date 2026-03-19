@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.pager.PagerIndicator
+import com.tangem.core.ui.ds.TangemPagerIndicator
+import com.tangem.core.ui.ds.TangemPagerIndicatorColors
 import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.news.details.components.ArticleDetail
@@ -105,12 +107,24 @@ private fun Content(state: NewsDetailsUM, background: Color) {
                     )
                 }
                 if (state.articles.size > 1) {
-                    PagerIndicator(
-                        pagerState = pagerState,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .windowInsetsPadding(WindowInsets.navigationBars),
-                    )
+                    if (isRedesignEnabled) {
+                        TangemPagerIndicator(
+                            pagerState = pagerState,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .windowInsetsPadding(WindowInsets.navigationBars),
+                            colors = TangemPagerIndicatorColors.copy(
+                                overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(alpha = .1f),
+                            ),
+                        )
+                    } else {
+                        PagerIndicator(
+                            pagerState = pagerState,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .windowInsetsPadding(WindowInsets.navigationBars),
+                        )
+                    }
                 }
             }
         }
