@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -25,11 +26,15 @@ import androidx.compose.ui.text.lerp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.button.PrimaryInverseTangemButton
+import com.tangem.core.ui.ds.button.TangemButtonShape
+import com.tangem.core.ui.ds.button.TangemButtonSize
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.header.TangemHeaderRow
@@ -120,7 +125,10 @@ internal fun LazyListScope.tokensListItems2(
                 }
             }
         }
-        WalletTokensListUM.Empty -> nonContentItem(modifier = modifier)
+        is WalletTokensListUM.Empty -> nonContentItem2(
+            onEmptyClick = walletTokensListUM.onEmptyClick,
+            modifier = modifier,
+        )
     }
 }
 
@@ -168,7 +176,11 @@ private fun LazyListScope.portfolioItem(
     isBalanceHidden: Boolean,
     modifier: Modifier,
 ) {
-    val lastIndex = listItem.tokenList.lastIndex + 1
+    val lastIndex = if (listItem.tokenList.isEmpty()) {
+        listItem.tokenList.lastIndex + 2
+    } else {
+        listItem.tokenList.lastIndex + 1
+    }
 
     accountItem(
         listItem = listItem,
@@ -177,45 +189,54 @@ private fun LazyListScope.portfolioItem(
         lastIndex = lastIndex,
         isBalanceHidden = isBalanceHidden,
     )
-    itemsIndexed(
-        items = listItem.tokenList,
-        key = { _, item -> item.tokenRowUM.id },
-        contentType = { _, item -> item::class.java },
-        itemContent = { tokenIndex, item ->
-            SlideInItemVisibility(
-                currentIndex = tokenIndex + 1,
-                lastIndex = lastIndex,
-                modifier = modifier
-                    .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
-                    .roundedShapeItemDecoration(
-                        radius = 18.dp,
-                        currentIndex = tokenIndex + 1,
-                        addDefaultPadding = false,
-                        lastIndex = lastIndex,
-                        backgroundColor = TangemTheme.colors2.surface.level3,
-                    ),
-                visible = listItem.isExpanded,
-            ) {
-                val itemModifier = Modifier
-                    .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
-                    .semantics { lazyListItemPosition = tokenIndex + 1 }
+    if (listItem.tokenList.isEmpty()) {
+        nonContentAccountItem(
+            listItem = listItem,
+            index = index,
+            lastIndex = lastIndex,
+            modifier = modifier,
+        )
+    } else {
+        itemsIndexed(
+            items = listItem.tokenList,
+            key = { _, item -> item.tokenRowUM.id },
+            contentType = { _, item -> item::class.java },
+            itemContent = { tokenIndex, item ->
+                SlideInItemVisibility(
+                    currentIndex = tokenIndex + 1,
+                    lastIndex = lastIndex,
+                    modifier = modifier
+                        .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                        .roundedShapeItemDecoration(
+                            radius = 18.dp,
+                            currentIndex = tokenIndex + 1,
+                            addDefaultPadding = false,
+                            lastIndex = lastIndex,
+                            backgroundColor = TangemTheme.colors2.surface.level3,
+                        ),
+                    visible = listItem.isExpanded,
+                ) {
+                    val itemModifier = Modifier
+                        .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+                        .semantics { lazyListItemPosition = tokenIndex + 1 }
 
-                when (val tokenRowUM = item.tokenRowUM) {
-                    is TangemTokenRowUM -> TangemTokenRow(
-                        tokenRowUM = tokenRowUM,
-                        isBalanceHidden = isBalanceHidden,
-                        reorderableState = null,
-                        modifier = itemModifier,
-                    )
-                    is TangemHeaderRowUM -> TangemHeaderRow(
-                        headerRowUM = tokenRowUM,
-                        isBalanceHidden = isBalanceHidden,
-                        modifier = itemModifier,
-                    )
+                    when (val tokenRowUM = item.tokenRowUM) {
+                        is TangemTokenRowUM -> TangemTokenRow(
+                            tokenRowUM = tokenRowUM,
+                            isBalanceHidden = isBalanceHidden,
+                            reorderableState = null,
+                            modifier = itemModifier,
+                        )
+                        is TangemHeaderRowUM -> TangemHeaderRow(
+                            headerRowUM = tokenRowUM,
+                            isBalanceHidden = isBalanceHidden,
+                            modifier = itemModifier,
+                        )
+                    }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 @Suppress("MagicNumber")
@@ -428,6 +449,54 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
     }
 }
 
+private fun LazyListScope.nonContentItem2(onEmptyClick: () -> Unit, modifier: Modifier = Modifier) {
+    item(
+        key = NON_CONTENT_TOKENS_LIST_KEY,
+        contentType = NON_CONTENT_TOKENS_LIST_KEY,
+    ) {
+        NonContentItemContentV2(
+            onClick = onEmptyClick,
+            textColor = TangemTheme.colors2.text.neutral.tertiary,
+            modifier = modifier
+                .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                .padding(top = 46.dp),
+        )
+    }
+}
+
+private fun LazyListScope.nonContentAccountItem(
+    listItem: TokensListItemUM2.Portfolio,
+    index: Int,
+    lastIndex: Int,
+    modifier: Modifier = Modifier,
+) {
+    item(
+        key = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
+        contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${listItem.tokenRowUM.id}",
+    ) {
+        SlideInItemVisibility(
+            currentIndex = index + 1,
+            lastIndex = lastIndex,
+            modifier = modifier
+                .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
+                .roundedShapeItemDecoration(
+                    radius = 18.dp,
+                    addDefaultPadding = false,
+                    currentIndex = 1,
+                    lastIndex = 1,
+                    backgroundColor = TangemTheme.colors2.surface.level3,
+                ),
+            visible = listItem.isExpanded,
+        ) {
+            NonContentItemContentV2(
+                modifier = Modifier.padding(vertical = 36.dp),
+                textColor = TangemTheme.colors2.text.neutral.secondary,
+                onClick = listItem.onEmptyClick,
+            )
+        }
+    }
+}
+
 @Composable
 internal fun NonContentItemContent(modifier: Modifier = Modifier) {
     Column(
@@ -448,6 +517,37 @@ internal fun NonContentItemContent(modifier: Modifier = Modifier) {
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,
+        )
+    }
+}
+
+@Composable
+internal fun NonContentItemContentV2(textColor: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_empty_64),
+            contentDescription = null,
+            modifier = Modifier.size(size = TangemTheme.dimens2.x16),
+            tint = TangemTheme.colors2.graphic.neutral.quaternary,
+        )
+        SpacerH(TangemTheme.dimens2.x5)
+        Text(
+            text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
+            color = textColor,
+            textAlign = TextAlign.Center,
+            style = TangemTheme.typography2.bodyRegular14,
+        )
+        SpacerH(TangemTheme.dimens2.x2)
+        PrimaryInverseTangemButton(
+            text = resourceReference(id = R.string.common_add_tokens),
+            onClick = onClick,
+            size = TangemButtonSize.X8,
+            shape = TangemButtonShape.Rounded,
+            modifier = Modifier,
         )
     }
 }
