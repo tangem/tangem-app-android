@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -14,21 +13,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onFirstVisible
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.buttons.SecondarySmallButton
-import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.extensions.conditionalCompose
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.earn.components.*
 import com.tangem.features.feed.ui.earn.state.*
@@ -345,66 +342,6 @@ private fun FilterButtonsShimmer(modifier: Modifier = Modifier) {
                 modifier = Modifier.width(90.dp),
             )
         }
-    }
-}
-
-@Composable
-private fun BestOpportunitiesEmpty(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .padding(vertical = 32.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            modifier = Modifier
-                .fillMaxWidth(),
-            painter = painterResource(R.drawable.ic_empty_64),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
-        SpacerH(24.dp)
-        Text(
-            modifier = Modifier
-                .padding(horizontal = 32.dp),
-            text = stringResourceSafe(R.string.earn_empty),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun BestOpportunitiesEmptyFiltered(onClearFilterClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(
-                color = TangemTheme.colors.background.action,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            )
-            .padding(vertical = 32.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = stringResourceSafe(R.string.earn_no_results),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        SpacerH(12.dp)
-        SecondarySmallButton(
-            config = SmallButtonConfig(
-                text = resourceReference(R.string.earn_clear_filter),
-                onClick = onClearFilterClick,
-            ),
-        )
     }
 }
 
