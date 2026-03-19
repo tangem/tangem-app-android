@@ -132,6 +132,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                         selectedWallet = userWallet,
                         error = e,
                         appCurrency = appCurrency,
+                        clickIntents = clickIntents,
                     ),
                 )
                 return
