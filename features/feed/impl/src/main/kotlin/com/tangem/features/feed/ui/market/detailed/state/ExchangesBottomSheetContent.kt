@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.market.detailed.state
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
@@ -18,6 +19,7 @@ import kotlinx.collections.immutable.toImmutableList
  *
 [REDACTED_AUTHOR]
  */
+@Immutable
 internal sealed interface ExchangesBottomSheetContent : TangemBottomSheetConfigContent {
 
     /** Title of bottom sheet. Like, app bar. */
@@ -39,6 +41,8 @@ internal sealed interface ExchangesBottomSheetContent : TangemBottomSheetConfigC
     /** Exchange items */
     val exchangeItems: ImmutableList<TokenItemState>
 
+    val exchangeItemsV2: ImmutableList<ExchangeItemUM>
+
     /**
      * Loading state
      *
@@ -49,6 +53,10 @@ internal sealed interface ExchangesBottomSheetContent : TangemBottomSheetConfigC
         override val exchangeItems: ImmutableList<TokenItemState>
             get() = List(size = exchangesCount) { index -> TokenItemState.Loading(id = "loading#$index") }
                 .toImmutableList()
+
+        override val exchangeItemsV2: ImmutableList<ExchangeItemUM>
+            get() = List(size = exchangesCount) { index -> ExchangeItemUM.Loading(id = "loading#$index") }
+                .toImmutableList()
     }
 
     /**
@@ -56,8 +64,14 @@ internal sealed interface ExchangesBottomSheetContent : TangemBottomSheetConfigC
      *
      * @property exchangeItems exchanges
      */
-    data class Content(
+    data class ContentV1(
         override val exchangeItems: ImmutableList<TokenItemState>,
+        override val exchangeItemsV2: ImmutableList<ExchangeItemUM> = persistentListOf(),
+    ) : ExchangesBottomSheetContent
+
+    data class ContentV2(
+        override val exchangeItemsV2: ImmutableList<ExchangeItemUM>,
+        override val exchangeItems: ImmutableList<TokenItemState> = persistentListOf(),
     ) : ExchangesBottomSheetContent
 
     /** Error state */
@@ -65,6 +79,7 @@ internal sealed interface ExchangesBottomSheetContent : TangemBottomSheetConfigC
         val onRetryClick: () -> Unit,
     ) : ExchangesBottomSheetContent {
         override val exchangeItems: ImmutableList<TokenItemState> = persistentListOf()
+        override val exchangeItemsV2: ImmutableList<ExchangeItemUM> = persistentListOf()
 
         @StringRes
         val message: Int = R.string.markets_loading_error_title
