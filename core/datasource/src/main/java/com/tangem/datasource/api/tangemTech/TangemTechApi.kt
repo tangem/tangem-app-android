@@ -28,6 +28,7 @@ interface TangemTechApi {
     suspend fun getCoins(
         @Header("Cache-Control") cacheControl: String = "max-age=600",
         @Query("contractAddress") contractAddress: String? = null,
+        @Query("contractAddresses") contractAddresses: String? = null,
         @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
         @Query("networkId") networkId: String? = null,
