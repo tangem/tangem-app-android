@@ -1,57 +1,54 @@
 package com.tangem.features.feed.ui.earn.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonSize
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetType
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
+import com.tangem.core.ui.extensions.clickableSingle
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.feed.impl.R
 
 @Composable
 internal inline fun <reified T : TangemBottomSheetConfigContent> EarnFilterBottomSheet(
     config: TangemBottomSheetConfig,
-    crossinline content: @Composable ColumnScope.(T) -> Unit,
+    crossinline content: @Composable (T) -> Unit,
 ) {
     TangemBottomSheet<T>(
         config = config,
+        type = TangemBottomSheetType.Modal,
         containerColor = TangemTheme.colors2.surface.level3,
         title = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing24)
-                    .padding(bottom = TangemTheme.dimens.spacing12),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResourceSafe(R.string.earn_filter_by),
-                    style = TangemTheme.typography2.headingSemibold17,
-                    color = TangemTheme.colors2.text.neutral.primary,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                SecondaryTangemButton(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    onClick = config.onDismissRequest,
-                    iconRes = R.drawable.ic_close_24,
-                    size = TangemButtonSize.X9,
-                    shape = TangemButtonShape.Rounded,
-                )
-            }
+            TangemTopBar(
+                title = resourceReference(R.string.earn_filter_by),
+                type = TangemTopBarType.BottomSheet,
+                endContent = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_close_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens2.x11)
+                            .background(
+                                color = TangemTheme.colors2.button.backgroundSecondary,
+                                shape = CircleShape,
+                            )
+                            .clickableSingle(onClick = config.onDismissRequest)
+                            .padding(TangemTheme.dimens2.x2_5),
+                    )
+                },
+            )
         },
         content = content,
     )
