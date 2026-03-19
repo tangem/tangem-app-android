@@ -44,7 +44,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingOption
-import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
@@ -145,7 +145,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
-    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
@@ -268,17 +268,19 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             val currency = cryptoCurrencyStatus.currency
-            val isCryptoCurrencyCoinCouldHide = currency is CryptoCurrency.Coin &&
-                !isCryptoCurrencyCoinCouldHide(userWalletId = accountId.userWalletId, cryptoCurrencyCoin = currency)
+            val canHide = isCryptoCurrencyCouldHideUseCase(
+                userWalletId = accountId.userWalletId,
+                cryptoCurrency = currency,
+            )
 
-            if (isCryptoCurrencyCoinCouldHide) {
-                uiMessageSender.send(WalletAlertUM.unableHideToken(cryptoCurrency = cryptoCurrencyStatus.currency))
-            } else {
+            if (canHide) {
                 uiMessageSender.send(
                     WalletAlertUM.hideTokenConfirm(cryptoCurrency = cryptoCurrencyStatus.currency) {
                         onPerformHideToken(accountId, cryptoCurrencyStatus)
                     },
                 )
+            } else {
+                uiMessageSender.send(WalletAlertUM.unableHideToken(cryptoCurrency = cryptoCurrencyStatus.currency))
             }
         }
     }
