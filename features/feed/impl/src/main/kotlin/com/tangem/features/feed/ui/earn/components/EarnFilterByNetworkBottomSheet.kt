@@ -119,9 +119,10 @@ private fun ContentV2(content: EarnFilterByNetworkBottomSheetContentUM) {
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(bottom = TangemTheme.dimens2.x4)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
     ) {
         NetworksTypesBlock(
             allMyNetworks = allMyNetworks,
