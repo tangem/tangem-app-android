@@ -104,9 +104,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             ifRight = { customerInfo ->
                 Timber.tag(TAG).i("proceedWithoutOrder data customerInfo $userWalletId")
                 val status = customerInfo.mapToPaymentAccountStatus()
-                if (status is PaymentAccountStatus.IssuingCard && customerInfo.kycStatus == KycStatus.APPROVED) {
-                    // If order id wasn't saved -> start order creation and get customer info
+                if (customerInfo.productInstance == null) {
                     onboardingRepository.createOrder(userWalletId)
+                        .onLeft { Timber.tag(TAG).e("createOrder failed: $it") }
                 }
                 status
             },
@@ -128,9 +128,6 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                     -> PaymentAccountStatus.IssuingCard(source = StatusSource.ACTUAL)
 
                     OrderStatus.CANCELED -> {
-                        // If order was cancelled -> clear previous order from local storage and start order creation
-                        onboardingRepository.clearOrderId(userWalletId)
-                        onboardingRepository.createOrder(userWalletId)
                         PaymentAccountStatus.Error.CardIssueFailed
                     }
                     OrderStatus.COMPLETED -> {
