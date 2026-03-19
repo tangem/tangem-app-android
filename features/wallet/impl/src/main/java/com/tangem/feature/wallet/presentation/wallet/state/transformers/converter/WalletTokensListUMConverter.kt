@@ -72,7 +72,9 @@ internal class WalletTokensListUMConverter(
     override fun convert(value: AccountStatusList): WalletTokensListUM {
         val promoCryptoCurrency = yieldSupplyPromoBannerConverter.convert2(value = value)
         return if (value.flattenCurrencies().isEmpty()) {
-            WalletTokensListUM.Empty
+            WalletTokensListUM.Empty(
+                onEmptyClick = { clickIntents.onManageTokensClick(value.mainAccount.accountId) },
+            )
         } else {
             val isCollapsable = value.accountStatuses.count {
                 it is AccountStatus.CryptoPortfolio && it.account.tokensCount > 0
@@ -89,6 +91,7 @@ internal class WalletTokensListUMConverter(
                                 tokenRowUM = accountRowConverter.convert(accountStatus),
                                 isExpanded = isExpanded || !isCollapsable,
                                 isCollapsable = isCollapsable,
+                                onEmptyClick = { clickIntents.onManageTokensClick(accountStatus.account.accountId) },
                                 tokenList = getTokenListItems(
                                     accountStatus,
                                     promoCryptoCurrency,
