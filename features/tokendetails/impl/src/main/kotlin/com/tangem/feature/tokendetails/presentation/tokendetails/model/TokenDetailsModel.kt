@@ -34,6 +34,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -114,7 +115,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-    private val isCryptoCurrencyCoinCouldHideUseCase: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -737,15 +738,10 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
         modelScope.launch {
-            val canHide = when (cryptoCurrency) {
-                is CryptoCurrency.Coin -> {
-                    isCryptoCurrencyCoinCouldHideUseCase(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyCoin = cryptoCurrency,
-                    )
-                }
-                is CryptoCurrency.Token -> true
-            }
+            val canHide = isCryptoCurrencyCouldHideUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+            )
 
             internalUiState.value = if (canHide) {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
