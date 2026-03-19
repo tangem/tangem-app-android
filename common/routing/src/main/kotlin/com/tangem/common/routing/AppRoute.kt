@@ -320,7 +320,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Stories(
         val storyId: String,
-        val nextScreen: AppRoute,
+        val nextScreen: AppRoute? = null,
         val screenSource: String,
     ) : AppRoute(path = "/stories$storyId")
 
