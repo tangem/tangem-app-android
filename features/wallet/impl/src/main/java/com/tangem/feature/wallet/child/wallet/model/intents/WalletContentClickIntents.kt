@@ -70,6 +70,8 @@ internal interface WalletContentClickIntents {
 
     fun onManageTokensClick(accountId: AccountId)
 
+    fun onManageTokensClick(userWalletId: UserWalletId)
+
     fun onTransactionClick(txHash: String)
 
     fun onDissmissBottomSheet()
@@ -226,6 +228,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onManageTokensClick(accountId: AccountId) {
         router.openManageTokensScreen(accountId)
+    }
+
+    override fun onManageTokensClick(userWalletId: UserWalletId) {
+        router.openManageTokensScreen(
+            AccountId.forMainCryptoPortfolio(userWalletId),
+        )
     }
 
     private fun openYieldSupply(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, apy: String) {
