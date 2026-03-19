@@ -5,6 +5,7 @@ import com.tangem.core.configtoggle.BuildConfig
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.blockchain.impl.DevExcludedBlockchainsManager
 import com.tangem.core.configtoggle.blockchain.impl.ProdExcludedBlockchainsManager
+import com.tangem.core.configtoggle.blockchain.provider.DefaultExcludedBlockchainTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.DefaultVersionProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -26,17 +27,22 @@ internal object ExcludedBlockchainsManagerModule {
         appPreferencesStore: AppPreferencesStore,
     ): ExcludedBlockchainsManager {
         val versionProvider = DefaultVersionProvider(context)
+        val excludedBlockchainTogglesProvider = DefaultExcludedBlockchainTogglesProvider()
 
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevExcludedBlockchainsManager(
                 versionProvider = versionProvider,
+                excludedBlockchainTogglesProvider = excludedBlockchainTogglesProvider,
                 localTogglesStorage = LocalTogglesStorage(
                     appPreferencesStore = appPreferencesStore,
                     preferencesKey = LocalTogglesStorage.EXCLUDED_BLOCKCHAINS_KEY,
                 ),
             )
         } else {
-            ProdExcludedBlockchainsManager(versionProvider = versionProvider)
+            ProdExcludedBlockchainsManager(
+                versionProvider = versionProvider,
+                excludedBlockchainTogglesProvider = excludedBlockchainTogglesProvider,
+            )
         }
     }
 }
