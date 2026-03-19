@@ -69,6 +69,23 @@ object CryptoCurrencyOperations {
         return getCoin(network = currency.network)
     }
 
+    /**
+     * Retrieves all tokens that belong to the same network as the specified [coin].
+     *
+     * @receiver the [AccountList] to search within
+     * @param coin the coin whose network will be used to find tokens
+     * @return list of [CryptoCurrency.Token] in the same network, or empty list if none found
+     */
+    fun AccountList.getTokens(coin: CryptoCurrency.Coin): List<CryptoCurrency.Token> {
+        return getExpectedAccounts(network = coin.network)
+            .flatMap { account ->
+                (account as? Account.CryptoPortfolio)
+                    ?.cryptoCurrencies.orEmpty()
+                    .filterIsInstance<CryptoCurrency.Token>()
+            }
+            .filter { token -> token.network.id == coin.network.id }
+    }
+
     fun AccountList.getCoin(network: Network): Option<CryptoCurrency.Coin> {
         return getExpectedAccounts(network = network)
             .flatMap { account ->
