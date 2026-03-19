@@ -93,7 +93,9 @@ private fun ContentV1(content: EarnFilterByTypeBottomSheetContentUM) {
 @Composable
 private fun ContentV2(content: EarnFilterByTypeBottomSheetContentUM) {
     CardFilterBlock(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(bottom = TangemTheme.dimens2.x4),
     ) {
         EarnFilterTypeUM.entries.forEachIndexed { index, type ->
             TangemRowContainer(
