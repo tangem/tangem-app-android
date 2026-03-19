@@ -42,11 +42,25 @@ class TogglesGeneratorTest {
         )
 
         // Assert
-        assertThat(code).contains("enum class FeatureToggles {")
+        assertThat(code).contains("enum class FeatureToggles(")
     }
 
     @Test
-    fun `generate creates enum entries and companion object`() {
+    fun `generate creates enum with constructor parameters`() {
+        // Arrange
+        val json = """[{ "name": "onramp/ios", "version": "1.0.0" }]"""
+
+        // Act
+        val code = generateAndReadOutput(json, "Toggles")
+
+        // Assert
+        assertThat(code).contains("ONRAMP_IOS(")
+        assertThat(code).contains("val rawName: String")
+        assertThat(code).contains("val version: String")
+    }
+
+    @Test
+    fun `generate creates enum entries without companion object`() {
         // Arrange & Act
         val code = generateAndReadOutput(
             json = SINGLE_ENTRY_JSON,
@@ -54,21 +68,23 @@ class TogglesGeneratorTest {
         )
 
         // Assert
-        assertThat(code).contains("STAKING_ETH_ENABLED,")
-        assertThat(code).contains("companion object {")
+        assertThat(code).contains("STAKING_ETH_ENABLED(")
+        assertThat(code).contains("val rawName: String")
+        assertThat(code).contains("val version: String")
+        assertThat(code).doesNotContain("companion object")
+        assertThat(code).doesNotContain("val values:")
     }
 
     @Test
-    fun `generate creates values map with string literal keys`() {
+    fun `generate creates enum entries with constructor arguments`() {
         // Arrange & Act
         val code = generateAndReadOutput(
             json = SINGLE_ENTRY_JSON,
             fileName = "FeatureToggles",
         )
 
-        // Assert
-        assertThat(code).contains("val values: Map<String, String> = mapOf(")
-        assertThat(code).contains(""""STAKING_ETH_ENABLED" to "undefined"""")
+        // Assert - verify enum entry includes constructor arguments
+        assertThat(code).contains(""""STAKING_ETH_ENABLED", "undefined"""")
     }
 
     @Test
@@ -86,12 +102,12 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "TestToggles")
 
         // Assert
-        assertThat(code).contains("FEATURE_A,")
-        assertThat(code).contains("FEATURE_B,")
-        assertThat(code).contains("FEATURE_C,")
-        assertThat(code).contains(""""FEATURE_A" to "1.0"""")
-        assertThat(code).contains(""""FEATURE_B" to "2.0"""")
-        assertThat(code).contains(""""FEATURE_C" to "undefined"""")
+        assertThat(code).contains("FEATURE_A(")
+        assertThat(code).contains("FEATURE_B(")
+        assertThat(code).contains("FEATURE_C(")
+        assertThat(code).contains(""""FEATURE_A", "1.0"""")
+        assertThat(code).contains(""""FEATURE_B", "2.0"""")
+        assertThat(code).contains(""""FEATURE_C", "undefined"""")
     }
 
     @Test
@@ -103,8 +119,8 @@ class TogglesGeneratorTest {
         )
 
         // Assert
-        assertThat(code).contains("enum class EmptyToggles {")
-        assertThat(code).contains("val values: Map<String, String> = mapOf(")
+        assertThat(code).contains("enum class EmptyToggles(")
+        assertThat(code).doesNotContain("companion object")
     }
 
     @Test
@@ -116,8 +132,8 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "Toggles")
 
         // Assert
-        assertThat(code).contains("NEXA_TEST,")
-        assertThat(code).contains(""""NEXA/test" to "undefined"""")
+        assertThat(code).contains("NEXA_TEST(")
+        assertThat(code).contains(""""NEXA/test", "undefined"""")
     }
 
     @Test
@@ -129,8 +145,8 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "Toggles")
 
         // Assert
-        assertThat(code).contains("VANAR_CHAIN,")
-        assertThat(code).contains(""""vanar-chain" to "undefined"""")
+        assertThat(code).contains("VANAR_CHAIN(")
+        assertThat(code).contains(""""vanar-chain", "undefined"""")
     }
 
     @Test
@@ -142,8 +158,8 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "Toggles")
 
         // Assert
-        assertThat(code).contains("SONIC,")
-        assertThat(code).contains(""""sonic" to "5.21.0"""")
+        assertThat(code).contains("SONIC(")
+        assertThat(code).contains(""""sonic", "5.21.0"""")
     }
 
     @Test
@@ -169,7 +185,6 @@ class TogglesGeneratorTest {
 
         // Assert
         assertThat(code).doesNotContain("public enum class")
-        assertThat(code).doesNotContain("public companion object")
         assertThat(code).doesNotContain("public val")
     }
 
@@ -188,12 +203,12 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "FeatureToggles")
 
         // Assert
-        assertThat(code).contains("NEW_CARD_SCANNING_ENABLED,")
-        assertThat(code).contains("HOT_WALLET_CREATION_RESTRICTION_ENABLED,")
-        assertThat(code).contains("SWAP_MARKET_LIST_ENABLED,")
-        assertThat(code).contains(""""NEW_CARD_SCANNING_ENABLED" to "undefined"""")
-        assertThat(code).contains(""""HOT_WALLET_CREATION_RESTRICTION_ENABLED" to "5.32.0"""")
-        assertThat(code).contains(""""SWAP_MARKET_LIST_ENABLED" to "5.34"""")
+        assertThat(code).contains("NEW_CARD_SCANNING_ENABLED(")
+        assertThat(code).contains("HOT_WALLET_CREATION_RESTRICTION_ENABLED(")
+        assertThat(code).contains("SWAP_MARKET_LIST_ENABLED(")
+        assertThat(code).contains(""""NEW_CARD_SCANNING_ENABLED", "undefined"""")
+        assertThat(code).contains(""""HOT_WALLET_CREATION_RESTRICTION_ENABLED", "5.32.0"""")
+        assertThat(code).contains(""""SWAP_MARKET_LIST_ENABLED", "5.34"""")
     }
 
     @Test
@@ -211,13 +226,15 @@ class TogglesGeneratorTest {
         val code = generateAndReadOutput(json, "ExcludedBlockchainToggles")
 
         // Assert
-        assertThat(code).contains("enum class ExcludedBlockchainToggles {")
-        assertThat(code).contains("NEXA,")
-        assertThat(code).contains("NEXA_TEST,")
-        assertThat(code).contains("SONIC,")
-        assertThat(code).contains(""""NEXA" to "undefined"""")
-        assertThat(code).contains(""""NEXA/test" to "undefined"""")
-        assertThat(code).contains(""""sonic" to "5.21.0"""")
+        assertThat(code).contains("enum class ExcludedBlockchainToggles(")
+        assertThat(code).contains("val rawName: String")
+        assertThat(code).contains("val version: String")
+        assertThat(code).contains("NEXA(")
+        assertThat(code).contains("NEXA_TEST(")
+        assertThat(code).contains("SONIC(")
+        assertThat(code).contains(""""NEXA", "undefined"""")
+        assertThat(code).contains(""""NEXA/test", "undefined"""")
+        assertThat(code).contains(""""sonic", "5.21.0"""")
     }
 
     @Test
@@ -230,8 +247,25 @@ class TogglesGeneratorTest {
         val code2 = generateAndReadOutput(json, "ExcludedBlockchainToggles")
 
         // Assert
-        assertThat(code1).contains("enum class FeatureToggles {")
-        assertThat(code2).contains("enum class ExcludedBlockchainToggles {")
+        assertThat(code1).contains("enum class FeatureToggles(")
+        assertThat(code2).contains("enum class ExcludedBlockchainToggles(")
+    }
+
+    @Test
+    fun `generate does not include semicolon after enum entries`() {
+        // Arrange
+        val json = """
+            [
+                { "name": "FEATURE_A", "version": "1.0" },
+                { "name": "FEATURE_B", "version": "2.0" }
+            ]
+        """.trimIndent()
+
+        // Act
+        val code = generateAndReadOutput(json, "TestToggles")
+
+        // Assert - ensure no trailing semicolons
+        assertThat(code).doesNotContain(";\n")
     }
 
     private fun generateAndReadOutput(json: String, fileName: String): String {
