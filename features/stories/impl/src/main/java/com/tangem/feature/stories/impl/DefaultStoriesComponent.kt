@@ -4,13 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesScreen
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.utils.ChangeRootBackgroundColorEffect
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.stories.impl.model.StoriesModel
+import com.tangem.feature.stories.impl.ui.StoriesScreen
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -26,7 +26,7 @@ internal class DefaultStoriesComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state = model.state.collectAsStateWithLifecycle()
-        SwapStoriesScreen(state.value)
+        StoriesScreen(state.value)
         ChangeRootBackgroundColorEffect(TangemColorPalette.Black)
     }
 
