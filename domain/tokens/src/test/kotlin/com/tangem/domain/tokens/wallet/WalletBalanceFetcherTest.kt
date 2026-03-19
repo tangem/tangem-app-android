@@ -19,7 +19,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
-import com.tangem.domain.tokens.wallet.FetchingSource.*
+import com.tangem.domain.tokens.FetchingSource
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
@@ -251,7 +251,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
 
         // Act
@@ -304,7 +306,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(QUOTE)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.QUOTE)),
+        )
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
 
         // Act
@@ -357,7 +361,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
         } returns Either.Right(ethereumStakingId)
@@ -411,7 +417,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any())
         } returns Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
@@ -462,7 +470,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery { stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = any()) } returns stakingId
 
         // Act
@@ -512,7 +522,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.STAKING)),
+        )
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
         } returns ethereumStakingId
@@ -578,7 +590,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE, STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns exception.left()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns exception.left()
         coEvery {
@@ -651,7 +665,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE, STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
         coEvery {
@@ -717,7 +733,9 @@ internal class WalletBalanceFetcherTest {
             singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWallet = any())
         } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { singleWalletWithTokenBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE)
+        every { singleWalletWithTokenBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
@@ -774,7 +792,9 @@ internal class WalletBalanceFetcherTest {
         mockColdWallet(cardTypesResolver)
         coEvery { singleWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { singleWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE)
+        every { singleWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
 
@@ -832,7 +852,9 @@ internal class WalletBalanceFetcherTest {
 
         coEvery { multiWalletBalanceFetcher.getCryptoCurrencies(userWallet = any()) } returns currencies
         coEvery { expressServiceFetcher.fetch(userWallet = any(), assetIds = any()) } returns mockk()
-        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(NETWORK, QUOTE, STAKING)
+        every { multiWalletBalanceFetcher.fetchingSources } returns setOf(
+            WalletFetchingSource.Balance(setOf(FetchingSource.NETWORK, FetchingSource.QUOTE, FetchingSource.STAKING)),
+        )
         coEvery { multiNetworkStatusFetcher(params = networkStatusFetcherParams) } returns Unit.right()
         coEvery { multiQuoteStatusFetcher(params = quoteStatusFetcherParams) } returns Unit.right()
         coEvery {
