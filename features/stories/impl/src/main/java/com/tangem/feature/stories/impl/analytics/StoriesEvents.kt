@@ -4,7 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.WATCHED
 
-sealed class StoriesEvents(
+internal sealed class StoriesEvents(
     event: String,
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Stories", event, params) {
