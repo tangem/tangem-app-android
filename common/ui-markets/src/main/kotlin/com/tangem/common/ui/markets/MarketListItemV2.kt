@@ -3,7 +3,6 @@ package com.tangem.common.ui.markets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,10 +33,12 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.ds.badge.*
 import com.tangem.core.ui.ds.image.TangemIcon
 import com.tangem.core.ui.ds.image.TangemIconUM
 import com.tangem.core.ui.ds.row.TangemRowContainer
 import com.tangem.core.ui.ds.row.TangemRowLayoutId
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -95,7 +96,7 @@ fun MarketListItemContentV2(model: MarketsListItemUM, modifier: Modifier = Modif
                     .padding(end = TangemTheme.dimens2.x2, start = TangemTheme.dimens2.x3),
                 ratingPosition = model.ratingPosition,
                 marketCap = model.marketCap,
-                // stakingRate = model.stakingRate, TODO in [REDACTED_TASK_KEY]
+                stakingRate = model.stakingRate,
             )
 
             PriceChangeInPercent(
@@ -146,7 +147,7 @@ private fun TokenTitle(name: String, currencySymbol: String, modifier: Modifier 
 private fun TokenSubtitle(
     ratingPosition: String?,
     marketCap: String?,
-    // stakingRate: TextReference?, TODO in [REDACTED_TASK_KEY]
+    stakingRate: TextReference?,
     modifier: Modifier = Modifier,
 ) {
     val ratingColor = mapRatingToColor(ratingPosition)
@@ -154,7 +155,7 @@ private fun TokenSubtitle(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x1),
     ) {
         TokenRatingPlace(
             ratingPosition = ratingPosition,
@@ -166,6 +167,9 @@ private fun TokenSubtitle(
                 modifier = Modifier.weight(1f, fill = false),
                 text = marketCap,
             )
+        }
+        if (stakingRate != null) {
+            StakingRate(stakingRate = stakingRate)
         }
     }
 }
@@ -211,6 +215,18 @@ private fun RowScope.TokenMarketCapText(text: String, ratingColor: Color, modifi
         style = TangemTheme.typography2.captionSemibold12,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun RowScope.StakingRate(stakingRate: TextReference, modifier: Modifier = Modifier) {
+    TangemBadge(
+        modifier = modifier.alignByBaseline(),
+        text = stakingRate,
+        shape = TangemBadgeShape.Rounded,
+        size = TangemBadgeSize.X4,
+        type = TangemBadgeType.Tinted,
+        color = TangemBadgeColor.Gray,
     )
 }
 
