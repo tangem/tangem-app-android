@@ -692,6 +692,9 @@
   <string name="initial_message_scan_header">Tap to scan</string>
   <string name="initial_message_sign_header">Tap to sign</string>
   <string name="initial_message_tap_header">Tap the card or ring</string>
+  <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
+  <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
+  <string name="initial_wallet_sync_restore_progress">Restoring %d%</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
