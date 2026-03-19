@@ -11,6 +11,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
@@ -60,8 +61,6 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalResult
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -70,6 +69,7 @@ import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
+import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
@@ -78,7 +78,6 @@ import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNet
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
@@ -145,7 +144,6 @@ internal class SwapModel @Inject constructor(
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
-    private val getStoryContentUseCase: GetStoryContentUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
@@ -352,12 +350,21 @@ internal class SwapModel @Inject constructor(
     var addToPortfolioManager: AddToPortfolioManager? = null
 
     init {
+        modelScope.launch {
+            val storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id
+            if (shouldShowStoriesUseCase.invokeSync(storyId)) {
+                router.push(
+                    AppRoute.Stories(
+                        storyId = storyId,
+                        nextScreen = null,
+                        screenSource = params.screenSource,
+                    ),
+                )
+            }
+        }
+
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)
-        modelScope.launch {
-            initStories()
-            swapRouter.openScreen(SwapNavScreen.PromoStories)
-        }
 
         modelScope.launch(dispatchers.io) {
             if (canUseFromAccountCurrencyStatus) {
@@ -609,21 +616,6 @@ internal class SwapModel @Inject constructor(
                 userWalletId = userWalletId,
                 coin = coin,
                 isFromCurrency = false,
-            )
-        }
-    }
-
-    private fun initStories() {
-        modelScope.launch {
-            getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
-                ifLeft = {
-                    Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
-                },
-                ifRight = { story ->
-                    if (story != null) {
-                        uiState = stateBuilder.createStoriesState(uiState, story)
-                    }
-                },
             )
         }
     }
@@ -1831,16 +1823,6 @@ internal class SwapModel @Inject constructor(
             },
             onSuccess = {
                 swapRouter.openScreen(SwapNavScreen.Success)
-            },
-            onStoriesClose = { watchCount ->
-                analyticsEventHandler.send(
-                    StoriesEvents.SwapStories(
-                        source = params.screenSource,
-                        watchCount = watchCount.toString(),
-                    ),
-                )
-                modelScope.launch { shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id) }
-                swapRouter.openScreen(SwapNavScreen.Main)
             },
             onOpenLearnMoreAboutApproveClick = {
                 urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
