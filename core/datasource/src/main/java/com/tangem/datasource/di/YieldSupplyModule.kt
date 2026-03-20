@@ -9,14 +9,12 @@ import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -28,7 +26,7 @@ object YieldSupplyModule {
     fun provideYieldMarketsStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): YieldMarketsStore {
         return DefaultYieldMarketsStore(
             persistenceStore = DataStoreFactory.create(
@@ -38,7 +36,7 @@ object YieldSupplyModule {
                     defaultValue = emptyList(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = appScope,
             ),
         )
     }
