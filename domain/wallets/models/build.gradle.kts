@@ -12,13 +12,14 @@ dependencies {
     // endregion
 
     // region Domain modules
-    implementation(project(":domain:models"))
+    implementation(projects.domain.models)
     // endregion
+
+    implementation(projects.core.utils)
 
     // region Other libraries
     implementation(deps.kotlin.serialization)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     // endregion
 }

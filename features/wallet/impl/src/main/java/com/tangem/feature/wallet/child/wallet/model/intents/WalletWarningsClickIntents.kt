@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
@@ -11,8 +12,8 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.navigation.review.ReviewManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -53,7 +54,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("TooManyFunctions")
@@ -187,7 +187,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 userWalletId = userWallet.walletId,
                 currencies = missedAddressCurrencies,
             ).fold(
-                ifLeft = { Timber.e(it, "Failed to derive public keys") },
+                ifLeft = { TangemLogger.e("Failed to derive public keys", it) },
                 ifRight = {
                     fetchCryptoCurrencies(userWalletId = userWallet.walletId, currencies = missedAddressCurrencies)
                 },
@@ -485,7 +485,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             networks = currencies.map(CryptoCurrency::network).toSet(),
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch networks: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch networks: $it") }
                 },
                 async {
                     multiQuoteStatusFetcher(
@@ -494,7 +494,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             appCurrencyId = null,
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch quotes: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch quotes: $it") }
                 },
                 async {
                     val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
@@ -507,7 +507,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                             stakingIds = stakingIds,
                         ),
                     )
-                        .onLeft { Timber.e("Unable to fetch yield balances: $it") }
+                        .onLeft { TangemLogger.e("Unable to fetch yield balances: $it") }
                 },
             )
                 .awaitAll()
@@ -516,12 +516,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     private fun getSelectedUserWallet(): UserWallet? {
         val userWalletId = stateHolder.getSelectedWalletId()
-        return getUserWalletUseCase(userWalletId).getOrElse {
-            Timber.e(
+        return getUserWalletUseCase(userWalletId).getOrElse { error ->
+            TangemLogger.e(
                 """
                     Unable to get user wallet
                     |- ID: $userWalletId
-                    |- Exception: $it
+                    |- Exception: $error
                 """.trimIndent(),
             )
 
@@ -538,7 +538,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             setNotificationsEnabledUseCase(userWalletId, true).onRight {
                 notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
             }.onLeft {
-                Timber.e(it)
+                TangemLogger.e("Error", it)
             }
         }
     }
