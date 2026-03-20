@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenReceiveQrCodeBottomSheetTestTags
@@ -147,6 +150,9 @@ private fun Buttons(
     val context = LocalContext.current
     val resources = context.resources
 
+    val isRedesignEnabled = LocalRedesignEnabled.current
+    val tangemTopSnackbarHostState = LocalTopSnackbarHostState.current
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -159,9 +165,18 @@ private fun Buttons(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onCopyClick()
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = resources.getStringSafe(R.string.wallet_notification_address_copied),
-                    )
+                    if (isRedesignEnabled) {
+                        tangemTopSnackbarHostState.showSnackbar(
+                            SnackbarMessage(
+                                startIconId = R.drawable.ic_check_24,
+                                message = resourceReference(R.string.wallet_notification_address_copied),
+                            ),
+                        )
+                    } else {
+                        snackbarHostState.showSnackbar(
+                            message = resources.getStringSafe(R.string.wallet_notification_address_copied),
+                        )
+                    }
                 }
             },
         )

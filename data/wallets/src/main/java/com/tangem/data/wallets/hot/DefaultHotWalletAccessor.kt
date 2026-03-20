@@ -2,6 +2,7 @@ package com.tangem.data.wallets.hot
 
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.repositories.LegacySettingsRepository
@@ -11,10 +12,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.exception.WrongPasswordException
 import com.tangem.hot.sdk.model.*
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -27,10 +25,8 @@ class DefaultHotWalletAccessor @Inject constructor(
     private val hotWalletPasswordRequester: HotWalletPasswordRequester,
     private val walletsRepository: WalletsRepository,
     private val legacySettingsRepository: LegacySettingsRepository,
-    dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) : HotWalletAccessor {
-
-    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
     private val contextualUnlockHotWallet: ConcurrentHashMap<HotWalletId, UnlockHotWallet?> = ConcurrentHashMap()
 
@@ -233,7 +229,6 @@ class DefaultHotWalletAccessor @Inject constructor(
             this is TangemSdkError.AuthenticationLockout ||
             this is TangemSdkError.AuthenticationUnavailable ||
             this is TangemSdkError.AuthenticationAlreadyInProgress ||
-            this is TangemSdkError.AuthenticationNotInitialized ||
             this is TangemSdkError.AuthenticationPermanentLockout
     }
 
