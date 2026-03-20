@@ -4,10 +4,22 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlin.Boolean
+import kotlin.String
+import kotlin.Unit
+import kotlin.collections.Map
+import kotlin.collections.any
+import kotlin.collections.associateWith
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.first
+import kotlin.collections.firstOrNull
+import kotlin.collections.mapValues
+import kotlin.collections.plus
+import kotlin.error
+import kotlin.to
 
 /**
  * Implementation of [ApiConfigsManager] in MOCK environment
@@ -18,15 +30,13 @@ import kotlinx.coroutines.flow.*
  */
 internal class MockApiConfigsManager(
     private val apiConfigs: ApiConfigs,
-    dispatchers: CoroutineDispatcherProvider,
+    private val coroutineScope: AppCoroutineScope,
 ) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
         field = MutableStateFlow(value = getInitialConfigs())
 
     override val initializedState: StateFlow<Boolean> = MutableStateFlow(value = true)
-
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     override fun initialize() = Unit
 

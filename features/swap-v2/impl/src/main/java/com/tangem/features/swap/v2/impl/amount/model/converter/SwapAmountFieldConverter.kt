@@ -15,10 +15,10 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
-import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.utils.StringsSigns.DOT
 
 @Suppress("LongParameterList")

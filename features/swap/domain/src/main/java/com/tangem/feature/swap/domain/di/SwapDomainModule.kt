@@ -1,7 +1,5 @@
 package com.tangem.feature.swap.domain.di
 
-import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.feature.swap.domain.*
 import dagger.Module
 import dagger.Provides
@@ -22,14 +20,6 @@ internal class SwapDomainModule {
     @Singleton
     fun provideSwapInteractorFactory(factory: SwapInteractorImpl.Factory): SwapInteractor.Factory {
         return factory
-    }
-
-    @Provides
-    @Singleton
-    fun providesGetCryptoCurrencyStatusUseCase(
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-    ): GetMultiCryptoCurrencyStatusUseCase {
-        return GetMultiCryptoCurrencyStatusUseCase(currencyStatusOperations)
     }
 
     @Provides
