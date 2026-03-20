@@ -95,9 +95,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
             repository.getCustomerInfo(userWalletId = userWalletId)
                 .onRight { customerInfo ->
-                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     when {
                         customerInfo.kycStatus != KycStatus.APPROVED -> {
+                            if (customerInfo.productInstance == null) {
+                                repository.createOrder(userWalletId)
+                                    .onLeft { error ->
+                                        Timber.e("Error creating order before KYC: $error")
+                                    }
+                            }
                             when (params) {
                                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> openKyc(userWalletId)
                                 else -> startOnboarding(userWalletId)
@@ -105,6 +110,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         }
                         else -> back()
                     }
+                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 }
                 .onLeft { startOnboarding(userWalletId) }
         }
@@ -178,6 +184,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         if (customerInfo.kycStatus == KycStatus.APPROVED) {
                             back()
                         } else {
+                            if (customerInfo.productInstance == null) {
+                                repository.createOrder(userWalletId)
+                                    .onLeft { error ->
+                                        Timber.e("Error creating order before KYC: $error")
+                                    }
+                            }
                             openKyc(userWalletId)
                         }
                     },

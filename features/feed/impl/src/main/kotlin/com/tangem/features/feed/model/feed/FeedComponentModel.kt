@@ -353,8 +353,6 @@ internal class FeedComponentModel @Inject constructor(
             SortByTypeUM.ExperiencedBuyers,
             SortByTypeUM.TopGainers,
             SortByTypeUM.TopLosers,
-            SortByTypeUM.Staking,
-            SortByTypeUM.YieldSupply,
             -> {
                 analyticsEventHandler.send(
                     FeedAnalyticsEvent.TokenListOpened(
@@ -439,8 +437,6 @@ internal class FeedComponentModel @Inject constructor(
             SortByTypeUM.ExperiencedBuyers -> TokenMarketListConfig.Order.Buyers
             SortByTypeUM.TopGainers -> TokenMarketListConfig.Order.TopGainers
             SortByTypeUM.TopLosers -> TokenMarketListConfig.Order.TopLosers
-            SortByTypeUM.Staking -> TokenMarketListConfig.Order.Staking
-            SortByTypeUM.YieldSupply -> TokenMarketListConfig.Order.YieldSupply
         }
     }
 
