@@ -68,13 +68,20 @@ sealed class AppRoute(val path: String) : Route {
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
+        val entryType: EntryType = EntryType.Manual,
     ) : AppRoute(
         path = "/send/${userWalletId.stringValue}/${currency.id.value}?" +
             "&$transactionId" +
             "&$amount" +
             "&$tag" +
             "&$destinationAddress",
-    )
+    ) {
+        @Serializable
+        enum class EntryType {
+            Manual,
+            QR,
+        }
+    }
 
     @Serializable
     data class Details(
@@ -139,6 +146,7 @@ sealed class AppRoute(val path: String) : Route {
             STORIES,
             SETTINGS,
             ACCOUNT,
+            TOKEN_SYNC_BANNER,
         }
     }
 
@@ -167,11 +175,14 @@ sealed class AppRoute(val path: String) : Route {
                 get() = when (this) {
                     is Send -> "/$networkName"
                     WalletConnect -> ""
+                    MainScreen -> ""
                 }
 
             data class Send(val networkName: String) : Source()
 
             data object WalletConnect : Source()
+
+            data object MainScreen : Source()
         }
     }
 
@@ -316,7 +327,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Stories(
         val storyId: String,
-        val nextScreen: AppRoute,
+        val nextScreen: AppRoute? = null,
         val screenSource: String,
     ) : AppRoute(path = "/stories$storyId")
 
