@@ -7,6 +7,7 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapQuoteModel
 import com.tangem.domain.models.wallet.UserWallet
 import java.math.BigDecimal
@@ -14,6 +15,7 @@ import java.math.BigDecimal
 /**
  * Get swap quote for selected pair
  */
+@Suppress("LongParameterList")
 class GetSwapQuoteUseCase(
     private val swapRepositoryV2: SwapRepositoryV2,
     private val swapErrorResolver: SwapErrorResolver,
@@ -23,23 +25,28 @@ class GetSwapQuoteUseCase(
      * @param userWallet selected user wallet
      * @param fromCryptoCurrency currency swap from
      * @param toCryptoCurrency currency swap to
-     * @param fromAmount swap amount
+     * @param amount swap amount
+
+     * @param rateType rate type for the quote. Float API does not support [SwapAmountType.To].
      * @param provider swap provider
      */
     suspend operator fun invoke(
         userWallet: UserWallet,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAmount: BigDecimal,
+        amount: BigDecimal,
+        amountType: SwapAmountType,
+        rateType: ExpressRateType,
         provider: ExpressProvider,
     ): Either<ExpressError, SwapQuoteModel> = Either.catch {
         swapRepositoryV2.getSwapQuote(
             userWallet = userWallet,
             fromCryptoCurrency = fromCryptoCurrency,
             toCryptoCurrency = toCryptoCurrency,
-            fromAmount = fromAmount,
+            amount = amount,
+            amountType = amountType,
             provider = provider,
-            rateType = ExpressRateType.Float, // todo rate type
+            rateType = rateType,
         )
     }.mapLeft(swapErrorResolver::resolve)
 }

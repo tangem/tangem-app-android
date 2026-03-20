@@ -97,6 +97,10 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.hotWallet)
@@ -144,6 +148,7 @@ dependencies {
     implementation(projects.features.yieldSupply.api)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.feed.api)
+    implementation(projects.features.promoBanners.api)
 
     /** Common modules */
     implementation(projects.common)
