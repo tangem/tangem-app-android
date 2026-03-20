@@ -21,7 +21,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Stable
@@ -57,7 +57,7 @@ internal class TangemPayChangePinModel @Inject constructor(
                     pin = uiState.value.pinCode,
                 ).getOrNull()
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 return@launch
             }
             uiState.update { it.copy(submitButtonLoading = false) }

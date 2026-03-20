@@ -18,6 +18,7 @@ dependencies {
 
     /** Project - Analytics */
     implementation(projects.core.analytics.models)
+    implementation(projects.core.utils)
 
     /** Project - Data */
     implementation(projects.core.datasource)
@@ -32,5 +33,4 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
-    implementation(deps.timber)
 }
