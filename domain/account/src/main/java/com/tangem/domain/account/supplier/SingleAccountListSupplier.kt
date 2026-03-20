@@ -21,4 +21,10 @@ abstract class SingleAccountListSupplier(
             params = SingleAccountListProducer.Params(userWalletId = userWalletId),
         )
     }
+
+    suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountList? {
+        return getSyncOrNull(
+            params = SingleAccountListProducer.Params(userWalletId = userWalletId),
+        )
+    }
 }

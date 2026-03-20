@@ -136,6 +136,8 @@ object PreferencesKeys {
 
     val HAS_HAD_FIRST_TOP_UP_KEY by lazy { stringPreferencesKey(name = "hasHadFirstTopUp") }
 
+    val PENDING_DISCOVERY_SYNC_KEY by lazy { stringPreferencesKey(name = "pendingDiscoverySync") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
@@ -161,7 +163,7 @@ object PreferencesKeys {
     val TANGEM_PAY_ACTIVE_WITHDRAW_ORDERS_KEY by lazy {
         stringPreferencesKey(name = "tangemPayActiveWithdrawOrdersKey")
     }
-    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { booleanPreferencesKey(name = "tangemPayEligibility") }
+    val TANGEM_PAY_ELIGIBILITY_KEY by lazy { stringSetPreferencesKey(name = "tangemPayEligibilityList") }
 
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion

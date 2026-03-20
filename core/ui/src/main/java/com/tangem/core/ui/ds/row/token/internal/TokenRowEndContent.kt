@@ -17,10 +17,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
@@ -33,6 +35,7 @@ internal fun TokenRowEndContent(
     isBalanceHidden: Boolean,
     textStyle: TextStyle,
     textColor: Color,
+    placeholderWidth: Dp,
     modifier: Modifier = Modifier,
 ) {
     when (endContentUM) {
@@ -43,12 +46,17 @@ internal fun TokenRowEndContent(
             textStyle = textStyle,
             textColor = textColor,
         )
-        TangemTokenRowUM.EndContentUM.Empty -> Unit
         TangemTokenRowUM.EndContentUM.Loading -> TextShimmer(
             style = textStyle,
-            modifier = modifier.width(TangemTheme.dimens2.x10),
+            modifier = modifier.width(placeholderWidth),
             radius = TangemTheme.dimens2.x25,
         )
+        TangemTokenRowUM.EndContentUM.Placeholder -> TextPlaceholder(
+            modifier = modifier,
+            textStyle = textStyle,
+            width = placeholderWidth,
+        )
+        TangemTokenRowUM.EndContentUM.Empty -> Unit
     }
 }
 
@@ -141,6 +149,7 @@ private fun TokenRowEndContent_Preview(
             isBalanceHidden = false,
             textColor = TangemTheme.colors2.text.neutral.primary,
             textStyle = TangemTheme.typography2.captionSemibold12,
+            placeholderWidth = TangemTheme.dimens2.x11,
         )
     }
 }
@@ -149,6 +158,8 @@ private class TokenRowEndContentPreviewProvider : PreviewParameterProvider<Tange
     override val values: Sequence<TangemTokenRowUM.EndContentUM>
         get() = sequenceOf(
             TangemTokenRowPreviewData.bottomEndContentUM,
+            TangemTokenRowUM.EndContentUM.Loading,
+            TangemTokenRowUM.EndContentUM.Empty,
         )
 }
 // endregion

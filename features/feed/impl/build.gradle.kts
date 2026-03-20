@@ -25,6 +25,7 @@ dependencies {
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
     api(projects.features.account.api)
+    implementation(projects.features.promoBanners.api)
 
     /* Data */
     implementation(projects.data.common)
@@ -56,7 +57,6 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.earn)
-
 
     /* Compose */
     implementation(deps.compose.coil)

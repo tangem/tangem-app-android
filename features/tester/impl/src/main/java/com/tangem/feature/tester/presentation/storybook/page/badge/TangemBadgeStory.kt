@@ -193,6 +193,7 @@ private fun BadgeTypeRow(
                 color = color,
                 type = type,
                 iconPosition = TangemBadgeIconPosition.Start,
+                onClick = {},
             )
         }
         Box(
@@ -205,6 +206,7 @@ private fun BadgeTypeRow(
                 shape = shape,
                 color = color,
                 type = type,
+                onClick = {},
             )
         }
         Box(
@@ -217,7 +219,7 @@ private fun BadgeTypeRow(
                 shape = shape,
                 color = color,
                 type = type,
-                iconPosition = TangemBadgeIconPosition.Start,
+                onClick = {},
             )
         }
     }

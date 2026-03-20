@@ -8,11 +8,13 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -33,6 +35,8 @@ internal interface InnerWalletRouter {
     val dialogNavigation: SlotNavigation<WalletDialogConfig>
 
     val navigateToFlow: SharedFlow<WalletRoute>
+
+    val organizeCallbacks: OrganizeTokensComponent.Callback
 
     /** Open organize tokens screen */
     fun openOrganizeTokensScreen(userWalletId: UserWalletId)
@@ -86,4 +90,20 @@ internal interface InnerWalletRouter {
 
     /** Open token action sheet */
     fun openTokenActionSheet(userWallet: UserWallet, tokenActionList: ImmutableList<TokenActionButtonUM>)
+
+    /** Open QR scanner screen */
+    fun openQrScanner()
+
+    /** Open send screen with prefilled destination */
+    fun openSend(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        address: String,
+        amount: String?,
+        tag: String?,
+        entryType: AppRoute.Send.EntryType = AppRoute.Send.EntryType.Manual,
+    )
+
+    /** Open network selection bottom sheet for multiple QR matches */
+    fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple)
 }

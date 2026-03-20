@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -47,6 +48,7 @@ import com.tangem.features.feed.model.converter.ShortArticleToArticleConfigUMCon
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.converter.DescriptionConverter
 import com.tangem.features.feed.model.market.details.converter.ExchangeItemStateConverter
+import com.tangem.features.feed.model.market.details.converter.ExchangeItemStateConverterV2
 import com.tangem.features.feed.model.market.details.converter.TokenMarketInfoConverter
 import com.tangem.features.feed.model.market.details.formatter.*
 import com.tangem.features.feed.model.market.details.state.QuotesStateUpdater
@@ -77,6 +79,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     getUserCountryUseCase: GetUserCountryUseCase,
     paramsContainer: ParamsContainer,
+    private val designFeatureToggles: DesignFeatureToggles,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
     private val getTokenMarketInfoUseCase: GetTokenMarketInfoUseCase,
     private val getTokenFullQuotesUseCase: GetTokenFullQuotesUseCase,
@@ -147,11 +150,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         needApplyFCARestrictions = Provider {
             userCountry.needApplyFCARestrictions()
         },
+        isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         // ==================
     )
 
     private val shortArticleToArticleConfigUMConverter by lazy {
-        ShortArticleToArticleConfigUMConverter(isTrending = Provider { false })
+        ShortArticleToArticleConfigUMConverter(isTrending = false)
     }
 
     private val descriptionConverter = DescriptionConverter(
@@ -701,9 +705,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                     ExchangesBottomSheetContent.Error(onRetryClick = { onListedOnClick(exchangesCount) })
                 },
                 ifRight = { list ->
-                    ExchangesBottomSheetContent.Content(
-                        exchangeItems = ExchangeItemStateConverter.convertList(list).toImmutableList(),
-                    )
+                    if (designFeatureToggles.isRedesignEnabled) {
+                        ExchangesBottomSheetContent.ContentV2(
+                            exchangeItemsV2 = ExchangeItemStateConverterV2.convertList(list).toImmutableList(),
+                        )
+                    } else {
+                        ExchangesBottomSheetContent.ContentV1(
+                            exchangeItems = ExchangeItemStateConverter.convertList(list).toImmutableList(),
+                        )
+                    }
                 },
             )
 

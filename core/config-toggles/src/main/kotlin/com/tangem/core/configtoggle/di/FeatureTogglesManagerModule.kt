@@ -5,6 +5,7 @@ import com.tangem.core.configtoggle.BuildConfig
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.ProdFeatureTogglesManager
+import com.tangem.core.configtoggle.feature.provider.DefaultFeatureTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.DefaultVersionProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -26,17 +27,22 @@ internal object FeatureTogglesManagerModule {
         appPreferencesStore: AppPreferencesStore,
     ): FeatureTogglesManager {
         val versionProvider = DefaultVersionProvider(context)
+        val featureTogglesProvider = DefaultFeatureTogglesProvider()
 
         return if (BuildConfig.TESTER_MENU_ENABLED) {
             DevFeatureTogglesManager(
                 versionProvider = versionProvider,
+                featureTogglesProvider = featureTogglesProvider,
                 featureTogglesLocalStorage = LocalTogglesStorage(
                     appPreferencesStore = appPreferencesStore,
                     preferencesKey = LocalTogglesStorage.FEATURE_TOGGLES_KEY,
                 ),
             )
         } else {
-            ProdFeatureTogglesManager(versionProvider = versionProvider)
+            ProdFeatureTogglesManager(
+                versionProvider = versionProvider,
+                featureTogglesProvider = featureTogglesProvider,
+            )
         }
     }
 }

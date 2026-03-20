@@ -5,6 +5,9 @@ import com.tangem.datasource.api.promotion.models.PromoBannerResponse
 import com.tangem.datasource.api.promotion.models.PromoBannerV2Response
 import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.tangemTech.models.promobanners.PromoBannerDisplaysResponse
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerRequest
+import com.tangem.datasource.api.tangemTech.models.promobanners.DismissPromoBannerResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletArchivedAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
@@ -25,6 +28,7 @@ interface TangemTechApi {
     suspend fun getCoins(
         @Header("Cache-Control") cacheControl: String = "max-age=600",
         @Query("contractAddress") contractAddress: String? = null,
+        @Query("contractAddresses") contractAddresses: String? = null,
         @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
         @Query("networkId") networkId: String? = null,
@@ -41,15 +45,6 @@ interface TangemTechApi {
 
     @GET("v1/geo")
     suspend fun getUserCountryCode(): GeoResponse
-
-    @GET("v1/user-tokens/{user-id}")
-    suspend fun getUserTokens(@Path(value = "user-id") userId: String): ApiResponse<UserTokensResponse>
-
-    @PUT("v1/user-tokens/{user-id}")
-    suspend fun saveUserTokens(
-        @Path(value = "user-id") userId: String,
-        @Body userTokens: UserTokensResponse,
-    ): ApiResponse<Unit>
 
     @PUT("/v1/wallets/{walletId}/tokens")
     suspend fun saveTokens(
@@ -135,14 +130,8 @@ interface TangemTechApi {
     @PATCH("v1/user-wallets/wallets/{wallet_id}")
     suspend fun updateWallet(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
 
-    @POST("v1/user-wallets/wallets/create-and-connect-by-appuid/{application_id}")
-    suspend fun associateApplicationIdWithWallets(
-        @Path("application_id") applicationId: String,
-        @Body body: List<WalletIdBody>,
-    ): ApiResponse<Unit>
-
     @PUT("/v1/user-wallets/applications/{application_id}/wallets")
-    suspend fun associateApplicationIdWithWalletsV2(
+    suspend fun associateApplicationIdWithWallets(
         @Path("application_id") applicationId: String,
         @Body body: AssociateApplicationIdWithWalletsBody,
     ): ApiResponse<Unit>
@@ -195,6 +184,21 @@ interface TangemTechApi {
         @Query("walletId") walletId: String,
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromoBannerV2Response>
+    // endregion
+
+    // region promo banners
+    @GET("v1/banner/displays")
+    suspend fun getPromoBannerDisplays(
+        @Query("walletId") walletId: String,
+        @Query("placeholder") placeholder: String,
+        @Query("locale") locale: String,
+    ): ApiResponse<PromoBannerDisplaysResponse>
+
+    @PATCH("v1/displays/{displayId}")
+    suspend fun dismissPromoBannerDisplay(
+        @Path("displayId") displayId: String,
+        @Body body: DismissPromoBannerRequest,
+    ): ApiResponse<DismissPromoBannerResponse>
     // endregion
 
     /**

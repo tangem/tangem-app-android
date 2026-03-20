@@ -111,7 +111,7 @@ internal class PortfolioTokenUMConverter(
                 if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
                     when (action) {
                         is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
-                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(action.showBadge)
+                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(action.shouldShowBadge)
                         is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
                         is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
                         is TokenActionsState.ActionState.YieldMode -> QuickActionUM.YieldMode(action.apy)

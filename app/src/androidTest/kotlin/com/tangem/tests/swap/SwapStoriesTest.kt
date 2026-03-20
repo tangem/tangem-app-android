@@ -3,6 +3,7 @@ package com.tangem.tests.swap
 import androidx.compose.ui.test.longClick
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.assertHasBadge
 import com.tangem.common.extensions.restartApp
 import com.tangem.common.utils.resetWireMockScenarioState
@@ -208,7 +209,10 @@ class SwapStoriesTest : BaseTestCase() {
             }
             step("Assert 'Swap' button has badge") {
                 waitForIdle()
-                onMainScreen { swapButton.assertHasBadge() }
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    composeTestRule.mainClock.advanceTimeBy(500)
+                    onMainScreen { swapButton.assertHasBadge() }
+                }
             }
             step("Open 'Swap' screen") {
                 openSwapScreen(from = SwapEntryPoint.TokenDetails, storiesExist = true)

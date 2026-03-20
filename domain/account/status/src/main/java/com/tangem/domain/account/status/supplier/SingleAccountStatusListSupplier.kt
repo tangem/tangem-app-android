@@ -20,4 +20,9 @@ abstract class SingleAccountStatusListSupplier(
         val params = SingleAccountStatusListProducer.Params(userWalletId)
         return this.invoke(params)
     }
+
+    suspend fun getSyncOrNull(userWalletId: UserWalletId): AccountStatusList? {
+        val params = SingleAccountStatusListProducer.Params(userWalletId)
+        return this.getSyncOrNull(params)
+    }
 }
