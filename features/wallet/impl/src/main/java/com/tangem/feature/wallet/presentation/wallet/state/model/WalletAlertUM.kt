@@ -80,6 +80,20 @@ internal object WalletAlertUM {
         )
     }
 
+    fun qrCodeUnrecognized(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.qr_scanner_error_unrecognized_title),
+            message = resourceReference(R.string.qr_scanner_error_unrecognized_message),
+        )
+    }
+
+    fun qrCodeUnsupportedNetwork(): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(R.string.qr_scanner_error_token_not_added_title),
+            message = resourceReference(R.string.qr_scanner_error_token_not_added_message),
+        )
+    }
+
     fun confirmExpressStatusHide(onConfirmClick: () -> Unit): DialogMessage {
         return DialogMessage(
             title = resourceReference(R.string.express_status_hide_dialog_title),

@@ -5,6 +5,7 @@ import com.tangem.domain.account.status.model.AccountCryptoCurrencies
 import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.feature.wallet.child.organizetokens.entity.DraggableItem
+import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeRowItemUM
 import com.tangem.feature.wallet.child.organizetokens.entity.OrganizeTokensListUM
 
 internal class CryptoCurrenciesIdsResolver {
@@ -21,6 +22,25 @@ internal class CryptoCurrenciesIdsResolver {
             is OrganizeTokensListUM.TokensList,
             -> tokensListUM.items.filterIsInstance<DraggableItem.Token>()
         }
+
+        return accountStatusList.accountStatuses
+            .filterCryptoPortfolio()
+            .filter { it.tokenList != TokenList.Empty }
+            .associate { accountStatus ->
+                val currenciesById = accountStatus.flattenCurrencies().associateBy { it.currency.id.value }
+
+                accountStatus.account to draggableTokens
+                    .asSequence()
+                    .filter { it.accountId == accountStatus.account.accountId.value }
+                    .mapNotNull { token -> currenciesById[token.id]?.currency }
+                    .toList()
+            }
+    }
+
+    fun resolve(tokenList: List<OrganizeRowItemUM>, accountStatusList: AccountStatusList?): AccountCryptoCurrencies {
+        if (accountStatusList == null) return emptyMap()
+
+        val draggableTokens = tokenList.filterIsInstance<OrganizeRowItemUM.Token>()
 
         return accountStatusList.accountStatuses
             .filterCryptoPortfolio()

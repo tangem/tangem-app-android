@@ -10,13 +10,6 @@ interface CustomTokensRepository {
 
     suspend fun validateContractAddress(contractAddress: String, networkId: Network.ID): Boolean
 
-    suspend fun isCurrencyNotAdded(
-        userWalletId: UserWalletId,
-        networkId: Network.ID,
-        derivationPath: Network.DerivationPath,
-        contractAddress: String?,
-    ): Boolean
-
     suspend fun findToken(
         userWalletId: UserWalletId,
         contractAddress: String,
