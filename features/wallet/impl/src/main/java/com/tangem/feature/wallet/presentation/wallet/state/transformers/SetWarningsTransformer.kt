@@ -7,7 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class SetWarningsTransformer(
     userWalletId: UserWalletId,
@@ -23,7 +23,7 @@ internal class SetWarningsTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             -> {
-                Timber.w("Impossible to update notifications for locked wallet")
+                TangemLogger.w("Impossible to update notifications for locked wallet")
                 prevState
             }
         }
@@ -36,7 +36,7 @@ internal class SetWarningsTransformer(
                 notificationsCarousel = notificationsCarousel,
             )
             is WalletUM.Locked -> {
-                Timber.w("Impossible to update notifications for locked wallet")
+                TangemLogger.w("Impossible to update notifications for locked wallet")
                 walletUM
             }
         }

@@ -45,7 +45,6 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     implementation(tangemDeps.blockchain)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
