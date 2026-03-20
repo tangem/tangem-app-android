@@ -7,6 +7,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.features.feed.components.earn.DefaultEarnComponent
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
@@ -21,6 +23,8 @@ internal class FeedEntryChildFactory @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val portfolioComponentFactory: MarketsPortfolioComponent.Factory,
     private val addToPortfolioPreselectedDataComponent: AddToPortfolioPreselectedDataComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
+    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
 ) {
 
     @Serializable
@@ -100,6 +104,8 @@ internal class FeedEntryChildFactory @Inject constructor(
                     appComponentContext = appComponentContext,
                     params = DefaultFeedComponent.FeedParams(feedClickIntents = feedEntryClickIntents),
                     addToPortfolioComponentFactory = addToPortfolioPreselectedDataComponent,
+                    promoBannersBlockComponentFactory = promoBannersBlockComponentFactory,
+                    newPromoBannersFeatureToggles = newPromoBannersFeatureToggles,
                 )
             }
             is Child.Earn -> {
