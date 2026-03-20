@@ -35,11 +35,11 @@ import com.tangem.domain.swap.models.*
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
@@ -392,7 +392,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ).getOrThrow()
             },
             onError = { error ->
-                Timber.w(error, "Unable to get pairs")
+                TangemLogger.w("Unable to get pairs", error)
                 throw error
             },
         )
@@ -438,7 +438,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         return try {
             txDetailsMoshiAdapter.fromJson(txDetailsJson)
         } catch (e: IOException) {
-            Timber.e(e, "error parsing txDetailsJson")
+            TangemLogger.e("error parsing txDetailsJson", e)
             null
         }
     }
