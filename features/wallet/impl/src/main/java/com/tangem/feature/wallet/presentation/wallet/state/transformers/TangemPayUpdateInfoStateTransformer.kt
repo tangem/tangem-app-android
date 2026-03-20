@@ -56,7 +56,7 @@ internal class TangemPayUpdateInfoStateTransformer(
             value.orderStatus == OrderStatus.CANCELED -> createCancelledState(customerId)
             value.info.kycStatus != KycStatus.APPROVED && !value.info.customerId.isNullOrEmpty() ->
                 createKycInProgressState(kycStatus = value.info.kycStatus, customerId = customerId)
-            cardInfo != null && productInstance != null ->
+            cardInfo != null && productInstance != null && value.orderStatus == OrderStatus.COMPLETED ->
                 getCardInfoState(customerId, cardInfo, productInstance)
             else -> createIssueProgressState()
         }
