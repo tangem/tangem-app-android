@@ -382,6 +382,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onScanQrClick() {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonQrScan())
         router.openQrScanner()
     }
 }
