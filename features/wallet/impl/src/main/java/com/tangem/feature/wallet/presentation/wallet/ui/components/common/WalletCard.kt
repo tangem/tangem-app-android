@@ -12,6 +12,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
@@ -164,6 +165,7 @@ private fun CardContainer(state: WalletCardState, isBalanceHidden: Boolean, item
             }
             AdditionalInfo(
                 text = additionalText,
+                showProgress = state.additionalInfo?.shouldShowProgress == true,
                 modifier = Modifier.conditional(
                     state.imageResId == null,
                 ) { fillMaxWidth() },
@@ -298,7 +300,7 @@ private fun Modifier.nonContentBalanceSize(dimens: TangemDimens): Modifier {
 }
 
 @Composable
-private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) {
+private fun AdditionalInfo(text: TextReference?, showProgress: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = text,
         label = "Update the additional text",
@@ -309,7 +311,19 @@ private fun AdditionalInfo(text: TextReference?, modifier: Modifier = Modifier) 
         },
     ) { animatedText ->
         if (animatedText != null) {
-            AdditionalInfoText(text = animatedText)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                AdditionalInfoText(text = animatedText)
+                if (showProgress) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size16),
+                        color = TangemTheme.colors.icon.accent,
+                        strokeWidth = TangemTheme.dimens.size2,
+                    )
+                }
+            }
         } else {
             RectangleShimmer(modifier = Modifier.nonContentAdditionalInfoSize(dimens = TangemTheme.dimens))
         }
