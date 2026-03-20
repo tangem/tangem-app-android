@@ -8,16 +8,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbarHost
+import com.tangem.core.ui.res.LocalRedesignEnabled
 
+@Deprecated(
+    "Use TangemTopSnackbarHost instead. Will be removed with redesign",
+)
 @Composable
 internal fun ContainerWithSnackbarHost(snackbarHostState: SnackbarHostState, content: @Composable () -> Unit) {
     Box {
         content()
-        CopiedTextSnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp),
-        )
+
+        if (LocalRedesignEnabled.current.not()) {
+            CopiedTextSnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp),
+            )
+        }
     }
 }

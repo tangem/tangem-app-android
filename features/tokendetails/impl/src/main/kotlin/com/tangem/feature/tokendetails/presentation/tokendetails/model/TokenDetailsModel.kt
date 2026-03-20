@@ -34,11 +34,12 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.IsCryptoCurrencyCouldHideUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
@@ -79,6 +80,7 @@ import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
+import com.tangem.feature.tokendetails.domain.GetCurrencyWarningsUseCase
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
@@ -110,10 +112,10 @@ import javax.inject.Inject
 internal class TokenDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-    private val isCryptoCurrencyCoinCouldHideUseCase: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val isCryptoCurrencyCouldHideUseCase: IsCryptoCurrencyCouldHideUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -326,12 +328,10 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
-            getCurrencyWarningsUseCase.invoke(
+            getCurrencyWarningsUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet is UserWallet.Cold &&
-                    userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
             )
                 .distinctUntilChanged()
                 .onEach { warnings ->
@@ -738,15 +738,10 @@ internal class TokenDetailsModel @Inject constructor(
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrency.symbol))
 
         modelScope.launch {
-            val canHide = when (cryptoCurrency) {
-                is CryptoCurrency.Coin -> {
-                    isCryptoCurrencyCoinCouldHideUseCase(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyCoin = cryptoCurrency,
-                    )
-                }
-                is CryptoCurrency.Token -> true
-            }
+            val canHide = isCryptoCurrencyCouldHideUseCase(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+            )
 
             internalUiState.value = if (canHide) {
                 stateFactory.getStateWithConfirmHideTokenDialog(cryptoCurrency)
@@ -845,7 +840,9 @@ internal class TokenDetailsModel @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             listOf(
-                async { fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id) },
+                async {
+                    cryptoCurrencyBalanceFetcher.invokeAndAwait(userWalletId = userWalletId, currency = cryptoCurrency)
+                },
                 async {
                     updateTxHistory()
                     subscribeOnExpressTransactionsUpdates()
