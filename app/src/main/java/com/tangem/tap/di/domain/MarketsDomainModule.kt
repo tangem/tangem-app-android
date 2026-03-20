@@ -4,7 +4,6 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import dagger.Module
 import dagger.Provides
@@ -82,17 +81,5 @@ object MarketsDomainModule {
     @Singleton
     fun provideGetTokenExchangesUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenExchangesUseCase {
         return GetTokenExchangesUseCase(marketsTokenRepository = marketsTokenRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideShouldShowYieldModeMarketPromoUseCase(
-        promoRepository: PromoRepository,
-        marketsTokenRepository: MarketsTokenRepository,
-    ): ShouldShowYieldModeMarketPromoUseCase {
-        return ShouldShowYieldModeMarketPromoUseCase(
-            promoRepository = promoRepository,
-            marketsTokenRepository = marketsTokenRepository,
-        )
     }
 }
