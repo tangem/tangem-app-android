@@ -1104,6 +1104,8 @@
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
+  <string name="qr_scanner_error_token_not_added_message">Requested token is not added to your wallet. Please add it and try again.</string>
+  <string name="qr_scanner_error_token_not_added_title">Token not added</string>
   <string name="qr_scanner_error_unrecognized_message">Sorry, this QR code could not be recognized.</string>
   <string name="qr_scanner_error_unrecognized_title">Unrecognized QR Code</string>
   <string name="qr_scanner_error_unsupported_network_message">This network isn\'t supported by any of your added tokens. Add a supported token to send crypto.</string>

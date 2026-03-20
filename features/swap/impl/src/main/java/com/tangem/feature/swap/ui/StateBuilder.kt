@@ -7,7 +7,6 @@ import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.HoldToConfirmButtonFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -23,7 +22,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -132,15 +130,6 @@ internal class StateBuilder(
             shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty(),
             isInsufficientFunds = false,
-        )
-    }
-
-    fun createStoriesState(uiStateHolder: SwapStateHolder, swapStory: StoryContent): SwapStateHolder {
-        return uiStateHolder.copy(
-            storiesConfig = SwapStoriesFactory.createStoriesState(
-                swapStory = swapStory,
-                onStoriesClose = actions.onStoriesClose,
-            ),
         )
     }
 
