@@ -75,13 +75,13 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.rekotlin.Store
-import timber.log.Timber
 
 lateinit var store: Store<AppState>
 
@@ -299,10 +299,10 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         store = createReduxStore()
 
-        Timber.i("APP STARTED")
+        TangemLogger.i("APP STARTED")
         if (BuildConfig.TESTER_MENU_ENABLED) {
-            Timber.i(featureTogglesManager.toString())
-            Timber.i(excludedBlockchainsManager.toString())
+            TangemLogger.i(featureTogglesManager.toString())
+            TangemLogger.i(excludedBlockchainsManager.toString())
         }
 
         initWithConfigDependency(environmentConfig = environmentConfig)
