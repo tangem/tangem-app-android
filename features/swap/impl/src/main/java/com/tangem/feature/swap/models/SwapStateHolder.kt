@@ -5,7 +5,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.common.ui.swapStoriesScreen.SwapStoriesUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -31,8 +30,6 @@ internal data class SwapStateHolder(
     val successState: SwapSuccessStateHolder? = null,
     val selectTokenState: SwapSelectTokenStateHolder? = null,
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
-    val storiesConfig: SwapStoriesUM? = null,
-
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
     val tosState: TosState? = null,

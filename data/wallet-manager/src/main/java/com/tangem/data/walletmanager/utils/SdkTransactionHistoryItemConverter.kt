@@ -66,6 +66,11 @@ internal class SdkTransactionHistoryItemConverter(
             is SdkTransactionHistoryItem.TransactionType.ContractMethodName,
             -> mapToInteractionAddressType(destinationType = destinationType)
 
+            is SdkTransactionHistoryItem.TransactionType.SolanaStakingTransactionType.Stake -> {
+                transactionType.validatorAddress?.let {
+                    TxInfo.InteractionAddressType.Validator(address = it)
+                }
+            }
             is SdkTransactionHistoryItem.TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
                 TxInfo.InteractionAddressType.Validator(address = transactionType.validatorAddress)
             }
