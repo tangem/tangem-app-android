@@ -46,6 +46,9 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
@@ -203,6 +206,8 @@ private fun AddressBlock(assetsUM: ReceiveAssetsUM, snackbarHostState: SnackbarH
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = context.resources
+    val isRedesignEnabled = LocalRedesignEnabled.current
+    val topSnackbarHostState = LocalTopSnackbarHostState.current
 
     assetsUM.addresses
         .fastFilter { it.type is ReceiveAddress.Type.Ens }
@@ -214,11 +219,20 @@ private fun AddressBlock(assetsUM: ReceiveAssetsUM, snackbarHostState: SnackbarH
                         assetsUM.onCopyClick(address)
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = resources.getStringSafe(
-                                    R.string.wallet_notification_address_copied,
-                                ),
-                            )
+                            if (isRedesignEnabled) {
+                                topSnackbarHostState.showSnackbar(
+                                    SnackbarMessage(
+                                        startIconId = R.drawable.ic_check_24,
+                                        message = resourceReference(R.string.wallet_notification_address_copied),
+                                    ),
+                                )
+                            } else {
+                                snackbarHostState.showSnackbar(
+                                    message = resources.getStringSafe(
+                                        R.string.wallet_notification_address_copied,
+                                    ),
+                                )
+                            }
                         }
                     },
                     address = address.value,
@@ -413,6 +427,8 @@ private fun ButtonsBlock(snackbarHostState: SnackbarHostState, onCopyClick: () -
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = context.resources
+    val isRedesignEnabled = LocalRedesignEnabled.current
+    val topSnackbarHostState = LocalTopSnackbarHostState.current
 
     Row(
         modifier = Modifier.width(IntrinsicSize.Min),
@@ -427,9 +443,18 @@ private fun ButtonsBlock(snackbarHostState: SnackbarHostState, onCopyClick: () -
                     onCopyClick()
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = resources.getStringSafe(R.string.wallet_notification_address_copied),
-                        )
+                        if (isRedesignEnabled) {
+                            topSnackbarHostState.showSnackbar(
+                                SnackbarMessage(
+                                    startIconId = R.drawable.ic_check_24,
+                                    message = resourceReference(R.string.wallet_notification_address_copied),
+                                ),
+                            )
+                        } else {
+                            snackbarHostState.showSnackbar(
+                                message = resources.getStringSafe(R.string.wallet_notification_address_copied),
+                            )
+                        }
                     }
                 },
             ),

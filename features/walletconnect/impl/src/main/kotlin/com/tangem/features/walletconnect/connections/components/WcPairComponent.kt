@@ -12,10 +12,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.walletconnect.connections.model.WcPairModel
@@ -112,7 +111,7 @@ internal class WcPairComponent(
         }
     }
 
-    private fun createBottomSheetMessageUM(alertType: Alert): MessageBottomSheetUMV2 {
+    private fun createBottomSheetMessageUM(alertType: Alert): MessageBottomSheetUM {
         return when (alertType) {
             is Alert.Verified -> WcAlertsFactory.createVerifiedDomainAlert(alertType.appName)
             is Alert.UnknownDomain -> WcAlertsFactory.createUnknownDomainAlert(model::connectFromAlert)
@@ -127,5 +126,7 @@ internal class WcPairComponent(
         }
     }
 
-    data class Params(val userWalletId: UserWalletId, val wcUrl: String, val source: WcPairRequest.Source)
+    data class Params(
+        val request: WcPairRequest,
+    )
 }

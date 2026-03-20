@@ -2,7 +2,7 @@ package com.tangem.data.networks.multi
 
 import arrow.core.raise.catch
 import arrow.core.raise.ensure
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.domain.common.tokens.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
 import com.tangem.data.networks.store.setSourceAsCache
