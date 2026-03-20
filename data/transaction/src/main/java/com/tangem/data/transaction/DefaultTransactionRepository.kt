@@ -33,8 +33,8 @@ import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -271,7 +271,7 @@ internal class DefaultTransactionRepository(
                 Result.failure(ex)
             }
         } else {
-            Timber.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
+            TangemLogger.e("${walletManager?.wallet?.blockchain} does not support transaction validation")
             Result.success(Unit)
         }
     }
@@ -441,14 +441,14 @@ internal class DefaultTransactionRepository(
             val response = tangemTechApi.transactionEvents(body)
             response.fold(
                 onSuccess = {
-                    Timber.d("Successfully sent yield supply transaction hash: $hash")
+                    TangemLogger.d("Successfully sent yield supply transaction hash: $hash")
                 },
                 onError = { error ->
-                    Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+                    TangemLogger.e("Failed to send yield supply transaction hash: $hash", error)
                 },
             )
         }.onFailure { error ->
-            Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+            TangemLogger.e("Failed to send yield supply transaction hash: $hash", error)
         }
     }
 
@@ -460,7 +460,7 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         )
         val preparer = walletManager as? TransactionPreparer ?: run {
-            Timber.e("${walletManager?.wallet?.blockchain} does not support TransactionBuilder")
+            TangemLogger.e("${walletManager?.wallet?.blockchain} does not support TransactionBuilder")
             error("Wallet manager does not support TransactionPreparer")
         }
         return preparer
