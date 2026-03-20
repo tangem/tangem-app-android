@@ -17,7 +17,8 @@ internal class QrContentClassifierTest {
         every { getShareSchemes(any()) } returns emptyList()
         every { validateAddress(any(), any()) } returns false
         every { getChainId(any()) } returns null
-        every { isSupportedAddress(any()) } returns false
+        every { findSupportedBlockchainName(any()) } returns null
+        every { getBlockchainNameByChainId(any()) } returns null
     }
     private val paymentUriParser = mockk<PaymentUriParser> {
         every { parse(any(), any(), any()) } returns PaymentUriParser.ParseResult.NotRecognized

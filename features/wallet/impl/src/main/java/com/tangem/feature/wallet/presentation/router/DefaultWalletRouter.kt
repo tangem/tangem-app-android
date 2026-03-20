@@ -186,6 +186,7 @@ internal class DefaultWalletRouter @Inject constructor(
         address: String,
         amount: String?,
         tag: String?,
+        entryType: AppRoute.Send.EntryType,
     ) {
         router.push(
             AppRoute.Send(
@@ -194,6 +195,7 @@ internal class DefaultWalletRouter @Inject constructor(
                 destinationAddress = address,
                 amount = amount,
                 tag = tag,
+                entryType = entryType,
             ),
         )
     }

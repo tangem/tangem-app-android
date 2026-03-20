@@ -15,7 +15,6 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.walletconnect.connections.model.WcPairModel
@@ -127,5 +126,7 @@ internal class WcPairComponent(
         }
     }
 
-    data class Params(val userWalletId: UserWalletId, val wcUrl: String, val source: WcPairRequest.Source)
+    data class Params(
+        val request: WcPairRequest,
+    )
 }

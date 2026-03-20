@@ -95,7 +95,14 @@ internal interface InnerWalletRouter {
     fun openQrScanner()
 
     /** Open send screen with prefilled destination */
-    fun openSend(userWalletId: UserWalletId, currency: CryptoCurrency, address: String, amount: String?, tag: String?)
+    fun openSend(
+        userWalletId: UserWalletId,
+        currency: CryptoCurrency,
+        address: String,
+        amount: String?,
+        tag: String?,
+        entryType: AppRoute.Send.EntryType = AppRoute.Send.EntryType.Manual,
+    )
 
     /** Open network selection bottom sheet for multiple QR matches */
     fun openNetworkSelectionBottomSheet(target: QrSendTarget.Multiple)
