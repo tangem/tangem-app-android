@@ -1,4 +1,4 @@
-package com.tangem.features.markets.deeplink
+package com.tangem.features.feed.entry.deeplink
 
 import kotlinx.coroutines.CoroutineScope
 
