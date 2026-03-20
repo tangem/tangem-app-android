@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -50,6 +51,7 @@ fun TangemTokenRow(
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.HEAD)
                     .padding(end = TangemTheme.dimens2.x2)
+                    .size(TangemTheme.dimens2.x9)
                     .testTag(tag = TokenElementsTestTags.TOKEN_ICON),
             )
 
@@ -74,6 +76,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
                 textColor = TangemTheme.colors2.text.neutral.primary,
+                placeholderWidth = TangemTheme.dimens2.x20,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
@@ -84,6 +87,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
                 textColor = TangemTheme.colors2.text.neutral.secondary,
+                placeholderWidth = TangemTheme.dimens2.x11,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
@@ -169,6 +173,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.bodySemibold16,
                 textColor = TangemTheme.colors2.text.neutral.primary,
+                placeholderWidth = TangemTheme.dimens2.x20,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_TOP)
                     .testTag(tag = TokenElementsTestTags.TOKEN_FIAT_AMOUNT),
@@ -179,6 +184,7 @@ fun TangemTokenRow(
                 isBalanceHidden = isBalanceHidden,
                 textStyle = TangemTheme.typography2.captionSemibold12,
                 textColor = TangemTheme.colors2.text.neutral.secondary,
+                placeholderWidth = TangemTheme.dimens2.x11,
                 modifier = Modifier
                     .layoutId(layoutId = TangemRowLayoutId.END_BOTTOM)
                     .testTag(tag = TokenElementsTestTags.TOKEN_CRYPTO_AMOUNT),
@@ -227,7 +233,7 @@ private fun Modifier.tokenClickable(tokenRowUM: TangemTokenRowUM): Modifier = co
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TangemTokenRow_Preview(
-    @PreviewParameter(TangemTokenRow_PreviewProvider::class) tokenRowUM: TangemTokenRowUM,
+    @PreviewParameter(TangemTokenRowPreviewProvider::class) tokenRowUM: TangemTokenRowUM,
 ) {
     TangemThemePreviewRedesign {
         TangemTokenRow(
@@ -239,8 +245,7 @@ private fun TangemTokenRow_Preview(
     }
 }
 
-@Suppress("ClassNaming")
-class TangemTokenRow_PreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
+private class TangemTokenRowPreviewProvider : CollectionPreviewParameterProvider<TangemTokenRowUM>(
     collection = listOf(
         TangemTokenRowPreviewData.defaultState,
         TangemTokenRowPreviewData.defaultEllipsisState,
@@ -249,6 +254,7 @@ class TangemTokenRow_PreviewProvider : CollectionPreviewParameterProvider<Tangem
         TangemTokenRowPreviewData.draggableState,
         TangemTokenRowPreviewData.draggableStateV2,
         TangemTokenRowPreviewData.loadingState,
+        TangemTokenRowPreviewData.emptyState,
         TangemTokenRowPreviewData.unreachableState,
         TangemTokenRowPreviewData.accountState,
         TangemTokenRowPreviewData.accountLetterState,

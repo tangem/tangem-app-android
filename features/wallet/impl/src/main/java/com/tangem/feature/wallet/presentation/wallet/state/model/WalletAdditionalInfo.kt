@@ -8,4 +8,5 @@ data class WalletAdditionalInfo(
     val hideable: Boolean,
     val content: TextReference,
     val isHotBackedUp: Boolean = false,
+    val shouldShowProgress: Boolean = false,
 )

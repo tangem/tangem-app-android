@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.ds.button.TangemButtonShape
-import com.tangem.core.ui.ds.button.TangemButtonState
 import com.tangem.core.ui.ds.button.TangemButtonType
 import com.tangem.core.ui.ds.button.TangemButtonUM
 import com.tangem.core.ui.extensions.TextReference
@@ -31,11 +30,6 @@ internal sealed class WalletActionButtons(
             shape = TangemButtonShape.Rounded,
             onClick = onClick,
             isEnabled = isEnabled,
-            state = if (isEnabled) {
-                TangemButtonState.Default
-            } else {
-                TangemButtonState.Disabled
-            },
         )
 
     data class Buy(
