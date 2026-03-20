@@ -9,8 +9,8 @@ val unexpectedErrorAlertBS
     get() = bottomSheetMessage {
         infoBlock {
             icon(R.drawable.img_knight_shield_32) {
-                type = MessageBottomSheetUMV2.Icon.Type.Attention
-                backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                type = MessageBottomSheetUM.Icon.Type.Attention
+                backgroundType = MessageBottomSheetUM.Icon.BackgroundType.SameAsTint
             }
             title = resourceReference(R.string.unexpected_error_title)
             body = resourceReference(R.string.unexpected_error_description)
