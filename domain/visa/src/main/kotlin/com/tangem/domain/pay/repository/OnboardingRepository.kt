@@ -6,7 +6,6 @@ import com.tangem.domain.models.TangemPayEligibilityType
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.visa.error.VisaApiError
-import kotlinx.coroutines.Job
 
 interface OnboardingRepository {
 
@@ -18,7 +17,7 @@ interface OnboardingRepository {
 
     suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo>
 
-    suspend fun createOrder(userWalletId: UserWalletId): Job
+    suspend fun createOrder(userWalletId: UserWalletId): Either<VisaApiError, String>
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
 
