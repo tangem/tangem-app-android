@@ -43,8 +43,12 @@ internal class QrContentClassifierParser(
             )
         }
 
-        if (blockchainDataProvider.isSupportedAddress(qrCode)) {
-            return ClassifiedQrContent.Error.UnsupportedNetwork
+        val supportedBlockchain = blockchainDataProvider.findSupportedBlockchainName(qrCode)
+        if (supportedBlockchain != null) {
+            return ClassifiedQrContent.Error.UnsupportedNetwork(
+                raw = qrCode,
+                blockchain = supportedBlockchain,
+            )
         }
 
         return ClassifiedQrContent.Error.Unrecognized(qrCode)
@@ -76,7 +80,8 @@ internal class QrContentClassifierParser(
         fun getShareSchemes(network: Network): List<String>
         fun validateAddress(network: Network, address: String): Boolean
         fun getChainId(network: Network): Long?
-        fun isSupportedAddress(address: String): Boolean
+        fun findSupportedBlockchainName(address: String): String?
+        fun getBlockchainNameByChainId(chainId: Long): String?
     }
 
     internal class DefaultBlockchainDataProvider : BlockchainDataProvider {
@@ -92,12 +97,20 @@ internal class QrContentClassifierParser(
             return runCatching { network.toBlockchain().getChainId()?.toLong() }.getOrNull()
         }
 
-        override fun isSupportedAddress(address: String): Boolean {
+        override fun findSupportedBlockchainName(address: String): String? {
             return Blockchain.entries
                 .filter { !it.isTestnet() }
-                .any { blockchain ->
+                .firstOrNull { blockchain ->
                     runCatching { blockchain.validateAddress(address) }.getOrDefault(false)
-                }
+                }?.fullName
+        }
+
+        override fun getBlockchainNameByChainId(chainId: Long): String? {
+            return Blockchain.entries
+                .filter { !it.isTestnet() }
+                .firstOrNull { blockchain ->
+                    runCatching { blockchain.getChainId()?.toLong() == chainId }.getOrDefault(false)
+                }?.fullName
         }
     }
 
