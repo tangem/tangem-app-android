@@ -4,15 +4,15 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.pay.converter.PaymentAccountStatusDMConverter
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.PaymentAccountStatus
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal typealias WalletIdWithPaymentStatus = Map<String, PaymentAccountStatus>
 internal typealias WalletIdWithPaymentStatusDM = Map<String, PaymentAccountStatusDM>
@@ -39,7 +39,7 @@ internal class PaymentAccountStatusesStore(
                     },
                 )
             } catch (e: Exception) {
-                Timber.e(e, "Error while loading cached payment account statuses")
+                TangemLogger.e("Error while loading cached payment account statuses", e)
             }
         }
     }

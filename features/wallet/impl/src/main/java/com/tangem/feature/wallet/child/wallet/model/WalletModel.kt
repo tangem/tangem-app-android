@@ -68,7 +68,7 @@ import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
@@ -157,7 +157,7 @@ internal class WalletModel @Inject constructor(
 
         modelScope.launch {
             bindRefcodeWithWalletUseCase.retry()
-                .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
+                .onLeft { TangemLogger.e("Failed to bind refcode with wallets: $it") }
         }
     }
 
@@ -308,7 +308,7 @@ internal class WalletModel @Inject constructor(
             val shouldAskNotificationPermissionsViaBs = notificationsRepository.shouldAskNotificationPermissionsViaBs()
             val shouldShow = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
-            Timber.d(
+            TangemLogger.d(
                 "push BS afterUpdate: $shouldShow," +
                     "isHuaweiDevice $isHuaweiDevice",
             )
@@ -454,7 +454,7 @@ internal class WalletModel @Inject constructor(
             awaitAll(
                 async {
                     refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
-                        Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
+                        TangemLogger.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
                     }
                 },
                 async {
@@ -497,10 +497,10 @@ internal class WalletModel @Inject constructor(
             }
             is WalletsUpdateActionResolver.Action.ReorderWallets -> reorderWallets(action)
             WalletsUpdateActionResolver.Action.EmptyWallets -> {
-                Timber.w("Wallets list is empty!")
+                TangemLogger.w("Wallets list is empty!")
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
-                Timber.w("Unable to perform action: $action")
+                TangemLogger.w("Unable to perform action: $action")
             }
         }
     }
@@ -820,7 +820,7 @@ internal class WalletModel @Inject constructor(
                     setNotificationsEnabledUseCase(userWalletId, true).onRight {
                         notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
                     }.onLeft {
-                        Timber.e(it)
+                        TangemLogger.e("Error", it)
                     }
                 }
             }

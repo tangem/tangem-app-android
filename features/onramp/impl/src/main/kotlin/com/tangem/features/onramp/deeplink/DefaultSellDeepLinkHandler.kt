@@ -5,7 +5,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
     router: AppRouter,
@@ -16,7 +16,7 @@ internal class DefaultSellDeepLinkHandler @AssistedInject constructor(
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase().fold(
             ifLeft = {
-                Timber.e("Error on getting user wallet: $it")
+                TangemLogger.e("Error on getting user wallet: $it")
             },
             ifRight = { userWallet ->
                 router.push(AppRoute.SellCrypto(userWallet.walletId))
