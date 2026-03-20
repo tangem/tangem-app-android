@@ -26,7 +26,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
 import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleAppThemeUM
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -98,7 +98,7 @@ private fun Activity.shareFile(file: File?) {
 
         ContextCompat.startActivity(this, chooserIntent, null)
     } catch (ex: Exception) {
-        Timber.e("Failed to share file: $ex")
+        TangemLogger.e("Failed to share file: $ex")
     }
 }
 

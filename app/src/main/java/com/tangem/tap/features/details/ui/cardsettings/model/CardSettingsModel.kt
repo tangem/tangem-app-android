@@ -36,11 +36,11 @@ import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addIf
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -244,7 +244,7 @@ internal class CardSettingsModel @Inject constructor(
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
             is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
             is CompletionResult.Failure -> {
-                Timber.e("Failed to change access code: ${result.error}")
+                TangemLogger.e("Failed to change access code: ${result.error}")
             }
         }
     }
