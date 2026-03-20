@@ -20,6 +20,7 @@ import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
@@ -255,7 +256,10 @@ internal class DetailsModel @Inject constructor(
     private fun addTangemPayItemIfEligible() {
         modelScope.launch {
             val isEligible = tangemPayEligibilityManager
-                .getEligibleWallets(shouldExcludePaeraCustomers = true)
+                .getEligibleWallets(
+                    shouldExcludePaeraCustomers = true,
+                    entryPoint = TangemPayEntryPoint.DETAILS,
+                )
                 .isNotEmpty()
             if (isEligible) {
                 items.update { itemsBuilder.addTangemPayItem(items = it, onClick = ::onTangemPayItemClicked) }
@@ -266,7 +270,7 @@ internal class DetailsModel @Inject constructor(
     private fun onTangemPayItemClicked() {
         modelScope.launch {
             analyticsEventHandler.send(TangemPayAnalyticsEvents.DetailsVisaPermanentButtonClicked())
-            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability()
+            val isEligible = tangemPayEligibilityManager.getTangemPayAvailability(TangemPayEntryPoint.DETAILS)
             if (isEligible) {
                 router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
             } else {
