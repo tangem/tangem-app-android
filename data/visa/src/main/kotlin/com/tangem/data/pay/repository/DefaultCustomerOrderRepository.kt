@@ -27,6 +27,7 @@ internal class DefaultCustomerOrderRepository @Inject constructor(
                 OrderResponse.Result.Status.CANCELED -> OrderStatus.CANCELED
             }
             OrderData(
+                customerId = response.result?.customerId.orEmpty(),
                 status = status,
                 withdrawTxHash = response.result?.data?.transactionHash?.ifEmpty { null },
             )
