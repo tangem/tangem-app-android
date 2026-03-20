@@ -13,7 +13,6 @@ dependencies {
     /* Core */
     implementation(projects.core.decompose)
     implementation(projects.core.configToggles)
-    implementation(projects.core.navigation)
 
     /* Domain */
     implementation(projects.domain.qrScanning.models)

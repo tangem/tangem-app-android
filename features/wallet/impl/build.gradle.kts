@@ -148,6 +148,7 @@ dependencies {
     implementation(projects.features.yieldSupply.api)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.feed.api)
+    implementation(projects.features.promoBanners.api)
 
     /** Common modules */
     implementation(projects.common)
