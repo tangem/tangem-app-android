@@ -22,11 +22,11 @@ import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
 import javax.inject.Inject
 
 typealias InitializationStatusFlow = MutableStateFlow<Lce<Throwable, List<ExpressAsset>>>
@@ -85,7 +85,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
                 if (expressAssetsStore.getSyncOrNull(userWallet.walletId) == null) {
                     initializationStatus.update { e.lceError() }
                 }
-                Timber.e(e, "Unable to fetch assets for: ${userWallet.walletId.stringValue}")
+                TangemLogger.e("Unable to fetch assets for: ${userWallet.walletId.stringValue}", e)
                 throw e
             }
         }

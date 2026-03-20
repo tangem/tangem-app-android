@@ -7,10 +7,10 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.reflect.KClass
 
 internal class ProxyAppRouter(
@@ -51,7 +51,7 @@ internal class ProxyAppRouter(
             runCatching {
                 innerRouter.replaceAll(*routes, onComplete = onComplete)
             }.getOrElse {
-                Timber.e(it)
+                TangemLogger.e("Error", it)
             }
         }
     }
@@ -76,12 +76,12 @@ internal class ProxyAppRouter(
 
     private fun safeNavigate(onComplete: (isSuccess: Boolean) -> Unit, message: String, block: () -> Unit) {
         routerScope.launch(dispatchers.mainImmediate) {
-            Timber.i(message)
+            TangemLogger.i(message)
 
             try {
                 block()
             } catch (e: Throwable) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
                 onComplete(false)
             }
         }
@@ -90,7 +90,7 @@ internal class ProxyAppRouter(
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
         if (!isSuccess) {
             analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(RuntimeException(errorMessage)))
-            Timber.w(errorMessage)
+            TangemLogger.w(errorMessage)
 
             with(receiver = config.snackbarHandler ?: return) {
                 showSnackbar(
