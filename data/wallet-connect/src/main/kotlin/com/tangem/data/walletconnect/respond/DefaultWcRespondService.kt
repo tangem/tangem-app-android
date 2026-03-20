@@ -10,11 +10,11 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.joda.time.Duration
-import timber.log.Timber
 import kotlin.coroutines.resume
 
 internal class DefaultWcRespondService : WcRespondService {
@@ -36,21 +36,21 @@ internal class DefaultWcRespondService : WcRespondService {
                         result = response,
                     ),
                 ),
-                onSuccess = {
+                onSuccess = { requestResponse ->
                     if (continuation.isCompleted) return@respondSessionRequest
-                    val result = when (val response = it.jsonRpcResponse) {
+                    val result = when (val response = requestResponse.jsonRpcResponse) {
                         is Wallet.Model.JsonRpcResponse.JsonRpcError -> {
-                            Timber.tag(WC_TAG).e("Failed respond $response for request $request")
+                            TangemLogger.withTag(WC_TAG).e("Failed respond $response for request $request")
                             WcRequestError.WcRespondError(
                                 code = response.code,
                                 message = response.message,
                             ).left()
                         }
                         is Wallet.Model.JsonRpcResponse.JsonRpcResult -> {
-                            Timber.tag(WC_TAG).i("Successful respond $response for request $request")
+                            TangemLogger.withTag(WC_TAG).i("Successful respond $response for request $request")
                             if (response.result == null) {
-                                Timber.tag(WC_TAG).e(
-                                    "Response result is null, but it should be String. Casted to empty",
+                                TangemLogger.withTag(WC_TAG).e(
+                                    "Response result is null, but requestResponse should be String. Casted to empty",
                                 )
                             }
                             (response.result ?: "").right()
@@ -58,16 +58,16 @@ internal class DefaultWcRespondService : WcRespondService {
                     }
                     continuation.resume(result)
                 },
-                onError = {
+                onError = { error ->
                     if (continuation.isCompleted) return@respondSessionRequest
-                    Timber.tag(WC_TAG).e(it.throwable, "Failed respond for request $request")
-                    continuation.resume(WcRequestError.UnknownError(it.throwable).left())
+                    TangemLogger.withTag(WC_TAG).e("Failed respond for request $request", error.throwable)
+                    continuation.resume(WcRequestError.UnknownError(error.throwable).left())
                 },
             )
         }
 
     override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
-        Timber.tag(WC_TAG).i("reject request $request")
+        TangemLogger.withTag(WC_TAG).i("reject request $request")
         removeCachedRequest(request)
         WalletKit.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(

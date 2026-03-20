@@ -7,9 +7,9 @@ import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import timber.log.Timber
 import java.util.Currency
 
 internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
@@ -26,7 +26,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             ?: value.fee?.let { convertFee(id = value.id, fee = it) }
             ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
             ?: run {
-                Timber.wtf("unknown type of transaction: $value")
+                TangemLogger.e("unknown type of transaction: $value")
                 null
             }
     }
@@ -82,7 +82,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         collateral: TangemPayTxHistoryResponse.Collateral,
     ): TangemPayTxHistoryItem.Collateral? {
         val date = collateral.postedAt ?: return run {
-            Timber.e("Collateral transaction postedAt is null: $collateral")
+            TangemLogger.e("Collateral transaction postedAt is null: $collateral")
             return@run null
         }
         return TangemPayTxHistoryItem.Collateral(
