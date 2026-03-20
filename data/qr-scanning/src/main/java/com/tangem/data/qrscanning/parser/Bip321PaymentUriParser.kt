@@ -25,7 +25,10 @@ internal class Bip321PaymentUriParser(
         val matchingCurrencies = allCurrencies.filter { it.network.id in matchingNetworkIds }
         if (matchingCurrencies.isEmpty()) {
             return PaymentUriParser.ParseResult.RecognizedError(
-                ClassifiedQrContent.Error.UnsupportedNetwork,
+                ClassifiedQrContent.Error.UnsupportedNetwork(
+                    raw = qrCode,
+                    blockchain = matchingCoins.firstOrNull()?.network?.name,
+                ),
             )
         }
 
