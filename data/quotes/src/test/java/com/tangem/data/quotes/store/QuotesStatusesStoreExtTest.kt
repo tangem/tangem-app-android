@@ -1,6 +1,7 @@
 package com.tangem.data.quotes.store
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.TestAppCoroutineScope
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.common.test.data.quote.toDomain
 import com.tangem.common.test.datastore.MockStateDataStore
@@ -9,7 +10,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.test.core.ProvideTestModels
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -39,7 +39,7 @@ internal class QuotesStatusesStoreExtTest {
         store = DefaultQuotesStatusesStore(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
-            dispatchers = TestingCoroutineDispatcherProvider(),
+            scope = TestAppCoroutineScope(),
         )
     }
 

@@ -1,9 +1,7 @@
 package com.tangem.features.feed.ui.earn.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -15,11 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
@@ -28,28 +28,53 @@ import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.components.rows.RowContentContainer
 import com.tangem.core.ui.components.rows.RowText
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.ds.checkbox.TangemCheckbox
+import com.tangem.core.ui.ds.row.TangemRowContainer
+import com.tangem.core.ui.ds.row.TangemRowLayoutId
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.earn.state.EarnFilterByNetworkBottomSheetContentUM
 import com.tangem.features.feed.ui.earn.state.EarnFilterNetworkUM
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun EarnFilterByNetworkBottomSheet(config: TangemBottomSheetConfig) {
+    if (LocalRedesignEnabled.current) {
+        EarnFilterByNetworkBottomSheetV2(config = config)
+    } else {
+        EarnFilterByNetworkBottomSheetV1(config = config)
+    }
+}
+
+@Composable
+private fun EarnFilterByNetworkBottomSheetV1(config: TangemBottomSheetConfig) {
     TangemBottomSheet<EarnFilterByNetworkBottomSheetContentUM>(
         config = config,
         titleText = resourceReference(R.string.earn_filter_by),
         containerColor = TangemTheme.colors.background.tertiary,
-        content = { Content(it) },
+        content = { ContentV1(it) },
     )
 }
 
 @Composable
-private fun Content(content: EarnFilterByNetworkBottomSheetContentUM) {
+private fun EarnFilterByNetworkBottomSheetV2(config: TangemBottomSheetConfig) {
+    EarnFilterBottomSheet<EarnFilterByNetworkBottomSheetContentUM>(
+        config = config,
+        content = { ContentV2(it) },
+    )
+}
+
+@Composable
+private fun ContentV1(content: EarnFilterByNetworkBottomSheetContentUM) {
     val allMyNetworks = remember(content) {
         content.networks.filterIsInstance<EarnFilterNetworkUM.AllNetworks>() +
             content.networks.filterIsInstance<EarnFilterNetworkUM.MyNetworks>()
@@ -75,6 +100,139 @@ private fun Content(content: EarnFilterByNetworkBottomSheetContentUM) {
                 specificNetworks = specificNetworks,
                 onOptionClicked = content.onOptionClick,
             )
+        }
+    }
+}
+
+@Composable
+private fun ContentV2(content: EarnFilterByNetworkBottomSheetContentUM) {
+    val allMyNetworks = remember(content) {
+        (content.networks.filterIsInstance<EarnFilterNetworkUM.AllNetworks>() +
+            content.networks.filterIsInstance<EarnFilterNetworkUM.MyNetworks>()).toImmutableList()
+    }
+    val specificNetworks = remember(content) {
+        content
+            .networks
+            .filterIsInstance<EarnFilterNetworkUM.Network>()
+            .toImmutableList()
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens2.x4)
+            .padding(bottom = TangemTheme.dimens2.x4)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x3),
+    ) {
+        NetworksTypesBlock(
+            allMyNetworks = allMyNetworks,
+            onOptionClick = content.onOptionClick,
+        )
+
+        SpecificNetworksBlock(
+            specificNetworks = specificNetworks,
+            onOptionClick = content.onOptionClick,
+        )
+    }
+}
+
+@Composable
+private fun NetworksTypesBlock(
+    allMyNetworks: ImmutableList<EarnFilterNetworkUM>,
+    onOptionClick: (EarnFilterNetworkUM) -> Unit,
+) {
+    CardFilterBlock {
+        allMyNetworks.fastForEachIndexed { index, item ->
+            TangemRowContainer(
+                modifier = Modifier
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = allMyNetworks.lastIndex,
+                        addDefaultPadding = false,
+                    )
+                    .clickable { onOptionClick(item) },
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+            ) {
+                Text(
+                    modifier = Modifier.layoutId(layoutId = TangemRowLayoutId.START_TOP),
+                    text = when (item) {
+                        is EarnFilterNetworkUM.AllNetworks -> TextReference.Res(R.string.earn_filter_all_networks)
+                        is EarnFilterNetworkUM.MyNetworks -> TextReference.Res(R.string.earn_filter_my_networks)
+                        is EarnFilterNetworkUM.Network -> TextReference.Str(item.text)
+                    }.resolveReference(),
+                    style = TangemTheme.typography2.bodySemibold16,
+                    color = TangemTheme.colors2.text.neutral.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                TangemCheckbox(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .layoutId(layoutId = TangemRowLayoutId.TAIL),
+                    isChecked = item.isSelected,
+                    onCheckedChange = { onOptionClick(item) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpecificNetworksBlock(
+    specificNetworks: ImmutableList<EarnFilterNetworkUM.Network>,
+    onOptionClick: (EarnFilterNetworkUM) -> Unit,
+) {
+    if (specificNetworks.isNotEmpty()) {
+        CardFilterBlock {
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp, bottom = 8.dp),
+                text = stringResourceSafe(id = R.string.earn_filter_networks),
+                style = TangemTheme.typography2.bodyRegular14,
+                color = TangemTheme.colors2.text.neutral.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            specificNetworks.fastForEachIndexed { index, item ->
+                TangemRowContainer(
+                    modifier = Modifier
+                        .roundedShapeItemDecoration(
+                            currentIndex = index,
+                            lastIndex = specificNetworks.lastIndex,
+                            addDefaultPadding = false,
+                        )
+                        .clickable { onOptionClick(item) },
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                ) {
+                    Image(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .layoutId(TangemRowLayoutId.HEAD),
+                        imageVector = ImageVector.vectorResource(item.iconRes),
+                        contentDescription = item.symbol,
+                    )
+                    Text(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .layoutId(layoutId = TangemRowLayoutId.START_TOP),
+                        text = item.text,
+                        style = TangemTheme.typography2.bodySemibold16,
+                        color = TangemTheme.colors2.text.neutral.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    TangemCheckbox(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .layoutId(layoutId = TangemRowLayoutId.TAIL),
+                        isChecked = item.isSelected,
+                        onCheckedChange = { onOptionClick(item) },
+                    )
+                }
+            }
         }
     }
 }
@@ -201,8 +359,47 @@ private fun LazyListScope.specificNetworksList(
 @Preview(widthDp = 360, heightDp = 800)
 @Preview(widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview() {
+private fun PreviewV1() {
     TangemThemePreview(
+        alwaysShowBottomSheets = true,
+    ) {
+        Box(Modifier.background(TangemTheme.colors.background.secondary)) {
+            EarnFilterByNetworkBottomSheet(
+                TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = {},
+                    content = EarnFilterByNetworkBottomSheetContentUM(
+                        networks = persistentListOf(
+                            EarnFilterNetworkUM.AllNetworks(isSelected = true),
+                            EarnFilterNetworkUM.MyNetworks(isSelected = false),
+                            EarnFilterNetworkUM.Network(
+                                id = "ethereum",
+                                text = "Ethereum",
+                                symbol = "ETH",
+                                iconRes = R.drawable.img_btc_22,
+                                isSelected = false,
+                            ),
+                            EarnFilterNetworkUM.Network(
+                                id = "polygon",
+                                text = "Polygon",
+                                symbol = "MATIC",
+                                iconRes = R.drawable.img_btc_22,
+                                isSelected = false,
+                            ),
+                        ),
+                        onOptionClick = {},
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 800)
+@Preview(widthDp = 360, heightDp = 800, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewV2() {
+    TangemThemePreviewRedesign(
         alwaysShowBottomSheets = true,
     ) {
         Box(Modifier.background(TangemTheme.colors.background.secondary)) {
