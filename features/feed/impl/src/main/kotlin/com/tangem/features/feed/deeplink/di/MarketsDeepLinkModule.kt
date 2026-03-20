@@ -1,9 +1,9 @@
-package com.tangem.features.markets.deeplink.di
+package com.tangem.features.feed.deeplink.di
 
-import com.tangem.features.markets.deeplink.DefaultMarketsDeepLinkHandler
-import com.tangem.features.markets.deeplink.DefaultMarketsTokenDetailDeepLinkHandler
-import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
-import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.deeplink.DefaultMarketsDeepLinkHandler
+import com.tangem.features.feed.deeplink.DefaultMarketsTokenDetailDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
