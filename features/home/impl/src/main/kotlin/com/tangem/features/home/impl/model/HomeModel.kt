@@ -48,7 +48,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.Locale
 import javax.inject.Inject
 
@@ -196,7 +196,7 @@ internal class HomeModel @Inject constructor(
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build()
 
         if (userWallet == null) {
-            Timber.e("User wallet not created")
+            TangemLogger.e("User wallet not created")
             setLoading(false)
             return
         }
@@ -205,11 +205,11 @@ internal class HomeModel @Inject constructor(
             userWallet = userWallet,
             analyticsSource = AnalyticsParam.ScreensSources.Intro,
         ).fold(
-            ifLeft = {
+            ifLeft = { error ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                when (error) {
+                    is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $error")
                     is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
                 }
             },
@@ -245,8 +245,8 @@ internal class HomeModel @Inject constructor(
     private fun handleScanError(error: TangemError) {
         when (error) {
             is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
-            is TangemSdkError -> Timber.e(error, "Scan error occurred")
-            else -> Timber.e(error, "Error happened")
+            is TangemSdkError -> TangemLogger.e("Scan error occurred", error)
+            else -> TangemLogger.e("Error happened", error)
         }
     }
 

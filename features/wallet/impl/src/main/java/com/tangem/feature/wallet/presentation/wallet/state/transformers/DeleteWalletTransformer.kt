@@ -5,7 +5,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenSta
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.toImmutableList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DeleteWalletTransformer(
     private val selectedWalletIndex: Int,
@@ -31,7 +31,7 @@ internal class DeleteWalletTransformer(
                 wallets = (prevState.wallets - deletedWalletState).toImmutableList(),
             )
             else -> {
-                Timber.e("Wallets does not contain deleted wallet")
+                TangemLogger.e("Wallets does not contain deleted wallet")
                 prevState
             }
         }
