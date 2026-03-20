@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+  <string name="common_add_tokens">添加代幣</string>
+  <string name="common_no_results">沒有結果</string>
+  <string name="common_token_send">要發送的代幣</string>
+  <string name="common_unlock">解鎖</string>
+  <string name="initial_wallet_sync_banner_description">您的錢包已同步並準備就緒。\n缺少某些代幣？</string>
+  <string name="initial_wallet_sync_banner_title">錢包導入成功</string>
+  <string name="initial_wallet_sync_restore_progress">恢復%d%</string>
+  <string name="markets_token_details_insight_day_timeline">天</string>
+  <string name="markets_token_details_insight_month_timeline">月</string>
+  <string name="markets_token_details_insight_week_timeline">週</string>
+  <string name="markets_token_details_insight_year_timeline">年</string>
+  <string name="send_rate_fixed_info_description">使用固定利率時，您在置換交易時收到的金額將被鎖定，這可以保護您免受交易過程中價格波動的影響。</string>
+  <string name="send_rate_fixed_info_title">固定利率</string>
+  <string name="send_rate_floating_info_description">浮動利率意味著您最終收到的金額可能會根據您開始和完成置換之間的市場情況略有變化。</string>
+  <string name="send_rate_floating_info_title">浮動利率</string>
+  <string name="send_rate_is_fixed">利率固定</string>
+</resources>
