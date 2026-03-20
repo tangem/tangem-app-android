@@ -105,6 +105,8 @@ internal class SendModel @Inject constructor(
     private val params: SendComponent.Params = paramsContainer.require()
     private val cryptoCurrency = params.currency
 
+    private var isEntryTypeConsumed = false
+
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
     val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send
 
@@ -262,6 +264,15 @@ internal class SendModel @Inject constructor(
     override fun onError(error: GetUserWalletError) {
         Timber.w(error.toString())
         showAlertError()
+    }
+
+    fun consumeEntryType(): CommonSendAnalyticEvents.SendEntryType {
+        if (isEntryTypeConsumed) return CommonSendAnalyticEvents.SendEntryType.Manual
+        isEntryTypeConsumed = true
+        return when (params.entryType) {
+            SendComponent.EntryType.QR -> CommonSendAnalyticEvents.SendEntryType.QR
+            SendComponent.EntryType.Manual -> CommonSendAnalyticEvents.SendEntryType.Manual
+        }
     }
 
     private suspend fun prepareTransferTransaction(): Either<Throwable, TransactionData> {
