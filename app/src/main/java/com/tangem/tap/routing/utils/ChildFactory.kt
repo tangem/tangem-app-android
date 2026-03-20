@@ -24,7 +24,6 @@ import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
-import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
@@ -64,7 +63,6 @@ internal class ChildFactory @Inject constructor(
     private val walletHardwareBackupComponentFactory: WalletHardwareBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
-    private val marketsTokenListComponentFactory: MarketsTokenListComponent.FactoryScreen,
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val onrampSuccessComponentFactory: OnrampSuccessComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
@@ -459,8 +457,8 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Markets -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
-                    componentFactory = marketsTokenListComponentFactory,
+                    params = FeedEntryRoute.MarketTokenList,
+                    componentFactory = feedEntryComponentFactory,
                 )
             }
             is AppRoute.Usedesk -> { // TODO [REDACTED_TASK_KEY] pass params
