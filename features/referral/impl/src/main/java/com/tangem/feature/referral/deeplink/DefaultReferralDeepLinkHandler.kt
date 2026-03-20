@@ -8,7 +8,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
     appRouter: AppRouter,
@@ -19,7 +19,7 @@ internal class DefaultReferralDeepLinkHandler @AssistedInject constructor(
         // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
         getSelectedWalletSyncUseCase().fold(
             ifLeft = {
-                Timber.e("Error on getting user wallet: $it")
+                TangemLogger.e("Error on getting user wallet: $it")
             },
             ifRight = { userWallet ->
                 if (userWallet !is UserWallet.Cold || userWallet.cardTypesResolver.isTangemWallet()) {

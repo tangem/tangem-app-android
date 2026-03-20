@@ -1,5 +1,6 @@
 package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
@@ -28,7 +29,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -96,10 +96,10 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
                 val userWallet = hotUserWalletBuilder.build()
                 saveUserWalletUseCase.invoke(userWallet.copy(backedUp = true))
-                    .onLeft {
+                    .onLeft { error ->
                         setImportProgress(false)
-                        when (it) {
-                            is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                        when (error) {
+                            is SaveWalletError.DataError -> TangemLogger.e("Unable to save user wallet: $error")
                             is SaveWalletError.WalletAlreadySaved -> {
                                 uiMessageSender.send(
                                     SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
@@ -129,8 +129,8 @@ internal class AddExistingWalletImportModel @Inject constructor(
                         )
                         params.callbacks.onWalletImported(userWallet.walletId)
                     }
-            }.onFailure {
-                Timber.e(it)
+            }.onFailure { throwable ->
+                TangemLogger.e("Error", throwable)
                 setImportProgress(false)
             }
         }
