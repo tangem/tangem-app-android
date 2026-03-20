@@ -115,7 +115,7 @@ import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -555,7 +555,7 @@ internal class SwapModel @Inject constructor(
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
 
                 applyInitialTokenChoice(
                     state = TokensDataStateExpress.EMPTY,
@@ -597,7 +597,7 @@ internal class SwapModel @Inject constructor(
 
                 swapRouter.back()
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
             }
         }
     }
@@ -820,11 +820,11 @@ internal class SwapModel @Inject constructor(
                     }
                 } else {
                     feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                    Timber.e("Accidentally empty quotes list")
+                    TangemLogger.e("Accidentally empty quotes list")
                 }
             },
             onError = { error ->
-                Timber.e("Error when loading quotes: $error")
+                TangemLogger.e("Error when loading quotes: $error")
                 feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                 uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
             },
@@ -1031,7 +1031,7 @@ internal class SwapModel @Inject constructor(
         val provider = requireNotNull(dataState.selectedProvider) { "Selected provider is null" }
         val lastLoadedQuotesState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
         if (lastLoadedQuotesState == null) {
-            Timber.e("Last loaded quotes state is null")
+            TangemLogger.e("Last loaded quotes state is null")
             return
         }
         val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
@@ -1075,7 +1075,7 @@ internal class SwapModel @Inject constructor(
                             txHash = swapTransactionState.txHash,
                             currency = fromCurrency.currency,
                         ).getOrElse {
-                            Timber.i("tx hash explore not supported")
+                            TangemLogger.i("tx hash explore not supported")
                             ""
                         }
 
@@ -1119,7 +1119,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
                 startLoadingQuotesFromLastState()
                 showAlert()
             }
@@ -1214,7 +1214,7 @@ internal class SwapModel @Inject constructor(
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
                         showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
-                        Timber.e("Fee should not be Empty")
+                        TangemLogger.e("Fee should not be Empty")
                         return@launch
                     }
                     is TxFeeState.MultipleFeeState -> fee.priorityFee
@@ -1254,7 +1254,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }.onFailure { showAlert() }
             }.onFailure { error ->
-                Timber.e(error.message.orEmpty())
+                TangemLogger.e(error.message.orEmpty())
                 showAlert()
             }
         }
@@ -1436,14 +1436,14 @@ internal class SwapModel @Inject constructor(
         coin: CryptoCurrency.Coin,
         isFromCurrency: Boolean,
     ) {
-        Timber.d("Subscribe to ${coin.id} balance updates")
+        TangemLogger.d("Subscribe to ${coin.id} balance updates")
 
         getAccountCurrencyStatusUseCase(
             userWalletId = userWalletId,
             currency = coin,
         ).distinctUntilChanged { old, new -> old.status.value.amount == new.status.value.amount } // Check only balance changes
             .onEach { (account, currencyStatus) ->
-                Timber.d("${coin.id} balance is ${currencyStatus.value.amount ?: "null"}")
+                TangemLogger.d("${coin.id} balance is ${currencyStatus.value.amount ?: "null"}")
 
                 if (isFromCurrency) {
                     dataState = dataState.copy(

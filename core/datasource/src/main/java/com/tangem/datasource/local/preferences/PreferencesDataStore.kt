@@ -17,7 +17,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_RING_
 import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
 import com.tangem.utils.coroutines.AppCoroutineScope
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Application preferences data store 'DataStore<Preferences>'.
@@ -49,7 +49,7 @@ internal object PreferencesDataStore {
     private fun createCorruptionHandler(): ReplaceFileCorruptionHandler<Preferences> {
         return ReplaceFileCorruptionHandler(
             produceNewData = { corruptionException ->
-                Timber.w(corruptionException)
+                TangemLogger.w("Error", corruptionException)
                 emptyPreferences()
             },
         )

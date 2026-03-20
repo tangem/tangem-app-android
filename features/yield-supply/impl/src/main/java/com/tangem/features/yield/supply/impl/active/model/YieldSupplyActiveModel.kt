@@ -40,7 +40,7 @@ import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -202,7 +202,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                                     }
                                 },
                                 ifEmpty = {
-                                    Timber.w("No currency status found: ${cryptoCurrency.id}")
+                                    TangemLogger.w("No currency status found: ${cryptoCurrency.id}")
                                 },
                             )
                         }
@@ -210,7 +210,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         .launchIn(modelScope)
                 },
                 ifLeft = { error ->
-                    Timber.w(error.toString())
+                    TangemLogger.w(error.toString())
                     return@launch
                 },
             )
@@ -232,7 +232,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         apy = TextReference.Str(DASH_SIGN),
                     )
                 }
-                Timber.e("Error loading token status")
+                TangemLogger.e("Error loading token status")
             }
         }
     }

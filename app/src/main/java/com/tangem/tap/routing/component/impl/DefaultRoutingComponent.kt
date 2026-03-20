@@ -45,11 +45,11 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.store
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -101,7 +101,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             try {
                 childFactory.createChild(route, childByContext(childContext))
             } catch (e: Exception) {
-                Timber.e(e, "App Router Failed")
+                TangemLogger.e("App Router Failed", e)
                 analyticsExceptionHandler.sendException(
                     ExceptionAnalyticsEvent(exception = e, params = mapOf("Category" to "App Routing")),
                 )
