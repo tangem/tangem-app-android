@@ -39,7 +39,6 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.utils.NetworkLogsSaveInterceptor
 import com.tangem.datasource.utils.WireMockRedirectInterceptor
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -219,9 +218,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val apiConfigsManager: ApiConfigsManager
         get() = entryPoint.getApiConfigsManager()
 
-    private val userTokensResponseStore: UserTokensResponseStore
-        get() = entryPoint.getUserTokensResponseStore()
-
     private val userWalletsListRepository
         get() = entryPoint.getUserWalletsListRepository()
 
@@ -385,7 +381,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     settingsManager = settingsManager,
                     uiMessageSender = uiMessageSender,
                     coldUserWalletBuilderFactory = coldUserWalletBuilderFactory,
-                    userTokensResponseStore = userTokensResponseStore,
                     userWalletsListRepository = userWalletsListRepository,
                     tangemHotSdk = tangemHotSdk,
                     trackingContextProxy = trackingContextProxy,

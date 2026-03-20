@@ -22,11 +22,9 @@ import com.tangem.domain.pay.repository.TangemPayWithdrawRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.ExpressDataError
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.addHexPrefix
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -43,6 +41,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPaySwapRepository"
 private const val MAX_POLLING_ATTEMPTS = 6
+
 private data class PollingKey(val userWalletId: String, val orderId: String)
 
 @Suppress("LongParameterList")
@@ -54,9 +53,9 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val swapRepository: SwapRepository,
     private val orderRepository: CustomerOrderRepository,
+    private val withdrawPollingScope: AppCoroutineScope,
 ) : TangemPayWithdrawRepository {
 
-    private val pollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pollingJobs = mutableMapOf<PollingKey, Job>()
     private val pollingMutex = Mutex()
 
@@ -139,7 +138,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         orderId: String,
         exchangeData: TangemPayWithdrawExchangeState,
     ) {
-        pollingScope.launch {
+        withdrawPollingScope.launch {
             startWithdrawOrderPolling(userWallet, orderId, exchangeData)
         }
     }
@@ -154,7 +153,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
         pollingMutex.withLock {
             if (pollingJobs.containsKey(key)) return@withLock
 
-            val pollingJob = pollingScope.launch {
+            val pollingJob = withdrawPollingScope.launch {
                 try {
                     var attemptCount = 0
                     while (isActive && attemptCount < MAX_POLLING_ATTEMPTS) {
@@ -194,7 +193,7 @@ internal class DefaultTangemPayWithdrawRepository @Inject constructor(
     }
 
     private fun stopPolling(userWalletId: String, orderId: String) {
-        pollingScope.launch {
+        withdrawPollingScope.launch {
             pollingMutex.withLock {
                 val key = PollingKey(userWalletId, orderId)
                 pollingJobs[key]?.cancel()
