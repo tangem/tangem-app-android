@@ -57,7 +57,7 @@ import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM as FeeSelectorUMRedesigned
@@ -273,7 +273,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error)
+                    TangemLogger.e("Error", error)
                     _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
                     alertFactory.getGenericErrorState(
                         onFailedTxEmailClick = { onFailedTxEmailClick(error.localizedMessage.orEmpty()) },
@@ -297,7 +297,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
         result.fold(
             ifLeft = { error ->
-                Timber.e(error.toString())
+                TangemLogger.e(error.toString())
                 alertFactory.getSendTransactionErrorState(
                     error = error,
                     popBack = appRouter::pop,

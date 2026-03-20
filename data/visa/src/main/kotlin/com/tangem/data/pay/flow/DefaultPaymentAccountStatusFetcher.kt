@@ -16,7 +16,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TAG = "PaymentAccountStatusFetcher"
@@ -31,12 +31,14 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
 
     override suspend fun invoke(params: PaymentAccountStatusFetcher.Params): Either<Throwable, Unit> =
         eitherOn(dispatchers.default) {
-            Timber.tag(TAG).i("fetch: ${params.userWalletId.stringValue}")
+            TangemLogger.withTag(TAG).i("fetch: ${params.userWalletId.stringValue}")
 
             if (deviceSecurity.isSecurityExposed()) {
-                Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
-                Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
-                Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+                TangemLogger.withTag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+                TangemLogger.withTag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+                TangemLogger.withTag(
+                    TAG,
+                ).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
 
                 return@eitherOn paymentAccountStatusesStore.store(
                     userWalletId = params.userWalletId,
@@ -47,7 +49,9 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
             val status = onboardingRepository.hasTangemPayInWallet(userWalletId = params.userWalletId)
                 .fold(
                     ifLeft = { error ->
-                        Timber.tag(TAG).e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
+                        TangemLogger.withTag(
+                            TAG,
+                        ).e("Failed check wallet ${params.userWalletId}: ${error.javaClass.simpleName}")
                         when (error) {
                             is VisaApiError.NotPaeraCustomer -> PaymentAccountStatus.NotCreated
                             else -> PaymentAccountStatus.Error.Unavailable(source = StatusSource.ACTUAL)
@@ -57,7 +61,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
                         proceedHasTangemPayResult(userWalletId = params.userWalletId, hasTangemPay = hasTangemPay)
                     },
                 )
-            Timber.tag(TAG).i("invoke status ${params.userWalletId}: $status")
+            TangemLogger.withTag(TAG).i("invoke status ${params.userWalletId}: $status")
             paymentAccountStatusesStore.store(userWalletId = params.userWalletId, status = status)
         }
 
@@ -65,7 +69,7 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
         userWalletId: UserWalletId,
         hasTangemPay: Boolean,
     ): PaymentAccountStatus {
-        Timber.tag(TAG).i("proceedHasTangemPayResult for $userWalletId hasTangemPay: $hasTangemPay")
+        TangemLogger.withTag(TAG).i("proceedHasTangemPayResult for $userWalletId hasTangemPay: $hasTangemPay")
         return if (hasTangemPay) {
             fetchTangemPayAccountStatus(userWalletId = userWalletId)
         } else {
@@ -98,15 +102,15 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithoutOrder(userWalletId: UserWalletId): PaymentAccountStatus {
         return onboardingRepository.getCustomerInfo(userWalletId).fold(
             ifLeft = { error ->
-                Timber.tag(TAG).e("proceedWithoutOrder $userWalletId error: $error")
+                TangemLogger.withTag(TAG).e("proceedWithoutOrder $userWalletId error: $error")
                 error.mapToPaymentAccountStatus()
             },
             ifRight = { customerInfo ->
-                Timber.tag(TAG).i("proceedWithoutOrder data customerInfo $userWalletId")
+                TangemLogger.withTag(TAG).i("proceedWithoutOrder data customerInfo $userWalletId")
                 val status = customerInfo.mapToPaymentAccountStatus()
                 if (customerInfo.productInstance == null) {
                     onboardingRepository.createOrder(userWalletId)
-                        .onLeft { Timber.tag(TAG).e("createOrder failed: $it") }
+                        .onLeft { TangemLogger.withTag(TAG).e("createOrder failed: $it") }
                 }
                 status
             },
@@ -116,11 +120,11 @@ internal class DefaultPaymentAccountStatusFetcher @Inject constructor(
     private suspend fun proceedWithOrderId(userWalletId: UserWalletId, orderId: String): PaymentAccountStatus {
         return customerOrderRepository.getOrderData(userWalletId, orderId = orderId).fold(
             ifLeft = { error ->
-                Timber.tag(TAG).e("proceedWithOrderId $userWalletId orderId: $orderId error: $error")
+                TangemLogger.withTag(TAG).e("proceedWithOrderId $userWalletId orderId: $orderId error: $error")
                 error.mapToPaymentAccountStatus()
             },
             ifRight = { orderData ->
-                Timber.tag(TAG).i("proceedWithOrderId $userWalletId: $orderId status: ${orderData.status}")
+                TangemLogger.withTag(TAG).i("proceedWithOrderId $userWalletId: $orderId status: ${orderData.status}")
                 when (orderData.status) {
                     // Kyc is passed and user waits for order creation -> no need to get customer info
                     OrderStatus.NEW,

@@ -6,9 +6,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import timber.log.Timber
 
 @HiltWorker
 class LockTimerWorker @AssistedInject constructor(
@@ -19,11 +19,11 @@ class LockTimerWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        Timber.i("onStart job")
+        TangemLogger.i("onStart job")
         userWalletsListRepository.lockAllWallets().onRight {
             settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
         }
-        Timber.i("onStart job complete")
+        TangemLogger.i("onStart job complete")
         return Result.success()
     }
 
