@@ -12,11 +12,11 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.tap.LockTimerWorker.Companion.TAG
 import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 
@@ -45,7 +45,7 @@ internal class LockUserWalletsTimer(
         WorkManager.getInstance(context).cancelAllWorkByTag(TAG)
         coroutineScope.launch {
             val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
-            Timber.i(
+            TangemLogger.i(
                 """
                 Owner resumed
                 |- Need to open welcome screen: $shouldOpenWelcomeScreenOnResume
@@ -65,7 +65,7 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        Timber.i("Owner stopped")
+        TangemLogger.i("Owner stopped")
         delayJob = null
 
         startTimerWorker()
@@ -73,7 +73,7 @@ internal class LockUserWalletsTimer(
 
     fun restart() {
         if (delayJob == null) return
-        Timber.i(
+        TangemLogger.i(
             """
                 Timer restart
                 |- Duration millis: ${duration.inWholeMilliseconds}
@@ -93,7 +93,7 @@ internal class LockUserWalletsTimer(
 
     private fun start(log: Boolean = true) {
         if (log) {
-            Timber.i(
+            TangemLogger.i(
                 """
                     Timer start
                     |- Duration millis: ${duration.inWholeMilliseconds}
