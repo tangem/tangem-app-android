@@ -1,11 +1,16 @@
 package com.tangem.features.send.v2.deeplink
 
+import arrow.core.Option
 import arrow.core.getOrElse
+import arrow.core.raise.option
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyOperations.getCryptoCurrency
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import dagger.assisted.Assisted
@@ -21,7 +26,7 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
     @Assisted queryParams: Map<String, String>,
     appRouter: AppRouter,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
 ) : SellRedirectDeepLinkHandler {
 
     init {
@@ -51,8 +56,8 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                     }
 
                     scope.launch {
-                        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet, currencyId).getOrElse { error ->
-                            Timber.e("Error on getting cryptoCurrency: $error")
+                        val cryptoCurrency = getCryptoCurrency(userWallet.walletId, currencyId).getOrElse {
+                            Timber.e("Error on getting cryptoCurrency: $currencyId")
                             return@launch
                         }
                         // Convert using universal parser to account for regional separators
@@ -71,6 +76,15 @@ internal class DefaultSellRedirectDeepLinkHandler @AssistedInject constructor(
                 },
             )
     }
+
+    private suspend fun getCryptoCurrency(userWalletId: UserWalletId, currencyId: String): Option<CryptoCurrency> =
+        option {
+            val accountStatusList = singleAccountListSupplier.getSyncOrNull(userWalletId)
+
+            ensureNotNull(accountStatusList)
+
+            return accountStatusList.getCryptoCurrency(currencyIdValue = currencyId)
+        }
 
     @AssistedFactory
     interface Factory : SellRedirectDeepLinkHandler.Factory {

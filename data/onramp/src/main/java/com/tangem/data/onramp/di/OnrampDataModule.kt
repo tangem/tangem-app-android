@@ -28,6 +28,7 @@ import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
 import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.onramp.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -109,6 +110,7 @@ internal object OnrampDataModule {
         dispatchers: CoroutineDispatcherProvider,
         analyticsEventHandler: AnalyticsEventHandler,
         walletAccountsFetcher: WalletAccountsFetcher,
+        appScope: AppCoroutineScope,
     ): HotCryptoRepository {
         return DefaultHotCryptoRepository(
             excludedBlockchains = excludedBlockchains,
@@ -119,6 +121,7 @@ internal object OnrampDataModule {
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
             walletAccountsFetcher = walletAccountsFetcher,
+            appScope = appScope,
         )
     }
 
