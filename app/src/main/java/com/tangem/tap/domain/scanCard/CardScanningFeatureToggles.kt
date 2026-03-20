@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.scanCard
 
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
 /**
@@ -12,5 +13,5 @@ class CardScanningFeatureToggles internal constructor(
 ) {
 
     val isNewCardScanningEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "NEW_CARD_SCANNING_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.NEW_CARD_SCANNING_ENABLED)
 }

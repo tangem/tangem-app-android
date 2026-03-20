@@ -20,8 +20,30 @@ internal sealed class WalletTokensListUM {
     abstract val tokenList: ImmutableList<TokensListItemUM2>
     abstract val organizeButtonUM: TangemButtonUM?
 
-    data object Empty : WalletTokensListUM() {
+    data class Empty(
+        val onEmptyClick: () -> Unit,
+    ) : WalletTokensListUM() {
         override val tokenList: ImmutableList<TokensListItemUM2.Portfolio> = persistentListOf()
+        override val organizeButtonUM: TangemButtonUM? = null
+    }
+
+    data object Locked : WalletTokensListUM() {
+        override val tokenList: ImmutableList<TokensListItemUM2.Portfolio> = persistentListOf(
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = TangemTokenRowUM.Empty(id = "0"),
+                tokenList = persistentListOf(),
+                isExpanded = false,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+            TokensListItemUM2.Portfolio(
+                tokenRowUM = TangemTokenRowUM.Empty(id = "1"),
+                tokenList = persistentListOf(),
+                isExpanded = false,
+                isCollapsable = true,
+                onEmptyClick = {},
+            ),
+        )
         override val organizeButtonUM: TangemButtonUM? = null
     }
 
@@ -32,18 +54,21 @@ internal sealed class WalletTokensListUM {
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isCollapsable = true,
+                onEmptyClick = {},
             ),
             TokensListItemUM2.Portfolio(
                 tokenRowUM = TangemTokenRowUM.Loading(id = "1"),
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isCollapsable = true,
+                onEmptyClick = {},
             ),
             TokensListItemUM2.Portfolio(
                 tokenRowUM = TangemTokenRowUM.Loading(id = "2"),
                 tokenList = persistentListOf(),
                 isExpanded = false,
                 isCollapsable = true,
+                onEmptyClick = {},
             ),
         )
         override val organizeButtonUM: TangemButtonUM? = null
@@ -72,6 +97,7 @@ internal sealed interface TokensListItemUM2 {
 
     data class Portfolio(
         override val tokenRowUM: TangemTokenRowUM,
+        val onEmptyClick: () -> Unit,
         val tokenList: ImmutableList<TokensListItemUM2>,
         val isExpanded: Boolean,
         val isCollapsable: Boolean,

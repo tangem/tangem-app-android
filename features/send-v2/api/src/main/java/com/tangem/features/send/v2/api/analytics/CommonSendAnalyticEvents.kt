@@ -5,6 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AppsFlyerIncludedEvent
 
 /**
@@ -32,11 +33,13 @@ sealed class CommonSendAnalyticEvents(
     data class AmountScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val type: SendEntryType = SendEntryType.Manual,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Amount Screen Opened",
         params = mapOf(
             SOURCE to source.analyticsName,
+            TYPE to type.analyticsName,
         ),
     ), AppsFlyerIncludedEvent
 
@@ -95,6 +98,7 @@ sealed class CommonSendAnalyticEvents(
         val toDerivationIndex: Int?,
         val sendBlockchain: String,
         val sendToken: String,
+        val type: SendEntryType = SendEntryType.Manual,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Confirm Screen Opened",
@@ -108,6 +112,7 @@ sealed class CommonSendAnalyticEvents(
                     "$fromDerivationIndex, $toDerivationIndex",
                 )
             }
+            put(TYPE, type.analyticsName)
         },
     ), AppsFlyerIncludedEvent
 
@@ -219,6 +224,11 @@ sealed class CommonSendAnalyticEvents(
         Amount,
         Fee,
         Confirm,
+    }
+
+    enum class SendEntryType(val analyticsName: String) {
+        QR("QR"),
+        Manual("Manually"),
     }
 
     enum class CommonSendSource(val analyticsName: String) {

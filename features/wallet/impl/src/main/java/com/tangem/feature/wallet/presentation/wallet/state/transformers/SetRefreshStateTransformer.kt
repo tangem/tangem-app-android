@@ -4,7 +4,6 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 
