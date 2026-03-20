@@ -3,6 +3,8 @@ package com.tangem.features.send.v2.networkselection.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.getTotalCryptoAmount
 import com.tangem.common.getTotalFiatAmount
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -44,12 +46,17 @@ import javax.inject.Inject
 internal class NetworkSelectionModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     private val params: NetworkSelectionComponent.Params = paramsContainer.require()
+
+    init {
+        analyticsEventHandler.send(SendAnalyticEvents.ChooseTokenScreenOpened())
+    }
 
     private val searchQuery = MutableStateFlow("")
     private val expandedWallets = MutableStateFlow(
@@ -227,7 +234,15 @@ internal class NetworkSelectionModel @Inject constructor(
                 text = cryptoAmount.format { crypto(currency) },
                 isFlickering = isFlickering,
             ),
-            onItemClick = { params.onTokenSelected(context.userWalletId, currency) },
+            onItemClick = {
+                analyticsEventHandler.send(
+                    SendAnalyticEvents.TokenSelected(
+                        token = currency.symbol,
+                        blockchain = currency.network.name,
+                    ),
+                )
+                params.onTokenSelected(context.userWalletId, currency)
+            },
             onItemLongClick = null,
         )
     }
