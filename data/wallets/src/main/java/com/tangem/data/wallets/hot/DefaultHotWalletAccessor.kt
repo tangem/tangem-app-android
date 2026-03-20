@@ -229,7 +229,6 @@ class DefaultHotWalletAccessor @Inject constructor(
             this is TangemSdkError.AuthenticationLockout ||
             this is TangemSdkError.AuthenticationUnavailable ||
             this is TangemSdkError.AuthenticationAlreadyInProgress ||
-            this is TangemSdkError.AuthenticationNotInitialized ||
             this is TangemSdkError.AuthenticationPermanentLockout
     }
 
