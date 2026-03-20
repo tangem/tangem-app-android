@@ -11,12 +11,15 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent
 import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioPreselectedDataComponent.Params
 import com.tangem.features.feed.model.feed.FeedComponentModel
@@ -28,9 +31,21 @@ internal class DefaultFeedComponent(
     appComponentContext: AppComponentContext,
     private val params: FeedParams,
     private val addToPortfolioComponentFactory: AddToPortfolioPreselectedDataComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
+    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
 ) : ComposableModularBottomSheetContentComponent, AppComponentContext by appComponentContext {
 
     private val feedComponentModel = getOrCreateModel<FeedComponentModel, FeedParams>(params = params)
+
+    private val promoBannersBlockComponent: PromoBannersBlockComponent? by lazy {
+        if (!newPromoBannersFeatureToggles.isNewPromoBannersEnabled) return@lazy null
+        promoBannersBlockComponentFactory.create(
+            context = child("promoBannersBlockComponent"),
+            params = PromoBannersBlockComponent.Params(
+                placeholder = PromoBannersBlockComponent.Placeholder.FEED,
+            ),
+        )
+    }
 
     private val bottomSheetSlot = childSlot(
         source = feedComponentModel.bottomSheetNavigation,
@@ -62,6 +77,7 @@ internal class DefaultFeedComponent(
         FeedList(
             modifier = modifier,
             state = state,
+            promoBannersBlockComponent = promoBannersBlockComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
     }

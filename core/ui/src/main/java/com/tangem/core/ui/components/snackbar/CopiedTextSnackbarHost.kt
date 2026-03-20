@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("Use TangemTopSnackbarHost instead. Will be removed with redesign")
 @Composable
 fun CopiedTextSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
     SnackbarHost(hostState = hostState, modifier = modifier) {
