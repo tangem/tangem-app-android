@@ -20,15 +20,13 @@ dependencies {
 
     /** Core */
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
     implementation(projects.core.configToggles)
-
-    /** Common */
-    implementation(projects.common.routing)
 
     /** Compose */
     implementation(deps.compose.foundation)
