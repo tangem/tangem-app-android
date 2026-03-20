@@ -63,7 +63,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
@@ -558,7 +558,7 @@ internal class SwapAmountModel @Inject constructor(
                 startLoadingQuotesTask(isSilentReload = false)
             } else {
                 @Suppress("NullableToStringCall")
-                Timber.e(
+                TangemLogger.e(
                     """
                         Invalid cryptocurrencies status: 
                         | Primary -> $primaryStatus

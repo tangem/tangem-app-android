@@ -29,7 +29,6 @@ import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DeepLinkFactoryTest {
@@ -126,7 +125,6 @@ class DeepLinkFactoryTest {
         every { mockedUri.port } returns 443 // Default HTTPS port
         every { mockedUri.fragment } returns null // No fragment in this URI
 
-        Timber.uprootAll() // Disable Timber logging for tests
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
