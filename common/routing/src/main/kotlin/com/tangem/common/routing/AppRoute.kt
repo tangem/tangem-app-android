@@ -68,13 +68,20 @@ sealed class AppRoute(val path: String) : Route {
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
+        val entryType: EntryType = EntryType.Manual,
     ) : AppRoute(
         path = "/send/${userWalletId.stringValue}/${currency.id.value}?" +
             "&$transactionId" +
             "&$amount" +
             "&$tag" +
             "&$destinationAddress",
-    )
+    ) {
+        @Serializable
+        enum class EntryType {
+            Manual,
+            QR,
+        }
+    }
 
     @Serializable
     data class Details(
