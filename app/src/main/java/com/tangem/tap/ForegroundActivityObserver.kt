@@ -4,7 +4,7 @@ import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import kotlin.reflect.KClass
 
 object ForegroundActivityObserver {
@@ -14,7 +14,7 @@ object ForegroundActivityObserver {
     val foregroundActivity: AppCompatActivity?
         get() = activities.entries
             .firstOrNull { entry ->
-                Timber.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")
+                TangemLogger.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")
                 entry.value.isDestroyed == false
             }
             ?.value
@@ -27,15 +27,15 @@ object ForegroundActivityObserver {
         }
 
         override fun onActivityResumed(activity: Activity) {
-            Timber.i("onActivityResumed ${activity::class}")
+            TangemLogger.i("onActivityResumed ${activity::class}")
             if (activity is AppCompatActivity) {
-                Timber.i("onActivityResumed store activity")
+                TangemLogger.i("onActivityResumed store activity")
                 activities[activity::class] = activity
             }
         }
 
         override fun onActivityDestroyed(activity: Activity) {
-            Timber.i("onActivityDestroyed")
+            TangemLogger.i("onActivityDestroyed")
             activities.remove(activity::class)
         }
 

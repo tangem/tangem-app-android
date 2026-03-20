@@ -58,7 +58,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
     implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)

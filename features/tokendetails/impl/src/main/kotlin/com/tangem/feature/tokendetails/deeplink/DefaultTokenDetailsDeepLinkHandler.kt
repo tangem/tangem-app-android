@@ -31,7 +31,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
@@ -66,18 +66,18 @@ internal class DefaultTokenDetailsDeepLinkHandler @AssistedInject constructor(
             val userWallet = userWalletId?.let { getUserWalletUseCase(userWalletId) }?.getOrNull()
             // If wallet to select is null or locked, ignore deeplink
             if (userWallet == null || userWallet.isLocked) {
-                Timber.e("Error on getting user wallet")
+                TangemLogger.e("Error on getting user wallet")
                 return@launch
             }
             if (selectWalletUseCase(userWalletId).getOrNull() == null) {
-                Timber.e("Error on selecting user wallet")
+                TangemLogger.e("Error on selecting user wallet")
                 return@launch
             }
 
             val cryptoCurrency = findCryptoCurrency(userWallet = userWallet, networkId = networkId, tokenId = tokenId)
 
             if (cryptoCurrency == null) {
-                Timber.e(
+                TangemLogger.e(
                     """
                         Could not get crypto currency for
                         |- $NETWORK_ID_KEY: $networkId
