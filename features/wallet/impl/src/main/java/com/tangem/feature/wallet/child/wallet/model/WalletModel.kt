@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -767,6 +768,7 @@ internal class WalletModel @Inject constructor(
                         userWalletId = stateHolder.getSelectedWalletId(),
                         uri = target.uri,
                         source = source,
+                        screen = WcPairRequest.Screen.MAIN,
                     ),
                 )
             }
@@ -777,6 +779,7 @@ internal class WalletModel @Inject constructor(
                     address = target.address,
                     amount = target.amount?.parseBigDecimal(target.currency.decimals),
                     tag = target.memo,
+                    entryType = AppRoute.Send.EntryType.QR,
                 )
             }
             is QrSendTarget.Multiple -> {
@@ -789,9 +792,17 @@ internal class WalletModel @Inject constructor(
     private fun handleQrError(error: ClassifiedQrContent.Error) {
         when (error) {
             is ClassifiedQrContent.Error.Unrecognized -> {
+                analyticsEventsHandler.send(
+                    WalletScreenAnalyticsEvent.MainScreen.NoticeUnrecognizedQr(),
+                )
                 uiMessageSender.send(WalletAlertUM.qrCodeUnrecognized())
             }
             is ClassifiedQrContent.Error.UnsupportedNetwork -> {
+                analyticsEventsHandler.send(
+                    WalletScreenAnalyticsEvent.MainScreen.NoticeNoAvailableTokens(
+                        blockchain = error.blockchain,
+                    ),
+                )
                 uiMessageSender.send(WalletAlertUM.qrCodeUnsupportedNetwork())
             }
         }
