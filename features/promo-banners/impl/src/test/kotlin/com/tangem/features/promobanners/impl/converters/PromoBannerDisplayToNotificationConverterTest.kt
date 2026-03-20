@@ -4,7 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.promobanners.impl.model.PromoBannerDisplay
 import com.tangem.features.promobanners.impl.model.PromoBannerPriority
 import com.google.common.truth.Truth.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class PromoBannerDisplayToNotificationConverterTest {
 
