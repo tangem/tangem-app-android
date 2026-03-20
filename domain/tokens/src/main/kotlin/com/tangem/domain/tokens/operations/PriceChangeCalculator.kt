@@ -50,9 +50,9 @@ object PriceChangeCalculator {
             return createZeroPriceChange(source = walletTotalFiatBalance.source).lceContent()
         }
 
-        val total = statuses.sumOf {
-            val weight = it.value.fiatAmount.orZero().divide(balance, 2, RoundingMode.HALF_UP)
-            val priceChange = it.value.priceChange.orZero()
+        val total = statuses.sumOf { status ->
+            val weight = status.value.fiatAmount.orZero().divide(balance, 2, RoundingMode.HALF_UP)
+            val priceChange = status.value.priceChange.orZero()
 
             weight * priceChange
         }.stripTrailingZeros()

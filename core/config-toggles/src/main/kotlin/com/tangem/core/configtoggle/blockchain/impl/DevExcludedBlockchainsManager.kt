@@ -1,7 +1,7 @@
 package com.tangem.core.configtoggle.blockchain.impl
 
-import com.tangem.core.configtoggle.ExcludedBlockchainToggles
 import com.tangem.core.configtoggle.blockchain.MutableExcludedBlockchainsManager
+import com.tangem.core.configtoggle.blockchain.provider.ExcludedBlockchainTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.utils.defineTogglesAvailability
 import com.tangem.core.configtoggle.utils.toTableString
@@ -12,11 +12,13 @@ import kotlin.properties.Delegates
 /**
  * [MutableExcludedBlockchainsManager] implementation in dev or mocked build
  *
- * @property versionProvider     application version provider
- * @property localTogglesStorage local storage for blockchain toggles
+ * @property versionProvider                    application version provider
+ * @property excludedBlockchainTogglesProvider  provider for excluded blockchain toggle entries
+ * @property localTogglesStorage                local storage for blockchain toggles
  */
 internal class DevExcludedBlockchainsManager(
     private val versionProvider: VersionProvider,
+    private val excludedBlockchainTogglesProvider: ExcludedBlockchainTogglesProvider,
     private val localTogglesStorage: LocalTogglesStorage,
 ) : MutableExcludedBlockchainsManager {
 
@@ -63,6 +65,7 @@ internal class DevExcludedBlockchainsManager(
     private fun getFileBlockchainToggles(): Map<String, Boolean> {
         val appVersion = versionProvider.get()
 
-        return ExcludedBlockchainToggles.values.defineTogglesAvailability(appVersion = appVersion)
+        return excludedBlockchainTogglesProvider.getToggles()
+            .defineTogglesAvailability(appVersion = appVersion)
     }
 }

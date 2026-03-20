@@ -40,7 +40,7 @@ inline fun <T : Any> InformationBlockContentScope.ListItems(
 }
 
 @Composable
-inline fun <T : Any> InformationBlockContentScope.GridItems(
+inline fun <T : Any> GridItems(
     items: ImmutableList<T>,
     modifier: Modifier = Modifier,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
