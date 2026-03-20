@@ -23,8 +23,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
+    implementation(projects.core.utils)
 
-    implementation(deps.timber)
 
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain) {

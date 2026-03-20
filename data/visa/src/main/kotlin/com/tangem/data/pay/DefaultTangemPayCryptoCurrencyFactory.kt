@@ -11,7 +11,7 @@ import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: DefaultTangemPayCryptoCurrencyFactory"
@@ -53,7 +53,7 @@ internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
                 decimals = TOKEN_DECIMALS,
             )
         }.mapLeft { exception ->
-            Timber.tag(TAG).e(exception)
+            TangemLogger.withTag(TAG).e("Error", exception)
             errorConverter.convert(exception)
         }
     }

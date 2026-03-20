@@ -9,7 +9,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /** Factory for creating [NetworkStatus] */
 object NetworkStatusFactory {
@@ -104,7 +104,7 @@ object NetworkStatusFactory {
             }
 
             if (amount == null) {
-                Timber.w("Unable to find amount for cryptocurrency: $currency")
+                TangemLogger.w("Unable to find amount for cryptocurrency: $currency")
                 currency.id to NetworkStatus.Amount.NotFound
             } else {
                 currency.id to NetworkStatus.Amount.Loaded(amount.value)
@@ -129,7 +129,7 @@ object NetworkStatusFactory {
             }
 
             if (amount == null) {
-                Timber.w("Unable to find amount for cryptocurrency: $currency")
+                TangemLogger.w("Unable to find amount for cryptocurrency: $currency")
                 currency.id to null
             } else {
                 currency.id to amount.yieldSupplyStatus
@@ -191,7 +191,7 @@ object NetworkStatusFactory {
         }
 
         if (address.value.isBlank()) {
-            Timber.w("Address value is blank")
+            TangemLogger.w("Address value is blank")
         }
 
         return NetworkAddress.Address(address.value, type)
