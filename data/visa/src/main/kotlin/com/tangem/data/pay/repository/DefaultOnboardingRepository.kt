@@ -12,6 +12,7 @@ import com.tangem.datasource.api.pay.models.response.OrderResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.TangemPayEligibilityType
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -211,19 +212,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    override suspend fun checkCustomerEligibility(): Boolean {
+    override suspend fun checkCustomerEligibility(): List<TangemPayEligibilityType> {
         val response = requestHelper.performWithStaticToken {
-            tangemPayApi.checkCustomerEligibility()
+            tangemPayApi.getEligibilityChannels()
         }.getOrNull()
 
-        val isAvailable = response?.result?.isTangemPayAvailable == true
-        tangemPayStorage.storeTangemPayEligibility(eligibility = isAvailable)
+        val channels = response?.result?.channels
+        val eligibility = channels.orEmpty().toSet()
+        tangemPayStorage.storeTangemPayEligibility(eligibility = eligibility)
 
-        return isAvailable
+        return eligibility.map(TangemPayEligibilityType::fromString)
     }
 
-    override suspend fun getCustomerEligibility(): Boolean {
-        return tangemPayStorage.getTangemPayEligibility()
+    override suspend fun getCustomerEligibility(): List<TangemPayEligibilityType> {
+        return tangemPayStorage.getTangemPayEligibility().map(TangemPayEligibilityType::fromString)
     }
 
     override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
