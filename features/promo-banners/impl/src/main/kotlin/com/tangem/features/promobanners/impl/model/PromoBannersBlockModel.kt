@@ -1,6 +1,6 @@
 package com.tangem.features.promobanners.impl.model
 
-import com.tangem.common.routing.LinkHandler
+import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -25,7 +25,7 @@ internal class PromoBannersBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val repository: PromoBannersRepository,
-    private val linkHandler: LinkHandler,
+    private val deeplinkLauncher: DeeplinkLauncher,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
@@ -95,7 +95,7 @@ internal class PromoBannersBlockModel @Inject constructor(
 
     private fun onButtonClick(displayId: String, deeplink: String?) {
         analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholder))
-        deeplink?.let { linkHandler.navigate(it) }
+        deeplink?.let { deeplinkLauncher.launch(it) }
     }
 
     private fun onBannerDismiss(walletId: String, displayId: String) {
