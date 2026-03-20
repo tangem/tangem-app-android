@@ -326,6 +326,7 @@ internal class ChildFactory @Inject constructor(
                         amount = route.amount,
                         tag = route.tag,
                         destinationAddress = route.destinationAddress,
+                        entryType = route.entryType.toSendEntryType(),
                     ),
                     componentFactory = sendComponentFactoryV2,
                 )
@@ -687,4 +688,9 @@ internal class ChildFactory @Inject constructor(
             }
         }
     }
+}
+
+private fun AppRoute.Send.EntryType.toSendEntryType(): SendComponent.EntryType = when (this) {
+    AppRoute.Send.EntryType.Manual -> SendComponent.EntryType.Manual
+    AppRoute.Send.EntryType.QR -> SendComponent.EntryType.QR
 }
