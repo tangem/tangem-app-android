@@ -14,9 +14,9 @@ import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.crypto.spec.SecretKeySpec
 
 internal class DefaultUserWalletsSensitiveInformationRepository(
@@ -123,7 +123,7 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                     this@decodeToSensitiveInformation.decodeToString(throwOnInvalidSequence = true),
                 )
             } catch (e: CharacterCodingException) {
-                Timber.e(e, "Unable to decode sensitive information")
+                TangemLogger.e("Unable to decode sensitive information", e)
 
                 null
             }
