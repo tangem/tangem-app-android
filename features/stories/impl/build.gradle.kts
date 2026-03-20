@@ -13,20 +13,18 @@ android {
 dependencies {
     /** Feature modules */
     implementation(projects.features.stories.api)
-    implementation(projects.features.swap.api)
-
     /** Domain modules */
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
 
     /** Project - Common */
     implementation(projects.common.routing)
-    implementation(projects.common.ui)
 
     /** Project - Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
 
@@ -34,7 +32,13 @@ dependencies {
     implementation(deps.androidx.activity.compose)
     implementation(deps.lifecycle.compose)
 
+    /** Compose */
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
+
     /** Others */
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.compose.coil)
     implementation(deps.timber)
     implementation(deps.arrow.core)
 

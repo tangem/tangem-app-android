@@ -4,8 +4,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Dsl
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetDsl
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUM
 import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.resourceReference
 @Immutable
 sealed interface EventMessage : UiMessage
 
+@Immutable
 data class ToastMessage(
     val message: TextReference,
     val duration: Duration = ToastMessage.Duration.Short,
@@ -48,8 +49,10 @@ data class ToastMessage(
  * @param actionLabel The label of the action button. Optional, `null` by default.
  * @param action The action to perform when the action button is clicked. Optional, `null` by default.
  * */
+@Immutable
 data class SnackbarMessage(
     val message: TextReference,
+    @field:DrawableRes val startIconId: Int? = null,
     val duration: Duration = Duration.Short,
     val onDismissRequest: () -> Unit = {},
     val actionLabel: TextReference? = null,
@@ -92,6 +95,7 @@ data class SnackbarMessage(
  * `true` by default.
  * @param onDismissRequest The action to perform when the dialog is dismissed.
  * */
+@Immutable
 data class DialogMessage(
     val message: TextReference,
     val title: TextReference? = null,
@@ -146,68 +150,28 @@ data class DialogMessage(
     }
 }
 
+@Immutable
 data class GlobalLoadingMessage(val isShow: Boolean) : EventMessage
 
 /**
  * Shows a bottom sheet.
  *
- * @param iconResId The icon to show in the bottom sheet.
- * Optional, `null` by default.
- * @param title The title of the bottom sheet. Optional, `null` by default.
- * @param message The message to show in the bottom sheet.
- * @param firstAction The first action to perform. Optional, `null` by default.
- * @param secondAction The second action to perform. Optional, `null` by default.
- * @param onDismissRequest The action to perform when the bottom sheet is dismissed.
+ * @param messageBottomSheetUM The content of the bottom sheet.
  * */
+@Immutable
 data class BottomSheetMessage(
-    @DrawableRes val iconResId: Int? = null,
-    val title: TextReference? = null,
-    val message: TextReference,
-    val firstAction: EventMessageAction? = null,
-    val secondAction: EventMessageAction? = null,
-    val onDismissRequest: () -> Unit = {},
-) : EventMessage {
-
-    companion object {
-
-        /**
-         * Builder for [BottomSheetMessage].
-         *
-         * @param iconResId The icon to show in the bottom sheet. Optional, `null` by default.
-         * @param title The title of the bottom sheet. Optional, `null` by default.
-         * @param message The message to show in the bottom sheet.
-         * @param onDismissRequest The action to perform when the bottom sheet is dismissed.
-         * @param firstActionBuilder The builder for the first action. Optional, `null` by default.
-         * @param secondActionBuilder The builder for the second action. Optional, `null` by default.
-         * */
-        operator fun invoke(
-            @DrawableRes iconResId: Int?,
-            title: TextReference?,
-            message: TextReference,
-            onDismissRequest: () -> Unit = {},
-            firstActionBuilder: (EventMessageAction.BuilderScope.() -> EventMessageAction)? = null,
-            secondActionBuilder: (EventMessageAction.BuilderScope.() -> EventMessageAction)? = null,
-        ): BottomSheetMessage {
-            val buttonsScope = EventMessageAction.BuilderScope(onDismissRequest)
-
-            return BottomSheetMessage(
-                iconResId = iconResId,
-                title = title,
-                message = message,
-                onDismissRequest = onDismissRequest,
-                firstAction = firstActionBuilder?.invoke(buttonsScope),
-                secondAction = secondActionBuilder?.invoke(buttonsScope),
-            )
-        }
-    }
-}
-
-data class BottomSheetMessageV2(
-    val messageBottomSheetUMV2: MessageBottomSheetUMV2,
+    val messageBottomSheetUM: MessageBottomSheetUM,
 ) : EventMessage
 
-fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() -> Unit) =
-    BottomSheetMessageV2(messageBottomSheetUM(init))
+/**
+ * Builder for [BottomSheetMessage].
+ *
+ * @param init The builder lambda with receiver of type [MessageBottomSheetUM].
+ *
+ * @return [BottomSheetMessage] with the specified content.
+ */
+fun bottomSheetMessage(init: @MessageBottomSheetDsl MessageBottomSheetUM.() -> Unit) =
+    BottomSheetMessage(messageBottomSheetUM(init))
 
 /**
  * Represents an action button in the dialog.

@@ -32,6 +32,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -177,12 +178,26 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
-        fromAmount: BigDecimal,
+        amount: BigDecimal,
+        amountType: SwapAmountType,
         provider: ExpressProvider,
         rateType: ExpressRateType,
     ): SwapQuoteModel = withContext(coroutineDispatcher.io) {
         val response = tangemExpressApi.getExchangeQuote(
-            fromAmount = fromAmount.movePointRight(fromCryptoCurrency.decimals).toString(),
+            fromAmount = if (amountType == SwapAmountType.From) {
+                amount.movePointRight(
+                    fromCryptoCurrency.decimals,
+                ).toString()
+            } else {
+                null
+            },
+            toAmount = if (amountType == SwapAmountType.To) {
+                amount.movePointRight(
+                    toCryptoCurrency.decimals,
+                ).toString()
+            } else {
+                null
+            },
             fromNetwork = fromCryptoCurrency.network.backendId,
             fromContractAddress = fromCryptoCurrency.getContractAddress(),
             fromDecimals = fromCryptoCurrency.decimals,
@@ -199,10 +214,12 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         ).getOrThrow()
 
         val toTokenAmount = requireNotNull(response.toAmount.toBigDecimalOrNull()?.movePointLeft(response.toDecimals))
+        val fromTokenAmount = response.fromAmount.toBigDecimalOrNull()?.movePointLeft(response.fromDecimals)
 
         return@withContext SwapQuoteModel(
             provider = provider,
             toTokenAmount = toTokenAmount,
+            fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
         )
     }
@@ -211,7 +228,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrency: CryptoCurrency,
-        fromAmount: String,
+        amount: String,
+        amountType: SwapAmountType,
         toAddress: String,
         toExtraId: String?,
         expressProvider: ExpressProvider,
@@ -241,7 +259,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             toAddress = toAddress,
             fromDecimals = fromCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
-            fromAmount = fromAmount,
+            fromAmount = if (amountType == SwapAmountType.From) amount else null,
+            toAmount = if (amountType == SwapAmountType.To) amount else null,
             providerId = expressProvider.providerId,
             rateType = rateType.name.lowercase(),
             requestId = requestId,

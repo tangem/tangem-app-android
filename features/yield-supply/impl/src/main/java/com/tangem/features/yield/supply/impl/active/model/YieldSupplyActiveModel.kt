@@ -16,12 +16,13 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
@@ -55,7 +56,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val urlOpener: UrlOpener,
     private val appRouter: AppRouter,
     private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
@@ -168,44 +169,44 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-                        userWalletId = params.userWalletId,
-                        currencyId = cryptoCurrency.id,
-                        isSingleWalletWithTokens = false,
-                    ).onEach { maybeCryptoCurrency ->
-                        maybeCryptoCurrency.fold(
-                            ifRight = { cryptoCurrencyStatus ->
-                                cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
+                    singleAccountStatusListSupplier(params.userWalletId)
+                        .map { it.getCryptoCurrencyStatus(currency = cryptoCurrency) }
+                        .distinctUntilChanged()
+                        .onEach { maybeCryptoCurrency ->
+                            maybeCryptoCurrency.fold(
+                                ifSome = { cryptoCurrencyStatus ->
+                                    cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
 
-                                val protocolBalance =
-                                    cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
-                                        ?: yieldSupplyGetProtocolBalanceUseCase(
-                                            userWalletId = userWalletId,
-                                            cryptoCurrency = cryptoCurrency,
-                                        ).getOrNull()
+                                    val protocolBalance =
+                                        cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
+                                            ?: yieldSupplyGetProtocolBalanceUseCase(
+                                                userWalletId = userWalletId,
+                                                cryptoCurrency = cryptoCurrency,
+                                            ).getOrNull()
 
-                                loadApy()
-                                loadMinAmount()
-                                loadFees()
+                                    loadApy()
+                                    loadMinAmount()
+                                    loadFees()
 
-                                uiState.update {
-                                    it.copy(
-                                        availableBalance = stringReference(
-                                            protocolBalance.format {
-                                                crypto(
-                                                    symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
-                                                    decimals = cryptoCurrency.decimals,
-                                                )
-                                            },
-                                        ),
-                                    )
-                                }
-                            },
-                            ifLeft = {
-                                Timber.w(it.toString())
-                            },
-                        )
-                    }.flowOn(dispatchers.default)
+                                    uiState.update {
+                                        it.copy(
+                                            availableBalance = stringReference(
+                                                protocolBalance.format {
+                                                    crypto(
+                                                        symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
+                                                        decimals = cryptoCurrency.decimals,
+                                                    )
+                                                },
+                                            ),
+                                        )
+                                    }
+                                },
+                                ifEmpty = {
+                                    Timber.w("No currency status found: ${cryptoCurrency.id}")
+                                },
+                            )
+                        }
+                        .flowOn(dispatchers.default)
                         .launchIn(modelScope)
                 },
                 ifLeft = { error ->
