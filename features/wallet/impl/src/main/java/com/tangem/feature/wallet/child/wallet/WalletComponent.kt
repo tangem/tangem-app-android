@@ -202,6 +202,7 @@ internal class WalletComponent @AssistedInject constructor(
                                     address = dialogConfig.address,
                                     amount = dialogConfig.amount?.parseBigDecimal(currency.decimals),
                                     tag = dialogConfig.memo,
+                                    entryType = AppRoute.Send.EntryType.Manual,
                                 )
                             },
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,

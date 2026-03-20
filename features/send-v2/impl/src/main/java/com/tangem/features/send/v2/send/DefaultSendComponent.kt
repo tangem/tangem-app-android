@@ -105,6 +105,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                                 sendToken = fromCurrency.symbol,
                                 fromDerivationIndex = fromDerivationIndex,
                                 toDerivationIndex = null,
+                                type = model.consumeEntryType(),
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {
@@ -116,6 +117,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                             CommonSendAnalyticEvents.AmountScreenOpened(
                                 categoryName = model.analyticCategoryName,
                                 source = model.analyticsSendSource,
+                                type = model.consumeEntryType(),
                             ),
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
