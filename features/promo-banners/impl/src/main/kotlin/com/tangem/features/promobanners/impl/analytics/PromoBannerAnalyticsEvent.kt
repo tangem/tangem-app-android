@@ -5,20 +5,37 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 internal sealed class PromoBannerAnalyticsEvent(
     event: String,
     params: Map<String, String> = emptyMap(),
-) : AnalyticsEvent(category = "Banner", event = event, params = params) {
+) : AnalyticsEvent(category = "Promo Banner", event = event, params = params) {
 
-    data class Shown(val bannerId: String) : PromoBannerAnalyticsEvent(
+    data class Shown(
+        private val displayId: String,
+        private val placeholder: String,
+    ) : PromoBannerAnalyticsEvent(
         event = "Banner Shown",
-        params = mapOf("banner_id" to bannerId),
+        params = mapOf("Display Id" to displayId, "Placeholder" to placeholder),
     )
 
-    data class Clicked(val bannerId: String) : PromoBannerAnalyticsEvent(
-        event = "Banner Clicked",
-        params = mapOf("banner_id" to bannerId),
+    data class CarouselScrolled(
+        private val displayId: String,
+        private val placeholder: String,
+    ) : PromoBannerAnalyticsEvent(
+        event = "Banner Carousel Scrolled",
+        params = mapOf("Display Id" to displayId, "Placeholder" to placeholder),
     )
 
-    data class Dismissed(val bannerId: String) : PromoBannerAnalyticsEvent(
+    data class Clicked(
+        private val displayId: String,
+        private val placeholder: String,
+    ) : PromoBannerAnalyticsEvent(
+        event = "Banner Button Clicked",
+        params = mapOf("Display Id" to displayId, "Placeholder" to placeholder),
+    )
+
+    data class Dismissed(
+        private val displayId: String,
+        private val placeholder: String,
+    ) : PromoBannerAnalyticsEvent(
         event = "Banner Dismissed",
-        params = mapOf("banner_id" to bannerId),
+        params = mapOf("Display Id" to displayId, "Placeholder" to placeholder),
     )
 }
