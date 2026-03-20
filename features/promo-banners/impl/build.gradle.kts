@@ -15,6 +15,7 @@ dependencies {
     implementation(projects.features.promoBanners.api)
 
     /** Domain */
+    implementation(projects.domain.common)
     implementation(projects.domain.models)
 
     /** Core */
