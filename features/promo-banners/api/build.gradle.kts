@@ -11,5 +11,4 @@ android {
 dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.domain.models)
 }
