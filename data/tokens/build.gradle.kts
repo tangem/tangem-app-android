@@ -26,6 +26,7 @@ dependencies {
     // region Project - Domain
     implementation(projects.domain.account)
     implementation(projects.domain.card)
+    implementation(projects.domain.common)
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
     implementation(projects.domain.express)
