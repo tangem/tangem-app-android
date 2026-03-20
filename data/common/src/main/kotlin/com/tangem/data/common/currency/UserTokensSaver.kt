@@ -12,10 +12,10 @@ import com.tangem.domain.common.wallets.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.retryer.Retryer
 import com.tangem.utils.retryer.RetryerPool
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 class UserTokensSaver(
@@ -36,7 +36,7 @@ class UserTokensSaver(
         val userWallet = userWalletsListRepository.getSyncOrNull(id = userWalletId)
 
         if (userWallet == null) {
-            Timber.e("UserWallet with id $userWalletId not found. Cannot push tokens.")
+            TangemLogger.e("UserWallet with id $userWalletId not found. Cannot push tokens.")
             onFailSend()
             return@withContext
         }
@@ -116,7 +116,7 @@ class UserTokensSaver(
                 userWalletId = userWalletId,
                 response = response,
                 onFailSend = {
-                    Timber.e(
+                    TangemLogger.e(
                         "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
                     )
 

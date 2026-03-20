@@ -20,8 +20,8 @@ import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 private typealias DerivedKeys = Map<ByteArrayKey, ExtendedPublicKeysMap>
@@ -60,14 +60,14 @@ internal class DefaultColdMapDerivationsRepository @Inject constructor(
         networks: List<Network>,
     ): UserWallet.Cold = withContext(dispatchers.io) {
         if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
-            Timber.d("Nothing to derive")
+            TangemLogger.d("Nothing to derive")
             return@withContext userWallet
         }
 
         val derivations = MissedDerivationsFinder(userWallet)
             .findByNetworks(networks)
             .ifEmpty {
-                Timber.d("Nothing to derive")
+                TangemLogger.d("Nothing to derive")
                 return@withContext userWallet
             }
 
