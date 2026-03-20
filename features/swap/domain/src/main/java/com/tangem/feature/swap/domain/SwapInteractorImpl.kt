@@ -70,7 +70,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -290,7 +290,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             contractAddress = permissionOptions.forTokenContractAddress,
             spenderAddress = permissionOptions.spenderAddress,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create approveTransaction")
+            TangemLogger.e("Failed to create approveTransaction", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -321,7 +321,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         reduceBalanceBy: BigDecimal,
         txFeeSealedState: TxFeeSealedState,
     ): Map<SwapProvider, SwapState> {
-        Timber.i(
+        TangemLogger.i(
             """
                Find the best quote
                |- fromToken: $fromToken
@@ -702,7 +702,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState {
-        Timber.i(
+        TangemLogger.i(
             """
                Swap
                |- swapProvider: $swapProvider
@@ -795,7 +795,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(dataToSign, currencyToSendStatus.currency.network, txFee.fee.getGasLimit()),
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap dex tx data")
+            TangemLogger.e("Failed to create swap dex tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -999,7 +999,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             network = currencyToSend.currency.network,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap CEX tx data")
+            TangemLogger.e("Failed to create swap CEX tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -2065,7 +2065,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 userWallet = userWallet,
             ).getOrNull() ?: error("unable to calculate fee")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get fee")
+            TangemLogger.e("Failed to get fee", e)
             // it's impossible next steps without fee
             return createSwapErrorWith(
                 fromToken = fromTokenStatus,
@@ -2491,7 +2491,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
             quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this@getQuotesOrEmpty).orEmpty()
         }.getOrElse { e ->
-            Timber.e(e, "Failed to get quotes: ${e.message.orEmpty()}")
+            TangemLogger.e("Failed to get quotes: ${e.message.orEmpty()}", e)
             emptySet()
         }
     }
@@ -2505,7 +2505,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return try {
             SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
         } catch (e: Exception) {
-            Timber.e("Failed to format the hash: ${e.message.orEmpty()}")
+            TangemLogger.e("Failed to format the hash: ${e.message.orEmpty()}")
             hash
         }
     }
