@@ -306,6 +306,7 @@
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_later">Later</string>
   <string name="common_learn_more">Learn more</string>
   <string name="common_left">%1$s left</string>
@@ -755,6 +756,7 @@
   <string name="markets_search_result_title">Result</string>
   <string name="markets_search_see_tokens_under_100k">See tokens under 100k USD market cap</string>
   <string name="markets_search_show_tokens">Show tokens</string>
+  <string name="markets_search_title_placeholder">Crypto, news and more</string>
   <string name="markets_search_token_no_result_title">No result</string>
   <string name="markets_select_network">Select network</string>
   <string name="markets_select_wallet">Select wallet</string>
@@ -1497,6 +1499,7 @@
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
   <string name="swapping_high_price_impact_title">High price impact</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
+  <string name="swapping_insufficient_funds_description">Not enough funds to complete this transaction. Reduce the amount to receive or add more funds.</string>
   <string name="swapping_permission_header">Give Permission</string>
   <string name="swapping_swap_action">Swap</string>
   <string name="swapping_swap_action_in_progress">Swapping...</string>
