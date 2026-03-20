@@ -8,7 +8,7 @@ import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLi
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.net.URLDecoder
 
 internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
@@ -24,7 +24,7 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
                 // It is okay here, we are navigating from outside, and there is no other way to getting UserWallet
                 getSelectedWalletSyncUseCase().fold(
                     ifLeft = {
-                        Timber.e("Error on getting user wallet: $it")
+                        TangemLogger.e("Error on getting user wallet: $it")
                     },
                     ifRight = { wallet ->
                         val decodedWcUri = URLDecoder.decode(wcUri, DEFAULT_CHARSET_NAME)
@@ -38,7 +38,7 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
                     },
                 )
             } catch (e: Exception) {
-                Timber.e(e)
+                TangemLogger.e("Error", e)
             }
         }
     }
