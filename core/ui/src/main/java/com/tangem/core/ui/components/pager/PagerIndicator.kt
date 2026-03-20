@@ -39,15 +39,24 @@ private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
 private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
 
 @Composable
-fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
-    val colors = PagerIndicatorColors(
-        active = TangemTheme.colors.control.key,
-        inactive = TangemTheme.colors.text.tertiary,
-        overlay = TangemTheme.colors.overlay.secondary,
-    )
+fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier, hasBackground: Boolean = true) {
+    val colors = if (hasBackground) {
+        PagerIndicatorColors(
+            active = TangemTheme.colors.control.key,
+            inactive = TangemTheme.colors.text.tertiary,
+            overlay = TangemTheme.colors.overlay.secondary,
+        )
+    } else {
+        PagerIndicatorColors(
+            active = TangemTheme.colors.icon.primary1,
+            inactive = TangemTheme.colors.icon.inactive,
+            overlay = Color.Transparent,
+        )
+    }
     PagerIndicatorContent(
         pagerState = pagerState,
         colors = colors,
+        hasBackground = hasBackground,
         modifier = modifier,
     )
 }
@@ -84,6 +93,7 @@ private fun PagerIndicatorContent(
     pagerState: PagerState,
     colors: PagerIndicatorColors,
     modifier: Modifier = Modifier,
+    hasBackground: Boolean = true,
     boxModifier: Modifier = Modifier,
 ) {
     val totalPages = pagerState.pageCount
@@ -98,16 +108,19 @@ private fun PagerIndicatorContent(
 
     val visibleIndices = (animState.displayLower until animState.displayUpper).toList()
 
-    Box(
-        modifier = modifier
+    val backgroundModifier = if (hasBackground) {
+        modifier
             .width(BACKGROUND_SIZE.width)
             .height(BACKGROUND_SIZE.height)
-            .background(
-                color = colors.overlay,
-                shape = CircleShape,
-            )
+            .background(color = colors.overlay, shape = CircleShape)
             .clip(CircleShape)
-            .then(boxModifier),
+            .then(boxModifier)
+    } else {
+        modifier.padding(vertical = 4.dp)
+    }
+
+    Box(
+        modifier = backgroundModifier,
         contentAlignment = Alignment.Center,
     ) {
         Row(

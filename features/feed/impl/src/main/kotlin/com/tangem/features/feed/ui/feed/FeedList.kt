@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
@@ -56,7 +57,11 @@ internal fun FeedListHeader(
 }
 
 @Composable
-internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
+internal fun FeedList(
+    state: FeedListUM,
+    modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
+) {
     val background = LocalMainBottomSheetColor.current.value
     AnimatedContent(
         modifier = modifier,
@@ -83,6 +88,7 @@ internal fun FeedList(state: FeedListUM, modifier: Modifier = Modifier) {
                 FeedListContent(
                     modifier = Modifier,
                     state = state,
+                    promoBannersBlockComponent = promoBannersBlockComponent,
                 )
             }
         }
@@ -123,7 +129,11 @@ private fun FeedSearchBar(
 }
 
 @Composable
-private fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
+private fun FeedListContent(
+    state: FeedListUM,
+    modifier: Modifier = Modifier,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
+) {
     val background = LocalMainBottomSheetColor.current.value
     Column(
         modifier = modifier
@@ -139,6 +149,8 @@ private fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
             marketChart = state.marketChartConfig.marketCharts[SortByTypeUM.Rating],
             feedListCallbacks = state.feedListCallbacks,
         )
+
+        promoBannersBlockComponent?.Content(modifier = Modifier.padding(horizontal = 16.dp))
 
         NewsBlock(
             news = state.news,
