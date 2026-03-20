@@ -25,7 +25,6 @@ dependencies {
     implementation(deps.firebase.messaging)
     // end
 
-    implementation(deps.timber)
 
     implementation(deps.arrow.core)
 

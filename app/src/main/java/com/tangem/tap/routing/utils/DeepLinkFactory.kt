@@ -23,6 +23,7 @@ import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLi
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.uriValidate
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.transformLatest
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -62,7 +62,7 @@ internal class DeepLinkFactory @Inject constructor(
     fun handleDeeplink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         lastDeepLink = deeplinkUri
 
-        Timber.i(
+        TangemLogger.i(
             """
                 Received deep link intent
                 |- Received URI: $deeplinkUri
@@ -108,7 +108,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
             DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
-                Timber.i(
+                TangemLogger.i(
                     """
                         No match found for deep link
                         |- Received URI: $deeplinkUri
@@ -157,7 +157,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
             DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
             else -> {
-                Timber.i(
+                TangemLogger.i(
                     """
                         No match found for deep link
                         |- Received URI: $deeplinkUri

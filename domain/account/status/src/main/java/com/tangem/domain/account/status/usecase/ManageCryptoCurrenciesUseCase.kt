@@ -8,7 +8,6 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
@@ -22,10 +21,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import kotlinx.coroutines.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Use case for saving crypto currencies to a specific account.
@@ -77,7 +80,7 @@ class ManageCryptoCurrenciesUseCase(
         skipDerivationErrors: Boolean = true,
     ): Either<Throwable, Unit> = eitherOn(dispatchers.default) {
         if (add.isEmpty() && remove.isEmpty()) {
-            Timber.d("No currencies to add or remove, skipping")
+            TangemLogger.d("No currencies to add or remove, skipping")
             return@eitherOn
         }
 
@@ -89,7 +92,7 @@ class ManageCryptoCurrenciesUseCase(
                 .modify(add = add, remove = remove)
 
             if (!modifiedCurrencyList.hasChanges) {
-                Timber.d("No changes in currencies, skipping")
+                TangemLogger.d("No changes in currencies, skipping")
                 return@withContext
             }
 
@@ -279,7 +282,7 @@ class ManageCryptoCurrenciesUseCase(
         createWalletManagers(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
         runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
-            .onFailure { Timber.e(it, "Failed to sync tokens for wallet $userWalletId") }
+            .onFailure { TangemLogger.e("Failed to sync tokens for wallet $userWalletId", it) }
     }
 
     /**
@@ -296,7 +299,7 @@ class ManageCryptoCurrenciesUseCase(
             runSuspendCatching {
                 walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
             }
-                .onFailure { Timber.e(it, "Failed to create wallet manager for network ${network.id}") }
+                .onFailure { TangemLogger.e("Failed to create wallet manager for network ${network.id}", it) }
         }
     }
 
