@@ -22,6 +22,27 @@ import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM.R
 
 @Suppress("CanBeNonNullable")
 internal fun LazyListScope.tokenMarketDetailsBody(
+    isRedesignEnabled: Boolean,
+    state: MarketsTokenDetailsUM.Body,
+    portfolioBlock: @Composable ((Modifier) -> Unit)?,
+    relatedNews: RelatedNews,
+) {
+    if (isRedesignEnabled) {
+        tokenMarketDetailsBodyV2(
+            state = state,
+            relatedNews = relatedNews,
+        )
+    } else {
+        tokenMarketDetailsBodyV1(
+            state = state,
+            portfolioBlock = portfolioBlock,
+            relatedNews = relatedNews,
+        )
+    }
+}
+
+@Suppress("CanBeNonNullable")
+private fun LazyListScope.tokenMarketDetailsBodyV1(
     state: MarketsTokenDetailsUM.Body,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
     relatedNews: RelatedNews,
@@ -40,7 +61,7 @@ internal fun LazyListScope.tokenMarketDetailsBody(
 
             aboutCoinHeader()
 
-            loadingInfoBlocks()
+            loadingInfoBlocks(false)
         }
         is MarketsTokenDetailsUM.Body.Content -> {
             if (state.description != null) {
@@ -59,7 +80,36 @@ internal fun LazyListScope.tokenMarketDetailsBody(
 
             aboutCoinHeader()
 
-            infoBlocksList(state.infoBlocks)
+            infoBlocksListV1(state = state.infoBlocks)
+        }
+        is MarketsTokenDetailsUM.Body.Error -> {
+            error(state)
+        }
+        MarketsTokenDetailsUM.Body.Nothing -> {
+            // Do nothing
+        }
+    }
+}
+
+@Suppress("CanBeNonNullable")
+private fun LazyListScope.tokenMarketDetailsBodyV2(state: MarketsTokenDetailsUM.Body, relatedNews: RelatedNews) {
+    when (state) {
+        MarketsTokenDetailsUM.Body.Loading -> {
+            item("description-loading") {
+                DescriptionPlaceholder(modifier = Modifier.blockPaddings())
+            }
+
+            loadingInfoBlocks(true)
+        }
+        is MarketsTokenDetailsUM.Body.Content -> {
+            if (state.description != null) {
+                description(state.description)
+            }
+
+            infoBlocksListV2(
+                state = state.infoBlocks,
+                relatedNews = relatedNews,
+            )
         }
         is MarketsTokenDetailsUM.Body.Error -> {
             error(state)
@@ -112,7 +162,7 @@ private fun LazyListScope.description(description: MarketsTokenDetailsUM.Descrip
     }
 }
 
-internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.InformationBlocks) {
+internal fun LazyListScope.infoBlocksListV1(state: MarketsTokenDetailsUM.InformationBlocks) {
     if (state.insights != null) {
         item("insights") {
             InsightsBlock(
@@ -166,7 +216,64 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
     }
 }
 
-private fun LazyListScope.loadingInfoBlocks() {
+internal fun LazyListScope.infoBlocksListV2(state: MarketsTokenDetailsUM.InformationBlocks, relatedNews: RelatedNews) {
+    if (state.metrics != null) {
+        item("metrics") {
+            MetricsBlock(
+                modifier = Modifier.blockPaddings(),
+                state = state.metrics,
+            )
+        }
+    }
+
+    if (state.insights != null) {
+        item("insights") {
+            InsightsBlock(
+                modifier = Modifier.blockPaddings(),
+                state = state.insights,
+            )
+        }
+    }
+
+    item(key = "listedOn") {
+        ListedOnBlock(
+            state = state.listedOn,
+            modifier = Modifier.blockPaddings(),
+        )
+    }
+
+    if (relatedNews.articles.isNotEmpty()) {
+        relatedNews(relatedNews)
+    }
+
+    if (state.securityScore != null) {
+        item("securityScore") {
+            SecurityScoreBlock(
+                modifier = Modifier.blockPaddings(),
+                state = state.securityScore,
+            )
+        }
+    }
+
+    if (state.links != null) {
+        item("links") {
+            LinksBlock(
+                modifier = Modifier.blockPaddings(),
+                state = state.links,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.loadingInfoBlocks(isRedesignEnabled: Boolean) {
+    if (isRedesignEnabled) {
+        loadingInfoBlocksV2()
+    } else {
+        loadingInfoBlocksV1()
+    }
+}
+
+private fun LazyListScope.loadingInfoBlocksV1() {
     item("insights-loading") {
         InsightsBlockPlaceholder(
             modifier = Modifier.blockPaddings(),
@@ -187,6 +294,28 @@ private fun LazyListScope.loadingInfoBlocks() {
 
     item(key = "listedOn-loading") {
         ListedOnBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+
+    item("links-loading") {
+        LinksBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+}
+
+private fun LazyListScope.loadingInfoBlocksV2() {
+    item("metrics-loading") {
+        MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+
+    item("insights-loading") {
+        InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+
+    item(key = "listedOn-loading") {
+        ListedOnBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
+
+    item("securityScore-loading") {
+        SecurityScoreBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
 
     item("links-loading") {

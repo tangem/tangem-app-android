@@ -14,6 +14,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
+import com.tangem.domain.pay.model.TangemPayEntryPoint
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -133,7 +134,10 @@ internal class TangemPayOnboardingModel @Inject constructor(
             val shouldExcludePaeraCustomers = params is TangemPayOnboardingComponent.Params.FromBannerInSettings
             modelScope.launch {
                 val eligibleWalletsIds = eligibilityManager
-                    .getEligibleWallets(shouldExcludePaeraCustomers = shouldExcludePaeraCustomers)
+                    .getEligibleWallets(
+                        shouldExcludePaeraCustomers = shouldExcludePaeraCustomers,
+                        entryPoint = params.toEntryPointOrNull(),
+                    )
                     .map { it.walletId }
                 if (eligibleWalletsIds.isEmpty()) {
                     back()
@@ -215,5 +219,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     override fun onWalletSelectorDismiss() {
         bottomSheetNavigation.dismiss()
+    }
+
+    private fun TangemPayOnboardingComponent.Params.toEntryPointOrNull() = when (this) {
+        is TangemPayOnboardingComponent.Params.FromBannerInSettings -> TangemPayEntryPoint.DETAILS
+        is TangemPayOnboardingComponent.Params.FromBannerOnMain -> TangemPayEntryPoint.BANNER
+
+        is TangemPayOnboardingComponent.Params.Deeplink,
+        is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+        -> null
     }
 }

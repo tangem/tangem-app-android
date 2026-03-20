@@ -1,14 +1,19 @@
 package com.tangem.tap.di
 
 import android.content.Context
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.routing.LinkHandler
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.tap.common.finisher.AndroidAppFinisher
 import com.tangem.tap.common.settings.IntentSettingsManager
 import com.tangem.tap.common.share.IntentShareManager
 import com.tangem.tap.common.url.CustomTabsUrlOpener
+import com.tangem.tap.core.DefaultAppCoroutineScope
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,21 +23,32 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object UtilsModule {
+internal interface UtilsModule {
 
-    @Provides
-    @Singleton
-    fun provideShareManager(): ShareManager = IntentShareManager()
+    @Binds
+    fun provideAppScope(defaultAppScope: DefaultAppCoroutineScope): AppCoroutineScope
 
-    @Provides
-    @Singleton
-    fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
+    companion object {
 
-    @Provides
-    @Singleton
-    fun provideAppFinisher(@ApplicationContext context: Context): AppFinisher = AndroidAppFinisher(context)
+        @Provides
+        @Singleton
+        fun provideShareManager(): ShareManager = IntentShareManager()
 
-    @Provides
-    @Singleton
-    fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager = IntentSettingsManager(context)
+        @Provides
+        @Singleton
+        fun provideUrlOpener(): UrlOpener = CustomTabsUrlOpener()
+
+        @Provides
+        @Singleton
+        fun provideAppFinisher(@ApplicationContext context: Context): AppFinisher = AndroidAppFinisher(context)
+
+        @Provides
+        @Singleton
+        fun provideSettingsManager(@ApplicationContext context: Context): SettingsManager =
+            IntentSettingsManager(context)
+
+        @Provides
+        @Singleton
+        fun provideLinkHandler(appRouter: AppRouter): LinkHandler = LinkHandler(appRouter)
+    }
 }
