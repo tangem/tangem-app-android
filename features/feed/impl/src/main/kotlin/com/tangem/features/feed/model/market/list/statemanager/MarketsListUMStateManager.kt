@@ -99,7 +99,6 @@ internal class MarketsListUMStateManager(
         isInErrorState: Boolean,
         isSearchNotFound: Boolean,
         uiItems: ImmutableList<MarketsListItemUM>,
-        marketsNotificationUM: MarketsNotificationUM?,
     ) {
         state.update { marketsListUM ->
             when {
@@ -115,19 +114,13 @@ internal class MarketsListUMStateManager(
                     marketsListUM.copy(list = ListUM.Loading)
                 }
                 else -> {
-                    marketsListUM.updateItems(
-                        newItems = uiItems,
-                        marketsNotificationUM = marketsNotificationUM,
-                    )
+                    marketsListUM.updateItems(newItems = uiItems)
                 }
             }
         }
     }
 
-    private fun MarketsListUM.updateItems(
-        newItems: ImmutableList<MarketsListItemUM>,
-        marketsNotificationUM: MarketsNotificationUM?,
-    ): MarketsListUM {
+    private fun MarketsListUM.updateItems(newItems: ImmutableList<MarketsListItemUM>): MarketsListUM {
         val currentState = this
 
         if (isInSearchMode.not() || currentState.showUnder100kButtonAlreadyPressed()) {
@@ -139,7 +132,6 @@ internal class MarketsListUMStateManager(
                         shouldShowUnder100kTokensNotificationWasHidden = currentState
                             .showUnder100kButtonAlreadyPressed(),
                     ),
-                marketsNotificationUM = marketsNotificationUM,
             )
         }
 
@@ -243,7 +235,6 @@ internal class MarketsListUMStateManager(
                 onOptionClicked = ::onBottomSheetOptionClicked,
             ),
         ),
-        marketsNotificationUM = null,
         onSearchClicked = {
             analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
             changeSearchBarIsActive(true)
