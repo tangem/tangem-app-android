@@ -49,6 +49,7 @@ import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetCo
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeaderLegacy
@@ -91,6 +92,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun WalletScreen(
     state: WalletScreenState,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetContent: @Composable (() -> Unit),
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -108,6 +110,7 @@ internal fun WalletScreen(
         snackbarHostState = snackbarHostState,
         isAutoScroll = isAutoScroll,
         onAutoScrollReset = { isAutoScroll.value = false },
+        promoBannersBlockComponent = promoBannersBlockComponent,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -129,6 +132,7 @@ private fun WalletContent(
     snackbarHostState: SnackbarHostState,
     isAutoScroll: State<Boolean>,
     onAutoScrollReset: () -> Unit,
+    promoBannersBlockComponent: ComposableContentComponent? = null,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
@@ -209,6 +213,12 @@ private fun WalletContent(
                 }
 
                 notifications(configs = selectedWallet.warnings, modifier = itemModifier)
+
+                promoBannersBlockComponent?.let { component ->
+                    item(key = "PromoBannersBlock") {
+                        component.Content(modifier = itemModifier)
+                    }
+                }
 
                 if (selectedWallet is WalletState.MultiCurrency) {
                     item(
