@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
     implementation(projects.common.routing)
@@ -71,7 +72,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.reKotlin)
 
     /** Tangem libraries */
