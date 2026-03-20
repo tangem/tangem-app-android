@@ -12,10 +12,10 @@ import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayToNoti
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -76,7 +76,7 @@ internal class PromoBannersBlockModel @Inject constructor(
                 onCarouselScrolled = ::onCarouselScrolled,
             )
         }.onFailure { error ->
-            Timber.w(error, "Failed to load promo banners")
+            TangemLogger.w("Failed to load promo banners", error)
         }
     }
 
@@ -111,11 +111,9 @@ internal class PromoBannersBlockModel @Inject constructor(
             runSuspendCatching {
                 repository.dismissBanner(walletId, displayId)
             }.onFailure { error ->
-                Timber.w(
+                TangemLogger.w(
+                    "Failed to dismiss promo banner $displayId for wallet $walletId",
                     error,
-                    "Failed to dismiss promo banner %s for wallet %s",
-                    displayId,
-                    walletId,
                 )
             }
         }

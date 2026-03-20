@@ -39,7 +39,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
 import java.math.BigDecimal
 import java.util.UUID
@@ -253,7 +253,7 @@ internal class DefaultSwapRepository(
                         )
                     },
                     catch = { exception ->
-                        Timber.e("getExchangeStatus error: $exception")
+                        TangemLogger.e("getExchangeStatus error: $exception")
                         raise(UnknownError(exception.message))
                     },
                 )
@@ -404,7 +404,7 @@ internal class DefaultSwapRepository(
         return try {
             txDetailsMoshiAdapter.fromJson(txDetailsJson)
         } catch (e: IOException) {
-            Timber.e(e, "error parsing txDetailsJson")
+            TangemLogger.e("error parsing txDetailsJson", e)
             null
         }
     }

@@ -29,7 +29,6 @@ dependencies {
 
     implementation(deps.kotlin.coroutines)
     implementation(deps.androidx.paging.runtime)
-    implementation(deps.timber)
     implementation(deps.jodatime)
     implementation(tangemDeps.blockchain)
 

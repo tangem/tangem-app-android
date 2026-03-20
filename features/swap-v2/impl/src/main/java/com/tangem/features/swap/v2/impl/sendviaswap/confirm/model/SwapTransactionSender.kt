@@ -28,7 +28,7 @@ import com.tangem.features.swap.v2.impl.common.ConfirmData
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -67,7 +67,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             ExpressProviderType.DEX_BRIDGE,
             ExpressProviderType.ONRAMP,
             -> {
-                Timber.w("Provider $providerType is not supported in Send With Swap")
+                TangemLogger.w("Provider $providerType is not supported in Send With Swap")
                 onExpressError(ExpressError.UnknownError)
             }
         }
@@ -155,7 +155,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
             userWalletId = userWallet.walletId,
             network = fromStatus.currency.network,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap CEX tx data")
+            TangemLogger.e("Failed to create swap CEX tx data", error)
             onSendError(SendTransactionError.UnknownError(Exception(error)))
             return
         }

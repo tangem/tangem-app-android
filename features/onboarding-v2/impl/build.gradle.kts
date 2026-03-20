@@ -81,7 +81,6 @@ dependencies {
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
-    implementation(deps.timber)
     implementation(deps.firebase.crashlytics)
     implementation(tangemDeps.card.core)
 
