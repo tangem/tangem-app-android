@@ -73,7 +73,7 @@ data class CustomerMeResponse(
     @JsonClass(generateAdapter = true)
     data class PaymentAccount(
         @Json(name = "id") val id: String,
-        @Json(name = "address") val address: String,
+        @Json(name = "address") val address: String?,
         @Json(name = "customer_wallet_address") val customerWalletAddress: String,
     )
 
