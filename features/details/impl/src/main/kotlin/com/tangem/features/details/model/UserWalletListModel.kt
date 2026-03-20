@@ -29,7 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -115,7 +115,7 @@ internal class UserWalletListModel @Inject constructor(
             unlockWalletUseCase(userWalletId)
                 .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
                 .onLeft { error ->
-                    Timber.e("Failed to unlock wallet $userWalletId: $error")
+                    TangemLogger.e("Failed to unlock wallet $userWalletId: $error")
                     error.handle(
                         onUserCancelled = {},
                         isFromUnlockAll = false,
@@ -142,7 +142,7 @@ internal class UserWalletListModel @Inject constructor(
             applyUserWalletListSortingUseCase(userWalletIds).onRight {
                 analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletsReorder())
             }.onLeft { error ->
-                Timber.e("Failed to apply wallet list sorting: $error")
+                TangemLogger.e("Failed to apply wallet list sorting: $error")
             }
         }
     }

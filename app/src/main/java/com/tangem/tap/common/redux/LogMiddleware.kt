@@ -1,7 +1,7 @@
 package com.tangem.tap.common.redux
 
+import com.tangem.utils.logging.TangemLogger
 import org.rekotlin.Middleware
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -9,7 +9,7 @@ import timber.log.Timber
 val logMiddleware: Middleware<AppState> = { _, _ ->
     { nextDispatch ->
         { action ->
-            Timber.i("Dispatch action: ${action::class.java.simpleName}")
+            TangemLogger.i("Dispatch action: ${action::class.java.simpleName}")
             nextDispatch(action)
         }
     }
