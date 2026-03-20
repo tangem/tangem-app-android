@@ -29,7 +29,6 @@ dependencies {
     }
 
     /** Other libraries */
-    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)

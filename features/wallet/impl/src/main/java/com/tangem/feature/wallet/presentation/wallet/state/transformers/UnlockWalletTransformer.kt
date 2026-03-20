@@ -11,7 +11,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
@@ -65,7 +65,7 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             -> {
-                Timber.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("Impossible to unlock wallet with not locked state")
                 prevState
             }
         }
@@ -77,7 +77,7 @@ internal class UnlockWalletTransformer(
                 userWallet = unlockedWallet,
             )
             is WalletUM.Content -> {
-                Timber.e("Impossible to unlock wallet with not locked state")
+                TangemLogger.e("Impossible to unlock wallet with not locked state")
                 walletUM
             }
         }

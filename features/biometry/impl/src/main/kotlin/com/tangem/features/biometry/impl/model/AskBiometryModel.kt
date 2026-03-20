@@ -22,13 +22,13 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -88,7 +88,7 @@ internal class AskBiometryModel @Inject constructor(
              * because it will be automatically saved on UserWalletsListManager switch
              */
             val selectedUserWallet = getSelectedWalletUseCase.sync().getOrNull() ?: run {
-                Timber.e("Unable to save user wallet")
+                TangemLogger.e("Unable to save user wallet")
                 uiMessageSender.send(
                     SnackbarMessage(stringReference("No selected user wallet")),
                 )

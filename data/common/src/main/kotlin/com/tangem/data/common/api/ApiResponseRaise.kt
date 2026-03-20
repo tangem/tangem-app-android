@@ -4,8 +4,8 @@ import arrow.core.raise.Raise
 import arrow.core.raise.recover
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withTimeoutOrNull
-import timber.log.Timber
 import kotlin.time.Duration
 
 /**
@@ -67,7 +67,7 @@ suspend inline fun <T> safeApiCall(
 ): T = recover(
     block = { call(ApiResponseRaise(raise = this)) },
     recover = { error ->
-        Timber.e(error, "Unable to perform safe API call")
+        TangemLogger.e("Unable to perform safe API call", error)
         onError(error)
     },
 )

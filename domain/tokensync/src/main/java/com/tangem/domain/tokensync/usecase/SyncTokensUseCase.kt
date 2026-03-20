@@ -6,9 +6,9 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokensync.repository.TokenSyncRepository
 import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class SyncTokensUseCase(
@@ -26,7 +26,7 @@ class SyncTokensUseCase(
                 tokenSyncRepository.runSync(userWalletId)
                 applyDiscoveredTokens(userWalletId)
             } catch (e: Exception) {
-                Timber.e(e, "Token sync failed for wallet: $userWalletId")
+                TangemLogger.e("Token sync failed for wallet: $userWalletId", e)
             } finally {
                 activeSyncJobs.remove(userWalletId)
             }
@@ -50,7 +50,7 @@ class SyncTokensUseCase(
                     }
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to apply pending syncs")
+                TangemLogger.e("Failed to apply pending syncs", e)
             }
         }
     }
@@ -70,7 +70,7 @@ class SyncTokensUseCase(
                 true
             },
             ifLeft = { error ->
-                Timber.e("Failed to apply discovered tokens for wallet: $userWalletId, error: $error")
+                TangemLogger.e("Failed to apply discovered tokens for wallet: $userWalletId, error: $error")
                 false
             },
         )

@@ -13,6 +13,7 @@ dependencies {
     /* Core */
     implementation(projects.core.decompose)
     implementation(projects.core.configToggles)
+    implementation(projects.core.utils)
 
     /* Domain */
     implementation(projects.domain.qrScanning.models)
@@ -30,7 +31,6 @@ dependencies {
     /* Libs - Other */
     api(deps.kotlin.serialization)
     implementation(deps.androidx.core.ktx)
-    implementation(deps.timber)
 
     /* Tests */
     testImplementation(deps.test.junit)

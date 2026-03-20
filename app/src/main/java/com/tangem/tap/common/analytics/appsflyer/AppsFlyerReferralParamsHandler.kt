@@ -2,13 +2,13 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLink
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.feature.referral.domain.SetShouldShowMobileWalletPromoUseCase
+import com.tangem.utils.coroutines.AppCoroutineScope
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.contracts.ExperimentalContracts
@@ -41,15 +41,15 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
 
     private fun handle(deepLinkValue: String?, deepLinkSub1: String?, deepLinkSub2: String?) {
         if (deepLinkValue != REFERRAL_DEEP_LINK_VALUE) {
-            Timber.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
+            TangemLogger.i("Ignoring deep link with value: ${deepLinkValue ?: "null"}")
             return
         }
 
         @Suppress("NullableToStringCall")
-        Timber.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
+        TangemLogger.i("refcode=$deepLinkSub1\ncampaign=$deepLinkSub2")
 
         if (!isValidParam(deepLinkSub1)) {
-            Timber.e("Deeplink conversion data is invalid")
+            TangemLogger.e("Deeplink conversion data is invalid")
             return
         }
 
@@ -69,7 +69,7 @@ class AppsFlyerReferralParamsHandler @Inject constructor(
         coroutineScope.launch {
             mutex.withLock {
                 setShouldShowMobileWalletPromoUseCase(true)
-                    .onLeft { Timber.e(it) }
+                    .onLeft { TangemLogger.e("Error", it) }
                 appsFlyerStore.storeIfAbsent(
                     value = AppsFlyerConversionData(refcode = refcode, campaign = campaign),
                 )

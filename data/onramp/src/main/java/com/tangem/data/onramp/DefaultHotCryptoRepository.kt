@@ -22,19 +22,15 @@ import com.tangem.domain.card.common.extensions.canHandleToken
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.getSyncStrict
 import com.tangem.domain.common.wallets.loadAndGet
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.runCatching
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.plus
-import timber.log.Timber
 
 /**
  * Default implementation of [HotCryptoRepository]
@@ -123,9 +119,9 @@ internal class DefaultHotCryptoRepository(
         return runCatching(dispatchers.io) {
             tangemTechApi.getHotCrypto(currencyId = appCurrencyId).getOrThrow()
         }
-            .onSuccess { Timber.d("HotCrypto is successfully updated") }
+            .onSuccess { TangemLogger.d("HotCrypto is successfully updated") }
             .onFailure { throwable ->
-                Timber.e(throwable, "Unable to fetch hot crypto")
+                TangemLogger.e("Unable to fetch hot crypto", throwable)
 
                 val httpException = throwable as? ApiResponseError.HttpException
                 analyticsEventHandler.send(

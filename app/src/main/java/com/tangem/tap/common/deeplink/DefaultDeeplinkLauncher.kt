@@ -3,11 +3,11 @@ package com.tangem.tap.common.deeplink
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.core.navigation.deeplink.DeeplinkLauncher
 import com.tangem.core.navigation.url.UrlOpener
-import androidx.core.net.toUri
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * [DeeplinkLauncher] implementation that launches deep links as intents to the current Activity
@@ -26,7 +26,7 @@ internal class DefaultDeeplinkLauncher(
             -> launchDeepLink(deeplinkUri)
             DeepLinkScheme.Https.scheme -> launchDeeplinkOrOpenBrowser(deeplinkUri, link)
             else -> {
-                Timber.i(
+                TangemLogger.i(
                     """
                         No match found for deep link
                         |- Received URI: $deeplinkUri

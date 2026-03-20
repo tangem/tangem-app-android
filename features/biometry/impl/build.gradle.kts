@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.utils)
 
     /** Domain */
     implementation(projects.domain.wallets)
@@ -45,7 +46,6 @@ dependencies {
     }
 
     /** Other */
-    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)

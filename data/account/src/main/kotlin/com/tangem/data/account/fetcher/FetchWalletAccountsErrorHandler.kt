@@ -16,7 +16,7 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -60,7 +60,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
     ): FetchResult {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
         if (isResponseUpToDate) {
-            Timber.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
+            TangemLogger.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
             val response = requireNotNull(savedAccountsResponse) {
                 "Saved accounts response is null for wallet: $userWalletId"
             }

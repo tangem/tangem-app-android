@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.utils
 import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 private const val TAG = "GoogleWalletUtil"
@@ -24,15 +24,16 @@ internal class GoogleWalletUtil @Inject constructor(
     }
 
     private fun getWalletIntent(): Intent? {
-        return if (walletIntent != null) {
-            walletIntent
+        val cached = walletIntent
+        return if (cached != null) {
+            cached
         } else {
             try {
                 context.packageManager.getLaunchIntentForPackage(WALLET_PACKAGE_NAME)
                     ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
                     .also { walletIntent = it }
             } catch (exception: Exception) {
-                Timber.tag(TAG).e(exception)
+                TangemLogger.withTag(TAG).e("Error", exception)
                 null
             }
         }

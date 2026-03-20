@@ -36,7 +36,6 @@ dependencies {
     /** Other */
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)

@@ -14,11 +14,11 @@ import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.Locale
 
 @Suppress("TooManyFunctions")
@@ -145,7 +145,7 @@ internal class DefaultSettingsRepository(
     override fun getUserCountryCode(): StateFlow<UserCountry?> = userCountryFlow
 
     override suspend fun fetchUserCountryCode() {
-        Timber.i("Start fetching user country code")
+        TangemLogger.i("Start fetching user country code")
 
         // for GB locale avoid request geo and use device default (FCA fixes)
         if (Locale.getDefault().country == GB_COUNTRY.code) {
@@ -166,7 +166,7 @@ internal class DefaultSettingsRepository(
                 else -> UserCountry.Other(code = country)
             }
 
-            Timber.i("User code country is $code")
+            TangemLogger.i("User code country is $code")
 
             userCountryFlow.value = code
         }
