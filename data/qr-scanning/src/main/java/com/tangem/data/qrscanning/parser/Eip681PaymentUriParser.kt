@@ -24,7 +24,10 @@ internal class Eip681PaymentUriParser(
         val matchingCoins = findMatchingCoins(parsed.chainId, coins)
         if (matchingCoins.isEmpty()) {
             return PaymentUriParser.ParseResult.RecognizedError(
-                ClassifiedQrContent.Error.UnsupportedNetwork,
+                ClassifiedQrContent.Error.UnsupportedNetwork(
+                    raw = qrCode,
+                    blockchain = parsed.chainId?.let { blockchainDataProvider.getBlockchainNameByChainId(it) },
+                ),
             )
         }
 
@@ -42,7 +45,10 @@ internal class Eip681PaymentUriParser(
             PaymentUriParser.ParseResult.Success(result)
         } else {
             PaymentUriParser.ParseResult.RecognizedError(
-                ClassifiedQrContent.Error.UnsupportedNetwork,
+                ClassifiedQrContent.Error.UnsupportedNetwork(
+                    raw = qrCode,
+                    blockchain = matchingCoins.firstOrNull()?.network?.name,
+                ),
             )
         }
     }
