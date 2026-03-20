@@ -45,7 +45,7 @@ internal sealed interface WalletUM {
     ) : WalletUM {
         override val notificationsCarousel: ImmutableList<WalletNotificationUM> = persistentListOf()
         override val pullToRefreshConfig = PullToRefreshConfig(false, {})
-        override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Empty // todo redesign main locked state
+        override val tokensListUM: WalletTokensListUM = WalletTokensListUM.Locked
         override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
         override val tangemPayState: TangemPayState = TangemPayState.Empty
     }

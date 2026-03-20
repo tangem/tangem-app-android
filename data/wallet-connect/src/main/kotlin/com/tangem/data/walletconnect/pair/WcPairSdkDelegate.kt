@@ -6,13 +6,13 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WC_TAG
-import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.ApprovalFailed
 import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
+import com.tangem.utils.coroutines.AppCoroutineScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -22,7 +22,7 @@ import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
 internal class WcPairSdkDelegate(
-    private val scope: WcScope,
+    private val scope: AppCoroutineScope,
     private val store: WalletConnectStore,
 ) : WcSdkObserver {
 

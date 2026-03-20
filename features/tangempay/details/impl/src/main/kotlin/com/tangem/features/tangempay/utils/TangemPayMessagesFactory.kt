@@ -4,18 +4,18 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.BottomSheetMessageV2
+import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 
 internal object TangemPayMessagesFactory {
 
-    fun createErrorMessage(errorType: TangemPayDetailsErrorType): BottomSheetMessageV2 {
+    fun createErrorMessage(errorType: TangemPayDetailsErrorType): BottomSheetMessage {
         return when (errorType) {
             TangemPayDetailsErrorType.Receive -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.img_attention_20) {
-                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                     }
                     title = TextReference.Res(R.string.tangempay_card_details_receive_error_title)
                     body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
@@ -28,7 +28,7 @@ internal object TangemPayMessagesFactory {
             TangemPayDetailsErrorType.Withdraw -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.img_attention_20) {
-                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                     }
                     title = TextReference.Res(R.string.tangempay_card_details_withdraw_error_title)
                     body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
@@ -41,8 +41,8 @@ internal object TangemPayMessagesFactory {
             TangemPayDetailsErrorType.WithdrawInProgress -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.ic_clock_24) {
-                        type = MessageBottomSheetUMV2.Icon.Type.Informative
-                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
+                        type = MessageBottomSheetUM.Icon.Type.Informative
+                        backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Informative
                     }
                     title = TextReference.Res(R.string.tangempay_card_details_withdraw_in_progress_title)
                     body = TextReference.Res(R.string.tangempay_card_details_withdraw_in_progress_description)
@@ -55,12 +55,12 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createFreezeCardMessage(onFreezeClicked: () -> Unit): BottomSheetMessageV2 {
+    fun createFreezeCardMessage(onFreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_snow_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Accent
+                    type = MessageBottomSheetUM.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
                 }
                 title = TextReference.Res(R.string.tangem_pay_freeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_freeze_card_alert_body)
@@ -75,12 +75,12 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createUnfreezeCardMessage(onUnfreezeClicked: () -> Unit): BottomSheetMessageV2 {
+    fun createUnfreezeCardMessage(onUnfreezeClicked: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.ic_snow_24) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Accent
+                    type = MessageBottomSheetUM.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Accent
                 }
                 title = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_title)
                 body = TextReference.Res(R.string.tangem_pay_unfreeze_card_alert_body)
@@ -95,11 +95,11 @@ internal object TangemPayMessagesFactory {
         }
     }
 
-    fun createWithdrawWarning(onGotItClick: () -> Unit): BottomSheetMessageV2 {
+    fun createWithdrawWarning(onGotItClick: () -> Unit): BottomSheetMessage {
         return bottomSheetMessage {
             infoBlock {
                 icon(R.drawable.img_attention_20) {
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                    backgroundType = MessageBottomSheetUM.Icon.BackgroundType.Attention
                 }
                 title = TextReference.Res(R.string.tangempay_withdrawal_note_title)
                 body = TextReference.Res(R.string.tangempay_withdrawal_note_description)

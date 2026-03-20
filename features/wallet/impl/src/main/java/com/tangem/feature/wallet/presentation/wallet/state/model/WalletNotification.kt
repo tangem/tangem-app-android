@@ -463,4 +463,21 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconSize = 72.dp,
         ),
     )
+
+    data class TokenSyncCompleted(
+        val onCloseClick: () -> Unit,
+        val onManageTokensClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.initial_wallet_sync_banner_title),
+            subtitle = resourceReference(R.string.initial_wallet_sync_banner_description),
+            iconResId = R.drawable.ic_check_circle_24,
+            iconTint = IconTint.Accent,
+            onCloseClick = onCloseClick,
+            buttonsState = ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.main_manage_tokens),
+                onClick = onManageTokensClick,
+            ),
+        ),
+    )
 }
