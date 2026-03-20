@@ -29,6 +29,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.transaction.error.GetFeeError
@@ -158,6 +159,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 fromAccount = params.accountFlow.value,
                 quote = amountUM?.selectedQuote,
                 rateType = amountUM?.swapRateType,
+                amountType = amountUM?.selectedAmountType ?: SwapAmountType.From,
             )
         }
 
