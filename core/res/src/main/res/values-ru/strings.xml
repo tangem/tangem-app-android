@@ -491,8 +491,9 @@
   <string name="earn_filter_by">Фильтровать по</string>
   <string name="earn_filter_my_networks">Мои сети</string>
   <string name="earn_filter_networks">Сети</string>
-  <string name="earn_mostly_used">Часто используемые</string>
+  <string name="earn_mostly_used">Популярные</string>
   <string name="earn_no_results">Нет результата</string>
+  <string name="earn_title">Доступные активы</string>
   <string name="email_preface_wc_error">Привет, команда поддержки, у меня возникла ошибка с кодом: %s</string>
   <string name="email_subject_wc_error">Ошибка WalletConnect</string>
   <string name="error_wrong_wallet_tapped">Вы использовали карту или кольцо от другого кошелька. Приложите карту или кольцо, связанную с этим кошельком.</string>
@@ -746,7 +747,7 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">Мой портфель</string>
   <string name="markets_common_title">Рынок</string>
-  <string name="markets_earn_common_title">Зарабатывай с Tangem</string>
+  <string name="markets_earn_common_title">Доход с Tangem</string>
   <string name="markets_generate_addresses_notification">Чтобы создать адреса для выбранных сетей, отсканируйте вашу карту или кольцо Tangem кошелька</string>
   <string name="markets_hint">Потяните вверх или коснитесь поисковой строки, чтобы добавить токен</string>
   <string name="markets_insights_info_description_message">Данные раздела получены из следующих сетей: %s</string>
