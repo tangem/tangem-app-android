@@ -16,6 +16,8 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -54,6 +56,8 @@ internal class WalletComponent @AssistedInject constructor(
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
+    private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
+    private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
@@ -64,6 +68,16 @@ internal class WalletComponent @AssistedInject constructor(
         feedEntryComponentFactory.create(
             context = child("feedEntryComponent"),
             entryRoute = null,
+        )
+    }
+
+    private val promoBannersBlockComponent: PromoBannersBlockComponent? by lazy {
+        if (!newPromoBannersFeatureToggles.isNewPromoBannersEnabled) return@lazy null
+        promoBannersBlockComponentFactory.create(
+            context = child("promoBannersBlockComponent"),
+            params = PromoBannersBlockComponent.Params(
+                placeholder = PromoBannersBlockComponent.Placeholder.MAIN,
+            ),
         )
     }
 
@@ -220,6 +234,7 @@ internal class WalletComponent @AssistedInject constructor(
         } else {
             WalletScreen(
                 state = model.uiState.collectAsStateWithLifecycle().value,
+                promoBannersBlockComponent = promoBannersBlockComponent,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
