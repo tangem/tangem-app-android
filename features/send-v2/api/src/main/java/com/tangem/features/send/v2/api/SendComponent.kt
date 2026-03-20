@@ -14,8 +14,14 @@ interface SendComponent : ComposableContentComponent {
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
+        val entryType: EntryType = EntryType.Manual,
         val callback: ModelCallback? = null,
     )
+
+    enum class EntryType {
+        Manual,
+        QR,
+    }
 
     interface Factory : ComponentFactory<Params, SendComponent>
 
