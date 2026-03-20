@@ -17,17 +17,17 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
+import com.tangem.domain.tokens.BalanceFetchingOperations
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -76,10 +76,10 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideGetWalletTotalBalanceUseCaseV2(
+    fun provideGetWalletTotalBalanceUseCase(
         multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
-    ): GetWalletTotalBalanceUseCaseV2 {
-        return GetWalletTotalBalanceUseCaseV2(
+    ): GetWalletTotalBalanceUseCase {
+        return GetWalletTotalBalanceUseCase(
             multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         )
     }
@@ -104,6 +104,7 @@ internal object AccountStatusUseCaseModule {
         cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
         expressServiceFetcher: ExpressServiceFetcher,
         dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
@@ -114,26 +115,36 @@ internal object AccountStatusUseCaseModule {
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             cryptoCurrencyMetadataCleaner = cryptoCurrencyMetadataCleaner,
             expressServiceFetcher = expressServiceFetcher,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            parallelUpdatingScope = appScope,
             dispatchers = dispatchers,
         )
     }
 
     @Provides
     @Singleton
-    fun provideCryptoCurrencyBalanceFetcher(
+    fun provideBalanceFetchingOperations(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
-        dispatchers: CoroutineDispatcherProvider,
-    ): CryptoCurrencyBalanceFetcher {
-        return CryptoCurrencyBalanceFetcher(
+    ): BalanceFetchingOperations {
+        return BalanceFetchingOperations(
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
-            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCryptoCurrencyBalanceFetcher(
+        balanceFetchingOperations: BalanceFetchingOperations,
+        appScope: AppCoroutineScope,
+    ): CryptoCurrencyBalanceFetcher {
+        return CryptoCurrencyBalanceFetcher(
+            balanceFetchingOperations = balanceFetchingOperations,
+            parallelUpdatingScope = appScope,
         )
     }
 
@@ -154,6 +165,18 @@ internal object AccountStatusUseCaseModule {
     ): ToggleTokenListGroupingUseCase {
         return ToggleTokenListGroupingUseCase(
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetFeePaidCryptoCurrencyStatusSyncUseCase(
+        currenciesRepository: CurrenciesRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    ): GetFeePaidCryptoCurrencyStatusSyncUseCase {
+        return GetFeePaidCryptoCurrencyStatusSyncUseCase(
+            currenciesRepository = currenciesRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         )
     }
 

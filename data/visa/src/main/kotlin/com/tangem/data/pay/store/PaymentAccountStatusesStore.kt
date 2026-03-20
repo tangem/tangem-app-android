@@ -4,11 +4,9 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.pay.converter.PaymentAccountStatusDMConverter
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.PaymentAccountStatus
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -28,10 +26,8 @@ internal typealias WalletIdWithPaymentStatusDM = Map<String, PaymentAccountStatu
 internal class PaymentAccountStatusesStore(
     private val runtimeStore: RuntimeSharedStore<WalletIdWithPaymentStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithPaymentStatusDM>,
-    dispatchers: CoroutineDispatcherProvider,
+    private val scope: AppCoroutineScope,
 ) {
-
-    private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
     init {
         scope.launch {

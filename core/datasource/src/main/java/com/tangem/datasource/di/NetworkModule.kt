@@ -25,7 +25,7 @@ import com.tangem.datasource.api.visa.VisaApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.di.utils.RetrofitApiBuilder.Timeouts
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,11 +47,11 @@ internal object NetworkModule {
     fun provideApiConfigManager(
         apiConfigs: ApiConfigs,
         appPreferencesStore: AppPreferencesStore,
-        dispatchers: CoroutineDispatcherProvider,
+        appScope: AppCoroutineScope,
     ): ApiConfigsManager {
         return when {
-            BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, dispatchers)
-            BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, dispatchers)
+            BuildConfig.BUILD_TYPE == MOCKED_BUILD_TYPE -> MockApiConfigsManager(apiConfigs, appScope)
+            BuildConfig.TESTER_MENU_ENABLED -> DevApiConfigsManager(apiConfigs, appPreferencesStore, appScope)
             else -> ProdApiConfigsManager(apiConfigs)
         }
     }
