@@ -37,6 +37,7 @@ import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
@@ -81,6 +82,7 @@ private fun Content(
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
     val lazyListState = rememberLazyListState()
@@ -133,6 +135,7 @@ private fun Content(
                 state = state.body,
                 portfolioBlock = portfolioBlock,
                 relatedNews = state.relatedNews,
+                isRedesignEnabled = isRedesignEnabled,
             )
         }
     }
