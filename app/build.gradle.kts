@@ -160,6 +160,7 @@ dependencies {
     implementation(projects.domain.hotWallet)
     implementation(projects.domain.news)
     implementation(projects.domain.earn)
+    implementation(projects.domain.tokensync)
 
     implementation(projects.common)
     implementation(projects.common.routing)
