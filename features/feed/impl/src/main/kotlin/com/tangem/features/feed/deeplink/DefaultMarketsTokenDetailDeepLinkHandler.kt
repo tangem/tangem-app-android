@@ -1,4 +1,4 @@
-package com.tangem.features.markets.deeplink
+package com.tangem.features.feed.deeplink
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
@@ -10,6 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTokenMarketInfoUseCase
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
