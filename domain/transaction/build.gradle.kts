@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 
+    implementation(projects.domain.account.status)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager)

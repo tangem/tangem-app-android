@@ -1,7 +1,7 @@
 package com.tangem.core.configtoggle.blockchain.impl
 
 import com.google.common.truth.Truth
-import com.tangem.core.configtoggle.ExcludedBlockchainToggles
+import com.tangem.core.configtoggle.blockchain.provider.ExcludedBlockchainTogglesProvider
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.VersionProvider
 import io.mockk.*
@@ -12,42 +12,74 @@ import org.junit.jupiter.api.*
 internal class DevExcludedBlockchainsManagerTest {
 
     private val versionProvider = mockk<VersionProvider>()
+    private val excludedBlockchainTogglesProvider = mockk<ExcludedBlockchainTogglesProvider>()
     private val localTogglesStorage = mockk<LocalTogglesStorage>(relaxUnitFun = true)
+
+    private val testVersion = "5.30"
+
+    private val testToggles = mapOf(
+        "ENABLED_BLOCKCHAIN" to "5.21.0",
+        "DISABLED_BLOCKCHAIN" to "undefined",
+        "FUTURE_BLOCKCHAIN" to "6.0.0",
+    )
+
+    private fun getExpectedFileToggles(appVersion: String?): Map<String, Boolean> {
+        if (appVersion.isNullOrEmpty()) {
+            return testToggles.mapValues { false }
+        }
+        return testToggles.mapValues { (_, version) ->
+            version != "undefined" && isVersionSufficient(appVersion, version)
+        }
+    }
+
+    private fun getExcludedBlockchains(appVersion: String?): Set<String> {
+        return getExpectedFileToggles(appVersion).filterValues { !it }.keys
+    }
+
+    private fun isVersionSufficient(appVersion: String, requiredVersion: String): Boolean {
+        val appParts = appVersion.split(".").mapNotNull { it.toIntOrNull() }
+        val reqParts = requiredVersion.split(".").mapNotNull { it.toIntOrNull() }
+        for (i in 0 until maxOf(appParts.size, reqParts.size)) {
+            val app = appParts.getOrElse(i) { 0 }
+            val req = reqParts.getOrElse(i) { 0 }
+            if (app > req) return true
+            if (app < req) return false
+        }
+        return true
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Initialization {
 
-        @BeforeAll
-        fun setupAll() {
-            val toggles = mapOf("CHAIN_1" to "1.0.0", "CHAIN_2" to "2.0.0")
-            mockkObject(ExcludedBlockchainToggles)
-            every { ExcludedBlockchainToggles.values } returns toggles
-        }
-
-        @AfterAll
-        fun tearDownAll() {
-            unmockkObject(ExcludedBlockchainToggles)
+        @BeforeEach
+        fun setupEach() {
+            every { excludedBlockchainTogglesProvider.getToggles() } returns testToggles
         }
 
         @AfterEach
         fun tearDownEach() {
-            clearMocks(versionProvider, localTogglesStorage)
+            clearMocks(versionProvider, excludedBlockchainTogglesProvider, localTogglesStorage)
         }
 
         @Test
         fun `successfully initialize manager`() = runTest {
             // Arrange
-            val appVersion = "1.0.0"
-            val savedToggles = mapOf("CHAIN_1" to false, "CHAIN_2" to true)
+            val appVersion = testVersion
+            val fileToggles = getExpectedFileToggles(appVersion)
+            val savedToggles = fileToggles.mapValues { !it.value }
             every { versionProvider.get() } returns appVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns savedToggles
 
             // Act
-            val actual = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage).excludedBlockchainsIds
+            val actual = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            ).excludedBlockchainsIds
 
             // Assert
-            val expected = setOf("CHAIN_1")
+            val expected = savedToggles.filterValues { !it }.keys
             Truth.assertThat(actual).containsExactlyElementsIn(expected)
 
             coVerifyOrder {
@@ -59,14 +91,20 @@ internal class DevExcludedBlockchainsManagerTest {
         @Test
         fun `successfully initialize manager if versionProvider returns null`() = runTest {
             // Arrange
-            every { versionProvider.get() } returns null
+            val appVersion: String? = null
+            every { versionProvider.get() } returns appVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
 
             // Act
-            val actual = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage).excludedBlockchainsIds
+            val actual = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            ).excludedBlockchainsIds
 
             // Assert
-            Truth.assertThat(actual).containsExactly("CHAIN_1", "CHAIN_2")
+            val expected = getExcludedBlockchains(appVersion)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected)
 
             coVerifyOrder {
                 versionProvider.get()
@@ -77,14 +115,20 @@ internal class DevExcludedBlockchainsManagerTest {
         @Test
         fun `successfully initialize manager if storage returns empty map`() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
+            val appVersion = testVersion
+            every { versionProvider.get() } returns appVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
 
             // Act
-            val actual = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage).excludedBlockchainsIds
+            val actual = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            ).excludedBlockchainsIds
 
             // Assert
-            Truth.assertThat(actual).containsExactly("CHAIN_2")
+            val expected = getExcludedBlockchains(appVersion)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected)
 
             coVerifyOrder {
                 versionProvider.get()
@@ -95,13 +139,19 @@ internal class DevExcludedBlockchainsManagerTest {
         @Test
         fun `failure initialize manager if storage throws exception`() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
+            val appVersion = testVersion
             val exception = Exception("Test exception")
+            every { versionProvider.get() } returns appVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } throws exception
 
             // Act
-            val actual = runCatching { DevExcludedBlockchainsManager(versionProvider, localTogglesStorage) }
-                .exceptionOrNull()!!
+            val actual = runCatching {
+                DevExcludedBlockchainsManager(
+                    versionProvider,
+                    excludedBlockchainTogglesProvider,
+                    localTogglesStorage,
+                )
+            }.exceptionOrNull()!!
 
             // Assert
             Truth.assertThat(actual).isInstanceOf(exception::class.java)
@@ -118,21 +168,34 @@ internal class DevExcludedBlockchainsManagerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class ExcludeBlockchain {
 
+        @BeforeEach
+        fun setupEach() {
+            every { excludedBlockchainTogglesProvider.getToggles() } returns testToggles
+        }
+
+        @AfterEach
+        fun tearDownEach() {
+            clearMocks(versionProvider, excludedBlockchainTogglesProvider, localTogglesStorage)
+        }
+
         @Test
         fun excludeBlockchain_changesStatusAndSaves() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
+            every { versionProvider.get() } returns testVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
-
-            val manager = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage)
-            manager.excludeBlockchain("CHAIN_1", false)
+            val manager = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            )
 
             // Act
+            manager.excludeBlockchain("ENABLED_BLOCKCHAIN", false)
             val actual = manager.excludedBlockchainsIds
 
             // Assert
-            Truth.assertThat(actual).contains("CHAIN_1")
-            coVerify { localTogglesStorage.store(match { it["CHAIN_1"] == false }) }
+            Truth.assertThat(actual).contains("ENABLED_BLOCKCHAIN")
+            coVerify { localTogglesStorage.store(match { it["ENABLED_BLOCKCHAIN"] == false }) }
         }
     }
 
@@ -140,13 +203,26 @@ internal class DevExcludedBlockchainsManagerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class IsMatchLocalConfig {
 
+        @BeforeEach
+        fun setupEach() {
+            every { excludedBlockchainTogglesProvider.getToggles() } returns testToggles
+        }
+
+        @AfterEach
+        fun tearDownEach() {
+            clearMocks(versionProvider, excludedBlockchainTogglesProvider, localTogglesStorage)
+        }
+
         @Test
         fun isMatchLocalConfig_returnsTrueIfMatchesFile() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
+            every { versionProvider.get() } returns testVersion
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
-
-            val manager = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage)
+            val manager = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            )
 
             // Act
             val actual = manager.isMatchLocalConfig()
@@ -158,13 +234,17 @@ internal class DevExcludedBlockchainsManagerTest {
         @Test
         fun isMatchLocalConfig_returnsFalseIfDiffersFromFile() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
+            every { versionProvider.get() } returns testVersion
+            val fileToggles = getExpectedFileToggles(testVersion)
             coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
-
-            val manager = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage)
-            manager.excludeBlockchain("CHAIN_1", false)
+            val manager = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            )
 
             // Act
+            manager.excludeBlockchain("ENABLED_BLOCKCHAIN", !fileToggles.getValue("ENABLED_BLOCKCHAIN"))
             val actual = manager.isMatchLocalConfig()
 
             // Assert
@@ -176,28 +256,36 @@ internal class DevExcludedBlockchainsManagerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class RecoverLocalConfig {
 
+        @BeforeEach
+        fun setupEach() {
+            every { excludedBlockchainTogglesProvider.getToggles() } returns testToggles
+        }
+
+        @AfterEach
+        fun tearDownEach() {
+            clearMocks(versionProvider, excludedBlockchainTogglesProvider, localTogglesStorage)
+        }
+
         @Test
         fun recoverLocalConfig_resetsToFileAndSaves() = runTest {
             // Arrange
-            every { versionProvider.get() } returns "1.0.0"
-
-            val toggles = mapOf("CHAIN_1" to "2.0.0", "CHAIN_2" to "2.0.0")
-            mockkObject(ExcludedBlockchainToggles)
-            every { ExcludedBlockchainToggles.values } returns toggles
-
-            coEvery { localTogglesStorage.getSyncOrEmpty() } returns mapOf("CHAIN_1" to true)
-
-            val manager = DevExcludedBlockchainsManager(versionProvider, localTogglesStorage)
-            manager.recoverLocalConfig()
+            val appVersion = testVersion
+            every { versionProvider.get() } returns appVersion
+            coEvery { localTogglesStorage.getSyncOrEmpty() } returns emptyMap()
+            val manager = DevExcludedBlockchainsManager(
+                versionProvider,
+                excludedBlockchainTogglesProvider,
+                localTogglesStorage,
+            )
+            manager.excludeBlockchain("ENABLED_BLOCKCHAIN", false)
 
             // Act
+            manager.recoverLocalConfig()
             val actual = manager.excludedBlockchainsIds
 
             // Assert
-            Truth.assertThat(actual).containsExactly("CHAIN_1", "CHAIN_2")
-
-            unmockkObject(ExcludedBlockchainToggles)
-            clearMocks(versionProvider, localTogglesStorage)
+            val expected = getExcludedBlockchains(appVersion)
+            Truth.assertThat(actual).containsExactlyElementsIn(expected)
         }
     }
 }

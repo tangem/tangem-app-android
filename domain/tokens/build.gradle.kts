@@ -16,10 +16,12 @@ dependencies {
 
     /** Project - Domain */
     api(projects.domain.core)
+    implementation(projects.domain.common)
+    implementation(projects.domain.card)
+    implementation(projects.domain.express)
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager)
-    implementation(projects.domain.card)
     implementation(projects.domain.staking)
     implementation(projects.domain.visa)
     implementation(projects.libs.blockchainSdk)
