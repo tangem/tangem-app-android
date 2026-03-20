@@ -12,6 +12,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
+import com.tangem.blockchain.tokenbalance.models.TokenBalance
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -280,6 +281,8 @@ interface WalletManagersFacade {
     ): NFTAsset.SalePrice?
 
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
+
+    suspend fun getTokenBalances(userWalletId: UserWalletId, network: Network): List<TokenBalance>
 
     /**
      * If wallet manager implements [InitializableAccount] then returns [InitializableAccount.isAccountInitialized]

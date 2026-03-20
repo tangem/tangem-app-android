@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapDataModel
 
 @Suppress("LongParameterList")
@@ -21,7 +22,8 @@ class GetSwapDataUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
-        fromAmount: String,
+        amount: String,
+        amountType: SwapAmountType,
         toCryptoCurrency: CryptoCurrency,
         toAddress: String,
         toExtraId: String?,
@@ -32,7 +34,8 @@ class GetSwapDataUseCase(
         swapRepositoryV2.getSwapData(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
-            fromAmount = fromAmount,
+            amount = amount,
+            amountType = amountType,
             toCryptoCurrency = toCryptoCurrency,
             toAddress = toAddress,
             toExtraId = toExtraId,

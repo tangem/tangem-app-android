@@ -19,6 +19,7 @@ import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.api.pay.models.response.OrderResponse.Result.Status
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -45,9 +46,9 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val storage: TangemPayStorage,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
     private val errorConverter: TangemPayErrorConverter,
+    private val pollingScope: AppCoroutineScope,
 ) : TangemPayCardDetailsRepository {
 
-    private val pollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pollingJobs = mutableMapOf<String, Job>()
     private val storePollingMutex = Mutex()
 
