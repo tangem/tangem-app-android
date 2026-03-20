@@ -1,7 +1,8 @@
-package com.tangem.features.markets.deeplink
+package com.tangem.features.feed.deeplink
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
