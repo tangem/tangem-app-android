@@ -1,7 +1,6 @@
 package com.tangem.features.feed.model.market.list
 
 import androidx.compose.runtime.Stable
-import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -12,20 +11,11 @@ import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
-import com.tangem.domain.markets.ShouldShowYieldModeMarketPromoUseCase
-import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
-import com.tangem.domain.settings.usercountry.models.UserCountry
-import com.tangem.domain.settings.usercountry.models.UserCountryError
-import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.model.market.list.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.feed.model.market.list.state.ListUM
-import com.tangem.features.feed.model.market.list.state.MarketsListUM
-import com.tangem.features.feed.model.market.list.state.MarketsNotificationUM
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.feed.model.market.list.statemanager.MarketsListUMStateManager
@@ -49,11 +39,8 @@ internal class MarketsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    shouldShowYieldModeMarketPromoUseCase: ShouldShowYieldModeMarketPromoUseCase,
     paramsContainer: ParamsContainer,
-    private val promoRepository: PromoRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
 ) : Model() {
 
     private val updateQuotesJob = JobHolder()
@@ -126,61 +113,30 @@ internal class MarketsListModel @Inject constructor(
                         flow = searchMarketsListManager.uiItems,
                         flow2 = searchMarketsListManager.isInInitialLoadingErrorState,
                         flow3 = searchMarketsListManager.isSearchNotFoundState,
-                        flow4 = shouldShowYieldModeMarketPromoUseCase(
-                            appCurrency = currentAppCurrency.value,
-                            interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ).conflate(),
-                        flow5 = getUserCountryUseCase.invoke(),
-                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState, isYieldModePromo, userCountry ->
+                    ) { uiItems, isInInitialLoadingErrorState, isSearchNotFoundState ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = isSearchNotFoundState,
-                            shouldShowYieldModePromo = isYieldModePromo,
-                            userCountry = userCountry,
                         )
                     }
                 } else {
                     combine(
                         flow = mainMarketsListManager.uiItems,
                         flow2 = mainMarketsListManager.isInInitialLoadingErrorState,
-                        flow3 = shouldShowYieldModeMarketPromoUseCase(
-                            appCurrency = currentAppCurrency.value,
-                            interval = marketsListUMStateManager.selectedInterval.toBatchRequestInterval(),
-                        ).conflate(),
-                        flow4 = getUserCountryUseCase.invoke(),
-                    ) { uiItems, isInInitialLoadingErrorState, shouldShowYieldModePromo, userCountry ->
+                    ) { uiItems, isInInitialLoadingErrorState ->
                         MarketsItemsData(
                             items = uiItems,
                             isInErrorState = isInInitialLoadingErrorState,
                             isSearchNotFound = false,
-                            shouldShowYieldModePromo = shouldShowYieldModePromo,
-                            userCountry = userCountry,
                         )
                     }
                 }
             }.collect { marketsItemsData ->
-                val isApplyFCARestrictions = marketsItemsData.userCountry.getOrNull().needApplyFCARestrictions()
-                val shouldShowYieldModePromo = marketsItemsData.shouldShowYieldModePromo && !isApplyFCARestrictions
-                if (marketsListUMStateManager.state.value.marketsNotificationUM == null && shouldShowYieldModePromo) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoShown())
-                }
-
                 marketsListUMStateManager.onUiItemsChanged(
                     uiItems = marketsItemsData.items,
                     isInErrorState = marketsItemsData.isInErrorState,
                     isSearchNotFound = marketsItemsData.isSearchNotFound,
-                    marketsNotificationUM = if (shouldShowYieldModePromo) {
-                        MarketsNotificationUM.YieldSupplyPromo(
-                            onClick = {
-                                analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModeMoreInfoClicked())
-                                marketsListUMStateManager.selectedSortByType = SortByTypeUM.YieldSupply
-                            },
-                            onCloseClick = { onYieldModeNotificationCloseClick() },
-                        )
-                    } else {
-                        null
-                    },
                 )
             }
         }
@@ -282,14 +238,6 @@ internal class MarketsListModel @Inject constructor(
         mainMarketsListManager.reload()
     }
 
-    private fun MarketsListUM.TrendInterval.toBatchRequestInterval(): TokenMarketListConfig.Interval {
-        return when (this) {
-            MarketsListUM.TrendInterval.H24 -> TokenMarketListConfig.Interval.H24
-            MarketsListUM.TrendInterval.D7 -> TokenMarketListConfig.Interval.WEEK
-            MarketsListUM.TrendInterval.M1 -> TokenMarketListConfig.Interval.MONTH
-        }
-    }
-
     private fun initAnalytics() {
         searchMarketsListManager
             .isSearchNotFoundState
@@ -331,18 +279,9 @@ internal class MarketsListModel @Inject constructor(
         }.saveIn(updateQuotesJob)
     }
 
-    private fun onYieldModeNotificationCloseClick() {
-        analyticsEventHandler.send(MarketsListAnalyticsEvent.YieldModePromoClosed())
-        modelScope.launch {
-            promoRepository.setMarketsYieldSupplyNotificationHideClicked()
-        }
-    }
-
     private class MarketsItemsData(
         val items: ImmutableList<MarketsListItemUM>,
         val isInErrorState: Boolean,
         val isSearchNotFound: Boolean,
-        val shouldShowYieldModePromo: Boolean,
-        val userCountry: Either<UserCountryError, UserCountry>,
     )
 }
