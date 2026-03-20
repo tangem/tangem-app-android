@@ -104,6 +104,7 @@ class RecentBlockTest : BaseTestCase() {
     @Test
     fun recentBlockTransactionHistoryDoesNotSupportedTest() {
         val tokenName = "Polkadot"
+        val fullTokenName = "Polkadot Asset Hub"
         val sendAmount = "1"
 
         setupHooks(
@@ -113,7 +114,7 @@ class RecentBlockTest : BaseTestCase() {
             }
         ).run {
             step("Open 'Send Screen' with token: $tokenName") {
-                openSendScreen(tokenName)
+                openSendScreen(tokenName = fullTokenName, mockState = tokenName)
             }
             step("Type '$sendAmount' in input text field") {
                 onSendScreen {
