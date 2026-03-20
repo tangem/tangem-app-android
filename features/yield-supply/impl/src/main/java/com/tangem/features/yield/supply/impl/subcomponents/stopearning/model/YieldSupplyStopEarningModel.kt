@@ -46,7 +46,7 @@ import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -153,7 +153,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 network = cryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
                     analytics.send(
                         YieldSupplyAnalytics.EarnErrors(
