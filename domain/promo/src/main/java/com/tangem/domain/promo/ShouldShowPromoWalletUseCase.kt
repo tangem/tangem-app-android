@@ -6,15 +6,19 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
 
 class ShouldShowPromoWalletUseCase(
     private val promoRepository: PromoRepository,
     private val settingsRepository: SettingsRepository,
+    private val isNewPromoBannersEnabled: Boolean,
 ) {
 
     operator fun invoke(userWalletId: UserWalletId, promoId: PromoId): Flow<Boolean> {
+        if (isNewPromoBannersEnabled) return flowOf(false)
+
         return flow {
             emit(false)
 

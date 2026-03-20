@@ -4,9 +4,9 @@ import android.net.Uri
 import com.tangem.common.routing.AppRoute
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsDeepLinkHandler
+import com.tangem.features.feed.entry.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
-import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
-import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
 import com.tangem.features.onramp.deeplink.OnrampDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
