@@ -41,13 +41,17 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
     @Suppress("LongMethod")
     override operator fun invoke(): Flow<WcPairState> {
-        val (uri: String, source: WcPairRequest.Source) = pairRequest
         return flow {
             Timber.tag(WC_TAG).i("start pair flow $pairRequest")
-            analytics.send(WcAnalyticEvents.NewPairInitiated(source))
+            analytics.send(
+                WcAnalyticEvents.NewPairInitiated(
+                    source = pairRequest.source,
+                    screen = pairRequest.screen,
+                ),
+            )
             emit(WcPairState.Loading)
 
-            val pairResult = sdkDelegate.pair(uri)
+            val pairResult = sdkDelegate.pair(pairRequest.uri)
                 .onLeft {
                     Timber.tag(WC_TAG).e(it, "Failed to call pair $pairRequest")
                     analytics.send(
