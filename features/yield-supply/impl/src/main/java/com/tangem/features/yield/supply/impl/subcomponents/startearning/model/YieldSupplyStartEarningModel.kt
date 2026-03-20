@@ -13,13 +13,14 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -55,7 +56,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val analytics: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val yieldSupplyStartEarningUseCase: YieldSupplyStartEarningUseCase,
@@ -346,27 +347,27 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private fun getCurrenciesStatusUpdates() {
-        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrency.id,
-            isSingleWalletWithTokens = false,
-        ).onEach { maybeCryptoCurrency ->
-            maybeCryptoCurrency.fold(
-                ifRight = { cryptoCurrencyStatus ->
-                    onDataLoaded(
-                        currencyStatus = cryptoCurrencyStatus,
-                        feeCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = userWalletId,
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        ).getOrNull() ?: cryptoCurrencyStatus,
-                    )
-                },
-                ifLeft = {
-                    Timber.w(it.toString())
-                    showAlertError()
-                },
-            )
-        }.launchIn(modelScope)
+        singleAccountStatusListSupplier(params.userWalletId)
+            .map { it.getCryptoCurrencyStatus(currency = cryptoCurrency) }
+            .distinctUntilChanged()
+            .onEach { maybeCryptoCurrency ->
+                maybeCryptoCurrency.fold(
+                    ifSome = { cryptoCurrencyStatus ->
+                        onDataLoaded(
+                            currencyStatus = cryptoCurrencyStatus,
+                            feeCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                                userWalletId = userWalletId,
+                                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            ).getOrNull() ?: cryptoCurrencyStatus,
+                        )
+                    },
+                    ifEmpty = {
+                        Timber.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
+                        showAlertError()
+                    },
+                )
+            }
+            .launchIn(modelScope)
     }
 
     private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, feeCurrencyStatus: CryptoCurrencyStatus) {

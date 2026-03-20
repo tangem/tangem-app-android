@@ -10,6 +10,9 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.core.ui.res.LocalTopSnackbarHostState
 import com.tangem.core.ui.utils.requestPermission
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
@@ -69,17 +72,16 @@ internal fun WalletEventEffectLegacy(
 @Composable
 internal fun WalletEventEffect(
     walletsPagerState: PagerState,
-    snackbarHostState: SnackbarHostState,
     event: StateEvent<WalletEvent>,
     onCollapseBalance: () -> Unit,
 ) {
-    val resources = LocalContext.current.resources
-
     var showPermissionRequest by remember { mutableStateOf<Pair<() -> Unit, () -> Unit>?>(null) }
     HandlePermissionRequest(
         permissionRequestParams = showPermissionRequest,
         onPermissionRequestResult = { showPermissionRequest = null },
     )
+
+    val tangemTopSnackbarHostState = LocalTopSnackbarHostState.current
 
     EventEffect(
         event = event,
@@ -92,12 +94,14 @@ internal fun WalletEventEffect(
                     walletsPagerState.scrollToPage(page = value.newIndex)
                 }
                 is WalletEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
+                    tangemTopSnackbarHostState.showSnackbar(SnackbarMessage(message = value.text))
                 }
                 is WalletEvent.CopyAddress -> {
-                    snackbarHostState.showSnackbar(
-                        message = resources.getStringSafe(R.string.wallet_notification_address_copied),
-                        duration = SnackbarDuration.Short,
+                    tangemTopSnackbarHostState.showSnackbar(
+                        SnackbarMessage(
+                            startIconId = R.drawable.ic_check_24,
+                            message = resourceReference(R.string.wallet_notification_address_copied),
+                        ),
                     )
                 }
                 is WalletEvent.DemonstrateWalletsScrollPreview -> {

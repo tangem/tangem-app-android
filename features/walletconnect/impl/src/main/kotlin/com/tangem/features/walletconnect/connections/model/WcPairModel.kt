@@ -29,7 +29,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.Unknown
-import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
@@ -75,13 +74,7 @@ internal class WcPairModel @Inject constructor(
 ) : Model(), WcPairComponentCallback {
 
     private val params: WcPairComponent.Params = paramsContainer.require()
-    private val wcPairUseCase = wcPairUseCaseFactory.create(
-        WcPairRequest(
-            userWalletId = params.userWalletId,
-            uri = params.wcUrl,
-            source = params.source,
-        ),
-    )
+    private val wcPairUseCase = wcPairUseCaseFactory.create(params.request)
 
     val stackNavigation = StackNavigation<WcAppInfoRoutes>()
     val portfolioFetcher: PortfolioFetcher = portfolioFetcherFactory.create(
@@ -109,7 +102,7 @@ internal class WcPairModel @Inject constructor(
         modelScope.launch {
             val portfolioBalance = portfolioFetcher.data.first().balances
                 .firstNotNullOfOrNull { (walletId, balance) ->
-                    if (params.userWalletId == walletId) balance else null
+                    if (params.request.userWalletId == walletId) balance else null
                 }
             if (portfolioBalance == null) {
                 router.pop()
