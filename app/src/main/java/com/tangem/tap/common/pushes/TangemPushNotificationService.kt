@@ -33,7 +33,11 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         super.onMessageReceived(message)
 
         if (customerIoFeatureToggles.isFeatureEnabled) {
-            CustomerIOFirebaseMessagingService.onMessageReceived(applicationContext, message)
+            CustomerIOFirebaseMessagingService.onMessageReceived(
+                context = applicationContext,
+                remoteMessage = message,
+                handleNotificationTrigger = false,
+            )
         }
 
         val notification = message.notification ?: return
