@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>Indentation:ExcludedBlockchainToggles.kt$ExcludedBlockchainToggles$ </ID>
-    <ID>Indentation:FeatureToggles.kt$FeatureToggles$ </ID>
-  </CurrentIssues>
-</SmellBaseline>

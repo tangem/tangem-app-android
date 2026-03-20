@@ -6,11 +6,9 @@ import androidx.annotation.StringRes
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.Log
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.common.*
-import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
@@ -18,24 +16,14 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.finisher.AppFinisher
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.res.getStringSafe
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
@@ -65,11 +53,11 @@ import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.R
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
@@ -80,16 +68,9 @@ internal class DefaultTangemSdkManager(
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
-    private val uiMessageSender: UiMessageSender,
-    private val appFinisher: AppFinisher,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
-    private val analyticsEventHandler: AnalyticsEventHandler,
-    dispatchers: CoroutineDispatcherProvider,
+    private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : TangemSdkManager {
-
-    private val awaitInitializationMutex = Mutex()
 
     private val tangemSdk: TangemSdk
         get() = cardSdkConfigRepository.sdk
@@ -101,10 +82,32 @@ internal class DefaultTangemSdkManager(
         )
     }
     override val needEnrollBiometrics: Boolean
-        get() = tangemSdk.authenticationManager.needEnrollBiometrics
+        get() {
+            val isNeedEnrollBiometrics = tangemSdk.authenticationManager.needEnrollBiometrics
+            if (isNeedEnrollBiometrics) {
+                analyticsErrorHandler.sendErrorEvent(
+                    AnalyticsEvent(
+                        category = "TangemSdkManager",
+                        event = "needEnrollBiometrics",
+                    ),
+                )
+            }
+            return isNeedEnrollBiometrics
+        }
 
     override val canUseBiometry: Boolean
-        get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
+        get() {
+            val isCanUseBiometry = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
+            if (!isCanUseBiometry) {
+                analyticsErrorHandler.sendErrorEvent(
+                    AnalyticsEvent(
+                        category = "TangemSdkManager",
+                        event = "cantUseBiometry",
+                    ),
+                )
+            }
+            return isCanUseBiometry
+        }
 
     override val keystoreManager: KeystoreManager
         get() = tangemSdk.keystoreManager
@@ -115,52 +118,12 @@ internal class DefaultTangemSdkManager(
     override val userCodeRequestPolicy: UserCodeRequestPolicy
         get() = tangemSdk.config.userCodeRequestPolicy
 
-    private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
-
     override suspend fun checkNeedEnrollBiometrics(awaitInitialization: Boolean): Boolean {
-        return try {
-            needEnrollBiometrics
-        } catch (e: TangemSdkError.AuthenticationNotInitialized) {
-            Log.error {
-                "Trying to access `needEnrollBiometrics` flag when authentication manager is not initialized: " +
-                    if (awaitInitialization) "awaiting initialization" else "failing"
-            }
-
-            if (awaitInitialization) {
-                val manager = awaitAuthenticationManagerInitialization()
-
-                if (manager.isInitialized) {
-                    manager.needEnrollBiometrics
-                } else {
-                    false
-                }
-            } else {
-                throw e
-            }
-        }
+        return needEnrollBiometrics
     }
 
     override suspend fun checkCanUseBiometry(awaitInitialization: Boolean): Boolean {
-        return try {
-            canUseBiometry
-        } catch (e: TangemSdkError.AuthenticationNotInitialized) {
-            Log.error {
-                "Trying to access `canUseBiometry` flag when authentication manager is not initialized: " +
-                    if (awaitInitialization) "awaiting initialization" else "failing"
-            }
-
-            if (awaitInitialization) {
-                val manager = awaitAuthenticationManagerInitialization()
-
-                if (manager.isInitialized) {
-                    manager.canAuthenticate || manager.needEnrollBiometrics
-                } else {
-                    false
-                }
-            } else {
-                throw e
-            }
-        }
+        return canUseBiometry
     }
 
     override suspend fun scanProduct(
@@ -434,59 +397,6 @@ internal class DefaultTangemSdkManager(
         tangemSdk.config.userCodeRequestPolicy = policy
     }
 
-    private suspend fun awaitAuthenticationManagerInitialization(): AuthenticationManager {
-        return awaitInitializationMutex.withLock {
-            var attemps = 0
-
-            do {
-                if (tangemSdk.authenticationManager.isInitialized) {
-                    break
-                } else {
-                    if (attemps++ >= MAX_INITIALIZE_ATTEMPTS) {
-                        analyticsExceptionHandler.sendException(
-                            ExceptionAnalyticsEvent(
-                                exception = IllegalStateException(
-                                    "Can't initialize authentication manager after $MAX_INITIALIZE_ATTEMPTS attempts",
-                                ),
-                            ),
-                        )
-                        showAlert()
-                        break
-                    } else {
-                        delay(timeMillis = 400)
-                    }
-                }
-            } while (true)
-
-            tangemSdk.authenticationManager
-        }
-    }
-
-    private fun showAlert() {
-        uiMessageSender.send(
-            message = DialogMessage(
-                message = resourceReference(id = R.string.alert_authentication_error_message),
-                title = resourceReference(id = R.string.alert_authentication_error_title),
-                isDismissable = false,
-                dismissOnFirstAction = false,
-                firstActionBuilder = {
-                    EventMessageAction(
-                        title = resourceReference(R.string.alert_button_request_support),
-                        onClick = {
-                            coroutineScope.launch {
-                                analyticsEventHandler.send(
-                                    Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.SignIn),
-                                )
-                                sendFeedbackEmailUseCase(FeedbackEmailType.BiometricsAuthenticationFailed)
-                            }
-                        },
-                    )
-                },
-                secondActionBuilder = { cancelAction(onClick = appFinisher::finish) },
-            ),
-        )
-    }
-
     // region Twin-specific
 
     override suspend fun createFirstTwinWallet(
@@ -626,8 +536,4 @@ internal class DefaultTangemSdkManager(
         }
     }
     // endregion
-
-    companion object {
-        private const val MAX_INITIALIZE_ATTEMPTS = 10
-    }
 }

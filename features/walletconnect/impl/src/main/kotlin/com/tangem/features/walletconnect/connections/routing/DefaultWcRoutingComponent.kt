@@ -89,9 +89,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
                 appComponentContext = childContext,
                 portfolioSelectorComponentFactory = portfolioSelectorComponentFactory,
                 params = WcPairComponent.Params(
-                    userWalletId = config.request.userWalletId,
-                    wcUrl = config.request.uri,
-                    source = config.request.source,
+                    request = config.request,
                 ),
             )
             is WcInnerRoute.UnsupportedMethodAlert -> AlertsComponent(

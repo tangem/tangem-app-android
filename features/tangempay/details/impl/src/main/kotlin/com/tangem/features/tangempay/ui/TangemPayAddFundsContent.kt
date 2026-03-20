@@ -20,7 +20,7 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Content
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.extensions.TextReference.Res
@@ -52,7 +52,7 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
         },
     ) {
         if (state.errorMessage != null) {
-            MessageBottomSheetV2Content(state.errorMessage)
+            MessageBottomSheetContent(state.errorMessage)
         } else {
             Surface(
                 modifier = Modifier

@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.components.background.shaderBackground
+import com.tangem.core.ui.res.LocalIsInDarkTheme
 import com.tangem.core.ui.res.LocalPowerSavingState
 import com.tangem.core.ui.shader.NorthernLightsMeshGradientShader
 
@@ -36,99 +37,58 @@ fun NorthernLightsBackground(
     }
 }
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "NamedArguments")
 @Composable
 private fun NorthernLightsBackgroundWithShader(containerColor: Color, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "FluidMeshGradientV2")
+    val isDark = LocalIsInDarkTheme.current
 
-    // Each track cycles through 4 states (matching the screenshot frames):
-    //   deep/dark → saturated+bright → light/pastel → vibrant/vivid → back
-    // 16 s total per track, staggered so no two tracks peak simultaneously.
-
-    // ── Color 1 – indigo → bright blue → lavender → hot violet ──────────────
-    val color1 by transition.animateColor(
-        initialValue = Color(0xFF2A1480),
-        targetValue = Color(0xFF2A1480),
+    @Composable
+    fun anim(a: Color, b: Color, c: Color, d: Color, offset: Int = 0) = transition.animateColor(
+        initialValue = a,
+        targetValue = a,
         animationSpec = infiniteRepeatable(
             animation = keyframes {
-                durationMillis = 16_000
-                Color(0xFF2A1480) at 0 using FastOutSlowInEasing
-                Color(0xFF4477EE) at 4_000 using FastOutSlowInEasing
-                Color(0xFFBBAAEE) at 8_000 using FastOutSlowInEasing
-                Color(0xFF8833EE) at 12_000 using FastOutSlowInEasing
+                durationMillis = 40_000
+                a at 0 using FastOutSlowInEasing
+                b at 10_000 using FastOutSlowInEasing
+                c at 20_000 using FastOutSlowInEasing
+                d at 30_000 using FastOutSlowInEasing
             },
             repeatMode = RepeatMode.Restart,
+            initialStartOffset = StartOffset(offset),
         ),
-        label = "color1",
+        label = "c$offset",
     )
 
-    // ── Color 2 – dark blue → cyan-blue → sky → teal ─────────────────────────
-    val color2 by transition.animateColor(
-        initialValue = Color(0xFF1444AA),
-        targetValue = Color(0xFF1444AA),
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 16_000
-                Color(0xFF1444AA) at 0 using FastOutSlowInEasing
-                Color(0xFF22AADD) at 4_000 using FastOutSlowInEasing
-                Color(0xFF99BBDD) at 8_000 using FastOutSlowInEasing
-                Color(0xFF44DDCC) at 12_000 using FastOutSlowInEasing
-            },
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(4_000),
-        ),
-        label = "color2",
-    )
+    val dc1 by anim(Color(0xFF0D0D3A), Color(0xFF141455), Color(0xFF1C1C6E), Color(0xFF111148), 0)
+    val dc2 by anim(Color(0xFF0A1238), Color(0xFF0D1D55), Color(0xFF112266), Color(0xFF0E1A4A), 10_000)
+    val dc3 by anim(Color(0xFF110A38), Color(0xFF1C1050), Color(0xFF2A1666), Color(0xFF180E48), 20_000)
+    val dc4 by anim(Color(0xFF081A30), Color(0xFF0D2844), Color(0xFF113355), Color(0xFF0D2240), 5_000)
 
-    // ── Color 3 – dark purple → medium purple → rose pink → magenta ──────────
-    val color3 by transition.animateColor(
-        initialValue = Color(0xFF4422BB),
-        targetValue = Color(0xFF4422BB),
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 16_000
-                Color(0xFF4422BB) at 0 using FastOutSlowInEasing
-                Color(0xFF7733CC) at 4_000 using FastOutSlowInEasing
-                Color(0xFFDD88BB) at 8_000 using FastOutSlowInEasing
-                Color(0xFFEE44AA) at 12_000 using FastOutSlowInEasing
-            },
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(8_000),
-        ),
-        label = "color3",
-    )
+    val lc1 by anim(Color(0xFFCCB8EE), Color(0xFFBBA0E8), Color(0xFFCCB0F0), Color(0xFFC4AAEC), 0)
+    val lc2 by anim(Color(0xFFB8C8F0), Color(0xFF9AAEE8), Color(0xFFAABEF0), Color(0xFFA0B8EE), 10_000)
+    val lc3 by anim(Color(0xFFDDC8F5), Color(0xFFCCB0EE), Color(0xFFD8BEF5), Color(0xFFD0B8F2), 20_000)
+    val lc4 by anim(Color(0xFFB8C4EE), Color(0xFFA8B4E8), Color(0xFFB4C0EE), Color(0xFFAABCEC), 5_000)
 
-    // ── Color 4 – dark violet → medium violet → light pink → hot pink ────────
-    val color4 by transition.animateColor(
-        initialValue = Color(0xFF331199),
-        targetValue = Color(0xFF331199),
-        animationSpec = infiniteRepeatable(
-            animation = keyframes {
-                durationMillis = 16_000
-                Color(0xFF331199) at 0 using FastOutSlowInEasing
-                Color(0xFF6644CC) at 4_000 using FastOutSlowInEasing
-                Color(0xFFCC77DD) at 8_000 using FastOutSlowInEasing
-                Color(0xFFFF66CC) at 12_000 using FastOutSlowInEasing
-            },
-            repeatMode = RepeatMode.Restart,
-            initialStartOffset = StartOffset(2_000),
-        ),
-        label = "color4",
-    )
+    val color1 = if (isDark) dc1 else lc1
+    val color2 = if (isDark) dc2 else lc2
+    val color3 = if (isDark) dc3 else lc3
+    val color4 = if (isDark) dc4 else lc4
 
     // Keep a stable shader instance so the RuntimeShader is never recreated.
     // Colors are pushed each recomposition via updateColors().
     val shader = remember {
         NorthernLightsMeshGradientShader(
             colors = arrayOf(
-                Color(0xFF2A1480),
-                Color(0xFF1444AA),
-                Color(0xFF4422BB),
-                Color(0xFF331199),
+                color1,
+                color2,
+                color3,
+                color4,
                 containerColor,
             ),
-            speed = 0.5f,
-            scale = 4f,
+            speed = 0.07f,
+            scale = 1.8f,
         )
     }
     val colorsArray = remember { Array(5) { Color.Unspecified } }
