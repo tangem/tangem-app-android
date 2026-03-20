@@ -86,6 +86,7 @@ internal class WcConnectionsModel @Inject constructor(
                         userWalletId = params.userWalletId,
                         uri = result.qrCode,
                         source = source,
+                        screen = WcPairRequest.Screen.WALLET_CONNECT,
                     ),
                 )
             }
