@@ -231,12 +231,22 @@ internal class DefaultTangemPayStorage @Inject constructor(
         ) == true
     }
 
-    override suspend fun storeTangemPayEligibility(eligibility: Boolean) {
-        appPreferencesStore.store(key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY, value = eligibility)
+    override suspend fun storeTangemPayEligibility(eligibility: Set<String>) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(
+                key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY,
+                value = eligibility,
+            )
+        }
     }
 
-    override suspend fun getTangemPayEligibility(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY, default = false)
+    override suspend fun getTangemPayEligibility(): Set<String> {
+        return withContext(dispatcherProvider.io) {
+            appPreferencesStore.getSyncOrDefault(
+                key = PreferencesKeys.TANGEM_PAY_ELIGIBILITY_KEY,
+                default = emptySet(),
+            )
+        }
     }
 
     override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) {
