@@ -17,6 +17,7 @@ internal class Eip681PaymentUriParserTest {
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
         every { getShareSchemes(any()) } returns emptyList()
         every { getChainId(any()) } returns null
+        every { getBlockchainNameByChainId(any()) } returns null
     }
     private val parser = Eip681PaymentUriParser(blockchainDataProvider)
 
