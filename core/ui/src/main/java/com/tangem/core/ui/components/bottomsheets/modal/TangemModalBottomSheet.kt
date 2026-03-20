@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.bottomsheets.modal
 
 import android.content.res.Configuration
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -110,13 +111,17 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
             sheetState = sheetState,
             onBack = onBack,
             bsContent = {
-                BsContent(
-                    config = config,
-                    containerColor = containerColor,
-                    scrollableContent = scrollableContent,
-                    title = title,
-                    content = content,
-                )
+                CompositionLocalProvider(
+                    LocalOverscrollFactory provides null,
+                ) {
+                    BsContent(
+                        config = config,
+                        containerColor = containerColor,
+                        scrollableContent = scrollableContent,
+                        title = title,
+                        content = content,
+                    )
+                }
             },
         )
     }
