@@ -18,6 +18,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.extensions.LocalUserInteractionTracker
+import com.tangem.core.ui.extensions.trackUserInteraction
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -37,7 +39,13 @@ import com.tangem.features.hotwallet.impl.R
 @Suppress("MagicNumber", "LongMethod")
 @Composable
 internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM, modifier: Modifier = Modifier) {
-    Box(Modifier.fillMaxSize()) {
+    val userInteractionTracker = LocalUserInteractionTracker.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .trackUserInteraction(userInteractionTracker),
+    ) {
         AnimatedVisibility(
             modifier = modifier,
             visible = state.isShown,
