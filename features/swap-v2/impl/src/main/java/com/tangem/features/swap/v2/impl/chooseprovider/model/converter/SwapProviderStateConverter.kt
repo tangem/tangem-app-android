@@ -50,7 +50,7 @@ internal class SwapProviderStateConverter(
             name = provider.name,
             iconUrl = provider.imageLarge,
             type = provider.type.typeName,
-            subtitle = quoteAmountValue,
+            subtitle = toAmountValue,
             additionalBadge = additionalBadge,
             diffPercent = diffPercent,
             isSelected = provider == selectedProvider,

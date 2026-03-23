@@ -12,10 +12,11 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.StringsSigns
@@ -66,8 +67,10 @@ internal data object SwapAmountContentPreview {
 
     private val quote = SwapQuoteUM.Content(
         provider = provider,
-        quoteAmount = "123".toBigDecimal(),
-        quoteAmountValue = stringReference("123"),
+        toAmount = "123".toBigDecimal(),
+        fromAmount = null,
+        toAmountValue = stringReference("123"),
+        fromAmountValue = TextReference.EMPTY,
         rate = stringReference("1 USD ≈ 123.123 POL"),
         diffPercent = SwapQuoteUM.Content.DifferencePercent.Best,
         isSingleProvider = false,
@@ -92,6 +95,7 @@ internal data object SwapAmountContentPreview {
         appCurrency = AppCurrency.Default,
         isShowBestRateAnimation = false,
         isShowFCAWarning = false,
+        swapRateMode = SwapRateMode.FLOAT_ONLY,
     )
 
     val defaultState = SwapAmountUM.Content(
@@ -127,10 +131,11 @@ internal data object SwapAmountContentPreview {
         selectedQuote = quote,
         primaryCryptoCurrencyStatus = cryptoCurrencyStatus,
         secondaryCryptoCurrencyStatus = cryptoCurrencyStatus,
-        swapRateType = ExpressRateType.Float,
+        swapRateType = ExpressRateType.Fixed,
         isPrimaryButtonEnabled = true,
         isShowBestRateAnimation = false,
         isShowFCAWarning = true,
+        swapRateMode = SwapRateMode.FLOAT_AND_FIXED,
     )
 
     val defaultStateAccount: SwapAmountUM.Content
