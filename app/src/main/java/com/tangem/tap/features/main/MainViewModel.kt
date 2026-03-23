@@ -149,6 +149,7 @@ internal class MainViewModel @Inject constructor(
             // await while initial route stack is initialized
             appRouterConfig.initializedState.first { it }
 
+            TangemLogger.withTag("MainActivity").i("Splash screen dismissed")
             isSplashScreenShown = false
         }
     }
