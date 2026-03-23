@@ -41,7 +41,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object UserWalletsListManagerModule {
+internal object UserWalletsListRepositoryModule {
 
     @Provides
     @Singleton
