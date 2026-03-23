@@ -15,6 +15,8 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.ExchangeDataResponseWithTxDetails
+import com.tangem.datasource.api.express.models.response.RateType
+import com.tangem.datasource.api.express.models.response.SwapPairProvider
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
@@ -98,8 +100,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     }
 
                 val mappedProviders = pair.providers
-                    .filterNot { it.hasOnlyFixedRateType() }
-                    .mapNotNull { expressProviders[it.providerId] }
+                    .mapNotNull { it.withExpressProvider(expressProviders) }
                     .filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
@@ -157,8 +158,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     val currencyStatusTo = createSendWithSwapCryptoCurrencyStatus(statusToDeferred.await())
 
                     val mappedProvider = pair.providers
-                        .filterNot { it.hasOnlyFixedRateType() }
-                        .mapNotNull { mappedProviders[it.providerId] }
+                        .mapNotNull { it.withExpressProvider(mappedProviders) }
                         .filterYieldSupplyProvider(currencyStatusFrom)
 
                     if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
@@ -441,6 +441,18 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             TangemLogger.e("error parsing txDetailsJson", e)
             null
         }
+    }
+
+    private fun SwapPairProvider.withExpressProvider(
+        expressProviders: Map<String, ExpressProvider>,
+    ): ExpressProvider? {
+        val provider = expressProviders[providerId] ?: return null
+        return provider.copy(rateTypes = rateTypes.map { it.toExpressRateType() })
+    }
+
+    private fun RateType.toExpressRateType(): ExpressRateType = when (this) {
+        RateType.FLOAT -> ExpressRateType.Float
+        RateType.FIXED -> ExpressRateType.Fixed
     }
 
     private fun CryptoCurrency.getContractAddress(): String {

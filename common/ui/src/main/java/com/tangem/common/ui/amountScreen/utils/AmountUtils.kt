@@ -40,13 +40,13 @@ internal fun String.checkExceedBalance(
     maxEnterAmount: EnterAmountBoundary,
     amountTextField: AmountFieldModel,
 ): Boolean {
-    val currencyCryptoAmount = maxEnterAmount.amount ?: BigDecimal.ZERO
-    val currencyFiatAmount = maxEnterAmount.fiatAmount ?: BigDecimal.ZERO
     val fiatDecimal = parseToBigDecimal(amountTextField.fiatAmount.decimals)
     val cryptoDecimal = parseToBigDecimal(amountTextField.cryptoAmount.decimals)
     return if (amountTextField.isFiatValue) {
+        val currencyFiatAmount = maxEnterAmount.fiatAmount ?: return false
         fiatDecimal > currencyFiatAmount
     } else {
+        val currencyCryptoAmount = maxEnterAmount.amount ?: return false
         cryptoDecimal > currencyCryptoAmount
     }
 }
