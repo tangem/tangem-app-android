@@ -7,12 +7,8 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.ScanFailsDialog
 import com.tangem.tap.common.ui.SimpleAlertDialog
-import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
 import com.tangem.tap.common.ui.SimpleOkDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletActivationErrorDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletAlreadyWasUsedDialog
 import com.tangem.tap.store
@@ -60,14 +56,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 context = context,
             )
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
-            is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(
-                context = context,
-                scanResponse = state.dialog.scanResponse,
-            )
-            is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(
-                context = context,
-                unfinishedBackupScanResponse = state.dialog.scanResponse,
-            )
             is AppDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
@@ -83,13 +71,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 onOk = state.dialog.onOk,
                 onSupport = state.dialog.onSupportClick,
                 onCancel = state.dialog.onCancel,
-            )
-            is AppDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
-                title = context.getString(state.dialog.titleRes, state.dialog.currencyTitle),
-                messageRes = state.dialog.messageRes,
-                context = context,
-                primaryButtonRes = state.dialog.primaryButtonRes,
-                primaryButtonAction = state.dialog.onOk,
             )
             else -> null
         }
