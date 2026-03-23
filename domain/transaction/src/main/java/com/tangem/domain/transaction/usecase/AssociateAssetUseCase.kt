@@ -3,10 +3,12 @@ package com.tangem.domain.transaction.usecase
 import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
@@ -22,15 +24,13 @@ class AssociateAssetUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+    private val getHotTransactionSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
 
-    suspend operator fun invoke(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-    ): Either<AssociateAssetError, Unit> {
+    suspend operator fun invoke(userWallet: UserWallet, currency: CryptoCurrency): Either<AssociateAssetError, Unit> {
         return either {
             val networkCoin = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                params = MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
             )
                 ?.firstOrNull {
                     val network = currency.network
@@ -38,18 +38,19 @@ class AssociateAssetUseCase(
                 }
                 ?: error("Unable to create network coin for currencyID: ${currency.id}")
 
-            if (isBalanceZero(userWalletId, networkCoin)) {
+            if (isBalanceZero(userWallet.walletId, networkCoin)) {
                 raise(AssociateAssetError.NotEnoughBalance(networkCoin))
             }
 
-            val signer = cardSdkConfigRepository.getCommonSigner(
-                cardId = null,
-                twinKey = null, // use null here because no assets support for Twin cards
-            )
+            val signer = createSigner(userWallet)
 
             catch(
                 block = {
-                    when (val result = walletManagersFacade.fulfillRequirements(userWalletId, currency, signer)) {
+                    when (val result = walletManagersFacade.fulfillRequirements(
+                        userWallet.walletId,
+                        currency,
+                        signer,
+                    )) {
                         is SimpleResult.Failure -> raise(AssociateAssetError.DataError(result.error.customMessage))
                         SimpleResult.Success -> Unit
                     }
@@ -57,6 +58,20 @@ class AssociateAssetUseCase(
                 catch = { error -> AssociateAssetError.DataError(error.message) },
             )
         }
+    }
+
+    private fun createSigner(userWallet: UserWallet): TransactionSigner {
+        return when (userWallet) {
+            is UserWallet.Hot -> getHotTransactionSigner(userWallet)
+            is UserWallet.Cold -> getColdSigner()
+        }
+    }
+
+    private fun getColdSigner(): TransactionSigner {
+        return cardSdkConfigRepository.getCommonSigner(
+            cardId = null,
+            twinKey = null, // use null here because no assets support for Twin cards
+        )
     }
 
     private suspend fun isBalanceZero(userWalletId: UserWalletId, currency: CryptoCurrency): Boolean {
