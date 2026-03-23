@@ -174,6 +174,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         installAppTheme()
 
         val splashScreen = installSplashScreen()
+        TangemLogger.i("Splash screen installed")
 
         enableEdgeToEdge(
             navigationBarStyle = SystemBarStyle.auto(
@@ -350,6 +351,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
