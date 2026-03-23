@@ -941,7 +941,7 @@ internal class TokenDetailsModel @Inject constructor(
         )
         modelScope.launch {
             retryIncompleteTransactionUseCase(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
@@ -982,7 +982,7 @@ internal class TokenDetailsModel @Inject constructor(
         )
         modelScope.launch(dispatchers.mainImmediate) {
             openTrustlineUseCase(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
@@ -1054,7 +1054,7 @@ internal class TokenDetailsModel @Inject constructor(
         )
         modelScope.launch(dispatchers.io) {
             associateAssetUseCase(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
