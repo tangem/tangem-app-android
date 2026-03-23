@@ -15,15 +15,6 @@ sealed class AppDialog : StateDialog {
         val onOk: VoidCallback? = null,
     ) : AppDialog()
 
-    data class RemoveWalletDialog(
-        val currencyTitle: String,
-        val onOk: () -> Unit,
-    ) : AppDialog() {
-        val messageRes: Int = R.string.token_details_hide_alert_message
-        val titleRes: Int = R.string.token_details_hide_alert_title
-        val primaryButtonRes: Int = R.string.token_details_hide_alert_hide
-    }
-
     data class TokensAreLinkedDialog(
         val currencyTitle: String,
         val currencySymbol: String,
