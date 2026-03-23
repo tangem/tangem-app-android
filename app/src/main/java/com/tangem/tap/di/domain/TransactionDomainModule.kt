@@ -78,12 +78,14 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): AssociateAssetUseCase {
         return AssociateAssetUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            getHotTransactionSigner = tangemHotWalletSignerFactory::create,
         )
     }
 
@@ -92,10 +94,12 @@ internal object TransactionDomainModule {
     fun provideRetryTransactionUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): RetryIncompleteTransactionUseCase {
         return RetryIncompleteTransactionUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
+            getHotTransactionSigner = tangemHotWalletSignerFactory::create,
         )
     }
 
@@ -104,10 +108,12 @@ internal object TransactionDomainModule {
     fun provideOpenTrustlineUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         walletManagersFacade: WalletManagersFacade,
+        tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): OpenTrustlineUseCase {
         return OpenTrustlineUseCase(
             cardSdkConfigRepository = cardSdkConfigRepository,
             walletManagersFacade = walletManagersFacade,
+            getHotTransactionSigner = tangemHotWalletSignerFactory::create,
         )
     }
 
