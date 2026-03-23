@@ -270,22 +270,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         }
     }
 
-    private fun updateLogFiles() {
-        appLogsStore.deleteOldLogsFile()
-
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            appLogsStore.deleteLastLogFile()
-        }
-
-        // Temporally logs are not saved
-        // scope.launch {
-        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
-        //         appLogsStore.deleteLastLogFile()
-        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
-        //     }
-        // }
-    }
-
     /**
      * Initialize components that need to be initialized before [super.onCreate] is called
      */
@@ -387,6 +371,22 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                 ),
             ),
         )
+    }
+
+    private fun updateLogFiles() {
+        appLogsStore.deleteOldLogsFile()
+
+        if (!BuildConfig.TESTER_MENU_ENABLED) {
+            appLogsStore.deleteLastLogFile()
+        }
+
+        // Temporarily logs are not saved
+        // scope.launch {
+        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
+        //         appLogsStore.deleteLastLogFile()
+        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
+        //     }
+        // }
     }
 
     override fun newImageLoader(): ImageLoader {
