@@ -1,70 +1,55 @@
 package com.tangem.features.swap.v2.impl.amount.model.transformers
 
-import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.swap.models.SwapAmountType
-import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
-import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
+import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountUpdateSubtitleConverter
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.transformer.Transformer
 
-@Suppress("LongParameterList")
 internal class SwapAmountBalanceHiddenTransformer(
     private val isBalanceHidden: Boolean,
-    private val isSingleWallet: Boolean,
-    private val userWallet: UserWallet,
-    private val appCurrency: AppCurrency,
-    private val swapDirection: SwapDirection,
-    private val clickIntents: AmountScreenClickIntents,
-    private val isAccountsMode: Boolean,
-    private val account: Account?,
 ) : Transformer<SwapAmountUM> {
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         val content = prevState as? SwapAmountUM.Content ?: return prevState
 
-        val amountFieldConverter = SwapAmountFieldConverter(
-            swapDirection = swapDirection,
+        val quoteContent = content.selectedQuote as? SwapQuoteUM.Content
+
+        val subtitleConverter = SwapAmountUpdateSubtitleConverter(
+            selectedAmountType = content.selectedAmountType,
             isBalanceHidden = isBalanceHidden,
-            userWallet = userWallet,
-            appCurrency = appCurrency,
-            clickIntents = clickIntents,
-            isSingleWallet = isSingleWallet,
-            isAccountsMode = isAccountsMode,
-            account = account,
         )
 
-        val recalculatedPrimary = amountFieldConverter.convert(
-            selectedType = SwapAmountType.From,
-            cryptoCurrencyStatus = content.primaryCryptoCurrencyStatus,
-        ) as SwapAmountFieldUM.Content
-
-        val oldPrimary = content.primaryAmount as? SwapAmountFieldUM.Content
-
-        val mergedAmountField = if (
-            oldPrimary?.amountField is AmountState.Data && recalculatedPrimary.amountField is AmountState.Data
-        ) {
-            val oldData = oldPrimary.amountField
-            val newData = recalculatedPrimary.amountField
-            newData.copy(
-                amountTextField = oldData.amountTextField,
-                isPrimaryButtonEnabled = oldData.isPrimaryButtonEnabled,
-                isEditingDisabled = oldData.isEditingDisabled,
-                reduceAmountBy = oldData.reduceAmountBy,
-                isIgnoreReduce = oldData.isIgnoreReduce,
+        val updatedPrimary = (content.primaryAmount as? SwapAmountFieldUM.Content)?.let { primary ->
+            val isAmountEmpty = (primary.amountField as? AmountState.Data)
+                ?.amountTextField?.cryptoAmount?.value == null
+            subtitleConverter.updateSubtitles(
+                field = primary,
+                cryptoCurrencyStatus = content.primaryCryptoCurrencyStatus,
+                isAmountEmpty = isAmountEmpty,
+                displayAmount = quoteContent?.fromAmount,
             )
+        } ?: content.primaryAmount
+
+        val updatedSecondary = if (content.secondaryCryptoCurrencyStatus != null) {
+            (content.secondaryAmount as? SwapAmountFieldUM.Content)?.let { secondary ->
+                val isAmountEmpty = (secondary.amountField as? AmountState.Data)
+                    ?.amountTextField?.cryptoAmount?.value == null
+                subtitleConverter.updateSubtitles(
+                    field = secondary,
+                    cryptoCurrencyStatus = content.secondaryCryptoCurrencyStatus,
+                    isAmountEmpty = isAmountEmpty,
+                    displayAmount = quoteContent?.toAmount,
+                )
+            } ?: content.secondaryAmount
         } else {
-            recalculatedPrimary.amountField
+            content.secondaryAmount
         }
 
-        val updatedPrimaryAmount = recalculatedPrimary.copy(
-            amountField = mergedAmountField,
+        return content.copy(
+            primaryAmount = updatedPrimary,
+            secondaryAmount = updatedSecondary,
         )
-
-        return content.copy(primaryAmount = updatedPrimaryAmount)
     }
 }
