@@ -344,6 +344,7 @@ internal class DefaultSwapRepository(
                         appPreferencesStore = appPreferencesStore,
                     ),
                     toExtraId = toExtraId?.ifEmpty { null },
+                    quoteId = null,
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
