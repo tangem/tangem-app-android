@@ -161,6 +161,7 @@ dependencies {
     implementation(projects.domain.news)
     implementation(projects.domain.earn)
     implementation(projects.domain.tokensync)
+    implementation(projects.domain.search)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -216,6 +217,7 @@ dependencies {
     implementation(projects.data.hotWallet)
     implementation(projects.data.news)
     implementation(projects.data.earn)
+    implementation(projects.data.search)
 
     /** Features */
     implementation(projects.features.referral.impl)
