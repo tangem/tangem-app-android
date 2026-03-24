@@ -18,7 +18,6 @@ internal class TangemPayRefreshNeededStateTransformer(
     override fun transform(prevState: WalletState): WalletState {
         val tangemPayState = TangemPayState.RefreshNeeded(
             notification = TangemPayRefreshNeeded(
-                tangemIcon = R.drawable.ic_tangem_24,
                 buttonText = when (userWallet) {
                     is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
                     is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
