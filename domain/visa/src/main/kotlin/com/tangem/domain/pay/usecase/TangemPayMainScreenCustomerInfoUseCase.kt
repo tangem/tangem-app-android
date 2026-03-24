@@ -15,8 +15,6 @@ import com.tangem.security.isSecurityExposed
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
 
-private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
-
 class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
@@ -27,15 +25,15 @@ class TangemPayMainScreenCustomerInfoUseCase(
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
         field = MutableStateFlow(value = mapOf())
 
+    private val logger = TangemLogger.withTag("TangemPayMainScreenCustomerInfoUseCase")
+
     suspend fun fetch(userWalletId: UserWalletId) {
-        TangemLogger.withTag(TAG).i("fetch: ${userWalletId.stringValue}")
+        logger.i("fetch: ${userWalletId.stringValue}")
 
         if (deviceSecurity.isSecurityExposed()) {
-            TangemLogger.withTag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
-            TangemLogger.withTag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
-            TangemLogger.withTag(
-                TAG,
-            ).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+            logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+            logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+            logger.i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
 
             updateState(userWalletId = userWalletId, either = TangemPayCustomerInfoError.ExposedDeviceError.left())
             return // fast exit
@@ -44,9 +42,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         onboardingRepository.hasTangemPayInWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
-                    TangemLogger.withTag(
-                        TAG,
-                    ).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
+                    logger.e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
                     if (error is VisaApiError.NotPaeraCustomer) {
                         showOnboardingBannerIfEligible(userWalletId)
                     } else {
@@ -54,7 +50,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                     }
                 },
                 ifRight = { hasTangemPay ->
-                    TangemLogger.withTag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
+                    logger.i("checkCustomerWallet for $userWalletId: $hasTangemPay")
                     if (hasTangemPay) {
                         val oldResult = state.value[userWalletId]
                         if (oldResult == null) {
@@ -129,11 +125,11 @@ class TangemPayMainScreenCustomerInfoUseCase(
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
         return onboardingRepository.getCustomerInfo(userWalletId)
             .mapLeft { error ->
-                TangemLogger.withTag(TAG).e("mapErrorForCustomer: $error")
+                logger.e("mapErrorForCustomer: $error")
                 error.mapErrorForCustomer()
             }
             .map { customerInfo ->
-                TangemLogger.withTag(TAG).i("customerInfo")
+                logger.i("customerInfo")
                 if (customerInfo.productInstance == null) {
                     onboardingRepository.createOrder(userWalletId)
                     MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.NEW)
