@@ -28,36 +28,30 @@ internal class SwapAmountSetQuotesTransformer(
     private val primaryMaximumAmountBoundary: EnterAmountBoundary? = null,
     private val primaryMinimumAmountBoundary: EnterAmountBoundary? = null,
 ) : Transformer<SwapAmountUM> {
+
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
         val selectedAmountType = prevState.selectedAmountType
         val comparator = SwapQuotesComparator(selectedAmountType)
-
-        val isSingleProvider = quotes.filter { swapQuoteUM ->
-            swapQuoteUM is SwapQuoteUM.Content || swapQuoteUM is SwapQuoteUM.Allowance ||
-                (swapQuoteUM as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
-        }.isSingleItem()
-
+        val isSingleProvider = isSingleProvider(quotes)
         val sortedQuotes = quotes.sortedWith(comparator)
         val bestQuote = findBestQuote(quotes, comparator) ?: SwapQuoteUM.Empty
+
         val quotesWithDiff = getQuotesWithDiff(
             sortedQuotes = sortedQuotes,
             bestQuote = bestQuote,
             isSingleProvider = isSingleProvider,
             selectedAmountType = selectedAmountType,
         )
-        val selectedQuote = if (isSilentReload && prevState.selectedQuote !is SwapQuoteUM.Loading) {
-            quotesWithDiff.firstOrNull { it.provider?.providerId == prevState.selectedQuote.provider?.providerId }
-                ?: prevState.selectedQuote
-        } else {
-            (bestQuote as? SwapQuoteUM.Content)?.copy(
-                diffPercent = DifferencePercent.Best,
-                isSingleProvider = isSingleProvider,
-            ) ?: bestQuote
-        }
+        val selectedQuote = resolveSelectedQuote(
+            prevState = prevState,
+            quotesWithDiff = quotesWithDiff,
+            bestQuote = bestQuote,
+            isSingleProvider = isSingleProvider,
+        )
 
-        val selectQuoteTransformer = SwapAmountSelectQuoteTransformer(
+        val updatedState = SwapAmountSelectQuoteTransformer(
             quoteUM = selectedQuote,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
@@ -66,28 +60,40 @@ internal class SwapAmountSetQuotesTransformer(
             isBalanceHidden = isBalanceHidden,
             primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
             primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
-        )
-
-        val updatedState = selectQuoteTransformer.transform(prevState = prevState)
+        ).transform(prevState = prevState)
         if (updatedState !is SwapAmountUM.Content) return prevState
 
-        val areAllQuotesErrors = quotes.all { it is SwapQuoteUM.Error }
-        val stateWithError = if (areAllQuotesErrors) {
-            SwapAmountErrorQuoteTransformer.transform(updatedState)
-        } else {
-            updatedState
-        }
+        val stateWithError = SwapAmountErrorQuoteTransformer(quotes).transform(updatedState)
         if (stateWithError !is SwapAmountUM.Content) return prevState
 
         return stateWithError.copy(
             isPrimaryButtonEnabled = stateWithError.isPrimaryButtonEnabled && quotesWithDiff.isNotEmpty(),
-            swapQuotes = getQuotesWithDiff(
-                sortedQuotes = sortedQuotes,
-                bestQuote = bestQuote,
-                isSingleProvider = isSingleProvider,
-                selectedAmountType = selectedAmountType,
-            ),
+            swapQuotes = quotesWithDiff,
         )
+    }
+
+    private fun resolveSelectedQuote(
+        prevState: SwapAmountUM.Content,
+        quotesWithDiff: ImmutableList<SwapQuoteUM>,
+        bestQuote: SwapQuoteUM,
+        isSingleProvider: Boolean,
+    ): SwapQuoteUM {
+        if (isSilentReload && prevState.selectedQuote !is SwapQuoteUM.Loading) {
+            return quotesWithDiff
+                .firstOrNull { it.provider?.providerId == prevState.selectedQuote.provider?.providerId }
+                ?: prevState.selectedQuote
+        }
+        return (bestQuote as? SwapQuoteUM.Content)?.copy(
+            diffPercent = DifferencePercent.Best,
+            isSingleProvider = isSingleProvider,
+        ) ?: bestQuote
+    }
+
+    private fun isSingleProvider(quotes: List<SwapQuoteUM>): Boolean {
+        return quotes.filter { swapQuoteUM ->
+            swapQuoteUM is SwapQuoteUM.Content || swapQuoteUM is SwapQuoteUM.Allowance ||
+                (swapQuoteUM as? SwapQuoteUM.Error)?.expressError is ExpressError.AmountError
+        }.isSingleItem()
     }
 
     private fun getQuotesWithDiff(

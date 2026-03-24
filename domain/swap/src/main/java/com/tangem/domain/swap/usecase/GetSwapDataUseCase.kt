@@ -30,6 +30,7 @@ class GetSwapDataUseCase(
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
+        quoteId: String? = null,
     ): Either<ExpressError, SwapDataModel> = Either.catch {
         swapRepositoryV2.getSwapData(
             userWallet = userWallet,
@@ -42,6 +43,7 @@ class GetSwapDataUseCase(
             expressProvider = expressProvider,
             rateType = rateType,
             expressOperationType = expressOperationType,
+            quoteId = quoteId,
         )
     }.mapLeft { throwable ->
         swapErrorResolver.resolve(throwable)
