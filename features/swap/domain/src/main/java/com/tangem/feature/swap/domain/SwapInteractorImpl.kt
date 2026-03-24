@@ -31,6 +31,7 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -131,7 +132,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getAccountCurrencyTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
         val walletAccountCurrencyStatuses = singleAccountStatusListSupplier.getSyncOrNull(
             SingleAccountStatusListProducer.Params(userWalletId),
-        )?.accountStatuses.orEmpty()
+        )?.accountStatuses.orEmpty().filterCryptoPortfolio()
 
         val walletAccountCurrencyStatusesExceptInitial: Map<Account, List<CryptoCurrencyStatus>> =
             walletAccountCurrencyStatuses.mapNotNull { accountStatus ->
