@@ -37,6 +37,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
+import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.send.v2.api.NetworkSelectionComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
@@ -51,6 +52,7 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
+    tangemPayMainBlockComponentFactory: TangemPayMainBlockComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
@@ -68,6 +70,12 @@ internal class WalletComponent @AssistedInject constructor(
         feedEntryComponentFactory.create(
             context = child("feedEntryComponent"),
             entryRoute = null,
+        )
+    }
+    private val tangemPayMainBlockComponent by lazy {
+        tangemPayMainBlockComponentFactory.create(
+            context = child("tangemPayMainBlockComponent"),
+            params = Unit,
         )
     }
 
@@ -218,10 +226,11 @@ internal class WalletComponent @AssistedInject constructor(
         val bottomSheetState = remember { mutableStateOf(BottomSheetState.COLLAPSED) }
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
-                state = model.uiState.collectAsStateWithLifecycle().value,
+                state = uiState,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
@@ -234,8 +243,9 @@ internal class WalletComponent @AssistedInject constructor(
             )
         } else {
             WalletScreen(
-                state = model.uiState.collectAsStateWithLifecycle().value,
+                state = uiState,
                 promoBannersBlockComponent = promoBannersBlockComponent,
+                tangemPayComponent = tangemPayMainBlockComponent,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
