@@ -12,6 +12,7 @@ import com.tangem.features.promobanners.impl.converters.PromoBannerDisplayToNoti
 import com.tangem.features.promobanners.impl.repository.PromoBannersRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -34,11 +35,12 @@ internal class PromoBannersBlockModel @Inject constructor(
     private val converter = PromoBannerDisplayToNotificationConverter()
 
     private val placeholder: String = params.placeholder.name.lowercase()
-    private val shownBannerIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val shownBannerIds: MutableSet<Int> = ConcurrentHashMap.newKeySet()
     private var wasCarouselScrolled = false
+    private val savedDisplayIdByWalletId: MutableMap<String, Int> = mutableMapOf()
 
     val uiState: StateFlow<PromoBannersBlockUM>
-        field = MutableStateFlow(PromoBannersBlockUM())
+        field = MutableStateFlow(getInitialState())
 
     init {
         subscribeOnSelectedWallet()
@@ -59,46 +61,67 @@ internal class PromoBannersBlockModel @Inject constructor(
     }
 
     private suspend fun loadBanners(walletId: String) {
-        val locale = Locale.getDefault().language
+        val languageISOCode = Locale.getDefault().language
 
         runSuspendCatching {
-            repository.getBanners(walletId, params.placeholder, locale)
+            repository.getBanners(walletId, params.placeholder, languageISOCode)
         }.onSuccess { banners ->
+            val bannerUMs = banners.map { banner ->
+                converter.convert(
+                    banner = banner,
+                    onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
+                    onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
+                )
+            }.toImmutableList()
+
+            val savedDisplayId = savedDisplayIdByWalletId[walletId]
+            val initialPage = if (savedDisplayId != null) {
+                bannerUMs.indexOfFirst { it.displayId == savedDisplayId }.coerceAtLeast(0)
+            } else {
+                0
+            }
+
             uiState.value = PromoBannersBlockUM(
-                banners = banners.map { banner ->
-                    converter.convert(
-                        banner = banner,
-                        onDeeplinkClick = { deeplink -> onButtonClick(banner.id, deeplink) },
-                        onDismiss = { displayId -> onBannerDismiss(walletId, displayId) },
-                    )
-                }.toImmutableList(),
+                userWalletId = walletId,
+                initialPage = initialPage,
+                banners = bannerUMs,
                 onBannerShown = ::onBannerShown,
                 onCarouselScrolled = ::onCarouselScrolled,
+                onPageChanged = { displayId -> savedDisplayIdByWalletId[walletId] = displayId },
             )
         }.onFailure { error ->
             TangemLogger.w("Failed to load promo banners", error)
         }
     }
 
-    private fun onBannerShown(displayId: String) {
+    private fun onBannerShown(displayId: Int) {
         if (shownBannerIds.add(displayId)) {
             analyticsEventHandler.send(PromoBannerAnalyticsEvent.Shown(displayId, placeholder))
         }
     }
 
-    private fun onCarouselScrolled(displayId: String) {
+    private fun onCarouselScrolled(displayId: Int) {
         if (!wasCarouselScrolled) {
             wasCarouselScrolled = true
             analyticsEventHandler.send(PromoBannerAnalyticsEvent.CarouselScrolled(displayId, placeholder))
         }
     }
 
-    private fun onButtonClick(displayId: String, deeplink: String?) {
+    private fun onButtonClick(displayId: Int, deeplink: String?) {
         analyticsEventHandler.send(PromoBannerAnalyticsEvent.Clicked(displayId, placeholder))
         deeplink?.let { deeplinkLauncher.launch(it) }
     }
 
-    private fun onBannerDismiss(walletId: String, displayId: String) {
+    private fun getInitialState() = PromoBannersBlockUM(
+        userWalletId = "",
+        initialPage = 0,
+        banners = persistentListOf(),
+        onBannerShown = {},
+        onCarouselScrolled = {},
+        onPageChanged = {},
+    )
+
+    private fun onBannerDismiss(walletId: String, displayId: Int) {
         analyticsEventHandler.send(PromoBannerAnalyticsEvent.Dismissed(displayId, placeholder))
         uiState.update { state ->
             state.copy(
