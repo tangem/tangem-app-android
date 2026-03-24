@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.domain.virtualaccount.models"
+    namespace = "com.tangem.domain.virtual.account.models"
 }
 
 dependencies {
