@@ -16,4 +16,5 @@ data class SwapQuoteModel(
     val toTokenAmount: BigDecimal,
     val fromTokenAmount: BigDecimal?,
     val allowanceContract: String?,
+    val quoteId: String? = null,
 )
