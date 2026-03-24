@@ -14,6 +14,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -23,13 +24,16 @@ import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun Header(
+internal fun ColumnScope.Header(
     onSeeAllClick: () -> Unit,
     isLoading: Boolean,
     shouldShowSeeAll: Boolean,
     title: @Composable () -> Unit,
 ) {
     val isRedesignEnabled = LocalRedesignEnabled.current
+    if (isRedesignEnabled) {
+        SpacerH(20.dp)
+    }
     AnimatedContent(isLoading) { animatedState ->
         Row(
             modifier = Modifier
