@@ -221,6 +221,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             toTokenAmount = toTokenAmount,
             fromTokenAmount = fromTokenAmount,
             allowanceContract = response.allowanceContract,
+            quoteId = response.quoteId,
         )
     }
 
@@ -235,6 +236,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         expressProvider: ExpressProvider,
         rateType: ExpressRateType,
         expressOperationType: ExpressOperationType,
+        quoteId: String?,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
         val (fromCurrency, fromStatus) = fromCryptoCurrencyStatus
@@ -273,6 +275,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 appPreferencesStore = appPreferencesStore,
             ),
             toExtraId = toExtraId?.ifEmpty { null },
+            quoteId = quoteId,
         ).getOrThrow()
 
         if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
