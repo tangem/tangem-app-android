@@ -25,6 +25,7 @@ import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransac
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -87,33 +88,43 @@ internal class SwapTransactionSender @AssistedInject constructor(
         val fromAccount = confirmData.fromAccount
         val provider = confirmData.quote?.provider ?: return
         val rateType = confirmData.rateType ?: return
-        val amountValue = confirmData.enteredAmount ?: return
         val feeValue = confirmData.fee?.amount?.value ?: return
         val destination = confirmData.enteredDestination ?: return
 
-        val fromAmount = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = fromStatus,
-            amountValue = amountValue,
-            feeValue = feeValue,
-            reduceAmountBy = confirmData.reduceAmountBy,
-        )
+        val (amount, currencyStatus) = when (confirmData.amountType) {
+            SwapAmountType.From -> {
+                val amountValue = confirmData.enteredFromAmount ?: return
+                val subtracted = FeeCalculationUtils.checkAndCalculateSubtractedAmount(
+                    isAmountSubtractAvailable = isAmountSubtractAvailable,
+                    cryptoCurrencyStatus = fromStatus,
+                    amountValue = amountValue,
+                    feeValue = feeValue,
+                    reduceAmountBy = confirmData.reduceAmountBy,
+                )
+                subtracted to fromStatus
+            }
+            SwapAmountType.To -> {
+                val amountValue = confirmData.enteredToAmount ?: return
+                amountValue to toStatus
+            }
+        }
 
         val swapData = getSwapDataUseCase(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromStatus,
-            amount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals),
-            amountType = SwapAmountType.From,
+            amount = amount.toStringWithRightOffset(currencyStatus.currency.decimals),
+            amountType = confirmData.amountType,
             toCryptoCurrency = toStatus.currency,
             toAddress = destination,
             toExtraId = confirmData.enteredMemo,
             expressProvider = provider,
             rateType = rateType,
             expressOperationType = expressOperationType,
+            quoteId = (confirmData.quote as? SwapQuoteUM.Content)?.quoteId,
         ).getOrElse { error -> onExpressError(error); return }
 
         createAndSendCexTransaction(
-            fromAmount = fromAmount,
+            fromAmount = amount,
             fromStatus = fromStatus,
             fromAccount = fromAccount,
             toStatus = toStatus,
