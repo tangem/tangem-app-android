@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,12 +36,16 @@ internal fun PromoBannersBlock(state: PromoBannersBlockUM, modifier: Modifier = 
             modifier = modifier,
         )
     } else {
-        BannersCarousel(
-            banners = state.banners,
-            onBannerShown = state.onBannerShown,
-            onCarouselScroll = state.onCarouselScrolled,
-            modifier = modifier,
-        )
+        key(state.userWalletId) {
+            BannersCarousel(
+                banners = state.banners,
+                initialPage = state.initialPage,
+                onBannerShown = state.onBannerShown,
+                onCarouselScroll = state.onCarouselScrolled,
+                onPageChange = state.onPageChanged,
+                modifier = modifier,
+            )
+        }
     }
 }
 
@@ -56,16 +61,22 @@ private fun SingleBanner(banner: PromoBannerNotificationUM, modifier: Modifier =
 @Composable
 private fun BannersCarousel(
     banners: List<PromoBannerNotificationUM>,
-    onBannerShown: (String) -> Unit,
-    onCarouselScroll: (String) -> Unit,
+    initialPage: Int,
+    onBannerShown: (Int) -> Unit,
+    onCarouselScroll: (Int) -> Unit,
+    onPageChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val pagerState = rememberPagerState(pageCount = { banners.size })
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { banners.size },
+    )
 
     LaunchedEffect(pagerState, banners) {
         snapshotFlow { pagerState.currentPage }
             .collect { page ->
                 banners.getOrNull(page)?.let { banner ->
+                    onPageChange(banner.displayId)
                     onBannerShown(banner.displayId)
                     if (page == 1) {
                         // one-time event when user scrolls from first to second page,
