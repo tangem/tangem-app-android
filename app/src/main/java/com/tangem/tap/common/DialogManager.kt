@@ -3,16 +3,11 @@ package com.tangem.tap.common
 import android.app.Dialog
 import android.content.Context
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.ScanFailsDialog
-import com.tangem.tap.common.ui.SimpleAlertDialog
-import com.tangem.tap.common.ui.SimpleOkDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletActivationErrorDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletAlreadyWasUsedDialog
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 class DialogManager : StoreSubscriber<GlobalState> {
@@ -44,34 +39,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
         if (dialog != null) return
 
         dialog = when (state.dialog) {
-            is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
             is StateDialog.ScanFailsDialog -> ScanFailsDialog.create(
                 context = context,
                 source = state.dialog.source,
                 onTryAgain = state.dialog.onTryAgain,
             )
-            is StateDialog.NfcFeatureIsUnavailable -> SimpleAlertDialog.create(
-                titleRes = R.string.common_error,
-                messageRes = R.string.nfc_error_unavailable,
-                context = context,
-            )
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
-            is AppDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
-                title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
-                message = context.getString(
-                    state.dialog.messageRes,
-                    state.dialog.currencyTitle,
-                    state.dialog.currencySymbol,
-                    state.dialog.networkName,
-                ),
-                context = context,
-            )
-            is AppDialog.WalletAlreadyWasUsedDialog -> WalletAlreadyWasUsedDialog.create(
-                context = context,
-                onOk = state.dialog.onOk,
-                onSupport = state.dialog.onSupportClick,
-                onCancel = state.dialog.onCancel,
-            )
             else -> null
         }
         dialog?.show()
