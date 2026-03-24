@@ -53,6 +53,7 @@ import com.tangem.features.feed.model.market.details.converter.TokenMarketInfoCo
 import com.tangem.features.feed.model.market.details.formatter.*
 import com.tangem.features.feed.model.market.details.state.QuotesStateUpdater
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
+import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.market.detailed.state.ExchangesBottomSheetContent
 import com.tangem.features.feed.ui.market.detailed.state.MarketsTokenDetailsUM
 import com.tangem.lib.crypto.BlockchainUtils
@@ -258,6 +259,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
                 onScroll = {},
             ),
             onShareClick = ::onShareClick,
+            feedListSearchBar = FeedListSearchBar(
+                onBarClick = { params.onMarketOpenClick() },
+                placeholderText = resourceReference(id = R.string.markets_search_title_placeholder),
+            ),
         ),
     )
 
