@@ -38,6 +38,7 @@ internal sealed class SwapQuoteUM {
         val diffPercent: DifferencePercent,
         val isSingleProvider: Boolean,
         val rate: TextReference,
+        val quoteId: String? = null,
     ) : SwapQuoteUM() {
         sealed class DifferencePercent {
             data object Empty : DifferencePercent()
