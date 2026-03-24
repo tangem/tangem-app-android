@@ -17,9 +17,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.R
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
@@ -251,11 +249,6 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun handleNfcFeatureUnavailable() {
-        uiMessageSender.send(
-            message = DialogMessage(
-                message = resourceReference(R.string.nfc_error_unavailable),
-                title = resourceReference(id = R.string.common_error),
-            ),
-        )
+        uiMessageSender.send(Dialogs.nfcFeatureUnavailable())
     }
 }
