@@ -140,7 +140,7 @@ internal class SwapAmountSelectQuoteTransformer(
             val insufficientFundsError = if (isSecondarySelected && fromAmount != null) {
                 val primaryBalance = prevState.primaryCryptoCurrencyStatus.value.amount
                 if (primaryBalance != null && fromAmount > primaryBalance) {
-                    resourceReference(R.string.swapping_insufficient_funds)
+                    resourceReference(R.string.common_insufficient_balance)
                 } else {
                     null
                 }
