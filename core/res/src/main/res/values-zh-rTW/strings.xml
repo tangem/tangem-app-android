@@ -99,6 +99,7 @@
   <string name="common_understand">我了解</string>
   <string name="common_unreachable">無法觸達</string>
   <string name="common_utxo_validate_withdrawal_message_warning">由於 %1$s 的限制，只有%2$d UTXO 可以放入單次交易中。這意味著您只能發送%3$s或更少數量。您需要減少數量。</string>
+  <string name="common_warning">警告</string>
   <string name="common_yes">是</string>
   <string name="contract_address_copied_message">已複製代幣地址</string>
   <string name="currency_subtitle_expanded">支持的網路</string>
