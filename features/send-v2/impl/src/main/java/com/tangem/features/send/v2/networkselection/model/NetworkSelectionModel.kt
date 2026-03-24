@@ -60,10 +60,7 @@ internal class NetworkSelectionModel @Inject constructor(
 
     private val searchQuery = MutableStateFlow("")
     private val expandedWallets = MutableStateFlow(
-        params.walletGroups.firstOrNull()
-            ?.userWalletId
-            ?.let(::setOf)
-            .orEmpty(),
+        params.walletGroups.map { it.userWalletId }.toSet(),
     )
 
     val uiState: StateFlow<NetworkSelectionUM> = createUiStateFlow()
