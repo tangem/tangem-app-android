@@ -6,13 +6,13 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
@@ -25,20 +25,20 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.*
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.qrscanning.models.QrResultSource
-import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
-import com.tangem.domain.qrscanning.models.ClassifiedQrContent
-import com.tangem.domain.qrscanning.models.QrSendTarget
-import com.tangem.domain.walletconnect.WcPairService
-import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.qrscanning.models.ClassifiedQrContent
+import com.tangem.domain.qrscanning.models.QrResultSource
+import com.tangem.domain.qrscanning.models.QrSendTarget
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ResolveQrSendTargetsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -61,6 +61,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejec
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
@@ -119,6 +120,8 @@ internal class WalletModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcPairService: WcPairService,
     private val resolveQrSendTargetsUseCase: ResolveQrSendTargetsUseCase,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val uiMessageSender: UiMessageSender,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -427,14 +430,17 @@ internal class WalletModel @Inject constructor(
                 updateTangemPayJobHolder.cancel()
                 modelScope.launch {
                     tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+                    paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
                         tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+                        paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
                     }
                 }.saveIn(updateTangemPayJobHolder)
             } else {
                 // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
                 tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
+                paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
             }
         }.launchIn(modelScope)
     }
@@ -543,6 +549,7 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 isMainScreenQrScanningEnabled = walletFeatureToggles.isMainScreenQrScanningEnabled,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
@@ -589,6 +596,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
     }
@@ -610,6 +618,7 @@ internal class WalletModel @Inject constructor(
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                     getWalletIconUseCase = getWalletIconUseCase,
+                    isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
                 ),
             )
         }
@@ -624,6 +633,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
@@ -685,6 +695,7 @@ internal class WalletModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 getWalletIconUseCase = getWalletIconUseCase,
+                isTangemPayRefactorEnabled = tangemPayFeatureToggles.isTangemPayAccountsRefactorEnabled,
             ),
         )
 
