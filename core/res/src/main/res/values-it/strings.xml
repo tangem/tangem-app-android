@@ -26,6 +26,7 @@
     <item quantity="one">%d gettone</item>
     <item quantity="other">%d gettoni</item>
   </plurals>
+  <string name="common_warning">Avviso</string>
   <string name="details_manage_security_access_code">Codice di accesso</string>
   <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
   <string name="details_manage_security_long_tap">Mantenimento della carta</string>
