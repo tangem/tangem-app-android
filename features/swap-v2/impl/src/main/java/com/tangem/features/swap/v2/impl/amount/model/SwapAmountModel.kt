@@ -109,6 +109,7 @@ internal class SwapAmountModel @Inject constructor(
 
     private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
+    val rateInfoNavigation: SlotNavigation<ExpressRateType> = SlotNavigation()
 
     private var isShowBestRateAnimation: Boolean = false
 
@@ -318,7 +319,8 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     override fun onRateClick() {
-        // TODO [REDACTED_TASK_KEY]
+        val content = uiState.value as? SwapAmountUM.Content ?: return
+        rateInfoNavigation.activate(content.swapRateType)
     }
 
     override fun onSeparatorClick() {
