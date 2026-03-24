@@ -82,37 +82,48 @@ fun AnnotatedString.Builder.appendStyled(text: String, spanStyle: SpanStyle) = w
 }
 
 /**
- * Appends text from a template string to the AnnotatedString.Builder, replacing a placeholder (default "%s")
- * with custom styled content provided by a lambda. The lambda allows you to insert styled or complex content
- * (e.g., colored, bold, or annotated text) at the placeholder position.
+ * Appends text from a template string to the AnnotatedString.Builder, replacing positional placeholders
+ * (%1$s, %2$s, ...) with custom styled content provided by lambdas.
  *
- * If the placeholder is not found in the template, the function does nothing.
+ * Placeholders are matched by their numeric index (1-based) and replaced in the order they appear
+ * in the template. Unmatched placeholders are left as-is.
  *
  * Example usage:
- *   builder.appendWithStyledPlaceholder(
- *       template = "Ensure you %s network address, as errors may result in lost transfers"
- *   ) {
- *       withStyle(SpanStyle(color = Color.Red, fontWeight = FontWeight.Bold)) {
- *           append("Ethereum")
- *       }
- *   }
+ *   builder.appendWithStyledPlaceholders(
+ *       template = "By using swap functionality, you agree with provider's %1$s and %2$s.",
+ *      {
+ *           withLink(LinkAnnotation.Url("https://example.com/terms")) { append("Terms of Use") }
+ *      },
+ *      {
+ *           withLink(LinkAnnotation.Url("https://example.com/privacy")) { append("Privacy Policy") }
+ *      }
+ *   )
  *
- * @param template The template string containing the placeholder to be replaced.
- * @param placeholder The placeholder string to be replaced by styled content. Default is "%s".
- * @param styledContent Lambda to build the styled content to insert at the placeholder position.
+ * @param template The template string with positional placeholders (%1$s, %2$s, ...).
+ * @param styledContents Lambdas indexed by placeholder number (first lambda → %1$s, second → %2$s, ...).
  */
-fun AnnotatedString.Builder.appendWithStyledPlaceholder(
+fun AnnotatedString.Builder.appendWithStyledPlaceholders(
     template: String,
-    placeholder: String = "%s",
-    styledContent: AnnotatedString.Builder.() -> Unit,
+    vararg styledContents: AnnotatedString.Builder.() -> Unit,
 ) {
-    val index = template.indexOf(placeholder)
-    if (index < 0) return
-    // Append before placeholder
-    if (index > 0) append(template.substring(0, index))
-    // Append styled content
-    styledContent()
-    // Append after placeholder
-    val afterIndex = index + placeholder.length
-    if (afterIndex < template.length) append(template.substring(afterIndex))
+    data class PlaceholderMatch(val position: Int, val argIndex: Int, val length: Int)
+    val matches = styledContents.indices
+        .mapNotNull { i ->
+            val placeholder = "%${i + 1}${'$'}s"
+            val pos = template.indexOf(placeholder)
+            if (pos >= 0) PlaceholderMatch(pos, i, placeholder.length) else null
+        }
+        .sortedBy { it.position }
+
+    var lastIndex = 0
+    for (match in matches) {
+        if (match.position > lastIndex) {
+            append(template.substring(lastIndex, match.position))
+        }
+        styledContents[match.argIndex](this)
+        lastIndex = match.position + match.length
+    }
+    if (lastIndex < template.length) {
+        append(template.substring(lastIndex))
+    }
 }

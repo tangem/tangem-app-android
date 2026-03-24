@@ -9,4 +9,19 @@ android {
 }
 
 dependencies {
+    /** Core */
+    implementation(projects.core.ui)
+
+    /** Common */
+    implementation(projects.common.ui)
+
+    /** Compose */
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling.preview)
+    debugImplementation(deps.compose.ui.tooling)
+
+    /** Other */
+    implementation(deps.kotlin.immutable.collections)
 }

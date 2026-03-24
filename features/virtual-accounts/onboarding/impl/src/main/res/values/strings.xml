@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="virtual_account_onboarding_learn_more">Learn More</string>
+    <string name="virtual_account_onboarding_continue">Continue</string>
+    <string name="virtual_account_onboarding_title">Get Virtual Account</string>
+    <string name="virtual_account_onboarding_subtitle">One sign-up. Instant access to powerful fiat features. Your wallet stays private, and you can delete profile anytime.</string>
+    <string name="virtual_account_onboarding_feature_1_title">Send from any bank</string>
+    <string name="virtual_account_onboarding_feature_1_description">Receive an account where you can move your crypto and use your card just like a regular bank account.</string>
+    <string name="virtual_account_onboarding_feature_2_title">Send money with SEPA</string>
+    <string name="virtual_account_onboarding_feature_2_description">A virtual bank account inside your crypto wallet.</string>
+    <string name="virtual_account_onboarding_feature_3_title">Zero fees</string>
+    <string name="virtual_account_onboarding_feature_3_description">Use one verified identity to get simplified access to supported onramps and services.</string>
+    <string name="virtual_account_onboarding_terms_template">By using service, you agree with provider %1$s and %2$s</string>
+    <string name="virtual_account_onboarding_terms_link">Terms of Use</string>
+    <string name="virtual_account_onboarding_privacy_link">Privacy Policy</string>
+    <string name="virtual_account_onboarding_powered_by">Powered by Paera</string>
+</resources>

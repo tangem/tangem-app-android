@@ -31,6 +31,9 @@ dependencies {
     implementation(projects.features.wallet.api)
     implementation(projects.features.hotWallet.api)
 
+    /** Features impl */
+    implementation(projects.features.payment.impl)
+
     /** Domain */
     implementation(projects.domain.visa)
     implementation(projects.domain.wallets)
@@ -42,7 +45,9 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
-    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.ui.tooling.preview)
+    debugImplementation(deps.compose.ui.tooling)
+
     implementation(deps.decompose.ext.compose)
 
     /** DI */

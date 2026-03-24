@@ -296,6 +296,8 @@ dependencies {
     implementation(projects.features.tangempay.main.impl)
     implementation(projects.features.tangempay.onboarding.api)
     implementation(projects.features.tangempay.onboarding.impl)
+    implementation(projects.features.virtualAccounts.onboarding.api)
+    implementation(projects.features.virtualAccounts.onboarding.impl)
     implementation(projects.features.tokenRecieve.api)
     implementation(projects.features.tokenRecieve.impl)
     implementation(projects.features.yieldSupply.api)

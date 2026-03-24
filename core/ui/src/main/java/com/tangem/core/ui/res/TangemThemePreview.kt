@@ -1,13 +1,20 @@
 package com.tangem.core.ui.res
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.windowsize.rememberWindowSizePreview
 
 @Composable
@@ -57,6 +64,41 @@ fun TangemThemePreviewRedesign(
             ) {
                 TangemThemeRedesign(
                     content = content,
+                )
+            }
+        }
+    }
+}
+
+@Suppress("ReusedModifierInstance")
+@Composable
+fun TangemThemePreviewColumn(
+    modifier: Modifier = Modifier,
+    isSystemInDarkTheme: Boolean = isSystemInDarkTheme(),
+    alwaysShowBottomSheets: Boolean = true,
+    rtl: Boolean = false,
+    itemSpacing: Dp = 16.dp,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalBottomSheetAlwaysVisible provides alwaysShowBottomSheets,
+        LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+    ) {
+        BoxWithConstraints {
+            TangemTheme(
+                isDark = isSystemInDarkTheme,
+                windowSize = rememberWindowSizePreview(maxWidth, maxHeight),
+            ) {
+                TangemThemeRedesign(
+                    content = {
+                        Surface {
+                            Column(
+                                modifier = modifier,
+                                content = content,
+                                verticalArrangement = Arrangement.spacedBy(itemSpacing),
+                            )
+                        }
+                    },
                 )
             }
         }

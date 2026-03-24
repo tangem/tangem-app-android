@@ -1,15 +1,19 @@
-package com.tangem.features.tangempay.ui
+package com.tangem.features.payment.impl.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.SpacerH
@@ -21,15 +25,20 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.tangempay.onboarding.impl.R
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@Immutable
+data class WalletSelectorBSContentUM(
+    val userWallets: ImmutableList<UserWalletItemUM>,
+    val onDismiss: () -> Unit,
+) : TangemBottomSheetConfigContent
+
 @Composable
-internal fun WalletSelectorBottomSheet(state: WalletSelectorBSContentUM) {
+fun WalletSelectorBottomSheet(state: WalletSelectorBSContentUM, title: String, subtitle: String? = null) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -38,12 +47,29 @@ internal fun WalletSelectorBottomSheet(state: WalletSelectorBSContentUM) {
         ),
         onBack = state.onDismiss,
         containerColor = TangemTheme.colors.background.tertiary,
-        title = { content ->
-            TangemTopAppBar(
-                title = resourceReference(R.string.common_choose_wallet),
-                titleAlignment = Alignment.CenterHorizontally,
-                endButton = TopAppBarButtonUM.Close(onCloseClick = state.onDismiss),
-            )
+        title = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TangemTopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = stringReference(title),
+                    titleAlignment = Alignment.CenterHorizontally,
+                    endButton = TopAppBarButtonUM.Close(onCloseClick = state.onDismiss),
+                )
+                if (subtitle != null) {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = 48.dp)
+                            .padding(bottom = 16.dp),
+                        text = subtitle,
+                        style = TangemTheme.typography.body2,
+                        color = TangemTheme.colors.text.secondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
         },
     ) { content ->
         Content(
@@ -119,6 +145,8 @@ private fun PreviewWalletSelectorBottomSheet() {
                 ),
                 onDismiss = {},
             ),
+            title = "Choose Wallet",
+            subtitle = "This wallet will be linked to your KYC profile.",
         )
     }
 }

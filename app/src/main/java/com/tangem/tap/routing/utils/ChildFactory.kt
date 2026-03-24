@@ -41,6 +41,7 @@ import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Par
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
+import com.tangem.features.virtualaccount.onboarding.api.VirtualAccountOnboardingComponent
 import com.tangem.features.yield.supply.api.YieldSupplyEntryComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
@@ -111,6 +112,7 @@ internal class ChildFactory @Inject constructor(
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyEntryComponentFactory: YieldSupplyEntryComponent.Factory,
     private val feedEntryComponentFactory: FeedEntryComponent.Factory,
+    private val virtualAccountOnboardingComponentFactory: VirtualAccountOnboardingComponent.Factory,
 ) {
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -684,6 +686,13 @@ internal class ChildFactory @Inject constructor(
                         preselectedArticlesId = listOf(route.newsId),
                     ),
                     componentFactory = feedEntryComponentFactory,
+                )
+            }
+            is AppRoute.VirtualAccountOnboarding -> {
+                createComponentChild(
+                    context = context,
+                    params = VirtualAccountOnboardingComponent.Params(),
+                    componentFactory = virtualAccountOnboardingComponentFactory,
                 )
             }
         }

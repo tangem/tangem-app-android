@@ -5,8 +5,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.features.payment.impl.ui.WalletSelectorBSContentUM
 import com.tangem.features.tangempay.components.TangemPayWalletSelectorComponent
-import com.tangem.features.tangempay.ui.WalletSelectorBSContentUM
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
