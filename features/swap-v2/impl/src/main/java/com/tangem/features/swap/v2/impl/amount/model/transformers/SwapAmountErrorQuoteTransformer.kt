@@ -5,17 +5,23 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountErrorConverter
+import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.utils.transformer.Transformer
 
 /**
  * Sets a generic "Something went wrong" error on the selected amount field
- * when all quotes returned errors.
+ * when all quotes returned errors that cannot be converted to a specific amount error.
+ * Returns [prevState] unchanged when the condition is not met.
  */
-internal object SwapAmountErrorQuoteTransformer : Transformer<SwapAmountUM> {
+internal class SwapAmountErrorQuoteTransformer(
+    private val quotes: List<SwapQuoteUM>,
+) : Transformer<SwapAmountUM> {
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
+        if (!areAllQuotesUnrecoverableErrors(prevState)) return prevState
 
         val error = resourceReference(R.string.send_with_swap_something_went_wrong)
 
@@ -38,6 +44,18 @@ internal object SwapAmountErrorQuoteTransformer : Transformer<SwapAmountUM> {
             primaryAmount = newPrimaryAmount,
             secondaryAmount = newSecondaryAmount,
         )
+    }
+
+    private fun areAllQuotesUnrecoverableErrors(state: SwapAmountUM.Content): Boolean {
+        if (!quotes.all { it is SwapQuoteUM.Error }) return false
+
+        val secondaryProviderErrorConverter = state.secondaryCryptoCurrencyStatus?.let {
+            SwapAmountErrorConverter(cryptoCurrency = it.currency)
+        }
+        return quotes.all { quote ->
+            (quote as? SwapQuoteUM.Error)?.expressError
+                ?.let { secondaryProviderErrorConverter?.convert(it) } == null
+        }
     }
 
     private fun applyError(
