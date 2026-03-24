@@ -11,43 +11,58 @@ import java.math.BigDecimal
 /**
  * Payment account status for storage in the local cache.
  *
- * @see [com.tangem.domain.pay.PaymentAccountStatus]
+ * @see [com.tangem.domain.models.account.AccountStatus.Payment]
  */
 @JsonClass(generateAdapter = true, generator = PolymorphicAdapterType.NAME_POLYMORPHIC_ADAPTER)
-sealed interface PaymentAccountStatusDM {
+sealed interface PaymentAccountStatusValueDM {
 
     @NameLabel("not_created")
     data class NotCreated(
         @Json(name = "not_created") val marker: Boolean = true,
-    ) : PaymentAccountStatusDM
+    ) : PaymentAccountStatusValueDM
 
     @NameLabel("kyc_status")
     data class UnderReview(
         @Json(name = "kyc_status") val kycStatus: KycStatus,
-    ) : PaymentAccountStatusDM
+        @Json(name = "customer_id") val customerId: String,
+    ) : PaymentAccountStatusValueDM
 
     @NameLabel("issuing_card")
     data class IssuingCard(
         @Json(name = "issuing_card") val marker: Boolean = true,
-    ) : PaymentAccountStatusDM
+    ) : PaymentAccountStatusValueDM
 
-    @NameLabel("locked")
-    data class Locked(
-        @Json(name = "locked") val marker: Boolean = true,
-    ) : PaymentAccountStatusDM
-
-    @NameLabel("balance")
-    data class Loaded(
+    @NameLabel("active_card")
+    data class ActiveCard(
+        @Json(name = "active_card") val isLocked: Boolean,
+        @Json(name = "customer_id") val customerId: String,
         @Json(name = "card_id") val cardId: String,
         @Json(name = "last_four_digits") val lastFourDigits: String,
-        @Json(name = "balance") val balance: BigDecimal,
         @Json(name = "currency_code") val currencyCode: String,
         @Json(name = "deposit_address") val depositAddress: String?,
         @Json(name = "is_pin_set") val isPinSet: Boolean,
-    ) : PaymentAccountStatusDM
+        @Json(name = "fiat_balance") val fiatBalance: FiatBalanceDM,
+        @Json(name = "crypto_balance") val cryptoBalance: CryptoBalanceDM,
+    ) : PaymentAccountStatusValueDM
 
     @NameLabel("card_issue_failed")
     data class CardIssueFailed(
         @Json(name = "card_issue_failed") val marker: Boolean = true,
-    ) : PaymentAccountStatusDM
+        @Json(name = "customer_id") val customerId: String,
+    ) : PaymentAccountStatusValueDM
+
+    @JsonClass(generateAdapter = true)
+    data class FiatBalanceDM(
+        @Json(name = "available_balance") val availableBalance: BigDecimal,
+        @Json(name = "currency") val currency: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class CryptoBalanceDM(
+        @Json(name = "id") val id: String,
+        @Json(name = "chain_id") val chainId: Long,
+        @Json(name = "deposit_address") val depositAddress: String,
+        @Json(name = "token_contract_address") val tokenContractAddress: String,
+        @Json(name = "balance") val balance: BigDecimal,
+    )
 }
