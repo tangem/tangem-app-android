@@ -1,6 +1,8 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.kyc.KycStatus
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import java.math.BigDecimal
 
 sealed class MainCustomerInfoContentState {
@@ -25,6 +27,7 @@ data class CustomerInfo(
     data class ProductInstance(
         val id: String,
         val cardId: String,
+        val frozenState: TangemPayCardFrozenState,
     )
 
     data class CardInfo(
@@ -33,5 +36,7 @@ data class CustomerInfo(
         val currencyCode: String,
         val depositAddress: String?,
         val isPinSet: Boolean,
+        val fiatBalance: PaymentAccountStatusValue.FiatBalance,
+        val cryptoBalance: PaymentAccountStatusValue.CryptoBalance,
     )
 }

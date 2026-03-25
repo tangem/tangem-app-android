@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -57,7 +58,6 @@ dependencies {
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.hot.core)

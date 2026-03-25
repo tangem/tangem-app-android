@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Stable
@@ -60,7 +60,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
         modelScope.launch {
             val session = wcSessionsUseCase.findByTopic(topic = topic)
             if (session == null) {
-                Timber.e("Can not find WcSession by topic: $topic")
+                TangemLogger.e("Can not find WcSession by topic: $topic")
                 messageSender.send(SnackbarMessage(stringReference("Can not find WcSession by topic: $topic")))
                 dismiss()
             } else {

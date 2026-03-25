@@ -3,10 +3,12 @@ package com.tangem.data.account.producer
 import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.flow.FlowProducerTools
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -29,6 +31,10 @@ class DefaultSingleAccountListProducerTest {
 
     private val userWalletId = UserWalletId("011")
     private val flowProducerTools: FlowProducerTools = mockk()
+    private val tangemPayFeatureToggles = mockk<TangemPayFeatureToggles> {
+        every { this@mockk.isTangemPayAccountsRefactorEnabled } returns false
+    }
+    private val userWalletsListRepository = mockk<UserWalletsListRepository>()
     private val userWallet = mockk<UserWallet> {
         every { this@mockk.walletId } returns userWalletId
     }
@@ -38,6 +44,8 @@ class DefaultSingleAccountListProducerTest {
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
         flowProducerTools = flowProducerTools,
+        tangemPayFeatureToggles = tangemPayFeatureToggles,
+        userWalletsListRepository = userWalletsListRepository,
     )
 
     @AfterEach

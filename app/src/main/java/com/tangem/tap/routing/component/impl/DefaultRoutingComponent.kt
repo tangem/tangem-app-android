@@ -23,20 +23,25 @@ import com.tangem.core.decompose.navigation.getOrCreateTyped
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.android.create
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.hot.TangemHotSDKProxy
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.features.root.RootDetectedWarningComponent
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
@@ -45,11 +50,12 @@ import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.utils.ChildFactory
 import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.tap.store
+import com.tangem.utils.logging.TangemLogger
+import com.tangem.wallet.R
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -71,6 +77,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val backupServiceHolder: BackupServiceHolder,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -101,7 +108,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             try {
                 childFactory.createChild(route, childByContext(childContext))
             } catch (e: Exception) {
-                Timber.e(e, "App Router Failed")
+                TangemLogger.e("App Router Failed", e)
                 analyticsExceptionHandler.sendException(
                     ExceptionAnalyticsEvent(exception = e, params = mapOf("Category" to "App Routing")),
                 )
@@ -251,9 +258,71 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private fun checkForUnfinishedBackup() {
+        if (DemoHelper.tryHandle { store.state }) return
         componentScope.launch(dispatchers.main) {
-            val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
-            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+            val scanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            messageSender.send(unfinishedBackupFoundDialog(scanResponse))
+        }
+    }
+
+    private fun unfinishedBackupFoundDialog(scanResponse: ScanResponse): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.common_warning),
+        message = resourceReference(R.string.welcome_interrupted_backup_alert_message),
+        isDismissable = false,
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_alert_resume),
+                onClick = {
+                    analyticsEventHandler.send(OnboardingEvent.Backup.ResumeInterruptedBackup())
+                    resumeUnfinishedBackup(scanResponse)
+                },
+            )
+        },
+        secondActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_alert_discard),
+                onClick = {
+                    analyticsEventHandler.send(OnboardingEvent.Backup.CancelInterruptedBackup())
+                    messageSender.send(confirmDiscardingBackupDialog(scanResponse))
+                },
+            )
+        },
+    )
+
+    private fun confirmDiscardingBackupDialog(scanResponse: ScanResponse): DialogMessage = DialogMessage(
+        title = resourceReference(R.string.welcome_interrupted_backup_discard_title),
+        message = resourceReference(R.string.welcome_interrupted_backup_discard_message),
+        isDismissable = false,
+        firstActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_discard_resume),
+                onClick = { resumeUnfinishedBackup(scanResponse) },
+            )
+        },
+        secondActionBuilder = {
+            EventMessageAction(
+                title = resourceReference(R.string.welcome_interrupted_backup_discard_discard),
+                onClick = { discardSavedBackup() },
+            )
+        },
+    )
+
+    private fun resumeUnfinishedBackup(scanResponse: ScanResponse) {
+        router.replaceAll(
+            AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                mode = AppRoute.Onboarding.Mode.ContinueFinalize,
+            ),
+        )
+    }
+
+    private fun discardSavedBackup() {
+        componentScope.launch(dispatchers.main) {
+            backupServiceHolder.backupService.get()?.discardSavedBackup()
+            val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+            cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
+            onboardingRepository.clearUnfinishedFinalizeOnboarding()
+            analyticsEventHandler.send(Onboarding.Finished())
         }
     }
 

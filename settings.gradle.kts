@@ -392,6 +392,7 @@ include(":domain:yield-supply")
 include(":domain:yield-supply:models")
 include(":domain:news")
 include(":domain:earn")
+include(":domain:search")
 // endregion Domain modules
 
 // region Data modules
@@ -430,4 +431,5 @@ include(":data:wallet-manager")
 include(":data:yield-supply")
 include(":data:news")
 include(":data:earn")
+include(":data:search")
 // endregion Data modules
