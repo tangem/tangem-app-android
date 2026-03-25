@@ -79,12 +79,15 @@ private fun lightThemeColors2(): TangemColors2 {
         neutral = TangemColors2.Border.Neutral(
             primary = TangemColorPalette.Light3,
             secondary = TangemColorPalette.Light5,
+            tertiary = TangemColorPalette.Light_10,
+            quaternary = TangemColorPalette.Dark_10,
         ),
         status = TangemColors2.Border.Status(
             accent = TangemColorPalette.Azure,
             warning = TangemColorPalette.Amaranth,
             attention = TangemColorPalette.Tangerine,
         ),
+        walletIcon = TangemColorPalette.Dark_10,
     )
     val overlay = TangemColors2.Overlay(
         overlayPrimary = TangemColorPalette.Overlay1,
@@ -122,8 +125,8 @@ private fun lightThemeColors2(): TangemColors2 {
     val surface = TangemColors2.Surface(
         level1 = TangemColorPalette.White,
         level2 = TangemColorPalette.Light1V2,
-        level3 = TangemColorPalette.Light1V2,
-        level4 = TangemColorPalette.White,
+        level3 = TangemColorPalette.White,
+        level4 = TangemColorPalette.Light1V2,
     )
     val controls = TangemColors2.Controls(
         backgroundChecked = TangemColorPalette.Dark6,
@@ -154,16 +157,28 @@ private fun lightThemeColors2(): TangemColors2 {
         iconGray = TangemColorPalette.Dark1,
         iconDisabled = TangemColorPalette.Light2,
         borderGray = TangemColorPalette.Light3,
-        backgroundTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
+        backgroundTintedBlue = TangemColorPalette.Azure_10,
         textBlue = text.status.accent,
         backgroundSolidRed = TangemColorPalette.Amaranth,
-        backgroundTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
+        backgroundTintedRed = TangemColorPalette.Amaranth_10,
         iconBlue = TangemColorPalette.Azure,
         iconRed = TangemColorPalette.Amaranth,
         textRed = TangemColorPalette.Amaranth,
         backgroundTintedGray = TangemColorPalette.Dark6.copy(alpha = 0.1f),
-        borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
-        borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
+        borderTintedBlue = TangemColorPalette.Azure_10,
+        borderTintedRed = TangemColorPalette.Amaranth_10,
+        textGreen = TangemColorPalette.Emerald,
+        iconGreen = TangemColorPalette.Emerald,
+        borderTintedGreen = TangemColorPalette.Emerald_10,
+        borderSolidColor = TangemColorPalette.Emerald_50,
+        backgroundTintedGreen = TangemColorPalette.Emerald_10,
+        backgroundSolidGreen = TangemColorPalette.Emerald,
+        textGreenAlt = TangemColorPalette.Eucalyptus,
+        iconGreenAlt = TangemColorPalette.Eucalyptus,
+        borderTintedGreenAlt = TangemColorPalette.Eucalyptus_10,
+        borderSolidColorAlt = TangemColorPalette.Eucalyptus_50,
+        backgroundTintedGreenAlt = TangemColorPalette.Eucalyptus_10,
+        backgroundSolidGreenAlt = TangemColorPalette.Eucalyptus,
     )
     val tabs = TangemColors2.Tabs(
         textPrimary = TangemColorPalette.Light2,
@@ -173,6 +188,9 @@ private fun lightThemeColors2(): TangemColors2 {
         backgroundSecondary = TangemColorPalette.Dark_10,
         backgroundTertiary = TangemColorPalette.White,
         backgroundQuaternary = TangemColorPalette.Dark_20,
+    )
+    val contextMenu = TangemColors2.ContextMenu(
+        background = TangemColorPalette.Dark_05,
     )
     return TangemColors2(
         text = text,
@@ -187,6 +205,7 @@ private fun lightThemeColors2(): TangemColors2 {
         skeleton = skeleton,
         markers = markers,
         tabs = tabs,
+        contextMenu = contextMenu,
     )
 }
 
@@ -229,12 +248,15 @@ private fun darkThemeColors2(): TangemColors2 {
         neutral = TangemColors2.Border.Neutral(
             primary = TangemColorPalette.Dark4,
             secondary = TangemColorPalette.Dark4,
+            tertiary = TangemColorPalette.Light_10,
+            quaternary = TangemColorPalette.Light_10,
         ),
         status = TangemColors2.Border.Status(
             accent = TangemColorPalette.Azure,
             warning = TangemColorPalette.Flamingo,
             attention = TangemColorPalette.Mustard,
         ),
+        walletIcon = TangemColorPalette.Light_10,
     )
     val overlay = TangemColors2.Overlay(
         overlayPrimary = TangemColorPalette.Overlay1,
@@ -270,8 +292,8 @@ private fun darkThemeColors2(): TangemColors2 {
         borderPrimary = TangemColorPalette.Light4,
     )
     val surface = TangemColors2.Surface(
-        level1 = TangemColorPalette.Dark6,
-        level2 = TangemColorPalette.Black,
+        level1 = TangemColorPalette.Black,
+        level2 = TangemColorPalette.Dark7,
         level3 = TangemColorPalette.Dark6,
         level4 = TangemColorPalette.Dark5,
     )
@@ -304,7 +326,7 @@ private fun darkThemeColors2(): TangemColors2 {
         iconGray = TangemColorPalette.Dark2,
         iconDisabled = TangemColorPalette.Dark5,
         borderGray = TangemColorPalette.White.copy(alpha = 0.2f),
-        backgroundTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
+        backgroundTintedBlue = TangemColorPalette.Azure_10,
         textBlue = text.status.accent,
         backgroundSolidRed = TangemColorPalette.Amaranth,
         backgroundTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
@@ -312,8 +334,20 @@ private fun darkThemeColors2(): TangemColors2 {
         iconRed = TangemColorPalette.Flamingo,
         textRed = TangemColorPalette.Flamingo,
         backgroundTintedGray = TangemColorPalette.White.copy(alpha = 0.1f),
-        borderTintedBlue = TangemColorPalette.Azure.copy(alpha = 0.1f),
-        borderTintedRed = TangemColorPalette.Amaranth.copy(alpha = 0.1f),
+        borderTintedBlue = TangemColorPalette.Azure_10,
+        borderTintedRed = TangemColorPalette.Amaranth_10,
+        textGreen = TangemColorPalette.Emerald,
+        iconGreen = TangemColorPalette.Emerald,
+        borderTintedGreen = TangemColorPalette.Emerald_10,
+        borderSolidColor = TangemColorPalette.Emerald_50,
+        backgroundTintedGreen = TangemColorPalette.Emerald_10,
+        backgroundSolidGreen = TangemColorPalette.Emerald,
+        textGreenAlt = TangemColorPalette.Emerald,
+        iconGreenAlt = TangemColorPalette.Emerald,
+        borderTintedGreenAlt = TangemColorPalette.Emerald_10,
+        borderSolidColorAlt = TangemColorPalette.Emerald_50,
+        backgroundTintedGreenAlt = TangemColorPalette.Emerald_10,
+        backgroundSolidGreenAlt = TangemColorPalette.Emerald,
     )
     val tabs = TangemColors2.Tabs(
         textPrimary = TangemColorPalette.Dark4,
@@ -323,6 +357,9 @@ private fun darkThemeColors2(): TangemColors2 {
         backgroundSecondary = TangemColorPalette.Light_10,
         backgroundTertiary = TangemColorPalette.Light_10,
         backgroundQuaternary = TangemColorPalette.Light_10,
+    )
+    val contextMenu = TangemColors2.ContextMenu(
+        background = TangemColorPalette.Light_10,
     )
     return TangemColors2(
         text = text,
@@ -337,5 +374,6 @@ private fun darkThemeColors2(): TangemColors2 {
         skeleton = skeleton,
         markers = markers,
         tabs = tabs,
+        contextMenu = contextMenu,
     )
 }
