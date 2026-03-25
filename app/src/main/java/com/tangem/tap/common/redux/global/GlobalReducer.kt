@@ -26,12 +26,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.IsSignWithRing -> globalState.copy(isLastSignWithRing = action.isSignWithRing)
-        is GlobalAction.ShowDialog -> {
-            globalState.copy(dialog = action.stateDialog)
-        }
-        is GlobalAction.HideDialog -> {
-            globalState.copy(dialog = null)
-        }
         else -> globalState
     }
 }
