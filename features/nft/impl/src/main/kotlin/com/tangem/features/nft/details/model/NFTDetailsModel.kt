@@ -38,7 +38,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -115,7 +115,7 @@ internal class NFTDetailsModel @Inject constructor(
             getNFTPriceUseCase(params.userWalletId, params.nftAsset)
                 .fold(
                     ifLeft = {
-                        Timber.w(it)
+                        TangemLogger.w("Error", it)
                     },
                     ifRight = { quoteFlow ->
                         quoteFlow

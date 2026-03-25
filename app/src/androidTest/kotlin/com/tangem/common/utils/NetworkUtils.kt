@@ -3,7 +3,7 @@ package com.tangem.common.utils
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.util.concurrent.TimeUnit
 
 /**
@@ -13,7 +13,7 @@ fun getWcUri(
     network: String = "ethereum",
     baseUrl: String = "[REDACTED_ENV_URL]"
 ): String? {
-    Timber.i("Getting WC URI for network: $network")
+    TangemLogger.i("Getting WC URI for network: $network")
 
     val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)    // Таймаут подключения
@@ -29,31 +29,31 @@ fun getWcUri(
 
     return try {
         client.newCall(request).execute().use { response ->
-            Timber.i("Response code: ${response.code}")
+            TangemLogger.i("Response code: ${response.code}")
 
             if (response.isSuccessful) {
                 val body = response.body?.string() ?: ""
-                Timber.i("Response body: $body")
+                TangemLogger.i("Response body: $body")
 
                 val jsonObject = JSONObject(body)
 
                 if (jsonObject.getBoolean("success")) {
                     val wcUri = jsonObject.getString("wcUri")
-                    Timber.i("Got WC URI successfully: $wcUri")
+                    TangemLogger.i("Got WC URI successfully: $wcUri")
 
                     wcUri
                 } else {
-                    Timber.e("API returned error: ${jsonObject.optString("error", "Unknown")}")
+                    TangemLogger.e("API returned error: ${jsonObject.optString("error", "Unknown")}")
                     null
                 }
             } else {
                 val errorBody = response.body?.string() ?: "No error body"
-                Timber.e("Request failed: ${response.code}, body: $errorBody")
+                TangemLogger.e("Request failed: ${response.code}, body: $errorBody")
                 null
             }
         }
     } catch (e: Exception) {
-        Timber.e(e, "Error getting WC URI")
+        TangemLogger.e("Error getting WC URI", e)
         null
     }
 }
@@ -61,7 +61,7 @@ fun getWcUri(
 fun checkServiceHealth(
     baseUrl: String = "[REDACTED_ENV_URL]"
 ): String? {
-    Timber.i("Checking service health")
+    TangemLogger.i("Checking service health")
 
     val client = OkHttpClient()
     val request = Request.Builder()
@@ -71,14 +71,14 @@ fun checkServiceHealth(
 
     return try {
         client.newCall(request).execute().use { response ->
-            Timber.i("Response code: ${response.code}")
+            TangemLogger.i("Response code: ${response.code}")
 
             if (response.isSuccessful) {
                 val body = response.body?.string() ?: ""
-                Timber.i("Response body: $body")
+                TangemLogger.i("Response body: $body")
 
                 if (body.isEmpty()) {
-                    Timber.e("Response body is empty")
+                    TangemLogger.e("Response body is empty")
                     return null
                 }
 
@@ -86,20 +86,20 @@ fun checkServiceHealth(
                 val status = jsonObject.optString("status", "")
 
                 if (status.isNotEmpty()) {
-                    Timber.i("Got status successfully: $status")
+                    TangemLogger.i("Got status successfully: $status")
                     status
                 } else {
-                    Timber.e("Status field is missing or empty")
+                    TangemLogger.e("Status field is missing or empty")
                     null
                 }
             } else {
                 val errorBody = response.body?.string() ?: "No error body"
-                Timber.e("Request failed: ${response.code}, body: $errorBody")
+                TangemLogger.e("Request failed: ${response.code}, body: $errorBody")
                 null
             }
         }
     } catch (e: Exception) {
-        Timber.e(e, "Error checking health")
+        TangemLogger.e("Error checking health", e)
         null
     }
 }

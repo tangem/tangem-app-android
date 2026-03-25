@@ -7,7 +7,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
@@ -38,7 +38,7 @@ internal class AccountListSortingSaver @Inject constructor(
             .debounce { 3.seconds }
             .onEach { accountIds ->
                 applyAccountListSortingUseCase.invoke(accountIds).onLeft {
-                    Timber.e("Error while saving account list sorting: $it")
+                    TangemLogger.e("Error while saving account list sorting: $it")
                 }
                     .onRight {
                         analyticsEventHandler.send(WalletSettingsAnalyticEvents.LongtapAccountsOrder())
