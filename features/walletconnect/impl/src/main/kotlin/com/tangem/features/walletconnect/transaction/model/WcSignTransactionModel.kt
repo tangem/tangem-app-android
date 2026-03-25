@@ -143,7 +143,7 @@ internal class WcSignTransactionModel @Inject constructor(
                     rawRequest = useCase.rawSdkRequest,
                     network = useCase.network,
                     securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                    accountDerivation = useCase.session.account?.derivationIndex?.value,
+                    accountDerivation = useCase.session.account.derivationIndex.value,
                 )
                 analytics.send(event)
                 showSuccessSignMessage()
@@ -172,7 +172,7 @@ internal class WcSignTransactionModel @Inject constructor(
                 network = useCase.network,
                 emulationStatus = null,
                 securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                accountDerivation = useCase.session.account?.derivationIndex?.value,
+                accountDerivation = useCase.session.account.derivationIndex.value,
             ),
         )
 
