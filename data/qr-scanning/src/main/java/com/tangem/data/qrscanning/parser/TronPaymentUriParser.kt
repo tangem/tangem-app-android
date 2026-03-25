@@ -8,6 +8,7 @@ import java.math.BigDecimal
 import java.math.MathContext
 
 internal class TronPaymentUriParser(
+    private val blockchainDataProvider: QrContentClassifierParser.BlockchainDataProvider,
     private val helper: PaymentUriResolveHelper = PaymentUriResolveHelper(),
 ) : PaymentUriParser {
 
@@ -28,6 +29,15 @@ internal class TronPaymentUriParser(
         if (matchingCoins.isEmpty()) {
             return PaymentUriParser.ParseResult.RecognizedError(
                 ClassifiedQrContent.Error.UnsupportedNetwork(raw = qrCode, blockchain = BLOCKCHAIN.fullName),
+            )
+        }
+
+        val isAddressValid = matchingCoins.any {
+            blockchainDataProvider.validateAddress(it.network, parsed.address)
+        }
+        if (!isAddressValid) {
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.Unrecognized(qrCode),
             )
         }
 
