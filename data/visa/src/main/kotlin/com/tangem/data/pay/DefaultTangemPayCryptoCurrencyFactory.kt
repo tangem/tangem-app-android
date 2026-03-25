@@ -8,6 +8,7 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.pay.util.TangemPayErrorConverter
+import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
@@ -41,6 +42,27 @@ internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
             val blockchain = requireNotNull(chain.blockchain)
             val network = networkFactory.create(
                 blockchain = blockchain,
+                extraDerivationPath = null,
+                userWallet = userWallet,
+            )
+            cryptoCurrencyFactory.createToken(
+                network = requireNotNull(network),
+                rawId = CryptoCurrency.RawID(TOKEN_ID),
+                name = TOKEN_NAME,
+                symbol = TOKEN_NAME,
+                contractAddress = TOKEN_CONTRACT_ADDRESS,
+                decimals = TOKEN_DECIMALS,
+            )
+        }.mapLeft { exception ->
+            TangemLogger.withTag(TAG).e("Error", exception)
+            errorConverter.convert(exception)
+        }
+    }
+
+    override fun create(userWallet: UserWallet): Either<UniversalError, CryptoCurrency.Token> {
+        return catch {
+            val network = networkFactory.create(
+                blockchain = VisaUtilities.visaBlockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
             )
