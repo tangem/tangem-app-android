@@ -14,8 +14,8 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.models.AppsFlyerConversionData
 import com.tangem.domain.wallets.repository.WalletsPromoRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 internal class DefaultWalletsPromoRepository(
     private val appPreferencesStore: AppPreferencesStore,
@@ -47,7 +47,7 @@ internal class DefaultWalletsPromoRepository(
         if (savedBindingData != null) {
             bind(refcode = savedBindingData.refcode, campaign = savedBindingData.campaign)
         } else {
-            Timber.i("retryBindRefcodeWithWallets: Binding data isn't required")
+            TangemLogger.i("retryBindRefcodeWithWallets: Binding data isn't required")
         }
     }
 

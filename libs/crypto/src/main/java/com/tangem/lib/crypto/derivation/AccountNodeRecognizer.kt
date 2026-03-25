@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.isUTXO
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.models.network.Network
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Utility class to recognize the account node in a derivation path based on the blockchain type.
@@ -36,7 +36,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
             .takeIf { nodesCount >= it }
 
         if (index == null) {
-            Timber.e("Cannot determine account node index for ${blockchain.fullName}: ${derivationPath.rawPath}")
+            TangemLogger.e("Cannot determine account node index for ${blockchain.fullName}: ${derivationPath.rawPath}")
         }
 
         return index
@@ -63,7 +63,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
     fun recognize(derivationPath: DerivationPath): Long? {
         return runCatching {
             if (!blockchain.isAccountsSupported()) {
-                Timber.e("Account derivation is not supported for blockchain: ${blockchain.fullName}")
+                TangemLogger.e("Account derivation is not supported for blockchain: ${blockchain.fullName}")
                 return null
             }
 
