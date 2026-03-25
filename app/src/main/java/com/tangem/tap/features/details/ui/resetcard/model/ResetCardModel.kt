@@ -28,6 +28,7 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -35,7 +36,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -190,7 +190,7 @@ internal class ResetCardModel @Inject constructor(
             resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
                 deleteSavedAccessCodesUseCase(cardId = primaryCardId)
                 val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
-                    Timber.e("Unable to delete user wallet: $error")
+                    TangemLogger.e("Unable to delete user wallet: $error")
                     return@launch
                 }
 

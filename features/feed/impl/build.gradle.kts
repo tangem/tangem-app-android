@@ -75,7 +75,6 @@ dependencies {
 
     /* Other */
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.decompose.ext.compose)
 
     /* Core */
