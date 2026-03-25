@@ -15,7 +15,6 @@ import java.math.BigDecimal
 internal class Eip681PaymentUriParserTest {
 
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
-        every { getShareSchemes(any()) } returns emptyList()
         every { getChainId(any()) } returns null
         every { getBlockchainNameByChainId(any()) } returns null
     }
@@ -56,8 +55,8 @@ internal class Eip681PaymentUriParserTest {
     }
 
     @Test
-    fun `native transfer without chain_id falls back to scheme matching`() {
-        every { blockchainDataProvider.getShareSchemes(ethereumCoin.network) } returns listOf("ethereum:")
+    fun `native transfer without chain_id falls back to chainId presence check`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
 
         val result = parser.parse(
             qrCode = "ethereum:0xRecipient?value=1000000000000000000",
