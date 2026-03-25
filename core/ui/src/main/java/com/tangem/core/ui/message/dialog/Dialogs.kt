@@ -14,6 +14,22 @@ import com.tangem.core.ui.message.EventMessageAction
 object Dialogs {
 
     /**
+     * NFC feature is unavailable dialog
+     */
+    fun nfcFeatureUnavailable(): DialogMessage = DialogMessage(
+        title = resourceReference(id = R.string.common_error),
+        message = resourceReference(R.string.nfc_error_unavailable),
+    )
+
+    /**
+     * Wrong wallet tapped dialog
+     */
+    fun wrongWalletTapped(): DialogMessage = DialogMessage(
+        title = resourceReference(id = R.string.common_warning),
+        message = resourceReference(id = R.string.error_wrong_wallet_tapped),
+    )
+
+    /**
      * Card verification failed dialog
      *
      * @param errorDescription sdk error description

@@ -10,13 +10,13 @@ import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.domain.staking.single.SingleStakingBalanceProducer.Companion.selectStakingBalance
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 
 /**
  * Default implementation of [SingleStakingBalanceProducer]
@@ -39,7 +39,7 @@ internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
     override val fallback: Option<StakingBalance> = StakingBalance.Error(stakingId = params.stakingId).some()
 
     override fun produce(): Flow<StakingBalance> {
-        Timber.i("Producing staking balance for params:\n$params")
+        TangemLogger.i("Producing staking balance for params:\n$params")
 
         return multiStakingBalanceSupplier(
             params = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId),
