@@ -1,10 +1,12 @@
 package com.tangem.data.qrscanning.parser
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 
 internal class Bip321PaymentUriParser(
-    private val blockchainDataProvider: QrContentClassifierParser.BlockchainDataProvider,
+    private val helper: PaymentUriResolveHelper = PaymentUriResolveHelper(),
 ) : PaymentUriParser {
 
     override fun parse(
@@ -12,22 +14,24 @@ internal class Bip321PaymentUriParser(
         coins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): PaymentUriParser.ParseResult {
-        val schemeAndRest = extractSchemeAndRest(qrCode, coins)
+        val (scheme, blockchains) = SCHEME_TO_BLOCKCHAINS.entries
+            .firstOrNull { (scheme, _) -> qrCode.startsWith(scheme, ignoreCase = true) }
             ?: return PaymentUriParser.ParseResult.NotRecognized
-        val (matchingCoins, withoutScheme) = schemeAndRest
 
-        val parsed = QrSentUriParser().parse(withoutScheme)
+        val parsed = helper.parseUri(qrCode, scheme)
             ?: return PaymentUriParser.ParseResult.RecognizedError(
                 ClassifiedQrContent.Error.Unrecognized(qrCode),
             )
 
+        val matchingCoins = coins.filter { it.network.toBlockchain() in blockchains }
         val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
         val matchingCurrencies = allCurrencies.filter { it.network.id in matchingNetworkIds }
+
         if (matchingCurrencies.isEmpty()) {
             return PaymentUriParser.ParseResult.RecognizedError(
                 ClassifiedQrContent.Error.UnsupportedNetwork(
                     raw = qrCode,
-                    blockchain = matchingCoins.firstOrNull()?.network?.name,
+                    blockchain = blockchains.first().fullName,
                 ),
             )
         }
@@ -42,22 +46,19 @@ internal class Bip321PaymentUriParser(
         )
     }
 
-    private fun extractSchemeAndRest(
-        qrCode: String,
-        coins: List<CryptoCurrency.Coin>,
-    ): Pair<List<CryptoCurrency.Coin>, String>? {
-        for (coin in coins) {
-            val schemes = blockchainDataProvider.getShareSchemes(coin.network)
-            for (scheme in schemes) {
-                if (qrCode.startsWith(scheme, ignoreCase = true)) {
-                    val withoutScheme = qrCode.removeRange(0, scheme.length)
-                    val allMatchingCoins = coins.filter { c ->
-                        blockchainDataProvider.getShareSchemes(c.network).any { it.equals(scheme, ignoreCase = true) }
-                    }
-                    return allMatchingCoins to withoutScheme
-                }
-            }
-        }
-        return null
+    private companion object {
+        val BLOCKCHAINS = listOf(
+            Blockchain.Bitcoin,
+            Blockchain.BitcoinTestnet,
+            Blockchain.Litecoin,
+            Blockchain.Binance,
+            Blockchain.BinanceTestnet,
+            Blockchain.Dogecoin,
+            Blockchain.XRP,
+        )
+        val SCHEME_TO_BLOCKCHAINS: Map<String, Set<Blockchain>> = BLOCKCHAINS
+            .flatMap { blockchain -> blockchain.getShareScheme().map { scheme -> scheme to blockchain } }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { it.value.toSet() }
     }
 }
