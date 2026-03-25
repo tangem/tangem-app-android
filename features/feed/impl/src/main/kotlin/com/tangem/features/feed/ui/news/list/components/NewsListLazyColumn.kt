@@ -16,9 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.news.ArticleCard
-import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.common.ui.news.DefaultLoadingArticle
+import com.tangem.features.feed.ui.feed.components.articles.ArticleCard
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.DefaultLoadingArticle
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.block.TangemBlockCardColors
@@ -112,7 +112,9 @@ private fun Content(
             key = ArticleConfigUM::id,
         ) { article ->
             ArticleCard(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .heightIn(min = 152.dp)
+                    .fillMaxWidth(),
                 colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
                 articleConfigUM = article,
                 onArticleClick = {

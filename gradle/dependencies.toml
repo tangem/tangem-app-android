@@ -102,6 +102,9 @@ markdownComposeView = "0.5.4"
 usedesk = "4.4.0"
 sumsub = "1.38.0"
 haze = "1.7.1"
+kotlinpoet = "1.18.1"
+customerio = "4.6.3"
+surveysparrow = "1.2.9"
 # endregion Other libraries
 
 # region Tools
@@ -149,6 +152,7 @@ agconnect = { id = "com.huawei.agconnect", version.ref = "agconnect" }
 gradle-android = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+gradle-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 # end region Classpath
 
 # region AndroidX
@@ -311,4 +315,7 @@ usedesk-chat-gui = { module = "com.github.Usedesk.Android_SDK:chat-gui", version
 sumsub-sdk = { module = "com.sumsub.sns:idensic-mobile-sdk", version.ref = "sumsub" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-materials", version.ref = "haze" }
+customerio-analytics = { module = "io.customer.android:datapipelines", version.ref = "customerio" }
+customerio-messaging = { module = "io.customer.android:messaging-push-fcm", version.ref = "customerio" }
+surveysparrow = { module = "com.github.surveysparrow:surveysparrow-android-sdk", version.ref = "surveysparrow" }
 # endregion Other

@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.BuildConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.utils.ProviderSuspend
@@ -11,13 +11,13 @@ import com.tangem.utils.version.AppVersionProvider
 /**
  * Express [ApiConfig]
  *
- * @property environmentConfigStorage  environment config storage
+ * @property environmentConfig         environment config
  * @property expressAuthProvider       express auth provider
  * @property appVersionProvider        app version provider
  * @property appInfoProvider           app info provider
  */
 internal class Express(
-    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val environmentConfig: EnvironmentConfig,
     private val expressAuthProvider: ExpressAuthProvider,
     private val appVersionProvider: AppVersionProvider,
     private val appInfoProvider: AppInfoProvider,
@@ -100,9 +100,9 @@ internal class Express(
 
     private fun getApiKey(isProd: Boolean): String {
         return if (isProd) {
-            environmentConfigStorage.getConfigSync().express
+            environmentConfig.express
         } else {
-            environmentConfigStorage.getConfigSync().devExpress
+            environmentConfig.devExpress
         }
             ?.apiKey
             ?: error("No express config provided")
