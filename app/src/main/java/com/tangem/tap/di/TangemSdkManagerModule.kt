@@ -1,6 +1,7 @@
 package com.tangem.tap.di
 
 import android.content.Context
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -12,6 +13,7 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.tasks.product.BlockchainToDeriveFinder
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
@@ -40,6 +42,8 @@ internal class TangemSdkManagerModule {
         appFinisher: AppFinisher,
         sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        blockchainToDeriveFinder: BlockchainToDeriveFinder,
+        analyticsEventHandler: AnalyticsEventHandler,
         dispatchers: CoroutineDispatcherProvider,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
@@ -56,6 +60,8 @@ internal class TangemSdkManagerModule {
                 appFinisher = appFinisher,
                 sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
                 analyticsExceptionHandler = analyticsExceptionHandler,
+                blockchainToDeriveFinder = blockchainToDeriveFinder,
+                analyticsEventHandler = analyticsEventHandler,
                 dispatchers = dispatchers,
             )
         }
