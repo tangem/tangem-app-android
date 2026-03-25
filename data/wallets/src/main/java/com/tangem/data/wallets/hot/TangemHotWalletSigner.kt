@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.operations.sign.SignData
+import com.tangem.utils.coroutines.runSuspendCatching
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -32,7 +33,7 @@ class TangemHotWalletSigner @AssistedInject constructor(
                 TangemSdkError.ExceptionError(IllegalStateException("wallet is locked")),
             )
 
-        val result = runCatching {
+        val result = runSuspendCatching {
             hotWalletAccessor.signHashes(
                 hotWalletId = userWallet.hotWalletId,
                 dataToSign = listOf(
@@ -59,7 +60,7 @@ class TangemHotWalletSigner @AssistedInject constructor(
         dataToSign: List<SignData>,
         publicKey: Wallet.PublicKey,
     ): CompletionResult<Map<ByteArray, ByteArray>> {
-        val result = runCatching {
+        val result = runSuspendCatching {
             hotWalletAccessor.signHashes(
                 hotWalletId = userWallet.hotWalletId,
                 dataToSign = dataToSign.map { signData ->
