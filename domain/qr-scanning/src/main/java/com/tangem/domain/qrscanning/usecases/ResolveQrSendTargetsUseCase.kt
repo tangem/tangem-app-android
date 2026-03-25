@@ -5,17 +5,23 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.math.BigDecimal
 import com.tangem.domain.qrscanning.models.QrSendTarget
+import kotlinx.coroutines.awaitAll
 
 class ResolveQrSendTargetsUseCase(
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val qrScanningEventsRepository: QrScanningEventsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val networksRepository: NetworksRepository,
 ) {
 
     suspend operator fun invoke(qrCode: String): QrSendTarget {
@@ -49,7 +55,7 @@ class ResolveQrSendTargetsUseCase(
         return resolve(classified, portfolioIndex)
     }
 
-    private fun resolve(classified: ClassifiedQrContent, portfolioIndex: PortfolioIndex): QrSendTarget {
+    private suspend fun resolve(classified: ClassifiedQrContent, portfolioIndex: PortfolioIndex): QrSendTarget {
         return when (classified) {
             is ClassifiedQrContent.WalletConnect -> QrSendTarget.WalletConnect(classified.uri)
             is ClassifiedQrContent.Error -> QrSendTarget.Error(classified)
@@ -70,14 +76,19 @@ class ResolveQrSendTargetsUseCase(
         }
     }
 
-    private fun resolveAddressTarget(
+    private suspend fun resolveAddressTarget(
         address: String,
         amount: BigDecimal?,
         memo: String?,
         matchingCurrencies: List<CryptoCurrency>,
         portfolioIndex: PortfolioIndex,
     ): QrSendTarget {
-        val walletGroups = buildWalletGroups(matchingCurrencies, portfolioIndex)
+        val ownAddressNetworks = findOwnAddressNetworks(address, matchingCurrencies, portfolioIndex)
+        val walletGroups = buildWalletGroups(matchingCurrencies, portfolioIndex, ownAddressNetworks)
+
+        if (walletGroups.isEmpty()) {
+            return QrSendTarget.AddressSameAsWallet
+        }
 
         val singleGroup = walletGroups.singleOrNull()
         val singleCurrency = singleGroup?.accounts?.singleOrNull()?.currencies?.singleOrNull()
@@ -100,9 +111,33 @@ class ResolveQrSendTargetsUseCase(
         }
     }
 
+    private suspend fun findOwnAddressNetworks(
+        address: String,
+        matchingCurrencies: List<CryptoCurrency>,
+        portfolioIndex: PortfolioIndex,
+    ): Map<UserWalletId, List<Network.ID>> = coroutineScope {
+        matchingCurrencies.distinctBy { it.id }
+            .flatMap { currency ->
+                portfolioIndex.currencyLocations[currency.id].orEmpty().map {
+                    it.accountId.userWalletId to currency.network
+                }
+            }
+            .distinct()
+            .map { (walletId, network) ->
+                async {
+                    val ownAddress = networksRepository.getDefaultAddress(walletId, network)
+                    if (ownAddress == address) walletId to network else null
+                }
+            }
+            .awaitAll()
+            .filterNotNull()
+            .groupBy(keySelector = { it.first }, valueTransform = { it.second.id })
+    }
+
     private fun buildWalletGroups(
         matchingCurrencies: List<CryptoCurrency>,
         portfolioIndex: PortfolioIndex,
+        ownAddressNetworks: Map<UserWalletId, List<Network.ID>>,
     ): List<QrSendTarget.Multiple.WalletGroup> {
         val walletMap = linkedMapOf<UserWalletId, WalletInfo>()
         val uniqueCurrencies = matchingCurrencies.distinctBy { it.id }
@@ -110,13 +145,18 @@ class ResolveQrSendTargetsUseCase(
         for (currency in uniqueCurrencies) {
             val locations = portfolioIndex.currencyLocations[currency.id].orEmpty()
             for (location in locations) {
-                val walletInfo = walletMap.getOrPut(location.accountId.userWalletId) {
-                    WalletInfo(location.walletName, linkedMapOf())
+                val walletId = location.accountId.userWalletId
+                val isOwnAddress = ownAddressNetworks[walletId]?.contains(currency.network.id) == true
+
+                if (!isOwnAddress) {
+                    val walletInfo = walletMap.getOrPut(walletId) {
+                        WalletInfo(location.walletName, linkedMapOf())
+                    }
+                    val accountInfo = walletInfo.accounts.getOrPut(location.accountId) {
+                        AccountInfo(location.accountName, mutableListOf())
+                    }
+                    accountInfo.currencies.add(currency)
                 }
-                val accountInfo = walletInfo.accounts.getOrPut(location.accountId) {
-                    AccountInfo(location.accountName, mutableListOf())
-                }
-                accountInfo.currencies.add(currency)
             }
         }
 
