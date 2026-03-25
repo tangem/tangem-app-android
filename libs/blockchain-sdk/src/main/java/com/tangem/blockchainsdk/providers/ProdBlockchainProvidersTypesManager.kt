@@ -2,7 +2,7 @@ package com.tangem.blockchainsdk.providers
 
 import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
 import kotlinx.coroutines.flow.Flow
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,11 +26,11 @@ internal class ProdBlockchainProvidersTypesManager @Inject constructor(
         val response = blockchainProvidersResponseLoader.load()
 
         if (response == null) {
-            Timber.e("Error loading BlockchainProviderTypes")
+            TangemLogger.e("Error loading BlockchainProviderTypes")
             return
         }
 
-        Timber.i("Update BlockchainProviderTypes")
+        TangemLogger.i("Update BlockchainProviderTypes")
 
         blockchainProviderTypesStore.store(
             value = BlockchainProviderTypesConverter.convert(response),

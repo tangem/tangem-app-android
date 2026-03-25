@@ -73,7 +73,6 @@ dependencies {
     /** Other libraries */
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
 
     /** Core modules */

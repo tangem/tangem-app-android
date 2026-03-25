@@ -161,6 +161,7 @@ dependencies {
     implementation(projects.domain.news)
     implementation(projects.domain.earn)
     implementation(projects.domain.tokensync)
+    implementation(projects.domain.search)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -216,6 +217,7 @@ dependencies {
     implementation(projects.data.hotWallet)
     implementation(projects.data.news)
     implementation(projects.data.earn)
+    implementation(projects.data.search)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -369,9 +371,7 @@ dependencies {
     implementation(deps.googlePlay.services)
     implementation(deps.googlePlay.advertising)
     coreLibraryDesugaring(deps.desugar)
-    implementation(deps.timber)
     implementation(deps.kermit)
-    implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
     implementation(deps.coil.gif)
@@ -390,6 +390,7 @@ dependencies {
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
     implementation(deps.kotlin.serialization)
+    implementation(deps.reKotlin)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)

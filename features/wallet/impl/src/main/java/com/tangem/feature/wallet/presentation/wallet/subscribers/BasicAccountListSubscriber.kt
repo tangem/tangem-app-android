@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetToken
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 /**
@@ -126,7 +126,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                     ?: return
             },
             ifError = { e ->
-                Timber.e("Failed to load token list: $e")
+                TangemLogger.e("Failed to load token list: $e")
                 stateController.update(
                     SetTokenListErrorTransformer(
                         selectedWallet = userWallet,

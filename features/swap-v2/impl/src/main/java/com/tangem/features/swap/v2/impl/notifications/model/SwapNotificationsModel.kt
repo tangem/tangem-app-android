@@ -65,6 +65,7 @@ internal class SwapNotificationsModel @Inject constructor(
 
     private suspend fun buildNotifications() {
         val notifications = buildList {
+            addInsufficientFundsNotification()
             addExpressErrorNotification()
             addDestinationTagRequiredNotification()
         }
@@ -90,6 +91,14 @@ internal class SwapNotificationsModel @Inject constructor(
 
         if (validationError is BlockchainSdkError.DestinationTagRequired) {
             add(NotificationUM.Error.DestinationTagRequired)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addInsufficientFundsNotification() {
+        val enteredFromAmount = notificationData.enteredFromAmount ?: return
+        val balance = notificationData.fromCryptoCurrencyStatus?.value?.amount ?: return
+        if (enteredFromAmount > balance) {
+            add(SwapNotificationUM.Error.InsufficientFunds)
         }
     }
 

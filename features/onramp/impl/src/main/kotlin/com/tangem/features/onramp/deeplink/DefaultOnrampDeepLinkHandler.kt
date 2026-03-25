@@ -8,7 +8,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
     @Assisted scope: CoroutineScope,
@@ -36,7 +36,7 @@ internal class DefaultOnrampDeepLinkHandler @AssistedInject constructor(
                 }
             }
             else -> {
-                Timber.e(
+                TangemLogger.e(
                     """
                        Invalid parameters for ONRAMP deeplink
                        |- Params: $queryParams
