@@ -10,10 +10,10 @@ import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.operations.sign.SignData
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
 
 class TangemHotWalletSigner @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet.Hot,
@@ -44,12 +44,12 @@ class TangemHotWalletSigner @AssistedInject constructor(
                     ),
                 ),
             )
-        }.getOrElse {
-            Timber.e(it)
-            return if (it is TangemSdkError) {
-                CompletionResult.Failure(it)
+        }.getOrElse { throwable ->
+            TangemLogger.e("Error", throwable)
+            return if (throwable is TangemSdkError) {
+                CompletionResult.Failure(throwable)
             } else {
-                CompletionResult.Failure(TangemSdkError.ExceptionError(it))
+                CompletionResult.Failure(TangemSdkError.ExceptionError(throwable))
             }
         }
 
@@ -77,12 +77,12 @@ class TangemHotWalletSigner @AssistedInject constructor(
                     )
                 },
             )
-        }.getOrElse {
-            Timber.e(it)
-            return if (it is TangemSdkError) {
-                CompletionResult.Failure(it)
+        }.getOrElse { throwable ->
+            TangemLogger.e("Error", throwable)
+            return if (throwable is TangemSdkError) {
+                CompletionResult.Failure(throwable)
             } else {
-                CompletionResult.Failure(TangemSdkError.ExceptionError(it))
+                CompletionResult.Failure(TangemSdkError.ExceptionError(throwable))
             }
         }
 

@@ -34,10 +34,10 @@ import com.tangem.features.feed.components.market.details.portfolio.add.AddToPor
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import timber.log.Timber
 import java.math.BigDecimal
 
 @Suppress("UnusedPrivateMember")
@@ -130,7 +130,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
 
         LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
             if (shouldHideBlock) {
-                Timber.e(
+                TangemLogger.e(
                     "Dismissing fee selector: " +
                         "shouldHideBlock = $shouldHideBlock, amount = ${dataState.amount}, " +
                         "isInsufficientFunds = ${model.uiState.isInsufficientFunds}",
@@ -140,13 +140,13 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             }
 
             val sendingCryptoCurrencyStatus = fromCryptoCurrency ?: run {
-                Timber.e("Dismissing fee selector: fromCryptoCurrency is null")
+                TangemLogger.e("Dismissing fee selector: fromCryptoCurrency is null")
                 slotNavigation.dismiss()
                 return@LaunchedEffect
             }
 
             val feeCurrencyStatus = feePaidCryptoCurrency ?: run {
-                Timber.e("Dismissing fee selector: feePaidCryptoCurrency is null")
+                TangemLogger.e("Dismissing fee selector: feePaidCryptoCurrency is null")
                 slotNavigation.dismiss()
                 return@LaunchedEffect
             }

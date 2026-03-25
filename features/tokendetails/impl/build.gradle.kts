@@ -37,7 +37,6 @@ dependencies {
     implementation(deps.reKotlin)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
-    implementation(deps.timber)
     implementation(deps.lifecycle.compose)
     implementation(deps.kotlin.serialization)
 

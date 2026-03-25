@@ -8,7 +8,7 @@ import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Implementation of [BlockchainProvidersTypesManager] in DEV environment
@@ -36,7 +36,7 @@ internal class DevBlockchainProvidersTypesManager(
         val changed = changedBlockchainProvidersStore.data.firstOrNull().orEmpty()
 
         if (changed.isEmpty()) {
-            Timber.i("Initialize ChangedBlockchainProvidersStore")
+            TangemLogger.i("Initialize ChangedBlockchainProvidersStore")
             changedBlockchainProvidersStore.updateData {
                 BlockchainProviderTypesConverter.convertBack(initial)
             }
