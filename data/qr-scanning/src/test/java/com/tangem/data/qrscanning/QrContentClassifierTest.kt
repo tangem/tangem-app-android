@@ -14,7 +14,6 @@ import java.math.BigDecimal
 internal class QrContentClassifierTest {
 
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
-        every { getShareSchemes(any()) } returns emptyList()
         every { validateAddress(any(), any()) } returns false
         every { getChainId(any()) } returns null
         every { findSupportedBlockchainName(any()) } returns null
