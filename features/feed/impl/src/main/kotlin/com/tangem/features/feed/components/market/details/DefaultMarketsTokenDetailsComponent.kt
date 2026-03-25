@@ -1,10 +1,18 @@
 package com.tangem.features.feed.components.market.details
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
@@ -12,9 +20,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
+import com.tangem.core.ui.res.LocalRedesignEnabled
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -22,6 +34,7 @@ import com.tangem.features.feed.components.market.details.portfolio.api.MarketsP
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
+import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTopBar
 import kotlinx.coroutines.flow.collectLatest
@@ -86,15 +99,59 @@ internal class DefaultMarketsTokenDetailsComponent(
     override fun Title(bottomSheetState: State<BottomSheetState>) {
         val state by model.state.collectAsStateWithLifecycle()
         val background = LocalMainBottomSheetColor.current.value
-        MarketsTokenDetailsTopBar(
-            onBackClick = { params.onBackClicked() },
-            isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
-            shouldShowPriceSubtitle = state.shouldShowPriceSubtitle,
-            tokenName = state.tokenName,
-            tokenPrice = state.priceText,
-            backgroundColor = background,
-            onShareClick = state.onShareClick,
-        )
+        if (LocalRedesignEnabled.current) {
+            FeedSearchBar(
+                isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
+                feedListSearchBar = state.feedListSearchBar,
+                modifier = Modifier.drawBehind { drawRect(background) },
+                startContent = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens2.x11)
+                            .background(
+                                color = TangemTheme.colors2.button.backgroundSecondary,
+                                shape = CircleShape,
+                            )
+                            .clickableSingle(
+                                onClick = { params.onBackClicked() },
+                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                            )
+                            .padding(TangemTheme.dimens2.x2),
+                    )
+                },
+                endContent = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_share_new_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors2.graphic.neutral.primary,
+                        modifier = Modifier
+                            .size(TangemTheme.dimens2.x11)
+                            .background(
+                                color = TangemTheme.colors2.button.backgroundSecondary,
+                                shape = CircleShape,
+                            )
+                            .clickableSingle(
+                                onClick = state.onShareClick,
+                                enabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                            )
+                            .padding(TangemTheme.dimens2.x2_5),
+                    )
+                },
+            )
+        } else {
+            MarketsTokenDetailsTopBar(
+                onBackClick = { params.onBackClicked() },
+                isBackButtonEnabled = bottomSheetState.value == BottomSheetState.EXPANDED,
+                shouldShowPriceSubtitle = state.shouldShowPriceSubtitle,
+                tokenName = state.tokenName,
+                tokenPrice = state.priceText,
+                backgroundColor = background,
+                onShareClick = state.onShareClick,
+            )
+        }
     }
 
     @Composable
@@ -131,6 +188,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         val analyticsParams: AnalyticsParams?,
         val onBackClicked: () -> Unit,
         val onArticleClick: (articleId: Int, preselectedArticlesId: List<Int>) -> Unit,
+        val onMarketOpenClick: () -> Unit,
     )
 
     @Serializable

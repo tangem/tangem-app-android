@@ -415,6 +415,7 @@
   <string name="common_utxo_validate_withdrawal_message_warning">Через обмеження %1$s в одну транзакцію може поміститися тільки %2$d UTXO. Це означає, що ви можете відправити тільки %3$s або менше. Вам потрібно зменшити суму.</string>
   <string name="common_value_copied">Скопійовано</string>
   <string name="common_wallets">Гаманці</string>
+  <string name="common_warning">Увага</string>
   <string name="common_week">тиждень</string>
   <string name="common_with">з</string>
   <string name="common_yes">Так</string>

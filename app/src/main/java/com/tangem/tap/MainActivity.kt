@@ -67,11 +67,11 @@ import com.tangem.tap.routing.utils.DeepLinkFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.utils.extensions.uriValidate
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
@@ -176,11 +176,12 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Timber.i("onCreate")
+        TangemLogger.i("onCreate")
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
         val splashScreen = installSplashScreen()
+        TangemLogger.i("Splash screen installed")
 
         enableEdgeToEdge(
             navigationBarStyle = SystemBarStyle.auto(
@@ -322,18 +323,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onStart() {
         super.onStart()
-        Timber.i("onStart")
+        TangemLogger.i("onStart")
         dialogManager.onStart(this)
     }
 
     override fun onStop() {
         dialogManager.onStop()
         super.onStop()
-        Timber.i("onStop")
+        TangemLogger.i("onStop")
     }
 
     override fun onDestroy() {
-        Timber.i("onDestroy")
+        TangemLogger.i("onDestroy")
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
@@ -366,6 +367,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        TangemLogger.i("onNewIntent: data=${intent.data}, extras=${intent.extras?.keySet()}")
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
@@ -432,8 +434,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private fun sendStakingUnsubmittedHashes() {
         lifecycleScope.launch {
             sendUnsubmittedHashesUseCase.invoke()
-                .onLeft { Timber.e(it.toString()) }
-                .onRight { Timber.d("Submitting hashes succeeded") }
+                .onLeft { TangemLogger.e(it.toString()) }
+                .onRight { TangemLogger.d("Submitting hashes succeeded") }
         }
     }
 
