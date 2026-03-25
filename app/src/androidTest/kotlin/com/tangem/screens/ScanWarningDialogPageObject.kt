@@ -1,36 +1,42 @@
 package com.tangem.screens
 
-import com.kaspersky.kaspresso.screens.KScreen
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import com.tangem.common.BaseTestCase
+import com.tangem.tap.features.scanfails.ui.ScanFailsDialogTestTags
 import com.tangem.wallet.R
-import io.github.kakaocup.kakao.text.KTextView
-import io.github.kakaocup.kakao.text.KButton
+import io.github.kakaocup.compose.node.element.ComposeScreen
+import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
+import io.github.kakaocup.compose.node.element.KNode
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 
-object ScanWarningDialogPageObject : KScreen<ScanWarningDialogPageObject>() {
+class ScanWarningDialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<ScanWarningDialogPageObject>(semanticsProvider = semanticsProvider) {
 
-    override val layoutId: Int? = null
-    override val viewClass: Class<*>? = null
-
-    val warningTitle = KTextView {
-        withText(R.string.common_warning)
+    val warningTitle: KNode = child {
+        hasText(getResourceString(R.string.common_warning))
+        useUnmergedTree = true
     }
 
-    val warningMessage = KTextView {
-        withText(R.string.alert_troubleshooting_scan_card_title)
+    val warningMessage: KNode = child {
+        hasText(getResourceString(R.string.alert_troubleshooting_scan_card_title))
+        useUnmergedTree = true
     }
 
-    val tryAgainButton = KButton {
-        withId(R.id.try_again_button)
+    val howToScanButton: KNode = child {
+        hasTestTag(ScanFailsDialogTestTags.HOW_TO_SCAN_BUTTON)
+        useUnmergedTree = true
     }
 
-    val howToScanButton = KButton {
-        withId(R.id.how_to_scan_button)
+    val requestSupportButton: KNode = child {
+        hasTestTag(ScanFailsDialogTestTags.REQUEST_SUPPORT_BUTTON)
+        useUnmergedTree = true
     }
 
-    val requestSupportButton = KButton {
-        withId(R.id.request_support_button)
-    }
-
-    val cancelButton = KButton {
-        withId(R.id.cancel_button)
+    val cancelButton: KNode = child {
+        hasTestTag(ScanFailsDialogTestTags.CANCEL_BUTTON)
+        useUnmergedTree = true
     }
 }
+
+internal fun BaseTestCase.onScanWarningDialog(function: ScanWarningDialogPageObject.() -> Unit) =
+    onComposeScreen(composeTestRule, function)
