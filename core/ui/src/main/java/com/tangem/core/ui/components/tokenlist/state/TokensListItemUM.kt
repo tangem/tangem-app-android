@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** Tokens list item state */
 @Immutable
@@ -45,15 +46,34 @@ sealed interface TokensListItemUM {
         val tokenItemUM: TokenItemState,
         val isExpanded: Boolean,
         val isCollapsable: Boolean,
-        val tokens: ImmutableList<PortfolioTokensListItemUM>,
+        val content: PortfolioItemContentUM,
     ) : TokensListItemUM {
         override val id: String = tokenItemUM.id
+
+        val tokens: ImmutableList<PortfolioTokensListItemUM>
+            get() = when (content) {
+                is PortfolioItemContentUM.Tokens -> content.tokens
+                is PortfolioItemContentUM.Empty -> persistentListOf()
+            }
     }
 
     data class Text(override val id: Any, val text: TextReference) : TokensListItemUM
 }
 
+@Immutable
 sealed interface PortfolioTokensListItemUM {
     /** Unique ID */
     val id: Any
+}
+
+@Immutable
+sealed interface PortfolioItemContentUM {
+    data class Tokens(val tokens: ImmutableList<PortfolioTokensListItemUM>) : PortfolioItemContentUM
+    data class Empty(val action: Action? = null) : PortfolioItemContentUM {
+
+        data class Action(
+            val text: TextReference,
+            val onClick: () -> Unit,
+        )
+    }
 }

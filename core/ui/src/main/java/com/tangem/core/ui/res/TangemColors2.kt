@@ -22,6 +22,7 @@ class TangemColors2 internal constructor(
     val skeleton: Skeleton,
     val markers: Markers,
     val tabs: Tabs,
+    val contextMenu: ContextMenu,
 ) {
 
     @Stable
@@ -326,21 +327,32 @@ class TangemColors2 internal constructor(
     class Border internal constructor(
         val neutral: Neutral,
         val status: Status,
+        walletIcon: Color,
     ) {
+        var walletIcon by mutableStateOf(walletIcon)
+            private set
 
         @Stable
         class Neutral internal constructor(
             primary: Color,
             secondary: Color,
+            tertiary: Color,
+            quaternary: Color,
         ) {
             var primary by mutableStateOf(primary)
                 private set
             var secondary by mutableStateOf(secondary)
                 private set
+            var tertiary by mutableStateOf(tertiary)
+                private set
+            var quaternary by mutableStateOf(quaternary)
+                private set
 
             fun update(other: Neutral) {
                 primary = other.primary
                 secondary = other.secondary
+                tertiary = other.tertiary
+                quaternary = other.quaternary
             }
         }
 
@@ -367,6 +379,7 @@ class TangemColors2 internal constructor(
         fun update(other: Border) {
             neutral.update(other.neutral)
             status.update(other.status)
+            walletIcon = other.walletIcon
         }
     }
 
@@ -448,24 +461,36 @@ class TangemColors2 internal constructor(
 
     @Stable
     class Markers internal constructor(
-        backgroundSolidGray: Color,
-        backgroundDisabled: Color,
-        backgroundSolidBlue: Color,
-        textGray: Color,
         textDisabled: Color,
-        iconGray: Color,
         iconDisabled: Color,
+        backgroundDisabled: Color,
+        textGray: Color,
+        iconGray: Color,
         borderGray: Color,
-        backgroundTintedBlue: Color,
+        backgroundSolidGray: Color,
+        backgroundTintedGray: Color,
         textBlue: Color,
+        iconBlue: Color,
+        borderTintedBlue: Color,
+        backgroundSolidBlue: Color,
+        backgroundTintedBlue: Color,
+        textRed: Color,
+        iconRed: Color,
+        borderTintedRed: Color,
         backgroundSolidRed: Color,
         backgroundTintedRed: Color,
-        iconBlue: Color,
-        iconRed: Color,
-        textRed: Color,
-        backgroundTintedGray: Color,
-        borderTintedBlue: Color,
-        borderTintedRed: Color,
+        textGreen: Color,
+        iconGreen: Color,
+        borderTintedGreen: Color,
+        borderSolidColor: Color,
+        backgroundTintedGreen: Color,
+        backgroundSolidGreen: Color,
+        textGreenAlt: Color,
+        iconGreenAlt: Color,
+        borderTintedGreenAlt: Color,
+        borderSolidColorAlt: Color,
+        backgroundTintedGreenAlt: Color,
+        backgroundSolidGreenAlt: Color,
     ) {
         var backgroundSolidGray by mutableStateOf(backgroundSolidGray)
             private set
@@ -504,6 +529,32 @@ class TangemColors2 internal constructor(
         var borderTintedRed by mutableStateOf(borderTintedRed)
             private set
 
+        var textGreen by mutableStateOf(textGreen)
+            private set
+        var iconGreen by mutableStateOf(iconGreen)
+            private set
+        var borderTintedGreen by mutableStateOf(borderTintedGreen)
+            private set
+        var borderSolidColor by mutableStateOf(borderSolidColor)
+            private set
+        var backgroundTintedGreen by mutableStateOf(backgroundTintedGreen)
+            private set
+        var backgroundSolidGreen by mutableStateOf(backgroundSolidGreen)
+            private set
+        var textGreenAlt by mutableStateOf(textGreenAlt)
+            private set
+        var iconGreenAlt by mutableStateOf(iconGreenAlt)
+            private set
+        var borderTintedGreenAlt by mutableStateOf(borderTintedGreenAlt)
+            private set
+        var borderSolidColorAlt by mutableStateOf(borderSolidColorAlt)
+            private set
+
+        var backgroundTintedGreenAlt by mutableStateOf(backgroundTintedGreenAlt)
+            private set
+        var backgroundSolidGreenAlt by mutableStateOf(backgroundSolidGreenAlt)
+            private set
+
         fun update(other: Markers) {
             backgroundSolidGray = other.backgroundSolidGray
             backgroundDisabled = other.backgroundDisabled
@@ -523,6 +574,18 @@ class TangemColors2 internal constructor(
             backgroundTintedGray = other.backgroundTintedGray
             borderTintedBlue = other.borderTintedBlue
             borderTintedRed = other.borderTintedRed
+            textGreen = other.textGreen
+            iconGreen = other.iconGreen
+            borderTintedGreen = other.borderTintedGreen
+            borderSolidColor = other.borderSolidColor
+            backgroundTintedGreen = other.backgroundTintedGreen
+            backgroundSolidGreen = other.backgroundSolidGreen
+            textGreenAlt = other.textGreenAlt
+            iconGreenAlt = other.iconGreenAlt
+            borderTintedGreenAlt = other.borderTintedGreenAlt
+            borderSolidColorAlt = other.borderSolidColorAlt
+            backgroundTintedGreenAlt = other.backgroundTintedGreenAlt
+            backgroundSolidGreenAlt = other.backgroundSolidGreenAlt
         }
     }
 
@@ -562,6 +625,18 @@ class TangemColors2 internal constructor(
         }
     }
 
+    @Stable
+    class ContextMenu internal constructor(
+        background: Color,
+    ) {
+        var background by mutableStateOf(background)
+            private set
+
+        fun update(other: ContextMenu) {
+            background = other.background
+        }
+    }
+
     fun update(other: TangemColors2) {
         text.update(other.text)
         graphic.update(other.graphic)
@@ -575,5 +650,6 @@ class TangemColors2 internal constructor(
         skeleton.update(other.skeleton)
         markers.update(other.markers)
         tabs.update(other.tabs)
+        contextMenu.update(other.contextMenu)
     }
 }
