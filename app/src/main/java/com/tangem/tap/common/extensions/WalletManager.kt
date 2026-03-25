@@ -10,8 +10,8 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.delay
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -31,7 +31,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
         Result.Success(wallet)
     }
 } catch (exception: Exception) {
-    Timber.e(exception)
+    TangemLogger.e("Error", exception)
 
     val networkConnectionManager = store.inject(DaggerGraphState::networkConnectionManager)
     if (!networkConnectionManager.isOnline) {
