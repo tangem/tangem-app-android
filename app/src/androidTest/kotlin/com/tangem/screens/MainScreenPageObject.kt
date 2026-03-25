@@ -154,24 +154,6 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val seedPhraseNotificationIcon: KNode = child {
-        hasAnySibling(withText(getResourceString(R.string.warning_seedphrase_issue_title)))
-        hasTestTag(NotificationTestTags.ICON)
-        useUnmergedTree = true
-    }
-
-    val seedPhraseNotificationTitle: KNode = child {
-        hasTestTag(NotificationTestTags.TITLE)
-        hasText(getResourceString(R.string.warning_seedphrase_issue_title))
-        useUnmergedTree = true
-    }
-
-    val seedPhraseNotificationMessage: KNode = child {
-        hasTestTag(NotificationTestTags.MESSAGE)
-        hasText(getResourceString(R.string.warning_seedphrase_issue_message))
-        useUnmergedTree = true
-    }
-
     val totalBalanceContainer: KNode = child {
         hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
     }
