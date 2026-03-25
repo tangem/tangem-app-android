@@ -33,5 +33,4 @@ dependencies {
     /** Other */
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.timber)
 }

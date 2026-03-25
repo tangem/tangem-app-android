@@ -49,11 +49,11 @@ import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.utils.SdkPageConverter
 import com.tangem.domain.wallets.extension.hasDerivation
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -178,13 +178,13 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         if (derivationPath != null &&
             !userWallet.hasDerivation(blockchain, derivationPath)
         ) {
-            Timber.w("Derivation missed for: $blockchain")
+            TangemLogger.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
         val walletManager = getOrCreateWalletManager(userWalletId, blockchain, derivationPath)
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to get a wallet manager for blockchain: $blockchain")
+            TangemLogger.w("Unable to get a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable()
         }
 
@@ -285,7 +285,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val gaslessFeeAddresses = try {
             gaslessTransactionRepository.getGaslessFeeAddresses()
         } catch (error: Throwable) {
-            Timber.e(error, "Failed to load gasless fee addresses; falling back to empty set")
+            TangemLogger.e("Failed to load gasless fee addresses; falling back to empty set", error)
             emptySet()
         }
         return when (itemsResult) {
@@ -311,7 +311,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         extraTokens: Set<CryptoCurrency.Token>,
     ): UpdateWalletManagerResult {
         if (derivationPath != null && !userWallet.hasDerivation(blockchain, derivationPath)) {
-            Timber.w("Derivation missed for: $blockchain")
+            TangemLogger.w("Derivation missed for: $blockchain")
             return UpdateWalletManagerResult.MissedDerivation
         }
 
@@ -321,7 +321,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             derivationPath = derivationPath,
         )
         if (walletManager == null || blockchain == Blockchain.Unknown) {
-            Timber.w("Unable to create or find a wallet manager for blockchain: $blockchain")
+            TangemLogger.w("Unable to create or find a wallet manager for blockchain: $blockchain")
             return UpdateWalletManagerResult.Unreachable()
         }
 
@@ -360,7 +360,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 amountToCreateAccount = e.amountToCreateAccount,
             )
         } catch (e: Throwable) {
-            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            TangemLogger.w("Unable to update a wallet manager for: ${walletManager.wallet.blockchain}", e)
 
             resultFactory.getUnreachableResult(walletManager)
         }
@@ -376,7 +376,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
                 amountToCreateAccount = e.amountToCreateAccount,
             )
         } catch (e: Throwable) {
-            Timber.w(e, "Unable to update a wallet manager for: ${walletManager.wallet.blockchain}")
+            TangemLogger.w("Unable to update a wallet manager for: ${walletManager.wallet.blockchain}", e)
 
             resultFactory.getUnreachableResult(walletManager)
         }
@@ -584,7 +584,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
 
         if (walletManager == null) {
-            Timber.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
+            TangemLogger.e("Unable to get a wallet manager for blockchain: ${currency.network.id}")
             return emptyList()
         }
 

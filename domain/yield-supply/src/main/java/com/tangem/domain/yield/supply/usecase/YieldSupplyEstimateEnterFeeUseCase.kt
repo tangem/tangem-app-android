@@ -14,7 +14,7 @@ import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.utils.extensions.isSingleItem
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 class YieldSupplyEstimateEnterFeeUseCase(
     private val feeRepository: FeeRepository,
@@ -65,7 +65,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
         val estimatedFees = blockAidGasEstimate.getGasEstimation(
             cryptoCurrency = cryptoCurrency,
             transactionDataList = transactionDataList,
-        ).onLeft(Timber::e).getOrNull() ?: return null
+        ).onLeft { TangemLogger.e("Error", it) }.getOrNull() ?: return null
 
         if (estimatedFees.estimatedGasList.isEmpty()) return null
 

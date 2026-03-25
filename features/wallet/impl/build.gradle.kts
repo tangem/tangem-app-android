@@ -45,7 +45,6 @@ dependencies {
     implementation(tangemDeps.hot.core)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain)
-    implementation(deps.timber)
     implementation(deps.firebase.perf) {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
@@ -149,6 +148,7 @@ dependencies {
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.feed.api)
     implementation(projects.features.promoBanners.api)
+    implementation(projects.features.tangempay.main.api)
 
     /** Common modules */
     implementation(projects.common)

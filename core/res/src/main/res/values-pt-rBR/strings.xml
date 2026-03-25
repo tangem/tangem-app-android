@@ -404,6 +404,7 @@
   <string name="common_utxo_validate_withdrawal_message_warning">Devido a %1$s limitações apenas %2$d Os UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
   <string name="common_value_copied">Valor copiado</string>
   <string name="common_wallets">Carteiras</string>
+  <string name="common_warning">Aviso</string>
   <string name="common_week">semana</string>
   <string name="common_with">com</string>
   <string name="common_yes">Sim</string>
