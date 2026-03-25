@@ -9,7 +9,7 @@ data class TokenMarketListConfig(
 ) {
 
     enum class Order {
-        ByRating, Trending, Buyers, TopGainers, TopLosers, Staking, YieldSupply,
+        ByRating, Trending, Buyers, TopGainers, TopLosers
     }
 
     enum class Interval {

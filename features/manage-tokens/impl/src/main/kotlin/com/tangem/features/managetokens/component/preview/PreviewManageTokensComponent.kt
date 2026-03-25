@@ -40,9 +40,7 @@ internal class PreviewManageTokensComponent(
             popBack = {},
             items = items,
             topBar = when (params.mode) {
-                is ManageTokensMode.Account,
-                is ManageTokensMode.Wallet,
-                -> ManageTokensTopBarUM.ManageContent(
+                is ManageTokensMode.Account -> ManageTokensTopBarUM.ManageContent(
                     title = resourceReference(id = R.string.main_manage_tokens),
                     onBackButtonClick = {},
                     endButton = TopAppBarButtonUM.Icon(
@@ -206,10 +204,10 @@ internal class PreviewManageTokensComponent(
             is CurrencyItemUM.Basic -> {
                 val updatedNetworks = (item.networks as? CurrencyItemUM.Basic.NetworksUM.Expanded)
                     ?.copy(
-                        networks = item.networks.networks.toPersistentList().mutate {
-                            it.fastForEachIndexed { index, network ->
+                        networks = item.networks.networks.toPersistentList().mutate { networks ->
+                            networks.fastForEachIndexed { index, network ->
                                 if (index == networkIndex) {
-                                    it[index] = network.copy(
+                                    networks[index] = network.copy(
                                         iconResId = if (isSelected) {
                                             R.drawable.img_eth_22
                                         } else {
