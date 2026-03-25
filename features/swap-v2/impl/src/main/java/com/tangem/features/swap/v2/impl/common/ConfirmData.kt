@@ -10,7 +10,8 @@ import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import java.math.BigDecimal
 
 internal data class ConfirmData(
-    val enteredAmount: BigDecimal?,
+    val enteredFromAmount: BigDecimal?,
+    val enteredToAmount: BigDecimal?,
     val reduceAmountBy: BigDecimal,
     val isIgnoreReduce: Boolean,
     val enteredDestination: String?,

@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.datasource)
     implementation(projects.core.analytics)
+    implementation(projects.core.utils)
 
     /** Common */
     implementation(projects.common.ui)
@@ -85,7 +86,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.decompose)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.timber)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.coil)
 
