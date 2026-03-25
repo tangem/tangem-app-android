@@ -54,7 +54,6 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.ActivityResultCallbackHolder
-import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
@@ -170,8 +169,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
-
-    private val dialogManager = DialogManager()
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
@@ -324,11 +321,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onStart() {
         super.onStart()
         TangemLogger.i("onStart")
-        dialogManager.onStart(this)
     }
 
     override fun onStop() {
-        dialogManager.onStop()
         super.onStop()
         TangemLogger.i("onStop")
     }
