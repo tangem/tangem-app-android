@@ -9,6 +9,8 @@ import kotlin.coroutines.suspendCoroutine
 
 object TangemSiteUrlBuilder {
 
+    const val NOTE_MIGRATION_URL = "https://tangem.com/en/?promocode=Note10"
+
     suspend fun getUtmTags(campaign: String?): String {
         val langCode = Locale.getDefault().language
         val utmCampaignPart = campaign?.let { "&utm_campaign=$it-$langCode" }.orEmpty()
