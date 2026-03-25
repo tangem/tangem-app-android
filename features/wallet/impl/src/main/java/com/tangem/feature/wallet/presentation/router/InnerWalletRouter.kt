@@ -66,9 +66,6 @@ internal interface InnerWalletRouter {
     /** Is wallet last screen */
     fun isWalletLastScreen(): Boolean
 
-    /** Open scan failed dialog */
-    fun openScanFailedDialog(onTryAgain: () -> Unit)
-
     /** Open NFT collections screen */
     fun openNFT(userWallet: UserWallet)
 
