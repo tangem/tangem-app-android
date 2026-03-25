@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.utils.logging.TangemLogger
-import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
@@ -45,7 +44,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -85,14 +83,6 @@ internal interface WalletWarningsClickIntents {
 
     fun onNoteMigrationButtonClick(url: String)
 
-    fun onSeedPhraseNotificationConfirm()
-
-    fun onSeedPhraseNotificationDecline()
-
-    fun onSeedPhraseSecondNotificationAccept()
-
-    fun onSeedPhraseSecondNotificationReject()
-
     fun onAllowPermissions()
 
     fun onDenyPermissions()
@@ -122,7 +112,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val urlOpener: UrlOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -357,66 +346,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(MainScreen.NotePromoButton())
         modelScope.launch(dispatchers.main) {
             router.openUrl(url)
-        }
-    }
-
-    override fun onSeedPhraseNotificationConfirm() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseConfirm {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
-
-                    urlOpener.openUrl(
-                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
-                    )
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseNotificationDecline() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseDismiss {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseSecondNotificationAccept() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed())
-
-        uiMessageSender.send(
-            WalletAlertUM.seedPhraseConfirm {
-                modelScope.launch {
-                    seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
-
-                    urlOpener.openUrl(
-                        url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
-                    )
-                }
-            },
-        )
-    }
-
-    override fun onSeedPhraseSecondNotificationReject() {
-        val userWallet = getSelectedUserWallet() ?: return
-
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined())
-
-        modelScope.launch {
-            seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
         }
     }
 
