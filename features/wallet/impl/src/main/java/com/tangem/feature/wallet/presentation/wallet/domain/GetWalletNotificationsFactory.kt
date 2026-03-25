@@ -14,9 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
@@ -40,7 +38,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
-    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
@@ -54,16 +51,15 @@ internal class GetWalletNotificationsFactory @Inject constructor(
         return combine(
             flow = accountStatusListFlow,
             flow2 = isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
-            flow3 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
-            flow4 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
-        ) { accountList, isNeedToBackup, seedPhraseIssueStatus, shouldAccessCodeSkipped ->
+            flow3 = getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
+        ) { accountList, isNeedToBackup, shouldAccessCodeSkipped ->
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
 
             buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
 
-                addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
+                addCriticalNotifications(userWallet, clickIntents)
 
                 addFinishWalletActivationNotification(
                     userWallet = userWallet,
@@ -99,14 +95,11 @@ internal class GetWalletNotificationsFactory @Inject constructor(
 
     private fun MutableList<WalletNotificationUM>.addCriticalNotifications(
         userWallet: UserWallet,
-        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
         clickIntents: WalletClickIntents,
     ) {
         if (userWallet !is UserWallet.Cold) {
             return
         }
-
-        addSeedNotificationIfNeeded(userWallet, seedPhraseIssueStatus, clickIntents)
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
@@ -277,37 +270,6 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             ),
             condition = shouldShowFinishActivation,
         )
-    }
-
-    private fun MutableList<WalletNotificationUM>.addSeedNotificationIfNeeded(
-        userWallet: UserWallet.Cold,
-        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
-        clickIntents: WalletClickIntents,
-    ) {
-        val isNotificationAvailable = with(userWallet) {
-            val isDemo = isDemoCardUseCase(cardId = userWallet.cardId)
-            val isWalletWithSeedPhrase = scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported
-
-            !isDemo && isWalletWithSeedPhrase
-        }
-
-        when (seedPhraseIssueStatus) {
-            SeedPhraseNotificationsStatus.SHOW_FIRST -> addIf(
-                element = WalletNotificationUM.SeedPhraseNotification(
-                    onDeclineClick = clickIntents::onSeedPhraseNotificationDecline,
-                    onConfirmClick = clickIntents::onSeedPhraseNotificationConfirm,
-                ),
-                condition = isNotificationAvailable,
-            )
-            SeedPhraseNotificationsStatus.SHOW_SECOND -> addIf(
-                element = WalletNotificationUM.SeedPhraseSecondNotification(
-                    onDeclineClick = clickIntents::onSeedPhraseSecondNotificationReject,
-                    onConfirmClick = clickIntents::onSeedPhraseSecondNotificationAccept,
-                ),
-                condition = isNotificationAvailable,
-            )
-            SeedPhraseNotificationsStatus.NOT_NEEDED -> Unit
-        }
     }
 
     private suspend fun hasSignedHashes(
