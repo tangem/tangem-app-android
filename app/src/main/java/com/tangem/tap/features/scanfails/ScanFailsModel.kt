@@ -13,11 +13,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.tap.common.analytics.events.ScanFailsDialogAnalytics
 import com.tangem.tap.features.scanfails.ui.ScanFailsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
