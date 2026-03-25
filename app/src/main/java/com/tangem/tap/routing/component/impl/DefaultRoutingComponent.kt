@@ -40,6 +40,8 @@ import com.tangem.hot.sdk.android.create
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.features.scanfails.ScanFailsComponent
+import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.hot.TangemHotSDKProxy
 import com.tangem.tap.features.root.RootDetectedWarningComponent
@@ -75,6 +77,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val trackingContextProxy: TrackingContextProxy,
+    private val scanFailsComponentFactory: ScanFailsComponent.Factory,
+    private val scanFailsRequesterProxy: ScanFailsRequesterProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val backupServiceHolder: BackupServiceHolder,
@@ -95,6 +99,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val rootDetectedWarningComponent: RootDetectedWarningComponent by lazy {
         rootDetectedWarningComponentFactory
             .create(child("rootDetectedWarningComponent"), Unit)
+    }
+
+    private val scanFailsComponent: ScanFailsComponent by lazy {
+        scanFailsComponentFactory
+            .create(child("scanFailsComponent"), Unit)
     }
 
     private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
@@ -197,6 +206,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
             rootDetectedWarningContent = { rootDetectedWarningComponent.Content(it) },
+            scanFailsContent = { scanFailsComponent.Content(it) },
         )
     }
 
@@ -240,10 +250,12 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             onCreate = {
                 tangemHotSDKProxy.sdkState.value = TangemHotSdk.create(activity)
                 hotAccessCodeRequesterProxy.componentRequester.value = hotAccessCodeRequestComponent
+                scanFailsRequesterProxy.componentRequester.value = scanFailsComponent
             },
             onDestroy = {
                 tangemHotSDKProxy.sdkState.value = null
                 hotAccessCodeRequesterProxy.componentRequester.value = null
+                scanFailsRequesterProxy.componentRequester.value = null
             },
         )
     }
