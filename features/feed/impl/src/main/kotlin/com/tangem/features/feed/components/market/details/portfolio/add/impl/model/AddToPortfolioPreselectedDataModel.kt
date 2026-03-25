@@ -29,7 +29,7 @@ import com.tangem.features.feed.model.earn.analytics.EarnAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -134,7 +134,7 @@ internal class AddToPortfolioPreselectedDataModel @Inject constructor(
             finishSuccessFlow(addedToken.currency, selectedPortfolioValue.userWallet.walletId)
         }
             .catch { throwable ->
-                Timber.e(throwable)
+                TangemLogger.e("Error", throwable)
                 params.callback.onDismiss()
             }
             .launchIn(modelScope)

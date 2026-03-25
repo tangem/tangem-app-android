@@ -3,13 +3,14 @@ package com.tangem.datasource.local.logs
 import android.content.Context
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatterBuilder
-import timber.log.Timber
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -121,7 +122,7 @@ class AppLogsStore @Inject constructor(
     private fun createFileIfNotExist() {
         if (!logFile.exists()) {
             runCatching { logFile.createNewFile() }
-                .onFailure(Timber::e)
+                .onFailure { TangemLogger.e("Error", it) }
         }
     }
 
@@ -129,7 +130,7 @@ class AppLogsStore @Inject constructor(
         scope.launch {
             mutex.withLock {
                 runCatching { callback() }
-                    .onFailure(Timber::e)
+                    .onFailure { TangemLogger.e("Error", it) }
             }
         }
     }

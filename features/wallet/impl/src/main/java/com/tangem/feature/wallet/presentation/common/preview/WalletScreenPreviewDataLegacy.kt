@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewDataLegacy.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -217,6 +218,8 @@ internal object WalletScreenPreviewDataLegacy {
                 onClick = {},
             ),
             type = WalletType.Cold,
+            tangemPayMainUM = TangemPayMainUM.Empty,
+            isTangemPayRefactorEnabled = false,
         )
     }
 
