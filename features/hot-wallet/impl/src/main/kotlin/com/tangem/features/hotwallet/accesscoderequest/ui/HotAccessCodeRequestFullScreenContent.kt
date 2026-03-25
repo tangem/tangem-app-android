@@ -1,11 +1,7 @@
 package com.tangem.features.hotwallet.accesscoderequest.ui
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -26,9 +22,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
@@ -42,12 +36,11 @@ internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM
     val userInteractionTracker = LocalUserInteractionTracker.current
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .trackUserInteraction(userInteractionTracker),
     ) {
         AnimatedVisibility(
-            modifier = modifier,
             visible = state.isShown,
             enter = fadeIn(),
             exit = fadeOut(),
