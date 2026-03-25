@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
@@ -14,21 +15,22 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
+import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
-import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.tokenreceive.TokenReceiveComponent
@@ -38,18 +40,18 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalDecomposeApi::class)
 @Suppress("LongParameterList")
 internal class WalletComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted navigate: (WalletRoute) -> Unit,
-    marketsEntryComponentFactory: MarketsEntryComponent.Factory,
     feedEntryComponentFactory: FeedEntryComponent.Factory,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
     private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
-    private val feedFeatureToggle: FeedFeatureToggle,
+    private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -59,9 +61,6 @@ internal class WalletComponent @AssistedInject constructor(
             context = child("feedEntryComponent"),
             entryRoute = null,
         )
-    }
-    private val marketsEntryComponent by lazy {
-        marketsEntryComponentFactory.create(child("marketsEntryComponent"))
     }
 
     init {
@@ -138,6 +137,15 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
+                is WalletDialogConfig.TokenActionList -> {
+                    TokenActionsComponent(
+                        appComponentContext = childByContext(componentContext),
+                        params = TokenActionsComponent.Params(
+                            actions = dialogConfig.actionList,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
             }
         },
     )
@@ -148,18 +156,33 @@ internal class WalletComponent @AssistedInject constructor(
         var headerSize by remember { mutableStateOf(0.dp) }
         val dialog by dialog.subscribeAsState()
 
-        WalletScreen(
-            state = model.uiState.collectAsStateWithLifecycle().value,
-            bottomSheetContent = {
-                BottomSheetContent(
-                    bottomSheetState = bottomSheetState,
-                    onHeaderSizeChange = { headerSize = it },
-                    modifier = modifier,
-                )
-            },
-            bottomSheetHeaderHeightProvider = { headerSize },
-            onBottomSheetStateChange = { bottomSheetState.value = it },
-        )
+        if (designFeatureToggles.isRedesignEnabled) {
+            WalletScreen2(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        } else {
+            WalletScreen(
+                state = model.uiState.collectAsStateWithLifecycle().value,
+                bottomSheetContent = {
+                    BottomSheetContent(
+                        bottomSheetState = bottomSheetState,
+                        onHeaderSizeChange = { headerSize = it },
+                        modifier = modifier,
+                    )
+                },
+                bottomSheetHeaderHeightProvider = { headerSize },
+                onBottomSheetStateChange = { bottomSheetState.value = it },
+            )
+        }
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
@@ -174,19 +197,11 @@ internal class WalletComponent @AssistedInject constructor(
         onHeaderSizeChange: (Dp) -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        if (feedFeatureToggle.isFeedEnabled) {
-            feedEntryComponent.BottomSheetContent(
-                bottomSheetState = bottomSheetState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                modifier = modifier,
-            )
-        } else {
-            marketsEntryComponent.BottomSheetContent(
-                bottomSheetState = bottomSheetState,
-                onHeaderSizeChange = onHeaderSizeChange,
-                modifier = modifier,
-            )
-        }
+        feedEntryComponent.BottomSheetContent(
+            bottomSheetState = bottomSheetState,
+            onHeaderSizeChange = onHeaderSizeChange,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory

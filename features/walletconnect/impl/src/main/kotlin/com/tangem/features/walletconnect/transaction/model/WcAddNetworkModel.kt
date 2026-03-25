@@ -137,7 +137,7 @@ internal class WcAddNetworkModel @Inject constructor(
                 network = useCase.network,
                 emulationStatus = null,
                 securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                accountDerivation = useCase.session.account?.derivationIndex?.value,
+                accountDerivation = useCase.session.account.derivationIndex.value,
             ),
         )
 

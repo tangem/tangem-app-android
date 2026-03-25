@@ -1,6 +1,5 @@
 package com.tangem.domain.nft
 
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -8,52 +7,42 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.WalletNFTCollections
 import com.tangem.domain.nft.repository.NFTRepository
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 class GetNFTCollectionsUseCase(
-    private val currenciesRepository: CurrenciesRepository,
     private val nftRepository: NFTRepository,
     private val singleAccountListSupplier: SingleAccountListSupplier,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
-    @Deprecated("Use invokeForAccounts instead")
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(userWalletId: UserWalletId): Flow<List<NFTCollections>> =
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            invokeForAccounts(userWalletId).map { it.flattenCollections }
-        } else {
-            currenciesRepository
-                .getWalletCurrenciesUpdates(userWalletId)
-                .flatMapLatest {
-                    nftCollections(userWalletId, it)
-                }
-        }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun invokeForAccounts(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
-        fun Account.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>>? {
-            val currencies = (this as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
-            if (currencies.isEmpty()) return null
-            return nftCollections(userWalletId = userWalletId, cryptoCurrencies = currencies.toList())
-                .map { nfts -> this to nfts }
-        }
-
+    operator fun invoke(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
         return singleAccountListSupplier(userWalletId)
-            .mapLatest { statusList -> statusList.accounts.mapNotNull { it.flowOfNFTCollections() } }
-            .flatMapLatest { flows -> combine(flows) { WalletNFTCollections(it.toMap()) } }
+            .mapLatest { statusList -> statusList.accounts.mapNotNull(::flowOfNFTCollections) }
+            .flatMapLatest { flows ->
+                combine(flows) { WalletNFTCollections(it.toMap()) }
+            }
     }
 
-    private fun nftCollections(
+    private fun flowOfNFTCollections(account: Account): Flow<Pair<Account, List<NFTCollections>>>? {
+        val currencies = (account as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
+
+        if (currencies.isEmpty()) return null
+
+        return getNftCollections(userWalletId = account.userWalletId, cryptoCurrencies = currencies.toList())
+            .map { nfts -> account to nfts }
+    }
+
+    private fun getNftCollections(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<List<NFTCollections>> {
         val networks = cryptoCurrencies
-            .map { cryptoCurrency -> cryptoCurrency.network }
+            .map(CryptoCurrency::network)
             .distinct()
+
         if (networks.isEmpty()) return flowOf(emptyList())
+
         return nftRepository.observeCollections(userWalletId, networks)
     }
 }

@@ -1,5 +1,6 @@
 package com.tangem.core.ui.format.bigdecimal
 
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CAN_BE_LOWER_SIGN
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_FEE_FORMAT_THRESHOLD
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
@@ -9,6 +10,7 @@ import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 import com.tangem.utils.extensions.isNotWhitespace
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
@@ -34,6 +36,17 @@ class BigDecimalCryptoFormatFull(
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
 }
 
+open class BigDecimalCryptoFormatStyled(
+    val symbol: String,
+    val decimals: Int,
+    val spanStyleReference: SpanStyleReference,
+    val locale: Locale = Locale.getDefault(),
+    val shouldIgnoreSymbolPosition: Boolean = false,
+) : BigDecimalFormatStyled {
+
+    override fun invoke(value: BigDecimal): TextReference = defaultAmount(spanStyleReference)(value)
+}
+
 // == Initializers ==
 
 fun BigDecimalFormatScope.crypto(
@@ -56,6 +69,35 @@ fun BigDecimalFormatScope.crypto(
     return BigDecimalCryptoFormat(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
+        shouldIgnoreSymbolPosition = ignoreSymbolPosition,
+        locale = locale,
+    )
+}
+
+fun BigDecimalFormatScope.cryptoStyled(
+    symbol: String,
+    decimals: Int,
+    spanStyleReference: SpanStyleReference,
+    locale: Locale = Locale.getDefault(),
+): BigDecimalCryptoFormatStyled {
+    return BigDecimalCryptoFormatStyled(
+        symbol = symbol,
+        decimals = decimals,
+        spanStyleReference = spanStyleReference,
+        locale = locale,
+    )
+}
+
+fun BigDecimalFormatScope.cryptoStyled(
+    cryptoCurrency: CryptoCurrency,
+    spanStyleReference: SpanStyleReference,
+    ignoreSymbolPosition: Boolean = false,
+    locale: Locale = Locale.getDefault(),
+): BigDecimalCryptoFormatStyled {
+    return BigDecimalCryptoFormatStyled(
+        symbol = cryptoCurrency.symbol,
+        decimals = cryptoCurrency.decimals,
+        spanStyleReference = spanStyleReference,
         shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
@@ -87,6 +129,51 @@ fun BigDecimalCryptoFormat.defaultAmount() = BigDecimalFormat { value ->
             )
     }
 }
+
+fun BigDecimalCryptoFormatStyled.defaultAmount(spanStyleReference: SpanStyleReference) =
+    BigDecimalFormatStyled { value ->
+        if (shouldIgnoreSymbolPosition) {
+            val formatter = NumberFormat.getInstance(locale).apply {
+                maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
+                minimumFractionDigits = 2
+                isGroupingUsed = true
+                roundingMode = RoundingMode.HALF_UP
+            }
+
+            val formattedAmount = formatter.format(value)
+
+            val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+
+            combinedReference(
+                stringReference(formattedAmount.take(separatorIndex)),
+                styledStringReference(formattedAmount.drop(separatorIndex), spanStyleReference),
+                stringReference(NON_BREAKING_SPACE + symbol),
+            )
+        } else {
+            val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+                currency = usdCurrency
+                maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
+                minimumFractionDigits = 2
+                isGroupingUsed = true
+                roundingMode = RoundingMode.HALF_UP
+            }
+
+            val formattedAmount = formatter.format(value)
+                .replaceFiatSymbolWithCrypto(
+                    fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                    cryptoCurrencySymbol = symbol,
+                )
+
+            val decimalSeparator = (formatter as? DecimalFormat)?.decimalFormatSymbols?.decimalSeparator
+            val separatorIndex = decimalSeparator?.let { formattedAmount.indexOf(it) } ?: formattedAmount.length
+
+            combinedReference(
+                stringReference(formattedAmount.take(separatorIndex)),
+                styledStringReference(formattedAmount.drop(separatorIndex), spanStyleReference),
+            )
+        }
+    }
 
 fun BigDecimalCryptoFormat.shorted() = BigDecimalFormat { value ->
     val formatter = if (value.isMoreThanThreshold()) {

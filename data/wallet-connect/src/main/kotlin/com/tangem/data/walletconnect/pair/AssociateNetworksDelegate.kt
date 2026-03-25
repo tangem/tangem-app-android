@@ -8,7 +8,6 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.model.WcPairError
@@ -22,19 +21,6 @@ internal class AssociateNetworksDelegate(
     private val multiAccountListSupplier: MultiAccountListSupplier,
     private val getWallets: GetWalletsUseCase,
 ) {
-
-    @Throws(WcPairError.UnsupportedBlockchains::class)
-    suspend fun associate(sessionProposal: Wallet.Model.SessionProposal): Map<UserWallet, ProposalNetwork> {
-        val userWallets = getWallets.invokeSync().filter { it.isMultiCurrency }
-        val requiredNamespaces: Set<String> = sessionProposal.requiredNamespaces.setOfChainId()
-        val optionalNamespaces: Set<String> = sessionProposal.optionalNamespaces.setOfChainId()
-            // remove duplicates
-            .subtract(requiredNamespaces)
-
-        return userWallets.associateWith { wallet ->
-            mapNetworksForPortfolio(wallet, null, requiredNamespaces, optionalNamespaces, sessionProposal)
-        }
-    }
 
     @Throws(WcPairError.UnsupportedBlockchains::class)
     suspend fun associateAccounts(sessionProposal: Wallet.Model.SessionProposal): Map<AccountId, ProposalNetwork> {
@@ -67,13 +53,12 @@ internal class AssociateNetworksDelegate(
     @Suppress("CyclomaticComplexMethod")
     private suspend fun mapNetworksForPortfolio(
         wallet: UserWallet,
-        account: Account?,
+        account: Account,
         requiredNamespaces: Set<String>,
         optionalNamespaces: Set<String>,
         sessionProposal: Wallet.Model.SessionProposal,
     ): ProposalNetwork {
-        val portfolioNetworks = account?.let { getAccountNetworks(it.accountId) }
-            ?: getWalletNetworks(userWalletId = wallet.walletId)
+        val portfolioNetworks = getAccountNetworks(account.accountId)
 
         val unknownRequired = mutableSetOf<String>()
         val unknownOptional = mutableSetOf<String>()
@@ -125,12 +110,6 @@ internal class AssociateNetworksDelegate(
             notAdded = notAdded,
             account = account,
         )
-    }
-
-    private suspend fun getWalletNetworks(userWalletId: UserWalletId): List<Network> {
-        return networksConverter.getWalletNetworks(userWalletId)
-            // flatten all derivation
-            .distinctBy { it.rawId }
     }
 
     private suspend fun getAccountNetworks(accountId: AccountId): List<Network> {
