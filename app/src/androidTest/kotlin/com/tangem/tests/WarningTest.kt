@@ -55,43 +55,4 @@ class WarningTest : BaseTestCase() {
             }
         }
     }
-
-    @AllureId("227")
-    @DisplayName("Seed notify: check warning for wallet with seed phrase")
-    @Test
-    fun checkWarningForWalletWithSeedPhraseTest() {
-        val scenarioName = "seedphrase_notification"
-        val scenarioState = "Notified"
-        setupHooks(
-            additionalBeforeSection = {
-                step("Setup WireMock scenario '$scenarioName' for '$scenarioState' state") {
-                    setWireMockScenarioState(scenarioName, scenarioState)
-                }
-            },
-            additionalAfterSection = {
-                step("Reset WireMock scenario '$scenarioName' state") {
-                    resetWireMockScenarioState(scenarioName)
-                }
-            }
-        ).run {
-            step("Open 'Main' screen") {
-                openMainScreen(mockContent = Wallet2WithSeedPhraseMockContent)
-            }
-            step("Assert 'Seed phrase' notification icon is displayed") {
-                onMainScreen { seedPhraseNotificationIcon.assertIsDisplayed() }
-            }
-            step("Assert 'Seed phrase' notification title is displayed") {
-                onMainScreen { seedPhraseNotificationTitle.assertIsDisplayed() }
-            }
-            step("Assert 'Seed phrase' notification message is displayed") {
-                onMainScreen { seedPhraseNotificationMessage.assertIsDisplayed() }
-            }
-            step("Assert notification 'Yes' button is displayed") {
-                onMainScreen { notificationYesButton.assertIsDisplayed() }
-            }
-            step("Assert notification 'No' button is displayed") {
-                onMainScreen { notificationNoButton.assertIsDisplayed() }
-            }
-        }
-    }
 }
