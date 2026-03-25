@@ -59,7 +59,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.zxing.qrCore)
     api(deps.jodatime)
-    implementation(deps.timber)
     implementation(deps.markdown)
     api(deps.haze) {
         exclude(module = "activity-compose")

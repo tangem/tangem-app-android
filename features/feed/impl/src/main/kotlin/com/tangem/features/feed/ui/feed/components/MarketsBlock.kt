@@ -71,7 +71,7 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
                         isLoading = currentChart is MarketChartUM.Loading,
                     )
 
-                    SpacerH(12.dp)
+                    SpacerH(if (isRedesignEnabled) 20.dp else 12.dp)
 
                     Charts(
                         onItemClick = feedListCallbacks.onMarketItemClick,
@@ -89,7 +89,7 @@ internal fun MarketBlock(marketChart: MarketChartUM?, feedListCallbacks: FeedLis
 
 @Suppress("LongMethod")
 @Composable
-internal fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
+internal fun ColumnScope.MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
     val isRedesignEnabled = LocalRedesignEnabled.current
     val onSeeAllClick by rememberUpdatedState {
         feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType)

@@ -5,8 +5,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import com.tangem.features.feed.ui.market.detailed.state.*
 import kotlinx.collections.immutable.persistentListOf
 
@@ -50,6 +52,10 @@ internal object MarketsTokenDetailsPreview {
             onScroll = {},
         ),
         onShareClick = {},
+        feedListSearchBar = FeedListSearchBar(
+            placeholderText = TextReference.Str("Search tokens & news"),
+            onBarClick = {},
+        ),
     )
 
     val contentState = MarketsTokenDetailsUM(
@@ -144,5 +150,9 @@ internal object MarketsTokenDetailsPreview {
             onScroll = {},
         ),
         onShareClick = {},
+        feedListSearchBar = FeedListSearchBar(
+            placeholderText = TextReference.Str("Search tokens & news"),
+            onBarClick = {},
+        ),
     )
 }

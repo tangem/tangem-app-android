@@ -6,10 +6,10 @@ import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchUpdateResult
 import com.tangem.pagination.PaginationStatus
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal fun logStatus(tag: String, status: PaginationStatus<List<TokenMarket>>) {
-    Timber.tag(tag).d(
+    TangemLogger.withTag(tag).d(
         """
         Status
         $status
@@ -19,19 +19,19 @@ internal fun logStatus(tag: String, status: PaginationStatus<List<TokenMarket>>)
 
 internal fun logAction(tag: String, action: BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>) {
     when (action) {
-        is BatchAction.Reload -> Timber.tag(tag).d(
+        is BatchAction.Reload -> TangemLogger.withTag(tag).d(
             """
             Reload = ${action.requestParams}
             """.trimIndent(),
         )
-        is BatchAction.UpdateBatches -> Timber.tag(tag).d(
+        is BatchAction.UpdateBatches -> TangemLogger.withTag(tag).d(
             """
             To update:
             keys: ${action.keys.toList()}
             updateType: ${action.updateRequest.javaClass.simpleName}
             """.trimIndent(),
         )
-        else -> Timber.tag(tag).d(
+        else -> TangemLogger.withTag(tag).d(
             """
             $action 
             """.trimIndent(),
@@ -48,7 +48,7 @@ internal fun logUpdateResults(
         is BatchUpdateResult.Error -> s.throwable.toString()
     }
 
-    Timber.tag(tag).d(
+    TangemLogger.withTag(tag).d(
         """
         updateResults
         request: ${updateResult.first}
