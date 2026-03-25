@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.account.supplier.MultiAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.qrscanning.repository.QrScanningEventsRepository
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -41,11 +42,13 @@ internal object QrScanningDomainModule {
         multiAccountListSupplier: MultiAccountListSupplier,
         qrScanningEventsRepository: QrScanningEventsRepository,
         userWalletsListRepository: UserWalletsListRepository,
+        networksRepository: NetworksRepository,
     ): ResolveQrSendTargetsUseCase {
         return ResolveQrSendTargetsUseCase(
             multiAccountListSupplier = multiAccountListSupplier,
             qrScanningEventsRepository = qrScanningEventsRepository,
             userWalletsListRepository = userWalletsListRepository,
+            networksRepository = networksRepository,
         )
     }
 }
