@@ -2,7 +2,7 @@ package com.tangem.tap.core.security
 
 import com.dexprotector.rtc.RtcStatus
 import com.tangem.security.DeviceSecurityInfoProvider
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
     override val isRooted: Boolean
@@ -16,7 +16,7 @@ internal class DefaultDeviceSecurityInfoProvider : DeviceSecurityInfoProvider {
         return try {
             RtcStatus.getRtcStatus()
         } catch (e: Throwable) {
-            Timber.e(e)
+            TangemLogger.e("Error", e)
             null
         }
     }

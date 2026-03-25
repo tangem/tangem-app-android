@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @HiltViewModel
@@ -86,7 +86,7 @@ internal class TesterActionsViewModel @Inject constructor(
             AppThemeMode.FOLLOW_SYSTEM -> AppThemeMode.FORCE_DARK
         }
 
-        Timber.d(
+        TangemLogger.d(
             """
             Change app theme mode
             |- Current theme mode: $currentAppThemeMode
@@ -95,7 +95,7 @@ internal class TesterActionsViewModel @Inject constructor(
         )
 
         changeAppThemeModeUseCase(newAppThemeMode).onLeft { error ->
-            Timber.e(
+            TangemLogger.e(
                 """
                 Unable to change app theme mode
                 |- Error: $error
@@ -108,7 +108,7 @@ internal class TesterActionsViewModel @Inject constructor(
         getAppThemeModeUseCase()
             .distinctUntilChanged()
             .onEach { maybeAppThemeMode ->
-                Timber.d(
+                TangemLogger.d(
                     """
                     Current app theme mode updated
                     |- Previous app theme mode: ${uiState.toggleAppThemeUM.currentAppTheme}
@@ -119,7 +119,7 @@ internal class TesterActionsViewModel @Inject constructor(
                 uiState = uiState.copy(
                     toggleAppThemeUM = uiState.toggleAppThemeUM.copy(
                         currentAppTheme = maybeAppThemeMode.getOrElse { error ->
-                            Timber.e(
+                            TangemLogger.e(
                                 """
                                 Unable to get current app theme mode, using default
                                 |- Default theme mode: ${AppThemeMode.DEFAULT}

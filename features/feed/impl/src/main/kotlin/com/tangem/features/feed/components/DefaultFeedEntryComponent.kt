@@ -78,6 +78,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                                 screenSource = AnalyticsParam.ScreensSources.Token,
                             )
                         },
+                        onMarketOpenClick = { onMarketOpenClick(null) },
                     ),
                 ),
             )
@@ -136,7 +137,10 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         override fun onOpenEarnPage() {
             innerRouter.push(
                 FeedEntryChildFactory.Child.Earn(
-                    params = DefaultEarnComponent.Params(onBackClick = { onChildBack() }),
+                    params = DefaultEarnComponent.Params(
+                        onBackClick = { onChildBack() },
+                        onMarketOpenClick = { onMarketOpenClick(null) },
+                    ),
                 ),
             )
         }
@@ -240,6 +244,7 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             paginationConfig = null,
                         )
                     },
+                    onMarketOpenClick = { clickIntents.onMarketOpenClick(null) },
                 ),
             )
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
