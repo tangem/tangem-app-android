@@ -19,7 +19,6 @@ internal data class MarketsListUM(
     val selectedInterval: TrendInterval,
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
-    val marketsNotificationUM: MarketsNotificationUM?,
     val onSearchClicked: () -> Unit,
 ) {
     val isInSearchMode
@@ -43,8 +42,6 @@ internal enum class SortByTypeUM(val text: TextReference) {
     ExperiencedBuyers(resourceReference(R.string.markets_sort_by_experienced_buyers_title)),
     TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
     TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
-    Staking(resourceReference(R.string.common_staking)),
-    YieldSupply(resourceReference(R.string.markets_sort_by_yield_mode_title)),
 }
 
 @Immutable

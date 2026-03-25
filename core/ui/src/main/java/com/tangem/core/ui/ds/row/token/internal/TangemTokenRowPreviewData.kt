@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.ds.image.TangemIconUM
+import com.tangem.core.ui.ds.row.internal.TangemRowTailUM
 import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.stringReference
@@ -123,7 +124,7 @@ internal object TangemTokenRowPreviewData {
             topEndContentUM = topEndContentUM,
             bottomEndContentUM = bottomEndContentUM,
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
-            tailUM = TangemTokenRowUM.TailUM.Empty,
+            tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -142,7 +143,7 @@ internal object TangemTokenRowPreviewData {
                         )
                     }),
                 ),
-                icons = persistentListOf(
+                startIcons = persistentListOf(
                     TangemIconUM.Icon(R.drawable.ic_staking_mini_10),
                     TangemIconUM.Icon(R.drawable.ic_attention_12),
                     TangemIconUM.Icon(R.drawable.ic_error_sync_24),
@@ -150,7 +151,7 @@ internal object TangemTokenRowPreviewData {
             ),
             bottomEndContentUM = bottomEndContentUM,
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
-            tailUM = TangemTokenRowUM.TailUM.Empty,
+            tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -164,7 +165,7 @@ internal object TangemTokenRowPreviewData {
             topEndContentUM = topEndContentUM,
             bottomEndContentUM = bottomEndContentUM,
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
-            tailUM = TangemTokenRowUM.TailUM.Empty,
+            tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -178,7 +179,7 @@ internal object TangemTokenRowPreviewData {
             topEndContentUM = topEndContentUM,
             bottomEndContentUM = bottomEndContentUM,
             promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
-            tailUM = TangemTokenRowUM.TailUM.Empty,
+            tailUM = TangemRowTailUM.Empty,
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -189,7 +190,7 @@ internal object TangemTokenRowPreviewData {
             headIconUM = coinIconState,
             titleUM = titleUM,
             subtitleUM = subtitleUM,
-            tailUM = TangemTokenRowUM.TailUM.Draggable,
+            tailUM = TangemRowTailUM.Draggable(R.drawable.ic_drag_24),
             onItemClick = {},
             onItemLongClick = {},
         )
@@ -202,7 +203,7 @@ internal object TangemTokenRowPreviewData {
             subtitleUM = subtitleUM,
             topEndContentUM = topEndContentUM,
             bottomEndContentUM = bottomEndContentUM,
-            tailUM = TangemTokenRowUM.TailUM.Draggable,
+            tailUM = TangemRowTailUM.Draggable(R.drawable.ic_drag_24),
             onItemClick = {},
             onItemLongClick = {},
         )

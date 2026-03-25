@@ -31,7 +31,6 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.onramp.hottokens.model.HotCryptoModel
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
@@ -48,38 +47,29 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: HotCryptoComponent.Params,
     private val onrampAddToPortfolioComponentFactory: OnrampAddToPortfolioComponent.Factory,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     addTokenComponentFactory: OnrampAddTokenComponent.Factory,
 ) : HotCryptoComponent, AppComponentContext by context {
 
     private val model: HotCryptoModel = getOrCreateModel(params)
 
-    private val portfolioSelectorComponent: PortfolioSelectorComponent? by lazy {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            portfolioSelectorComponentFactory.create(
-                context = child("portfolioSelectorComponent"),
-                params = PortfolioSelectorComponent.Params(
-                    portfolioFetcher = requireNotNull(model.portfolioFetcher),
-                    controller = model.portfolioSelectorController,
-                ),
-            )
-        } else {
-            null
-        }
+    private val portfolioSelectorComponent: PortfolioSelectorComponent by lazy {
+        portfolioSelectorComponentFactory.create(
+            context = child("portfolioSelectorComponent"),
+            params = PortfolioSelectorComponent.Params(
+                portfolioFetcher = model.portfolioFetcher,
+                controller = model.portfolioSelectorController,
+            ),
+        )
     }
-    private val addTokenComponent: OnrampAddTokenComponent? by lazy {
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            addTokenComponentFactory.create(
-                context = child("addTokenComponent"),
-                params = OnrampAddTokenComponent.Params(
-                    callbacks = model,
-                    tokenToAdd = model.hotCryptoToAddDataFlow,
-                ),
-            )
-        } else {
-            null
-        }
+    private val addTokenComponent: OnrampAddTokenComponent by lazy {
+        addTokenComponentFactory.create(
+            context = child("addTokenComponent"),
+            params = OnrampAddTokenComponent.Params(
+                callbacks = model,
+                tokenToAdd = model.hotCryptoToAddDataFlow,
+            ),
+        )
     }
 
     private val bottomSheetSlot = childSlot(
@@ -106,9 +96,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
         HotCrypto(state, modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
-        if (accountsFeatureToggles.isFeatureEnabled) {
-            AddHotCryptoBottomSheet()
-        }
+        AddHotCryptoBottomSheet()
     }
 
     @Composable
@@ -133,7 +121,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
                 content = TangemBottomSheetConfigContent.Empty,
             ),
             containerColor = TangemTheme.colors.background.tertiary,
-            title = { state ->
+            title = { _ ->
                 AnimatedContent(targetState = contentStack.value) { stack ->
                     BottomSheetTitle(
                         stack = stack,
@@ -142,7 +130,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
                     )
                 }
             },
-            content = { state ->
+            content = { _ ->
                 AnimatedContent(targetState = contentStack.value) { stack ->
                     val paddingModifier = Modifier.padding(
                         start = 16.dp,
@@ -221,8 +209,8 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
     }
 
     private fun contentChild(config: OnrampAddTokenRoute): ComposableContentComponent = when (config) {
-        OnrampAddTokenRoute.AddToken -> requireNotNull(addTokenComponent)
-        OnrampAddTokenRoute.PortfolioSelector -> requireNotNull(portfolioSelectorComponent)
+        OnrampAddTokenRoute.AddToken -> addTokenComponent
+        OnrampAddTokenRoute.PortfolioSelector -> portfolioSelectorComponent
         OnrampAddTokenRoute.Empty -> ComposableContentComponent.EMPTY
     }
 

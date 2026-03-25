@@ -3,7 +3,6 @@ package com.tangem.domain.tokens.operations
 import arrow.core.*
 import arrow.core.raise.*
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -28,7 +27,6 @@ import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
@@ -42,7 +40,7 @@ import kotlinx.coroutines.flow.*
 [REDACTED_AUTHOR]
  */
 @Suppress("LargeClass", "LongParameterList")
-abstract class BaseCurrencyStatusOperations(
+class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
@@ -55,10 +53,6 @@ abstract class BaseCurrencyStatusOperations(
 ) {
 
     private val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
-
-    abstract fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>>
-
-    protected abstract fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>>
 
     suspend fun getCurrencyStatusFlow(
         userWalletId: UserWalletId,
@@ -389,6 +383,14 @@ abstract class BaseCurrencyStatusOperations(
             .bind()
     }
 
+    private fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<QuoteStatus>>> {
+        return singleQuoteStatusSupplier(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = id),
+        )
+            .map<QuoteStatus, Either<Error, Set<QuoteStatus>>> { setOf(it).right() }
+            .distinctUntilChanged()
+    }
+
     private suspend fun getStakingBalancesSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
@@ -439,7 +441,7 @@ abstract class BaseCurrencyStatusOperations(
         )
     }
 
-    protected fun getIds(currencies: List<CryptoCurrency>): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {
+    private fun getIds(currencies: List<CryptoCurrency>): Pair<NonEmptySet<Network>, NonEmptySet<CryptoCurrency.ID>> {
         val currencyIdToNetworkId = currencies.associate { currency ->
             currency.id to currency.network
         }

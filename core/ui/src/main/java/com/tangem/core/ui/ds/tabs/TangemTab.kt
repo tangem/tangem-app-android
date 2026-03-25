@@ -45,7 +45,7 @@ fun TangemTab(
     val backgroundColor = if (isChecked) {
         TangemTheme.colors2.tabs.backgroundPrimary
     } else {
-        TangemTheme.colors2.tabs.textPrimary
+        TangemTheme.colors2.tabs.backgroundSecondary
     }
     val textColor = if (isChecked) {
         TangemTheme.colors2.tabs.textPrimary

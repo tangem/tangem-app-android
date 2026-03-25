@@ -96,20 +96,6 @@ internal class DefaultPromoRepository(
         appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
-    override fun isMarketsYieldSupplyNotificationHideClicked(): Flow<Boolean> {
-        return appPreferencesStore.get(
-            key = PreferencesKeys.MARKETS_YIELD_SUPPLY_NOTIFICATION_HIDE_CLICKED_KEY,
-            default = false,
-        )
-    }
-
-    override suspend fun setMarketsYieldSupplyNotificationHideClicked() {
-        appPreferencesStore.store(
-            key = PreferencesKeys.MARKETS_YIELD_SUPPLY_NOTIFICATION_HIDE_CLICKED_KEY,
-            value = true,
-        )
-    }
-
     override suspend fun isMoonpayPromoActive(): Boolean {
         val banner = runCatching(dispatchers.io) {
             val response = promoBannerStore.getSyncOrNull(MOONPAY_NAME) ?: run {

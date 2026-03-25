@@ -1,5 +1,6 @@
 package com.tangem.blockchainsdk.providers
 
+import android.os.Build
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
@@ -28,7 +29,21 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
 
     /** Load [BlockchainProvidersResponse] */
     suspend fun load(): BlockchainProvidersResponse? {
-        val localResponse = loadLocal().ifEmpty { return null }
+        val localResponse = loadLocal()
+
+        /**
+         * Behavior when local config is empty or cannot be parsed:
+         * - Android 15          -> return null (do not load remote)
+         * - Android 16 (stable) -> return null (do not load remote)
+         * - Android 16 (preview)-> continue (attempt to load remote and merge)
+         * - Android 17+         -> continue (attempt to load remote and merge)
+         */
+        val shouldLoadRemoteIfError = Build.VERSION.SDK_INT > ANDROID_16_SDK_VERSION ||
+            Build.VERSION.SDK_INT == ANDROID_16_SDK_VERSION && Build.VERSION.PREVIEW_SDK_INT > 0
+
+        if (localResponse.isEmpty() && !shouldLoadRemoteIfError) {
+            return null
+        }
 
         return loadRemote().fold(
             onSuccess = { remoteResponse ->
@@ -39,7 +54,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
             },
             onFailure = { throwable ->
                 Timber.e(throwable, "Failed to load blockchain provider types from backend")
-                localResponse
+                localResponse.ifEmpty { null }
             },
         )
     }
@@ -50,4 +65,9 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
         dispatcher = dispatchers.io,
         block = tangemTechApi::getBlockchainProviders,
     )
+
+    private companion object {
+        // TODO Replace with Build.VERSION_CODES
+        const val ANDROID_16_SDK_VERSION = 36
+    }
 }

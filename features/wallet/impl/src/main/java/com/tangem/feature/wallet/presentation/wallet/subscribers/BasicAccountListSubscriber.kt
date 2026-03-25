@@ -6,7 +6,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
@@ -66,7 +65,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 singleAccountTransform(
                     maybeTokenList = maybeTokenList,
                     appCurrency = appCurrency,
-                    portfolioId = PortfolioId(mainAccount.accountId),
+                    accountId = mainAccount.accountId,
                     yieldSupplyApyMap = yieldSupplyApyMap,
                     stakingAvailabilityMap = stakingAvailabilityMap,
                     shouldShowMainPromo = shouldShowMainPromo,
@@ -85,10 +84,33 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         }
     }
 
+    protected fun updateState2(
+        accountList: AccountStatusList,
+        appCurrency: AppCurrency,
+        expandedAccounts: Set<AccountId>,
+        isAccountMode: Boolean,
+        yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
+        stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
+        shouldShowMainPromo: Boolean = false,
+    ) {
+        stateController.update(
+            SetTokenListTransformer(
+                params = TokenConverterParams.Account(accountList, expandedAccounts),
+                userWallet = userWallet,
+                appCurrency = appCurrency,
+                clickIntents = clickIntents,
+                yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingAvailabilityMap = stakingAvailabilityMap,
+                shouldShowMainPromo = shouldShowMainPromo,
+                isAccountsModeEnabled = isAccountMode,
+            ),
+        )
+    }
+
     private fun singleAccountTransform(
         maybeTokenList: Lce<TokenListError, TokenList>,
         appCurrency: AppCurrency,
-        portfolioId: PortfolioId,
+        accountId: AccountId,
         yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
         shouldShowMainPromo: Boolean,
@@ -117,7 +139,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         )
 
         updateContent(
-            params = TokenConverterParams.Wallet(portfolioId, tokenList),
+            params = TokenConverterParams.Wallet(accountId, tokenList),
             appCurrency = appCurrency,
             yieldSupplyApyMap = yieldSupplyApyMap,
             stakingAvailabilityMap = stakingAvailabilityMap,
@@ -141,6 +163,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingAvailabilityMap = stakingAvailabilityMap,
                 shouldShowMainPromo = shouldShowMainPromo,
+                isAccountsModeEnabled = false,
             ),
         )
     }

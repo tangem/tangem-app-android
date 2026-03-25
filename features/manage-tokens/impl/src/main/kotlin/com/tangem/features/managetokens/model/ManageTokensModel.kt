@@ -18,12 +18,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.models.account.AccountId
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
-import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
@@ -66,7 +66,7 @@ internal class ManageTokensModel @Inject constructor(
     )
 
     val state: MutableStateFlow<ManageTokensUM> = MutableStateFlow(getInitialState())
-    val bottomSheetNavigation: SlotNavigation<ManageTokensBottomSheetConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<AccountId> = SlotNavigation()
 
     init {
         manageTokensListManager.uiItems
@@ -101,15 +101,12 @@ internal class ManageTokensModel @Inject constructor(
         analyticsEventHandler.send(ManageTokensAnalyticEvent.ScreenOpened(params.source))
 
         return when (params.mode) {
-            is ManageTokensMode.Wallet,
-            is ManageTokensMode.Account,
-            -> createManageContentModel()
+            is ManageTokensMode.Account -> createManageContentModel()
             ManageTokensMode.None -> createReadContentModel()
         }
     }
 
     private fun getTopBarInitialState(): ManageTokensTopBarUM = when (params.mode) {
-        is ManageTokensMode.Wallet -> manageContentTopBar()
         is ManageTokensMode.Account -> ManageTokensTopBarUM.ReadContent(
             title = resourceReference(id = R.string.main_manage_tokens),
             onBackButtonClick = router::pop,
@@ -196,9 +193,7 @@ internal class ManageTokensModel @Inject constructor(
                     state.update { it.copySealed(topBar = manageContentTopBar()) }
                 }
             }
-            ManageTokensMode.None,
-            is ManageTokensMode.Wallet,
-            -> Unit // use init state
+            ManageTokensMode.None -> Unit // use init state
         }
     }
 
@@ -299,12 +294,12 @@ internal class ManageTokensModel @Inject constructor(
                 .flatten()
                 .toSet()
                 .associate { network -> network.backendId to network.derivationPath.value }
-            val needToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)
+            val isNeedToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)
 
             state.update { state ->
                 state.copySealed(
                     hasChanges = currenciesToAdd.isNotEmpty() || currenciesToRemove.isNotEmpty(),
-                    needToInteractWithColdWallet = needToInteractWithColdWallet,
+                    needToInteractWithColdWallet = isNeedToInteractWithColdWallet,
                 )
             }
         }
@@ -324,12 +319,8 @@ internal class ManageTokensModel @Inject constructor(
     private fun navigateToAddCustomToken() {
         analyticsEventHandler.send(CustomTokenAnalyticsEvent.ButtonCustomToken(params.source))
         when (val portfolio = params.mode) {
-            is ManageTokensMode.Wallet ->
-                bottomSheetNavigation
-                    .activate(ManageTokensBottomSheetConfig.AddWalletCustomToken(portfolio.userWalletId))
             is ManageTokensMode.Account ->
-                bottomSheetNavigation
-                    .activate(ManageTokensBottomSheetConfig.AddAccountCustomToken(portfolio.accountId))
+                bottomSheetNavigation.activate(portfolio.accountId)
             ManageTokensMode.None -> Unit
         }
     }
@@ -347,8 +338,8 @@ internal class ManageTokensModel @Inject constructor(
         useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,
             currenciesToRemove = manageTokensListManager.currenciesToRemove.value,
-        ).getOrElse {
-            Timber.e(it, "Failed to save changes")
+        ).getOrElse { throwable ->
+            Timber.e(throwable, "Failed to save changes")
             return@resource
         }
 
