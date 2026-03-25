@@ -92,8 +92,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
     }
 
     private fun UserWallet.isCompatible(): Boolean = when (this) {
-        is UserWallet.Cold ->
-            scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
+        is UserWallet.Cold -> scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
         is UserWallet.Hot -> hotWalletId.authType != HotWalletId.AuthType.NoPassword
     }
 
@@ -104,7 +103,7 @@ internal class DefaultTangemPayEligibilityManager @Inject constructor(
             map { wallet ->
                 async {
                     val isCustomer = onboardingRepository
-                        .checkCustomerWallet(wallet.walletId)
+                        .hasTangemPayInWallet(wallet.walletId)
                         .getOrNull() == true
                     wallet to isCustomer
                 }
