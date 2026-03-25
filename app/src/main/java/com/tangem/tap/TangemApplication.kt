@@ -239,6 +239,9 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val customerIoFeatureToggles: CustomerIoFeatureToggles
         get() = entryPoint.getCustomerIoFeatureToggles()
 
+    private val scanFailsRequester
+        get() = entryPoint.getScanFailsRequester()
+
     // endregion
 
     private val appScope = MainScope()
@@ -368,6 +371,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     userWalletsListRepository = userWalletsListRepository,
                     tangemHotSdk = tangemHotSdk,
                     trackingContextProxy = trackingContextProxy,
+                    scanFailsRequester = scanFailsRequester,
                 ),
             ),
         )
