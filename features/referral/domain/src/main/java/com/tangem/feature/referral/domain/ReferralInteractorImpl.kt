@@ -13,7 +13,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class ReferralInteractorImpl(
     private val repository: ReferralRepository,
@@ -62,7 +62,7 @@ internal class ReferralInteractorImpl(
         )
             .mapLeft { it.mapToDomainError() }
             .onLeft { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
                 if (error is ReferralError.UserCancelledException) {
                     throw error
                 }
