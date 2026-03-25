@@ -48,9 +48,9 @@ fun TangemCheckbox(
     isEnabled: Boolean = true,
 ) {
     val shape = if (isRounded) {
-        RoundedCornerShape(TangemTheme.dimens2.x1)
-    } else {
         CircleShape
+    } else {
+        RoundedCornerShape(TangemTheme.dimens2.x1)
     }
     Box(
         modifier = modifier

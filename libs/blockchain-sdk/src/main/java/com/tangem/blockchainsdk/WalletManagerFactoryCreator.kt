@@ -7,7 +7,6 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -24,7 +23,6 @@ internal class WalletManagerFactoryCreator @Inject constructor(
     private val accountCreator: AccountCreator,
     private val blockchainDataStorage: BlockchainDataStorage,
     private val blockchainSDKLogger: BlockchainSDKLogger,
-    private val featureTogglesManager: FeatureTogglesManager,
 ) {
 
     fun create(config: BlockchainSdkConfig, blockchainProviderTypes: BlockchainProviderTypes): WalletManagerFactory {
@@ -35,10 +33,8 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             blockchainProviderTypes = blockchainProviderTypes,
             accountCreator = accountCreator,
             featureToggles = BlockchainFeatureToggles(
-                isYieldSupplyEnabled = featureTogglesManager.isFeatureEnabled("YIELD_SUPPLY_FEATURE_ENABLED"),
-                isPendingTransactionsEnabled = featureTogglesManager.isFeatureEnabled(
-                    "YIELD_SUPPLY_PENDING_TRANSACTIONS_ENABLED",
-                ),
+                isYieldSupplyEnabled = true,
+                isPendingTransactionsEnabled = true,
             ),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
