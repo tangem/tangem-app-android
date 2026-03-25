@@ -94,6 +94,12 @@ internal object WalletAlertUM {
         )
     }
 
+    fun qrCodeAddressSameAsWallet(): DialogMessage {
+        return DialogMessage(
+            message = resourceReference(R.string.send_error_address_same_as_wallet),
+        )
+    }
+
     fun confirmExpressStatusHide(onConfirmClick: () -> Unit): DialogMessage {
         return DialogMessage(
             title = resourceReference(R.string.express_status_hide_dialog_title),
