@@ -785,6 +785,9 @@ internal class WalletModel @Inject constructor(
             is QrSendTarget.Multiple -> {
                 innerWalletRouter.openNetworkSelectionBottomSheet(target)
             }
+            is QrSendTarget.AddressSameAsWallet -> {
+                uiMessageSender.send(WalletAlertUM.qrCodeAddressSameAsWallet())
+            }
             is QrSendTarget.Error -> handleQrError(target.error)
         }
     }
