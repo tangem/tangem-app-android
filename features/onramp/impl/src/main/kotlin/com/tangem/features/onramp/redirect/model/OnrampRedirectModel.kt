@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -133,7 +133,7 @@ internal class OnrampRedirectModel @Inject constructor(
     }
 
     private fun handleError(error: OnrampError) {
-        Timber.e(error.toString())
+        TangemLogger.e(error.toString())
         analyticsEventHandler.sendOnrampErrorEvent(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,

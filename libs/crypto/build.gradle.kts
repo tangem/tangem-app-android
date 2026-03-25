@@ -28,7 +28,6 @@ dependencies {
 
     // region Other deps
     implementation(deps.kotlin.coroutines)
-    implementation(deps.timber)
     // endregion
 
     // region Test libraries
