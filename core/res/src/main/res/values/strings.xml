@@ -217,6 +217,7 @@
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_add_tokens">Add tokens</string>
   <string name="common_added">Added</string>
   <string name="common_address">Address</string>
   <string name="common_all">All</string>
@@ -325,6 +326,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
+  <string name="common_no_results">No results</string>
   <string name="common_not_added">Not Added</string>
   <string name="common_not_available">Not available</string>
   <string name="common_not_now">Not now</string>
@@ -383,6 +385,7 @@
   <string name="common_to">To</string>
   <string name="common_to_wallet_name">To %s</string>
   <string name="common_today">Today</string>
+  <string name="common_token_send">Token to send</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
     <item quantity="other">%d tokens</item>
@@ -395,6 +398,7 @@
   <string name="common_understand">I understand</string>
   <string name="common_understand_continue">I understand, continue</string>
   <string name="common_unknown_error">There was an error. Please try again.</string>
+  <string name="common_unlock">Unlock</string>
   <string name="common_unreachable">Unreachable</string>
   <string name="common_unstake">Unstake</string>
   <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
@@ -478,7 +482,7 @@
   <string name="earn_filter_networks">Networks</string>
   <string name="earn_mostly_used">Mostly used</string>
   <string name="earn_no_results">No results</string>
-  <string name="earn_title">Earn</string>
+  <string name="earn_title">Staking &amp; Yield mode</string>
   <string name="email_preface_wc_error">Hi support team, I\'ve encountered an error with code: %s</string>
   <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
@@ -688,6 +692,9 @@
   <string name="initial_message_scan_header">Tap to scan</string>
   <string name="initial_message_sign_header">Tap to sign</string>
   <string name="initial_message_tap_header">Tap the card or ring</string>
+  <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
+  <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
+  <string name="initial_wallet_sync_restore_progress">Restoring %d%</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
@@ -699,6 +706,7 @@
   <string name="koinos_mana_level_title">Mana level</string>
   <string name="main_empty_tokens_list_message">To begin tracking your crypto assets and transactions, add tokens</string>
   <string name="main_manage_tokens">Manage tokens</string>
+  <string name="main_qr_scan_hint">Scan QR code to send funds or connect to an app</string>
   <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
   <string name="main_scan_card_warning_view_title">Scan your card or ring</string>
   <string name="main_swap_changelly_promotion_message">Enjoy %1$s service fees on swaps via Changelly from February %2$s-%3$s</string>
@@ -733,9 +741,11 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
-  <string name="markets_earn_common_title">Earn with Tangem</string>
+  <string name="markets_earn_common_title">Staking &amp; Yield mode</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
+  <string name="markets_hint_part_one">Swipe up to explore the market</string>
+  <string name="markets_hint_part_two">Find new hidden gems</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
@@ -798,6 +808,10 @@
   <string name="markets_token_details_holders">Holders</string>
   <string name="markets_token_details_holders_description">The change in the number of token holders within a specific timeframe</string>
   <string name="markets_token_details_holders_full">Holders</string>
+  <string name="markets_token_details_insight_day_timeline">D</string>
+  <string name="markets_token_details_insight_month_timeline">M</string>
+  <string name="markets_token_details_insight_week_timeline">W</string>
+  <string name="markets_token_details_insight_year_timeline">Y</string>
   <string name="markets_token_details_insights">Insights</string>
   <string name="markets_token_details_links">Links</string>
   <string name="markets_token_details_liquidity">Liquidity</string>
@@ -825,9 +839,11 @@
   <string name="markets_token_details_total_supply">Total supply</string>
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
   <string name="markets_token_details_total_supply_full">Total supply</string>
+  <string name="markets_token_details_trading_interval">24h</string>
   <string name="markets_token_details_trading_volume">Trading volume (24h)</string>
   <string name="markets_token_details_trading_volume_24h_description">The total amount of a cryptocurrency that has been traded within the last 24 hours, indicating the level of activity and liquidity in the market</string>
   <string name="markets_token_details_trading_volume_full">Trading volume (24h)</string>
+  <string name="markets_token_details_valuation_value_in_total">%s in total</string>
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
@@ -851,6 +867,7 @@
   <string name="news_related_tokens">Related tokens</string>
   <string name="news_sources">Related news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
+  <string name="news_trending_score">Trending score</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
   <string name="nft_asset">NFT asset</string>
@@ -1037,7 +1054,7 @@
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
-  <string name="onramp_offer_type_fastet">Quickest Processing</string>
+  <string name="onramp_offer_type_fastet">Quickest processing</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_payment_method_subtitle">Payment method</string>
   <string name="onramp_provider_max_amount">Available up to %s</string>
@@ -1087,6 +1104,10 @@
   <string name="qr_scanner_camera_denied_settings_button">Settings</string>
   <string name="qr_scanner_camera_denied_text">You have not given access to your camera</string>
   <string name="qr_scanner_camera_denied_title">Camera access denied</string>
+  <string name="qr_scanner_error_unrecognized_message">Sorry, this QR code could not be recognized.</string>
+  <string name="qr_scanner_error_unrecognized_title">Unrecognized QR Code</string>
+  <string name="qr_scanner_error_unsupported_network_message">This network isn\'t supported by any of your added tokens. Add a supported token to send crypto.</string>
+  <string name="qr_scanner_error_unsupported_network_title">No supported tokens found</string>
   <string name="receive_bottom_sheet_no_memo_required_message">No memo required</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s on %2$s network</string>
@@ -1201,6 +1222,10 @@
   <string name="send_memo">Memo: %s</string>
   <string name="send_memo_destination_tag_error">Invalid Memo</string>
   <string name="send_network_fee_warning_title">Network fee coverage</string>
+  <plurals name="send_network_selection_hidden_tokens">
+    <item quantity="one">%d token isn\'t compatible with this address</item>
+    <item quantity="other">%d tokens aren\'t compatible with this address</item>
+  </plurals>
   <string name="send_nonce">Nonce</string>
   <string name="send_nonce_footer">Unique number for each transaction. Use it to resend or cancel a pending transaction.</string>
   <string name="send_nonce_hint">Enter nonce…</string>
@@ -1228,6 +1253,11 @@
   <string name="send_notification_transaction_limit_title">Transaction limitation</string>
   <string name="send_optional_field">Optional</string>
   <string name="send_qrcode_scan_info">Please align your QR code with the square to scan it. Ensure you scan %s network address.</string>
+  <string name="send_rate_fixed_info_description">When you use a fixed rate, the amount you receive is locked in at the time of the swap. This protects you from price changes during the transaction.</string>
+  <string name="send_rate_fixed_info_title">Fixed rate</string>
+  <string name="send_rate_floating_info_description">A floating rate means the final amount you receive may change slightly based on market conditions between the time you start and complete the swap.</string>
+  <string name="send_rate_floating_info_title">Floating rate</string>
+  <string name="send_rate_is_fixed">Rate is fixed</string>
   <string name="send_recent_transactions">Recent</string>
   <string name="send_recipient">Recipient</string>
   <string name="send_recipient_address_error">Not a valid address</string>
@@ -1271,6 +1301,7 @@
   <string name="send_with_swap_recipient_get_amount">Recipient gets %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Are you sure you want to cancel the conversion? Your previous data will be cleared.</string>
   <string name="send_with_swap_remove_convert_alert_title">Remove Conversion</string>
+  <string name="send_with_swap_something_went_wrong">Something went wrong. Try again.</string>
   <string name="send_with_swap_title">Send with swap</string>
   <string name="sent_transaction_sent_title">Transaction sent</string>
   <string name="settings_card_settings_footer">Prepare to scan card or ring you want to set up.</string>
@@ -1437,8 +1468,8 @@
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
-  <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
-  <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
+  <string name="swap_search_suggestion_hint">Looking for something else?\nTry searching or explore another crypto!</string>
+  <string name="swap_search_tooltip_description">Search for any token, even if it’s not in your list yet.</string>
   <string name="swap_search_tooltip_title">Use search to find what you need</string>
   <string name="swap_story_fifth_subtitle">Feel confident with round-the-clock support to help with any issues</string>
   <string name="swap_story_fifth_title">Always Here</string>
@@ -1508,6 +1539,7 @@
   <string name="tangempay_cancel_kyc">Hide KYC from main screen</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Add to Google Wallet</string>
   <string name="tangempay_card_details_card_number">Card Number</string>
   <string name="tangempay_card_details_change_pin">Change PIN</string>
   <string name="tangempay_card_details_change_pin_success_description">The card is fully ready for payments.</string>

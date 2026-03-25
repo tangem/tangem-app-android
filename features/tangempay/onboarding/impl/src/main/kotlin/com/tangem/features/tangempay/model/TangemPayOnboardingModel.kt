@@ -11,9 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.kyc.KycStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayEligibilityManager
-import com.tangem.domain.pay.model.CustomerInfo.KycStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -94,9 +94,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
             uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
             repository.getCustomerInfo(userWalletId = userWalletId)
                 .onRight { customerInfo ->
-                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                     when {
                         customerInfo.kycStatus != KycStatus.APPROVED -> {
+                            if (customerInfo.productInstance == null) {
+                                repository.createOrder(userWalletId)
+                                    .onLeft { error ->
+                                        Timber.e("Error creating order before KYC: $error")
+                                    }
+                            }
                             when (params) {
                                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> openKyc(userWalletId)
                                 else -> startOnboarding(userWalletId)
@@ -104,6 +109,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         }
                         else -> back()
                     }
+                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 }
                 .onLeft { startOnboarding(userWalletId) }
         }
@@ -174,6 +180,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         if (customerInfo.kycStatus == KycStatus.APPROVED) {
                             back()
                         } else {
+                            if (customerInfo.productInstance == null) {
+                                repository.createOrder(userWalletId)
+                                    .onLeft { error ->
+                                        Timber.e("Error creating order before KYC: $error")
+                                    }
+                            }
                             openKyc(userWalletId)
                         }
                     },

@@ -1,7 +1,6 @@
 package com.tangem.core.ui.components.pager
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -22,151 +21,153 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.haze.hazeEffectTangem
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import com.tangem.core.ui.res.TangemThemePreviewRedesign
+import dev.chrisbanes.haze.HazeStyle
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.roundToInt
 
-private const val ANIMATION_DURATION = 300
-private const val MAX_VISIBLE_DOTS = 5
+internal const val ANIMATION_DURATION = 300
+internal const val MAX_VISIBLE_DOTS = 5
+internal val SPACING = 4.dp
+internal val HINT_DOT_SIZE = DpSize(6.dp, 6.dp)
 private const val MIN_HIDDEN_FOR_SMALL_DOT = 2
 private const val MIN_DISTANCE_FOR_SMALL_DOT = 3
 private const val MIN_DISTANCE_FOR_HINT_DOT = 2
-
-private val SPACING = 4.dp
 private val BACKGROUND_SIZE = DpSize(92.dp, 32.dp)
-
 private val CURRENT_DOT_SIZE = DpSize(16.dp, 8.dp)
 private val NORMAL_DOT_SIZE = DpSize(8.dp, 8.dp)
-private val HINT_DOT_SIZE = DpSize(6.dp, 6.dp)
 private val SMALL_DOT_SIZE = DpSize(4.dp, 4.dp)
 
-@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun PagerIndicator(pagerState: PagerState, modifier: Modifier = Modifier) {
-    val totalPages = pagerState.pageCount
-    val currentIndex = pagerState.currentPage
+    if (LocalRedesignEnabled.current) {
+        PagerIndicatorV2(pagerState, modifier)
+    } else {
+        PagerIndicatorV1(pagerState, modifier)
+    }
+}
 
+@Composable
+private fun PagerIndicatorV1(pagerState: PagerState, modifier: Modifier = Modifier) {
+    val colors = PagerIndicatorColors(
+        active = TangemTheme.colors.control.key,
+        inactive = TangemTheme.colors.text.tertiary,
+        overlay = TangemTheme.colors.overlay.secondary,
+    )
+    PagerIndicatorContent(
+        pagerState = pagerState,
+        colors = colors,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun PagerIndicatorV2(pagerState: PagerState, modifier: Modifier = Modifier) {
+    val colors = PagerIndicatorColors(
+        active = TangemTheme.colors2.graphic.neutral.primary,
+        inactive = TangemTheme.colors2.graphic.neutral.tertiary,
+        overlay = TangemTheme.colors2.tabs.backgroundSecondary.copy(alpha = .1f),
+    )
+    PagerIndicatorContent(
+        pagerState = pagerState,
+        colors = colors,
+        modifier = modifier,
+        boxModifier = Modifier.hazeEffectTangem(style = HazeStyle(blurRadius = 22.dp, tint = null)),
+    )
+}
+
+@Composable
+private fun rememberPagerIndicatorAnimationState(pagerState: PagerState): PagerIndicatorAnimationState {
+    val density = LocalDensity.current
+    return remember(pagerState.pageCount, density) {
+        PagerIndicatorAnimationState(pagerState.pageCount, pagerState.currentPage, density)
+    }
+}
+
+@Suppress("LongParameterList")
+private fun calculateDotAlpha(
+    isSliding: Boolean,
+    slideDirection: Int,
+    index: Int,
+    displayLower: Int,
+    displayUpper: Int,
+    fadeProgress: Float,
+): Float {
+    return when {
+        !isSliding -> 1f
+        slideDirection > 0 && index == displayLower -> 1f - fadeProgress
+        slideDirection > 0 && index == displayUpper - 1 -> fadeProgress
+        slideDirection < 0 && index == displayUpper - 1 -> 1f - fadeProgress
+        slideDirection < 0 && index == displayLower -> fadeProgress
+        else -> 1f
+    }
+}
+
+@Composable
+private fun PagerIndicatorContent(
+    pagerState: PagerState,
+    colors: PagerIndicatorColors,
+    modifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
+) {
+    val totalPages = pagerState.pageCount
     if (totalPages == 0) return
 
-    val indicatorColor = TangemTheme.colors.control.key
-    val overlayColor = TangemTheme.colors.overlay.secondary
-    val inactiveIndicatorColor = TangemTheme.colors.text.tertiary
-
-    val density = LocalDensity.current
-
-    val (targetLower, targetUpper) = getWindowBounds(totalPages, currentIndex)
-
-    var displayLower by remember { mutableIntStateOf(targetLower) }
-    var displayUpper by remember { mutableIntStateOf(targetUpper) }
-    var prevTargetLower by remember { mutableIntStateOf(targetLower) }
-
-    val slideOffset = remember { Animatable(0f) }
-    var isSliding by remember { mutableStateOf(false) }
-    var slideDirection by remember { mutableIntStateOf(0) }
-    val fadeProgress = remember { Animatable(0f) }
-    var fadeJob by remember { mutableStateOf<Job?>(null) }
+    val animState = rememberPagerIndicatorAnimationState(pagerState)
+    val (targetLower, targetUpper) = getWindowBounds(pagerState.pageCount, pagerState.currentPage)
 
     LaunchedEffect(targetLower) {
-        if (targetLower != prevTargetLower && totalPages > MAX_VISIBLE_DOTS) {
-            fadeJob?.cancel()
-            slideOffset.stop()
-            fadeProgress.stop()
-
-            val dir = if (targetLower > prevTargetLower) 1 else -1
-            val edgeDotSize = with(density) { (HINT_DOT_SIZE.width + SPACING).toPx() }
-            val halfEdge = edgeDotSize / 2
-
-            isSliding = true
-            slideDirection = dir
-            fadeProgress.snapTo(0f)
-
-            if (dir > 0) {
-                displayLower = prevTargetLower
-                displayUpper = targetUpper
-                slideOffset.snapTo(halfEdge)
-            } else {
-                displayLower = targetLower
-                displayUpper = prevTargetLower + MAX_VISIBLE_DOTS
-                slideOffset.snapTo(-halfEdge)
-            }
-
-            prevTargetLower = targetLower
-
-            fadeJob = launch {
-                fadeProgress.animateTo(1f, tween(ANIMATION_DURATION))
-            }
-            slideOffset.animateTo(
-                if (dir > 0) -halfEdge else halfEdge,
-                tween(ANIMATION_DURATION),
-            )
-
-            displayLower = targetLower
-            displayUpper = targetUpper
-            slideOffset.snapTo(0f)
-            isSliding = false
-            slideDirection = 0
-        }
+        animState.onBoundsChange(this, targetLower, targetUpper)
     }
-    val visibleIndices = (displayLower until displayUpper).toList()
+
+    val visibleIndices = (animState.displayLower until animState.displayUpper).toList()
 
     Box(
         modifier = modifier
             .width(BACKGROUND_SIZE.width)
             .height(BACKGROUND_SIZE.height)
             .background(
-                color = overlayColor,
+                color = colors.overlay,
                 shape = CircleShape,
             )
-            .clip(CircleShape),
+            .clip(CircleShape)
+            .then(boxModifier),
         contentAlignment = Alignment.Center,
     ) {
         Row(
             modifier = Modifier.offset {
-                IntOffset(slideOffset.value.roundToInt(), 0)
+                IntOffset(animState.slideOffset.value.roundToInt(), 0)
             },
             horizontalArrangement = Arrangement.spacedBy(SPACING),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             visibleIndices.forEach { index ->
-                val dotAlpha = when {
-                    !isSliding -> 1f
-                    slideDirection > 0 && index == displayLower -> 1f - fadeProgress.value
-                    slideDirection > 0 && index == displayUpper - 1 -> fadeProgress.value
-                    slideDirection < 0 && index == displayUpper - 1 -> 1f - fadeProgress.value
-                    slideDirection < 0 && index == displayLower -> fadeProgress.value
-                    else -> 1f
-                }
+                val dotAlpha = calculateDotAlpha(
+                    isSliding = animState.isSliding,
+                    slideDirection = animState.slideDirection,
+                    index = index,
+                    displayLower = animState.displayLower,
+                    displayUpper = animState.displayUpper,
+                    fadeProgress = animState.fadeProgress.value,
+                )
 
                 key(index) {
                     Dot(
                         index = index,
-                        currentIndex = currentIndex,
+                        currentIndex = pagerState.currentPage,
                         totalPages = totalPages,
-                        activeColor = indicatorColor,
-                        inactiveColor = inactiveIndicatorColor,
+                        activeColor = colors.active,
+                        inactiveColor = colors.inactive,
                         modifier = Modifier.graphicsLayer { alpha = dotAlpha },
                     )
                 }
             }
         }
     }
-}
-
-private fun getWindowBounds(totalPages: Int, currentIndex: Int): Pair<Int, Int> {
-    if (totalPages <= MAX_VISIBLE_DOTS) {
-        return 0 to totalPages
-    }
-    val lowerBound = when {
-        currentIndex <= 1 -> 0
-        currentIndex >= totalPages - 2 -> totalPages - MAX_VISIBLE_DOTS
-        else -> currentIndex - 2
-    }
-    val upperBound = min(lowerBound + MAX_VISIBLE_DOTS, totalPages)
-    return lowerBound to upperBound
 }
 
 private fun getDotSize(index: Int, currentIndex: Int, totalPages: Int): DpSize {
@@ -179,6 +180,46 @@ private fun getDotSize(index: Int, currentIndex: Int, totalPages: Int): DpSize {
     val params = DotSizeParams.create(index, currentIndex, totalPages)
     return params.calculateSize()
 }
+
+@Composable
+private fun Dot(
+    index: Int,
+    currentIndex: Int,
+    totalPages: Int,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val isActive = index == currentIndex
+    val size = getDotSize(index, currentIndex, totalPages)
+
+    val animSpec = tween<Dp>(ANIMATION_DURATION)
+    val colorSpec = tween<Color>(ANIMATION_DURATION)
+
+    val animatedWidth by animateDpAsState(size.width, animSpec, label = "w$index")
+    val animatedHeight by animateDpAsState(size.height, animSpec, label = "h$index")
+    val animatedColor by animateColorAsState(
+        targetValue = if (isActive) activeColor else inactiveColor,
+        animationSpec = colorSpec,
+        label = "c$index",
+    )
+
+    val shape = RoundedCornerShape(animatedHeight / 2)
+
+    Box(
+        modifier = modifier
+            .width(animatedWidth)
+            .height(animatedHeight)
+            .background(animatedColor, shape),
+    )
+}
+
+@Immutable
+private data class PagerIndicatorColors(
+    val active: Color,
+    val inactive: Color,
+    val overlay: Color,
+)
 
 private class DotSizeParams private constructor(
     val posInWindow: Int,
@@ -248,43 +289,27 @@ private class DotSizeParams private constructor(
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun Dot(
-    index: Int,
-    currentIndex: Int,
-    totalPages: Int,
-    activeColor: Color,
-    inactiveColor: Color,
-    modifier: Modifier = Modifier,
-) {
-    val isActive = index == currentIndex
-    val size = getDotSize(index, currentIndex, totalPages)
-
-    val animSpec = tween<Dp>(ANIMATION_DURATION)
-    val colorSpec = tween<Color>(ANIMATION_DURATION)
-
-    val animatedWidth by animateDpAsState(size.width, animSpec, label = "w$index")
-    val animatedHeight by animateDpAsState(size.height, animSpec, label = "h$index")
-    val animatedColor by animateColorAsState(
-        targetValue = if (isActive) activeColor else inactiveColor,
-        animationSpec = colorSpec,
-        label = "c$index",
-    )
-
-    val shape = RoundedCornerShape(animatedHeight / 2)
-
-    Box(
-        modifier = modifier
-            .width(animatedWidth)
-            .height(animatedHeight)
-            .background(animatedColor, shape),
-    )
+private fun PagerIndicatorPreviewV1() {
+    TangemThemePreview {
+        Column(
+            Modifier
+                .background(TangemTheme.colors.background.primary)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            listOf(0, 1, 2, 3, 4).forEach { page ->
+                PagerIndicator(rememberPagerState(page) { 5 })
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PagerIndicatorPreview() {
-    TangemThemePreview {
+private fun PagerIndicatorPreviewV2() {
+    TangemThemePreviewRedesign {
         Column(
             Modifier
                 .background(TangemTheme.colors.background.primary)
