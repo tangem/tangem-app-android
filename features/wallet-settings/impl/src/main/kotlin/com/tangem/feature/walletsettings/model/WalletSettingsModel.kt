@@ -57,7 +57,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -250,7 +250,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun forgetWallet() = modelScope.launch {
         val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
-            Timber.e("Unable to delete wallet: $error")
+            TangemLogger.e("Unable to delete wallet: $error")
 
             messageSender.send(
                 message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
@@ -447,7 +447,7 @@ internal class WalletSettingsModel @Inject constructor(
                 -> modelScope.launch {
                     unlockHotWalletContextualUseCase.invoke(hotWalletId)
                         .onLeft {
-                            Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                            TangemLogger.e("Unable to unlock wallet with id ${params.userWalletId}", it)
                         }
                         .onRight {
                             action(true)

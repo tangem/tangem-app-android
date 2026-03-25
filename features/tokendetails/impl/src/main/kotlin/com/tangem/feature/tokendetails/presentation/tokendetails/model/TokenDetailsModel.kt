@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import arrow.core.merge
 import arrow.core.right
+import com.tangem.utils.logging.TangemLogger
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
@@ -103,7 +104,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions", "PropertyUsedBeforeDeclaration")
@@ -499,11 +499,9 @@ internal class TokenDetailsModel @Inject constructor(
                     ),
                 )
 
-                Timber.e(
-                    /* t = */ throwable,
-                    /* message = */ "Unable to get wallet manager for user wallet %s and network %s",
-                    /* ...args = */ userWalletId,
-                    cryptoCurrency.network,
+                TangemLogger.e(
+                    "Unable to get wallet manager for user wallet $userWalletId and network ${cryptoCurrency.network}",
+                    throwable,
                 )
 
                 false
@@ -655,7 +653,7 @@ internal class TokenDetailsModel @Inject constructor(
                 cryptoCurrency.network,
             ).fold(
                 ifLeft = { throwable ->
-                    Timber.e(throwable.cause?.localizedMessage.orEmpty())
+                    TangemLogger.e(throwable.cause?.localizedMessage.orEmpty())
                     ""
                 },
                 ifRight = { it },
@@ -756,12 +754,12 @@ internal class TokenDetailsModel @Inject constructor(
             val accountId = account?.accountId
 
             if (accountId == null) {
-                Timber.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
+                TangemLogger.e("Account ID is null, cannot hide currency ${cryptoCurrency.id}")
                 return@launch
             }
 
             manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
-                .onLeft { Timber.e(it) }
+                .onLeft { TangemLogger.e("Error", it) }
                 .onRight { router.popBackStack() }
         }
     }
@@ -830,7 +828,7 @@ internal class TokenDetailsModel @Inject constructor(
             txHash = txHash,
             currency = cryptoCurrency,
         ).fold(
-            ifLeft = { Timber.e(it.toString()) },
+            ifLeft = { TangemLogger.e(it.toString()) },
             ifRight = { router.openUrl(url = it) },
         )
     }
@@ -960,7 +958,7 @@ internal class TokenDetailsModel @Inject constructor(
                     }
                     if (message != null) {
                         internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(message))
-                        Timber.e(message)
+                        TangemLogger.e(message)
                     }
                 },
                 ifRight = {
@@ -1033,7 +1031,7 @@ internal class TokenDetailsModel @Inject constructor(
                     internalUiState.value = stateFactory.getStateWithErrorDialog(
                         stringReference(e.message.orEmpty()),
                     )
-                    Timber.e(e.message)
+                    TangemLogger.e("Error: $e")
                 },
                 ifRight = {
                     internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
@@ -1068,7 +1066,7 @@ internal class TokenDetailsModel @Inject constructor(
                             internalUiState.value = stateFactory.getStateWithErrorDialog(
                                 stringReference(e.message.orEmpty()),
                             )
-                            Timber.e(e.message)
+                            TangemLogger.e("Error: $e")
                         }
                     }
                 },
@@ -1141,7 +1139,7 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun showStakingUnavailable() {
-        Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+        TangemLogger.e("Staking is unavailable for ${cryptoCurrency.name}")
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
     }
 

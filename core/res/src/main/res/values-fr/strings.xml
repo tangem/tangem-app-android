@@ -400,6 +400,7 @@
   <string name="common_unstake">Unstakez</string>
   <string name="common_utxo_validate_withdrawal_message_warning">En raison d\'une limitations sur les %1$s, seuls les %2$d UTXO peuvent s\'intégrer dans une seule transaction. Ce qui signifie vous ne pouvez envoyer que %3$s ou moins. Réduisez le montant.</string>
   <string name="common_value_copied">Valeur copiée</string>
+  <string name="common_warning">Alerte</string>
   <string name="common_week">semaine</string>
   <string name="common_with">avec</string>
   <string name="common_yes">Oui</string>
