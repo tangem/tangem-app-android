@@ -4,14 +4,9 @@ import com.tangem.common.CompletionResult
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.StateDialog
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
-
-    // dialogs
-    data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
-    object HideDialog : GlobalAction()
 
     object ScanFailsCounter {
         data class ChooseBehavior(
