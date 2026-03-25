@@ -35,6 +35,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("LongParameterList")
 class SendTransactionUseCase(
@@ -96,6 +97,8 @@ class SendTransactionUseCase(
                     is Result.Success -> sendResult.data.right()
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (ex: Exception) {
             cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
             SendTransactionError.DataError(ex.message).left()
