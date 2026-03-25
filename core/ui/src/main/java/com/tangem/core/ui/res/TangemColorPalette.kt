@@ -16,9 +16,11 @@ object TangemColorPalette {
     val Dark4 = Color(0xFF3B3B3B)
     val Dark5 = Color(0xFF303030)
     val Dark6 = Color(0xFF1E1E1E)
+    val Dark7 = Color(0xFF171717)
     // endregion Dark
 
     // region Dark Alpha
+    val Dark_05 = Color(0x0D1E1E1E)
     val Dark_10 = Color(0x1A1E1E1E)
     val Dark_20 = Color(0x331E1E1E)
     val Dark_30 = Color(0x4D1E1E1E)
@@ -58,19 +60,44 @@ object TangemColorPalette {
     val DarkGreen = Color(0xFF06311F)
     // endregion Green
 
-    // region Blue
+    // region Azure
     val Azure = Color(0xFF0099FF)
-    // endregion Blue
+    val Azure_50 = Color(0x800099FF)
+    val Azure_10 = Color(0x1A0099FF)
+    // endregion Azure
 
-    // region Red
+    // region Amaranth
     val Amaranth = Color(0xFFFF3333)
+    val Amaranth_50 = Color(0x80FF3333)
+    val Amaranth_20 = Color(0x33FF3333)
+    val Amaranth_10 = Color(0x1AFF3333)
+    // endregion Amaranth
+
+    // region Flamingo
     val Flamingo = Color(0xFFFF5B5B)
-    // endregion Red
+    val Flamingo_50 = Color(0x80FF5B5B)
+    val Flamingo_20 = Color(0x33FF5B5B)
+    val Flamingo_10 = Color(0x1AFF5B5B)
+    // endregion Flamingo
 
     // region Yellow
     val Tangerine = Color(0xFFFFB71B)
     val Mustard = Color(0xFFFDDE55)
     // endregion Yellow
+
+    // region Emerald
+    val Emerald = Color(0xFF34DF12)
+    val Emerald_50 = Color(0x8034DF12)
+    val Emerald_20 = Color(0x3334DF12)
+    val Emerald_10 = Color(0x1A34DF12)
+    // endregion Emerald
+
+    // region Eucalyptus
+    val Eucalyptus = Color(0xFF0C9F3D)
+    val Eucalyptus_50 = Color(0x800C9F3D)
+    val Eucalyptus_20 = Color(0x330C9F3D)
+    val Eucalyptus_10 = Color(0x1A0C9F3D)
+    // endregion Eucalyptus
 
     // region Overlay
     val Overlay1 = Color(0x66000000)

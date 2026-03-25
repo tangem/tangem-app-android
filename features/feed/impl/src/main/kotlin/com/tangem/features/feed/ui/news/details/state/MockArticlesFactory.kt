@@ -11,6 +11,7 @@ import kotlinx.collections.immutable.toPersistentList
 internal object MockArticlesFactory {
     fun createMockArticles(): ImmutableList<ArticleUM> = listOf(
         ArticleUM(
+            isTrending = false,
             id = 1,
             title = "SEC delays decisions on ETH-staking ETFs and spot XRP/SOL funds",
             createdAt = TextReference.Str("20 Jun, 21:45"),
@@ -78,6 +79,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 3,
@@ -107,6 +109,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 4,
@@ -136,6 +139,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 5,
@@ -151,6 +155,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 6,
@@ -167,6 +172,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 7,
@@ -182,6 +188,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 8,
@@ -197,6 +204,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 9,
@@ -213,6 +221,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
         ArticleUM(
             id = 10,
@@ -229,6 +238,7 @@ internal object MockArticlesFactory {
             newsUrl = "",
             relatedTokens = persistentListOf(),
             isLiked = false,
+            isTrending = false,
         ),
     ).toPersistentList()
 }
