@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
@@ -8,7 +9,6 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionRequestInfoItemUM
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class WcTransactionRequestBlockUMConverter @Inject constructor(
@@ -42,7 +42,7 @@ internal class WcTransactionRequestBlockUMConverter @Inject constructor(
             try {
                 addAll(transactionParamsConverter.convert(params))
             } catch (exception: Exception) {
-                Timber.e(exception, "Error while parsing transaction params - %s", params)
+                TangemLogger.e("Error while parsing transaction params - $params", exception)
             }
         }
     }
