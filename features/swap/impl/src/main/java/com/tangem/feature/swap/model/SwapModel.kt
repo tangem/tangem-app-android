@@ -551,7 +551,11 @@ internal class SwapModel @Inject constructor(
                     dataState.fromCryptoCurrency
                 }
 
-                if (fromCryptoCurrency != null) updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
+                if (fromCryptoCurrency != null) {
+                    updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
+                } else {
+                    Timber.e("updateFeePaidCryptoCurrencyFor failed: fromCryptoCurrency is null")
+                }
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
@@ -763,7 +767,14 @@ internal class SwapModel @Inject constructor(
             feePaidCryptoCurrency = getFeePaidCryptoCurrencyStatusSyncUseCase(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = fromToken,
-            ).getOrNull(),
+            )
+                .onLeft { Timber.e("Unable to get fee paid crypto currency status for ${fromToken.currency.id}") }
+                .onRight { currencyStatus ->
+                    if (currencyStatus == null) {
+                        Timber.e("Fee paid crypto currency status is null for ${fromToken.currency.id}")
+                    }
+                }
+                .getOrNull(),
         )
     }
 
@@ -1038,6 +1049,7 @@ internal class SwapModel @Inject constructor(
         val fee = getSelectedFee()
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
+            Timber.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
@@ -1064,6 +1076,7 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         if (fee == null) {
+                            Timber.e("onSwapClick: onSuccess: fee is null after swap")
                             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
@@ -1400,16 +1413,16 @@ internal class SwapModel @Inject constructor(
             }
             modelScope.launch {
                 updateFeePaidCryptoCurrencyFor(fromToken)
+                startLoadingQuotes(
+                    fromToken = fromToken,
+                    fromAccount = fromAccount,
+                    toToken = toToken,
+                    toAccount = toAccount,
+                    amount = lastAmount.value,
+                    reduceBalanceBy = lastReducedBalanceBy.value,
+                    toProvidersList = findSwapProviders(fromToken, toToken),
+                )
             }
-            startLoadingQuotes(
-                fromToken = fromToken,
-                fromAccount = fromAccount,
-                toToken = toToken,
-                toAccount = toAccount,
-                amount = lastAmount.value,
-                reduceBalanceBy = lastReducedBalanceBy.value,
-                toProvidersList = findSwapProviders(fromToken, toToken),
-            )
             updateTokensState(tokens)
         }
     }
@@ -2295,10 +2308,14 @@ internal class SwapModel @Inject constructor(
 
     private fun getSelectedFeeState(): TxFeeSealedState {
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
-            ?: return TxFeeSealedState.Legacy(
+
+        if (feeStateUM == null) {
+            Timber.e("getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, returning Legacy state")
+            return TxFeeSealedState.Legacy(
                 txFeeState = TxFeeState.Empty,
                 selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
             )
+        }
 
         val transactionFeeExtended = feeStateUM.feeExtraInfo.transactionFeeExtended
         return TxFeeSealedState.Component(
@@ -2312,7 +2329,13 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun getSelectedFee(): TxFee? {
-        val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content ?: return null
+        val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
+
+        if (feeStateUM == null) {
+            Timber.e("getSelectedFee: FeeSelectorUM is not Content: $feeStateUM, returning null")
+            return null
+        }
+
         val transactionFeeExtended = feeStateUM.feeExtraInfo.transactionFeeExtended
 
         return TxFee.FeeComponent(
@@ -2368,6 +2391,7 @@ internal class SwapModel @Inject constructor(
 
             if (newState is FeeSelectorUM.Error) {
                 modelScope.launch {
+                    Timber.e("onResult: FeeSelectorUM is Error, isHidden = true")
                     forceUpdateState.emit(newState.copy(isHidden = true))
                 }
                 return
@@ -2382,6 +2406,8 @@ internal class SwapModel @Inject constructor(
                 newState.feeExtraInfo.feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin
 
             if (isFeeCurrencySameAsFromCurrency || isCoinFeeSelected) {
+                Timber.e("onResult: Fee currency is same as from currency or coin fee selected, reloading quotes")
+
                 // block swap button until fee is loaded
                 uiState = uiState.copy(
                     swapButton = uiState.swapButton.copy(
@@ -2404,15 +2430,19 @@ internal class SwapModel @Inject constructor(
         }
 
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+            Timber.e("loadFee: Start loading fee")
+
             val fromToken = dataState.fromCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
+                Timber.e("loadFee: Quotes not loaded ${dataState.lastLoadedSwapStates[selectedProvider]}")
                 return Either.Left(GetFeeError.UnknownError)
             }
 
             if (isPermissionNotificationShown()) {
+                Timber.e("loadFee: Permission notification is shown, cannot load fee")
                 return Either.Left(GetFeeError.UnknownError)
             }
 
@@ -2425,6 +2455,12 @@ internal class SwapModel @Inject constructor(
                 amount = lastAmount.value,
                 reduceBalanceBy = lastReducedBalanceBy.value,
             )
+                .onLeft {
+                    Timber.e("loadFee: Failed to load fee with error $it")
+                }
+                .onRight {
+                    Timber.e("loadFee: Fee loaded successfully")
+                }
         }
 
         override fun choosingInProgress(updatedState: Boolean) {
