@@ -15,10 +15,9 @@ import com.tangem.data.pay.usecase.DefaultGetTangemPayCustomerIdUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.visa.entity.PaymentAccountStatusDM
+import com.tangem.datasource.local.visa.entity.PaymentAccountStatusValueDM
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
@@ -32,6 +31,7 @@ import com.tangem.domain.tangempay.GetTangemPayCustomerIdUseCase
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Binds
 import dagger.Module
@@ -118,7 +118,7 @@ internal interface TangemPayDataModule {
                 persistenceDataStore = DataStoreFactory.create(
                     serializer = MoshiDataStoreSerializer(
                         moshi = moshi,
-                        types = mapWithStringKeyTypes<PaymentAccountStatusDM>(),
+                        types = mapWithStringKeyTypes<PaymentAccountStatusValueDM>(),
                         defaultValue = emptyMap(),
                     ),
                     produceFile = { context.dataStoreFile(fileName = "payment_account_statuses") },

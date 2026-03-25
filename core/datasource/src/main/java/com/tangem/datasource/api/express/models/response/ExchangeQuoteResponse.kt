@@ -25,4 +25,7 @@ data class ExchangeQuoteResponse(
     @Json(name = "minAmount")
     val minAmount: BigDecimal,
 
+    @Json(name = "quoteId")
+    val quoteId: String? = null,
+
 )
