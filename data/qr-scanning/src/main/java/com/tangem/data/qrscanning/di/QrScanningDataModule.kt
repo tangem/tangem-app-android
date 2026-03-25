@@ -26,9 +26,9 @@ internal object QrScanningDataModule {
                 blockchainDataProvider = blockchainDataProvider,
                 paymentUriParsers = setOf(
                     Eip681PaymentUriParser(blockchainDataProvider),
-                    TronPaymentUriParser(),
-                    SolanaPaymentUriParser(),
-                    Bip321PaymentUriParser(),
+                    TronPaymentUriParser(blockchainDataProvider),
+                    SolanaPaymentUriParser(blockchainDataProvider),
+                    Bip321PaymentUriParser(blockchainDataProvider),
                 ),
             ),
         )
