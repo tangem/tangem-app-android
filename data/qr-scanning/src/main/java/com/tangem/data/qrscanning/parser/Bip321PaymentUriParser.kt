@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 
 internal class Bip321PaymentUriParser(
+    private val blockchainDataProvider: QrContentClassifierParser.BlockchainDataProvider,
     private val helper: PaymentUriResolveHelper = PaymentUriResolveHelper(),
 ) : PaymentUriParser {
 
@@ -33,6 +34,15 @@ internal class Bip321PaymentUriParser(
                     raw = qrCode,
                     blockchain = blockchains.first().fullName,
                 ),
+            )
+        }
+
+        val isAddressValid = matchingCoins.any {
+            blockchainDataProvider.validateAddress(it.network, parsed.address)
+        }
+        if (!isAddressValid) {
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.Unrecognized(qrCode),
             )
         }
 
