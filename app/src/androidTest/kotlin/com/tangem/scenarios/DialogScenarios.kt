@@ -7,10 +7,10 @@ import com.tangem.screens.AlreadyUsedWalletDialogPageObject.message
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.title
-import com.tangem.screens.ScanWarningDialogPageObject
 import com.tangem.screens.onActionIsUnavailableDialog
 import com.tangem.screens.onDataNotLoadedDialog
 import com.tangem.screens.onFailedTransactionDialog
+import com.tangem.screens.onScanWarningDialog
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.checkFailedTransactionDialog() {
@@ -31,21 +31,21 @@ fun BaseTestCase.checkFailedTransactionDialog() {
     }
 }
 
-fun checkScanWarningDialog() {
+fun BaseTestCase.checkScanWarningDialog() {
     step("Assert 'Scan warning' dialog title is displayed") {
-        ScanWarningDialogPageObject { warningTitle.isDisplayed() }
+        onScanWarningDialog { warningTitle.assertIsDisplayed() }
     }
     step("Assert warning dialog message is displayed") {
-        ScanWarningDialogPageObject { warningMessage.isDisplayed() }
+        onScanWarningDialog { warningMessage.assertIsDisplayed() }
     }
     step("Assert 'Cancel' button is displayed") {
-        ScanWarningDialogPageObject { cancelButton.isDisplayed() }
+        onScanWarningDialog { cancelButton.assertIsDisplayed() }
     }
     step("Assert 'How to scan' button is displayed") {
-        ScanWarningDialogPageObject { howToScanButton.isDisplayed() }
+        onScanWarningDialog { howToScanButton.assertIsDisplayed() }
     }
     step("Assert 'Request support' button is displayed") {
-        ScanWarningDialogPageObject { requestSupportButton.isDisplayed() }
+        onScanWarningDialog { requestSupportButton.assertIsDisplayed() }
     }
 }
 
