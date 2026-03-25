@@ -1,9 +1,9 @@
 package com.tangem.tap.common.analytics
 
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.core.analytics.api.ExceptionLogger
 import com.tangem.core.analytics.api.EventLogger
-import timber.log.Timber
+import com.tangem.core.analytics.api.ExceptionLogger
+import com.tangem.utils.logging.TangemLogger
 
 class AnalyticsEventsLogger(
     private val name: String,
@@ -11,11 +11,11 @@ class AnalyticsEventsLogger(
 ) : EventLogger, ExceptionLogger {
 
     override fun logEvent(event: String, params: Map<String, String>) {
-        Timber.d(jsonConverter.prettyPrint(PrintEventModel(name, event, params)))
+        TangemLogger.d(jsonConverter.prettyPrint(PrintEventModel(name, event, params)))
     }
 
     override fun logException(error: Throwable, params: Map<String, String>) {
-        Timber.e(error, jsonConverter.prettyPrint(PrintEventModel(name, "error", params)))
+        TangemLogger.e(jsonConverter.prettyPrint(PrintEventModel(name, "error", params)), error)
     }
 }
 

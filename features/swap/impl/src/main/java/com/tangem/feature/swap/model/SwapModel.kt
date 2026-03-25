@@ -115,7 +115,7 @@ import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -554,12 +554,12 @@ internal class SwapModel @Inject constructor(
                 if (fromCryptoCurrency != null) {
                     updateFeePaidCryptoCurrencyFor(fromCryptoCurrency)
                 } else {
-                    Timber.e("updateFeePaidCryptoCurrencyFor failed: fromCryptoCurrency is null")
+                    TangemLogger.e("updateFeePaidCryptoCurrencyFor failed: fromCryptoCurrency is null")
                 }
 
                 subscribeToCoinBalanceUpdatesIfNeeded()
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
 
                 applyInitialTokenChoice(
                     state = TokensDataStateExpress.EMPTY,
@@ -601,7 +601,7 @@ internal class SwapModel @Inject constructor(
 
                 swapRouter.back()
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
             }
         }
     }
@@ -768,10 +768,10 @@ internal class SwapModel @Inject constructor(
                 userWalletId = userWalletId,
                 cryptoCurrencyStatus = fromToken,
             )
-                .onLeft { Timber.e("Unable to get fee paid crypto currency status for ${fromToken.currency.id}") }
+                .onLeft { TangemLogger.e("Unable to get fee paid crypto currency status for ${fromToken.currency.id}") }
                 .onRight { currencyStatus ->
                     if (currencyStatus == null) {
-                        Timber.e("Fee paid crypto currency status is null for ${fromToken.currency.id}")
+                        TangemLogger.e("Fee paid crypto currency status is null for ${fromToken.currency.id}")
                     }
                 }
                 .getOrNull(),
@@ -831,11 +831,11 @@ internal class SwapModel @Inject constructor(
                     }
                 } else {
                     feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
-                    Timber.e("Accidentally empty quotes list")
+                    TangemLogger.e("Accidentally empty quotes list")
                 }
             },
             onError = { error ->
-                Timber.e("Error when loading quotes: $error")
+                TangemLogger.e("Error when loading quotes: $error")
                 feeSelectorRepository.state.value = FeeSelectorUM.Error(GetFeeError.UnknownError, isHidden = true)
                 uiState = stateBuilder.addNotification(uiState, null) { startLoadingQuotesFromLastState() }
             },
@@ -1042,14 +1042,14 @@ internal class SwapModel @Inject constructor(
         val provider = requireNotNull(dataState.selectedProvider) { "Selected provider is null" }
         val lastLoadedQuotesState = dataState.lastLoadedSwapStates[provider] as? SwapState.QuotesLoadedState
         if (lastLoadedQuotesState == null) {
-            Timber.e("Last loaded quotes state is null")
+            TangemLogger.e("Last loaded quotes state is null")
             return
         }
         val fromCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val fee = getSelectedFee()
 
         if (fee == null && tangemPayInput?.isWithdrawal != true) {
-            Timber.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
+            TangemLogger.e("onSwapClick: fee is null and isWithdrawal is ${tangemPayInput?.isWithdrawal}")
             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
             modelScope.launch {
                 delay(SWAP_IN_PROGRESS_DELAY)
@@ -1076,7 +1076,7 @@ internal class SwapModel @Inject constructor(
                 when (swapTransactionState) {
                     is SwapTransactionState.TxSent -> {
                         if (fee == null) {
-                            Timber.e("onSwapClick: onSuccess: fee is null after swap")
+                            TangemLogger.e("onSwapClick: onSuccess: fee is null after swap")
                             showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
                             return@onSuccess
                         }
@@ -1088,7 +1088,7 @@ internal class SwapModel @Inject constructor(
                             txHash = swapTransactionState.txHash,
                             currency = fromCurrency.currency,
                         ).getOrElse {
-                            Timber.i("tx hash explore not supported")
+                            TangemLogger.i("tx hash explore not supported")
                             ""
                         }
 
@@ -1132,7 +1132,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }
             }.onFailure { error ->
-                Timber.e(error)
+                TangemLogger.e("Error", error)
                 startLoadingQuotesFromLastState()
                 showAlert()
             }
@@ -1227,7 +1227,7 @@ internal class SwapModel @Inject constructor(
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
                         showAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
-                        Timber.e("Fee should not be Empty")
+                        TangemLogger.e("Fee should not be Empty")
                         return@launch
                     }
                     is TxFeeState.MultipleFeeState -> fee.priorityFee
@@ -1267,7 +1267,7 @@ internal class SwapModel @Inject constructor(
                     }
                 }.onFailure { showAlert() }
             }.onFailure { error ->
-                Timber.e(error.message.orEmpty())
+                TangemLogger.e(error.message.orEmpty())
                 showAlert()
             }
         }
@@ -1449,14 +1449,14 @@ internal class SwapModel @Inject constructor(
         coin: CryptoCurrency.Coin,
         isFromCurrency: Boolean,
     ) {
-        Timber.d("Subscribe to ${coin.id} balance updates")
+        TangemLogger.d("Subscribe to ${coin.id} balance updates")
 
         getAccountCurrencyStatusUseCase(
             userWalletId = userWalletId,
             currency = coin,
         ).distinctUntilChanged { old, new -> old.status.value.amount == new.status.value.amount } // Check only balance changes
             .onEach { (account, currencyStatus) ->
-                Timber.d("${coin.id} balance is ${currencyStatus.value.amount ?: "null"}")
+                TangemLogger.d("${coin.id} balance is ${currencyStatus.value.amount ?: "null"}")
 
                 if (isFromCurrency) {
                     dataState = dataState.copy(
@@ -2310,7 +2310,7 @@ internal class SwapModel @Inject constructor(
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
 
         if (feeStateUM == null) {
-            Timber.e("getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, returning Legacy state")
+            TangemLogger.e("getSelectedFeeState: FeeSelectorUM is not Content: $feeStateUM, returning Legacy state")
             return TxFeeSealedState.Legacy(
                 txFeeState = TxFeeState.Empty,
                 selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
@@ -2332,7 +2332,7 @@ internal class SwapModel @Inject constructor(
         val feeStateUM = feeSelectorRepository.state.value as? FeeSelectorUM.Content
 
         if (feeStateUM == null) {
-            Timber.e("getSelectedFee: FeeSelectorUM is not Content: $feeStateUM, returning null")
+            TangemLogger.e("getSelectedFee: FeeSelectorUM is not Content: $feeStateUM, returning null")
             return null
         }
 
@@ -2391,7 +2391,7 @@ internal class SwapModel @Inject constructor(
 
             if (newState is FeeSelectorUM.Error) {
                 modelScope.launch {
-                    Timber.e("onResult: FeeSelectorUM is Error, isHidden = true")
+                    TangemLogger.e("onResult: FeeSelectorUM is Error, isHidden = true")
                     forceUpdateState.emit(newState.copy(isHidden = true))
                 }
                 return
@@ -2406,7 +2406,7 @@ internal class SwapModel @Inject constructor(
                 newState.feeExtraInfo.feeCryptoCurrencyStatus.currency is CryptoCurrency.Coin
 
             if (isFeeCurrencySameAsFromCurrency || isCoinFeeSelected) {
-                Timber.e("onResult: Fee currency is same as from currency or coin fee selected, reloading quotes")
+                TangemLogger.e("onResult: Fee currency is same as from currency or coin fee selected, reloading quotes")
 
                 // block swap button until fee is loaded
                 uiState = uiState.copy(
@@ -2430,19 +2430,19 @@ internal class SwapModel @Inject constructor(
         }
 
         override suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-            Timber.e("loadFee: Start loading fee")
+            TangemLogger.e("loadFee: Start loading fee")
 
             val fromToken = dataState.fromCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val toToken = dataState.toCryptoCurrency ?: return Either.Left(GetFeeError.UnknownError)
             val selectedProvider = dataStateStateFlow.first { it.selectedProvider != null }.selectedProvider!!
 
             if (dataState.lastLoadedSwapStates[selectedProvider] !is SwapState.QuotesLoadedState) {
-                Timber.e("loadFee: Quotes not loaded ${dataState.lastLoadedSwapStates[selectedProvider]}")
+                TangemLogger.e("loadFee: Quotes not loaded ${dataState.lastLoadedSwapStates[selectedProvider]}")
                 return Either.Left(GetFeeError.UnknownError)
             }
 
             if (isPermissionNotificationShown()) {
-                Timber.e("loadFee: Permission notification is shown, cannot load fee")
+                TangemLogger.e("loadFee: Permission notification is shown, cannot load fee")
                 return Either.Left(GetFeeError.UnknownError)
             }
 
@@ -2456,10 +2456,10 @@ internal class SwapModel @Inject constructor(
                 reduceBalanceBy = lastReducedBalanceBy.value,
             )
                 .onLeft {
-                    Timber.e("loadFee: Failed to load fee with error $it")
+                    TangemLogger.e("loadFee: Failed to load fee with error $it")
                 }
                 .onRight {
-                    Timber.e("loadFee: Fee loaded successfully")
+                    TangemLogger.e("loadFee: Fee loaded successfully")
                 }
         }
 
