@@ -151,7 +151,6 @@ sealed class WalletNotification(val config: NotificationConfig) {
         )
 
         data class TangemPayRefreshNeeded(
-            @DrawableRes private val tangemIcon: Int?,
             private val onRefreshClick: () -> Unit,
             private val buttonText: TextReference,
             private val shouldShowProgress: Boolean,
@@ -160,7 +159,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
             buttonsState = ButtonsState.PrimaryButtonConfig(
                 text = buttonText,
-                iconResId = tangemIcon,
+                iconResId = R.drawable.ic_tangem_24,
                 onClick = onRefreshClick,
                 shouldShowProgress = shouldShowProgress,
             ),
@@ -478,6 +477,13 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 text = resourceReference(R.string.main_manage_tokens),
                 onClick = onManageTokensClick,
             ),
+        ),
+    )
+
+    data class CreateTangemPayAccount(val onClick: () -> Unit, val onCloseClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            subtitle = resourceReference(R.string.tangempay_onboarding_banner_description),
+            iconResId = R.drawable.img_tangem_pay_visa_banner,
         ),
     )
 }
