@@ -17,6 +17,7 @@ internal class Eip681PaymentUriParserTest {
     private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
         every { getChainId(any()) } returns null
         every { getBlockchainNameByChainId(any()) } returns null
+        every { validateAddress(any(), any()) } returns true
     }
     private val parser = Eip681PaymentUriParser(blockchainDataProvider)
 
@@ -164,6 +165,24 @@ internal class Eip681PaymentUriParserTest {
 
         val result = parser.parse(
             qrCode = "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48@1/transfer?uint256=1000000",
+            coins = listOf(ethereumCoin),
+            allCurrencies = listOf(ethereumCoin, usdcToken),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
+
+    @Test
+    fun `ERC-20 transfer with invalid recipient address returns Unrecognized error`() {
+        every { blockchainDataProvider.getChainId(ethereumCoin.network) } returns 1L
+        every { blockchainDataProvider.validateAddress(any(), eq("0xInvalidRecipient")) } returns false
+
+        val usdcToken = buildToken("ethereum", "USDC", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+
+        val result = parser.parse(
+            qrCode = "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48@1/transfer?address=0xInvalidRecipient&uint256=1000000",
             coins = listOf(ethereumCoin),
             allCurrencies = listOf(ethereumCoin, usdcToken),
         )
