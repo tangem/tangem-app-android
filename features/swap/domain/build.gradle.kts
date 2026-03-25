@@ -55,7 +55,6 @@ dependencies {
     /** Other Libraries **/
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
-    implementation(deps.timber)
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
     implementation(deps.moshi)

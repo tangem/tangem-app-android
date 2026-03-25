@@ -45,7 +45,6 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Other */
-    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.common.test)

@@ -232,7 +232,13 @@ internal class FeedComponentModel @Inject constructor(
         return FeedListUM(
             currentDate = getCurrentDate(),
             feedListSearchBar = FeedListSearchBar(
-                placeholderText = resourceReference(R.string.markets_search_header_title),
+                placeholderText = resourceReference(
+                    id = if (feedFeatureToggle.isEarnBlockEnabled) {
+                        R.string.markets_search_title_placeholder
+                    } else {
+                        R.string.markets_search_header_title
+                    },
+                ),
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
                     params.feedClickIntents.onMarketOpenClick(null)
