@@ -13,8 +13,6 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.redux.OnboardingManageTokensAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -41,7 +39,6 @@ import javax.inject.Inject
 internal class OnboardingManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val messageSender: UiMessageSender,
-    private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventHandler: AnalyticsEventHandler,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
@@ -294,10 +291,6 @@ internal class OnboardingManageTokensModel @Inject constructor(
     }
 
     private fun returnToParentComponent() {
-        // old onboarding
-        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
-
-        // new one
         modelScope.launch {
             returnToParentComponentFlow.emit(Unit)
         }
