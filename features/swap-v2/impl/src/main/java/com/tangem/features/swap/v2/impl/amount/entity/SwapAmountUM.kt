@@ -10,6 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -44,6 +45,7 @@ internal sealed class SwapAmountUM {
 
         // selected swap route
         val swapRateType: ExpressRateType,
+        val swapRateMode: SwapRateMode,
 
         // swap models
         val swapCurrencies: SwapCurrencies,

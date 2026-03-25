@@ -75,13 +75,13 @@ import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.rekotlin.Store
-import timber.log.Timber
 
 lateinit var store: Store<AppState>
 
@@ -270,22 +270,6 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         }
     }
 
-    private fun updateLogFiles() {
-        appLogsStore.deleteOldLogsFile()
-
-        if (!BuildConfig.TESTER_MENU_ENABLED) {
-            appLogsStore.deleteLastLogFile()
-        }
-
-        // Temporally logs are not saved
-        // scope.launch {
-        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
-        //         appLogsStore.deleteLastLogFile()
-        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
-        //     }
-        // }
-    }
-
     /**
      * Initialize components that need to be initialized before [super.onCreate] is called
      */
@@ -299,10 +283,10 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         store = createReduxStore()
 
-        Timber.i("APP STARTED")
+        TangemLogger.i("APP STARTED")
         if (BuildConfig.TESTER_MENU_ENABLED) {
-            Timber.i(featureTogglesManager.toString())
-            Timber.i(excludedBlockchainsManager.toString())
+            TangemLogger.i(featureTogglesManager.toString())
+            TangemLogger.i(excludedBlockchainsManager.toString())
         }
 
         initWithConfigDependency(environmentConfig = environmentConfig)
@@ -387,6 +371,22 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                 ),
             ),
         )
+    }
+
+    private fun updateLogFiles() {
+        appLogsStore.deleteOldLogsFile()
+
+        if (!BuildConfig.TESTER_MENU_ENABLED) {
+            appLogsStore.deleteLastLogFile()
+        }
+
+        // Temporarily logs are not saved
+        // scope.launch {
+        //     if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
+        //         appLogsStore.deleteLastLogFile()
+        //         appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
+        //     }
+        // }
     }
 
     override fun newImageLoader(): ImageLoader {

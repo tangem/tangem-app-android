@@ -18,6 +18,7 @@ dependencies {
     /* Project - Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
     implementation(projects.common.routing)
     implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
@@ -57,5 +58,4 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.decompose.ext.compose)
-    implementation(deps.timber)
 }
