@@ -1,11 +1,15 @@
 package com.tangem.features.onramp.main.di
 
+import com.tangem.core.decompose.model.Model
 import com.tangem.features.onramp.main.DefaultOnrampMainComponent
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.main.model.OnrampMainComponentModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 import javax.inject.Singleton
 
 @Module
@@ -15,4 +19,9 @@ internal interface OnrampMainComponentModule {
     @Binds
     @Singleton
     fun bindOnrampMainComponentFactory(factory: DefaultOnrampMainComponent.Factory): OnrampMainComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(OnrampMainComponentModel::class)
+    fun bindOnrampMainComponentModel(model: OnrampMainComponentModel): Model
 }
