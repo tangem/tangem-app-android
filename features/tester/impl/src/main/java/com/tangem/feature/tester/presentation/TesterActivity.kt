@@ -1,5 +1,6 @@
 package com.tangem.feature.tester.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +18,7 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
 import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
@@ -36,6 +38,9 @@ import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
 import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
+import com.tangem.feature.tester.presentation.storybook.ui.StoryBookScreen
+import com.tangem.feature.tester.presentation.storybook.viewmodel.StoryBookViewModel
+import com.tangem.feature.tester.presentation.surveysparrow.SurveySparrowManager
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -57,6 +62,9 @@ internal class TesterActivity : ComposeActivity() {
 
     @Inject
     lateinit var appRouter: AppRouter
+
+    @Inject
+    lateinit var environmentConfig: EnvironmentConfig
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
@@ -86,6 +94,8 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
                             ButtonUM.ADDRESSES_INFO,
+                            ButtonUM.STORY_BOOK,
+                            ButtonUM.SURVEY_SPARROW,
                         ),
                         onButtonClick = { buttonUM ->
                             val route = when (buttonUM) {
@@ -97,6 +107,8 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
                                 ButtonUM.ADDRESSES_INFO -> TesterScreen.ADDRESSES_INFO
+                                ButtonUM.STORY_BOOK -> TesterScreen.STORY_BOOK
+                                ButtonUM.SURVEY_SPARROW -> TesterScreen.SURVEY_SPARROW
                             }
 
                             innerTesterRouter.open(route)
@@ -179,6 +191,51 @@ internal class TesterActivity : ComposeActivity() {
 
                 AddressesInfoScreen(state)
             }
+
+            composable(route = TesterScreen.STORY_BOOK.name) {
+                val viewModel = hiltViewModel<StoryBookViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                StoryBookScreen(state)
+            }
+
+            composable(route = TesterScreen.SURVEY_SPARROW.name) {
+                LaunchedEffect(Unit) {
+                    val isSuccess = startSurveySparrow()
+                    if (isSuccess) {
+                        innerTesterRouter.back()
+                    }
+                }
+            }
         }
+    }
+
+    private fun startSurveySparrow(): Boolean {
+        val token = environmentConfig.surveySparrowToken
+
+        if (token.isNullOrEmpty()) {
+            val toast = Toast.makeText(
+                this,
+                "Survey Sparrow is not configured. Token is missing.",
+                Toast.LENGTH_LONG,
+            )
+
+            toast.show()
+            return false
+        }
+
+        SurveySparrowManager(domain = DOMAIN, token = token).startSurveyForResult(
+            activity = this,
+            requestCode = SURVEY_SPARROW_REQUEST_CODE,
+        )
+
+        return true
+    }
+
+    private companion object {
+        const val DOMAIN = "tangem.com"
+        const val SURVEY_SPARROW_REQUEST_CODE = 1001
     }
 }

@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
-import com.tangem.data.account.featuretoggle.DefaultAccountsFeatureToggles
 import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher
 import com.tangem.data.account.repository.AccountsExpandedDTO
 import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
@@ -25,7 +23,6 @@ import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.repository.AccountsExpandedRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
@@ -42,12 +39,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object AccountDataModule {
-
-    @Provides
-    @Singleton
-    fun provideAccountFeatureToggle(featureTogglesManager: FeatureTogglesManager): AccountsFeatureToggles {
-        return DefaultAccountsFeatureToggles(featureTogglesManager = featureTogglesManager)
-    }
 
     @Provides
     @Singleton

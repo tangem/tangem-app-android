@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -29,6 +30,8 @@ import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.extensions.LocalUserInteractionTracker
+import com.tangem.core.ui.extensions.UserInteractionTracker
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
@@ -43,8 +46,8 @@ import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -162,7 +165,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
 
     @Inject
-    internal lateinit var tangemPayFeatureToggles: TangemPayFeatureToggles
+    internal lateinit var passwordRequester: HotWalletPasswordRequester
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -235,8 +238,16 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intent),
         )
 
+        val userInteractionTracker = object : UserInteractionTracker {
+            override fun onUserInteraction() {
+                lockUserWalletsTimer?.restart()
+            }
+        }
+
         setContent {
-            routingComponent.Content(Modifier.fillMaxSize())
+            CompositionLocalProvider(LocalUserInteractionTracker provides userInteractionTracker) {
+                routingComponent.Content(Modifier.fillMaxSize())
+            }
         }
     }
 
@@ -253,6 +264,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             coroutineScope = mainScope,
             userWalletsListRepository = userWalletsListRepository,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
+            passwordRequester = passwordRequester,
         )
 
         store.dispatch(
