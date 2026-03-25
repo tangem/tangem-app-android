@@ -19,7 +19,6 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.gasless.GetAvailableFeeTokensUseCase
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.NonceInserted
 import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeNonce
@@ -59,7 +58,6 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getAvailableFeeTokensUseCase: GetAvailableFeeTokensUseCase,
-    sendFeatureToggles: SendFeatureToggles,
     isGaslessFeeSupportedForNetwork: IsGaslessFeeSupportedForNetwork,
 ) : FeeSelectorIntents {
 
@@ -67,8 +65,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
     private val loadFeeJobHolder = JobHolder()
     val uiState = MutableStateFlow(params.state)
 
-    val isGaslessEnabled = sendFeatureToggles.isGaslessTransactionsEnabled &&
-        params.onLoadFeeExtended != null &&
+    val isGaslessEnabled = params.onLoadFeeExtended != null &&
         isGaslessFeeSupportedForNetwork(params.feeCryptoCurrencyStatus.currency.network) &&
         params.cryptoCurrencyStatus.currency is CryptoCurrency.Token
 
@@ -227,7 +224,7 @@ internal class FeeSelectorLogic @AssistedInject constructor(
                         },
                     )
                 },
-                ifLeft = { feeError ->
+                ifLeft = { _ ->
                     feeSelectorCheckReloadTrigger.callbackCheckResult(false)
                     feeSelectorAlertFactory.getFeeUnreachableErrorState { loadFee(isReload = true) }
                 },

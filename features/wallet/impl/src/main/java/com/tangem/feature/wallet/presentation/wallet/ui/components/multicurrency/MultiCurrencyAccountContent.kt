@@ -3,22 +3,23 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrenc
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.buttons.SecondarySmallButton
+import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.tokenlist.PortfolioListItem
 import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
+import com.tangem.core.ui.components.tokenlist.state.PortfolioItemContentUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
@@ -58,7 +59,8 @@ internal fun LazyListScope.portfolioTokensList(
         portfolioIndex = portfolioIndex,
         isBalanceHidden = isBalanceHidden,
     )
-    if (tokens.isEmpty()) {
+    val portfolioContent = portfolio.content
+    if (portfolioContent is PortfolioItemContentUM.Empty) {
         item(
             key = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
             contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
@@ -76,9 +78,7 @@ internal fun LazyListScope.portfolioTokensList(
                     ),
                 visible = isExpanded,
             ) {
-                NonContentItemContent(
-                    modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing28),
-                )
+                EmptyAccountContent(portfolioContent)
             }
         }
         return
@@ -112,6 +112,28 @@ internal fun LazyListScope.portfolioTokensList(
             }
         },
     )
+}
+
+@Composable
+private fun EmptyAccountContent(emptyConent: PortfolioItemContentUM.Empty, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        SpacerH16()
+        NonContentItemContent()
+        val emptyAction = emptyConent.action
+        if (emptyAction != null) {
+            SpacerH16()
+            SecondarySmallButton(
+                config = SmallButtonConfig(
+                    text = emptyAction.text,
+                    onClick = { emptyAction.onClick() },
+                ),
+            )
+        }
+        SpacerH24()
+    }
 }
 
 @Suppress("MagicNumber")
@@ -163,7 +185,7 @@ private fun LazyListScope.portfolioItem(
 
 @Suppress("MagicNumber")
 @Composable
-private fun SlideInItemVisibility(
+internal fun SlideInItemVisibility(
     visible: Boolean,
     currentIndex: Int,
     lastIndex: Int,

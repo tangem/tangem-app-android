@@ -7,6 +7,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -124,7 +125,6 @@ internal class TangemPayDetailsModel @Inject constructor(
         modelScope.launch {
             expressTransactionsEventListener.send(ExpressTransactionsEvent.Update)
         }
-        subscribeToWithdrawOrder()
     }
 
     fun onPause() {
@@ -147,14 +147,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                 )
             }
             .launchIn(modelScope)
-    }
-
-    private fun subscribeToWithdrawOrder() {
-        modelScope.launch {
-            val userWallet = userWallet ?: getUserWalletUseCase(params.userWalletId).getOrNull()
-                ?: return@launch
-            tangemPayWithdrawRepository.pollWithdrawOrdersIfNeeds(userWallet)
-        }
     }
 
     override fun onClickPinCode() {
@@ -380,6 +372,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onContactSupportClicked() {
         analytics.send(TangemPayAnalyticsEvents.GoToSupportOnBetaBannerClicked())
+        analytics.send(Basic.ButtonSupport(source = AnalyticsParam.ScreensSources.TangemPay))
         modelScope.launch {
             sendFeedbackEmailUseCase.invoke(
                 type = FeedbackEmailType.Visa.FeatureIsBeta(

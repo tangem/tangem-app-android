@@ -2,11 +2,13 @@ package com.tangem.domain.tokens.wallet
 
 import arrow.core.Either
 import arrow.core.raise.either
+import arrow.core.right
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
@@ -45,6 +47,7 @@ class WalletBalanceFetcher internal constructor(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+    private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
@@ -57,6 +60,7 @@ class WalletBalanceFetcher internal constructor(
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+        paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -72,6 +76,7 @@ class WalletBalanceFetcher internal constructor(
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
         multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+        paymentAccountStatusFetcher = paymentAccountStatusFetcher,
         stakingIdFactory = stakingIdFactory,
         dispatchers = dispatchers,
     )
@@ -91,10 +96,18 @@ class WalletBalanceFetcher internal constructor(
             error("UserWallet doesn't contain crypto-currencies: $userWalletId")
         }
 
-        fetcher.fetch(userWalletId = userWalletId, currencies = currencies)
+        fetcher.fetch(
+            userWalletId = userWalletId,
+            currencies = currencies,
+            paymentAccountRefactorEnabled = params.isPaymentAccountRefactorEnabled,
+        )
     }
 
-    private suspend fun BaseWalletBalanceFetcher.fetch(userWalletId: UserWalletId, currencies: Set<CryptoCurrency>) {
+    private suspend fun BaseWalletBalanceFetcher.fetch(
+        userWalletId: UserWalletId,
+        currencies: Set<CryptoCurrency>,
+        paymentAccountRefactorEnabled: Boolean,
+    ) {
         coroutineScope {
             val results = fetchingSources.map { source ->
                 async {
@@ -102,6 +115,10 @@ class WalletBalanceFetcher internal constructor(
                         FetchingSource.NETWORK -> fetchNetworks(userWalletId = userWalletId, currencies = currencies)
                         FetchingSource.QUOTE -> fetchQuotes(currencies = currencies)
                         FetchingSource.STAKING -> fetchStaking(userWalletId = userWalletId, currencies = currencies)
+                        FetchingSource.TANGEM_PAY -> fetchPaymentAccount(
+                            userWalletId = userWalletId,
+                            paymentAccountRefactorEnabled = paymentAccountRefactorEnabled,
+                        )
                     }
 
                     source to maybeResult
@@ -173,10 +190,19 @@ class WalletBalanceFetcher internal constructor(
         }
     }
 
+    private suspend fun fetchPaymentAccount(
+        userWalletId: UserWalletId,
+        paymentAccountRefactorEnabled: Boolean,
+    ): Either<Throwable, Unit> {
+        if (!paymentAccountRefactorEnabled) return Unit.right()
+
+        return paymentAccountStatusFetcher.invoke(PaymentAccountStatusFetcher.Params(userWalletId))
+    }
+
     /**
      * Params of [WalletBalanceFetcher]
      *
      * @property userWalletId user wallet id
      */
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val userWalletId: UserWalletId, val isPaymentAccountRefactorEnabled: Boolean)
 }

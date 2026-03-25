@@ -2,7 +2,9 @@ package com.tangem.scenarios
 
 import androidx.compose.ui.test.click
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.assertVisibility
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.isDisplayedSafely
 import com.tangem.screens.*
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.Allure.step
@@ -170,11 +172,141 @@ fun BaseTestCase.checkStoriesChanges() {
     }
 }
 
+fun BaseTestCase.selectFeeType(feeType: FeeType, selectedFeeAmount: String) {
+    step("Click on 'Select fee' icon") {
+        onSwapTokenScreen { selectFeeIcon.performClick() }
+    }
+
+    when (feeType) {
+        FeeType.Market -> {
+            step("Click on 'Market' item") {
+                onSwapSelectNetworkFeeBottomSheet { marketSelectorItem.performClick() }
+            }
+            step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
+                onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+            }
+        }
+        FeeType.Fast -> {
+            step("Click on 'Fast' item") {
+                onSwapSelectNetworkFeeBottomSheet { fastSelectorItem.performClick() }
+            }
+            step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
+                onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+            }
+        }
+    }
+}
+
+fun BaseTestCase.selectFeeTypeWithGasless(feeType: FeeType, selectedFeeAmount: String) {
+    step("Click on 'Select fee' icon") {
+        onSwapTokenScreen { selectFeeIcon.performClick() }
+    }
+
+    when (feeType) {
+        FeeType.Market -> selectMarketFee(selectedFeeAmount)
+        FeeType.Fast -> selectFastFee(selectedFeeAmount)
+    }
+}
+
+private fun BaseTestCase.selectMarketFee(selectedFeeAmount: String) {
+    step("Deselect current fee and select 'Market'") {
+        onSwapSelectNetworkFeeBottomSheet {
+            if (fastSelectorItem.isDisplayedSafely()) {
+                fastSelectorItem.performClick()
+            }
+            marketSelectorItem.performClick()
+        }
+    }
+    step("Click on 'Apply' button") {
+        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
+    }
+    step("Assert fee amount is equal to 'Market' fee:'$selectedFeeAmount'") {
+        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+    }
+}
+
+private fun BaseTestCase.selectFastFee(selectedFeeAmount: String) {
+    step("Deselect current fee and select 'Fast'") {
+        onSwapSelectNetworkFeeBottomSheet {
+            if (marketSelectorItem.isDisplayedSafely()) {
+                marketSelectorItem.performClick()
+            }
+            fastSelectorItem.performClick()
+        }
+    }
+    step("Click on 'Apply' button") {
+        onSwapSelectNetworkFeeBottomSheet { applyButton.performClick() }
+    }
+    step("Assert fee amount is equal to 'Fast' fee:'$selectedFeeAmount'") {
+        onSwapTokenScreen { feeAmount.assertTextContains(selectedFeeAmount, substring = true) }
+    }
+}
+
+fun BaseTestCase.chackUnableToCoverFeeNotification(networkName: String, currencySymbol: String) {
+    step("Assert 'Unable to cover '$networkName' fee notification title is displayed'") {
+        onSwapTokenScreen { unableToCoverFeeNotificationTitle(networkName).assertIsDisplayed() }
+    }
+    step("Assert 'Unable to cover '$networkName' fee notification text is displayed'") {
+        onSwapTokenScreen {
+            unableToCoverFeeNotificationText(
+                currencyName = networkName,
+                currencySymbol = currencySymbol
+            ).assertIsDisplayed()
+        }
+    }
+    step("Assert 'Unable to cover '$networkName' fee notification icon is displayed'") {
+        onSwapTokenScreen { unableToCoverFeeNotificationIcon(networkName).assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkSwapWarning(
+    title: String,
+    message: String,
+    isDisplayed: Boolean = true,
+    swapButtonIsDisabled: Boolean = isDisplayed,
+) {
+    val assertDisplay = if (isDisplayed) "displayed" else "not displayed"
+
+    step("Assert warning title is $assertDisplay") {
+        onSwapTokenScreen {
+            warningTitle(title).assertVisibility(isDisplayed)
+        }
+    }
+    step("Assert warning icon is $assertDisplay") {
+        onSwapTokenScreen {
+            warningIcon(message).assertVisibility(isDisplayed)
+        }
+    }
+    step("Assert warning message is $assertDisplay") {
+        onSwapTokenScreen {
+            warningMessage(message).assertVisibility(isDisplayed)
+        }
+    }
+
+    if (swapButtonIsDisabled)
+        step("Assert 'Swap' button is disabled") {
+            onSwapTokenScreen {
+                swapButton.assertIsNotEnabled()
+            }
+        }
+    else
+        step("Assert 'Swap' button is enabled") {
+            onSwapTokenScreen {
+                swapButton.assertIsEnabled()
+            }
+        }
+}
+
 sealed class SwapEntryPoint {
     object MainScreen : SwapEntryPoint()
     object TokenDetails : SwapEntryPoint()
     object MarketsTokenDetails : SwapEntryPoint()
     object TokenActionsBottomSheet : SwapEntryPoint()
+}
+
+enum class FeeType {
+    Market,
+    Fast
 }
 
 
