@@ -57,7 +57,7 @@ internal class DefaultNetworksRepository(
             .map { currency ->
                 CryptoCurrencyAddress(
                     cryptoCurrency = currency,
-                    address = getDefaultAddress(userWalletId, network),
+                    address = getDefaultAddress(userWalletId, network).orEmpty(),
                 )
             }
     }
@@ -74,9 +74,15 @@ internal class DefaultNetworksRepository(
             .map { currency ->
                 CryptoCurrencyAddress(
                     cryptoCurrency = currency,
-                    address = getDefaultAddress(userWalletId, currency.network),
+                    address = getDefaultAddress(userWalletId, currency.network).orEmpty(),
                 )
             }
+    }
+
+    override suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String? {
+        return withContext(dispatchers.io) {
+            walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network)
+        }
     }
 
     override suspend fun hasCachedStatuses(userWalletId: UserWalletId): Boolean {
@@ -99,11 +105,5 @@ internal class DefaultNetworksRepository(
         )
 
         networksStatusesStore.storeStatus(userWalletId = userWalletId, status = networkStatus)
-    }
-
-    private suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String {
-        return withContext(dispatchers.io) {
-            walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network).orEmpty()
-        }
     }
 }
