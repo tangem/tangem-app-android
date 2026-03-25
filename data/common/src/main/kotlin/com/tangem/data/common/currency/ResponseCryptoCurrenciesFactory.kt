@@ -11,7 +11,7 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import com.tangem.blockchain.common.Token as SdkToken
 
@@ -46,7 +46,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     ): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
+            TangemLogger.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
             return null
         }
 
@@ -71,7 +71,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     ): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
+            TangemLogger.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
             return null
         }
 

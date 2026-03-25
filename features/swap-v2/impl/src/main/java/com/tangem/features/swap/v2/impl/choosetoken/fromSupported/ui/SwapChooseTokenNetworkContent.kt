@@ -6,11 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -25,7 +23,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
@@ -141,21 +138,6 @@ private fun SwapChooseTokenNetworkContentList(swapNetworks: ImmutableList<SwapCh
                         TangemTheme.colors.text.tertiary
                     },
                 )
-                if (network.hasFixedRate) {
-                    SpacerWMax()
-                    Text(
-                        text = stringResourceSafe(R.string.swap_fixed_rate),
-                        style = TangemTheme.typography.body2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier
-                            .border(
-                                width = 1.dp,
-                                color = TangemTheme.colors.stroke.primary,
-                                shape = RoundedCornerShape(6.dp),
-                            )
-                            .padding(vertical = 2.dp, horizontal = 4.dp),
-                    )
-                }
             }
         }
     }

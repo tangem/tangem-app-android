@@ -22,7 +22,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.lib.crypto.BlockchainUtils
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class ManagedCryptoCurrencyFactory(
     private val networkFactory: NetworkFactory,
@@ -223,7 +223,7 @@ internal class ManagedCryptoCurrencyFactory(
             blockchain.canHandleTokens() -> {
                 val formattedContractAddress = blockchain.reformatContractAddress(contractAddress)
                 if (formattedContractAddress == null) {
-                    Timber.w("Couldn't reformat $contractAddress")
+                    TangemLogger.w("Couldn't reformat $contractAddress")
                     return null
                 }
                 SourceNetwork.Default(

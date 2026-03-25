@@ -26,7 +26,7 @@ import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
@@ -53,7 +53,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
 
     suspend fun show(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         if (userWalletExists(attemptRequest.hotWalletId).not()) {
-            Timber.e("User wallet with id ${attemptRequest.hotWalletId} does not exist")
+            TangemLogger.e("User wallet with id ${attemptRequest.hotWalletId} does not exist")
             result.value = HotWalletPasswordRequester.Result.Dismiss
             return
         }
