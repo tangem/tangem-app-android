@@ -214,6 +214,7 @@
   <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
+  <string name="common_add_tokens">トークンの追加</string>
   <string name="common_added">追加済み</string>
   <string name="common_address">アドレス</string>
   <string name="common_all">すべて</string>
@@ -319,6 +320,7 @@
   <string name="common_nft">NFT</string>
   <string name="common_no">いいえ</string>
   <string name="common_no_address">アドレスがありません</string>
+  <string name="common_no_results">該当する結果はありません</string>
   <string name="common_not_added">未追加</string>
   <string name="common_not_available">利用できません</string>
   <string name="common_not_now">今はしない</string>
@@ -377,6 +379,7 @@
   <string name="common_to">宛先</string>
   <string name="common_to_wallet_name">%sへ</string>
   <string name="common_today">今日</string>
+  <string name="common_token_send">送信するトークン</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d トークン</item>
   </plurals>
@@ -388,6 +391,7 @@
   <string name="common_understand">わかりました</string>
   <string name="common_understand_continue">理解して続行</string>
   <string name="common_unknown_error">エラーが発生しました。もう一度お試しください。</string>
+  <string name="common_unlock">ロック解除</string>
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
@@ -692,6 +696,7 @@
   <string name="koinos_mana_level_title">Manaレベル</string>
   <string name="main_empty_tokens_list_message">暗号資産および取引の追跡を開始するには、トークンを追加してください</string>
   <string name="main_manage_tokens">トークンの管理</string>
+  <string name="main_qr_scan_hint">QRコードをスキャンして送金するか、アプリに接続します。</string>
   <string name="main_scan_card_warning_view_subtitle">すべてのネットワークにアクセスするには、カードをスキャンする必要があります。</string>
   <string name="main_scan_card_warning_view_title">カードまたはリングをスキャンする</string>
   <string name="main_swap_changelly_promotion_message">2月%2$s - %3$sの期間、Changelly経由のスワップは%1$sのサービス手数料となります。</string>
@@ -728,6 +733,8 @@
   <string name="markets_earn_common_title">Tangemで稼ぐ</string>
   <string name="markets_generate_addresses_notification">選択したネットワークのアドレスを生成するには、Tangemウォレットカードまたはリングをスキャンする必要があります。</string>
   <string name="markets_hint">トークンを追加するには、これをスワイプするか、検索バーをタップしてください。</string>
+  <string name="markets_hint_part_one">上にスワイプしてマーケットをチェック</string>
+  <string name="markets_hint_part_two">新たな有望銘柄を見つける</string>
   <string name="markets_insights_info_description_message">このセクションのデータは、次のネットワークから取得されています: %s</string>
   <string name="markets_loading_error_title">データを読み込めません…</string>
   <string name="markets_loading_no_data_title">データなし</string>
@@ -788,6 +795,10 @@
   <string name="markets_token_details_holders">ホルダー</string>
   <string name="markets_token_details_holders_description">特定の期間内のトークンホルダー数の変化</string>
   <string name="markets_token_details_holders_full">ホルダー</string>
+  <string name="markets_token_details_insight_day_timeline">日</string>
+  <string name="markets_token_details_insight_month_timeline">月</string>
+  <string name="markets_token_details_insight_week_timeline">週</string>
+  <string name="markets_token_details_insight_year_timeline">年</string>
   <string name="markets_token_details_insights">インサイト</string>
   <string name="markets_token_details_links">リンク</string>
   <string name="markets_token_details_liquidity">流動性</string>
@@ -815,9 +826,11 @@
   <string name="markets_token_details_total_supply">総供給量</string>
   <string name="markets_token_details_total_supply_description">特定の暗号資産に存在しうるコインまたはトークンの最大数</string>
   <string name="markets_token_details_total_supply_full">総供給量</string>
+  <string name="markets_token_details_trading_interval">24h</string>
   <string name="markets_token_details_trading_volume">取引量（24時間）</string>
   <string name="markets_token_details_trading_volume_24h_description">過去24時間以内に取引された暗号資産の合計額。市場の活発さと流動性を示します。</string>
   <string name="markets_token_details_trading_volume_full">取引量（24時間）</string>
+  <string name="markets_token_details_valuation_value_in_total">合計 %s</string>
   <string name="markets_token_details_volume">取引量</string>
   <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
   <string name="markets_tooltip_title">トークンを追加</string>
@@ -839,6 +852,7 @@
   <string name="news_related_tokens">関連トークン</string>
   <string name="news_sources">関連ニュース</string>
   <string name="news_stay_in_the_loop">最新情報を入手</string>
+  <string name="news_trending_score">トレンドスコア</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="nft_about_title">NFTについて</string>
   <string name="nft_asset">NFTアセット</string>
@@ -1181,6 +1195,9 @@
   <string name="send_memo">メモ: %s</string>
   <string name="send_memo_destination_tag_error">無効なメモ</string>
   <string name="send_network_fee_warning_title">ネットワーク手数料のカバー</string>
+  <plurals name="send_network_selection_hidden_tokens">
+    <item quantity="other">%dトークンは、このアドレスには対応していません。</item>
+  </plurals>
   <string name="send_nonce">ナンス</string>
   <string name="send_nonce_footer">各取引に固有の番号です。保留中の取引を再送信またはキャンセルするために使用します。</string>
   <string name="send_nonce_hint">ナンスを入力してください...</string>
@@ -1488,6 +1505,7 @@
   <string name="tangempay_cancel_kyc">メイン画面からKYCを非表示にする</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
+  <string name="tangempay_card_details_add_to_wallet_button_text">Googleウォレットに追加</string>
   <string name="tangempay_card_details_card_number">カード番号</string>
   <string name="tangempay_card_details_change_pin">PINを変更する</string>
   <string name="tangempay_card_details_change_pin_success_description">カードは支払いの準備が整いました。</string>
@@ -1876,6 +1894,8 @@
   <string name="warning_express_refresh_required_title">サービスは一時的に利用できません</string>
   <string name="warning_express_too_maximum_amount_title">スワップするトークンの量は %s を超えないでください</string>
   <string name="warning_express_too_minimal_amount_title">スワップ金額は %s 以上である必要があります</string>
+  <string name="warning_express_unsupported_pair_description">このペアではスワップを利用できません。別のトークンを選択して、もう一度お試しください。</string>
+  <string name="warning_express_unsupported_pair_title">スワップ非対応のペアです</string>
   <string name="warning_express_wrong_amount_description">スワップの金額を変更してください</string>
   <string name="warning_failed_to_verify_card_message">このカードは、サンプル品または偽造品である可能性があります</string>
   <string name="warning_failed_to_verify_card_title">真正性チェックに失敗しました</string>
