@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.forgetwallet
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -80,8 +80,8 @@ internal class ForgetWalletModel @Inject constructor(
     private fun forgetWallet() {
         modelScope.launch {
             val hasUserWallets = deleteWalletUseCase(params.userWalletId)
-                .getOrElse {
-                    Timber.e("Unable to delete wallet: $it")
+                .getOrElse { error ->
+                    TangemLogger.e("Unable to delete wallet: $error")
 
                     uiMessageSender.send(
                         message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
