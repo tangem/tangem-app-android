@@ -2,16 +2,22 @@ package com.tangem.data.qrscanning
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.qrscanning.parser.PaymentUriParser
+import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.data.qrscanning.parser.SolanaPaymentUriParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Test
 import java.math.BigDecimal
 
 internal class SolanaPaymentUriParserTest {
 
-    private val parser = SolanaPaymentUriParser()
+    private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
+        every { validateAddress(any(), any()) } returns true
+    }
+    private val parser = SolanaPaymentUriParser(blockchainDataProvider)
 
     // region Scheme matching
 
@@ -111,6 +117,21 @@ internal class SolanaPaymentUriParserTest {
     // endregion
 
     // region Unsupported network
+
+    @Test
+    fun `invalid address returns Unrecognized error`() {
+        every { blockchainDataProvider.validateAddress(any(), eq("InvalidSolAddress")) } returns false
+
+        val result = parser.parse(
+            qrCode = "solana:InvalidSolAddress?amount=1",
+            coins = listOf(solanaCoin),
+            allCurrencies = listOf(solanaCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
 
     @Test
     fun `no matching solana coin returns UnsupportedNetwork`() {
