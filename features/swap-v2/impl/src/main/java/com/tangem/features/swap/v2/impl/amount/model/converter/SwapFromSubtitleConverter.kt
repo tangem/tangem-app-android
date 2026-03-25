@@ -6,6 +6,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.swap.v2.impl.R
+import com.tangem.utils.StringsSigns.DOT
 import java.math.BigDecimal
 
 /**
@@ -15,7 +16,7 @@ import java.math.BigDecimal
  * |--------------------------------|-----------------------------------|-----------------------------------|------------------------|
  * | Entering (float), any          | "Balance: " (empty param)         | "{balance}" masked                | OffsetEnd(symbol)      |
  * | Viewing (fixed), empty         | "Balance: " (empty param)         | "{balance}" masked (crypto only)  | End                    |
- * | Viewing (fixed), not empty     | send_from_title                   | "{displayStr}" masked             | OffsetEnd(symbol)      |
+ * | Viewing (fixed), not empty     | "{balance}" masked               | "• Send {displayStr}" masked       | OffsetEnd(symbol)      |
  */
 internal object SwapFromSubtitleConverter {
 
@@ -52,9 +53,13 @@ internal object SwapFromSubtitleConverter {
                 ellipsisLeft = TextEllipsis.End
             }
             else -> {
-                subtitleLeft = resourceReference(R.string.send_from_title)
-                subtitleRight = combinedReference(stringReference(displayStr))
+                subtitleLeft = stringReference(balance)
                     .orMaskWithStars(isBalanceHidden)
+                subtitleRight = combinedReference(
+                    stringReference("$DOT "),
+                    resourceReference(R.string.common_send),
+                    stringReference(" $displayStr"),
+                ).orMaskWithStars(isBalanceHidden)
                 ellipsisLeft = TextEllipsis.OffsetEnd(symbol.length)
             }
         }
