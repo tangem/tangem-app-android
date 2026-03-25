@@ -27,9 +27,7 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
-import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -56,7 +54,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
-    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val accountDependencies: AccountDependencies,
@@ -76,7 +73,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             accountStatusListFlow,
             isReadyToShowRateAppUseCase().distinctUntilChanged(),
             isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
-            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.OnePlusOne)
                 .distinctUntilChanged(),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
@@ -93,13 +89,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val accountStatusList = array[0] as AccountStatusList
                 val isReadyToShowRating = array[1] as Boolean
                 val isNeedToBackup = array[2] as Boolean
-                val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
-                val shouldShowOnePlusOnePromo = array[4] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[5] as Boolean
-                val shouldAccessCodeSkipped = array[6] as Boolean
-                val shouldShowYieldPromo = array[7] as Boolean
-                val shouldShowUpgradeBanner = array[8] as Boolean
-                val closureTimestamp = array[9] as? Long
+                val shouldShowOnePlusOnePromo = array[3] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[4] as Boolean
+                val shouldAccessCodeSkipped = array[5] as Boolean
+                val shouldShowYieldPromo = array[6] as Boolean
+                val shouldShowUpgradeBanner = array[7] as Boolean
+                val closureTimestamp = array[8] as? Long
 
                 val flattenCurrencies = accountStatusList.flattenCurrencies()
                 val paymentAccountStatus = accountStatusList.accountStatuses
@@ -109,7 +104,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 buildList {
                     addUsedOutdatedDataNotification(accountStatusList.totalFiatBalance)
 
-                    addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
+                    addCriticalNotifications(userWallet, clickIntents)
 
                     addUpgradeHotWalletPromoNotification(
                         userWallet = userWallet,
@@ -213,14 +208,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(
         userWallet: UserWallet,
-        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
         clickIntents: WalletClickIntents,
     ) {
         if (userWallet !is UserWallet.Cold) {
             return
         }
-
-        addSeedNotificationIfNeeded(userWallet, seedPhraseIssueStatus, clickIntents)
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
@@ -243,39 +235,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 element = WalletNotification.Warning.LowSignatures(count = remainingSignatures),
                 condition = remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT,
             )
-        }
-    }
-
-    private fun MutableList<WalletNotification>.addSeedNotificationIfNeeded(
-        userWallet: UserWallet.Cold,
-        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
-        clickIntents: WalletClickIntents,
-    ) {
-        val isNotificationAvailable = with(userWallet) {
-            val isDemo = isDemoCardUseCase(cardId = userWallet.cardId)
-            val isWalletWithSeedPhrase = scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported
-
-            !isDemo && isWalletWithSeedPhrase
-        }
-
-        when (seedPhraseIssueStatus) {
-            SeedPhraseNotificationsStatus.SHOW_FIRST -> addIf(
-                element = WalletNotification.Critical.SeedPhraseNotification(
-                    onDeclineClick = clickIntents::onSeedPhraseNotificationDecline,
-                    onConfirmClick = clickIntents::onSeedPhraseNotificationConfirm,
-                ),
-                condition = isNotificationAvailable,
-            )
-            SeedPhraseNotificationsStatus.SHOW_SECOND -> addIf(
-                element = WalletNotification.Critical.SeedPhraseSecondNotification(
-                    onDeclineClick = clickIntents::onSeedPhraseSecondNotificationReject,
-                    onConfirmClick = clickIntents::onSeedPhraseSecondNotificationAccept,
-                ),
-                condition = isNotificationAvailable,
-            )
-            SeedPhraseNotificationsStatus.NOT_NEEDED -> {
-                // do nothing
-            }
         }
     }
 
