@@ -8,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic.ButtonSupport
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
@@ -234,6 +235,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             val userWallet = getSelectedUserWallet() ?: return@launch
             val cardInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
 
+            analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(walletMetaInfo = cardInfo))
         }
     }
@@ -336,6 +338,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
     }
@@ -345,6 +348,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch {
             val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            analyticsEventHandler.send(ButtonSupport(source = AnalyticsParam.ScreensSources.Main))
             sendFeedbackEmailUseCase(type = FeedbackEmailType.BackupProblem(walletMetaInfo = metaInfo))
         }
     }

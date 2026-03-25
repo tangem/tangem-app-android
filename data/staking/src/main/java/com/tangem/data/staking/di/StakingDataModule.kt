@@ -61,7 +61,6 @@ internal object StakingDataModule {
         dispatchers: CoroutineDispatcherProvider,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
-        walletManagersFacade: WalletManagersFacade,
     ): StakingRepository {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
@@ -69,7 +68,6 @@ internal object StakingDataModule {
             stakingBalanceStoreV2 = stakeKitBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
-            walletManagersFacade = walletManagersFacade,
             stakingFeatureToggles = stakingFeatureToggles,
         )
     }

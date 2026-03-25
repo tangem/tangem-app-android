@@ -164,7 +164,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
         flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>>,
     ): Flow<Map<AccountCurrencyId, CryptoCurrencyStatus>> {
         val walletId = userWallet.walletId
-        val networkStatusFlow: SharedFlow<Map<Network.ID, NetworkStatus>> = networkStatusFlow(walletId, flattenCurrency)
+        val networkStatusFlow: SharedFlow<Map<Network.ID, NetworkStatus>> = networkStatusFlow(walletId)
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
         val stakingBalanceFlow: SharedFlow<Map<StakingID, Set<StakingBalance>>> = stakingFlow(userWallet)
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
@@ -213,27 +213,10 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             }
     }
 
-    private fun networkStatusFlow(
-        walletId: UserWalletId,
-        flattenCurrency: MutableSharedFlow<Map<AccountCurrencyId, CryptoCurrency>>,
-    ): Flow<Map<Network.ID, NetworkStatus>> = channelFlow {
-        val currencyCount = flattenCurrency
-            .map { map -> map.size }
-            .stateIn(this, SharingStarted.Eagerly, 0)
-
+    private fun networkStatusFlow(walletId: UserWalletId): Flow<Map<Network.ID, NetworkStatus>> =
         networkStatusSupplier(MultiNetworkStatusProducer.Params(walletId))
-            // todo accounts high frequency, investigate better debounce
-            .debounce {
-                val count = currencyCount.value
-                @Suppress("MagicNumber") when {
-                    count in 10..25 -> 50L
-                    count > 25 -> 100L
-                    else -> 0
-                }
-            }
             .mapLatest { statuses -> statuses.associateBy { status -> status.network.id } }
-            .distinctUntilChanged().collect { result -> channel.send(result) }
-    }
+            .distinctUntilChanged()
 
     private fun stakingFlow(wallet: UserWallet): Flow<Map<StakingID, Set<StakingBalance>>> =
         if (!wallet.isMultiCurrency) {

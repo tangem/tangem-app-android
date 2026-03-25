@@ -1,6 +1,6 @@
 package com.tangem.features.feed.model.news.list.statemanager
 
-import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.features.feed.model.news.list.analytics.NewsListAnalyticsEvent
