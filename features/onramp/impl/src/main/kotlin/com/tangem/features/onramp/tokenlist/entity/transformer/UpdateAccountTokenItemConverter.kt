@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
+import com.tangem.common.ui.account.TokensListPortfolioItemConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
@@ -25,7 +26,7 @@ internal class UpdateAccountTokenItemConverter(
         .createUnavailableItemConverterV2(appCurrency = appCurrency, unavailableErrorText = unavailableErrorText)
 
     override fun convert(value: AccountAvailabilityUM): TokensListItemUM.Portfolio {
-        return TokensListItemUM.Portfolio(
+        return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
                 account = value.account,
@@ -40,6 +41,6 @@ internal class UpdateAccountTokenItemConverter(
                     unavailableConverter.convert(status)
                 }
             }.map(TokensListItemUM::Token).toPersistentList(),
-        )
+        ).convert(Unit)
     }
 }
