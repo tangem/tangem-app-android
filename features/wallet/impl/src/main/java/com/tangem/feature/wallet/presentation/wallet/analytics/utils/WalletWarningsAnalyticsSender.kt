@@ -116,8 +116,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                     balanceState = balanceState,
                 )
             }
-            is WalletNotification.Critical.SeedPhraseNotification -> NoticeSeedPhraseSupport()
-            is WalletNotification.Critical.SeedPhraseSecondNotification -> NoticeSeedPhraseSupportSecond()
             is WalletNotification.PushNotifications -> PushBanner()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             is WalletNotification.Warning.TangemPayUnreachable -> null
@@ -163,8 +161,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                     balanceState = balanceState,
                 )
             }
-            is WalletNotificationUM.SeedPhraseNotification -> NoticeSeedPhraseSupport()
-            is WalletNotificationUM.SeedPhraseSecondNotification -> NoticeSeedPhraseSupportSecond()
             is WalletNotificationUM.PushNotifications -> PushBanner()
             is WalletNotificationUM.UnlockWallets,
             is WalletNotificationUM.NoAccount,
