@@ -51,6 +51,11 @@ internal object SwapNotificationUM {
             subtitle = resourceReference(R.string.warning_express_providers_fca_warning_description),
             iconResId = R.drawable.ic_alert_circle_24,
         )
+
+        data object InsufficientFunds : Error(
+            title = resourceReference(R.string.swapping_insufficient_funds),
+            subtitle = resourceReference(R.string.swapping_insufficient_funds_description),
+        )
     }
 
     sealed class Warning(
