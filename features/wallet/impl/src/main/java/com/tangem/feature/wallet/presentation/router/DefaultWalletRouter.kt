@@ -17,8 +17,6 @@ import com.tangem.domain.qrscanning.models.QrSendTarget
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
@@ -35,7 +33,6 @@ import javax.inject.Inject
 internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
-    private val reduxStateHolder: ReduxStateHolder,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : InnerWalletRouter {
 
@@ -115,10 +112,6 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
-    }
-
-    override fun openScanFailedDialog(onTryAgain: () -> Unit) {
-        reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
     }
 
     override fun openNFT(userWallet: UserWallet) {
