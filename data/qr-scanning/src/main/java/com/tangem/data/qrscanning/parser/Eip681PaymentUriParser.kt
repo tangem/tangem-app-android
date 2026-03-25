@@ -1,5 +1,6 @@
 package com.tangem.data.qrscanning.parser
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import java.math.BigDecimal
@@ -14,11 +15,10 @@ internal class Eip681PaymentUriParser(
         coins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): PaymentUriParser.ParseResult {
-        if (!qrCode.startsWith(SCHEME)) {
-            return PaymentUriParser.ParseResult.NotRecognized
-        }
+        val scheme = SCHEMES.find { qrCode.startsWith(it, ignoreCase = true) }
+            ?: return PaymentUriParser.ParseResult.NotRecognized
 
-        val withoutScheme = qrCode.removePrefix(SCHEME)
+        val withoutScheme = qrCode.removePrefix(scheme)
         val parsed = parseEip681(withoutScheme) ?: return PaymentUriParser.ParseResult.NotRecognized
 
         val matchingCoins = findMatchingCoins(parsed.chainId, coins)
@@ -114,7 +114,7 @@ internal class Eip681PaymentUriParser(
     private fun findMatchingCoins(chainId: Long?, coins: List<CryptoCurrency.Coin>): List<CryptoCurrency.Coin> {
         if (chainId == null) {
             return coins.filter { coin ->
-                blockchainDataProvider.getShareSchemes(coin.network).any { it.startsWith(SCHEME) }
+                blockchainDataProvider.getChainId(coin.network) != null
             }
         }
         return coins.filter { coin ->
@@ -164,7 +164,7 @@ internal class Eip681PaymentUriParser(
     private companion object {
         // ethereum:<address>[@<chainId>][/<function>][?<params>]
         val URI_REGEX = Regex("""^([^@/?]+)(?:@(\d+))?(?:/([^?]+))?(?:\?(.+))?$""")
-        const val SCHEME = "ethereum:"
+        val SCHEMES = Blockchain.Ethereum.getShareScheme()
         const val FUNCTION_TRANSFER = "transfer"
         const val PARAM_VALUE = "value"
         const val PARAM_ADDRESS = "address"
