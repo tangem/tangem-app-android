@@ -17,6 +17,15 @@ dependencies {
     implementation(deps.gradle.kotlin)
     implementation(deps.gradle.android)
     implementation(deps.gradle.detekt)
+    implementation(deps.gradle.kotlinpoet)
+    implementation(deps.kotlin.serialization)
+
+    testImplementation(deps.test.junit5)
+    testImplementation(deps.test.truth)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 gradlePlugin {

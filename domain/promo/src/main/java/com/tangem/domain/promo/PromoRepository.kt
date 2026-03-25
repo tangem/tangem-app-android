@@ -16,10 +16,6 @@ interface PromoRepository {
 
     suspend fun setNeverToShowTokenPromo(promoId: PromoId)
 
-    fun isMarketsYieldSupplyNotificationHideClicked(): Flow<Boolean>
-
-    suspend fun setMarketsYieldSupplyNotificationHideClicked()
-
     suspend fun isMoonpayPromoActive(): Boolean
     // endregion
 

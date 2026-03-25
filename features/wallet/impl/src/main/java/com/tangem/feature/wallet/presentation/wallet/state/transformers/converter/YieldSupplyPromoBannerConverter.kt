@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
@@ -20,6 +21,35 @@ internal class YieldSupplyPromoBannerConverter(
             is TokenConverterParams.Wallet -> value.tokenList.flattenCurrencies()
             is TokenConverterParams.Account -> value.accountList.flattenCurrencies()
         }.filter { status ->
+            status.value is CryptoCurrencyStatus.Loaded
+        }
+
+        val cryptoCurrencyStatuses = currencies.filter { it.currency is CryptoCurrency.Token }
+
+        if (cryptoCurrencyStatuses.any { it.value.yieldSupplyStatus?.isActive == true }) return null
+        if (yieldModuleApyMap.isEmpty()) return null
+
+        val max = cryptoCurrencyStatuses.asSequence()
+            .mapNotNull { status ->
+                val token = status.currency as? CryptoCurrency.Token ?: return@mapNotNull null
+                val shouldIgnoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId)
+                val tokenKey = "${token.network.rawId}_${token.contractAddress}"
+
+                val matchedKey = yieldModuleApyMap.keys.firstOrNull { mapKey ->
+                    mapKey.equals(tokenKey, shouldIgnoreCase)
+                } ?: return@mapNotNull null
+
+                status to matchedKey
+            }
+            .maxByOrNull { (status, _) -> status.value.amount ?: BigDecimal.ZERO }
+
+        return max?.first
+    }
+
+    fun convert2(value: AccountStatusList): CryptoCurrencyStatus? {
+        if (!shouldShowMainPromo) return null
+
+        val currencies = value.flattenCurrencies().filter { status ->
             status.value is CryptoCurrencyStatus.Loaded
         }
 

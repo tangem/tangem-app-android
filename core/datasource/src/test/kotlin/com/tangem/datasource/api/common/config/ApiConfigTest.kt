@@ -2,6 +2,7 @@ package com.tangem.datasource.api.common.config
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.utils.ProviderSuspend
 import io.mockk.clearMocks
 import io.mockk.every
@@ -19,6 +20,7 @@ class ApiConfigTest {
 
     private val appAuthProvider = mockk<AuthProvider>()
     private val apiKeyProvider = mockk<ProviderSuspend<String>>()
+    private val environmentConfig = mockk<EnvironmentConfig>()
 
     @BeforeEach
     fun setup() {
@@ -47,7 +49,7 @@ class ApiConfigTest {
             when (it) {
                 ApiConfig.ID.Express -> {
                     Express(
-                        environmentConfigStorage = mockk(),
+                        environmentConfig = environmentConfig,
                         expressAuthProvider = mockk(),
                         appVersionProvider = mockk(),
                         appInfoProvider = mockk(),
@@ -55,7 +57,7 @@ class ApiConfigTest {
                 }
                 ApiConfig.ID.YieldSupply -> {
                     YieldSupply(
-                        environmentConfigStorage = mockk(),
+                        environmentConfig = environmentConfig,
                         appVersionProvider = mockk(),
                         authProvider = appAuthProvider,
                         appInfoProvider = mockk(),
@@ -70,14 +72,14 @@ class ApiConfigTest {
                 }
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = mockk())
                 ApiConfig.ID.TangemPay -> TangemPay.Bff(
+                    environmentConfig = environmentConfig,
                     appVersionProvider = mockk(),
-                    environmentConfigStorage = mockk()
                 )
                 ApiConfig.ID.TangemPayAuth -> TangemPay.Auth(
+                    environmentConfig = environmentConfig,
                     appVersionProvider = mockk(),
-                    environmentConfigStorage = mockk()
                 )
-                ApiConfig.ID.BlockAid -> BlockAid(configStorage = mockk())
+                ApiConfig.ID.BlockAid -> BlockAid(environmentConfig = environmentConfig)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
                 ApiConfig.ID.News -> News(
