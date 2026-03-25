@@ -23,13 +23,13 @@ import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import kotlin.coroutines.resume
 
 @Suppress("LongParameterList")
@@ -91,7 +91,7 @@ internal class DefaultWcSessionsManager(
     }
 
     override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
-        Timber.i("onSessionDelete: $sessionDelete")
+        TangemLogger.i("onSessionDelete: $sessionDelete")
         onSessionDelete.trySend(sessionDelete)
     }
 
@@ -150,7 +150,7 @@ internal class DefaultWcSessionsManager(
         val haveSomeUnknownSdkSessions = unknownSdkSessions.isNotEmpty()
 
         if (haveSomeUnknown) {
-            Timber.tag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
+            TangemLogger.withTag(WC_TAG).i("removeUnknownSessions $unknownStoredSessions")
             store.removeSessions(unknownStoredSessions.toSet())
         }
 
@@ -162,7 +162,7 @@ internal class DefaultWcSessionsManager(
         val haveEmptyDto = emptyNetworksDto.isNotEmpty()
 
         if (haveEmptyDto) {
-            Timber.tag(WC_TAG).i("remove sessions without networks $emptyNetworksDto")
+            TangemLogger.withTag(WC_TAG).i("remove sessions without networks $emptyNetworksDto")
             store.removeSessions(emptyNetworksDto)
         }
         if (haveEmptySessions) {

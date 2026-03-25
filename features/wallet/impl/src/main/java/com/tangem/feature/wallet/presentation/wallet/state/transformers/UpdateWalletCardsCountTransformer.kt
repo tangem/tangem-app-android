@@ -7,7 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class UpdateWalletCardsCountTransformer(
     private val userWallet: UserWallet,
@@ -25,7 +25,7 @@ internal class UpdateWalletCardsCountTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             -> {
-                Timber.e("Impossible to update wallet cards count for locked wallet")
+                TangemLogger.e("Impossible to update wallet cards count for locked wallet")
                 prevState
             }
         }
