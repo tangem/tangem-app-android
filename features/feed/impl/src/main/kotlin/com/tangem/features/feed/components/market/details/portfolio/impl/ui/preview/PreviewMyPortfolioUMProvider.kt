@@ -3,7 +3,6 @@ package com.tangem.features.feed.components.market.details.portfolio.impl.ui.pre
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountTitleUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
@@ -22,25 +21,19 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             MyPortfolioUM.Tokens(
                 tokens = persistentListOf(sampleToken, sampleToken),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Available,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
                 tokens = persistentListOf(sampleToken, sampleToken.copy(isQuickActionsShown = true)),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Unavailable,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
             MyPortfolioUM.Tokens(
                 tokens = persistentListOf(sampleToken.copy(isQuickActionsShown = true), sampleToken),
                 buttonState = MyPortfolioUM.Tokens.AddButtonState.Loading,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
                 onAddClick = {},
             ),
-            MyPortfolioUM.AddFirstToken(
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-                onAddClick = {},
-            ),
+            MyPortfolioUM.AddFirstToken(onAddClick = {}),
             MyPortfolioUM.Content(
                 items = persistentListOf(
                     walletPortfolioHeader,

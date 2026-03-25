@@ -20,6 +20,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -30,6 +31,7 @@ import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.AppBarWithSearchTestTags
 
 /**
  * App bar with close icon and search functionality
@@ -135,7 +137,8 @@ private fun CollapsedSearchView(
             contentDescription = null,
             modifier = Modifier
                 .clickable { onExpandedChange(true) }
-                .padding(end = TangemTheme.dimens.spacing16),
+                .padding(end = TangemTheme.dimens.spacing16)
+                .testTag(AppBarWithSearchTestTags.SEARCH_ICON),
         )
     }
 }
@@ -210,7 +213,8 @@ private fun ExpandedSearchView(
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(textFieldFocusRequester)
-                .onFocusChanged { onFocusChange(it.hasFocus) },
+                .onFocusChanged { onFocusChange(it.hasFocus) }
+                .testTag(AppBarWithSearchTestTags.TEXT_FIELD),
             placeholder = {
                 Text(text = placeholderSearchText)
             },

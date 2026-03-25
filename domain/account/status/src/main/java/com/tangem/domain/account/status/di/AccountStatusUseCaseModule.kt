@@ -67,8 +67,8 @@ internal object AccountStatusUseCaseModule {
     fun provideApplyTokenListSortingUseCaseV2(
         accountsCRUDRepository: AccountsCRUDRepository,
         dispatchers: CoroutineDispatcherProvider,
-    ): ApplyTokenListSortingUseCaseV2 {
-        return ApplyTokenListSortingUseCaseV2(
+    ): ApplyTokenListSortingUseCase {
+        return ApplyTokenListSortingUseCase(
             accountsCRUDRepository = accountsCRUDRepository,
             dispatchers = dispatchers,
         )
@@ -141,8 +141,8 @@ internal object AccountStatusUseCaseModule {
     @Singleton
     fun provideToggleTokenListSortingUseCaseV2(
         dispatchers: CoroutineDispatcherProvider,
-    ): ToggleTokenListSortingUseCaseV2 {
-        return ToggleTokenListSortingUseCaseV2(
+    ): ToggleTokenListSortingUseCase {
+        return ToggleTokenListSortingUseCase(
             dispatchers = dispatchers,
         )
     }
@@ -151,8 +151,8 @@ internal object AccountStatusUseCaseModule {
     @Singleton
     fun provideToggleTokenListGroupingUseCaseV2(
         dispatchers: CoroutineDispatcherProvider,
-    ): ToggleTokenListGroupingUseCaseV2 {
-        return ToggleTokenListGroupingUseCaseV2(
+    ): ToggleTokenListGroupingUseCase {
+        return ToggleTokenListGroupingUseCase(
             dispatchers = dispatchers,
         )
     }
