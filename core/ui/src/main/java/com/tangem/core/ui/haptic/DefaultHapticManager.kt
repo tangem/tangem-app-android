@@ -10,11 +10,7 @@ internal class DefaultHapticManager(
 
     override fun perform(effect: TangemHapticEffect) {
         when (effect) {
-            is TangemHapticEffect.View -> {
-                effect.androidHapticFeedbackCode?.let {
-                    ViewCompat.performHapticFeedback(view, it)
-                }
-            }
+            is TangemHapticEffect.View -> performViewEffect(effect)
             is TangemHapticEffect.OneTime -> {
                 if (vibratorHapticManager != null) {
                     vibratorHapticManager.performOneTime(effect)
@@ -28,5 +24,21 @@ internal class DefaultHapticManager(
                 }
             }
         }
+    }
+
+    private fun performViewEffect(effect: TangemHapticEffect.View) {
+        val code = effect.androidHapticFeedbackCode ?: return
+        if (ViewCompat.performHapticFeedback(view, code)) return
+
+        val fallbackCode = VIEW_FALLBACKS[effect]?.androidHapticFeedbackCode ?: return
+        ViewCompat.performHapticFeedback(view, fallbackCode)
+    }
+
+    private companion object {
+        val VIEW_FALLBACKS = mapOf(
+            TangemHapticEffect.View.ClockTick to TangemHapticEffect.View.KeyboardPress,
+            TangemHapticEffect.View.Confirm to TangemHapticEffect.View.ContextClick,
+            TangemHapticEffect.View.Reject to TangemHapticEffect.View.LongPress,
+        )
     }
 }

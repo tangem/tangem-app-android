@@ -47,7 +47,6 @@ internal class WcEthNetwork(
             ?: return error("Failed to parse $name")
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(
             rawChainId = chainId,
-            wallet = wallet,
             account = account,
         )
 
@@ -74,7 +73,7 @@ internal class WcEthNetwork(
             -> anyExistNetwork()
         } ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
-        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet, account).size
+        val networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, account).size
         val context = WcMethodUseCaseContext(
             session = session,
             rawSdkRequest = request,
