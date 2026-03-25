@@ -1,9 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.usecase.GetWalletIconUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 
 /**
@@ -17,12 +19,20 @@ internal class ReinitializeWalletTransformer(
     private val userWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val getWalletIconUseCase: GetWalletIconUseCase,
 ) : WalletStateTransformer(userWalletId = userWallet.walletId) {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
+            getWalletIconUseCase = getWalletIconUseCase,
+        )
+    }
+
+    override fun transform(walletUM: WalletUM): WalletUM {
+        return walletLoadingStateFactory.create2(
+            userWallet = userWallet,
         )
     }
 

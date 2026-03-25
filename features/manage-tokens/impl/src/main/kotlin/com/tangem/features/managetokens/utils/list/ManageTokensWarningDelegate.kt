@@ -29,9 +29,7 @@ internal class ManageTokensWarningDelegate @AssistedInject constructor(
     ) {
         val isNonePortfolio = when (mode) {
             ManageTokensMode.None -> true
-            is ManageTokensMode.Account,
-            is ManageTokensMode.Wallet,
-            -> false
+            is ManageTokensMode.Account -> false
         }
         val hasLinkedTokens = if (isNonePortfolio || !isCoin) {
             false

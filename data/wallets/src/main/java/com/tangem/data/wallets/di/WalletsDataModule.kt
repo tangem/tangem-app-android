@@ -9,13 +9,11 @@ import com.tangem.data.wallets.cold.DefaultColdMapDerivationsRepository
 import com.tangem.data.wallets.derivations.DefaultDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotMapDerivationsRepository
 import com.tangem.data.wallets.hot.DefaultHotWalletAccessCodeAttemptsRepository
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.derivations.ColdMapDerivationsRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -43,10 +41,7 @@ internal object WalletsDataModule {
         tangemTechApi: TangemTechApi,
         userWalletsListRepository: UserWalletsListRepository,
         dispatchers: CoroutineDispatcherProvider,
-        authProvider: AuthProvider,
         walletServerBinder: WalletServerBinder,
-        appsFlyerStore: AppsFlyerStore,
-        accountsFeatureToggles: AccountsFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): WalletsRepository {
         return DefaultWalletsRepository(
@@ -55,10 +50,7 @@ internal object WalletsDataModule {
             userWalletsListRepository = userWalletsListRepository,
             seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
-            authProvider = authProvider,
             walletServerBinder = walletServerBinder,
-            appsFlyerStore = appsFlyerStore,
-            accountsFeatureToggles = accountsFeatureToggles,
             moshi = moshi,
         )
     }
