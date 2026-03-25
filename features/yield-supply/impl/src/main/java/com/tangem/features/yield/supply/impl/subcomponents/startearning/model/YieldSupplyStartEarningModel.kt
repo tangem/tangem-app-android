@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -14,13 +15,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusOperations.getCryptoCurrencyStatus
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
-import com.tangem.domain.account.status.usecase.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -44,7 +45,6 @@ import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
@@ -231,7 +231,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
                     analytics.send(
                         YieldSupplyAnalytics.EarnErrors(
@@ -323,8 +323,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     }
                     getCurrenciesStatusUpdates()
                 },
-                ifLeft = {
-                    Timber.w(it.toString())
+                ifLeft = { error ->
+                    TangemLogger.w(error.toString())
                     showAlertError()
                 },
             )
@@ -362,7 +362,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         )
                     },
                     ifEmpty = {
-                        Timber.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
+                        TangemLogger.w("Unable to get crypto currency status: ${cryptoCurrency.id}")
                         showAlertError()
                     },
                 )

@@ -21,7 +21,7 @@ import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -136,7 +136,7 @@ internal class NFTCollectionsModel @Inject constructor(
             _state.update { ChangeRefreshingStateTransformer(true).transform(it) }
             try {
                 refreshAllNFTUseCase(params.userWalletId)
-                    .onLeft { Timber.e(it) }
+                    .onLeft { TangemLogger.e("Error", it) }
             } finally {
                 _state.update { ChangeRefreshingStateTransformer(false).transform(it) }
             }
