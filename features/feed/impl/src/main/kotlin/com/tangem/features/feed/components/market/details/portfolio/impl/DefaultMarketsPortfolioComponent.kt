@@ -58,7 +58,6 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
         bottomSheet.child?.instance?.BottomSheet()
     }
 
-    @Suppress("UnsafeCallOnNullableType")
     private fun bottomSheetChild(
         config: MarketsPortfolioRoute,
         componentContext: ComponentContext,
@@ -66,7 +65,7 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
         MarketsPortfolioRoute.AddToPortfolio -> addToPortfolioComponentFactory.create(
             context = childByContext(componentContext),
             params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = model.newAddToPortfolioManager!!,
+                addToPortfolioManager = model.addToPortfolioManager,
                 callback = model.addToPortfolioCallback,
             ),
         )

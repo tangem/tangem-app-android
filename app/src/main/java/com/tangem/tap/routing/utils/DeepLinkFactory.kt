@@ -7,7 +7,6 @@ import com.tangem.common.routing.DeepLinkScheme
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.feature.referral.api.deeplink.ReferralDeepLinkHandler
 import com.tangem.features.feed.entry.deeplink.NewsDetailsDeepLinkHandler
-import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.markets.deeplink.MarketsDeepLinkHandler
 import com.tangem.features.markets.deeplink.MarketsTokenDetailDeepLinkHandler
 import com.tangem.features.onramp.deeplink.BuyDeepLinkHandler
@@ -53,7 +52,6 @@ internal class DeepLinkFactory @Inject constructor(
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
     private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
     private val newsDetailsDeepLink: NewsDetailsDeepLinkHandler.Factory,
-    private val feedFeatureToggle: FeedFeatureToggle,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -127,7 +125,7 @@ internal class DeepLinkFactory @Inject constructor(
                     onboardVisaDeepLink.create(deeplinkUri)
                     return
                 }
-                deeplinkUri.path?.startsWith("/news") == true && feedFeatureToggle.isFeedEnabled -> {
+                deeplinkUri.path?.startsWith("/news") == true -> {
                     newsDetailsDeepLink.create(coroutineScope, deeplinkUri)
                     return
                 }
