@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.manualbackup.check.model
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,15 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.String
-import kotlin.Suppress
-import kotlin.collections.List
-import kotlin.collections.all
-import kotlin.collections.map
 
 @Stable
 @ModelScoped
@@ -63,7 +56,7 @@ internal class ManualBackupCheckModel @Inject constructor(
                     }
                 }
             }.onFailure {
-                Timber.e(it)
+                TangemLogger.e("Error", it)
             }
         }
     }
@@ -114,8 +107,8 @@ internal class ManualBackupCheckModel @Inject constructor(
                 uiState.update {
                     it.copy(completeButtonProgress = false)
                 }
-            }.onFailure {
-                Timber.e(it)
+            }.onFailure { throwable ->
+                TangemLogger.e("Error", throwable)
 
                 uiState.update {
                     it.copy(completeButtonProgress = false)

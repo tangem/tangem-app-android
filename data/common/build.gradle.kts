@@ -45,7 +45,6 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
-    implementation(deps.timber)
 
     /* Test */
     testImplementation(projects.common.test)

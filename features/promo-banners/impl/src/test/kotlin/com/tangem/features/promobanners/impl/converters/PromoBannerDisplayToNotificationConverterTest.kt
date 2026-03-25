@@ -13,14 +13,14 @@ class PromoBannerDisplayToNotificationConverterTest {
     @Test
     fun `should convert banner with all fields`() {
         val banner = createBanner(
-            id = "b1",
+            id = 1,
             deeplink = "tangem://wallet",
             isButtonEnabled = true,
             buttonText = "Open",
             isDismissable = true,
         )
         var clickedDeeplink: String? = "not_called"
-        var dismissedId: String? = null
+        var dismissedId: Int? = null
 
         val result = converter.convert(
             banner = banner,
@@ -28,7 +28,7 @@ class PromoBannerDisplayToNotificationConverterTest {
             onDismiss = { dismissedId = it },
         )
 
-        assertThat(result.displayId).isEqualTo("b1")
+        assertThat(result.displayId).isEqualTo(1)
         assertThat(result.config.title).isEqualTo(TextReference.Str("Title"))
         assertThat(result.config.subtitle).isEqualTo(TextReference.Str("Subtitle"))
         assertThat(result.config.iconUrl).isEqualTo("https://icon.png")
@@ -42,7 +42,7 @@ class PromoBannerDisplayToNotificationConverterTest {
         assertThat(clickedDeeplink).isEqualTo("tangem://wallet")
 
         result.config.onCloseClick!!.invoke()
-        assertThat(dismissedId).isEqualTo("b1")
+        assertThat(dismissedId).isEqualTo(1)
     }
 
     @Test
@@ -98,7 +98,7 @@ class PromoBannerDisplayToNotificationConverterTest {
     }
 
     private fun createBanner(
-        id: String = "id",
+        id: Int = 0,
         deeplink: String? = "https://example.com",
         isButtonEnabled: Boolean = false,
         buttonText: String? = null,

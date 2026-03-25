@@ -12,10 +12,8 @@ import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.security.isSecurityExposed
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
-
-private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
 
 class TangemPayMainScreenCustomerInfoUseCase(
     private val onboardingRepository: OnboardingRepository,
@@ -27,13 +25,15 @@ class TangemPayMainScreenCustomerInfoUseCase(
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
         field = MutableStateFlow(value = mapOf())
 
+    private val logger = TangemLogger.withTag("TangemPayMainScreenCustomerInfoUseCase")
+
     suspend fun fetch(userWalletId: UserWalletId) {
-        Timber.tag(TAG).i("fetch: ${userWalletId.stringValue}")
+        logger.i("fetch: ${userWalletId.stringValue}")
 
         if (deviceSecurity.isSecurityExposed()) {
-            Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
-            Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
-            Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+            logger.i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+            logger.i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+            logger.i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
 
             updateState(userWalletId = userWalletId, either = TangemPayCustomerInfoError.ExposedDeviceError.left())
             return // fast exit
@@ -42,7 +42,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         onboardingRepository.hasTangemPayInWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
-                    Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
+                    logger.e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
                     if (error is VisaApiError.NotPaeraCustomer) {
                         showOnboardingBannerIfEligible(userWalletId)
                     } else {
@@ -50,7 +50,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
                     }
                 },
                 ifRight = { hasTangemPay ->
-                    Timber.tag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
+                    logger.i("checkCustomerWallet for $userWalletId: $hasTangemPay")
                     if (hasTangemPay) {
                         val oldResult = state.value[userWalletId]
                         if (oldResult == null) {
@@ -125,14 +125,13 @@ class TangemPayMainScreenCustomerInfoUseCase(
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
         return onboardingRepository.getCustomerInfo(userWalletId)
             .mapLeft { error ->
-                Timber.tag(TAG).e("mapErrorForCustomer: $error")
+                logger.e("mapErrorForCustomer: $error")
                 error.mapErrorForCustomer()
             }
             .map { customerInfo ->
-                Timber.tag(TAG).i("customerInfo")
+                logger.i("customerInfo")
                 if (customerInfo.productInstance == null) {
                     onboardingRepository.createOrder(userWalletId)
-                    Timber.tag("ddk9499").d("TangemPayMainScreenCustomerInfoUseCase.proceedWithoutOrder: ")
                     MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.NEW)
                 } else {
                     MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.COMPLETED)

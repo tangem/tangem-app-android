@@ -8,8 +8,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.usecase.ArchivedAccountList
 import com.tangem.domain.models.account.AccountId
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.collections.immutable.toImmutableList
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class AccountArchivedUMBuilder @Inject constructor() {
@@ -49,7 +49,7 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
         onCloseClick: () -> Unit,
         getArchivedAccounts: () -> Unit,
     ): AccountArchivedUM.Error {
-        Timber.e(throwable)
+        TangemLogger.e("Error", throwable)
         return AccountArchivedUM.Error(
             onCloseClick = onCloseClick,
             onRetryClick = { getArchivedAccounts() },
