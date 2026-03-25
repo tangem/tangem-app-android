@@ -77,7 +77,6 @@ internal class QrContentClassifierParser(
     }
 
     internal interface BlockchainDataProvider {
-        fun getShareSchemes(network: Network): List<String>
         fun validateAddress(network: Network, address: String): Boolean
         fun getChainId(network: Network): Long?
         fun findSupportedBlockchainName(address: String): String?
@@ -85,10 +84,6 @@ internal class QrContentClassifierParser(
     }
 
     internal class DefaultBlockchainDataProvider : BlockchainDataProvider {
-        override fun getShareSchemes(network: Network): List<String> {
-            return runCatching { network.toBlockchain().getShareScheme() }.getOrDefault(emptyList())
-        }
-
         override fun validateAddress(network: Network, address: String): Boolean {
             return runCatching { network.toBlockchain().validateAddress(address) }.getOrDefault(false)
         }
