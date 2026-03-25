@@ -3,6 +3,7 @@ package com.tangem.data.feedback.converters
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.domain.feedback.models.BlockchainInfo
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses.Multiple.AddressInfo
 import com.tangem.utils.converter.Converter
@@ -16,22 +17,38 @@ import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainA
 internal object BlockchainInfoConverter : Converter<WalletManager, BlockchainInfo> {
 
     override fun convert(value: WalletManager): BlockchainInfo {
-        val derivationPath = value.wallet.publicKey.derivationPath
+        val wallet = value.wallet
+        val blockchain = wallet.blockchain
+        val derivationPath = wallet.publicKey.derivationPath
 
         return BlockchainInfo(
-            blockchain = value.wallet.blockchain.fullName,
+            blockchain = blockchain.fullName,
             derivationPath = derivationPath?.rawPath.orEmpty(),
             outputsCount = value.outputsCount?.toString(),
             host = value.currentHost,
-            addresses = value.wallet.mapAddresses(Address::value),
-            explorerLinks = value.wallet.mapAddresses { value.wallet.getExploreUrl(it.value) },
-            tokens = value.cardTokens.map { token ->
-                BlockchainInfo.TokenInfo(
-                    id = token.id,
-                    name = token.name,
-                    contractAddress = token.contractAddress,
-                    decimals = token.decimals.toString(),
+            addresses = wallet.mapAddresses(Address::value),
+            explorerLinks = wallet.mapAddresses { value.wallet.getExploreUrl(it.value) },
+            tokens = buildList {
+                // add coin
+                add(
+                    BlockchainInfo.TokenInfo(
+                        id = blockchain.toCoinId(),
+                        name = blockchain.getCoinName(),
+                        contractAddress = wallet.address,
+                        decimals = blockchain.decimals().toString(),
+                    ),
                 )
+                // add other tokens
+                value.cardTokens.forEach { token ->
+                    add(
+                        BlockchainInfo.TokenInfo(
+                            id = token.id,
+                            name = token.name,
+                            contractAddress = token.contractAddress,
+                            decimals = token.decimals.toString(),
+                        ),
+                    )
+                }
             },
         )
     }
