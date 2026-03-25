@@ -72,7 +72,6 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi.kotlin)
     implementation(deps.retrofit) // For HttpException
-    implementation(deps.timber)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion

@@ -3,7 +3,7 @@ package com.tangem.data.networks.converters
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.utils.converter.TwoWayConverter
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Converter from [NetworkAddressConverter.Value] to [NetworkAddress] and vice versa
@@ -58,7 +58,7 @@ internal object NetworkAddressConverter : TwoWayConverter<NetworkAddressConverte
         }
 
         if (address.value.isBlank()) {
-            Timber.w("Address value is blank")
+            TangemLogger.w("Address value is blank")
         }
 
         return NetworkAddress.Address(value = address.value, type = type)
