@@ -37,6 +37,7 @@ import com.tangem.utils.extensions.isZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import timber.log.Timber
 import java.math.BigDecimal
 
 @Suppress("UnusedPrivateMember")
@@ -129,16 +130,23 @@ internal class DefaultSwapComponent @AssistedInject constructor(
 
         LaunchedEffect(fromCryptoCurrency, feePaidCryptoCurrency, shouldHideBlock) {
             if (shouldHideBlock) {
+                Timber.e(
+                    "Dismissing fee selector: " +
+                        "shouldHideBlock = $shouldHideBlock, amount = ${dataState.amount}, " +
+                        "isInsufficientFunds = ${model.uiState.isInsufficientFunds}",
+                )
                 slotNavigation.dismiss()
                 return@LaunchedEffect
             }
 
             val sendingCryptoCurrencyStatus = fromCryptoCurrency ?: run {
+                Timber.e("Dismissing fee selector: fromCryptoCurrency is null")
                 slotNavigation.dismiss()
                 return@LaunchedEffect
             }
 
             val feeCurrencyStatus = feePaidCryptoCurrency ?: run {
+                Timber.e("Dismissing fee selector: feePaidCryptoCurrency is null")
                 slotNavigation.dismiss()
                 return@LaunchedEffect
             }
