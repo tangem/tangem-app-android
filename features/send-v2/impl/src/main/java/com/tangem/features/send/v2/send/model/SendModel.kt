@@ -48,8 +48,10 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.entity.PredefinedValues
+import com.tangem.features.send.v2.api.entity.isFromMainScreenQr
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.CommonSendRoute.*
 import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -171,11 +173,11 @@ internal class SendModel @Inject constructor(
         subscribeOnBalanceHidden()
         subscribeOnQRScannerResult()
         subscribeOnCurrencyStatusUpdates()
-        if (params.amount != null) {
-            subscribeOnStatusForDeeplinkDestination()
+        initPredefinedValues()
+        if (predefinedValues is PredefinedValues.Content) {
+            subscribeOnStatusForInitialNavigation()
         }
         initAppCurrency()
-        initPredefinedValues()
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
@@ -228,7 +230,14 @@ internal class SendModel @Inject constructor(
             onBackClick()
         } else {
             when (currentRoute.value) {
-                is Amount -> router.push(Destination(isEditMode = false))
+                is Amount -> {
+                    val nextRoute = if (predefinedValues.isFromMainScreenQr) {
+                        Confirm
+                    } else {
+                        Destination(isEditMode = false)
+                    }
+                    router.push(nextRoute)
+                }
                 is Destination -> router.push(Confirm)
                 Confirm -> router.push(ConfirmSuccess)
                 else -> onBackClick()
@@ -381,7 +390,7 @@ internal class SendModel @Inject constructor(
             PredefinedValues.Content.QrCode(
                 amount = predefinedAmount,
                 address = predefinedAddress,
-                memo = params.tag,
+                memo = params.tag, source = PredefinedValues.Source.MAIN_SCREEN,
             )
         } else {
             PredefinedValues.Empty
@@ -429,26 +438,38 @@ internal class SendModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnStatusForDeeplinkDestination() {
+    private fun subscribeOnStatusForInitialNavigation() {
         combine(
             cryptoCurrencyStatusFlow,
             feeCryptoCurrencyStatusFlow,
-        ) { cryptoCurrencyStatus, feeCryptoCurrencyStatus ->
-            if (isAvailableForSend && currentRoute.value == initialRoute) {
-                if (isPredefinedAmountExceedsBalance(cryptoCurrencyStatus)) {
-                    router.replaceAll(Amount(isEditMode = false))
-                } else {
-                    router.replaceAll(Confirm)
-                }
-            } else if (isUnavailableForSend) {
-                showAlertError()
+        ) { cryptoCurrencyStatus, _ ->
+            if (!isAvailableForSend || currentRoute.value != initialRoute) {
+                if (isUnavailableForSend) showAlertError()
+                return@combine
             }
+            val route = resolveInitialRoute(cryptoCurrencyStatus) ?: return@combine
+            router.replaceAll(route)
         }.launchIn(modelScope)
     }
 
-    private fun isPredefinedAmountExceedsBalance(cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
-        val predefinedAmount = (predefinedValues as? PredefinedValues.Content)?.amount
-            ?.parseBigDecimalOrNull() ?: return false
+    private fun resolveInitialRoute(cryptoCurrencyStatus: CryptoCurrencyStatus): CommonSendRoute? {
+        return when (predefinedValues) {
+            is PredefinedValues.Content.Deeplink -> Confirm
+            is PredefinedValues.Content.QrCode -> {
+                if (!predefinedValues.isFromMainScreenQr) return null
+                val amount = (predefinedValues as PredefinedValues.Content.QrCode).amount ?: return null
+                if (isPredefinedAmountExceedsBalance(amount, cryptoCurrencyStatus)) {
+                    Amount(isEditMode = false)
+                } else {
+                    Confirm
+                }
+            }
+            PredefinedValues.Empty -> null
+        }
+    }
+
+    private fun isPredefinedAmountExceedsBalance(amount: String, cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+        val predefinedAmount = amount.parseBigDecimalOrNull() ?: return false
         val balance = cryptoCurrencyStatus.value.amount ?: return false
         return predefinedAmount > balance
     }
@@ -495,6 +516,7 @@ internal class SendModel @Inject constructor(
             amount = amount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),
             memo = parsedQrCode?.memo,
+            source = PredefinedValues.Source.SEND_SCREEN,
         )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
