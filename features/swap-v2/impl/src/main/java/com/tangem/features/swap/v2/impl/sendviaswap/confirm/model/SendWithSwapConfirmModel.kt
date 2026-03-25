@@ -138,12 +138,18 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 onDirect = { amountUM.primaryAmount },
                 onReverse = { amountUM.secondaryAmount },
             )
-            val amountState = fromAmount?.amountField as? AmountState.Data
+            val toAmount = amountUM?.swapDirection?.withSwapDirection(
+                onDirect = { amountUM.secondaryAmount },
+                onReverse = { amountUM.primaryAmount },
+            )
+            val amountStateFrom = fromAmount?.amountField as? AmountState.Data
+            val amountStateTo = toAmount?.amountField as? AmountState.Data
             val isQuoteContent = amountUM?.selectedQuote is SwapQuoteUM.Content
             return ConfirmData(
-                enteredAmount = amountState?.amountTextField?.cryptoAmount?.value,
-                reduceAmountBy = amountState?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
-                isIgnoreReduce = amountState?.isIgnoreReduce == true,
+                enteredToAmount = amountStateTo?.amountTextField?.cryptoAmount?.value,
+                enteredFromAmount = amountStateFrom?.amountTextField?.cryptoAmount?.value,
+                reduceAmountBy = amountStateFrom?.reduceAmountBy.takeIf { isQuoteContent }.orZero(),
+                isIgnoreReduce = amountStateFrom?.isIgnoreReduce == true,
                 enteredDestination = destinationUM?.addressTextField?.actualAddress,
                 enteredMemo = destinationUM?.memoTextField?.value,
                 fee = feeSelectorUM?.selectedFeeItem?.fee.takeIf { isQuoteContent },
@@ -250,7 +256,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         val defaultError = GetFeeError.UnknownError.left()
 
         val provider = (confirmData.quote as? SwapQuoteUM.Content)?.provider ?: return defaultError
-        val amountValue = confirmData.enteredAmount ?: return defaultError
+        val amountValue = confirmData.enteredFromAmount ?: return defaultError
 
         return when (val providerType = provider.type) {
             ExpressProviderType.CEX -> {
@@ -274,7 +280,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
         val defaultError = GetFeeError.UnknownError.left()
         val provider = (confirmData.quote as? SwapQuoteUM.Content)?.provider ?: return defaultError
-        val amountValue = confirmData.enteredAmount ?: return defaultError
+        val amountValue = confirmData.enteredFromAmount ?: return defaultError
 
         return when (val providerType = provider.type) {
             ExpressProviderType.CEX -> {
@@ -420,7 +426,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                         is CryptoCurrency.Coin -> "0"
                     },
                     memo = null,
-                    amountValue = confirmData.enteredAmount.orZero(),
+                    amountValue = confirmData.enteredFromAmount.orZero(),
                     reduceAmountBy = confirmData.reduceAmountBy,
                     isIgnoreReduce = confirmData.isIgnoreReduce,
                     fee = confirmData.fee,
@@ -436,6 +442,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     memo = confirmData.enteredMemo,
                     toCryptoCurrencyStatus = confirmData.toCryptoCurrencyStatus,
                     userWalletId = params.userWallet.walletId,
+                    enteredFromAmount = confirmData.enteredFromAmount,
+                    fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
                 ),
             )
             uiState.transformerUpdate(
