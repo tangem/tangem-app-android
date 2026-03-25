@@ -3,15 +3,21 @@ package com.tangem.data.qrscanning
 import com.google.common.truth.Truth.assertThat
 import com.tangem.data.qrscanning.parser.Bip321PaymentUriParser
 import com.tangem.data.qrscanning.parser.PaymentUriParser
+import com.tangem.data.qrscanning.parser.QrContentClassifierParser
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Test
 import java.math.BigDecimal
 
 internal class Bip321PaymentUriParserTest {
 
-    private val parser = Bip321PaymentUriParser()
+    private val blockchainDataProvider = mockk<QrContentClassifierParser.BlockchainDataProvider> {
+        every { validateAddress(any(), any()) } returns true
+    }
+    private val parser = Bip321PaymentUriParser(blockchainDataProvider)
 
     // region Basic parsing
 
@@ -137,6 +143,21 @@ internal class Bip321PaymentUriParserTest {
     // endregion
 
     // region Unsupported network
+
+    @Test
+    fun `invalid address returns Unrecognized error`() {
+        every { blockchainDataProvider.validateAddress(any(), eq("InvalidBtcAddress")) } returns false
+
+        val result = parser.parse(
+            qrCode = "bitcoin:InvalidBtcAddress?amount=0.5",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.RecognizedError::class.java)
+        val error = (result as PaymentUriParser.ParseResult.RecognizedError).error
+        assertThat(error).isInstanceOf(ClassifiedQrContent.Error.Unrecognized::class.java)
+    }
 
     @Test
     fun `bitcoin URI with no matching coin returns UnsupportedNetwork`() {

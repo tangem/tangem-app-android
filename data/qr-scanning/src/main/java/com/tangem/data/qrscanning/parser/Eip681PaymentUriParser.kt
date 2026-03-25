@@ -31,8 +31,26 @@ internal class Eip681PaymentUriParser(
             )
         }
 
+        val isAddressValid = matchingCoins.any { coin ->
+            blockchainDataProvider.validateAddress(coin.network, parsed.targetAddress)
+        }
+        if (!isAddressValid) {
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.Unrecognized(qrCode),
+            )
+        }
+
         val result = if (parsed.functionName == FUNCTION_TRANSFER) {
-            if (PARAM_ADDRESS !in parsed.params) {
+            val recipient = parsed.params[PARAM_ADDRESS]
+            if (recipient == null) {
+                return PaymentUriParser.ParseResult.RecognizedError(
+                    ClassifiedQrContent.Error.Unrecognized(qrCode),
+                )
+            }
+            val isRecipientValid = matchingCoins.any { coin ->
+                blockchainDataProvider.validateAddress(coin.network, recipient)
+            }
+            if (!isRecipientValid) {
                 return PaymentUriParser.ParseResult.RecognizedError(
                     ClassifiedQrContent.Error.Unrecognized(qrCode),
                 )
