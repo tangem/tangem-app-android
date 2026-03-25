@@ -143,64 +143,6 @@ internal sealed class WalletNotificationUM(val messageUM: TangemMessageUM, val t
         type = WalletNotificationType.Critical,
     )
 
-    data class SeedPhraseNotification(
-        val onDeclineClick: () -> Unit,
-        val onConfirmClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "SeedPhraseIssueNotification",
-            title = resourceReference(id = R.string.warning_seedphrase_issue_title),
-            subtitle = resourceReference(id = R.string.warning_seedphrase_issue_message),
-            messageEffect = TangemMessageEffect.Warning,
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.common_no),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onDeclineClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.common_yes),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onConfirmClick,
-                ),
-            ),
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
-        ),
-        type = WalletNotificationType.Critical,
-    )
-
-    data class SeedPhraseSecondNotification(
-        val onDeclineClick: () -> Unit,
-        val onConfirmClick: () -> Unit,
-    ) : WalletNotificationUM(
-        messageUM = TangemMessageUM(
-            id = "SeedPhraseSecondIssueNotification",
-            title = resourceReference(id = R.string.warning_seedphrase_action_required_title),
-            subtitle = resourceReference(id = R.string.warning_seedphrase_contacted_support),
-            messageEffect = TangemMessageEffect.Warning,
-            iconUM = TangemIconUM.Icon(
-                iconRes = R.drawable.ic_attention_default_24,
-                tintReference = { TangemTheme.colors2.graphic.neutral.primary },
-            ),
-            buttonsUM = persistentListOf(
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.seed_warning_no),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onDeclineClick,
-                ),
-                TangemMessageButtonUM(
-                    text = resourceReference(id = R.string.seed_warning_yes),
-                    type = TangemButtonType.PrimaryInverse,
-                    onClick = onConfirmClick,
-                ),
-            ),
-        ),
-        type = WalletNotificationType.Critical,
-    )
-
     data class MissingBackup(val onClick: () -> Unit) : WalletNotificationUM(
         messageUM = TangemMessageUM(
             id = "MissingBackupNotification",
