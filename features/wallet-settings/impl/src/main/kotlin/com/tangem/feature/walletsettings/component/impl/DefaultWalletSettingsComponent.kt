@@ -22,7 +22,6 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.requestPermission
 import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -49,7 +48,6 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val networksAvailableForNotificationsComponent: NetworksAvailableForNotificationsComponent.Factory,
     private val accountTokenMigrationStore: AccountTokenMigrationStore,
-    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : WalletSettingsComponent, AppComponentContext by context {
 
     private val model: WalletSettingsModel = getOrCreateModel(params)
@@ -74,11 +72,7 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
 
     init {
         lifecycle.subscribe(
-            onResume = {
-                if (accountsFeatureToggles.isFeatureEnabled) {
-                    showMigrationAlertIfNeeded()
-                }
-            },
+            onResume = { showMigrationAlertIfNeeded() },
             onPause = { accountMigrationJobHolder.cancel() },
         )
     }

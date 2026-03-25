@@ -105,12 +105,6 @@ interface SwapInteractor {
      */
     fun getTokenBalance(token: CryptoCurrencyStatus): SwapAmount
 
-    suspend fun getInitialCurrencyToSwap(
-        initialCryptoCurrency: CryptoCurrency,
-        state: TokensDataStateExpress,
-        isReverseFromTo: Boolean,
-    ): CryptoCurrencyStatus?
-
     /**
      * Returns initial currency to swap as AccountSwapCurrency
      *
@@ -118,7 +112,7 @@ interface SwapInteractor {
      * @param state current tokens data state
      * @param isReverseFromTo flag indicating the direction of the swap
      */
-    suspend fun getInitialCurrencyToSwapV2(
+    suspend fun getInitialCurrencyToSwap(
         initialCryptoCurrency: CryptoCurrency,
         state: TokensDataStateExpress,
         isReverseFromTo: Boolean,

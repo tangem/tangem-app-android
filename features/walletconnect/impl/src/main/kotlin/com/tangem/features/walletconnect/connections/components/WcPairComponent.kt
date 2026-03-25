@@ -15,11 +15,9 @@ import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.account.PortfolioSelectorComponent
-import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent.*
-import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent.*
 import com.tangem.features.walletconnect.connections.model.WcPairModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes.Alert
@@ -68,7 +66,6 @@ internal class WcPairComponent(
                 else -> model.stackNavigation.pop()
             }
             is WcAppInfoRoutes.SelectNetworks,
-            is WcAppInfoRoutes.SelectWallet,
             is WcAppInfoRoutes.PortfolioSelector,
             -> model.stackNavigation.pop()
         }
@@ -104,18 +101,10 @@ internal class WcPairComponent(
                     callback = model,
                 ),
             )
-            is WcAppInfoRoutes.SelectWallet -> WcSelectWalletComponent(
-                appComponentContext = appComponentContext,
-                params = WcSelectWalletComponent.WcSelectWalletParams(
-                    selectedWalletId = config.selectedWalletId,
-                    onDismiss = ::dismiss,
-                    callback = model,
-                ),
-            )
             WcAppInfoRoutes.PortfolioSelector -> portfolioSelectorComponentFactory.create(
                 context = appComponentContext,
                 params = PortfolioSelectorComponent.Params(
-                    portfolioFetcher = model.portfolioFetcher!!,
+                    portfolioFetcher = model.portfolioFetcher,
                     bsCallback = model.portfolioSelectorCallback,
                     controller = model.selectorController,
                 ),
