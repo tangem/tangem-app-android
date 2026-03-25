@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,32 +62,41 @@ internal fun ScanFailsDialogContent(state: ScanFailsUM) {
                 text = stringResourceSafe(R.string.alert_button_how_to_scan),
                 onClick = state.onHowToScan,
                 color = TangemTheme.colors.text.accent,
+                modifier = Modifier.testTag(ScanFailsDialogTestTags.HOW_TO_SCAN_BUTTON),
             )
 
             DialogTextButton(
                 text = stringResourceSafe(R.string.alert_button_request_support),
                 onClick = state.onRequestSupport,
                 color = TangemTheme.colors.text.accent,
+                modifier = Modifier.testTag(ScanFailsDialogTestTags.REQUEST_SUPPORT_BUTTON),
             )
 
             DialogTextButton(
                 text = stringResourceSafe(R.string.common_cancel),
                 onClick = state.onDismiss,
                 color = TangemTheme.colors.text.warning,
+                modifier = Modifier.testTag(ScanFailsDialogTestTags.CANCEL_BUTTON),
             )
         }
     }
 }
 
 @Composable
-private fun DialogTextButton(text: String, onClick: () -> Unit, color: Color) {
+private fun DialogTextButton(text: String, onClick: () -> Unit, color: Color, modifier: Modifier = Modifier) {
     Text(
         text = text.uppercase(),
         color = color,
         style = TangemTheme.typography.button,
         textAlign = TextAlign.Center,
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = modifier.clickable(onClick = onClick),
     )
+}
+
+object ScanFailsDialogTestTags {
+    const val HOW_TO_SCAN_BUTTON = "scan_fails_how_to_scan_button"
+    const val REQUEST_SUPPORT_BUTTON = "scan_fails_request_support_button"
+    const val CANCEL_BUTTON = "scan_fails_cancel_button"
 }
 
 // region Preview
