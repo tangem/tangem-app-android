@@ -22,7 +22,6 @@ import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
 import com.tangem.core.ui.ds.topbar.TangemTopBar
 import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
@@ -47,7 +46,6 @@ internal class DefaultNewsDetailsComponent(
         val state by newsDetailsModel.state.collectAsStateWithLifecycle()
         if (LocalRedesignEnabled.current) {
             TangemTopBar(
-                title = resourceReference(R.string.common_news),
                 type = TangemTopBarType.BottomSheet,
                 startContent = {
                     Icon(

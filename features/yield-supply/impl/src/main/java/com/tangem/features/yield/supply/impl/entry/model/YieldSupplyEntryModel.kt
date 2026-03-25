@@ -16,7 +16,7 @@ import com.tangem.features.yield.supply.api.entry.YieldSupplyEntryRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 
 @ModelScoped
@@ -43,7 +43,7 @@ internal class YieldSupplyEntryModel @Inject constructor(
             singleAccountStatusListSupplier.getSyncOrNull(userWalletId)
                 .getCryptoCurrencyStatus(currency = cryptoCurrency)
                 .onNone {
-                    Timber.e("Failed to get CryptoCurrencyStatus: ${cryptoCurrency.id}")
+                    TangemLogger.e("Failed to get CryptoCurrencyStatus: ${cryptoCurrency.id}")
                     withContext(dispatchers.mainImmediate) {
                         router.pop()
                     }

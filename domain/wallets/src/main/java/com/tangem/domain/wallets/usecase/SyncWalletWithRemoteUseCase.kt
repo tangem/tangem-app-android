@@ -3,7 +3,7 @@ package com.tangem.domain.wallets.usecase
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.runSuspendCatching
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 /**
  * Use case to sync wallet with remote
@@ -16,6 +16,6 @@ class SyncWalletWithRemoteUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId) {
         runSuspendCatching { walletsRepository.createWallet(userWalletId) }
-            .onFailure(Timber::e)
+            .onFailure { TangemLogger.e("Error", it) }
     }
 }

@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -40,7 +41,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("TooManyFunctions")
@@ -131,12 +131,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onTokenItemLongClick(accountId: AccountId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
             val userWalletId = accountId.userWalletId
-            val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
-                Timber.e(
+            val userWallet = getUserWalletUseCase(userWalletId).getOrElse { error ->
+                TangemLogger.e(
                     """
                         Unable to get user wallet
                         |- ID: $userWalletId
-                        |- Exception: $it
+                        |- Exception: $error
                     """.trimIndent(),
                 )
 
@@ -287,7 +287,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 txHash = txHash,
                 currency = currency,
             ).fold(
-                ifLeft = { Timber.e(it.toString()) },
+                ifLeft = { TangemLogger.e(it.toString()) },
                 ifRight = { router.openUrl(url = it) },
             )
         }
