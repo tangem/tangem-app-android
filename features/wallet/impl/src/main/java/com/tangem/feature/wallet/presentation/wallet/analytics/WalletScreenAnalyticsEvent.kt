@@ -155,18 +155,6 @@ sealed class WalletScreenAnalyticsEvent {
 
         class DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
 
-        class NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
-
-        class NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")
-
-        class NoticeSeedPhraseSupportButtonNo : MainScreen(event = "Button - Support No")
-
-        class NoticeSeedPhraseSupportButtonYes : MainScreen(event = "Button - Support Yes")
-
-        class NoticeSeedPhraseSupportButtonUsed : MainScreen(event = "Button - Support Used")
-
-        class NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
-
         class NoticeUnrecognizedQr : MainScreen(
             event = "Notice - Unrecognized QR",
         )
