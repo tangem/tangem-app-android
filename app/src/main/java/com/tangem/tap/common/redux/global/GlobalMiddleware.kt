@@ -4,9 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
@@ -54,12 +53,14 @@ private fun handleFailureChooseBehaviour(
         store.dispatch(GlobalAction.ScanFailsCounter.Increment)
         if (store.state.globalState.scanCardFailsCounter >= 2) {
             val scanFailsSource = when (analyticsSource) {
-                is AnalyticsParam.ScreensSources.SignIn -> StateDialog.ScanFailsSource.SIGN_IN
-                is AnalyticsParam.ScreensSources.Settings -> StateDialog.ScanFailsSource.SETTINGS
-                is AnalyticsParam.ScreensSources.Intro -> StateDialog.ScanFailsSource.INTRO
-                else -> StateDialog.ScanFailsSource.MAIN
+                is AnalyticsParam.ScreensSources.SignIn -> ScanFailsRequester.Source.SIGN_IN
+                is AnalyticsParam.ScreensSources.Settings -> ScanFailsRequester.Source.SETTINGS
+                is AnalyticsParam.ScreensSources.Intro -> ScanFailsRequester.Source.INTRO
+                else -> ScanFailsRequester.Source.MAIN
             }
-            store.dispatchDialogShow(StateDialog.ScanFailsDialog(scanFailsSource))
+            scope.launch {
+                store.inject(DaggerGraphState::scanFailsRequester).show(scanFailsSource)
+            }
         }
     } else {
         store.dispatch(GlobalAction.ScanFailsCounter.Reset)
