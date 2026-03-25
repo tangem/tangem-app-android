@@ -344,7 +344,7 @@ internal class DefaultSwapRepository(
                         appPreferencesStore = appPreferencesStore,
                     ),
                     toExtraId = toExtraId?.ifEmpty { null },
-                    quoteId = null,
+                    quoteId = null, // TODO add when implementing fixed rate in swap
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
