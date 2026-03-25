@@ -2,7 +2,6 @@ package com.tangem.features.feed.ui.feed.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.markets.models.MarketsListItemUM
-import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
@@ -15,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
 import com.tangem.features.feed.ui.earn.state.EarnListItemUM
 import com.tangem.features.feed.ui.earn.state.EarnListUM
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.features.feed.ui.feed.state.*
 import kotlinx.collections.immutable.*
 
@@ -77,8 +77,6 @@ internal object FeedListPreviewDataProvider {
                 items = items,
                 isSelected = false,
             ),
-            SortByTypeUM.Staking to MarketChartUM.Loading,
-            SortByTypeUM.TopLosers to MarketChartUM.Loading,
         )
 
         val ratingChart = if (includeErrorState) {

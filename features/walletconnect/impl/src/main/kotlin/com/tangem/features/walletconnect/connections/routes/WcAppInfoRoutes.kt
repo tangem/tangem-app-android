@@ -3,7 +3,6 @@ package com.tangem.features.walletconnect.connections.routes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,9 +13,6 @@ internal sealed class WcAppInfoRoutes : Route {
 
     @Serializable
     data object PortfolioSelector : WcAppInfoRoutes()
-
-    @Serializable
-    data class SelectWallet(val selectedWalletId: UserWalletId) : WcAppInfoRoutes()
 
     @Serializable
     data class SelectNetworks(
