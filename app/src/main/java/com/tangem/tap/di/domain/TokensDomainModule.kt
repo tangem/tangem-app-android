@@ -7,6 +7,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.pay.flow.PaymentAccountStatusFetcher
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -19,7 +20,6 @@ import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
-import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
@@ -41,28 +41,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideAddCryptoCurrenciesUseCase(
-        currenciesRepository: CurrenciesRepository,
-        walletManagersFacade: WalletManagersFacade,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        stakingIdFactory: StakingIdFactory,
-    ): AddCryptoCurrenciesUseCase {
-        return AddCryptoCurrenciesUseCase(
-            currenciesRepository = currenciesRepository,
-            walletManagersFacade = walletManagersFacade,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideFetchPendingTransactionsUseCase(
         networksRepository: NetworksRepository,
     ): FetchPendingTransactionsUseCase {
@@ -77,52 +55,12 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenListUseCase(
-        currenciesRepository: CurrenciesRepository,
-        currenciesStatusesOperations: BaseCurrencyStatusOperations,
-    ): GetTokenListUseCase {
-        return GetTokenListUseCase(
-            currenciesRepository = currenciesRepository,
-            currenciesStatusesOperations = currenciesStatusesOperations,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideRemoveCurrencyUseCase(
-        currenciesRepository: CurrenciesRepository,
-        walletManagersFacade: WalletManagersFacade,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    ): RemoveCurrencyUseCase {
-        return RemoveCurrencyUseCase(
-            currenciesRepository = currenciesRepository,
-            walletManagersFacade = walletManagersFacade,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideGetCurrencyUseCase(
         baseCurrencyStatusOperations: BaseCurrencyStatusOperations,
         dispatchers: CoroutineDispatcherProvider,
     ): GetSingleCryptoCurrencyStatusUseCase {
         return GetSingleCryptoCurrencyStatusUseCase(
             currencyStatusOperations = baseCurrencyStatusOperations,
-            dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetAllWalletsCryptoCurrencyStatusesUseCase(
-        currenciesRepository: CurrenciesRepository,
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-        dispatchers: CoroutineDispatcherProvider,
-    ): GetAllWalletsCryptoCurrencyStatusesUseCase {
-        return GetAllWalletsCryptoCurrencyStatusesUseCase(
-            currenciesRepository = currenciesRepository,
-            currencyStatusOperations = currencyStatusOperations,
             dispatchers = dispatchers,
         )
     }
@@ -174,34 +112,6 @@ internal object TokensDomainModule {
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     ): GetCryptoCurrencyUseCase {
         return GetCryptoCurrencyUseCase(currenciesRepository, multiWalletCryptoCurrenciesSupplier)
-    }
-
-    @Provides
-    @Singleton
-    fun provideToggleTokenListGroupingUseCase(
-        dispatchers: CoroutineDispatcherProvider,
-    ): ToggleTokenListGroupingUseCase {
-        return ToggleTokenListGroupingUseCase(dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideToggleTokenListSortingUseCase(dispatchers: CoroutineDispatcherProvider): ToggleTokenListSortingUseCase {
-        return ToggleTokenListSortingUseCase(dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideApplyTokenListSortingUseCase(
-        currenciesRepository: CurrenciesRepository,
-        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        dispatchers: CoroutineDispatcherProvider,
-    ): ApplyTokenListSortingUseCase {
-        return ApplyTokenListSortingUseCase(
-            currenciesRepository = currenciesRepository,
-            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            dispatchers = dispatchers,
-        )
     }
 
     @Provides
@@ -310,14 +220,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetWalletTotalBalanceUseCase(
-        currenciesStatusesOperations: BaseCurrencyStatusOperations,
-    ): GetWalletTotalBalanceUseCase {
-        return GetWalletTotalBalanceUseCase(currenciesStatusesOperations)
-    }
-
-    @Provides
-    @Singleton
     fun provideRefreshMultiCurrencyWalletQuotesUseCase(
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
@@ -350,7 +252,7 @@ internal object TokensDomainModule {
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         stakingIdFactory: StakingIdFactory,
     ): BaseCurrencyStatusOperations {
-        return CachedCurrenciesStatusesOperations(
+        return BaseCurrencyStatusOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
@@ -365,12 +267,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
-        return GetCryptoCurrenciesUseCase(currenciesRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideWalletBalanceFetcher(
         currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesFetcher: MultiWalletCryptoCurrenciesFetcher,
@@ -378,6 +274,7 @@ internal object TokensDomainModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
+        paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletBalanceFetcher {
@@ -388,6 +285,7 @@ internal object TokensDomainModule {
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiStakingBalanceFetcher = multiStakingBalanceFetcher,
+            paymentAccountStatusFetcher = paymentAccountStatusFetcher,
             stakingIdFactory = stakingIdFactory,
             dispatchers = dispatchers,
         )
