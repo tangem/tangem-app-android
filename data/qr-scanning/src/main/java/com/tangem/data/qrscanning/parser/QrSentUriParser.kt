@@ -20,7 +20,7 @@ internal class QrSentUriParser {
 
         val params = extractParameters(withoutScheme)
         val amount = params[PARAM_AMOUNT]?.toBigDecimalOrNull()
-        val memo = (params[PARAM_MEMO] ?: params[PARAM_MESSAGE])?.let {
+        val memo = (params[PARAM_MEMO] ?: params[PARAM_MESSAGE] ?: params[PARAM_DT])?.let {
             runCatching { URLDecoder.decode(it, CHARSET_UTF8) }.getOrDefault(it)
         }
 
@@ -53,6 +53,7 @@ internal class QrSentUriParser {
         const val PARAM_AMOUNT = "amount"
         const val PARAM_MEMO = "memo"
         const val PARAM_MESSAGE = "message"
+        const val PARAM_DT = "dt"
         const val PARAM_ADDRESS = "address"
         const val PARAM_VALUE = "value"
         const val PARAM_UINT256 = "uint256"
