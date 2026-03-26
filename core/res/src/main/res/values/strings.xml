@@ -834,6 +834,7 @@
   <string name="markets_token_details_max_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
   <string name="markets_token_details_max_supply_full">Max supply</string>
   <string name="markets_token_details_metrics">Metrics</string>
+  <string name="markets_token_details_metrics_no_limited">No limited</string>
   <string name="markets_token_details_official_links">Official links</string>
   <string name="markets_token_details_price_performance">Price performance</string>
   <string name="markets_token_details_repository">Repository</string>
