@@ -24,20 +24,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberCustomStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.*
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
 import com.patrykandpatrick.vico.compose.common.of
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
 import com.patrykandpatrick.vico.core.cartesian.Zoom
-import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
-import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.*
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
@@ -54,6 +48,7 @@ import com.tangem.common.ui.charts.state.*
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -98,14 +93,26 @@ fun MarketChart(
 
     val marker = rememberTangemChartMarker(color = state.chartColor)
 
-    val chart = rememberCartesianChart(
-        layer,
-        startAxis = rememberMarketChartStartAxis(state.yValueFormatter),
-        bottomAxis = rememberMarketChartBottomAxis(state.xValueFormatter),
-        horizontalLayout = HorizontalLayout.FullWidth(),
-        markerVisibilityListener = rememberMarketVisibilityListener(canvasWidth, state),
-        marker = marker,
-    )
+    val chart = if (state.isMinMaxLook) {
+        rememberCartesianChart(
+            layer,
+            startAxis = rememberMarketChartStartMinMaxAxis(state.yValueFormatter),
+            endAxis = rememberMarketChartEndAxis(),
+            bottomAxis = rememberMarketChartBottomAxis(state.xValueFormatter),
+            horizontalLayout = HorizontalLayout.FullWidth(),
+            markerVisibilityListener = rememberMarketVisibilityListener(canvasWidth, state),
+            marker = marker,
+        )
+    } else {
+        rememberCartesianChart(
+            layer,
+            startAxis = rememberMarketChartStartAxis(state.yValueFormatter),
+            bottomAxis = rememberMarketChartBottomAxis(state.xValueFormatter),
+            horizontalLayout = HorizontalLayout.FullWidth(),
+            markerVisibilityListener = rememberMarketVisibilityListener(canvasWidth, state),
+            marker = marker,
+        )
+    }
 
     // we need to calculate what the overall height should be in order to get the correct height of the graph
     val bottomAxisHeight = with(LocalDensity.current) {
@@ -181,6 +188,62 @@ private fun rememberMarketVisibilityListener(
 }
 
 @Composable
+private fun rememberMarketChartEndAxis(): VerticalAxis<AxisPosition.Vertical.End> {
+    return rememberEndAxis(
+        line = null,
+        tick = null,
+        guideline = rememberChartAxisGuidelineComponent(
+            color = TangemTheme.colors.icon.inactive.copy(alpha = 0.12f),
+            isWithPadding = false,
+        ),
+        label = null,
+        horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
+        verticalLabelPosition = VerticalAxis.VerticalLabelPosition.Center,
+        itemPlacer = MidVerticalAxisItemPlacer(false),
+        valueFormatter = CartesianValueFormatter.yPercent(),
+    )
+}
+
+@Composable
+private fun rememberMarketChartStartMinMaxAxis(
+    yValueFormatter: CartesianValueFormatter,
+): VerticalAxis<AxisPosition.Vertical.Start> {
+    val textStyle = TangemTheme.typography.caption2
+    val resolver = LocalFontFamilyResolver.current
+    val typeface by remember(resolver, textStyle) {
+        resolver.resolveAsTypeface(
+            fontFamily = textStyle.fontFamily,
+            fontWeight = textStyle.fontWeight ?: FontWeight.Normal,
+            fontStyle = textStyle.fontStyle ?: FontStyle.Normal,
+            fontSynthesis = textStyle.fontSynthesis ?: FontSynthesis.All,
+        )
+    }
+
+    return rememberMinMaxStartAxis(
+        line = null,
+        tick = null,
+        guideline = null,
+        labelGuideline = rememberChartAxisGuidelineComponent(
+            color = TangemTheme.colors.icon.inactive.copy(alpha = 0.12f),
+        ),
+        label = rememberAxisLabelComponent(
+            color = TangemTheme.colors.text.tertiary,
+            background = null,
+            padding = Dimensions.of(
+                start = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
+            ),
+            textSize = TangemTheme.typography.caption2.fontSize,
+            typeface = typeface,
+        ),
+        horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
+        verticalLabelPosition = VerticalAxis.VerticalLabelPosition.Center,
+        itemPlacer = VerticalAxis.ItemPlacer.count({ 2 }, false),
+        valueFormatter = yValueFormatter,
+    )
+}
+
+@Composable
 private fun rememberMarketChartStartAxis(
     yValueFormatter: CartesianValueFormatter,
 ): VerticalAxis<AxisPosition.Vertical.Start> {
@@ -253,13 +316,27 @@ private fun rememberMarketChartBottomAxis(
 }
 
 @Composable
-private fun rememberChartAxisGuidelineComponent(color: Color): LineComponent {
+private fun rememberChartAxisGuidelineComponent(color: Color, isWithPadding: Boolean = true): LineComponent {
+    val isRedesign = LocalRedesignEnabled.current
+
+    val startPadding = if (isRedesign) {
+        TangemTheme.dimens2.x2_5
+    } else {
+        TangemTheme.dimens.spacing4
+    }
+
+    val endPadding = if (isRedesign) {
+        TangemTheme.dimens2.x2
+    } else {
+        TangemTheme.dimens.spacing4
+    }
+
     return rememberAxisGuidelineComponent(
         color = color,
         shape = Shape.Rectangle,
         margins = Dimensions(
-            startDp = TangemTheme.dimens.spacing4.value,
-            endDp = TangemTheme.dimens.spacing4.value,
+            startDp = if (isWithPadding) startPadding.value else 0f,
+            endDp = if (isWithPadding) endPadding.value else 0f,
             topDp = 0f,
             bottomDp = 0f,
         ),
