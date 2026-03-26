@@ -7,7 +7,7 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.domain.card.ScanFailsRequester
+import com.tangem.core.analytics.models.AnalyticsParam
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import com.tangem.scenarios.checkFailedTransactionDialog
@@ -179,7 +179,7 @@ class FeedbackTest : BaseTestCase() {
                 runOnUiThread {
                     val requester = store.state.daggerGraphState.scanFailsRequester!!
                     MainScope().launch {
-                        requester.show(ScanFailsRequester.Source.MAIN)
+                        requester.show(AnalyticsParam.ScreensSources.Main)
                     }
                 }
             }
