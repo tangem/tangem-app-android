@@ -30,14 +30,13 @@ internal class ScanFailsModel @Inject constructor(
     val uiState: StateFlow<ScanFailsUM>
         field = MutableStateFlow(ScanFailsUM(onDismiss = ::dismiss))
 
-    fun show(source: ScanFailsRequester.Source) {
-        val analyticsSource = source.toAnalyticsSource()
+    fun show(source: AnalyticsParam.ScreensSources) {
         result.value = null
         uiState.update {
             ScanFailsUM(
                 isShown = true,
-                onHowToScan = { onHowToScan(analyticsSource) },
-                onRequestSupport = { onRequestSupport(analyticsSource) },
+                onHowToScan = { onHowToScan(source) },
+                onRequestSupport = { onRequestSupport(source) },
                 onDismiss = ::dismiss,
             )
         }
@@ -69,12 +68,5 @@ internal class ScanFailsModel @Inject constructor(
         modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.ScanningProblem)
         }
-    }
-
-    private fun ScanFailsRequester.Source.toAnalyticsSource(): AnalyticsParam.ScreensSources = when (this) {
-        ScanFailsRequester.Source.MAIN -> AnalyticsParam.ScreensSources.Main
-        ScanFailsRequester.Source.SIGN_IN -> AnalyticsParam.ScreensSources.SignIn
-        ScanFailsRequester.Source.SETTINGS -> AnalyticsParam.ScreensSources.Settings
-        ScanFailsRequester.Source.INTRO -> AnalyticsParam.ScreensSources.Intro
     }
 }
