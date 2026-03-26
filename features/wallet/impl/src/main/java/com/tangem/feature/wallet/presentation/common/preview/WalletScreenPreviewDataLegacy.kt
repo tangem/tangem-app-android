@@ -245,6 +245,7 @@ internal object WalletScreenPreviewDataLegacy {
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsTooltip = {},
+        isRedesignEnabled = false,
     )
 
     internal val accountScreenState =
