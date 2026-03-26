@@ -114,6 +114,18 @@ class TangemTypography2 internal constructor(
         ),
     )
 
+    val headingSemibold22: TextStyle = TextStyle(
+        fontFamily = fontFamily,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = TextUnit(value = 0.38f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 28f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    )
+
     val headingRegular20: TextStyle = TextStyle(
         fontFamily = fontFamily,
         fontSize = 20.sp,
