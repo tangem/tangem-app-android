@@ -49,6 +49,7 @@ data class TokenMarketInfo(
 
     data class Metrics(
         val marketRating: Int?,
+        val marketRatingChange24h: Int?,
         val circulatingSupply: BigDecimal?,
         val marketCap: BigDecimal?,
         val volume24h: BigDecimal?,
