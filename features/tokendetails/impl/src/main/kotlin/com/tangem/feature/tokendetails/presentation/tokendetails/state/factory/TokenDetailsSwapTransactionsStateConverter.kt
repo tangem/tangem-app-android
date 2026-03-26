@@ -70,19 +70,22 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 val fromCryptoCurrencyRawId = swapTransaction.fromCryptoCurrency.id.rawCurrencyId
 
                 swapTransaction.transactions.forEach { transaction ->
-                    val toAmount = transaction.toCryptoAmount
-                    val fromAmount = transaction.fromCryptoAmount
+                    // Amounts can be JVM-null despite Kotlin non-null type due to Moshi deserialization
+                    @Suppress("USELESS_CAST")
+                    val toAmount = transaction.toCryptoAmount as BigDecimal?
+                    @Suppress("USELESS_CAST")
+                    val fromAmount = transaction.fromCryptoAmount as BigDecimal?
                     var toFiatAmount: BigDecimal? = null
                     var fromFiatAmount: BigDecimal? = null
                     quoteStatuses.forEach { quote ->
                         quote.mapData {
-                            if (quote.rawCurrencyId == toCryptoCurrencyRawId) {
+                            if (quote.rawCurrencyId == toCryptoCurrencyRawId && toAmount != null) {
                                 toFiatAmount = fiatRate.multiply(toAmount)
                             }
                         }
 
                         quote.mapData {
-                            if (quote.rawCurrencyId == fromCryptoCurrencyRawId) {
+                            if (quote.rawCurrencyId == fromCryptoCurrencyRawId && fromAmount != null) {
                                 fromFiatAmount = fiatRate.multiply(fromAmount)
                             }
                         }
