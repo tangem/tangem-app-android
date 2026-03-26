@@ -37,12 +37,12 @@ internal class TangemPayWalletSelectorModel @Inject constructor(
         onWalletClick = { params.listener.onWalletSelected(it) },
     )
 
+    val uiState: StateFlow<WalletSelectorBSContentUM>
+        field = MutableStateFlow(getInitialState())
+
     init {
         fetchUserWalletsUM()
     }
-
-    val uiState: StateFlow<WalletSelectorBSContentUM>
-        field = MutableStateFlow(getInitialState())
 
     private fun getInitialState(): WalletSelectorBSContentUM {
         return WalletSelectorBSContentUM(
