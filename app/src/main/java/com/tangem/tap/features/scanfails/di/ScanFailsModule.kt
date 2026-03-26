@@ -2,7 +2,9 @@ package com.tangem.tap.features.scanfails.di
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.ScanFailsRequester
+import com.tangem.tap.domain.scanCard.DefaultScanFailsCounter
 import com.tangem.tap.features.scanfails.ScanFailsComponent
 import com.tangem.tap.features.scanfails.ScanFailsModel
 import com.tangem.tap.features.scanfails.ScanFailsRequesterProxy
@@ -29,4 +31,8 @@ internal interface ScanFailsModule {
     @Binds
     @Singleton
     fun bindRequester(impl: ScanFailsRequesterProxy): ScanFailsRequester
+
+    @Binds
+    @Singleton
+    fun bindScanFailsCounter(impl: DefaultScanFailsCounter): ScanFailsCounter
 }
