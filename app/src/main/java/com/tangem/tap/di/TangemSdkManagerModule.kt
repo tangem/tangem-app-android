@@ -9,7 +9,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
 import com.tangem.tap.domain.tasks.product.BlockchainToDeriveFinder
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.visa.PaymentGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
 import dagger.Module
@@ -30,7 +30,7 @@ internal class TangemSdkManagerModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
         visaCardScanHandler: VisaCardScanHandler,
         visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
-        tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
+        paymentGenerateAddressAndSignChallengeTaskFactory: PaymentGenerateAddressAndSignChallengeTask.Factory,
         onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
         blockchainToDeriveFinder: BlockchainToDeriveFinder,
         analyticsErrorHandler: AnalyticsErrorHandler,
@@ -43,7 +43,7 @@ internal class TangemSdkManagerModule {
                 resources = context.resources,
                 visaCardScanHandler = visaCardScanHandler,
                 visaCardActivationTaskFactory = visaCardActivationTaskFactory,
-                tangemPayChallengeTaskFactory = tangemPayChallengeTaskFactory,
+                paymentGenerateAddressAndSignChallengeTaskFactory = paymentGenerateAddressAndSignChallengeTaskFactory,
                 onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 blockchainToDeriveFinder = blockchainToDeriveFinder,
                 analyticsErrorHandler = analyticsErrorHandler,

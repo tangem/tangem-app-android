@@ -10,28 +10,28 @@ import com.tangem.datasource.api.pay.models.request.GetTokenByCustomerWalletRequ
 import com.tangem.datasource.api.pay.models.response.TangemPayErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.card.common.visa.VisaUtilities
-import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayAuthTokens
-import com.tangem.domain.visa.model.VisaAuthChallenge
-import com.tangem.domain.visa.model.VisaAuthSession
+import com.tangem.domain.payment.models.auth.PaymentAuthApiError
+import com.tangem.domain.payment.auth.PaymentRemoteDataSource
+import com.tangem.domain.payment.models.auth.PaymentAuthChallenge
+import com.tangem.domain.payment.models.auth.PaymentAuthSession
+import com.tangem.domain.payment.models.auth.PaymentAuthTokens
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
-internal class DefaultTangemPayRemoteDataSource @Inject constructor(
+internal class TangemPayRemoteDataSource @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     private val tangemPayAuthApi: TangemPayAuthApi,
     private val dispatchers: CoroutineDispatcherProvider,
-) : TangemPayRemoteDataSource {
+) : PaymentRemoteDataSource {
 
     private val errorAdapter by lazy { moshi.adapter(TangemPayErrorResponse::class.java) }
 
     override suspend fun getCustomerWalletAuthChallenge(
         customerWalletAddress: String,
         customerWalletId: String,
-    ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
+    ): Either<PaymentAuthApiError, PaymentAuthChallenge> = withContext(dispatchers.io) {
         request {
             tangemPayAuthApi.generateNonceByCustomerWallet(
                 request = GenerateNonceByCustomerWalletRequest(
@@ -40,9 +40,9 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
                 ),
             ).getOrThrow()
         }.map { response ->
-            VisaAuthChallenge.Wallet(
+            PaymentAuthChallenge(
                 challenge = response.nonce,
-                session = VisaAuthSession(response.sessionId),
+                session = PaymentAuthSession(response.sessionId),
             )
         }
     }
@@ -51,7 +51,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
         sessionId: String,
         signature: String,
         nonce: String,
-    ): Either<VisaApiError, TangemPayAuthTokens> = withContext(dispatchers.io) {
+    ): Either<PaymentAuthApiError, PaymentAuthTokens> = withContext(dispatchers.io) {
         request {
             tangemPayAuthApi.getTokenByCustomerWallet(
                 request = GetTokenByCustomerWalletRequest(
@@ -62,7 +62,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
                 ),
             ).getOrThrow()
         }.map { response ->
-            TangemPayAuthTokens(
+            PaymentAuthTokens(
                 accessToken = response.accessToken,
                 expiresAt = response.expiresAt,
                 refreshToken = response.refreshToken,
@@ -72,7 +72,7 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
         }
     }
 
-    private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<VisaApiError, T> {
+    private suspend fun <T : Any> request(requestBlock: suspend () -> T): Either<PaymentAuthApiError, T> {
         return runCatching {
             Either.Right(requestBlock())
         }.getOrElse { responseError ->
@@ -81,10 +81,10 @@ internal class DefaultTangemPayRemoteDataSource @Inject constructor(
             ) {
                 val errorCode =
                     errorAdapter.fromJson(responseError.errorBody)?.error?.code ?: responseError.code.numericCode
-                return Either.Left(VisaApiError.fromBackendError(errorCode))
+                return Either.Left(PaymentAuthApiError.fromBackendError(errorCode))
             }
 
-            return Either.Left(VisaApiError.UnknownWithoutCode)
+            return Either.Left(PaymentAuthApiError.UnknownWithoutCode)
         }
     }
 }

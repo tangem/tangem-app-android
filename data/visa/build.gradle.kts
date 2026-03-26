@@ -25,6 +25,8 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.payment)
+    implementation(projects.domain.payment.models)
     implementation(projects.domain.card)
     implementation(projects.domain.wallets)
     implementation(projects.domain.legacy)
@@ -62,6 +64,7 @@ dependencies {
     /** Libs - Tangem */
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android)
     implementation(tangemDeps.hot.core)
     implementation(projects.libs.tangemSdkApi)
 

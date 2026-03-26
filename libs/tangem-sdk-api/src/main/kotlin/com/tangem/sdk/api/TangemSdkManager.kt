@@ -18,13 +18,15 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.payment.models.auth.PaymentAuthConfig
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.sdk.api.visa.PaymentGenerateChallengeHelper
+import com.tangem.sdk.api.visa.PaymentSignChallengeResult
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 
@@ -158,7 +160,18 @@ interface TangemSdkManager {
 
     // endregion
 
-    // region Visa-specific
+    // region Payment-specific
+
+    suspend fun paymentGenerateAddressAndSignChallenge(
+        preflightReadFilter: PreflightReadFilter,
+        config: PaymentAuthConfig,
+        userWalletId: String,
+        generateChallengeHelper: PaymentGenerateChallengeHelper,
+    ): Either<Throwable, PaymentSignChallengeResult>
+
+    // endregion
+
+    // region TangemPay-specific
 
     suspend fun activateVisaCard(
         mode: VisaCardActivationTaskMode,
@@ -168,10 +181,6 @@ interface TangemSdkManager {
     suspend fun visaCustomerWalletApprove(
         visaDataForApprove: VisaDataForApprove,
     ): CompletionResult<VisaSignedDataByCustomerWallet>
-
-    suspend fun tangemPayProduceInitialCredentials(
-        preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials>
 
     suspend fun getWithdrawalSignature(
         hash: String,

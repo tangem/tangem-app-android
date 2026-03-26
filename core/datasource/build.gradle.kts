@@ -82,6 +82,7 @@ dependencies {
     implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.visa.models)
+    implementation(projects.domain.payment.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)

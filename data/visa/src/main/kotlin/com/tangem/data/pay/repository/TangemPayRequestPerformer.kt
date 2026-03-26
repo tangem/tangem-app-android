@@ -6,16 +6,16 @@ import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.right
 import com.squareup.wire.Instant
+import com.tangem.data.pay.store.TangemPayAuthStorage
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
-import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.payment.models.auth.PaymentAuthTokens
+import com.tangem.domain.payment.models.auth.getAuthHeader
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.TangemPayAuthTokens
-import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.sync.Mutex
@@ -33,7 +33,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val errorConverter: TangemPayErrorConverter,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayAuthApi: TangemPayAuthApi,
-    private val tangemPayStorage: TangemPayStorage,
+    private val paymentAuthStorage: TangemPayAuthStorage,
 ) {
 
     private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
@@ -77,7 +77,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
         if (existingAddress != null) {
             return existingAddress
         }
-        val storedAddress = tangemPayStorage.getCustomerWalletAddress(
+        val storedAddress = paymentAuthStorage.getCustomerWalletAddress(
             userWalletId = userWalletId,
         ) ?: error("Can not find customer address")
 
@@ -85,10 +85,10 @@ internal class TangemPayRequestPerformer @Inject constructor(
         return storedAddress
     }
 
-    private suspend fun getAccessTokens(userWalletId: UserWalletId): Either<VisaApiError, TangemPayAuthTokens> {
+    private suspend fun getAccessTokens(userWalletId: UserWalletId): Either<VisaApiError, PaymentAuthTokens> {
         return tokensMutex.withLock {
             val walletAddress = getCustomerWalletAddress(userWalletId)
-            val tokens = tangemPayStorage.getAuthTokens(walletAddress) ?: error("Auth tokens are not stored")
+            val tokens = paymentAuthStorage.getAuthTokens(walletAddress) ?: error("Auth tokens are not stored")
             val now = Instant.now()
             val accessExpiresAt = Instant.ofEpochSecond(tokens.expiresAt)
             val refreshExpiresAt = Instant.ofEpochSecond(tokens.refreshExpiresAt)
@@ -105,8 +105,8 @@ internal class TangemPayRequestPerformer @Inject constructor(
 
     private suspend fun refreshAuthTokens(
         userWalletId: UserWalletId,
-        authTokens: TangemPayAuthTokens,
-    ): Either<VisaApiError, TangemPayAuthTokens> {
+        authTokens: PaymentAuthTokens,
+    ): Either<VisaApiError, PaymentAuthTokens> {
         val customerWalletAddress = getCustomerWalletAddress(userWalletId)
         val idempotencyKey = requireNotNull(authTokens.idempotencyKey) { "Idempotency key is null" }
         val apiResponse = tangemPayAuthApi.refreshCustomerWalletAccessToken(
@@ -121,7 +121,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
             is ApiResponse.Success<TangemPayGetTokensResponse> -> apiResponse.data.right()
         }
         return responseEither.map { response ->
-            TangemPayAuthTokens(
+            PaymentAuthTokens(
                 accessToken = response.accessToken,
                 expiresAt = response.expiresAt,
                 refreshToken = response.refreshToken,
@@ -132,7 +132,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
             TangemLogger.withTag(TAG).e("Can not refresh auth tokens: $error")
             if (error is VisaApiError.ServerUnavailable) error else VisaApiError.RefreshTokenExpired
         }.onRight { tokens ->
-            tangemPayStorage.storeAuthTokens(customerWalletAddress = customerWalletAddress, tokens = tokens)
+            paymentAuthStorage.storeAuthTokens(customerWalletAddress = customerWalletAddress, tokens = tokens)
         }
     }
 }

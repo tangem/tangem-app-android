@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
+    implementation(projects.domain.payment.models)
 
     implementation(projects.core.configToggles)
     implementation(projects.core.res)

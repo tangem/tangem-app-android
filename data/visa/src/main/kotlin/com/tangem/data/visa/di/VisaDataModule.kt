@@ -1,14 +1,12 @@
 package com.tangem.data.visa.di
 
 import com.tangem.data.pay.datasource.DefaultTangemPayAuthDataSource
-import com.tangem.data.visa.DefaultTangemPayRemoteDataSource
 import com.tangem.data.visa.DefaultVisaActivationRepository
 import com.tangem.data.visa.DefaultVisaAuthRemoteDataSource
 import com.tangem.data.visa.MockVisaRepository
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.visa.datasource.TangemPayRemoteDataSource
-import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
+import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaRepository
 import dagger.Binds
 import dagger.Module
@@ -23,10 +21,6 @@ internal interface VisaDataModule {
     @Binds
     @Singleton
     fun bindVisaAuthRemoteDataSource(repository: DefaultVisaAuthRemoteDataSource): VisaAuthRemoteDataSource
-
-    @Binds
-    @Singleton
-    fun bindTangemPayRemoteDataSource(impl: DefaultTangemPayRemoteDataSource): TangemPayRemoteDataSource
 
     @Binds
     @Singleton

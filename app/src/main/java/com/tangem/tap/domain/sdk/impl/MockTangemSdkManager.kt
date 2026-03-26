@@ -20,7 +20,7 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.payment.models.auth.PaymentAuthConfig
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
@@ -29,6 +29,8 @@ import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.api.visa.PaymentGenerateChallengeHelper
+import com.tangem.sdk.api.visa.PaymentSignChallengeResult
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
@@ -219,9 +221,12 @@ class MockTangemSdkManager(
         error("Not implemented")
     }
 
-    override suspend fun tangemPayProduceInitialCredentials(
+    override suspend fun paymentGenerateAddressAndSignChallenge(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+        config: PaymentAuthConfig,
+        userWalletId: String,
+        generateChallengeHelper: PaymentGenerateChallengeHelper,
+    ): Either<Throwable, PaymentSignChallengeResult> {
         error("Not implemented")
     }
 

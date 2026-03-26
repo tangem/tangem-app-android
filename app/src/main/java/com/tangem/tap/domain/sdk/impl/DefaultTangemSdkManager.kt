@@ -28,7 +28,11 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.WithdrawalSignatureResult
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.payment.models.auth.PaymentAuthConfig
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
+import com.tangem.domain.visa.model.sign
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
@@ -41,14 +45,13 @@ import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.api.visa.PaymentGenerateChallengeHelper
+import com.tangem.sdk.api.visa.PaymentSignChallengeResult
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.domain.tasks.product.*
-import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
-import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
-import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
-import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
+import com.tangem.tap.domain.tasks.visa.*
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -66,7 +69,7 @@ internal class DefaultTangemSdkManager(
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
-    private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
+    private val paymentGenerateAddressAndSignChallengeTaskFactory: PaymentGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val blockchainToDeriveFinder: BlockchainToDeriveFinder,
     private val analyticsErrorHandler: AnalyticsErrorHandler,
@@ -491,12 +494,20 @@ internal class DefaultTangemSdkManager(
         )
     }
 
-    override suspend fun tangemPayProduceInitialCredentials(
+    override suspend fun paymentGenerateAddressAndSignChallenge(
         preflightReadFilter: PreflightReadFilter,
-    ): Either<Throwable, TangemPayInitialCredentials> {
+        config: PaymentAuthConfig,
+        userWalletId: String,
+        generateChallengeHelper: PaymentGenerateChallengeHelper,
+    ): Either<Throwable, PaymentSignChallengeResult> {
         return coroutineScope {
             val result = runTaskAsyncReturnOnMain(
-                runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
+                runnable = paymentGenerateAddressAndSignChallengeTaskFactory.create(
+                    coroutineScope = this,
+                    config = config,
+                    userWalletId = userWalletId,
+                    generateChallengeHelper = generateChallengeHelper,
+                ),
                 cardId = null,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
                 preflightReadFilter = preflightReadFilter,
@@ -504,7 +515,7 @@ internal class DefaultTangemSdkManager(
 
             return@coroutineScope when (result) {
                 is CompletionResult.Failure<*> -> result.error.left()
-                is CompletionResult.Success<TangemPayInitialCredentials> -> result.data.right()
+                is CompletionResult.Success<PaymentSignChallengeResult> -> result.data.right()
             }
         }
     }
