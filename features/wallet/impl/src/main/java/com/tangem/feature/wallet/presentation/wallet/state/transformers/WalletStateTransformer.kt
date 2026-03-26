@@ -15,17 +15,22 @@ internal abstract class WalletStateTransformer(
     abstract fun transform(walletUM: WalletUM): WalletUM
 
     final override fun transform(prevState: WalletScreenState): WalletScreenState {
-        return prevState.copy(
-            wallets = prevState.wallets
-                .map { state ->
-                    if (state.walletCardState.id == userWalletId) transform(state) else state
-                }
-                .toImmutableList(),
-            wallets2 = prevState.wallets2
-                .map { walletUM ->
-                    if (walletUM.walletsBalanceUM.id == userWalletId) transform(walletUM) else walletUM
-                }
-                .toImmutableList(),
-        )
+        return if (prevState.isRedesignEnabled) {
+            prevState.copy(
+                wallets2 = prevState.wallets2
+                    .map { walletUM ->
+                        if (walletUM.walletsBalanceUM.id == userWalletId) transform(walletUM) else walletUM
+                    }
+                    .toImmutableList(),
+            )
+        } else {
+            prevState.copy(
+                wallets = prevState.wallets
+                    .map { state ->
+                        if (state.walletCardState.id == userWalletId) transform(state) else state
+                    }
+                    .toImmutableList(),
+            )
+        }
     }
 }
