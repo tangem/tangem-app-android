@@ -9,7 +9,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.card.ScanCardException
-import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -73,14 +72,8 @@ internal object UseCaseScanProcessor {
     }
 
     private fun showScanFailsDialog(source: AnalyticsParam.ScreensSources) {
-        val scanFailsSource = when (source) {
-            is AnalyticsParam.ScreensSources.SignIn -> ScanFailsRequester.Source.SIGN_IN
-            is AnalyticsParam.ScreensSources.Settings -> ScanFailsRequester.Source.SETTINGS
-            is AnalyticsParam.ScreensSources.Intro -> ScanFailsRequester.Source.INTRO
-            else -> ScanFailsRequester.Source.MAIN
-        }
         scope.launch {
-            store.inject(DaggerGraphState::scanFailsRequester).show(scanFailsSource)
+            store.inject(DaggerGraphState::scanFailsRequester).show(source)
         }
     }
 
