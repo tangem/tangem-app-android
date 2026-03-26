@@ -189,6 +189,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             marketChartLook.copy(
                 type = percentChangeType.toChartType(),
+                isMinMaxLook = designFeatureToggles.isRedesignEnabled,
                 xAxisFormatter = MarketsDateTimeFormatters.getChartXFormatterByInterval(PriceChangeInterval.H24),
                 yAxisFormatter = { value ->
                     value.format {
