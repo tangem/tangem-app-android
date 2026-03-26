@@ -26,9 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,8 +39,7 @@ import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.CryptoPortfolioIconConverter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
@@ -59,7 +56,7 @@ fun TransactionCard(
     balance: String,
     tokenIconUrl: String,
     tokenCurrency: String,
-    amountEquivalent: String?,
+    amountEquivalent: TextReference?,
     priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
@@ -129,7 +126,7 @@ fun TransactionCard(
 @Composable
 fun TransactionCardEmpty(
     type: TransactionCardType,
-    amountEquivalent: String?,
+    amountEquivalent: TextReference?,
     textFieldValue: TextFieldValue?,
     modifier: Modifier = Modifier,
     onChangeTokenClick: (() -> Unit)? = null,
@@ -157,7 +154,7 @@ fun TransactionCardEmpty(
                 type = type,
                 amountEquivalent = amountEquivalent,
                 textFieldValue = textFieldValue,
-                priceImpact = PriceImpact.Empty(),
+                priceImpact = PriceImpact.Empty,
             )
         }
 
@@ -250,7 +247,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
 @Composable
 private fun Content(
     type: TransactionCardType,
-    amountEquivalent: String?,
+    amountEquivalent: TextReference?,
     priceImpact: PriceImpact,
     textFieldValue: TextFieldValue?,
 ) {
@@ -320,27 +317,13 @@ private fun Content(
                         modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size20),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (priceImpact is PriceImpact.Value) {
+                        AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
                             Text(
-                                text = makePriceImpactBalanceWarning(
-                                    amountEquivalent,
-                                    priceImpact.getIntPercentValue(),
-                                ),
+                                text = amount.resolveAnnotatedReference(),
                                 color = TangemTheme.colors.text.tertiary,
                                 style = TangemTheme.typography.body2,
-                                modifier = Modifier.testTag(
-                                    SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT_WITH_PRICE_IMPACT_WARNING,
-                                ),
+                                modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
                             )
-                        } else {
-                            AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
-                                Text(
-                                    text = amount,
-                                    color = TangemTheme.colors.text.tertiary,
-                                    style = TangemTheme.typography.body2,
-                                    modifier = Modifier.testTag(SwapTokenScreenTestTags.RECEIVE_FIAT_AMOUNT),
-                                )
-                            }
                         }
                         if (type.shouldShowWarning) {
                             SpacerW4()
@@ -353,10 +336,10 @@ private fun Content(
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_information_24),
                                     contentDescription = null,
-                                    tint = if (priceImpact is PriceImpact.Value) {
-                                        TangemTheme.colors.text.attention
-                                    } else {
-                                        TangemTheme.colors.text.tertiary
+                                    tint = when (priceImpact.type) {
+                                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
+                                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
+                                        else -> TangemTheme.colors.text.tertiary
                                     },
                                     modifier = Modifier
                                         .align(Alignment.CenterVertically)
@@ -368,7 +351,7 @@ private fun Content(
                 } else {
                     AnimatedContent(targetState = amountEquivalent, label = "") { amount ->
                         Text(
-                            text = amount,
+                            text = amount.resolveAnnotatedReference(),
                             color = TangemTheme.colors.text.tertiary,
                             style = TangemTheme.typography.body2,
                             modifier = Modifier
@@ -530,19 +513,6 @@ fun ChangeTokenSelector() {
     }
 }
 
-@Composable
-private fun makePriceImpactBalanceWarning(value: String, priceImpactPercents: Int): AnnotatedString {
-    val fullValue = "$value (-$priceImpactPercents%)"
-    return buildAnnotatedString {
-        append(fullValue)
-        addStyle(
-            style = SpanStyle(color = TangemTheme.colors.text.attention),
-            start = value.length,
-            end = fullValue.length,
-        )
-    }
-}
-
 // region preview
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
@@ -602,14 +572,14 @@ private fun TransactionCardPreview() {
             inputError = TransactionCardType.InputError.Empty,
             accountTitleUM = null,
         ),
-        amountEquivalent = "1 000 000",
+        amountEquivalent = stringReference("1 000 000"),
         tokenIconUrl = "",
         tokenCurrency = "DAI",
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
         balance = "123",
         textFieldValue = TextFieldValue(),
-        priceImpact = PriceImpact.Empty(),
+        priceImpact = PriceImpact.Empty,
     )
 }
 
@@ -625,14 +595,24 @@ private fun TransactionCardPreviewWithPriceImpact() {
                 icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
-        amountEquivalent = "1 000 000",
+        amountEquivalent = combinedReference(
+            stringReference("1 000 000 $"),
+            styledStringReference(
+                " (-15%)",
+                { SpanStyle(color = TangemTheme.colors.text.attention) },
+            ),
+        ),
         tokenIconUrl = "",
         tokenCurrency = "DAI",
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
         balance = "123",
         textFieldValue = TextFieldValue("1000000.0000000000000000000000000"),
-        priceImpact = PriceImpact.Value(0.15F),
+        priceImpact = PriceImpact(
+            value = 0.15F.toBigDecimal(),
+            type = PriceImpact.Type.MEDIUM,
+            amountSignificance = PriceImpact.AmountSignificance.HIGH,
+        ),
     )
 }
 
@@ -647,14 +627,14 @@ private fun TransactionCardPreviewWithoutPriceImpact() {
                 icon = CryptoPortfolioIconConverter.convert(CryptoPortfolioIcon.ofDefaultCustomAccount()),
             ),
         ),
-        amountEquivalent = "1 000 000",
+        amountEquivalent = stringReference("1 000 000"),
         tokenIconUrl = "",
         tokenCurrency = "DAI",
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
         balance = "123",
         textFieldValue = TextFieldValue(),
-        priceImpact = PriceImpact.Empty(),
+        priceImpact = PriceImpact.Empty,
     )
 }
 
