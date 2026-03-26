@@ -105,6 +105,7 @@ internal class TokenMarketInfoConverter(
     private fun TokenMarketInfoResponse.Metrics.convert(): TokenMarketInfo.Metrics {
         return TokenMarketInfo.Metrics(
             marketRating = marketRating,
+            marketRatingChange24h = marketRatingChange24h,
             circulatingSupply = circulatingSupply,
             marketCap = marketCap,
             volume24h = volume24h,
