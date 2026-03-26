@@ -691,7 +691,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.VirtualAccountOnboarding -> {
                 createComponentChild(
                     context = context,
-                    params = VirtualAccountOnboardingComponent.Params(),
+                    params = Unit,
                     componentFactory = virtualAccountOnboardingComponentFactory,
                 )
             }

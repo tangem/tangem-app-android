@@ -54,7 +54,7 @@ internal fun VirtualAccountOnboardingScreen(
                 title = null,
                 startButton = TopAppBarButtonUM.Back(onBackClicked = onBackClick),
                 endButton = TopAppBarButtonUM.Text(
-                    text = resourceReference(OnboardingR.string.virtual_account_onboarding_learn_more),
+                    text = resourceReference(OnboardingR.string.common_learn_more),
                     onTextClicked = onLearnMoreClick,
                 ),
             )
@@ -242,7 +242,7 @@ private fun BottomContent(
         Spacer(modifier = Modifier.size(12.dp))
         NavigationPrimaryButton(
             primaryButton = NavigationButton(
-                textReference = resourceReference(OnboardingR.string.virtual_account_onboarding_continue),
+                textReference = resourceReference(OnboardingR.string.common_continue),
                 onClick = onContinueClick,
             ),
         )
@@ -260,8 +260,8 @@ private fun BottomContent(
 @Composable
 private fun TermsText(termsOfUseUrl: String, privacyPolicyLink: String, modifier: Modifier = Modifier) {
     val accentColor = TangemTheme.colors.text.accent
-    val termsOfUse = stringResourceSafe(OnboardingR.string.virtual_account_onboarding_terms_link)
-    val privacyPolicy = stringResourceSafe(OnboardingR.string.virtual_account_onboarding_privacy_link)
+    val termsOfUse = stringResourceSafe(OnboardingR.string.common_terms_of_use)
+    val privacyPolicy = stringResourceSafe(OnboardingR.string.common_privacy_policy)
     Text(
         modifier = modifier,
         text = buildAnnotatedString {

@@ -1,16 +1,15 @@
 package com.tangem.features.virtualaccount.onboarding.impl.model
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.common.routing.AppRouter
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.features.virtualaccount.onboarding.impl.ui.state.VirtualAccountOnboardingUiState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,8 +20,8 @@ internal class VirtualAccountOnboardingModel @Inject constructor(
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
 ) : Model() {
 
-    var uiState: VirtualAccountOnboardingUiState by mutableStateOf(VirtualAccountOnboardingUiState())
-        private set
+    val uiState: StateFlow<VirtualAccountOnboardingUiState>
+        field = MutableStateFlow(VirtualAccountOnboardingUiState())
 
     init {
         modelScope.launch {

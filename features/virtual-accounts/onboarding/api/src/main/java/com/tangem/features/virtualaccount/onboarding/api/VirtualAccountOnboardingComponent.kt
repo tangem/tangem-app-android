@@ -5,7 +5,5 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface VirtualAccountOnboardingComponent : ComposableContentComponent {
 
-    class Params
-
-    interface Factory : ComponentFactory<Params, VirtualAccountOnboardingComponent>
+    interface Factory : ComponentFactory<Unit, VirtualAccountOnboardingComponent>
 }
