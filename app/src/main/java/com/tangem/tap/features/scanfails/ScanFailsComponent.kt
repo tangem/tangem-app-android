@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -21,7 +22,7 @@ internal class ScanFailsComponent @AssistedInject constructor(
 
     private val model: ScanFailsModel = getOrCreateModel(params)
 
-    override suspend fun show(source: ScanFailsRequester.Source): ScanFailsRequester.Result {
+    override suspend fun show(source: AnalyticsParam.ScreensSources): ScanFailsRequester.Result {
         model.show(source)
         return model.waitResult()
     }
