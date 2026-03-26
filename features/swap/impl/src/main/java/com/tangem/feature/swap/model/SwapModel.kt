@@ -1700,7 +1700,7 @@ internal class SwapModel @Inject constructor(
             onReceiveCardWarningClick = {
                 val selectedProvider = dataState.selectedProvider ?: return@UiActions
                 val currencySymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return@UiActions
-                val isPriceImpact = uiState.priceImpact is PriceImpact.Value
+                val isPriceImpact = uiState.priceImpact.type != PriceImpact.Type.NONE
                 showSwapInfoAlert(isPriceImpact, currencySymbol, selectedProvider)
             },
             onLinkClick = urlOpener::openUrl,
