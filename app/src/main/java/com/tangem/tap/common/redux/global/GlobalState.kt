@@ -10,7 +10,6 @@ data class GlobalState(
     val scanResponse: ScanResponse? = null,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
     val appCurrency: AppCurrency = AppCurrency.Default,
-    val scanCardFailsCounter: Int = 0,
     val isLastSignWithRing: Boolean = false,
 ) : StateType
 
