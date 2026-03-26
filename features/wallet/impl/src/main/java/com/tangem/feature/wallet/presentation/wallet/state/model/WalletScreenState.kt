@@ -15,4 +15,5 @@ internal data class WalletScreenState(
     val isHidingMode: Boolean,
     val showMarketsOnboarding: Boolean,
     val onDismissMarketsTooltip: () -> Unit,
+    val isRedesignEnabled: Boolean,
 )
