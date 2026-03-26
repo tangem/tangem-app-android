@@ -31,6 +31,7 @@ fun TangemThemeRedesign(content: @Composable () -> Unit) {
             LocalTangemColors provides themeColors,
             LocalTangemColors2 provides if (LocalIsInDarkTheme.current) darkThemeColors2() else lightThemeColors2(),
             LocalTangemTypography2 provides TangemTypography2(InterFamily),
+            LocalTangemTypography provides TangemTypography(InterFamily),
             LocalRootBackgroundColor provides remember(rootBackgroundColor) { mutableStateOf(rootBackgroundColor) },
         ) {
             CompositionLocalProvider(
