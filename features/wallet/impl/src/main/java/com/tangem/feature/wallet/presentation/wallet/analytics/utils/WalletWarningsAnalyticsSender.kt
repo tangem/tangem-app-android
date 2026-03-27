@@ -168,6 +168,8 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             WalletNotificationUM.SomeNetworksUnreachable,
             is WalletNotificationUM.UsedOutdatedData,
             is WalletNotificationUM.CloreMigration,
+            is WalletNotificationUM.TangemPayRefreshNeeded,
+            WalletNotificationUM.TangemPayUnreachable,
             -> null
         }
     }
