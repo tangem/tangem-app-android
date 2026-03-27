@@ -301,6 +301,7 @@
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
   <string name="common_in_progress">進行中</string>
+  <string name="common_insufficient_balance">残高不足</string>
   <string name="common_later">後で</string>
   <string name="common_learn_more">もっと詳しく</string>
   <string name="common_left">残り%1$s</string>
@@ -397,6 +398,7 @@
   <string name="common_utxo_validate_withdrawal_message_warning">%1$sの制限により、1つのトランザクションに収まるUTXOは%2$d個のみです。つまり、 %3$s以下しか送信できません。量を減らす必要があります。</string>
   <string name="common_value_copied">値がコピーされました</string>
   <string name="common_wallets">ウォレット</string>
+  <string name="common_warning">警告</string>
   <string name="common_week">週</string>
   <string name="common_with">で</string>
   <string name="common_yes">はい</string>
@@ -473,7 +475,7 @@
   <string name="earn_filter_by">絞り込み</string>
   <string name="earn_filter_my_networks">マイネットワーク</string>
   <string name="earn_filter_networks">ネットワーク</string>
-  <string name="earn_mostly_used">よく使われています</string>
+  <string name="earn_mostly_used">人気</string>
   <string name="earn_no_results">該当する結果はありません</string>
   <string name="earn_title">ステーキング・利息モード</string>
   <string name="email_preface_wc_error">こんにちは、サポートチームの皆さん、コード %s のエラーが発生しました。</string>
@@ -687,7 +689,7 @@
   <string name="initial_message_tap_header">カードまたはリングをタップ</string>
   <string name="initial_wallet_sync_banner_description">ウォレットは同期され、準備ができています。\n一部のトークンが見つかりませんか？</string>
   <string name="initial_wallet_sync_banner_title">ウォレットのインポートが完了しました</string>
-  <string name="initial_wallet_sync_restore_progress">%d%を復元中</string>
+  <string name="initial_wallet_sync_restore_progress">%d%%を復元中</string>
   <string name="key_invalidated_warning_description">生体認証を更新しました。カードまたはリングをスキャンして入ってください。</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">送金するには、残高が手数料額より高くなければなりません。</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">残高不足</string>

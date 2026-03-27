@@ -146,10 +146,56 @@ internal class SolanaPaymentUriParserTest {
 
     // endregion
 
+    // region Unsupported params
+
+    @Test
+    fun `unknown parameter returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "solana:SolAddress?amount=1&reference=abc123",
+            coins = listOf(solanaCoin),
+            allCurrencies = listOf(solanaCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.address).isEqualTo("SolAddress")
+        assertThat(warning.unsupportedParams).containsEntry("reference", "abc123")
+    }
+
+    @Test
+    fun `memo on non-memo network returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "solana:SolAddress?amount=1&memo=hello",
+            coins = listOf(solanaCoin),
+            allCurrencies = listOf(solanaCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.unsupportedParams).containsEntry("memo", "hello")
+    }
+
+    @Test
+    fun `only known params returns Success`() {
+        val result = parser.parse(
+            qrCode = "solana:SolAddress?amount=1",
+            coins = listOf(solanaCoin),
+            allCurrencies = listOf(solanaCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.Success::class.java)
+    }
+
+    // endregion
+
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
-        return (this as? PaymentUriParser.ParseResult.Success)?.content
+        return when (this) {
+            is PaymentUriParser.ParseResult.Success -> content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> content
+            else -> null
+        }
     }
 
     private val solanaNetwork = buildNetwork("SOLANA", "Solana", "SOL")
