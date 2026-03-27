@@ -49,12 +49,20 @@ internal class SolanaPaymentUriParser(
             qrCode = qrCode,
         )
 
-        val splTokenMint = parsed.params[PARAM_SPL_TOKEN]
-        return if (splTokenMint != null) {
+        val splTokenMint = parsed.remainingParams[PARAM_SPL_TOKEN]
+        val result = if (splTokenMint != null) {
             helper.resolveTokenTransfer(context, splTokenMint)
         } else {
             helper.resolveNativeOrAll(context)
         }
+
+        val unconsumed = parsed.remainingParams - PARAM_SPL_TOKEN
+        return helper.validateParams(
+            result = result,
+            unconsumedParams = unconsumed,
+            memo = parsed.memo,
+            matchingCoins = matchingCoins,
+        )
     }
 
     private companion object {

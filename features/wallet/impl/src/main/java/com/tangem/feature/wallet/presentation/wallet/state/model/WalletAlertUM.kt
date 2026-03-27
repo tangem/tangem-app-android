@@ -94,6 +94,24 @@ internal object WalletAlertUM {
         )
     }
 
+    fun qrCodeUnsupportedParams(unsupportedParams: Map<String, String>, onContinue: () -> Unit): DialogMessage {
+        val paramsList = unsupportedParams.entries.joinToString { "${it.key} = ${it.value}" }
+        return DialogMessage(
+            title = resourceReference(R.string.qr_scanner_warning_unknown_parameters_title),
+            message = resourceReference(
+                id = R.string.qr_scanner_warning_unknown_parameters_message,
+                formatArgs = WrappedList(listOf(paramsList)),
+            ),
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.common_continue),
+                    onClick = onContinue,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
+        )
+    }
+
     fun qrCodeAddressSameAsWallet(): DialogMessage {
         return DialogMessage(
             message = resourceReference(R.string.send_error_address_same_as_wallet),
