@@ -1,10 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
+import androidx.compose.ui.text.SpanStyle
 import com.tangem.common.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.formatStyled
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.PaymentAccountStatusValue
@@ -21,6 +24,7 @@ private const val POLYGON_CHAIN_ID = 137
 
 internal class TangemPayMainBlockConverter(
     private val tangemPayClickIntents: TangemPayIntents,
+    private val isRedesignEnabled: Boolean,
 ) : Converter<AccountStatus.Payment, TangemPayMainUM> {
     @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun convert(value: AccountStatus.Payment): TangemPayMainUM {
@@ -102,9 +106,21 @@ internal class TangemPayMainBlockConverter(
 
     private fun getBalanceText(currencyCode: String, balance: BigDecimal): TextReference {
         val currency = Currency.getInstance(currencyCode)
-        val formattedBalance = balance.format {
-            fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+        val formattedBalance = if (isRedesignEnabled) {
+            balance.formatStyled {
+                fiat(
+                    fiatCurrencyCode = currency.currencyCode,
+                    fiatCurrencySymbol = currency.symbol,
+                    spanStyleReference = { SpanStyle(color = TangemTheme.colors2.text.neutral.secondary) },
+                )
+            }
+        } else {
+            stringReference(
+                balance.format {
+                    fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
+                },
+            )
         }
-        return stringReference(formattedBalance)
+        return formattedBalance
     }
 }
