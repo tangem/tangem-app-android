@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -14,23 +13,21 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.R
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.feature.swap.choosetoken.api.ChooseTokenComponent
 import com.tangem.feature.swap.component.SwapFeeSelectorBlockComponent
 import com.tangem.feature.swap.model.SwapModel
-import com.tangem.feature.swap.models.AddToPortfolioRoute
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
-import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.features.approval.api.GiveApprovalComponent
-import com.tangem.features.feed.components.market.details.portfolio.add.AddToPortfolioComponent
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.extensions.isZero
@@ -45,19 +42,19 @@ internal class DefaultSwapComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: SwapComponent.Params,
     private val swapFeeSelectorBlockComponentFactory: SwapFeeSelectorBlockComponent.Factory,
-    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
     private val giveApprovalComponentFactory: GiveApprovalComponent.Factory,
+    private val chooseTokenComponentFactory: ChooseTokenComponent.Factory,
 ) : SwapComponent, AppComponentContext by appComponentContext {
 
     private val model: SwapModel = getOrCreateModel(params)
 
-    private val bottomSheetSlot = childSlot(
-        source = model.bottomSheetNavigation,
-        serializer = AddToPortfolioRoute.serializer(),
-        key = BOTTOM_SHEET_SLOT_KEY,
-        handleBackButton = false,
-        childFactory = { _, context -> bottomSheetChild(context) },
-    )
+    // todo swap create InnerRouter
+    private val chooseTokenComponent by lazy {
+        chooseTokenComponentFactory.create(
+            context = child("chooseTokenComponent"),
+            params = ChooseTokenComponent.Params(model.chooseTokenBridge),
+        )
+    }
 
     private val approvalSlot = childSlot(
         key = APPROVAL_SLOT_KEY,
@@ -161,7 +158,6 @@ internal class DefaultSwapComponent @AssistedInject constructor(
 
         val feeSelectorChildStackState by childSlot.subscribeAsState()
         val feeSelectorBlockComponent = feeSelectorChildStackState.child?.instance
-        val bottomSheet by bottomSheetSlot.subscribeAsState()
 
         Crossfade(
             modifier = Modifier.background(TangemTheme.colors.background.secondary),
@@ -189,36 +185,12 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                         )
                     }
                 }
-                SwapNavScreen.SelectToken -> {
-                    val tokenState = model.uiState.selectTokenState
-                    if (tokenState != null) {
-                        SwapSelectTokenScreen(state = tokenState, onBack = model.uiState.onBackClicked)
-                    } else {
-                        SwapScreen(
-                            stateHolder = model.uiState,
-                            feeSelectorBlockComponent = feeSelectorBlockComponent,
-                        )
-                    }
-                }
+                SwapNavScreen.SelectToken -> chooseTokenComponent.Content(Modifier)
             }
         }
 
-        bottomSheet.child?.instance?.BottomSheet()
-
         val approvalSlotState by approvalSlot.subscribeAsState()
         approvalSlotState.child?.instance?.BottomSheet()
-    }
-
-    @Suppress("UnsafeCallOnNullableType")
-    private fun bottomSheetChild(componentContext: ComponentContext): ComposableBottomSheetComponent {
-        return addToPortfolioComponentFactory.create(
-            context = childByContext(componentContext),
-            params = AddToPortfolioComponent.Params(
-                addToPortfolioManager = model.addToPortfolioManager!!,
-                callback = model.addToPortfolioCallback,
-                shouldSkipTokenActionsScreen = true,
-            ),
-        )
     }
 
     fun getApprovalParams(): GiveApprovalComponent.Params? {
