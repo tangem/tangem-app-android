@@ -40,11 +40,13 @@ data class QuoteStatus(val rawCurrencyId: CryptoCurrency.RawID, val value: Value
      *
      * @property source      status source
      * @property fiatRate    the current fiat exchange rate for the cryptocurrency
+     * @property fiatRateUSD the current fiat exchange rate in USD for the cryptocurrency
      * @property priceChange the price change for the cryptocurrency
      */
     data class Data(
         override val source: StatusSource,
         val fiatRate: BigDecimal,
+        val fiatRateUSD: BigDecimal,
         val priceChange: BigDecimal,
     ) : Value
 }
