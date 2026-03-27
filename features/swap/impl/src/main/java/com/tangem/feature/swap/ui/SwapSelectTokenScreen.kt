@@ -3,7 +3,6 @@ package com.tangem.feature.swap.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -26,19 +25,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH32
-import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.list.InfiniteListHandler
-import com.tangem.core.ui.components.atoms.text.EllipsisText
-import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.tokenlist.PortfolioListItem
 import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
 import com.tangem.core.ui.components.tokenlist.TokenListItem
@@ -51,7 +44,6 @@ import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenListUMData
-import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.models.isEmptyState
 import com.tangem.feature.swap.models.isNotFoundState
 import com.tangem.feature.swap.models.market.state.SwapMarketState
@@ -59,7 +51,6 @@ import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.ui.market.swapMarketsListItems
 import com.tangem.feature.swap.ui.preview.SwapSelectTokenPreviewProvider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
 private const val LOAD_MORE_BUFFER = 25
 
@@ -162,12 +153,6 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             tokensListData = state.tokensListData,
             isBalanceHidden = state.isBalanceHidden,
         )
-
-        tokensToSelectItems(state.availableTokens, state.onTokenSelected)
-
-        item { SpacerH12() }
-
-        tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
     }
 }
 
@@ -196,20 +181,6 @@ private fun ListOfTokensWithMarkets(
             tokensListData = state.tokensListData,
             isBalanceHidden = state.isBalanceHidden,
         )
-
-        tokensToSelectItems(state.availableTokens, state.onTokenSelected)
-        if (state.unavailableTokens.isNotEmpty()) {
-            item { SpacerH12() }
-            tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
-        }
-
-        val hasPortfolioContent = state.tokensListData !is TokenListUMData.EmptyList ||
-            state.availableTokens.isNotEmpty()
-        if (hasPortfolioContent) {
-            item { SpacerH32() }
-        } else {
-            item { SpacerH12() }
-        }
 
         swapMarketsListItems(marketsState)
     }
@@ -374,170 +345,25 @@ private fun LazyListScope.portfolioItem(
     }
 }
 
-private fun LazyListScope.tokensToSelectItems(
-    items: ImmutableList<TokenToSelectState>,
-    onTokenClick: (String) -> Unit,
-) {
-    itemsIndexed(items = items) { index, item ->
-        when (item) {
-            is TokenToSelectState.Title -> {
-                TitleHeader(
-                    item = item,
-                    modifier = Modifier.roundedShapeItemDecoration(
-                        currentIndex = index,
-                        lastIndex = items.lastIndex,
-                    ),
-                )
-            }
-            is TokenToSelectState.TokenToSelect -> {
-                TokenItem(
-                    token = item,
-                    modifier = Modifier
-                        .roundedShapeItemDecoration(
-                            currentIndex = index,
-                            lastIndex = items.lastIndex,
-                        )
-                        .background(TangemTheme.colors.background.action),
-                    onTokenClick = {
-                        onTokenClick(item.id)
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TitleHeader(item: TokenToSelectState.Title, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(TangemTheme.colors.background.action),
-    ) {
-        Text(
-            text = item.title.resolveReference().uppercase(),
-            style = TangemTheme.typography.overline,
-            color = TangemTheme.colors.text.tertiary,
-            modifier = Modifier
-                .padding(
-                    top = TangemTheme.dimens.spacing16,
-                    start = TangemTheme.dimens.spacing16,
-                ),
-        )
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-private fun TokenItem(
-    token: TokenToSelectState.TokenToSelect,
-    onTokenClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.size72)
-            .clickable(
-                enabled = token.isAvailable,
-                onClick = onTokenClick,
-            )
-            .padding(
-                vertical = TangemTheme.dimens.spacing14,
-                horizontal = TangemTheme.dimens.spacing16,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CurrencyIcon(
-            state = token.tokenIcon,
-            shouldDisplayNetwork = true,
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .align(Alignment.CenterVertically)
-                .padding(start = TangemTheme.dimens.spacing12),
-        ) {
-            EllipsisText(
-                text = token.name,
-                style = TangemTheme.typography.subtitle1,
-                color = if (token.isAvailable) {
-                    TangemTheme.colors.text.primary1
-                } else {
-                    TangemTheme.colors.text.tertiary
-                },
-            )
-            SpacerW2()
-            EllipsisText(
-                text = token.symbol,
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        }
-
-        if (token.addedTokenBalanceData != null) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing8),
-            ) {
-                Text(
-                    text = token.addedTokenBalanceData.amountEquivalent.orEmpty().orMaskWithStars(
-                        maskWithStars = token.addedTokenBalanceData.isBalanceHidden &&
-                            !token.addedTokenBalanceData.amountEquivalent.isNullOrEmpty(),
-                    ),
-                    style = TangemTheme.typography.subtitle1,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Visible,
-                    color = if (token.isAvailable) {
-                        TangemTheme.colors.text.primary1
-                    } else {
-                        TangemTheme.colors.text.tertiary
-                    },
-                )
-                SpacerW2()
-                Text(
-                    text = token.addedTokenBalanceData.amount.orEmpty().orMaskWithStars(
-                        maskWithStars = token.addedTokenBalanceData.isBalanceHidden &&
-                            !token.addedTokenBalanceData.amount.isNullOrEmpty(),
-                    ),
-                    maxLines = 1,
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-            }
-        }
-    }
-}
-
 private class SwapSelectTokenScreenPreviewProvider : PreviewParameterProvider<SwapSelectTokenStateHolder> {
     override val values: Sequence<SwapSelectTokenStateHolder> = sequenceOf(
         // Content state with tokens and markets
         SwapSelectTokenPreviewProvider().provideSwapSelectTokenState(),
         // Empty state
         SwapSelectTokenStateHolder(
-            availableTokens = persistentListOf(),
-            unavailableTokens = persistentListOf(),
             tokensListData = TokenListUMData.EmptyList,
-            marketsState = null,
+            marketsState = SwapMarketState.DefaultLoading,
             isAfterSearch = false,
             isBalanceHidden = false,
             onSearchEntered = {},
-            onTokenSelected = {},
         ),
         // Not found state
         SwapSelectTokenStateHolder(
-            availableTokens = persistentListOf(),
-            unavailableTokens = persistentListOf(),
             tokensListData = TokenListUMData.EmptyList,
-            marketsState = null,
+            marketsState = SwapMarketState.SearchLoading,
             isAfterSearch = true,
             isBalanceHidden = false,
             onSearchEntered = {},
-            onTokenSelected = {},
         ),
     )
 }
