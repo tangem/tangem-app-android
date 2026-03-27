@@ -51,12 +51,20 @@ internal class TronPaymentUriParser(
             qrCode = qrCode,
         )
 
-        val tokenContractAddress = parsed.params[PARAM_TOKEN]
-        return if (tokenContractAddress != null) {
+        val tokenContractAddress = parsed.remainingParams[PARAM_TOKEN]
+        val result = if (tokenContractAddress != null) {
             helper.resolveTokenTransfer(context, tokenContractAddress, ::interpretAmount)
         } else {
             helper.resolveNativeOrAll(context, ::interpretAmount)
         }
+
+        val unconsumed = parsed.remainingParams - PARAM_TOKEN
+        return helper.validateParams(
+            result = result,
+            unconsumedParams = unconsumed,
+            memo = parsed.memo,
+            matchingCoins = matchingCoins,
+        )
     }
 
     /**
