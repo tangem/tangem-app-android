@@ -7,17 +7,18 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.swap.models.SwapAmountType
+import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils.calculatePriceImpact
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountErrorConverter
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountUpdateSubtitleConverter
-import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.features.swap.v2.impl.common.isRestrictedByFCA
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
+import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SwapAmountSelectQuoteTransformer(
     private val quoteUM: SwapQuoteUM,
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
@@ -26,35 +27,64 @@ internal class SwapAmountSelectQuoteTransformer(
     private val isBalanceHidden: Boolean,
     private val primaryMaximumAmountBoundary: EnterAmountBoundary? = null,
     private val primaryMinimumAmountBoundary: EnterAmountBoundary? = null,
+    private val primaryFiatRateUSD: BigDecimal?,
+    private val secondaryFiatRateUSD: BigDecimal?,
 ) : Transformer<SwapAmountUM> {
 
-    @Suppress("CyclomaticComplexMethod", "LongMethod")
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
         if (prevState !is SwapAmountUM.Content) return prevState
 
-        val isPrimarySelected = prevState.selectedAmountType == SwapAmountType.From
-        val isSecondarySelected = prevState.selectedAmountType == SwapAmountType.To
-
-        val primaryProviderErrorConverter = SwapAmountErrorConverter(
-            cryptoCurrency = prevState.primaryCryptoCurrencyStatus.currency,
-        )
-        val secondaryProviderErrorConverter = prevState.secondaryCryptoCurrencyStatus?.let {
-            SwapAmountErrorConverter(cryptoCurrency = it.currency)
-        }
-
         val quoteContent = quoteUM as? SwapQuoteUM.Content
-        val fromAmount = quoteContent?.fromAmount
-        val toAmount = quoteContent?.toAmount
-
-        val primarySwapAmountField = prevState.primaryAmount as? SwapAmountFieldUM.Content
-        val secondarySwapAmountField = prevState.secondaryAmount as? SwapAmountFieldUM.Content
 
         val subtitleConverter = SwapAmountUpdateSubtitleConverter(
             selectedAmountType = prevState.selectedAmountType,
             isBalanceHidden = isBalanceHidden,
         )
 
-        val newPrimaryAmount = when {
+        val newPrimaryAmount = getPrimaryAmount(
+            prevState = prevState,
+            quoteContent = quoteContent,
+            subtitleConverter = subtitleConverter,
+        )
+
+        val newSecondaryAmount = getSecondaryAmount(
+            prevState = prevState,
+            quoteContent = quoteContent,
+            subtitleConverter = subtitleConverter,
+        )
+
+        val priceImpact = calculatePriceImpact(
+            quoteContent = quoteContent,
+            swapDirection = prevState.swapDirection,
+            primaryFiatRateUSD = primaryFiatRateUSD,
+            secondaryFiatRateUSD = secondaryFiatRateUSD,
+            primaryCryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
+            secondaryCryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
+        )
+
+        return prevState.copy(
+            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
+            selectedQuote = quoteUM,
+            isShowFCAWarning = isNeedApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
+            primaryAmount = newPrimaryAmount,
+            priceImpact = priceImpact,
+            secondaryAmount = newSecondaryAmount,
+        )
+    }
+
+    private fun getPrimaryAmount(
+        prevState: SwapAmountUM.Content,
+        quoteContent: SwapQuoteUM.Content?,
+        subtitleConverter: SwapAmountUpdateSubtitleConverter,
+    ): SwapAmountFieldUM {
+        val isPrimarySelected = prevState.selectedAmountType == SwapAmountType.From
+        val primarySwapAmountField = prevState.primaryAmount as? SwapAmountFieldUM.Content
+
+        val primaryProviderErrorConverter = SwapAmountErrorConverter(
+            cryptoCurrency = prevState.primaryCryptoCurrencyStatus.currency,
+        )
+        val fromAmount = quoteContent?.fromAmount
+        return when {
             fromAmount != null && primaryMaximumAmountBoundary != null -> {
                 primarySwapAmountField?.let { fromField ->
                     subtitleConverter.updateSubtitles(
@@ -103,22 +133,26 @@ internal class SwapAmountSelectQuoteTransformer(
             }
             else -> prevState.primaryAmount
         }
+    }
 
-        val newSecondaryAmount = if (
+    @Suppress("CyclomaticComplexMethod")
+    private fun getSecondaryAmount(
+        prevState: SwapAmountUM.Content,
+        quoteContent: SwapQuoteUM.Content?,
+        subtitleConverter: SwapAmountUpdateSubtitleConverter,
+    ): SwapAmountFieldUM {
+        val isSecondarySelected = prevState.selectedAmountType == SwapAmountType.To
+        val secondaryProviderErrorConverter = prevState.secondaryCryptoCurrencyStatus?.let {
+            SwapAmountErrorConverter(cryptoCurrency = it.currency)
+        }
+        val fromAmount = quoteContent?.fromAmount
+        val toAmount = quoteContent?.toAmount
+        val secondarySwapAmountField = prevState.secondaryAmount as? SwapAmountFieldUM.Content
+        return if (
             prevState.secondaryCryptoCurrencyStatus != null &&
             secondaryMaximumAmountBoundary != null &&
             secondarySwapAmountField != null
         ) {
-            val fromAmountForPriceImpact = fromAmount
-                ?: (prevState.primaryAmount.amountField as? AmountState.Data)
-                    ?.amountTextField?.cryptoAmount?.value.orZero()
-            val priceImpact = calculatePriceImpact(
-                swapDirection = prevState.swapDirection,
-                fromTokenAmount = fromAmountForPriceImpact,
-                toTokenAmount = toAmount.orZero(),
-                primaryCryptoCurrencyStatus = prevState.primaryCryptoCurrencyStatus,
-                secondaryCryptoCurrencyStatus = prevState.secondaryCryptoCurrencyStatus,
-            )
             val isAmountEmpty = toAmount == null
             val secondaryAmountError = if (isSecondarySelected) {
                 (quoteUM as? SwapQuoteUM.Error)?.expressError
@@ -166,19 +200,10 @@ internal class SwapAmountSelectQuoteTransformer(
                 isAmountEmpty = isAmountEmpty,
                 displayAmount = toAmount,
             ).copy(
-                priceImpact = priceImpact,
                 amountField = secondaryAmountFieldWithError,
             )
         } else {
             prevState.secondaryAmount
         }
-
-        return prevState.copy(
-            isPrimaryButtonEnabled = quoteUM is SwapQuoteUM.Content,
-            selectedQuote = quoteUM,
-            isShowFCAWarning = isNeedApplyFCARestrictions && quoteUM.provider?.isRestrictedByFCA() == true,
-            primaryAmount = newPrimaryAmount,
-            secondaryAmount = newSecondaryAmount,
-        )
     }
 }

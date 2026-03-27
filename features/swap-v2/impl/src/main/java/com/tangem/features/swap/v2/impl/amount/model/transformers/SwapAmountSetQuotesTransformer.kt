@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SwapAmountSetQuotesTransformer(
     private val quotes: List<SwapQuoteUM>,
     private val secondaryMaximumAmountBoundary: EnterAmountBoundary?,
@@ -27,6 +28,8 @@ internal class SwapAmountSetQuotesTransformer(
     private val isBalanceHidden: Boolean,
     private val primaryMaximumAmountBoundary: EnterAmountBoundary? = null,
     private val primaryMinimumAmountBoundary: EnterAmountBoundary? = null,
+    private val primaryFiatRateUSD: BigDecimal?,
+    private val secondaryFiatRateUSD: BigDecimal?,
 ) : Transformer<SwapAmountUM> {
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {
@@ -53,6 +56,8 @@ internal class SwapAmountSetQuotesTransformer(
 
         val updatedState = SwapAmountSelectQuoteTransformer(
             quoteUM = selectedQuote,
+            primaryFiatRateUSD = primaryFiatRateUSD,
+            secondaryFiatRateUSD = secondaryFiatRateUSD,
             secondaryMaximumAmountBoundary = secondaryMaximumAmountBoundary,
             secondaryMinimumAmountBoundary = secondaryMinimumAmountBoundary,
             isNeedApplyFCARestrictions = isNeedApplyFcaRestrictions &&
