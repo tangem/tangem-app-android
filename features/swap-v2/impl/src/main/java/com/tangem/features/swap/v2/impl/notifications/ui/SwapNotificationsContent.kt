@@ -38,6 +38,7 @@ internal fun LazyListScope.swapNotifications(
                     else -> TangemTheme.colors.button.disabled
                 },
                 iconTint = when (item) {
+                    is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors.icon.warning
                     is SwapNotificationUM.Error,
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning,
