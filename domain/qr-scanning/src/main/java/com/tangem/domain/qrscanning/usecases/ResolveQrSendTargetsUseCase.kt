@@ -73,6 +73,13 @@ class ResolveQrSendTargetsUseCase(
                 matchingCurrencies = classified.matchingCurrencies,
                 portfolioIndex = portfolioIndex,
             )
+            is ClassifiedQrContent.PaymentUriWarning -> {
+                val inner = resolve(classified.paymentUri, portfolioIndex)
+                QrSendTarget.Warning(
+                    target = inner,
+                    unsupportedParams = classified.unsupportedParams,
+                )
+            }
         }
     }
 

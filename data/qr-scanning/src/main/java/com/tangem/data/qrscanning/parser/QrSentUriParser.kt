@@ -8,8 +8,8 @@ internal class QrSentUriParser {
     data class Result(
         val address: String,
         val amount: BigDecimal?,
-        val memo: String?,
-        val params: Map<String, String>,
+        val memo: Pair<String, String>?,
+        val remainingParams: Map<String, String>,
     )
 
     fun parse(withoutScheme: String): Result? {
@@ -20,15 +20,24 @@ internal class QrSentUriParser {
 
         val params = extractParameters(withoutScheme)
         val amount = params[PARAM_AMOUNT]?.toBigDecimalOrNull()
-        val memo = (params[PARAM_MEMO] ?: params[PARAM_MESSAGE] ?: params[PARAM_DT])?.let {
-            runCatching { URLDecoder.decode(it, CHARSET_UTF8) }.getOrDefault(it)
+
+        val memoKey = MemoParam.keys.firstOrNull { it in params }
+        val memo = memoKey?.let { key ->
+            val raw = params[key] ?: return@let null
+            val decoded = runCatching { URLDecoder.decode(raw, CHARSET_UTF8) }.getOrDefault(raw)
+            key to decoded
+        }
+
+        val consumedKeys = buildSet {
+            add(PARAM_AMOUNT)
+            addAll(MemoParam.keys)
         }
 
         return Result(
             address = address,
             amount = amount,
             memo = memo,
-            params = params,
+            remainingParams = params - consumedKeys,
         )
     }
 
@@ -44,6 +53,17 @@ internal class QrSentUriParser {
             .toMap()
     }
 
+    enum class MemoParam(val key: String) {
+        MEMO("memo"),
+        MESSAGE("message"),
+        DESTINATION_TAG("dt"),
+        ;
+
+        companion object {
+            val keys = entries.map { it.key }.toSet()
+        }
+    }
+
     companion object {
         const val CHAIN_DELIMITER = '@'
         const val FUNCTION_DELIMITER = '/'
@@ -51,9 +71,6 @@ internal class QrSentUriParser {
         const val PARAMS_DELIMITER = '&'
         const val PARAM_VALUE_DELIMITER = '='
         const val PARAM_AMOUNT = "amount"
-        const val PARAM_MEMO = "memo"
-        const val PARAM_MESSAGE = "message"
-        const val PARAM_DT = "dt"
         const val PARAM_ADDRESS = "address"
         const val PARAM_VALUE = "value"
         const val PARAM_UINT256 = "uint256"
