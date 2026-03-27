@@ -31,4 +31,8 @@ internal class DefaultQuotesRepository(
                 ?: QuoteStatus(rawCurrencyId = currencyId)
         }
     }
+
+    override suspend fun getCurrencyUSDQuote(currencyId: CryptoCurrency.RawID): QuoteStatus? {
+        return getMultiQuoteSyncOrNull(currenciesIds = setOf(currencyId)).firstOrNull()
+    }
 }
