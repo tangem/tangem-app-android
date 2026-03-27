@@ -68,7 +68,6 @@ import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.utils.coroutines.runSuspendCatching
-import com.tangem.utils.extensions.orZero
 import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -2457,7 +2456,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         if (fromQuoteStatus == null) return PriceImpact.Empty
 
         val fromTokenFiatValue = fromTokenAmount.multiply(fromQuoteStatus.fiatRate)
-        val toTokenFiatValue = toTokenAmount.multiply(toRate.orZero())
+        val toTokenFiatValue = toRate?.let { toTokenAmount.multiply(toRate) } ?: return PriceImpact.Empty
+
         val value = BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)
 
         val fromAmountUSD = if (fromQuoteStatus.fiatRateUSD != BigDecimal.ZERO) {
@@ -2467,7 +2467,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val amountSignificance = when {
-            fromAmountUSD < PRICE_IMPACT_AMOUNT_MIN_THRESHOLD -> PriceImpact.AmountSignificance.LOW
+            fromAmountUSD <= PRICE_IMPACT_AMOUNT_MIN_THRESHOLD -> PriceImpact.AmountSignificance.LOW
             fromAmountUSD > PRICE_IMPACT_AMOUNT_MAX_THRESHOLD -> PriceImpact.AmountSignificance.HIGH
             else -> PriceImpact.AmountSignificance.MEDIUM
         }
@@ -2552,7 +2552,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     companion object {
         private const val INCREASE_GAS_LIMIT_FOR_DEX = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
-        private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 50.toBigDecimal() // in USD
+        private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
         private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
         private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
         private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
