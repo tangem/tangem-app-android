@@ -69,7 +69,7 @@ internal class WalletLoadingStateFactory(
                 is UserWallet.Cold -> WalletType.Cold
                 is UserWallet.Hot -> WalletType.Hot
             },
-            tangemPayState = TangemPayState.Empty,
+            tangemPayMainUM = TangemPayMainUM.Empty,
         )
     }
 
