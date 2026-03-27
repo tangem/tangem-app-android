@@ -23,7 +23,6 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.transaction.usecase.gasless.IsGaslessFeeSupportedForNetwork
-import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
@@ -658,21 +657,6 @@ internal class StateBuilder(
         )
     }
 
-    fun addTokensToStateV2(
-        uiState: SwapStateHolder,
-        tokensDataState: CurrenciesGroup,
-        isAccountsMode: Boolean,
-    ): SwapStateHolder {
-        return TokensDataConverter(
-            onSearchEntered = actions.onSearchEntered,
-            onTokenSelected = actions.onTokenSelected,
-            appCurrencyProvider = appCurrencyProvider,
-            tokensDataState = tokensDataState,
-            isBalanceHidden = isBalanceHiddenProvider(),
-            isAccountsMode = isAccountsMode,
-        ).transform(uiState)
-    }
-
     fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
@@ -757,28 +741,10 @@ internal class StateBuilder(
         val patchedReceiveCardData = uiState.receiveCardData.copy(
             isBalanceHidden = isBalanceHidden,
         )
-        val selectTokenState = uiState.selectTokenState?.copy(
-            isBalanceHidden = isBalanceHidden,
-            availableTokens = uiState.selectTokenState.availableTokens.map { tokenState ->
-                when (tokenState) {
-                    is TokenToSelectState.TokenToSelect -> {
-                        tokenState.copy(
-                            addedTokenBalanceData = tokenState.addedTokenBalanceData?.copy(
-                                isBalanceHidden = isBalanceHidden,
-                            ),
-                        )
-                    }
-                    is TokenToSelectState.Title -> {
-                        tokenState
-                    }
-                }
-            }.toImmutableList(),
-        )
 
         return uiState.copy(
             sendCardData = patchedSendCardData,
             receiveCardData = patchedReceiveCardData,
-            selectTokenState = selectTokenState,
         )
     }
 
