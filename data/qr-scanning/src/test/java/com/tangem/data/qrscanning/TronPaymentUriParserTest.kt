@@ -186,10 +186,56 @@ internal class TronPaymentUriParserTest {
 
     // endregion
 
+    // region Unsupported params
+
+    @Test
+    fun `unknown parameter returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "tron:TAddress?amount=100&gasLimit=21000",
+            coins = listOf(tronCoin),
+            allCurrencies = listOf(tronCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.address).isEqualTo("TAddress")
+        assertThat(warning.unsupportedParams).containsEntry("gaslimit", "21000")
+    }
+
+    @Test
+    fun `memo on non-memo network returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "tron:TAddress?amount=100&memo=hello",
+            coins = listOf(tronCoin),
+            allCurrencies = listOf(tronCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.unsupportedParams).containsEntry("memo", "hello")
+    }
+
+    @Test
+    fun `only known params returns Success`() {
+        val result = parser.parse(
+            qrCode = "tron:TAddress?amount=100",
+            coins = listOf(tronCoin),
+            allCurrencies = listOf(tronCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.Success::class.java)
+    }
+
+    // endregion
+
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
-        return (this as? PaymentUriParser.ParseResult.Success)?.content
+        return when (this) {
+            is PaymentUriParser.ParseResult.Success -> content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> content
+            else -> null
+        }
     }
 
     private val tronNetwork = buildNetwork("TRON", "Tron", "TRX")

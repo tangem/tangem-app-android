@@ -46,17 +46,26 @@ internal class Bip321PaymentUriParser(
             )
         }
 
-        return PaymentUriParser.ParseResult.Success(
+        val result = PaymentUriParser.ParseResult.Success(
             ClassifiedQrContent.PaymentUri(
                 address = parsed.address,
                 amount = parsed.amount,
-                memo = parsed.memo,
+                memo = parsed.memo?.second,
                 matchingCurrencies = matchingCurrencies,
             ),
+        )
+
+        val unconsumed = parsed.remainingParams - PARAM_LABEL
+        return helper.validateParams(
+            result = result,
+            unconsumedParams = unconsumed,
+            memo = parsed.memo,
+            matchingCoins = matchingCoins,
         )
     }
 
     private companion object {
+        const val PARAM_LABEL = "label"
         val BLOCKCHAINS = listOf(
             Blockchain.Bitcoin,
             Blockchain.BitcoinTestnet,
