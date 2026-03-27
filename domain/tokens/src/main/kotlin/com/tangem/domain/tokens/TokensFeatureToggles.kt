@@ -6,5 +6,5 @@ package com.tangem.domain.tokens
 [REDACTED_AUTHOR]
  */
 interface TokensFeatureToggles {
-    val isMultiAddressUtxoEnabled: Boolean
+    val isDynamicAddressesEnabled: Boolean
 }
