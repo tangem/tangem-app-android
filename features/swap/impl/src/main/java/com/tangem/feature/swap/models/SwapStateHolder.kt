@@ -28,7 +28,6 @@ internal data class SwapStateHolder(
     val priceImpact: PriceImpact,
 
     val successState: SwapSuccessStateHolder? = null,
-    val selectTokenState: SwapSelectTokenStateHolder? = null,
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
