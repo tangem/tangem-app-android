@@ -53,7 +53,7 @@
         "version": "undefined"
     },
     {
-        "name": "MULTI_ADDRESS_UTXO_ENABLED",
+        "name": "DYNAMIC_ADDRESSES_ENABLED",
         "version": "undefined"
     },
     {
