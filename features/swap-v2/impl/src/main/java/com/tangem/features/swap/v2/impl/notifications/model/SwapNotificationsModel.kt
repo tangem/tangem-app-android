@@ -11,13 +11,13 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
+import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import com.tangem.features.swap.v2.impl.notifications.DefaultSwapNotificationsUpdateTrigger
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsComponent.Params.SwapNotificationData
 import com.tangem.features.swap.v2.impl.notifications.SwapNotificationsUpdateListener
 import com.tangem.features.swap.v2.impl.notifications.entity.SwapNotificationUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import java.math.BigDecimal
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @ModelScoped
@@ -68,9 +69,16 @@ internal class SwapNotificationsModel @Inject constructor(
             addInsufficientFundsNotification()
             addExpressErrorNotification()
             addDestinationTagRequiredNotification()
+            maybeAddPriceImpactNotification()
         }
 
-        swapNotificationsUpdateTrigger.callbackHasError(notifications.isNotEmpty())
+        val hasErrorNotification = notifications
+            .filterNot { notification ->
+                notification == SwapNotificationUM.Warning.TradeTooHigh ||
+                    notification == SwapNotificationUM.Warning.HighPriceImpact
+            }
+            .isNotEmpty()
+        swapNotificationsUpdateTrigger.callbackHasError(hasErrorNotification)
         uiState.value = notifications.toImmutableList()
     }
 
@@ -134,5 +142,18 @@ internal class SwapNotificationsModel @Inject constructor(
         }
 
         add(errorNotification)
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddPriceImpactNotification() {
+        val priceImpact = notificationData.priceImpact ?: return
+        if (!priceImpact.shouldShowWarning()) return
+
+        val notification = when (priceImpact.type) {
+            PriceImpact.Type.HIGH -> SwapNotificationUM.Warning.TradeTooHigh
+            PriceImpact.Type.MEDIUM -> SwapNotificationUM.Warning.HighPriceImpact
+            else -> return
+        }
+
+        add(notification)
     }
 }
