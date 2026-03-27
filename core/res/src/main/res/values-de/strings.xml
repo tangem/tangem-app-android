@@ -694,7 +694,7 @@
   <string name="initial_message_tap_header">Lege die Karte oder Ring an</string>
   <string name="initial_wallet_sync_banner_description">Deine Wallet ist eingerichtet und einsatzbereit!</string>
   <string name="initial_wallet_sync_banner_title">Wallet erfolgreich importiert</string>
-  <string name="initial_wallet_sync_restore_progress">Wiederherstellung %d%</string>
+  <string name="initial_wallet_sync_restore_progress">Wiederherstellung %d%%</string>
   <string name="key_invalidated_warning_description">Du hast deine biometrischen Daten aktualisiert, scanne deine Karte oder Ring, um einzutreten</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Dein Guthaben sollte höher sein als der Gebührenwert, um eine Überweisung zu tätigen</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Unzureichende Mittel</string>
