@@ -86,7 +86,7 @@ internal fun SwapAmountBlockContent(
         val quoteContent = amountUM.selectedQuote as? SwapQuoteUM.Content
         val isBestRate = quoteContent?.diffPercent is SwapQuoteUM.Content.DifferencePercent.Best
         SwapChooseProviderContent(
-            isBestRate = isBestRate && amountUM.priceImpact?.shouldShowWarning() == true,
+            isBestRate = isBestRate && amountUM.priceImpact?.shouldShowWarning() != true,
             isSingleProvider = quoteContent?.isSingleProvider == true,
             showBestRateAnimation = amountUM.isShowBestRateAnimation,
             expressProvider = amountUM.selectedQuote.provider,
