@@ -13,6 +13,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token1.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("1.23"),
+            fiatRateUSD = BigDecimal("1.23"),
             priceChange = BigDecimal("0.01"),
             source = StatusSource.ACTUAL,
         ),
@@ -22,6 +23,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token2.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("2.34"),
+            fiatRateUSD = BigDecimal("2.34"),
             priceChange = BigDecimal("-0.02"),
             source = StatusSource.ACTUAL,
         ),
@@ -31,6 +33,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token3.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("3.45"),
+            fiatRateUSD = BigDecimal("3.45"),
             priceChange = BigDecimal("0.03"),
             source = StatusSource.ACTUAL,
         ),
@@ -40,6 +43,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token4.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("4.56"),
+            fiatRateUSD = BigDecimal("4.56"),
             priceChange = BigDecimal("-0.04"),
             source = StatusSource.ACTUAL,
         ),
@@ -49,6 +53,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token5.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("5.67"),
+            fiatRateUSD = BigDecimal("5.67"),
             priceChange = BigDecimal("0.05"),
             source = StatusSource.ACTUAL,
         ),
@@ -58,6 +63,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token6.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("6.78"),
+            fiatRateUSD = BigDecimal("6.78"),
             priceChange = BigDecimal("-0.06"),
             source = StatusSource.ACTUAL,
         ),
@@ -67,6 +73,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token7.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("7.89"),
+            fiatRateUSD = BigDecimal("7.89"),
             priceChange = BigDecimal("0.07"),
             source = StatusSource.ACTUAL,
         ),
@@ -76,6 +83,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token8.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("8.90"),
+            fiatRateUSD = BigDecimal("8.90"),
             priceChange = BigDecimal("-0.08"),
             source = StatusSource.ACTUAL,
         ),
@@ -85,6 +93,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token9.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("9.01"),
+            fiatRateUSD = BigDecimal("9.01"),
             priceChange = BigDecimal("0.09"),
             source = StatusSource.ACTUAL,
         ),
@@ -94,6 +103,7 @@ internal object MockQuotes {
         rawCurrencyId = MockTokens.token10.id.rawCurrencyId!!,
         value = QuoteStatus.Data(
             fiatRate = BigDecimal("10.12"),
+            fiatRateUSD = BigDecimal("10.12"),
             priceChange = BigDecimal("-0.10"),
             source = StatusSource.ACTUAL,
         ),
