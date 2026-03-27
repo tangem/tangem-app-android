@@ -696,7 +696,7 @@
   <string name="initial_message_tap_header">Tap the card or ring</string>
   <string name="initial_wallet_sync_banner_description">Your wallet is synced and ready.\nSome tokens missing?</string>
   <string name="initial_wallet_sync_banner_title">Wallet successfully imported</string>
-  <string name="initial_wallet_sync_restore_progress">Restoring %d%</string>
+  <string name="initial_wallet_sync_restore_progress">Restoring %d%%</string>
   <string name="key_invalidated_warning_description">You have updated biometrics, scan your card or ring to enter</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Your balance should be higher than the fee value to make a transfer</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Not enough balance</string>
@@ -1500,6 +1500,7 @@
   <string name="swapping_fee_estimation_error_text">Fee estimation error. Please send feedback to support.</string>
   <string name="swapping_from_title">You swap</string>
   <string name="swapping_high_price_impact_description">Swapping this amount of selected tokens will cause a significant price impact and reduce your outcome.</string>
+  <string name="swapping_high_price_impact_text">You may receive significantly less due to low liquidity. Try a smaller amount or another provider.</string>
   <string name="swapping_high_price_impact_title">High price impact</string>
   <string name="swapping_insufficient_funds">Insufficient funds</string>
   <string name="swapping_insufficient_funds_description">Not enough funds to complete this transaction. Reduce the amount to receive or add more funds.</string>
@@ -1509,6 +1510,8 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="swapping_trade_too_large_text">Not enough liquidity for this trade.\nReduce the amount or choose another provider.</string>
+  <string name="swapping_trade_too_large_title">Trade too large</string>
   <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
   <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
