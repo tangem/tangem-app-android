@@ -306,6 +306,7 @@
   <string name="common_hour">hora</string>
   <string name="common_import">Importar</string>
   <string name="common_in_progress">Em andamento</string>
+  <string name="common_insufficient_balance">Saldo insuficiente</string>
   <string name="common_later">Mais tarde</string>
   <string name="common_learn_more">Saber mais</string>
   <string name="common_left">%1$s falta</string>
@@ -404,6 +405,7 @@
   <string name="common_utxo_validate_withdrawal_message_warning">Devido a %1$s limitações apenas %2$d Os UTXOs podem caber em uma única transação. Isso significa que você só pode enviar %3$s ou menos. Você precisa reduzir a quantidade.</string>
   <string name="common_value_copied">Valor copiado</string>
   <string name="common_wallets">Carteiras</string>
+  <string name="common_warning">Aviso</string>
   <string name="common_week">semana</string>
   <string name="common_with">com</string>
   <string name="common_yes">Sim</string>
@@ -691,6 +693,9 @@
   <string name="initial_message_scan_header">Toque para digitalizar</string>
   <string name="initial_message_sign_header">Toque para assinar</string>
   <string name="initial_message_tap_header">Toque no Cartão ou no Anel</string>
+  <string name="initial_wallet_sync_banner_description">Sua carteira está sincronizada e pronta. \n Faltam alguns tokens?</string>
+  <string name="initial_wallet_sync_banner_title">Carteira importada com sucesso.</string>
+  <string name="initial_wallet_sync_restore_progress">Restaurando %d%%</string>
   <string name="key_invalidated_warning_description">Você atualizou seus dados biométricos. Escaneie seu cartão ou toque a campainha para entrar.</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Seu saldo deve ser superior ao valor da taxa para efetuar uma transferência.</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Saldo insuficiente</string>
@@ -751,6 +756,7 @@
   <string name="markets_search_result_title">Resultado</string>
   <string name="markets_search_see_tokens_under_100k">Veja tokens com capitalização de mercado inferior a 100 mil dólares.</string>
   <string name="markets_search_show_tokens">Mostrar tokens</string>
+  <string name="markets_search_title_placeholder">Criptomoedas, notícias e muito mais</string>
   <string name="markets_search_token_no_result_title">Nenhum resultado</string>
   <string name="markets_select_network">Selecione a rede</string>
   <string name="markets_select_wallet">Selecione a carteira</string>
@@ -823,9 +829,11 @@
   <string name="markets_token_details_market_rating_description">Posição no ranking de criptomoedas entre todas as moedas com base na capitalização de mercado.</string>
   <string name="markets_token_details_market_rating_full">Posicionamento de mercado</string>
   <string name="markets_token_details_max_supply">Fornecimento máximo</string>
+  <string name="markets_token_details_max_supply_and_circulation_full">Circulação e Fornecimento Máximo</string>
   <string name="markets_token_details_max_supply_description">O número máximo de moedas ou tokens que podem existir para uma determinada criptomoeda.</string>
   <string name="markets_token_details_max_supply_full">Fornecimento máximo</string>
   <string name="markets_token_details_metrics">Métricas</string>
+  <string name="markets_token_details_metrics_no_limited">Sem limite</string>
   <string name="markets_token_details_official_links">Links oficiais</string>
   <string name="markets_token_details_price_performance">Desempenho de preço</string>
   <string name="markets_token_details_repository">Repositório</string>
@@ -1100,6 +1108,12 @@
   <string name="qr_scanner_camera_denied_settings_button">Configurações</string>
   <string name="qr_scanner_camera_denied_text">Você não concedeu acesso à sua câmera.</string>
   <string name="qr_scanner_camera_denied_title">Acesso à câmera negado</string>
+  <string name="qr_scanner_error_token_not_added_message">O token solicitado não foi adicionado à sua carteira. Adicione-o e tente novamente.</string>
+  <string name="qr_scanner_error_token_not_added_title">Token não adicionado</string>
+  <string name="qr_scanner_error_unrecognized_message">Desculpe, este código QR não pôde ser reconhecido.</string>
+  <string name="qr_scanner_error_unrecognized_title">Código QR não reconhecido</string>
+  <string name="qr_scanner_error_unsupported_network_message">Esta rede não é compatível com nenhum dos tokens adicionados. Adicione um token compatível para enviar criptomoedas.</string>
+  <string name="qr_scanner_error_unsupported_network_title">Nenhum token compatível encontrado</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Não é necessário memorando</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sobre %3$s rede</string>
   <string name="receive_bottom_sheet_warning_message_compact">%1$s sobre %2$s rede</string>
@@ -1245,6 +1259,11 @@
   <string name="send_notification_transaction_limit_title">Limitação de transação</string>
   <string name="send_optional_field">Opcional</string>
   <string name="send_qrcode_scan_info">Alinhe o seu código QR com o quadrado para escaneá-lo. Certifique-se de escanear corretamente. %s endereço de rede.</string>
+  <string name="send_rate_fixed_info_description">Ao utilizar uma taxa fixa, o valor que você recebe fica garantido no momento da troca. Isso protege você de variações de preço durante a transação.</string>
+  <string name="send_rate_fixed_info_title">Taxa fixa</string>
+  <string name="send_rate_floating_info_description">Uma taxa flutuante significa que o valor final que você recebe pode variar ligeiramente com base nas condições de mercado entre o momento em que você inicia e conclui a operação de swap.</string>
+  <string name="send_rate_floating_info_title">Taxa flutuante</string>
+  <string name="send_rate_is_fixed">A taxa é fixa.</string>
   <string name="send_recent_transactions">Recente</string>
   <string name="send_recipient">Destinatário</string>
   <string name="send_recipient_address_error">Endereço inválido</string>
@@ -1288,6 +1307,7 @@
   <string name="send_with_swap_recipient_get_amount">O destinatário recebe %s</string>
   <string name="send_with_swap_remove_convert_alert_message">Tem certeza de que deseja cancelar a conversão? Seus dados anteriores serão apagados.</string>
   <string name="send_with_swap_remove_convert_alert_title">Remover conversão</string>
+  <string name="send_with_swap_something_went_wrong">Algo deu errado. Tente novamente.</string>
   <string name="send_with_swap_title">Enviar com troca</string>
   <string name="sent_transaction_sent_title">Transação enviada</string>
   <string name="settings_card_settings_footer">Prepare-se para escanear o Cartão ou Anel que deseja configurar.</string>
@@ -1481,6 +1501,7 @@
   <string name="swapping_high_price_impact_description">Trocar essa quantidade de tokens selecionados causará um impacto significativo no preço e reduzirá seu resultado.</string>
   <string name="swapping_high_price_impact_title">Alto impacto nos preços</string>
   <string name="swapping_insufficient_funds">Fundos insuficientes</string>
+  <string name="swapping_insufficient_funds_description">Não há fundos suficientes para concluir esta transação. Reduza o valor a receber ou adicione mais fundos.</string>
   <string name="swapping_permission_header">Conceder permissão</string>
   <string name="swapping_swap_action">Trocar</string>
   <string name="swapping_swap_action_in_progress">Trocar...</string>
@@ -1647,6 +1668,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Token em %%imagem%% %1$s rede</string>
   <string name="token_details_unable_hide_alert_message">O %1$s (%2$sO token ) é a principal moeda da plataforma. %3$s rede e não pode ser ocultada enquanto você tiver outros tokens dessa rede na lista</string>
   <string name="token_details_unable_hide_alert_title">Não foi possível ocultar %s</string>
+  <string name="token_market_metrics_no_data">N/A</string>
   <string name="token_receive_show_qr_code_title">Mostrar código QR</string>
   <string name="token_swap_changelly_promotion_message">Troque este token por outro em %1$s taxas de serviço a partir de fevereiro %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Trocar com Changelly, %s tarifas</string>
