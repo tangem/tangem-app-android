@@ -40,7 +40,7 @@ internal class PaymentUriResolveHelper {
             ClassifiedQrContent.PaymentUri(
                 address = context.parsed.address,
                 amount = amount,
-                memo = context.parsed.memo,
+                memo = context.parsed.memo?.second,
                 matchingCurrencies = matchingTokens,
             ),
         )
@@ -67,10 +67,38 @@ internal class PaymentUriResolveHelper {
             ClassifiedQrContent.PaymentUri(
                 address = context.parsed.address,
                 amount = amount,
-                memo = context.parsed.memo,
+                memo = context.parsed.memo?.second,
                 matchingCurrencies = matchingCurrencies,
             ),
         )
+    }
+
+    fun validateParams(
+        result: PaymentUriParser.ParseResult,
+        unconsumedParams: Map<String, String>,
+        memo: Pair<String, String>?,
+        matchingCoins: List<CryptoCurrency.Coin>,
+    ): PaymentUriParser.ParseResult {
+        if (result !is PaymentUriParser.ParseResult.Success) return result
+
+        val unsupported = buildMap {
+            putAll(unconsumedParams)
+            if (memo != null && !isMemoSupported(matchingCoins)) {
+                put(memo.first, memo.second)
+            }
+        }
+
+        return if (unsupported.isEmpty()) {
+            result
+        } else {
+            PaymentUriParser.ParseResult.SuccessWithWarning(result.content, unsupported)
+        }
+    }
+
+    private fun isMemoSupported(matchingCoins: List<CryptoCurrency.Coin>): Boolean {
+        return matchingCoins.any {
+            it.network.transactionExtrasType != Network.TransactionExtrasType.NONE
+        }
     }
 
     data class ResolveContext(
