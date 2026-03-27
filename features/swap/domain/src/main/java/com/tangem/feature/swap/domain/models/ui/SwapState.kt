@@ -66,6 +66,10 @@ data class PriceImpact(
         return type == Type.HIGH && amountSignificance == AmountSignificance.HIGH
     }
 
+    fun shouldShowWarning(): Boolean {
+        return type.ordinal > Type.LOW.ordinal || amountSignificance.ordinal > AmountSignificance.LOW.ordinal
+    }
+
     companion object {
         val Empty = PriceImpact(
             value = BigDecimal.ZERO,
