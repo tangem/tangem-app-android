@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
@@ -47,7 +48,7 @@ sealed class SwapCardState {
     data class SwapCardData(
         @DrawableRes val networkIconRes: Int?,
         val type: TransactionCardType,
-        val amountEquivalent: String?,
+        val amountEquivalent: TextReference?,
         val token: CryptoCurrencyStatus?,
         val coinId: String?,
         val amountTextFieldValue: TextFieldValue?,
@@ -61,7 +62,7 @@ sealed class SwapCardState {
 
     data class Empty(
         val type: TransactionCardType,
-        val amountEquivalent: String?,
+        val amountEquivalent: TextReference?,
         val amountTextFieldValue: TextFieldValue?,
         val canSelectAnotherToken: Boolean = false,
     ) : SwapCardState()
@@ -75,6 +76,7 @@ data class SwapButton(
     val onClick: () -> Unit,
 )
 
+@Immutable
 sealed interface TransactionCardType {
 
     val accountTitleUM: AccountTitleUM?
