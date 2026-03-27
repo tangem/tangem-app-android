@@ -80,6 +80,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             appCurrency = appCurrency,
             isShowBestRateAnimation = isShowBestRateAnimation,
             isShowFCAWarning = false,
+            priceImpact = null,
             swapRateMode = swapRateMode,
         )
     }
