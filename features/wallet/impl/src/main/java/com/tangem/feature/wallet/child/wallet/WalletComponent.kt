@@ -16,12 +16,11 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
-import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
-import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
@@ -32,13 +31,14 @@ import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen2
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.KycRejectedComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
-import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.feed.entry.components.FeedEntryComponent
+import com.tangem.features.promobanners.api.NewPromoBannersFeatureToggles
+import com.tangem.features.promobanners.api.PromoBannersBlockComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
-import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.send.v2.api.NetworkSelectionComponent
+import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
@@ -231,6 +231,7 @@ internal class WalletComponent @AssistedInject constructor(
         if (designFeatureToggles.isRedesignEnabled) {
             WalletScreen2(
                 state = uiState,
+                tangemPayComponent = tangemPayMainBlockComponent,
                 bottomSheetContent = {
                     BottomSheetContent(
                         bottomSheetState = bottomSheetState,
