@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.ds.message.TangemMessageEffect
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -10,12 +11,15 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.PaymentAccountStatusValue
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotificationUM
 import com.tangem.hot.sdk.model.HotWalletId
@@ -56,6 +60,10 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             val totalFiatBalance = accountList.totalFiatBalance
             val flattenCurrencies = accountList.flattenCurrencies()
 
+            val paymentAccountStatus = accountList.accountStatuses
+                .filterIsInstance<AccountStatus.Payment>()
+                .firstOrNull()
+
             buildList {
                 addUsedOutdatedDataNotification(totalFiatBalance)
 
@@ -82,6 +90,14 @@ internal class GetWalletNotificationsFactory @Inject constructor(
                     isNeedToBackup = isNeedToBackup,
                     clickIntents = clickIntents,
                 )
+
+                if (paymentAccountStatus != null) {
+                    addTangemPayWarnings(
+                        status = paymentAccountStatus,
+                        userWallet = userWallet,
+                        walletClickIntents = clickIntents,
+                    )
+                }
             }.sortedBy { it.type.ordinal }.toImmutableList()
         }
     }
@@ -198,6 +214,34 @@ internal class GetWalletNotificationsFactory @Inject constructor(
             ),
             condition = hasSignedHashes(userWallet, flattenCurrencies.firstOrNull()),
         )
+    }
+
+    private fun MutableList<WalletNotificationUM>.addTangemPayWarnings(
+        status: AccountStatus.Payment,
+        userWallet: UserWallet,
+        walletClickIntents: WalletClickIntents,
+    ) {
+        val notification = when (status.value) {
+            is PaymentAccountStatusValue.Error.NotSynced -> WalletNotificationUM.TangemPayRefreshNeeded(
+                buttonText = when (userWallet) {
+                    is UserWallet.Cold -> resourceReference(id = R.string.home_button_scan)
+                    is UserWallet.Hot -> resourceReference(id = R.string.tangempay_sync_needed_restore_access)
+                },
+                onRefreshClick = { walletClickIntents.onRefreshPayToken(userWallet) },
+                shouldShowProgress = false,
+            )
+            is PaymentAccountStatusValue.NotCreated -> null // TODO(Main redesign)
+            is PaymentAccountStatusValue.Error.Unavailable -> WalletNotificationUM.TangemPayUnreachable
+            is PaymentAccountStatusValue.Error.CardIssueFailed,
+            is PaymentAccountStatusValue.Error.ExposedDevice,
+            is PaymentAccountStatusValue.IssuingCard,
+            is PaymentAccountStatusValue.Loaded,
+            is PaymentAccountStatusValue.Loading,
+            is PaymentAccountStatusValue.Locked,
+            is PaymentAccountStatusValue.UnderReview,
+            -> null
+        }
+        notification?.let(::add)
     }
 
     private fun MutableList<WalletNotificationUM>.addNoAccountWarning(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
