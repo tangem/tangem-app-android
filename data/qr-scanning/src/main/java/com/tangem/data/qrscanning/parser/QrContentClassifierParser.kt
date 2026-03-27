@@ -26,6 +26,12 @@ internal class QrContentClassifierParser(
 
         when (val paymentUriResult = tryParsePaymentUri(qrCode, uniqueCoins, userCurrencies)) {
             is PaymentUriParser.ParseResult.Success -> return paymentUriResult.content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> {
+                return ClassifiedQrContent.PaymentUriWarning(
+                    paymentUri = paymentUriResult.content,
+                    unsupportedParams = paymentUriResult.unsupportedParams,
+                )
+            }
             is PaymentUriParser.ParseResult.RecognizedError -> return paymentUriResult.error
             is PaymentUriParser.ParseResult.NotRecognized -> Unit
         }
