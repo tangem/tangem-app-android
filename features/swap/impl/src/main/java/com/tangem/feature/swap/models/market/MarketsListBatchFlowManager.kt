@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models.market
 
 import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -12,6 +13,9 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -19,14 +23,14 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 @Suppress("LongParameterList")
-internal class SwapMarketsListBatchFlowManager(
+internal class MarketsListBatchFlowManager @AssistedInject constructor(
     getMarketsTokenListFlowUseCase: GetMarketsTokenListFlowUseCase,
-    private val batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
-    private val order: TokenMarketListConfig.Order,
-    private val currentAppCurrency: Provider<AppCurrency>,
-    private val currentSearchText: Provider<String?>,
-    private val modelScope: CoroutineScope,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
+    @Assisted private val batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
+    @Assisted private val order: TokenMarketListConfig.Order,
+    @Assisted private val currentSearchText: Provider<String?>,
+    @Assisted private val modelScope: CoroutineScope,
 ) {
     private val actionsFlow =
         MutableSharedFlow<BatchAction<Int, TokenMarketListConfig, TokenMarketUpdateRequest>>(replay = 1)
@@ -42,6 +46,9 @@ internal class SwapMarketsListBatchFlowManager(
 
     private val resultBatches = MutableStateFlow(ResultBatches())
     private val uiBatches = resultBatches.map { it.uiBatches }
+
+    private val appCurrency: StateFlow<AppCurrency> = getSelectedAppCurrencyUseCase.invokeOrDefault()
+        .stateIn(modelScope, SharingStarted.Eagerly, AppCurrency.Default)
 
     val uiItems: StateFlow<ImmutableList<MarketsListItemUM>>
         get() = uiBatches
@@ -114,7 +121,7 @@ internal class SwapMarketsListBatchFlowManager(
                 val items = resultBatches.uiBatches
                 val previousList = resultBatches.processedItems
 
-                val converter = SwapMarketsTokenItemConverter(appCurrency = currentAppCurrency())
+                val converter = SwapMarketsTokenItemConverter(appCurrency = appCurrency.value)
 
                 if (newList.isEmpty()) {
                     return@update ResultBatches(processedItems = emptyList())
@@ -178,7 +185,7 @@ internal class SwapMarketsListBatchFlowManager(
             actionsFlow.emit(
                 BatchAction.Reload(
                     requestParams = TokenMarketListConfig(
-                        fiatPriceCurrency = currentAppCurrency().code,
+                        fiatPriceCurrency = appCurrency.value.code,
                         searchText = if (currentSearchText() == null) {
                             null
                         } else {
@@ -220,7 +227,7 @@ internal class SwapMarketsListBatchFlowManager(
                         keys = batchesKeysToLoad,
                         updateRequest = TokenMarketUpdateRequest.UpdateChart(
                             interval = TokenMarketListConfig.Interval.H24,
-                            currency = currentAppCurrency().code,
+                            currency = appCurrency.value.code,
                         ),
                         async = true,
                         operationId = batchesKeysToLoad.toString() + "h24",
@@ -250,4 +257,14 @@ internal class SwapMarketsListBatchFlowManager(
         val uiBatches: List<Batch<Int, List<MarketsListItemUM>>> = emptyList(),
         val processedItems: List<Batch<Int, List<TokenMarket>>>? = null,
     )
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            batchFlowType: GetMarketsTokenListFlowUseCase.BatchFlowType,
+            order: TokenMarketListConfig.Order,
+            currentSearchText: Provider<String?>,
+            modelScope: CoroutineScope,
+        ): MarketsListBatchFlowManager
+    }
 }
