@@ -8,6 +8,6 @@ internal class DefaultTokensFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TokensFeatureToggles {
 
-    override val isMultiAddressUtxoEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.MULTI_ADDRESS_UTXO_ENABLED)
+    override val isDynamicAddressesEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(FeatureToggles.DYNAMIC_ADDRESSES_ENABLED)
 }
