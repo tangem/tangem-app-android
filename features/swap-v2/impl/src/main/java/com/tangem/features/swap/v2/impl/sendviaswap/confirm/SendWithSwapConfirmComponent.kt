@@ -139,6 +139,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                 userWalletId = params.userWallet.walletId,
                 enteredFromAmount = model.confirmData.enteredFromAmount,
                 fromCryptoCurrencyStatus = model.confirmData.fromCryptoCurrencyStatus,
+                priceImpact = model.confirmData.priceImpact,
             ),
         ),
     )
