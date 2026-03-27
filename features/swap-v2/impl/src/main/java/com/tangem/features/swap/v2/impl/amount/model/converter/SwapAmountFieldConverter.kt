@@ -58,7 +58,6 @@ internal class SwapAmountFieldConverter(
             subtitleEllipsisLeft = subtitles.subtitleEllipsisLeft,
             subtitleRight = subtitles.subtitleRight,
             subtitleEllipsisRight = subtitles.subtitleEllipsisRight,
-            priceImpact = null,
             isClickEnabled = true,
             amountField = AmountStateConverter(
                 clickIntents = clickIntents,
