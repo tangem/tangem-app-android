@@ -7,16 +7,13 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletBalanceUMTransformer
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TangemPayMainBlockConverter
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.WalletTokensListUMConverter
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.utils.logging.TangemLogger
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
+@Suppress("LongParameterList")
 internal class SetTokenListTransformer(
     private val params: TokenConverterParams,
     private val userWallet: UserWallet,
@@ -26,10 +23,14 @@ internal class SetTokenListTransformer(
     private val stakingAvailabilityMap: Map<CryptoCurrency, StakingAvailability> = emptyMap(),
     private val shouldShowMainPromo: Boolean,
     private val isAccountsModeEnabled: Boolean,
+    private val isRedesignEnabled: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     private val tangemPayConverter by lazy {
-        TangemPayMainBlockConverter(tangemPayClickIntents = clickIntents)
+        TangemPayMainBlockConverter(
+            tangemPayClickIntents = clickIntents,
+            isRedesignEnabled = isRedesignEnabled,
+        )
     }
 
     override fun transform(prevState: WalletState): WalletState {
@@ -59,6 +60,7 @@ internal class SetTokenListTransformer(
             is WalletUM.Content -> {
                 walletUM.copy(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState2(),
+                    tangemPayMainUM = walletUM.tangemPayMainUM.toLoadedState(),
                     tokensListUM = toLoadedState(),
                     buttons = walletUM.enableButtons(),
                 )
