@@ -9,6 +9,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.swap.v2.impl.amount.entity.PriceImpact
 import java.math.BigDecimal
 import com.tangem.features.swap.v2.impl.notifications.model.SwapNotificationsModel
 import com.tangem.features.swap.v2.impl.notifications.ui.swapNotifications
@@ -49,6 +50,7 @@ internal class SwapNotificationsComponent(
             val userWalletId: UserWalletId? = null,
             val enteredFromAmount: BigDecimal? = null,
             val fromCryptoCurrencyStatus: CryptoCurrencyStatus? = null,
+            val priceImpact: PriceImpact? = null,
         )
     }
 }
