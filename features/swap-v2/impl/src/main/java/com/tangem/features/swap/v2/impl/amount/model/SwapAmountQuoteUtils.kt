@@ -34,10 +34,10 @@ internal object SwapAmountQuoteUtils {
         secondaryFiatRateUSD: BigDecimal?,
         primaryCryptoCurrencyStatus: CryptoCurrencyStatus,
         secondaryCryptoCurrencyStatus: CryptoCurrencyStatus?,
-    ): PriceImpact {
-        if (quoteContent == null) return PriceImpact.Empty
+    ): PriceImpact? {
+        if (quoteContent == null) return null
 
-        val fromAmount = quoteContent.fromAmount ?: return PriceImpact.Empty
+        val fromAmount = quoteContent.fromAmount ?: return null
         val toAmount = quoteContent.toAmount
 
         val (fromRate, toRate) = if (swapDirection == SwapDirection.Direct) {
