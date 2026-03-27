@@ -3,7 +3,9 @@ package com.tangem.features.tangempay.component
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import com.tangem.features.tangempay.ui.TangemPayMainBlockContent
 import com.tangem.features.tangempay.ui.TangemPayMainBlockItem
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -26,7 +28,11 @@ internal class DefaultTangemPayMainBlockComponent @AssistedInject constructor(
             key = TANGEM_PAY_ACCOUNT_CONTENT_TYPE,
             contentType = TANGEM_PAY_ACCOUNT_CONTENT_TYPE,
         ) {
-            TangemPayMainBlockItem(state, isBalanceHidden, modifier)
+            if (LocalRedesignEnabled.current) {
+                TangemPayMainBlockContent(state, isBalanceHidden, modifier)
+            } else {
+                TangemPayMainBlockItem(state, isBalanceHidden, modifier)
+            }
         }
     }
 
