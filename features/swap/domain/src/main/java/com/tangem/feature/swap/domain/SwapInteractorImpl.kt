@@ -17,6 +17,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -67,11 +68,12 @@ import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -1289,12 +1291,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun createEmptyAmountState(): SwapState {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
-            zeroAmountEquivalent = BigDecimal.ZERO.format {
-                fiat(
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                )
-            },
+            zeroAmountEquivalent = stringReference(
+                BigDecimal.ZERO.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+            ),
         )
     }
 
@@ -1523,7 +1527,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
             tokenAmount = amount,
-            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
+            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
             account = fromAccount,
@@ -1687,7 +1691,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(feeCurrencyId)
         return rates[feeCurrencyId]?.let { rate ->
             fees.map { fee ->
-                rate.multiply(fee).format {
+                rate.fiatRate.multiply(fee).format {
                     fiat(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
@@ -1855,7 +1859,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
             tokenAmount = amount,
-            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
+            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
             account = fromAccount,
@@ -1963,21 +1967,21 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 tokenAmount = fromTokenAmount,
                 account = fromAccount,
                 cryptoCurrencyStatus = fromTokenStatus,
-                amountFiat = rates[fromToken.id]?.multiply(fromTokenAmount.value)
+                amountFiat = rates[fromToken.id]?.fiatRate?.multiply(fromTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
                 cryptoCurrencyStatus = toTokenStatus,
                 account = toAccount,
-                amountFiat = rates[toToken.id]?.multiply(toTokenAmount.value)
+                amountFiat = rates[toToken.id]?.fiatRate?.multiply(toTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.id]?.toDouble() ?: 0.0,
+                fromQuoteStatus = rates[fromToken.id],
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id]?.toDouble() ?: 0.0,
+                toRate = rates[toToken.id]?.fiatRate,
             ),
             swapDataModel = swapData,
             swapProvider = provider,
@@ -2446,17 +2450,42 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private fun calculatePriceImpact(
         fromTokenAmount: BigDecimal,
-        fromRate: Double,
+        fromQuoteStatus: QuoteStatus.Data?,
         toTokenAmount: BigDecimal,
-        toRate: Double,
+        toRate: BigDecimal?,
     ): PriceImpact {
-        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
-        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
-        val value = (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
-        return PriceImpact.Value(value)
+        if (fromQuoteStatus == null) return PriceImpact.Empty
+
+        val fromTokenFiatValue = fromTokenAmount.multiply(fromQuoteStatus.fiatRate)
+        val toTokenFiatValue = toTokenAmount.multiply(toRate.orZero())
+        val value = BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)
+
+        val fromAmountUSD = if (fromQuoteStatus.fiatRateUSD != BigDecimal.ZERO) {
+            fromTokenAmount.multiply(fromQuoteStatus.fiatRateUSD)
+        } else {
+            PRICE_IMPACT_AMOUNT_MIN_THRESHOLD
+        }
+
+        val amountSignificance = when {
+            fromAmountUSD < PRICE_IMPACT_AMOUNT_MIN_THRESHOLD -> PriceImpact.AmountSignificance.LOW
+            fromAmountUSD > PRICE_IMPACT_AMOUNT_MAX_THRESHOLD -> PriceImpact.AmountSignificance.HIGH
+            else -> PriceImpact.AmountSignificance.MEDIUM
+        }
+
+        val type = when {
+            value < PRICE_IMPACT_LOW_THRESHOLD -> PriceImpact.Type.LOW
+            value in PRICE_IMPACT_LOW_THRESHOLD..PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.MEDIUM
+            else -> PriceImpact.Type.HIGH
+        }
+
+        return PriceImpact(
+            value = value,
+            amountSignificance = amountSignificance,
+            type = type,
+        )
     }
 
-    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, BigDecimal> {
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, QuoteStatus.Data> {
         val set = ids.mapNotNullTo(destination = hashSetOf(), transform = CryptoCurrency.ID::rawCurrencyId)
             .getQuotesOrEmpty()
 
@@ -2465,7 +2494,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val found = set.find { it.rawCurrencyId == id.rawCurrencyId && it.value is QuoteStatus.Data }
                     ?: return@mapNotNull null
 
-                id to (found.value as QuoteStatus.Data).fiatRate
+                id to found.value as QuoteStatus.Data
             }
             .toMap()
     }
@@ -2523,6 +2552,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     companion object {
         private const val INCREASE_GAS_LIMIT_FOR_DEX = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
+        private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 50.toBigDecimal() // in USD
+        private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
+        private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
+        private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
         private const val INFINITY_SYMBOL = "∞"
     }
 
