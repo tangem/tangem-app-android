@@ -19,6 +19,11 @@ sealed interface ClassifiedQrContent {
         val matchingCurrencies: List<CryptoCurrency>,
     ) : ClassifiedQrContent
 
+    data class PaymentUriWarning(
+        val paymentUri: PaymentUri,
+        val unsupportedParams: Map<String, String>,
+    ) : ClassifiedQrContent
+
     sealed interface Error : ClassifiedQrContent {
 
         /** QR code not recognized by any parser */
