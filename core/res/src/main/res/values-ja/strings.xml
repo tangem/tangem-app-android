@@ -689,7 +689,7 @@
   <string name="initial_message_tap_header">カードまたはリングをタップ</string>
   <string name="initial_wallet_sync_banner_description">ウォレットは同期され、準備ができています。\n一部のトークンが見つかりませんか？</string>
   <string name="initial_wallet_sync_banner_title">ウォレットのインポートが完了しました</string>
-  <string name="initial_wallet_sync_restore_progress">%d%を復元中</string>
+  <string name="initial_wallet_sync_restore_progress">%d%%を復元中</string>
   <string name="key_invalidated_warning_description">生体認証を更新しました。カードまたはリングをスキャンして入ってください。</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">送金するには、残高が手数料額より高くなければなりません。</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">残高不足</string>
