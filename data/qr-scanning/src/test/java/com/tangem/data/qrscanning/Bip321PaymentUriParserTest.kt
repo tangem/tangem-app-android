@@ -215,15 +215,76 @@ internal class Bip321PaymentUriParserTest {
     }
 
     @Test
-    fun `bitcoin URI with memo param`() {
+    fun `bitcoin URI with memo param returns warning for unsupported memo`() {
         val result = parser.parse(
             qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1&memo=TestMemo",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.memo).isEqualTo("TestMemo")
+        assertThat(warning.unsupportedParams).containsEntry("memo", "TestMemo")
+    }
+
+    // endregion
+
+    // region Unsupported params
+
+    @Test
+    fun `unknown parameter returns SuccessWithWarning`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5&req-unknownparam=bar",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.content.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+        assertThat(warning.unsupportedParams).containsEntry("req-unknownparam", "bar")
+    }
+
+    @Test
+    fun `multiple unknown parameters all reported`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=1&foo=1&bar=2",
+            coins = listOf(bitcoinCoin),
+            allCurrencies = listOf(bitcoinCoin),
+        )
+
+        assertThat(result).isInstanceOf(PaymentUriParser.ParseResult.SuccessWithWarning::class.java)
+        val warning = result as PaymentUriParser.ParseResult.SuccessWithWarning
+        assertThat(warning.unsupportedParams).hasSize(2)
+        assertThat(warning.unsupportedParams).containsEntry("foo", "1")
+        assertThat(warning.unsupportedParams).containsEntry("bar", "2")
+    }
+
+    @Test
+    fun `memo on network with memo support is not unsupported`() {
+        val xrpCoin = buildCoin("XRP", "XRP", "XRP", decimals = 6, extrasType = Network.TransactionExtrasType.DESTINATION_TAG)
+
+        val result = parser.parse(
+            qrCode = "ripple:rAddress?dt=12345",
+            coins = listOf(xrpCoin),
+            allCurrencies = listOf(xrpCoin),
+        ).asSuccess()
+
+        assertThat(result).isNotNull()
+        assertThat(result!!.memo).isEqualTo("12345")
+    }
+
+    @Test
+    fun `only known params returns Success`() {
+        val result = parser.parse(
+            qrCode = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.5&label=Satoshi",
             coins = listOf(bitcoinCoin),
             allCurrencies = listOf(bitcoinCoin),
         ).asSuccess()
 
         assertThat(result).isNotNull()
-        assertThat(result!!.memo).isEqualTo("TestMemo")
+        assertThat(result!!.address).isEqualTo("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
     }
 
     // endregion
@@ -231,7 +292,11 @@ internal class Bip321PaymentUriParserTest {
     // region Helpers
 
     private fun PaymentUriParser.ParseResult.asSuccess(): ClassifiedQrContent.PaymentUri? {
-        return (this as? PaymentUriParser.ParseResult.Success)?.content
+        return when (this) {
+            is PaymentUriParser.ParseResult.Success -> content
+            is PaymentUriParser.ParseResult.SuccessWithWarning -> content
+            else -> null
+        }
     }
 
     private val bitcoinCoin = buildCoin("BTC", "Bitcoin", "BTC", decimals = 8)
@@ -243,6 +308,7 @@ internal class Bip321PaymentUriParserTest {
         name: String,
         symbol: String,
         decimals: Int,
+        extrasType: Network.TransactionExtrasType = Network.TransactionExtrasType.NONE,
     ): CryptoCurrency.Coin {
         return CryptoCurrency.Coin(
             id = CryptoCurrency.ID(
@@ -250,7 +316,7 @@ internal class Bip321PaymentUriParserTest {
                 body = CryptoCurrency.ID.Body.NetworkId(rawNetworkId),
                 suffix = CryptoCurrency.ID.Suffix.RawID(rawNetworkId),
             ),
-            network = buildNetwork(rawNetworkId, name, symbol),
+            network = buildNetwork(rawNetworkId, name, symbol, extrasType),
             name = name,
             symbol = symbol,
             decimals = decimals,
@@ -276,7 +342,12 @@ internal class Bip321PaymentUriParserTest {
         )
     }
 
-    private fun buildNetwork(rawNetworkId: String, name: String, symbol: String): Network {
+    private fun buildNetwork(
+        rawNetworkId: String,
+        name: String,
+        symbol: String,
+        extrasType: Network.TransactionExtrasType = Network.TransactionExtrasType.NONE,
+    ): Network {
         return Network(
             id = Network.ID(Network.RawID(rawNetworkId), Network.DerivationPath.None),
             backendId = rawNetworkId,
@@ -287,7 +358,7 @@ internal class Bip321PaymentUriParserTest {
             standardType = Network.StandardType.Unspecified("UNSPECIFIED"),
             hasFiatFeeRate = false,
             canHandleTokens = false,
-            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            transactionExtrasType = extrasType,
             nameResolvingType = Network.NameResolvingType.NONE,
         )
     }
