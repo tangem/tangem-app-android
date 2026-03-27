@@ -55,7 +55,7 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
         val response = quotesFetcher.fetch(
             fiatCurrencyId = appCurrencyId,
             currenciesIds = replacementIdsResult.idsForRequest,
-            fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H),
+            fields = setOf(Field.PRICE, Field.PRICE_CHANGE_24H, Field.PRICE_USD),
         )
             .getOrElse { error("Cause: $it") }
 
