@@ -42,12 +42,14 @@ data class TangemMessageUM(
  * @param text      TextReference for the button label.
  * @param type      TangemButtonType defining the style type of the button.
  * @param iconRes   Drawable resource ID for the icon to be displayed in the button (optional).
+ * @param isLoading Boolean indicating whether the button should show a loading state.
  * @param onClick   Lambda to be invoked when the button is clicked.
  */
 data class TangemMessageButtonUM(
     val text: TextReference,
     val type: TangemButtonType,
     @DrawableRes val iconRes: Int? = null,
+    val isLoading: Boolean = false,
     val onClick: () -> Unit,
 ) {
     /** Creates a TangemButtonUM representation of this message button. */
@@ -58,6 +60,7 @@ data class TangemMessageButtonUM(
         iconRes = iconRes,
         iconPosition = TangemButtonIconPosition.End,
         type = type,
+        isLoading = isLoading,
         onClick = onClick,
     )
 }
