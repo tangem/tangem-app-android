@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -68,6 +69,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletPagerIndicator
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.WalletTopBar
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
+import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
+import com.tangem.features.tangempay.entity.TangemPayMainUM
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -77,6 +80,7 @@ private const val MARKET_HINT_THRESHOLD = 0.5f
 @Composable
 internal fun WalletScreen2(
     state: WalletScreenState,
+    tangemPayComponent: TangemPayMainBlockComponent,
     bottomSheetContent: @Composable (() -> Unit),
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -104,6 +108,7 @@ internal fun WalletScreen2(
     WalletContent2(
         state = state,
         walletsPagerState = walletsPagerState,
+        tangemPayComponent = tangemPayComponent,
         behavior = behavior,
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
@@ -128,6 +133,7 @@ internal fun WalletScreen2(
 private fun WalletContent2(
     state: WalletScreenState,
     walletsPagerState: PagerState,
+    tangemPayComponent: TangemPayMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -257,6 +263,7 @@ private fun WalletContent2(
                                 currentWallet = currentWallet,
                                 listState = listState,
                                 isBalanceHidden = state.isHidingMode,
+                                tangemPayComponent = tangemPayComponent,
                                 contentPadding = contentPadding,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -565,6 +572,14 @@ private fun WalletScreen2_Preview(@PreviewParameter(WalletScreen2PreviewProvider
     TangemThemePreviewRedesign {
         WalletScreen2(
             state = data,
+            tangemPayComponent = object : TangemPayMainBlockComponent {
+                override fun LazyListScope.tangemPayMainContent(
+                    state: TangemPayMainUM,
+                    isBalanceHidden: Boolean,
+                    modifier: Modifier,
+                ) {
+                }
+            },
             bottomSheetContent = {
                 Text("Markets Content")
             },
