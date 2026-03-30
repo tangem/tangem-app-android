@@ -15,7 +15,6 @@ import com.tangem.common.ui.notifications.notificationsCarousel
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletUM
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.tokensListItems
@@ -40,41 +39,40 @@ internal fun WalletListContent(
     val movableItemModifier = Modifier.padding(horizontal = TangemTheme.dimens2.x3)
     val itemModifier = movableItemModifier.padding(top = TangemTheme.dimens2.x3)
 
-    TangemSharedTransitionLayout(modifier) {
-        LazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            overscrollEffect = rememberOverscrollEffect(),
-        ) {
-            notifications(
-                notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
-                contentColor = containerColor,
-                modifier = movableItemModifier,
-            )
-            notificationsCarousel(
-                containerColor = containerColor,
-                modifier = movableItemModifier,
-                notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
-            )
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        contentPadding = contentPadding,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        overscrollEffect = rememberOverscrollEffect(),
+    ) {
+        notifications(
+            notifications = currentWallet.notifications.map { it.messageUM }.toPersistentList(),
+            contentColor = containerColor,
+            modifier = movableItemModifier,
+        )
+        notificationsCarousel(
+            containerColor = containerColor,
+            modifier = movableItemModifier,
+            notifications = currentWallet.notificationsCarousel.map { it.messageUM }.toPersistentList(),
+        )
 
-            tangemPay(
-                tangemPayComponent = tangemPayComponent,
-                tangemPayUM = currentWallet.tangemPayMainUM,
-                isBalanceHidden = isBalanceHidden,
-                modifier = itemModifier,
-            )
+        tangemPay(
+            tangemPayComponent = tangemPayComponent,
+            tangemPayUM = currentWallet.tangemPayMainUM,
+            isBalanceHidden = isBalanceHidden,
+            modifier = itemModifier,
+        )
 
-            tokensListItems2(
-                walletTokensListUM = currentWallet.tokensListUM,
-                modifier = movableItemModifier,
-                isBalanceHidden = isBalanceHidden,
-            )
+        tokensListItems2(
+            walletTokensListUM = currentWallet.tokensListUM,
+            modifier = movableItemModifier,
+            isBalanceHidden = isBalanceHidden,
+        )
 
-            nftCollections2(state = currentWallet, itemModifier = itemModifier)
+        nftCollections2(state = currentWallet, itemModifier = itemModifier)
 
-            organizeTokens2(state = currentWallet, itemModifier = itemModifier)
-        }
+        organizeTokens2(state = currentWallet, itemModifier = itemModifier)
     }
 }
 
