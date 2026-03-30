@@ -22,7 +22,6 @@ class ValidateWalletMemoUseCase(
     ): Either<ValidateMemoError, Unit> {
         return try {
             val isValidMemo = walletAddressServiceRepository.validateMemo(
-                userWalletId = userWalletId,
                 network = cryptoCurrency.network,
                 memo = memo,
             )
