@@ -53,6 +53,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isHotWallet
 import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -163,6 +164,9 @@ internal class SwapModel @Inject constructor(
         ) { "No wallet found for id: $userWalletId" }
     }
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
+
+    val isHoldToConfirmEnabled: Boolean =
+        holdToConfirmButtonFeatureToggles.isHoldToConfirmEnabled && userWallet.isHotWallet
 
     private lateinit var initialFromStatus: CryptoCurrencyStatus
     private var initialToStatus: CryptoCurrencyStatus? = null

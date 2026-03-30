@@ -210,6 +210,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
                 id = R.string.give_permission_swap_subtitle,
                 formatArgs = wrappedList(providerName, permissionState.currency),
             ),
+            isHoldToConfirm = model.isHoldToConfirmEnabled,
             callback = model.approvalCallback,
         )
     }
