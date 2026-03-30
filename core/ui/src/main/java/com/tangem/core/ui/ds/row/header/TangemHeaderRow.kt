@@ -117,7 +117,6 @@ fun TangemHeaderRow(
  * @param modifier          Modifier for the composable
  * @param subtitle          Optional subtitle as a TextReference
  * @param headTangemIconUM  Optional TangemIconUM for the head icon
- * @param footerTangemIconRes Optional drawable resource ID for the footer icon
  * @param isEnabled         Boolean indicating if the row is clickable
  * @param onItemClick       Optional click callback for the row
  */
