@@ -22,7 +22,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.news.model.NewsListConfig
-import com.tangem.features.feed.components.earn.DefaultEarnComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
@@ -78,7 +77,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                                 screenSource = AnalyticsParam.ScreensSources.Token,
                             )
                         },
-                        onMarketOpenClick = { onMarketOpenClick(null) },
                     ),
                 ),
             )
@@ -135,14 +133,11 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
         }
 
         override fun onOpenEarnPage() {
-            innerRouter.push(
-                FeedEntryChildFactory.Child.Earn(
-                    params = DefaultEarnComponent.Params(
-                        onBackClick = { onChildBack() },
-                        onMarketOpenClick = { onMarketOpenClick(null) },
-                    ),
-                ),
-            )
+            innerRouter.push(FeedEntryChildFactory.Child.Earn)
+        }
+
+        override fun openSearch() {
+            innerRouter.push(FeedEntryChildFactory.Child.Search)
         }
     }
 
@@ -244,7 +239,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
                             paginationConfig = null,
                         )
                     },
-                    onMarketOpenClick = { clickIntents.onMarketOpenClick(null) },
                 ),
             )
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(

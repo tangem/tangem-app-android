@@ -13,6 +13,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -66,6 +67,7 @@ internal class FeedComponentModel @Inject constructor(
     private val fetchTopEarnTokensUseCase: FetchTopEarnTokensUseCase,
     private val getTopEarnTokensUseCase: GetTopEarnTokensUseCase,
     private val appRouter: AppRouter,
+    private val designFeatureToggles: DesignFeatureToggles,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     paramsContainer: ParamsContainer,
@@ -233,7 +235,7 @@ internal class FeedComponentModel @Inject constructor(
             currentDate = getCurrentDate(),
             feedListSearchBar = FeedListSearchBar(
                 placeholderText = resourceReference(
-                    id = if (feedFeatureToggle.isEarnBlockEnabled) {
+                    id = if (designFeatureToggles.isRedesignEnabled) {
                         R.string.markets_search_title_placeholder
                     } else {
                         R.string.markets_search_header_title
@@ -241,7 +243,11 @@ internal class FeedComponentModel @Inject constructor(
                 ),
                 onBarClick = {
                     analyticsEventHandler.send(FeedAnalyticsEvent.TokenSearchedClicked())
-                    params.feedClickIntents.onMarketOpenClick(null)
+                    if (designFeatureToggles.isRedesignEnabled) {
+                        params.feedClickIntents.openSearch()
+                    } else {
+                        params.feedClickIntents.onMarketOpenClick(null)
+                    }
                 },
             ),
             feedListCallbacks = FeedListCallbacks(
