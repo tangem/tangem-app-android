@@ -11,4 +11,5 @@ internal data class GiveApprovalUM(
     @DrawableRes val walletInteractionIcon: Int?,
     val isApproveButtonEnabled: Boolean,
     val isApproveLoading: Boolean,
+    val isHoldToConfirm: Boolean = false,
 )
