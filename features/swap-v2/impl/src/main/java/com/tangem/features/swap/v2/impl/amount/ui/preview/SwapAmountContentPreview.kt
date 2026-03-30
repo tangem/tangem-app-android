@@ -12,11 +12,11 @@ import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapRateMode
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
-import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 import com.tangem.utils.StringsSigns
@@ -95,6 +95,7 @@ internal data object SwapAmountContentPreview {
         appCurrency = AppCurrency.Default,
         isShowBestRateAnimation = false,
         isShowFCAWarning = false,
+        priceImpact = null,
         swapRateMode = SwapRateMode.FLOAT_ONLY,
     )
 
@@ -105,7 +106,6 @@ internal data object SwapAmountContentPreview {
             title = stringReference("Tether"),
             subtitleLeft = stringReference("11 101,123123456 BTC"),
             subtitleRight = stringReference(" ${StringsSigns.DOT} 1 212,12 $"),
-            priceImpact = null,
             isClickEnabled = false,
             subtitleEllipsisLeft = TextEllipsis.OffsetEnd(3),
             subtitleEllipsisRight = TextEllipsis.OffsetEnd(1),
@@ -116,7 +116,6 @@ internal data object SwapAmountContentPreview {
                 accountTitleUM = AccountTitleUM.Text(stringReference("Amount to receive")),
             ),
             title = stringReference("Shiba Inu"),
-            priceImpact = stringReference("(-10%)"),
             subtitleLeft = TextReference.EMPTY,
             subtitleRight = TextReference.EMPTY,
             isClickEnabled = false,
@@ -135,6 +134,7 @@ internal data object SwapAmountContentPreview {
         isPrimaryButtonEnabled = true,
         isShowBestRateAnimation = false,
         isShowFCAWarning = true,
+        priceImpact = null,
         swapRateMode = SwapRateMode.FLOAT_AND_FIXED,
     )
 

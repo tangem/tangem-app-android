@@ -64,6 +64,7 @@ internal class SwapAmountPrimaryReadyStateTransformer(
             appCurrency = appCurrency,
             isShowBestRateAnimation = isShowBestRateAnimation,
             isShowFCAWarning = false,
+            priceImpact = null,
             swapRateMode = (prevState as? SwapAmountUM.Content)?.swapRateMode ?: SwapRateMode.FLOAT_ONLY,
         )
     }

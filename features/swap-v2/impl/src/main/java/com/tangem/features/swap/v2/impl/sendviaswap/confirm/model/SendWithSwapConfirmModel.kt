@@ -52,6 +52,7 @@ import com.tangem.features.swap.v2.api.subcomponents.SwapAmountUpdateTrigger
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.amount.SwapAmountReduceTrigger
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
+import com.tangem.features.swap.v2.impl.amount.model.SwapAmountQuoteUtils
 import com.tangem.features.swap.v2.impl.common.ConfirmData
 import com.tangem.features.swap.v2.impl.common.SwapAlertFactory
 import com.tangem.features.swap.v2.impl.common.SwapUtils.INCREASE_GAS_LIMIT_FOR_CEX
@@ -126,7 +127,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val feeUMV2
         get() = uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content
 
-    val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
+    private val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
     val secondaryCurrency: CryptoCurrency = requireNotNull(amountUM?.secondaryCryptoCurrencyStatus?.currency) {
         "Crypto currency must not be null"
     }
@@ -166,6 +167,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 quote = amountUM?.selectedQuote,
                 rateType = amountUM?.swapRateType,
                 amountType = amountUM?.selectedAmountType ?: SwapAmountType.From,
+                priceImpact = amountUM?.priceImpact,
             )
         }
 
@@ -444,6 +446,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     userWalletId = params.userWallet.walletId,
                     enteredFromAmount = confirmData.enteredFromAmount,
                     fromCryptoCurrencyStatus = confirmData.fromCryptoCurrencyStatus,
+                    priceImpact = confirmData.priceImpact,
                 ),
             )
             uiState.transformerUpdate(
@@ -461,9 +464,11 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             uiState.update { state ->
                 val feeUM = state.feeSelectorUM as? FeeSelectorUM.Content
                 val isTransactionInProcess = (state.confirmUM as? ConfirmUM.Content)?.isTransactionInProcess == true
+                val isHighPriceImpact = SwapAmountQuoteUtils.isHighPriceImpact(state.amountUM)
+                val isPrimaryButtonEnabled = !hasError && feeUM != null && !isTransactionInProcess && !isHighPriceImpact
                 state.copy(
                     confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
-                        isPrimaryButtonEnabled = !hasError && feeUM != null && !isTransactionInProcess,
+                        isPrimaryButtonEnabled = isPrimaryButtonEnabled,
                     ) ?: state.confirmUM,
                 )
             }
