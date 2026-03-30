@@ -17,12 +17,14 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.DesignFeatureToggles
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.feature.wallet.child.tokenActions.DefaultTokenActionsComponent
 import com.tangem.feature.wallet.child.tokenActions.TokenActionsComponent
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
@@ -61,6 +63,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val promoBannersBlockComponentFactory: PromoBannersBlockComponent.Factory,
     private val newPromoBannersFeatureToggles: NewPromoBannersFeatureToggles,
     private val networkSelectionComponentFactory: NetworkSelectionComponent.Factory,
+    private val tokenActionsComponentFactory: TokenActionsComponent.Factory,
     private val designFeatureToggles: DesignFeatureToggles,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -164,11 +167,14 @@ internal class WalletComponent @AssistedInject constructor(
                     )
                 }
                 is WalletDialogConfig.TokenActionList -> {
-                    TokenActionsComponent(
-                        appComponentContext = childByContext(componentContext),
+                    tokenActionsComponentFactory.create(
+                        context = childByContext(componentContext),
                         params = TokenActionsComponent.Params(
                             actions = dialogConfig.actionList,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                            tokenRowUM = dialogConfig.tokenRowUM,
+                            offsetX = dialogConfig.offsetX,
+                            offsetY = dialogConfig.offsetY,
                         ),
                     )
                 }
@@ -261,6 +267,13 @@ internal class WalletComponent @AssistedInject constructor(
 
         when (val dialog = dialog.child?.instance) {
             is ComposableDialogComponent -> dialog.Dialog()
+            is DefaultTokenActionsComponent -> {
+                if (designFeatureToggles.isRedesignEnabled) {
+                    dialog.Content(Modifier.hazeEffectTangem())
+                } else {
+                    dialog.BottomSheet()
+                }
+            }
             is ComposableBottomSheetComponent -> dialog.BottomSheet()
             else -> {}
         }
