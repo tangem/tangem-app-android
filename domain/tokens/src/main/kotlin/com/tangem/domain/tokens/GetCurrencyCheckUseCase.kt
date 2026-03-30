@@ -45,6 +45,14 @@ class GetCurrencyCheckUseCase(
             } else {
                 false
             }
+            val isMemoRequired = if (recipientAddress != null) {
+                currencyChecksRepository.checkIfMemoRequired(
+                    network = network,
+                    address = recipientAddress,
+                )
+            } else {
+                false
+            }
             val utxoAmountLimit = if (currency is CryptoCurrency.Coin && amount != null && fee != null) {
                 currencyChecksRepository.checkUtxoAmountLimit(
                     userWalletId = userWalletId,
@@ -65,6 +73,7 @@ class GetCurrencyCheckUseCase(
                 utxoAmountLimit = utxoAmountLimit,
                 isAccountFunded = isAccountFunded,
                 rentWarning = rentWarning,
+                isMemoRequired = isMemoRequired,
             )
         }
     }
