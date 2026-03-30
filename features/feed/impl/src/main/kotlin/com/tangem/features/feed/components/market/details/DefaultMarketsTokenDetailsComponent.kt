@@ -10,7 +10,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -23,6 +22,8 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.decompose.ComposableModularBottomSheetContentComponent
+import com.tangem.core.ui.ds.topbar.TangemTopBar
+import com.tangem.core.ui.ds.topbar.TangemTopBarType
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalRedesignEnabled
@@ -34,7 +35,6 @@ import com.tangem.features.feed.components.market.details.portfolio.api.MarketsP
 import com.tangem.features.feed.model.market.details.MarketsTokenDetailsModel
 import com.tangem.features.feed.model.market.details.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.feed.model.market.details.state.TokenNetworksState
-import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsContent
 import com.tangem.features.feed.ui.market.detailed.MarketsTokenDetailsTopBar
 import kotlinx.coroutines.flow.collectLatest
@@ -100,10 +100,7 @@ internal class DefaultMarketsTokenDetailsComponent(
         val state by model.state.collectAsStateWithLifecycle()
         val background = LocalMainBottomSheetColor.current.value
         if (LocalRedesignEnabled.current) {
-            FeedSearchBar(
-                isSearchBarClickable = bottomSheetState.value == BottomSheetState.EXPANDED,
-                feedListSearchBar = state.feedListSearchBar,
-                modifier = Modifier.drawBehind { drawRect(background) },
+            TangemTopBar(
                 startContent = {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_back_28),
@@ -140,6 +137,7 @@ internal class DefaultMarketsTokenDetailsComponent(
                             .padding(TangemTheme.dimens2.x2_5),
                     )
                 },
+                type = TangemTopBarType.BottomSheet,
             )
         } else {
             MarketsTokenDetailsTopBar(
@@ -188,7 +186,6 @@ internal class DefaultMarketsTokenDetailsComponent(
         val analyticsParams: AnalyticsParams?,
         val onBackClicked: () -> Unit,
         val onArticleClick: (articleId: Int, preselectedArticlesId: List<Int>) -> Unit,
-        val onMarketOpenClick: () -> Unit,
     )
 
     @Serializable

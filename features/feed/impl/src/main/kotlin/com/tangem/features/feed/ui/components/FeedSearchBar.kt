@@ -107,7 +107,7 @@ private fun FeedSearchBarV2(
                         end = if (endContent != null) TangemTheme.dimens2.x3 else 0.dp,
                     )
                     .clip(CircleShape)
-                    .background(color = TangemTheme.colors2.field.backgroundDefault)
+                    .background(color = TangemTheme.colors2.button.backgroundSecondary)
                     .conditional(condition = isSearchBarClickable) {
                         clickable(onClick = feedListSearchBar.onBarClick)
                     }
