@@ -2,13 +2,12 @@ package com.tangem.features.feed.ui.market.detailed.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
-import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
+import com.tangem.features.feed.ui.feed.components.articles.ArticleConfigUM
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
@@ -30,7 +29,6 @@ internal data class MarketsTokenDetailsUM(
     val onShouldShowPriceSubtitleChange: (Boolean) -> Unit,
     val relatedNews: RelatedNews,
     val onShareClick: () -> Unit,
-    val feedListSearchBar: FeedListSearchBar,
 ) {
 
     data class ChartState(
