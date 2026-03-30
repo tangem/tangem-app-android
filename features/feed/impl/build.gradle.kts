@@ -57,6 +57,7 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.earn)
+    implementation(projects.domain.search)
 
     /* Compose */
     implementation(deps.compose.coil)
