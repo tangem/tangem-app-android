@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
+import com.tangem.core.ui.ds.row.token.TangemTokenRowUM
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
@@ -34,6 +35,9 @@ internal sealed interface WalletDialogConfig {
     @Serializable
     data class TokenActionList(
         val actionList: ImmutableList<TokenActionButtonUM>,
+        val tokenRowUM: TangemTokenRowUM?,
+        val offsetY: Float,
+        val offsetX: Float,
     ) : WalletDialogConfig
 
     @Serializable
