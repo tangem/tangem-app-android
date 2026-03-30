@@ -1497,6 +1497,7 @@ internal class StakingModel @Inject constructor(
                 id = R.string.give_permission_staking_subtitle,
                 formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
             ),
+            isHoldToConfirm = value.shouldShowHoldToConfirmButton,
             callback = approvalCallback,
         )
     }
