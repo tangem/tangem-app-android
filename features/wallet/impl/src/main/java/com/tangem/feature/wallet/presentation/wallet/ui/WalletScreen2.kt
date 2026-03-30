@@ -50,6 +50,7 @@ import com.tangem.core.ui.components.background.northernlights.NorthernLightsBac
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetDraggableHeader
 import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshSlidingContainer
+import com.tangem.core.ui.components.haze.hazeEffectTangem
 import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
@@ -72,6 +73,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.common.Wallet
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.lazyListStateMapSaver
 import com.tangem.features.tangempay.component.TangemPayMainBlockComponent
 import com.tangem.features.tangempay.entity.TangemPayMainUM
+import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeTint
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -82,6 +85,7 @@ private const val MARKET_HINT_THRESHOLD = 0.5f
 internal fun WalletScreen2(
     state: WalletScreenState,
     tangemPayComponent: TangemPayMainBlockComponent,
+    modifier: Modifier = Modifier,
     bottomSheetContent: @Composable (() -> Unit),
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
@@ -130,6 +134,7 @@ internal fun WalletScreen2(
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
+        modifier = modifier,
         listStates = listStates,
     )
 
@@ -154,6 +159,7 @@ private fun WalletContent2(
     tangemPayComponent: TangemPayMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
     listStates: Map<Int, LazyListState>,
+    modifier: Modifier = Modifier,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
@@ -169,6 +175,7 @@ private fun WalletContent2(
     }
 
     BaseScaffoldWithMarkets(
+        modifier = modifier,
         state = state,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
@@ -200,7 +207,7 @@ private fun WalletContent2(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .hazeSourceTangem(zIndex = -1f),
+                .hazeSourceTangem(zIndex = -2f),
         ) {
             NorthernLightsBackground(
                 containerColor = if (LocalIsInDarkTheme.current) {
@@ -220,10 +227,20 @@ private fun WalletContent2(
                 behavior = behavior,
             )
 
+            val overlay = TangemTheme.colors2.overlay.overlayPrimary
+
             HorizontalPager(
                 state = walletsPagerState,
                 userScrollEnabled = canPagerScroll,
                 beyondViewportPageCount = 1,
+                modifier = Modifier.hazeEffectTangem {
+                    fallbackTint = HazeTint(color = overlay)
+                    progressive = HazeProgressive.verticalGradient(
+                        startIntensity = 1f,
+                        endIntensity = 1f,
+                        preferPerformance = true,
+                    )
+                },
             ) { currentWalletIndex ->
                 val listState = listStates[currentWalletIndex] ?: rememberLazyListState()
 
