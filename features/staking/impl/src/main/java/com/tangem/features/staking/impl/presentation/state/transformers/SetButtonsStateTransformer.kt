@@ -44,8 +44,10 @@ internal class SetButtonsStateTransformer(
         val isConfirmation = prevState.currentStep == StakingStep.Confirmation
         val isInProgress = innerConfirmState == InnerConfirmationStakingState.IN_PROGRESS
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
+        val isApprovalRequired = prevState.isApprovalRequired()
 
-        val isHoldToConfirm = prevState.shouldShowHoldToConfirmButton && isConfirmation && !isCompleted
+        val isHoldToConfirm = prevState.shouldShowHoldToConfirmButton &&
+            isConfirmation && !isCompleted && !isApprovalRequired
         val isIconVisible = isConfirmation && !isCompleted && !isHoldToConfirm
         val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
@@ -114,14 +116,9 @@ internal class SetButtonsStateTransformer(
     private fun StakingUiState.getConfirmationButtonText(): TextReference {
         val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
             ?: return resourceReference(R.string.common_close)
-        val amountState = amountState as? AmountState.Data
-            ?: return resourceReference(R.string.common_close)
 
-        if (actionType is StakingActionCommonType.Enter) {
-            val amount = amountState.amountTextField.cryptoAmount.value.orZero()
-            if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
-                return resourceReference(R.string.give_permission_title)
-            }
+        if (isApprovalRequired()) {
+            return resourceReference(R.string.give_permission_title)
         }
 
         return getBaseActionText(confirmationState)
@@ -151,18 +148,13 @@ internal class SetButtonsStateTransformer(
 
     private fun StakingUiState.onConfirmationClick() {
         val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
-        val amountState = amountState as? AmountState.Data
-        if (confirmationState != null && amountState != null) {
+        if (confirmationState != null) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 clickIntents.onNextClick()
+            } else if (isApprovalRequired()) {
+                clickIntents.showApprovalBottomSheet()
             } else {
-                val amount = amountState.amountTextField.cryptoAmount.value.orZero()
-                val isEnterAction = actionType is StakingActionCommonType.Enter
-                if (isEnterAction && confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
-                    clickIntents.showApprovalBottomSheet()
-                } else {
-                    clickIntents.onActionClick()
-                }
+                clickIntents.onActionClick()
             }
         } else {
             clickIntents.onBackClick()
@@ -175,6 +167,15 @@ internal class SetButtonsStateTransformer(
         val isCardano = BlockchainUtils.isCardano(cryptoCurrencyBlockchainId)
 
         return !hasNotStaking && isCardano && currentStep == StakingStep.InitialInfo
+    }
+
+    private fun StakingUiState.isApprovalRequired(): Boolean {
+        val confirmState = confirmationState as? StakingStates.ConfirmationState.Data ?: return false
+        val amountState = amountState as? AmountState.Data ?: return false
+        val amount = amountState.amountTextField.cryptoAmount.value.orZero()
+        return actionType is StakingActionCommonType.Enter &&
+            confirmState.isApprovalNeeded &&
+            confirmState.allowance < amount
     }
 
     private fun StakingUiState.isButtonEnabled(): Boolean {
