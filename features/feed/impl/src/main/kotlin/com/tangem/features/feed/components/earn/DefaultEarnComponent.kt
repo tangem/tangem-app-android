@@ -35,7 +35,6 @@ import com.tangem.features.feed.components.market.details.portfolio.add.AddToPor
 import com.tangem.features.feed.model.earn.EarnModel
 import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.earn.EarnContent
-import kotlinx.serialization.Serializable
 
 internal class DefaultEarnComponent(
     appComponentContext: AppComponentContext,
@@ -129,9 +128,8 @@ internal class DefaultEarnComponent(
         )
     }
 
-    @Serializable
     data class Params(
         val onBackClick: () -> Unit,
-        val onMarketOpenClick: () -> Unit,
+        val onSearchClicked: () -> Unit,
     )
 }
