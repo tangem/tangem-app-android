@@ -76,6 +76,7 @@ internal class GiveApprovalModel @Inject constructor(
                 walletInteractionIcon = walletInterationIcon(userWallet),
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,
+                isHoldToConfirm = params.isHoldToConfirm,
             ),
         )
 
