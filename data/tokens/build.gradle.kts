@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.walletManager)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets.models)
     // endregion
 
