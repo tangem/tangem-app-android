@@ -12,25 +12,10 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     if (action !is DetailsAction) return state.detailsState
     val detailsState = state.detailsState
     return when (action) {
-        is DetailsAction.PrepareScreen -> {
-            handlePrepareScreen(action)
-        }
         is DetailsAction.AppSettings -> {
             handlePrivacyAction(action, detailsState)
         }
-        is DetailsAction.ChangeAppCurrency -> detailsState.copy(
-            appSettingsState = detailsState.appSettingsState.copy(
-                selectedAppCurrency = action.currency,
-            ),
-        )
     }
-}
-
-private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
-    return DetailsState(
-        scanResponse = action.scanResponse,
-        appSettingsState = action.initializedAppSettingsState,
-    )
 }
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
@@ -94,6 +79,7 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 useBiometricAuthentication = action.state.useBiometricAuthentication,
                 requireAccessCode = action.state.requireAccessCode,
                 hasSecuredWallets = action.state.hasSecuredWallets,
+                needEnrollBiometrics = action.state.needEnrollBiometrics,
             ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,
