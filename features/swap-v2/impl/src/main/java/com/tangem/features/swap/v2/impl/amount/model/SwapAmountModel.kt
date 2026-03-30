@@ -21,13 +21,14 @@ import com.tangem.datasource.local.swap.SwapBestRateAnimationStore
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.notifications.ShouldShowNotificationUseCase
+import com.tangem.domain.quotes.GetCurrencyUSDQuoteUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.domain.express.models.ExpressRateType
 import com.tangem.domain.swap.models.*
 import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
@@ -58,13 +59,13 @@ import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
@@ -93,6 +94,7 @@ internal class SwapAmountModel @Inject constructor(
     private val shouldShowNotificationUseCase: ShouldShowNotificationUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getWalletsUseCase: GetWalletsUseCase,
+    private val getCurrencyUSDQuoteUseCase: GetCurrencyUSDQuoteUseCase,
 ) : Model(), SwapAmountClickIntents, SwapChooseProviderComponent.ModelCallback {
 
     private val params: SwapAmountComponentParams = paramsContainer.require()
@@ -106,6 +108,9 @@ internal class SwapAmountModel @Inject constructor(
     private var primaryMinimumAmountBoundary: EnterAmountBoundary by Delegates.notNull()
     private var secondaryMaximumAmountBoundary: EnterAmountBoundary? = null
     private var secondaryMinimumAmountBoundary: EnterAmountBoundary? = null
+
+    private var primaryFiatRateUSD: BigDecimal? = null
+    private var secondaryFiatRateUSD: BigDecimal? = null
 
     private var userCountry: UserCountry = UserCountry.Other(Locale.getDefault().country)
     val bottomSheetNavigation: SlotNavigation<SwapChooseProviderConfig> = SlotNavigation()
@@ -177,6 +182,8 @@ internal class SwapAmountModel @Inject constructor(
                 isBalanceHidden = params.isBalanceHidingFlow.value,
                 primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                 primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                primaryFiatRateUSD = primaryFiatRateUSD,
+                secondaryFiatRateUSD = secondaryFiatRateUSD,
             ),
         )
     }
@@ -218,7 +225,7 @@ internal class SwapAmountModel @Inject constructor(
         val selectedProvider = amountUM.selectedQuote.provider ?: return
 
         swapAmountAlertFactory.priceImpactAlert(
-            hasPriceImpact = (amountUM.secondaryAmount as? SwapAmountFieldUM.Content)?.priceImpact != null,
+            hasPriceImpact = amountUM.priceImpact != null,
             currencySymbol = amountUM.primaryCryptoCurrencyStatus.currency.symbol,
             provider = selectedProvider,
         )
@@ -560,6 +567,8 @@ internal class SwapAmountModel @Inject constructor(
             val secondaryStatus = secondaryCurrency?.currencyStatus
             val primaryStatus = (uiState.value as? SwapAmountUM.Content)?.primaryCryptoCurrencyStatus
             if (secondaryStatus != null && primaryStatus != null) {
+                val rawId = secondaryStatus.currency.id.rawCurrencyId
+                secondaryFiatRateUSD = rawId?.let { id -> getCurrencyUSDQuoteUseCase(id) }
                 initCurrencies(primaryStatus, secondaryStatus)
                 val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
                 uiState.transformerUpdate(
@@ -611,7 +620,13 @@ internal class SwapAmountModel @Inject constructor(
         )
         primaryMaximumAmountBoundary = MaxEnterAmountConverter().convert(primaryStatus)
 
+        val primaryRawId = primaryStatus.currency.id.rawCurrencyId
+        primaryFiatRateUSD = primaryRawId?.let { id -> getCurrencyUSDQuoteUseCase(id) }
+
         if (secondaryStatus != null) {
+            val secondaryRawId = secondaryStatus.currency.id.rawCurrencyId
+            secondaryFiatRateUSD = secondaryRawId?.let { id -> getCurrencyUSDQuoteUseCase(id) }
+
             secondaryMinimumAmountBoundary = EnterAmountBoundary(
                 amount = getMinimumTransactionAmountSyncUseCase
                     .invoke(
@@ -727,6 +742,8 @@ internal class SwapAmountModel @Inject constructor(
                     isBalanceHidden = params.isBalanceHidingFlow.value,
                     primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
                     primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                    primaryFiatRateUSD = primaryFiatRateUSD,
+                    secondaryFiatRateUSD = secondaryFiatRateUSD,
                 ),
             )
             feeSelectorReloadTrigger.triggerUpdate()
