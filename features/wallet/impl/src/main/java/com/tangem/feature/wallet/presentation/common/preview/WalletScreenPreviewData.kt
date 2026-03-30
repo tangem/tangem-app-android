@@ -40,7 +40,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val accountRowDefault = TangemTokenRowUM.Content(
@@ -61,7 +61,7 @@ internal object WalletScreenPreviewData {
         promoBannerUM = TangemTokenRowUM.PromoBannerUM.Empty,
         tailUM = TangemRowTailUM.Empty,
         onItemClick = {},
-        onItemLongClick = {},
+        onItemLongClick = { _, _ -> },
     )
 
     private val tokenListDefault = WalletTokensListUM.Content(
