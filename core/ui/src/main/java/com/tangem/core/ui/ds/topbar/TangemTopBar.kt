@@ -171,7 +171,9 @@ fun TangemTopBar(
         if (reserveSlotSpace || endContent != null) {
             AnimatedContent(
                 targetState = endContent != null,
-                modifier = Modifier.size(TangemTheme.dimens2.x11),
+                modifier = Modifier
+                    .height(TangemTheme.dimens2.x11)
+                    .widthIn(min = TangemTheme.dimens2.x11),
                 label = "End Content Visibility",
             ) { isVisible ->
                 if (isVisible) {
