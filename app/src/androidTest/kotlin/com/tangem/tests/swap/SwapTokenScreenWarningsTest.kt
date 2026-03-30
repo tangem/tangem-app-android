@@ -206,7 +206,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                     onSwapTokenScreen {
                         waitForIdle()
-                        receiveFiatAmountWithPriceImpactWarning.assertTextContains("%", substring = true)
+                        receiveFiatAmount.assertTextContains("%", substring = true)
                     }
                 }
             }
@@ -288,7 +288,7 @@ class SwapTokenScreenWarningsTest : BaseTestCase() {
                 }
             }
             step("Assert fiat amount with warning is displayed") {
-                onSwapTokenScreen { receiveFiatAmountWithPriceImpactWarning.assertTextContains("%", substring = true) }
+                onSwapTokenScreen { receiveFiatAmount.assertTextContains("%", substring = true) }
             }
             step("Assert receive amount information icon is displayed") {
                 onSwapTokenScreen { receiveFiatAmountInformationIcon.assertIsDisplayed() }
