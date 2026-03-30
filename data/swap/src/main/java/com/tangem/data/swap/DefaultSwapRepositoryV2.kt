@@ -478,8 +478,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 }
 
 private val MEMO_RESTRICTED_NETWORKS = setOf(
-    Blockchain.XRP.toNetworkId(),
-    Blockchain.Stellar.toNetworkId(),
     Blockchain.InternetComputer.toNetworkId(),
     Blockchain.Casper.toNetworkId(),
     Blockchain.Algorand.toNetworkId(),
