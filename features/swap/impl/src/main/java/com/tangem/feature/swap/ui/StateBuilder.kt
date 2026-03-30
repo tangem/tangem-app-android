@@ -387,26 +387,26 @@ internal class StateBuilder(
                         .formatToUIRepresentation()
                         .appendApproximateSign(),
                 ),
-                amountEquivalent = combinedReference(
-                    getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
-                    stringReference(StringsSigns.WHITE_SPACE),
-                    styledStringReference(
-                        priceImpact.value.format {
-                            percent(withoutSign = false)
-                        },
-                        spanStyleReference = {
-                            SpanStyle(
-                                color = when (priceImpact.type) {
-                                    PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
-                                    PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
-                                    PriceImpact.Type.LOW,
-                                    PriceImpact.Type.NONE,
-                                    -> TangemTheme.colors.text.tertiary
-                                },
-                            )
-                        },
-                    ),
-                ),
+                amountEquivalent = if (priceImpact.type.ordinal > PriceImpact.Type.LOW.ordinal) {
+                    combinedReference(
+                        getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat),
+                        stringReference(StringsSigns.WHITE_SPACE),
+                        styledStringReference(
+                            value = "(${StringsSigns.MINUS}${priceImpact.value.format { percent() }})",
+                            spanStyleReference = {
+                                SpanStyle(
+                                    color = when (priceImpact.type) {
+                                        PriceImpact.Type.HIGH -> TangemTheme.colors.text.warning
+                                        PriceImpact.Type.MEDIUM -> TangemTheme.colors.text.attention
+                                        else -> TangemTheme.colors.text.tertiary
+                                    },
+                                )
+                            },
+                        ),
+                    )
+                } else {
+                    getFormattedFiatAmount(quoteModel.toTokenInfo.amountFiat)
+                },
                 token = toCurrencyStatus,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = toCurrencyStatus.currency.network.backendId,
@@ -436,7 +436,7 @@ internal class StateBuilder(
             ),
             changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
             providerState = swapProvider.convertToContentClickableProviderState(
-                isBestRate = bestRatedProviderId == swapProvider.providerId,
+                isBestRate = bestRatedProviderId == swapProvider.providerId && !priceImpact.shouldShowWarning(),
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
                 isNeedBestRateBadge = isNeedBestRateBadge,
@@ -444,7 +444,7 @@ internal class StateBuilder(
                 onProviderClick = actions.onProviderClick,
                 needApplyFCARestrictions = needApplyFCARestrictions,
             ),
-            priceImpact = quoteModel.priceImpact,
+            priceImpact = priceImpact,
             tosState = createTosState(swapProvider),
             shouldShowMaxAmount = shouldShowMaxAmount(fromToken, toCurrencyStatus.currency),
         )
