@@ -34,6 +34,7 @@ import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
+import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
@@ -68,6 +69,7 @@ internal class NotificationsModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
+    private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
     private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
@@ -350,6 +352,10 @@ internal class NotificationsModel @Inject constructor(
                 params.callback.onAmountReduceTo(reduceTo)
             },
         )
+        addDestinationTagRequiredNotification(
+            isMemoRequired = currencyCheck.isMemoRequired,
+            memo = memo,
+        )
         addHighFeeWarningNotification(
             enteredAmountValue = enteredAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -368,6 +374,21 @@ internal class NotificationsModel @Inject constructor(
 
     private suspend fun MutableList<NotificationUM>.addInfoNotifications() {
         addTronNetworkFeesNotification()
+    }
+
+    private suspend fun MutableList<NotificationUM>.addDestinationTagRequiredNotification(
+        isMemoRequired: Boolean,
+        memo: String?,
+    ) {
+        if (!isMemoRequired || contains(NotificationUM.Error.DestinationTagRequired)) return
+        val isMemoInvalid = memo.isNullOrEmpty() || validateWalletMemoUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrency = currency,
+            memo = memo,
+        ).isLeft()
+        if (isMemoInvalid) {
+            add(NotificationUM.Error.DestinationTagRequired)
+        }
     }
 
     private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
