@@ -325,7 +325,7 @@ internal class EarnModel @Inject constructor(
                 onNetworkFilterClick = ::onNetworkFilterClick,
                 onTypeFilterClick = ::onTypeFilterClick,
                 onScroll = ::onMostlyUsedScrolled,
-                onSearchBarClicked = params.onMarketOpenClick,
+                onSearchBarClicked = params.onSearchClicked,
             ),
         )
     }
