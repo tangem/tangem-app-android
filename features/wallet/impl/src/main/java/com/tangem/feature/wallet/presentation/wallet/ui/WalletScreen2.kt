@@ -58,6 +58,7 @@ import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingTopBar
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.*
+import com.tangem.core.ui.utils.TangemSharedTransitionLayout
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
@@ -95,12 +96,28 @@ internal fun WalletScreen2(
         pageCount = { state.wallets2.size },
     )
 
+    val listStates = rememberSaveable(saver = lazyListStateMapSaver(walletsPagerState.pageCount)) {
+        mutableMapOf<Int, LazyListState>().apply {
+            repeat(walletsPagerState.pageCount) { index -> put(index, LazyListState()) }
+        }
+    }
+
+    val isTopOverscrollEnabled by remember {
+        derivedStateOf {
+            val listState = listStates[walletsPagerState.currentPage] ?: return@derivedStateOf false
+            listState.layoutInfo.totalItemsCount > 0 &&
+                !listState.canScrollBackward && !listState.canScrollForward ||
+                listState.canScrollBackward && !listState.canScrollForward
+        }
+    }
+
     val partialCollapsedHeight = 64.dp + statusBarHeight
     val balanceBlockHeight = 320.dp + partialCollapsedHeight
     val behavior = rememberTangemExitUntilCollapsedScrollBehavior(
         expandedHeight = balanceBlockHeight,
         partialCollapsedHeight = partialCollapsedHeight,
         snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
+        isTopOverscrollEnabled = isTopOverscrollEnabled,
     )
 
     val coroutineScope = rememberCoroutineScope()
@@ -113,6 +130,7 @@ internal fun WalletScreen2(
         bottomSheetContent = bottomSheetContent,
         bottomSheetHeaderHeightProvider = bottomSheetHeaderHeightProvider,
         onBottomSheetStateChange = onBottomSheetStateChange,
+        listStates = listStates,
     )
 
     WalletEventEffect(
@@ -135,6 +153,7 @@ private fun WalletContent2(
     walletsPagerState: PagerState,
     tangemPayComponent: TangemPayMainBlockComponent,
     behavior: TangemCollapsingAppBarBehavior,
+    listStates: Map<Int, LazyListState>,
     bottomSheetHeaderHeightProvider: () -> Dp,
     onBottomSheetStateChange: (BottomSheetState) -> Unit,
     bottomSheetContent: @Composable (() -> Unit),
@@ -171,12 +190,6 @@ private fun WalletContent2(
         LaunchedEffect(walletsPagerState.currentPage) {
             if (walletsPagerState.currentPage != state.selectedWalletIndex) {
                 state.onWalletChange(walletsPagerState.currentPage, false)
-            }
-        }
-
-        val listStates = rememberSaveable(saver = lazyListStateMapSaver(walletsPagerState.pageCount)) {
-            mutableMapOf<Int, LazyListState>().apply {
-                repeat(walletsPagerState.pageCount) { index -> put(index, LazyListState()) }
             }
         }
 
@@ -220,7 +233,8 @@ private fun WalletContent2(
 
                 LaunchedEffect(walletsPagerState.currentPage, currentWallet.walletsBalanceUM) {
                     if (walletsPagerState.currentPage == currentWalletIndex) {
-                        walletBalance = (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
+                        walletBalance =
+                            (currentWallet.walletsBalanceUM as? WalletBalanceUM.Content)?.balanceInAppBar
                     }
                 }
                 LaunchedEffect(walletsPagerState.currentPage, currentWallet.pullToRefreshConfig) {
@@ -240,39 +254,45 @@ private fun WalletContent2(
 
                 val pageSlideAlpha by rememberPageAlpha(walletsPagerState, currentWalletIndex)
 
-                TangemPullToRefreshSlidingContainer(
-                    state = pullToRefreshState,
-                    config = currentWallet.pullToRefreshConfig,
-                    modifier = Modifier.alpha(pageSlideAlpha),
-                    indicatorOffset = with(LocalDensity.current) {
-                        behavior.state.partialHeightLimit.toDp()
-                    },
+                TangemSharedTransitionLayout(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(pageSlideAlpha),
                 ) {
-                    TangemCollapsingTopBar(
-                        state = behavior.state,
-                        collapsingPart = {
-                            WalletBalance(
-                                behavior = behavior,
-                                walletBalanceUM = currentWallet.walletsBalanceUM,
-                                buttons = currentWallet.buttons,
-                                isBalanceHidden = state.isHidingMode,
-                            )
+                    TangemPullToRefreshSlidingContainer(
+                        state = pullToRefreshState,
+                        config = currentWallet.pullToRefreshConfig,
+                        indicatorOffset = with(LocalDensity.current) {
+                            behavior.state.partialHeightLimit.toDp()
                         },
-                        body = {
-                            WalletListContent(
-                                currentWallet = currentWallet,
-                                listState = listState,
-                                isBalanceHidden = state.isHidingMode,
-                                tangemPayComponent = tangemPayComponent,
-                                contentPadding = contentPadding,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .nestedScroll(behavior.nestedScrollConnection),
-                            )
-                        },
-                    )
+                    ) {
+                        TangemCollapsingTopBar(
+                            state = behavior.state,
+                            collapsingPart = {
+                                WalletBalance(
+                                    behavior = behavior,
+                                    walletBalanceUM = currentWallet.walletsBalanceUM,
+                                    buttons = currentWallet.buttons,
+                                    isBalanceHidden = state.isHidingMode,
+                                )
+                            },
+                            body = {
+                                WalletListContent(
+                                    currentWallet = currentWallet,
+                                    listState = listState,
+                                    isBalanceHidden = state.isHidingMode,
+                                    contentPadding = contentPadding,
+                                    tangemPayComponent = tangemPayComponent,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .nestedScroll(behavior.nestedScrollConnection),
+                                )
+                            },
+                        )
+                    }
 
-                    val peekHeight = bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
+                    val peekHeight =
+                        bottomSheetHeaderHeightProvider() + handComposableComponentHeight + bottomBarHeight
                     MarketsHint(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
