@@ -7,16 +7,18 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 
-class TopBarPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<TopBarPageObject>(
+class MainScreenTopBarPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<MainScreenTopBarPageObject>(
         semanticsProvider = semanticsProvider,
         viewBuilderAction = { hasTestTag(MainScreenTestTags.TOP_BAR) }
     ) {
+
     val moreButton: KNode = child {
         hasTestTag(MainScreenTestTags.MORE_BUTTON)
+        hasPosition(1)
         useUnmergedTree = true
     }
 }
 
-internal fun BaseTestCase.onTopBar(function: TopBarPageObject.() -> Unit) =
+internal fun BaseTestCase.onMainScreenTopBar(function: MainScreenTopBarPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
