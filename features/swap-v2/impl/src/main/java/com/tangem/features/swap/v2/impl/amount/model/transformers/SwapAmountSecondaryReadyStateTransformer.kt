@@ -11,6 +11,7 @@ import com.tangem.domain.swap.models.SwapCurrencies
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.domain.swap.models.SwapAmountType
 import com.tangem.domain.swap.models.SwapRateMode
+import com.tangem.domain.swap.models.getInitialRateType
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.model.converter.SwapAmountFieldConverter
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
@@ -52,11 +53,7 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             rateTypes.contains(ExpressRateType.Fixed) -> SwapRateMode.FIXED_ONLY
             else -> SwapRateMode.FLOAT_ONLY
         }
-        val selectedAmountType = if (swapRateMode != SwapRateMode.FLOAT_ONLY) {
-            ExpressRateType.Fixed
-        } else {
-            ExpressRateType.Float
-        }
+        val selectedRateType = providers.getInitialRateType()
         return SwapAmountUM.Content(
             isPrimaryButtonEnabled = false,
             primaryAmount = prevState.primaryAmount,
@@ -68,13 +65,13 @@ internal class SwapAmountSecondaryReadyStateTransformer(
             ),
             secondaryCryptoCurrencyStatus = secondaryCryptoCurrencyStatus,
             swapCurrencies = swapCurrencies,
-            selectedAmountType = if (selectedAmountType == ExpressRateType.Fixed) {
+            selectedAmountType = if (selectedRateType == ExpressRateType.Fixed) {
                 SwapAmountType.To
             } else {
                 SwapAmountType.From
             },
             swapDirection = swapDirection,
-            swapRateType = selectedAmountType,
+            swapRateType = selectedRateType,
             swapQuotes = persistentListOf(),
             selectedQuote = SwapQuoteUM.Empty,
             appCurrency = appCurrency,
