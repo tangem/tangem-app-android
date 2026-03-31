@@ -1,8 +1,6 @@
 package com.tangem.tap.common.redux
 
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.features.details.redux.DetailsMiddleware
-import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import org.rekotlin.Middleware
@@ -10,7 +8,6 @@ import org.rekotlin.StateType
 
 data class AppState(
     val globalState: GlobalState = GlobalState(),
-    val detailsState: DetailsState = DetailsState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
 
@@ -18,7 +15,6 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                 logMiddleware,
-                DetailsMiddleware().detailsMiddleware,
                 LockUserWalletsTimerMiddleware().middleware,
                 AccessCodeRequestPolicyMiddleware().middleware,
                 DaggerGraphMiddleware.daggerGraphMiddleware,
