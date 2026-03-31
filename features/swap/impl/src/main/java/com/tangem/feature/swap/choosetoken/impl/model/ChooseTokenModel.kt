@@ -16,6 +16,7 @@ import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketListConfig
 import com.tangem.domain.markets.toSerializableParam
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -62,6 +63,8 @@ internal class ChooseTokenModel @Inject constructor(
     private val visibleMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
     private val visibleDefaultMarketItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
+    private val expandedAccountsFlow: MutableStateFlow<Map<AccountId, Boolean>> = MutableStateFlow(emptyMap())
+
     var addToPortfolioManager: AddToPortfolioManager? = null
     val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
         override fun onDismiss() = bottomSheetNavigation.dismiss()
@@ -104,17 +107,27 @@ internal class ChooseTokenModel @Inject constructor(
         flow = bridge.currenciesGroup,
         flow2 = settingContextUseCase.invoke(),
         flow3 = marketsStateFlow(),
-        transform = { currenciesGroup, settingContext, marketState ->
+        flow4 = expandedAccountsFlow,
+        transform = { currenciesGroup, settingContext, marketState, expandedAccounts ->
             val isAccountsMode = settingContext.isAccountsMode
             val appCurrency = settingContext.appCurrency
             val isBalanceHidden = settingContext.isBalanceHidden
+
             TokensDataConverter(
                 onSearchEntered = { query -> bridge.onSearchQuery(query) },
-                onTokenSelected = { tokenId ->
+                onTokenClick = { tokenId ->
                     val selected = tokenId to ChooseTokenAnalyticsPayload
                         .IsSearched(searchQueryState.value.isNotEmpty())
                     bridge.onTokenSelected(selected)
                 },
+                onAccountClick = { account ->
+                    expandedAccountsFlow.update { expandedList ->
+                        val hasSavedAccount = expandedList[account.accountId]
+                        val isExpanded = hasSavedAccount == true
+                        expandedList + (account.accountId to !isExpanded)
+                    }
+                },
+                expandedAccounts = expandedAccounts,
                 tokensDataState = currenciesGroup,
                 isBalanceHidden = isBalanceHidden,
                 isAccountsMode = isAccountsMode,
