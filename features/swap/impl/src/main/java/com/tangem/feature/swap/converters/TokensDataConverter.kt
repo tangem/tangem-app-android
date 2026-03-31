@@ -3,6 +3,8 @@ package com.tangem.feature.swap.converters
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.feature.swap.domain.models.ui.CurrenciesGroup
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenListUMData
@@ -15,7 +17,9 @@ import kotlinx.collections.immutable.toPersistentList
 @Suppress("LongParameterList")
 internal class TokensDataConverter(
     private val onSearchEntered: (String) -> Unit,
-    private val onTokenSelected: (String) -> Unit,
+    onTokenClick: (String) -> Unit,
+    onAccountClick: (Account.CryptoPortfolio) -> Unit,
+    private val expandedAccounts: Map<AccountId, Boolean>,
     private val tokensDataState: CurrenciesGroup,
     private val isBalanceHidden: Boolean,
     private val isAccountsMode: Boolean,
@@ -26,7 +30,9 @@ internal class TokensDataConverter(
     private val accountListItemConverter = AccountTokenItemConverter(
         appCurrency = appCurrency,
         unavailableErrorText = resourceReference(R.string.tokens_list_unavailable_to_swap_source_header),
-        onItemClick = onTokenSelected,
+        onTokenItemClick = onTokenClick,
+        onAccountItemClick = onAccountClick,
+        expandedAccounts = expandedAccounts,
     )
 
     fun transform(): SwapSelectTokenStateHolder {
