@@ -204,7 +204,7 @@ internal class DefaultSwapComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             cryptoCurrencyStatus = fromCryptoCurrency,
             feeCryptoCurrencyStatus = feeCryptoCurrency,
-            amount = permissionState.amount,
+            amount = model.dataState.amount.orEmpty(),
             spenderAddress = requireNotNull(model.dataState.approveDataModel).spenderAddress,
             subtitle = resourceReference(
                 id = R.string.give_permission_swap_subtitle,
