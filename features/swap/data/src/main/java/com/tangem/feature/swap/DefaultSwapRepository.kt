@@ -6,10 +6,6 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.right
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.common.Approver
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -27,7 +23,6 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -36,12 +31,11 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
-import com.tangem.utils.logging.TangemLogger
 import java.io.IOException
-import java.math.BigDecimal
 import java.util.UUID
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo as NetworkLeastTokenInfo
 
@@ -408,36 +402,6 @@ internal class DefaultSwapRepository(
             TangemLogger.e("error parsing txDetailsJson", e)
             null
         }
-    }
-
-    override suspend fun getAllowance(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        tokenDecimalCount: Int,
-        tokenAddress: String,
-        spenderAddress: String,
-    ): BigDecimal {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        val result = (walletManager as? Approver)?.getAllowance(
-            spenderAddress,
-            Token(
-                symbol = blockchain.currency,
-                contractAddress = tokenAddress,
-                decimals = tokenDecimalCount,
-            ),
-        ) ?: error("Cannot cast to Approver")
-
-        return result.fold(
-            onSuccess = { it },
-            onFailure = { error(it) },
-        )
     }
 
     private fun getDataError(ex: Exception): ExpressDataError {
