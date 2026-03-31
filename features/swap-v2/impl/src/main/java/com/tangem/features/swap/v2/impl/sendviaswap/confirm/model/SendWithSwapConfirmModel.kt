@@ -310,6 +310,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun onSendClick() {
         val provider = confirmData.quote?.provider ?: return
         modelScope.launch {
@@ -322,6 +323,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 onExpressError = { expressError ->
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
+                    analyticsEventHandler.send(
+                        SendWithSwapAnalyticEvents.SendWithSwapError(
+                            errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
+                            message = "Express error: $expressError",
+                        ),
+                    )
                     swapAlertFactory.getGenericErrorState(
                         expressError = expressError,
                         onFailedTxEmailClick = {
@@ -339,6 +346,12 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 },
                 onSendError = { error ->
                     uiState.transformerUpdate(SendWithSwapConfirmSendingStateTransformer(false))
+                    analyticsEventHandler.send(
+                        SendWithSwapAnalyticEvents.SendWithSwapError(
+                            errorScreen = SendWithSwapAnalyticEvents.ErrorScreen.Confirm,
+                            message = "Send error: ${error?.toString().orEmpty()}",
+                        ),
+                    )
                     swapAlertFactory.getSendTransactionErrorState(
                         error = error,
                         onFailedTxEmailClick = { _ ->
