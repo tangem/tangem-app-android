@@ -51,6 +51,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
@@ -112,6 +113,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    private val getAllowanceInfoUseCase: GetAllowanceInfoUseCase,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -431,12 +433,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val isAllowedToSpend = maybeQuotes.fold(
             ifRight = { quotes ->
                 quotes.allowanceContract?.let { allowanceContract ->
-                    isAllowedToSpend(
-                        networkId = networkId,
-                        fromToken = fromToken.currency,
-                        amount = amount,
+                    getAllowanceInfoUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = fromToken.currency,
                         spenderAddress = allowanceContract,
-                    )
+                        requiredAmount = amount.value,
+                    ).getOrNull() is AllowanceInfo.Enough
                 } != false
             },
             ifLeft = { false },
@@ -1266,25 +1268,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ?.filterIsInstance<CryptoCurrency.Coin>()
             ?.firstOrNull { it.network.id == network.id && it.network.derivationPath == network.derivationPath }
             ?: error("Unable to create network coin with ID: ${network.id}")
-    }
-
-    private suspend fun isAllowedToSpend(
-        networkId: String,
-        fromToken: CryptoCurrency,
-        amount: SwapAmount,
-        spenderAddress: String,
-    ): Boolean {
-        if (fromToken is CryptoCurrency.Coin) return true
-
-        val allowance = repository.getAllowance(
-            userWalletId = userWallet.walletId,
-            networkId = networkId,
-            derivationPath = fromToken.network.derivationPath.value,
-            tokenDecimalCount = fromToken.decimals,
-            tokenAddress = getTokenAddress(fromToken),
-            spenderAddress = spenderAddress,
-        )
-        return allowance >= amount.value
     }
 
     private suspend fun createEmptyAmountState(): SwapState {
