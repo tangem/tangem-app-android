@@ -1,5 +1,6 @@
 package com.tangem.tap.features.main
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
@@ -39,6 +40,7 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
+import com.tangem.security.DeviceSecurityInfoProvider
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
@@ -83,6 +85,7 @@ internal class MainViewModel @Inject constructor(
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
+    private val deviceSecurityInfoProvider: DeviceSecurityInfoProvider,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -123,6 +126,7 @@ internal class MainViewModel @Inject constructor(
         deleteDeprecatedLogsUseCase()
 
         sendKeyboardIdentifierEvent()
+        sendMediaTekVulnerabilityEvent()
 
         preloadImages()
     }
@@ -341,7 +345,6 @@ internal class MainViewModel @Inject constructor(
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 
-    @Suppress("NullableToStringCall")
     private fun sendKeyboardIdentifierEvent() {
         viewModelScope.launch {
             val keyboardId = keyboardValidator.getKeyboardId()
@@ -360,6 +363,27 @@ internal class MainViewModel @Inject constructor(
                 )
             } else {
                 TangemLogger.e("Unable to get keyboard identifier")
+            }
+        }
+    }
+
+    private fun sendMediaTekVulnerabilityEvent() {
+        viewModelScope.launch(dispatchers.io) {
+            val isVulnerable = deviceSecurityInfoProvider.isVulnerableToMediaTekExploit
+
+            if (isVulnerable) {
+                analyticsEventHandler.send(
+                    event = TechAnalyticsEvent.MediaTekVulnerability(
+                        model = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else "unknown",
+                        manufacturer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            Build.SOC_MANUFACTURER
+                        } else {
+                            "unknown"
+                        },
+                        hardware = Build.HARDWARE,
+                        patch = Build.VERSION.SECURITY_PATCH,
+                    ),
+                )
             }
         }
     }
