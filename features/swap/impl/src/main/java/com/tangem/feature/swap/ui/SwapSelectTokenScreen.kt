@@ -1,21 +1,16 @@
 package com.tangem.feature.swap.ui
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -30,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.tokenlist.PortfolioListItem
@@ -37,10 +33,11 @@ import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
+import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenListUMData
@@ -182,6 +179,10 @@ private fun ListOfTokensWithMarkets(
             isBalanceHidden = state.isBalanceHidden,
         )
 
+        item("spacer_before_markets") {
+            SpacerH(32.dp)
+        }
+
         swapMarketsListItems(marketsState)
     }
 
@@ -248,10 +249,12 @@ private fun LazyListScope.assetsTitle(count: Int, showCount: Boolean) {
 private fun LazyListScope.tokensListItems(tokensListData: TokenListUMData, isBalanceHidden: Boolean) {
     when (tokensListData) {
         is TokenListUMData.AccountList -> {
-            tokensListData.tokensList.forEach { item ->
+            tokensListData.tokensList.forEachIndexed { index, item ->
                 portfolioTokensList(
                     portfolio = item,
                     isBalanceHidden = isBalanceHidden,
+                    portfolioIndex = index,
+                    modifier = Modifier,
                 )
             }
         }
@@ -287,97 +290,168 @@ private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isB
     )
 }
 
-internal fun LazyListScope.portfolioTokensList(portfolio: TokensListItemUM.Portfolio, isBalanceHidden: Boolean) {
+internal fun LazyListScope.portfolioTokensList(
+    portfolio: TokensListItemUM.Portfolio,
+    modifier: Modifier,
+    portfolioIndex: Int,
+    isBalanceHidden: Boolean,
+) {
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
+    val lastIndex = tokens.lastIndex.inc()
 
     portfolioItem(
         portfolio = portfolio,
-        modifier = Modifier,
+        modifier = modifier,
+        portfolioIndex = portfolioIndex,
         isBalanceHidden = isBalanceHidden,
     )
-    if (!isExpanded) return
     itemsIndexed(
         items = tokens,
-        key = { _, item -> item.id },
+        key = { _, item -> item.id.toString() + "-portfolio-${portfolio.id}" },
         contentType = { _, item -> item::class.java },
         itemContent = { tokenIndex, token ->
             val indexWithHeader = tokenIndex.inc()
-            PortfolioTokensListItem(
-                state = token,
-                isBalanceHidden = isBalanceHidden,
-                modifier = Modifier
-                    .animateItem()
+            SlideInItemVisibility(
+                currentIndex = tokenIndex,
+                lastIndex = lastIndex,
+                modifier = modifier
+                    .testModifier(indexWithHeader)
+                    .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = null)
                     .roundedShapeItemDecoration(
+                        radius = TangemTheme.dimens.radius14,
                         currentIndex = indexWithHeader,
-                        lastIndex = tokens.lastIndex.inc(),
+                        lastIndex = lastIndex,
                         backgroundColor = TangemTheme.colors.background.primary,
-                    )
-                    .conditional(tokenIndex == tokens.lastIndex) {
-                        Modifier.padding(bottom = 8.dp)
-                    },
-            )
+                    ),
+                visible = isExpanded,
+            ) {
+                val innerModifier = if (indexWithHeader == lastIndex) Modifier.padding(bottom = 8.dp) else Modifier
+                PortfolioTokensListItem(
+                    state = token,
+                    isBalanceHidden = isBalanceHidden,
+                    modifier = innerModifier,
+                )
+            }
         },
     )
 }
 
+@Suppress("MagicNumber")
 private fun LazyListScope.portfolioItem(
     portfolio: TokensListItemUM.Portfolio,
     modifier: Modifier,
+    portfolioIndex: Int,
     isBalanceHidden: Boolean,
 ) {
+    val tokens = portfolio.tokens
+    val isExpanded = portfolio.isExpanded
+    val lastIndex = when {
+        isExpanded && tokens.isEmpty() -> 1
+        isExpanded -> tokens.lastIndex.inc()
+        else -> 0
+    }
+
     item(
         key = "account-${portfolio.id}",
-        contentType = "account",
+        contentType = "account-content",
     ) {
+        // Snap immediately on expand; on collapse, hold until all child items finish
+        // their shrink animation, then snap to fully-rounded shape.
+        val effectiveLastIndex by animateIntAsState(
+            targetValue = lastIndex,
+            animationSpec = if (lastIndex != 0) {
+                snap()
+            } else {
+                snap(delayMillis = minOf(50 * tokens.lastIndex, 250) + 150)
+            },
+            label = "lastIndex",
+        )
+
         PortfolioListItem(
             state = portfolio,
             isBalanceHidden = isBalanceHidden,
-            modifier = Modifier
-                .animateItem()
+            modifier = modifier
+                .testModifier(portfolioIndex)
                 .roundedShapeItemDecoration(
                     currentIndex = 0,
-                    lastIndex = portfolio.tokens.lastIndex.inc(),
+                    radius = TangemTheme.dimens.radius14,
+                    lastIndex = effectiveLastIndex,
                     backgroundColor = TangemTheme.colors.background.primary,
-                )
-                .then(modifier),
+                ),
+        )
+    }
+}
+
+private fun Modifier.testModifier(index: Int): Modifier = this
+    .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
+    .semantics { lazyListItemPosition = index }
+
+@Suppress("MagicNumber")
+@Composable
+internal fun SlideInItemVisibility(
+    visible: Boolean,
+    currentIndex: Int,
+    lastIndex: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val maxDelay = 250
+    val delayEnter = minOf(50 * currentIndex, maxDelay)
+    val delayExit = minOf(50 * (lastIndex - currentIndex - 1), maxDelay)
+
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = visible,
+        enter = expandVertically(
+            tween(200, delayMillis = delayEnter, easing = LinearOutSlowInEasing),
+            expandFrom = Alignment.Top,
+        ) + fadeIn(tween(200, delayMillis = delayEnter, easing = LinearOutSlowInEasing)),
+        exit = shrinkVertically(
+            tween(150, delayMillis = delayExit, easing = FastOutLinearInEasing),
+            shrinkTowards = Alignment.Top,
+        ) + fadeOut(tween(150, delayMillis = delayExit, easing = FastOutLinearInEasing)),
+    ) {
+        content()
+    }
+}
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun SwapSelectTokenScreen_Preview(
+    @PreviewParameter(SwapSelectTokenScreenPreviewProvider::class) params: SwapSelectTokenStateHolder,
+) {
+    TangemThemePreview {
+        SwapSelectTokenScreen(
+            state = params,
+            onBack = {},
         )
     }
 }
 
 private class SwapSelectTokenScreenPreviewProvider : PreviewParameterProvider<SwapSelectTokenStateHolder> {
-    override val values: Sequence<SwapSelectTokenStateHolder> = sequenceOf(
-        // Content state with tokens and markets
-        SwapSelectTokenPreviewProvider().provideSwapSelectTokenState(),
-        // Empty state
-        SwapSelectTokenStateHolder(
-            tokensListData = TokenListUMData.EmptyList,
-            marketsState = SwapMarketState.DefaultLoading,
-            isAfterSearch = false,
-            isBalanceHidden = false,
-            onSearchEntered = {},
-        ),
-        // Not found state
-        SwapSelectTokenStateHolder(
-            tokensListData = TokenListUMData.EmptyList,
-            marketsState = SwapMarketState.SearchLoading,
-            isAfterSearch = true,
-            isBalanceHidden = false,
-            onSearchEntered = {},
-        ),
-    )
-}
-
-@Preview
-@Composable
-private fun TokenScreenPreview(
-    @PreviewParameter(SwapSelectTokenScreenPreviewProvider::class)
-    state: SwapSelectTokenStateHolder,
-) {
-    TangemThemePreview {
-        SwapSelectTokenScreen(
-            state = state,
-            onBack = {},
+    override val values: Sequence<SwapSelectTokenStateHolder>
+        get() = sequenceOf(
+            // Content state with tokens and markets
+            SwapSelectTokenPreviewProvider.defaultState,
+            // Empty state
+            SwapSelectTokenStateHolder(
+                tokensListData = TokenListUMData.EmptyList,
+                marketsState = SwapMarketState.DefaultLoading,
+                isAfterSearch = false,
+                isBalanceHidden = false,
+                onSearchEntered = {},
+            ),
+            // Not found state
+            SwapSelectTokenStateHolder(
+                tokensListData = TokenListUMData.EmptyList,
+                marketsState = SwapMarketState.SearchLoading,
+                isAfterSearch = true,
+                isBalanceHidden = false,
+                onSearchEntered = {},
+            ),
         )
-    }
 }
+// endregion
