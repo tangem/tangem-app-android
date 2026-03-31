@@ -3,6 +3,7 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.DetailsScreenTestTags
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -10,10 +11,11 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 
 class DetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<DetailsPageObject>(
-        semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(DetailsScreenTestTags.SCREEN_CONTAINER) }
-    ) {
+    ComposeScreen<DetailsPageObject>(semanticsProvider = semanticsProvider) {
+
+    val topAppBarBackButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+    }
 
     val walletConnectButton: KNode = child {
         hasTestTag(DetailsScreenTestTags.SCREEN_ITEM)
