@@ -184,10 +184,12 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
+                type = TransactionCardType.ReadOnly(
                     accountTitleUM = getFromCardAccountTitle(fromAccount),
                 ),
-                amountTextFieldValue = null,
+                amountTextFieldValue = TextFieldValue(
+                    text = "0",
+                ),
                 amountEquivalent = "0 ${appCurrencyProvider.invoke().symbol}",
                 token = fromToken,
                 tokenIconUrl = fromToken.currency.iconUrl,
