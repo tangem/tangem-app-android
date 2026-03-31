@@ -26,7 +26,7 @@ import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.screens.onStoriesScreen
 import com.tangem.screens.onTokenDetailsScreen
-import com.tangem.screens.onTopBar
+import com.tangem.screens.onMainScreenTopBar
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -57,7 +57,7 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Click 'More' button on TopBar") {
                 waitForIdle()
-                onTopBar { moreButton.clickWithAssertion() }
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Contact support' button") {
                 waitForIdle()
