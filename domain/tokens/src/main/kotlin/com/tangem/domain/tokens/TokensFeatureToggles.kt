@@ -5,6 +5,4 @@ package com.tangem.domain.tokens
  *
 [REDACTED_AUTHOR]
  */
-interface TokensFeatureToggles {
-    val isDynamicAddressesEnabled: Boolean
-}
+interface TokensFeatureToggles
