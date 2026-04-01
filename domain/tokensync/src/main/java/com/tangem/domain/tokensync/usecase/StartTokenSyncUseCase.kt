@@ -11,7 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
-class SyncTokensUseCase(
+class StartTokenSyncUseCase(
     private val tokenSyncRepository: TokenSyncRepository,
     private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val appCoroutineScope: AppCoroutineScope,
@@ -25,6 +25,7 @@ class SyncTokensUseCase(
             try {
                 tokenSyncRepository.runSync(userWalletId)
                 applyDiscoveredTokens(userWalletId)
+                tokenSyncRepository.completeSync(userWalletId)
             } catch (e: Exception) {
                 TangemLogger.e("Token sync failed for wallet: $userWalletId", e)
             } finally {
@@ -61,7 +62,7 @@ class SyncTokensUseCase(
         if (currencies.isEmpty()) return true
 
         val accountId = AccountId.forMainCryptoPortfolio(userWalletId)
-        return manageCryptoCurrenciesUseCase(
+        return manageCryptoCurrenciesUseCase.invokeAndAwait(
             accountId = accountId,
             add = currencies,
         ).fold(
