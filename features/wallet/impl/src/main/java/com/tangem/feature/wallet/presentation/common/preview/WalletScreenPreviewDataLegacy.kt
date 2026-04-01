@@ -160,7 +160,7 @@ internal object WalletScreenPreviewDataLegacy {
             title = "Note",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("Locked"),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Locked")),
             ),
             imageResId = R.drawable.ill_note_btc_120_106,
             dropDownItems = persistentListOf(),
@@ -172,7 +172,7 @@ internal object WalletScreenPreviewDataLegacy {
             title = "Wallet 1",
             additionalInfo = WalletAdditionalInfo(
                 hideable = false,
-                content = TextReference.Str("Seed phrase"),
+                content = WalletAdditionalInfo.Content.Text(TextReference.Str("Seed phrase")),
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             cardCount = 3,
