@@ -78,6 +78,33 @@ class ManageCryptoCurrenciesUseCase(
         add: List<CryptoCurrency> = emptyList(),
         remove: List<CryptoCurrency> = emptyList(),
         skipDerivationErrors: Boolean = true,
+    ): Either<Throwable, Unit> = invokeInternal(
+        accountId = accountId,
+        add = add,
+        remove = remove,
+        skipDerivationErrors = skipDerivationErrors,
+        awaitTokensSyncFinished = false,
+    )
+
+    suspend fun invokeAndAwait(
+        accountId: AccountId,
+        add: List<CryptoCurrency> = emptyList(),
+        remove: List<CryptoCurrency> = emptyList(),
+        skipDerivationErrors: Boolean = true,
+    ): Either<Throwable, Unit> = invokeInternal(
+        accountId = accountId,
+        add = add,
+        remove = remove,
+        skipDerivationErrors = skipDerivationErrors,
+        awaitTokensSyncFinished = true,
+    )
+
+    private suspend fun invokeInternal(
+        accountId: AccountId,
+        add: List<CryptoCurrency>,
+        remove: List<CryptoCurrency>,
+        skipDerivationErrors: Boolean,
+        awaitTokensSyncFinished: Boolean,
     ): Either<Throwable, Unit> = eitherOn(dispatchers.default) {
         if (add.isEmpty() && remove.isEmpty()) {
             TangemLogger.d("No currencies to add or remove, skipping")
@@ -111,9 +138,11 @@ class ManageCryptoCurrenciesUseCase(
                 account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total),
             )
 
-            parallelUpdatingScope.launch {
-                syncTokens(userWalletId, modifiedCurrencyList)
-
+            syncTokensAndLaunchUpdates(
+                userWalletId = userWalletId,
+                modifiedCurrencyList = modifiedCurrencyList,
+                awaitSync = awaitTokensSyncFinished,
+            ) {
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
@@ -129,6 +158,7 @@ class ManageCryptoCurrenciesUseCase(
         accountId: AccountId,
         networkId: String,
         contractAddress: String,
+        awaitTokensSyncFinished: Boolean = false,
     ): Either<Throwable, CryptoCurrency> = eitherOn(dispatchers.default) {
         val userWalletId = accountId.userWalletId
 
@@ -152,9 +182,11 @@ class ManageCryptoCurrenciesUseCase(
 
             saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total))
 
-            parallelUpdatingScope.launch {
-                syncTokens(userWalletId, modifiedCurrencyList)
-
+            syncTokensAndLaunchUpdates(
+                userWalletId = userWalletId,
+                modifiedCurrencyList = modifiedCurrencyList,
+                awaitSync = awaitTokensSyncFinished,
+            ) {
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
             }
@@ -283,6 +315,25 @@ class ManageCryptoCurrenciesUseCase(
 
         runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
             .onFailure { TangemLogger.e("Failed to sync tokens for wallet $userWalletId", it) }
+    }
+
+    private suspend fun syncTokensAndLaunchUpdates(
+        userWalletId: UserWalletId,
+        modifiedCurrencyList: ModifiedCurrencyList,
+        awaitSync: Boolean,
+        updates: suspend () -> Unit,
+    ) {
+        if (awaitSync) {
+            syncTokens(userWalletId, modifiedCurrencyList)
+            parallelUpdatingScope.launch {
+                updates()
+            }
+        } else {
+            parallelUpdatingScope.launch {
+                syncTokens(userWalletId, modifiedCurrencyList)
+                updates()
+            }
+        }
     }
 
     /**
