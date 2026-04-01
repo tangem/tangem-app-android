@@ -34,7 +34,8 @@ import com.tangem.domain.swap.models.SwapDirection.Companion.withSwapDirection
 import com.tangem.domain.swap.usecase.GetSwapQuoteUseCase
 import com.tangem.domain.swap.usecase.SelectInitialPairUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.domain.transaction.models.AllowanceInfo
+import com.tangem.domain.transaction.usecase.GetAllowanceInfoUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.api.subcomponents.amount.analytics.CommonSendAmountAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
@@ -83,7 +84,7 @@ internal class SwapAmountModel @Inject constructor(
     private val selectInitialPairUseCase: SelectInitialPairUseCase,
     private val getSwapQuoteUseCase: GetSwapQuoteUseCase,
     private val swapChooseTokenNetworkListener: SwapChooseTokenNetworkListener,
-    private val getAllowanceUseCase: GetAllowanceUseCase,
+    private val getAllowanceInfoUseCase: GetAllowanceInfoUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val swapBestRateAnimationStore: SwapBestRateAnimationStore,
@@ -833,18 +834,15 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private suspend fun checkAllowance(state: SwapAmountUM.Content, quote: SwapQuoteModel): Boolean {
-        val allowanceContract = quote.allowanceContract
-        val allowance = if (allowanceContract != null) {
-            getAllowanceUseCase(
-                userWalletId = userWallet.walletId,
-                cryptoCurrency = state.primaryCryptoCurrencyStatus.currency,
-                spenderAddress = allowanceContract,
-            ).getOrNull()
-        } else {
-            BigDecimal.ZERO
-        }
+        val allowanceContract = quote.allowanceContract ?: return false
+        val allowance = getAllowanceInfoUseCase(
+            userWalletId = userWallet.walletId,
+            cryptoCurrency = state.primaryCryptoCurrencyStatus.currency,
+            spenderAddress = allowanceContract,
+            requiredAmount = state.primaryCryptoCurrencyStatus.value.amount.orZero(),
+        ).getOrNull()
 
-        return allowance.orZero() < state.primaryCryptoCurrencyStatus.value.amount.orZero()
+        return allowance !is AllowanceInfo.Enough
     }
 
     private fun saveResult() {
