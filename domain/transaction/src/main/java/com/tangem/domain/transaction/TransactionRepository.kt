@@ -6,11 +6,9 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.nft.models.NFTAsset
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.models.EventTransactionTypeDto
-import java.math.BigDecimal
 import java.math.BigInteger
 
 interface TransactionRepository {
@@ -90,12 +88,6 @@ interface TransactionRepository {
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras
-
-    suspend fun getAllowance(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency.Token,
-        spenderAddress: String,
-    ): BigDecimal
 
     suspend fun prepareForSend(
         transactionData: TransactionData,
