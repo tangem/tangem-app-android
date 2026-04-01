@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,25 +24,21 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.ds.button.SecondaryTangemButton
-import com.tangem.core.ui.ds.button.TangemButtonShape
 import com.tangem.core.ui.ds.button.TangemButtonUM
+import com.tangem.core.ui.ds.button.action.ActionButtons
 import com.tangem.core.ui.ds.image.TangemDeviceIcon
 import com.tangem.core.ui.ds.placeholder.TextPlaceholder
 import com.tangem.core.ui.ds.topbar.collapsing.TangemCollapsingAppBarBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.rememberTangemExitUntilCollapsedScrollBehavior
 import com.tangem.core.ui.ds.topbar.collapsing.snapToExitUntilCollapsed
-import com.tangem.core.ui.extensions.orEmpty
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreviewRedesign
 import com.tangem.core.ui.test.MainScreenTestTags
 import com.tangem.feature.wallet.presentation.preview.WalletBalancePreview
 import com.tangem.feature.wallet.presentation.preview.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBalanceUM
-import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.ImmutableList
 
@@ -148,41 +143,6 @@ private fun Balance(walletBalanceUM: WalletBalanceUM, isBalanceHidden: Boolean, 
                 textStyle = TangemTheme.typography2.titleRegular44,
                 width = 200.dp,
             )
-        }
-    }
-}
-
-@Composable
-private fun ActionButtons(buttons: ImmutableList<TangemButtonUM>) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        buttons.fastForEach { button ->
-            key(button.text) {
-                val textColor = if (button.isEnabled) {
-                    TangemTheme.colors2.text.neutral.primary
-                } else {
-                    TangemTheme.colors2.text.status.disabled
-                }
-                Column(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens2.x2_5),
-                    verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens2.x2),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    SecondaryTangemButton(
-                        tangemIconUM = button.tangemIconUM,
-                        onClick = button.onClick,
-                        isEnabled = button.isEnabled,
-                        shape = TangemButtonShape.Rounded,
-                    )
-                    Text(
-                        text = button.text.orEmpty().resolveReference(),
-                        style = TangemTheme.typography2.bodySemibold15,
-                        color = textColor,
-                    )
-                }
-            }
         }
     }
 }
