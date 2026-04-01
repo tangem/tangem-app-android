@@ -12,8 +12,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.features.hotwallet.ForgetWalletComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class ForgetWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -30,6 +33,8 @@ internal class ForgetWalletModel @Inject constructor(
     private val router: Router,
     private val deleteWalletUseCase: DeleteWalletUseCase,
     private val uiMessageSender: UiMessageSender,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ForgetWalletComponent.Params>()
@@ -79,6 +84,10 @@ internal class ForgetWalletModel @Inject constructor(
 
     private fun forgetWallet() {
         modelScope.launch {
+            if (hotWalletFeatureToggles.isTokenSyncEnabled) {
+                startTokenSyncUseCase.cancel(params.userWalletId)
+            }
+
             val hasUserWallets = deleteWalletUseCase(params.userWalletId)
                 .getOrElse { error ->
                     TangemLogger.e("Unable to delete wallet: $error")
