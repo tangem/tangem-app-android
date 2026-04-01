@@ -37,6 +37,7 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.domain.wallets.analytics.Settings
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction
@@ -48,6 +49,7 @@ import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -88,6 +90,8 @@ internal class WalletSettingsModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountListSortingSaver: AccountListSortingSaver,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -249,6 +253,13 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun forgetWallet() = modelScope.launch {
+        val userWallet = getUserWalletUseCase(params.userWalletId)
+            .getOrNull()
+
+        if (userWallet is UserWallet.Hot && hotWalletFeatureToggles.isTokenSyncEnabled) {
+            startTokenSyncUseCase.cancel(params.userWalletId)
+        }
+
         val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
             TangemLogger.e("Unable to delete wallet: $error")
 
