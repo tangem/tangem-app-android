@@ -284,7 +284,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
 
             // Act
-            val actual = useCase(userWalletId = userWalletId, currencyId = currency.id, network = null)
+            val actual = useCase(userWalletId = userWalletId, currencyId = currency.id, network = currency.network)
                 .let(::getEmittedValues)
 
             // Assert
