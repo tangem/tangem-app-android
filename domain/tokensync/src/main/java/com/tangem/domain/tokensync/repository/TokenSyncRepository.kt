@@ -9,6 +9,8 @@ interface TokenSyncRepository {
 
     suspend fun runSync(userWalletId: UserWalletId)
 
+    suspend fun completeSync(userWalletId: UserWalletId)
+
     suspend fun getPendingSyncWalletIds(): List<UserWalletId>
 
     fun observeSyncProgress(userWalletId: UserWalletId): Flow<TokenSyncProgress>
