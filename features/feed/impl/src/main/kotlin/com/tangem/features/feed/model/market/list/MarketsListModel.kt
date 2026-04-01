@@ -45,7 +45,7 @@ internal class MarketsListModel @Inject constructor(
 
     private val updateQuotesJob = JobHolder()
 
-    private val params = paramsContainer.require<DefaultMarketsTokenListComponent.Params>()
+    private val modelParams = paramsContainer.require<DefaultMarketsTokenListComponent.ModelParams>()
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase().map { maybeAppCurrency ->
         maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -65,10 +65,11 @@ internal class MarketsListModel @Inject constructor(
             onRetryButtonClicked = { activeListManager.reload() },
             onTokenClick = { onTokenUIClicked(it) },
             onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
-            shouldAlwaysShowSearchBar = Provider { params.shouldAlwaysShowSearchBar },
-            preselectedSortType = Provider { params.preselectedSortType },
-            onBackClick = params.onBackClicked,
+            shouldAlwaysShowSearchBar = Provider { modelParams.params.shouldAlwaysShowSearchBar },
+            preselectedSortType = Provider { modelParams.params.preselectedSortType },
+            onBackClick = modelParams.clickIntents.onBackClicked,
             analyticsEventHandler = analyticsEventHandler,
+            onSearchBarClick = modelParams.clickIntents.onSearchClicked,
         )
     }
 
@@ -261,7 +262,7 @@ internal class MarketsListModel @Inject constructor(
     private fun onTokenUIClicked(token: MarketsListItemUM) {
         modelScope.launch {
             activeListManager.getTokenById(token.id)?.let { found ->
-                params.onTokenClick(found.toSerializableParam(), currentAppCurrency.value)
+                modelParams.clickIntents.onTokenClick(found.toSerializableParam(), currentAppCurrency.value)
             }
         }
     }

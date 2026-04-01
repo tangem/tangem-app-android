@@ -3,7 +3,7 @@ package com.tangem.features.feed.ui.market.list.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.markets.MarketsListItem
 import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.markets.models.MarketsListItemUM.Companion.TOKEN_LAZY_LIST_ID_SEPARATOR
@@ -19,9 +20,12 @@ import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.list.InfiniteListHandler
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.event.EventEffect
+import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalRedesignEnabled
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -40,6 +44,7 @@ internal fun MarketsListLazyColumn(
     lazyListState: LazyListState,
     modifier: Modifier = Modifier,
 ) {
+    val isRedesignEnabled = LocalRedesignEnabled.current
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -93,11 +98,22 @@ internal fun MarketsListLazyColumn(
                     }
                 }
                 is ListUM.Content -> {
-                    items(
+                    itemsIndexed(
                         items = state.items,
-                        key = { it.getComposeKey() },
-                    ) { item ->
+                        key = { _, item -> item.getComposeKey() },
+                    ) { index, item ->
                         MarketsListItem(
+                            modifier = Modifier.conditionalCompose(
+                                condition = isRedesignEnabled,
+                                modifier = {
+                                    roundedShapeItemDecoration(
+                                        currentIndex = index,
+                                        lastIndex = state.items.lastIndex,
+                                        backgroundColor = TangemTheme.colors2.surface.level3,
+                                        radius = TangemTheme.dimens2.x5,
+                                    )
+                                },
+                            ),
                             model = item,
                             onClick = { state.onItemClick(item) },
                         )
@@ -144,8 +160,8 @@ private fun LoadingErrorItem(onTryAgain: () -> Unit, modifier: Modifier = Modifi
     Box(
         modifier
             .padding(
-                horizontal = TangemTheme.dimens.spacing16,
-                vertical = TangemTheme.dimens.spacing12,
+                horizontal = 16.dp,
+                vertical = 12.dp,
             )
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
