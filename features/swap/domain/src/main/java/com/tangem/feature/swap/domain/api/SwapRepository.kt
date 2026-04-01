@@ -4,10 +4,8 @@ import arrow.core.Either
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.domain.*
-import java.math.BigDecimal
 
 interface SwapRepository {
 
@@ -40,17 +38,6 @@ interface SwapRepository {
         providerId: String,
         rateType: RateType,
     ): Either<ExpressDataError, QuoteModel>
-
-    @Suppress("LongParameterList")
-    @Throws(IllegalStateException::class)
-    suspend fun getAllowance(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        tokenDecimalCount: Int,
-        tokenAddress: String,
-        spenderAddress: String,
-    ): BigDecimal
 
     @Suppress("LongParameterList")
     suspend fun getExchangeData(
