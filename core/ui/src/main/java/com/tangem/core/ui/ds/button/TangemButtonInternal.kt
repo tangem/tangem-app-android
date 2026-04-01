@@ -144,7 +144,7 @@ private fun ButtonContent(
 ) {
     Column {
         AnimatedVisibility(text != null) {
-            val wrappedText = remember(this) { text.orEmpty() }
+            val wrappedText = remember(this, text) { text.orEmpty() }
             val textStyle = size.toTextStyle()
             Text(
                 text = wrappedText.resolveReference(),
