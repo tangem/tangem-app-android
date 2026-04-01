@@ -11,14 +11,24 @@ android {
 }
 
 dependencies {
+    api(projects.domain.tokensync)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.models)
+    implementation(projects.domain.walletManager)
+    implementation(projects.domain.wallets)
+    implementation(projects.data.common)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
-    implementation(projects.domain.models)
+
+    implementation(tangemDeps.blockchain)
+
+    implementation(deps.androidx.datastore)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    implementation(deps.androidx.datastore)
     implementation(deps.kotlin.coroutines)
     implementation(deps.moshi)
 }
