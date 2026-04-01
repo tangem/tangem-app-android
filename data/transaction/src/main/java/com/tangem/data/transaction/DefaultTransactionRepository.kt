@@ -25,7 +25,6 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.OperationType
 import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
@@ -330,28 +329,6 @@ internal class DefaultTransactionRepository(
             }
             else -> error("Data extras not supported for $blockchain")
         }
-    }
-
-    override suspend fun getAllowance(
-        userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency.Token,
-        spenderAddress: String,
-    ): BigDecimal {
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(userWalletId, cryptoCurrency.network)
-        val blockchain = cryptoCurrency.network.toBlockchain()
-        val allowanceResult = (walletManager as? Approver)?.getAllowance(
-            spenderAddress,
-            Token(
-                symbol = blockchain.currency,
-                contractAddress = cryptoCurrency.contractAddress,
-                decimals = cryptoCurrency.decimals,
-            ),
-        ) ?: error("Cannot cast to Approver")
-
-        return allowanceResult.fold(
-            onSuccess = { it },
-            onFailure = { error(it) },
-        )
     }
 
     @Suppress("CyclomaticComplexMethod")
