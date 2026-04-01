@@ -61,7 +61,7 @@ internal class SetTokenListErrorTransformer(
                     walletsBalanceUM = walletUM.walletsBalanceUM.toLoadedState(),
                     tokensListUM = WalletTokensListUM.Empty(
                         onEmptyClick = {
-                            clickIntents.onManageTokensClick(walletUM.walletsBalanceUM.id)
+                            clickIntents.onTokenSyncManageClick(walletUM.walletsBalanceUM.id)
                         },
                     ),
                     buttons = walletUM.disableButtons(),
