@@ -9,6 +9,7 @@ import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class MarketsListUM(
@@ -20,6 +21,8 @@ internal data class MarketsListUM(
     val onIntervalClick: (TrendInterval) -> Unit,
     val onSortByButtonClick: () -> Unit,
     val onSearchClicked: () -> Unit,
+    val feedListSearchBar: FeedListSearchBar,
+    val sortByMenuUM: SortByMenuUM,
 ) {
     val isInSearchMode
         get() = marketsSearchBar.searchBarUM.query.isNotEmpty()
