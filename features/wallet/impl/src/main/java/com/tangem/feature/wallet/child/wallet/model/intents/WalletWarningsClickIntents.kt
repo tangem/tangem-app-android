@@ -19,6 +19,7 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.hotwallet.CloseHotWalletUpgradeBannerUseCase
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -39,6 +40,7 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.tokensync.usecase.AcknowledgeTokenSyncCompletionUseCase
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
@@ -94,6 +96,10 @@ internal interface WalletWarningsClickIntents {
     fun onUpgradeHotWalletClick(userWalletId: UserWalletId)
 
     fun onCloseUpgradeBannerClick(userWalletId: UserWalletId)
+
+    fun onDismissTokenSyncNotification(userWalletId: UserWalletId)
+
+    fun onTokenSyncManageClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -126,6 +132,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val reviewManager: ReviewManager,
     private val closeHotWalletUpgradeBannerUseCase: CloseHotWalletUpgradeBannerUseCase,
+    private val acknowledgeTokenSyncCompletionUseCase: AcknowledgeTokenSyncCompletionUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -499,6 +506,17 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 closeHotWalletUpgradeBannerUseCase(userWalletId)
             }
         }
+    }
+
+    override fun onDismissTokenSyncNotification(userWalletId: UserWalletId) {
+        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+    }
+
+    override fun onTokenSyncManageClick(userWalletId: UserWalletId) {
+        acknowledgeTokenSyncCompletionUseCase(userWalletId)
+        router.openManageTokensScreen(
+            AccountId.forMainCryptoPortfolio(userWalletId),
+        )
     }
 
     private companion object {
