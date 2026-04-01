@@ -122,7 +122,7 @@ internal class SetTokenListTransformer(
         if (params !is TokenConverterParams.Account) {
             return WalletTokensListUM.Empty(
                 onEmptyClick = {
-                    clickIntents.onManageTokensClick(userWallet.walletId)
+                    clickIntents.onTokenSyncManageClick(userWallet.walletId)
                 },
             )
         }
