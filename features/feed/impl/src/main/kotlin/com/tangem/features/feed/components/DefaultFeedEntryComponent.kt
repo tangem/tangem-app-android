@@ -86,14 +86,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             innerRouter.push(
                 route = FeedEntryChildFactory.Child.TokenList(
                     params = DefaultMarketsTokenListComponent.Params(
-                        onBackClicked = { onChildBack() },
-                        onTokenClick = { token, currency ->
-                            onMarketItemClick(
-                                token = token,
-                                appCurrency = currency,
-                                source = AnalyticsParam.ScreensSources.Market.value,
-                            )
-                        },
                         preselectedSortType = sortBy ?: SortByTypeUM.Rating,
                         shouldAlwaysShowSearchBar = sortBy == null,
                     ),
@@ -243,14 +235,6 @@ internal class DefaultFeedEntryComponent @AssistedInject constructor(
             )
             FeedEntryRoute.MarketTokenList -> FeedEntryChildFactory.Child.TokenList(
                 DefaultMarketsTokenListComponent.Params(
-                    onBackClicked = { router.pop() },
-                    onTokenClick = { token, currency ->
-                        clickIntents.onMarketItemClick(
-                            token = token,
-                            appCurrency = currency,
-                            source = AnalyticsParam.ScreensSources.Market.value,
-                        )
-                    },
                     preselectedSortType = SortByTypeUM.Rating,
                     shouldAlwaysShowSearchBar = false,
                 ),
