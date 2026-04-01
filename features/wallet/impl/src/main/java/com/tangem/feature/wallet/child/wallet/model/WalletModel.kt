@@ -38,6 +38,8 @@ import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -123,6 +125,8 @@ internal class WalletModel @Inject constructor(
     private val paymentAccountStatusFetcher: PaymentAccountStatusFetcher,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val uiMessageSender: UiMessageSender,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -155,6 +159,7 @@ internal class WalletModel @Inject constructor(
         subscribeTangemPayOnWalletState()
         subscribeToMainScreenQrScanning()
         enableNotificationsIfNeeded()
+        applyPendingTokenSyncs()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
 
@@ -816,6 +821,12 @@ internal class WalletModel @Inject constructor(
                 )
                 uiMessageSender.send(WalletAlertUM.qrCodeUnsupportedNetwork())
             }
+        }
+    }
+
+    private fun applyPendingTokenSyncs() {
+        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
+            startTokenSyncUseCase.applyPendingSyncs()
         }
     }
 
