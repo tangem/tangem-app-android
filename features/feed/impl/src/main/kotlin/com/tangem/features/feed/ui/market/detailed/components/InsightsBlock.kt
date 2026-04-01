@@ -146,7 +146,6 @@ private fun InsightsBlockV2(state: InsightsUM, modifier: Modifier = Modifier) {
                 TangemSegmentedPicker(
                     items = segmentItems,
                     initialSelectedItem = segmentItems.first(),
-                    hasSeparator = true,
                     isFixed = false,
                     isAltSurface = true,
                     minSegmentWidth = 48.dp,
