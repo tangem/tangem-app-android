@@ -51,6 +51,7 @@ enum class BuildType(
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = true),
             BuildConfigField.ABTestsEnabled(isEnabled = false),
+            BuildConfigField.WireMockLocalUrl(url = ""),
         ),
     ),
 

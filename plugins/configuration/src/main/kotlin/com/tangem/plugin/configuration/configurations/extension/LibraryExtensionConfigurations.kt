@@ -4,12 +4,13 @@ import com.android.build.gradle.LibraryExtension
 import com.tangem.plugin.configuration.model.AppConfig
 import com.tangem.plugin.configuration.model.BuildType
 import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
+import com.tangem.plugin.configuration.utils.resolveGradleProperties
 import org.gradle.api.Project
 
 internal fun LibraryExtension.configure(project: Project) {
     configureCompileSdk()
     configureDefaultConfig()
-    configureBuildTypes()
+    configureBuildTypes(project)
     configurePackagingOptions()
     configureCompose(project)
     configureCompilerOptions()
@@ -25,12 +26,13 @@ private fun LibraryExtension.configureDefaultConfig() {
     }
 }
 
-private fun LibraryExtension.configureBuildTypes() {
+private fun LibraryExtension.configureBuildTypes(project: Project) {
     buildTypes {
         BuildType.values().forEach { buildVariant ->
             maybeCreate(buildVariant.id).apply {
+                val fields = buildVariant.configFields.resolveGradleProperties(project)
                 BuildConfigFieldFactory(
-                    fields = buildVariant.configFields,
+                    fields = fields,
                     builder = ::buildConfigField,
                 ).create()
             }

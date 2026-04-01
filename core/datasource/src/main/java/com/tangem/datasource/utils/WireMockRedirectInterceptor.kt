@@ -32,9 +32,22 @@ class WireMockRedirectInterceptor : Interceptor {
 
         /**
          * Override base URL for WireMock requests.
-         * When null (default), requests go to wiremock.tests-d.com.
+         * When null, requests go to wiremock.tests-d.com.
          * When set (e.g., "http://localhost:8080"), requests are redirected to local WireMock instance.
+         *
+         * Initialized from `BuildConfig.WIREMOCK_LOCAL_URL` (set via `-PwiremockLocalUrl=...` at build time).
+         * Can be overridden at runtime (e.g., from instrumentation args in UI tests).
          */
-        var overriddenBaseUrl: String? = null
+        var overriddenBaseUrl: String? = resolveWireMockLocalUrl()
+
+        private fun resolveWireMockLocalUrl(): String? {
+            return try {
+                val clazz = Class.forName("com.tangem.datasource.BuildConfig")
+                val value = clazz.getField("WIREMOCK_LOCAL_URL").get(null) as? String
+                value?.ifEmpty { null }
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 }

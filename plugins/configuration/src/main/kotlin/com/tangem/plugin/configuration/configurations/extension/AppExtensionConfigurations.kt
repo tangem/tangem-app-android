@@ -2,9 +2,11 @@ package com.tangem.plugin.configuration.configurations.extension
 
 import com.android.build.gradle.AppExtension
 import com.tangem.plugin.configuration.model.AppConfig
+import com.tangem.plugin.configuration.model.BuildConfigField
 import com.tangem.plugin.configuration.model.BuildType
 import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
 import com.tangem.plugin.configuration.utils.VersionNameProvider
+import com.tangem.plugin.configuration.utils.resolveGradleProperties
 import org.gradle.api.Project
 import com.android.build.gradle.internal.dsl.BuildType as AndroidBuildType
 
@@ -12,7 +14,7 @@ internal fun AppExtension.configure(project: Project) {
     configureCompileSdk()
     configureDefaultConfig(project)
     configureBuildFeatures()
-    configureBuildTypes()
+    configureBuildTypes(project)
     configurePackagingOptions()
     configureCompose(project)
     configureCompilerOptions()
@@ -52,7 +54,7 @@ private fun AppExtension.configureBuildFeatures() {
     }
 }
 
-private fun AppExtension.configureBuildTypes() {
+private fun AppExtension.configureBuildTypes(project: Project) {
     buildTypes {
         BuildType.values().forEach { buildType ->
             maybeCreate(buildType.id).apply {
@@ -61,8 +63,9 @@ private fun AppExtension.configureBuildTypes() {
                     buildType = buildType,
                 )
 
+                val fields = buildType.configFields.resolveGradleProperties(project)
                 BuildConfigFieldFactory(
-                    fields = buildType.configFields,
+                    fields = fields,
                     builder = ::buildConfigField,
                 ).create()
             }

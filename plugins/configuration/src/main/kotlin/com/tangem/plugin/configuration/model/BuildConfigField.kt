@@ -38,4 +38,10 @@ internal sealed class BuildConfigField(val type: String, val name: String, val v
         name = "AB_TESTS_ENABLED",
         value = isEnabled.toString(),
     )
+
+    class WireMockLocalUrl(url: String) : BuildConfigField(
+        type = "String",
+        name = "WIREMOCK_LOCAL_URL",
+        value = "\"$url\"",
+    )
 }
