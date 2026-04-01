@@ -1,22 +1,14 @@
 package com.tangem.data.transaction.di
 
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
-import com.tangem.data.transaction.DefaultFeeRepository
-import com.tangem.data.transaction.DefaultGaslessTransactionRepository
-import com.tangem.data.transaction.DefaultMemoValidatorFacade
-import com.tangem.data.transaction.DefaultTransactionRepository
-import com.tangem.data.transaction.DefaultWalletAddressServiceRepository
+import com.tangem.data.transaction.*
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.datasource.api.gasless.GaslessTxServiceApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
-import com.tangem.domain.transaction.FeeRepository
-import com.tangem.domain.transaction.GaslessTransactionRepository
-import com.tangem.domain.transaction.MemoValidatorFacade
-import com.tangem.domain.transaction.TransactionRepository
-import com.tangem.domain.transaction.WalletAddressServiceRepository
+import com.tangem.domain.transaction.*
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -98,6 +90,18 @@ internal object TransactionDataModule {
             gaslessTxServiceApi = gaslessTxServiceApi,
             coroutineDispatcherProvider = coroutineDispatcherProvider,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAllowanceRepository(
+        walletManagersFacade: WalletManagersFacade,
+        dispatchers: CoroutineDispatcherProvider,
+    ): AllowanceRepository {
+        return DefaultAllowanceRepository(
+            walletManagersFacade = walletManagersFacade,
+            dispatchers = dispatchers,
         )
     }
 }
