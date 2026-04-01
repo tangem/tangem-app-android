@@ -13,11 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.UnableToLoadData
-import com.tangem.core.ui.components.haze.hazeSourceTangem
 import com.tangem.core.ui.components.pager.PagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicator
 import com.tangem.core.ui.ds.TangemPagerIndicatorColors
-import com.tangem.core.ui.extensions.conditionalCompose
 import com.tangem.core.ui.res.*
 import com.tangem.features.feed.ui.news.details.components.ArticleDetail
 import com.tangem.features.feed.ui.news.details.components.NewsDetailsPlaceholder
@@ -84,12 +82,6 @@ private fun Content(state: NewsDetailsUM, background: Color) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .conditionalCompose(
-                condition = isRedesignEnabled,
-                modifier = {
-                    hazeSourceTangem(zIndex = 1f)
-                },
-            )
             .background(background),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
