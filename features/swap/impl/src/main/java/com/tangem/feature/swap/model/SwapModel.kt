@@ -89,10 +89,7 @@ import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.ui.*
-import com.tangem.feature.swap.models.AddToPortfolioRoute
-import com.tangem.feature.swap.models.SwapAlertUM
-import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.UiActions
+import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.market.SwapMarketsListBatchFlowManager
 import com.tangem.feature.swap.models.market.state.SwapMarketState
 import com.tangem.feature.swap.models.states.SwapNotificationUM
@@ -1424,6 +1421,13 @@ internal class SwapModel @Inject constructor(
                     "updateFeePaidCryptoCurrencyFor: id = ${fromToken.currency.id}, " +
                         "isOrderReversed: ${isOrderReversed.value}",
                 )
+                if ((uiState.sendCardData as? SwapCardState.SwapCardData)?.type is TransactionCardType.ReadOnly) {
+                    uiState = stateBuilder.createInitialLoadingState(
+                        initialCurrencyFrom = fromToken.currency,
+                        initialCurrencyTo = toToken.currency,
+                        fromNetworkInfo = fromToken.currency.getNetworkInfo(),
+                    )
+                }
                 updateFeePaidCryptoCurrencyFor(fromToken)
                 startLoadingQuotes(
                     fromToken = fromToken,
@@ -2021,6 +2025,14 @@ internal class SwapModel @Inject constructor(
                 receiveBlockchain = toToken.currency.network.name,
             ),
         )
+        // Cancel periodic quote task if selected token is not supported
+        singleTaskScheduler.cancelTask()
+        // Reset data state
+        dataState = SwapProcessDataState(
+            tokensDataState = dataState.tokensDataState,
+        )
+        lastReducedBalanceBy.value = BigDecimal.ZERO
+        lastAmount.value = INITIAL_AMOUNT
         uiState = stateBuilder.createSwapNotSupportedState(
             uiStateHolder = uiState,
             fromToken = fromToken,
