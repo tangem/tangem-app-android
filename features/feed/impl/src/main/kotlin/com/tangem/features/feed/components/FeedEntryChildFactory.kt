@@ -63,6 +63,7 @@ internal class FeedEntryChildFactory @Inject constructor(
         data object Search : Child
     }
 
+    @Suppress("LongMethod")
     fun createChild(
         child: Child,
         appComponentContext: AppComponentContext,
@@ -82,6 +83,17 @@ internal class FeedEntryChildFactory @Inject constructor(
                 DefaultMarketsTokenListComponent(
                     appComponentContext = appComponentContext,
                     params = child.params,
+                    clickIntents = DefaultMarketsTokenListComponent.ClickIntents(
+                        onBackClicked = onBackClicked,
+                        onSearchClicked = feedEntryClickIntents::openSearch,
+                        onTokenClick = { token, currency ->
+                            feedEntryClickIntents.onMarketItemClick(
+                                token = token,
+                                appCurrency = currency,
+                                source = AnalyticsParam.ScreensSources.Market.value,
+                            )
+                        },
+                    ),
                 )
             }
             is Child.NewsDetails -> {
