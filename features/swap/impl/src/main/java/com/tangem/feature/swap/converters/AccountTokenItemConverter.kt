@@ -37,7 +37,9 @@ internal class AccountTokenItemConverter(
         return TokensListPortfolioItemConverter(
             tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
-                account = value.account,
+                account = value.account.copy(
+                    cryptoCurrencies = value.currencyList.map { it.cryptoCurrencyStatus.currency },
+                ),
                 onItemClick = onAccountItemClick,
             ).convert(
                 TotalFiatBalance.Loaded(
