@@ -27,6 +27,9 @@ import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
+import com.tangem.domain.tokensync.model.TokenSyncProgress
+import com.tangem.domain.tokensync.usecase.ObserveTokenSyncUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -43,6 +46,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -61,6 +65,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val shouldShowUpgradeHotWalletBannerUseCase: ShouldShowUpgradeHotWalletBannerUseCase,
     private val getUpgradeBannerClosureTimestampUseCase: GetUpgradeBannerClosureTimestampUseCase,
     private val checkHotWalletUpgradeBannerUseCase: CheckHotWalletUpgradeBannerUseCase,
+    private val observeTokenSyncUseCase: ObserveTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod", "CastNullableToNonNullableType")
@@ -68,6 +74,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
         val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
         val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
+
+        val tokenSyncProgressFlow = if (hotWalletFeatureToggles.isTokenSyncEnabled && userWallet is UserWallet.Hot) {
+            observeTokenSyncUseCase(userWallet.walletId).distinctUntilChanged()
+        } else {
+            flowOf(TokenSyncProgress.Idle)
+        }
 
         return combine(
             accountStatusListFlow,
@@ -84,6 +96,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 .distinctUntilChanged(),
             getUpgradeBannerClosureTimestampUseCase(userWallet.walletId)
                 .distinctUntilChanged(),
+            tokenSyncProgressFlow,
         ) { array -> array }
             .map { array ->
                 val accountStatusList = array[0] as AccountStatusList
@@ -95,6 +108,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowYieldPromo = array[6] as Boolean
                 val shouldShowUpgradeBanner = array[7] as Boolean
                 val closureTimestamp = array[8] as? Long
+                val tokenSyncProgress = array[9] as TokenSyncProgress
 
                 val flattenCurrencies = accountStatusList.flattenCurrencies()
                 val paymentAccountStatus = accountStatusList.accountStatuses
@@ -136,6 +150,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         cardTypesResolver = cardTypesResolver,
                         flattenCurrencies = flattenCurrencies,
                         isNeedToBackup = isNeedToBackup,
+                        clickIntents = clickIntents,
+                    )
+
+                    addTokenSyncCompletedNotification(
+                        userWallet = userWallet,
+                        tokenSyncProgress = tokenSyncProgress,
                         clickIntents = clickIntents,
                     )
 
@@ -383,6 +403,20 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     //         it.value.yieldSupplyStatus?.isAllowedToSpend == false
     //     }
     // }
+
+    private fun MutableList<WalletNotification>.addTokenSyncCompletedNotification(
+        userWallet: UserWallet,
+        tokenSyncProgress: TokenSyncProgress,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotification.TokenSyncCompleted(
+                onCloseClick = { clickIntents.onDismissTokenSyncNotification(userWallet.walletId) },
+                onManageTokensClick = { clickIntents.onTokenSyncManageClick(userWallet.walletId) },
+            ),
+            condition = tokenSyncProgress is TokenSyncProgress.Completed,
+        )
+    }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
         isReadyToShowRating: Boolean,

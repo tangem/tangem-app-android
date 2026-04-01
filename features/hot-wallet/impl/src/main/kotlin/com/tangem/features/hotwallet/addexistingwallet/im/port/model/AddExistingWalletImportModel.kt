@@ -17,8 +17,10 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.datasource.local.appsflyer.AppsFlyerStore
 import com.tangem.domain.common.wallets.error.SaveWalletError
+import com.tangem.domain.tokensync.usecase.StartTokenSyncUseCase
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.addexistingwallet.im.port.entity.AddExistingWalletImportUM
@@ -40,6 +42,8 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
+    private val startTokenSyncUseCase: StartTokenSyncUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appsFlyerStore: AppsFlyerStore,
@@ -109,6 +113,11 @@ internal class AddExistingWalletImportModel @Inject constructor(
                     }
                     .onRight {
                         setImportProgress(false)
+
+                        if (hotWalletFeatureToggles.isTokenSyncEnabled) {
+                            startTokenSyncUseCase(userWallet.walletId)
+                        }
+
                         analyticsEventHandler.send(
                             event = OnboardingAnalyticsEvent.Onboarding.Finished(
                                 source = AnalyticsParam.ScreensSources.ImportWallet.value,
