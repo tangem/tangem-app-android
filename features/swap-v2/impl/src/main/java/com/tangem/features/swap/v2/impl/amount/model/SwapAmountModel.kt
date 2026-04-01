@@ -551,9 +551,6 @@ internal class SwapAmountModel @Inject constructor(
                         initPairs(data.swapCurrencies, data.cryptoCurrency)
                         amountUM.copy(
                             isPrimaryButtonEnabled = false,
-                            secondaryAmount = SwapAmountFieldUM.Loading(
-                                amountType = SwapAmountType.To,
-                            ),
                         )
                     } else {
                         amountUM
