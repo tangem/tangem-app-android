@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
@@ -107,6 +108,7 @@ internal fun WalletTopBar(
  *
  * @param config component config
  */
+@Suppress("MagicNumber")
 @Deprecated("Remove with main toggle [DesignFeatureToggles.isRedesignEnabled]")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +124,9 @@ internal fun WalletTopBar(config: WalletTopBarConfig) {
                         Icon(
                             painter = painterResource(id = action.iconRes),
                             contentDescription = null,
-                            modifier = Modifier.testTag(MainScreenTestTags.MORE_BUTTON),
+                            modifier = Modifier
+                                .rotate(if (action.iconRes == R.drawable.ic_more_default_24) 90f else 0f)
+                                .testTag(MainScreenTestTags.MORE_BUTTON),
                         )
                     }
                 }
