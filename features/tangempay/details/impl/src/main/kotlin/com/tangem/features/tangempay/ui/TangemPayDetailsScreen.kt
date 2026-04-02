@@ -74,7 +74,6 @@ internal fun TangemPayDetailsScreen(
         val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
         val expressState by expressTransactionsComponent.state.collectAsStateWithLifecycle()
         val expressTransactionsBottomSheetState = expressState.bottomSheetSlot
-        val expressTransactionsDialogState = expressState.dialogSlot
 
         TangemPullToRefreshContainer(
             config = state.pullToRefreshConfig,
@@ -158,7 +157,6 @@ internal fun TangemPayDetailsScreen(
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
-        expressTransactionsDialogState?.content()
         expressTransactionsBottomSheetState?.content()
     }
 }
