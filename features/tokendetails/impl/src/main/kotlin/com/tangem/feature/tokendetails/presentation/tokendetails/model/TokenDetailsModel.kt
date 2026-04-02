@@ -27,6 +27,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -87,7 +90,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.Token
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsTopAppBarUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.TokenDetailsExpressStatusFactory
 import com.tangem.features.tokendetails.TokenDetailsComponent
@@ -99,6 +106,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -196,6 +204,9 @@ internal class TokenDetailsModel @Inject constructor(
 
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
     val uiState: StateFlow<TokenDetailsState> = internalUiState
+
+    private val internalRedesignUiState = MutableStateFlow(createInitialRedesignState())
+    val redesignUiState: StateFlow<TokenDetailsUM> = internalRedesignUiState
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
@@ -1274,6 +1285,29 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onOpenCloreClaimPortal() = cloreMigrationModel.onOpenCloreClaimPortal()
 
     // endregion Clore migration
+
+    private fun createInitialRedesignState(): TokenDetailsUM {
+        return TokenDetailsUM(
+            topAppBarUM = TokenDetailsTopAppBarUM(
+                title = stringReference(cryptoCurrency.name),
+                subtitle = stringReference(cryptoCurrency.symbol),
+                menuItems = persistentListOf(),
+            ),
+            balanceBlockUM = TokenDetailsBalanceBlockUM.Loading(
+                actionButtons = persistentListOf(),
+                tokenBalanceTypeUM = TokenBalanceTypeUM.Single,
+                currencyIconState = CurrencyIconState.Loading,
+            ),
+            marketPriceBlockState = MarketPriceBlockState.Loading(currencySymbol = cryptoCurrency.symbol),
+            stakingBlocksState = null,
+            pullToRefreshConfig = PullToRefreshConfig(
+                isRefreshing = false,
+                onRefresh = {},
+            ),
+            isBalanceHidden = false,
+            isMarketPriceAvailable = false,
+        )
+    }
 
     private companion object {
         const val EXPRESS_STATUS_UPDATE_DELAY = 10_000L
