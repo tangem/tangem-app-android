@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.appsflyer
 
 import com.appsflyer.deeplink.DeepLinkListener
 import com.appsflyer.deeplink.DeepLinkResult
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,10 +17,10 @@ class AppsFlyerDeepLinkListener @Inject constructor(
                 referralParamsHandler.handle(deepLink = p0.deepLink)
             }
             DeepLinkResult.Status.NOT_FOUND -> {
-                Timber.i("No deep link found")
+                TangemLogger.i("No deep link found")
             }
             DeepLinkResult.Status.ERROR -> {
-                Timber.e("Deep link error: ${p0.error}")
+                TangemLogger.e("Deep link error: ${p0.error}")
             }
         }
     }

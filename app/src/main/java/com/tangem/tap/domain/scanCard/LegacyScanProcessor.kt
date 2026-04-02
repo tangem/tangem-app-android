@@ -19,6 +19,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.card.ScanFailsCounter
 import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -26,9 +27,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.disclaimer.createDisclaimer
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.mainScope
@@ -49,6 +48,7 @@ internal class LegacyScanProcessor @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val trackingContextProxy: TrackingContextProxy,
+    private val scanFailsCounter: ScanFailsCounter,
 ) {
 
     suspend fun scan(
@@ -89,10 +89,13 @@ internal class LegacyScanProcessor @Inject constructor(
         )
 
         val analyticsEvent = Basic.CardWasScanned(analyticsSource)
-        store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result, analyticsSource))
 
         result
             .doOnFailure { error ->
+                scanFailsCounter.onScanFailure(
+                    isUserCancelled = error is TangemSdkError.UserCancelled,
+                    source = analyticsSource,
+                )
                 onScanFailure(
                     analyticsSource = analyticsSource,
                     error = error,
@@ -106,6 +109,7 @@ internal class LegacyScanProcessor @Inject constructor(
                 )
             }
             .doOnSuccess { scanResponse ->
+                scanFailsCounter.reset()
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
                 sendAnalytics(analyticsEvent, scanResponse)

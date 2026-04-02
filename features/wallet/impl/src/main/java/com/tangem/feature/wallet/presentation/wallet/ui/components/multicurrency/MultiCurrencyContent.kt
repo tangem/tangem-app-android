@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -17,8 +18,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.positionOnScreen
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -155,12 +160,19 @@ private fun LazyListScope.tokenItem(
                 backgroundColor = TangemTheme.colors2.surface.level3,
             )
 
+        var position by remember { mutableStateOf(Offset.Zero) }
         when (val tokenRowUM = listItem.tokenRowUM) {
             is TangemTokenRowUM -> TangemTokenRow(
                 tokenRowUM = tokenRowUM,
                 isBalanceHidden = isBalanceHidden,
                 reorderableState = null,
-                modifier = itemModifier,
+                modifier = itemModifier
+                    .onGloballyPositioned { position = it.positionOnScreen() }
+                    .combinedClickable(
+                        enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
+                        onClick = tokenRowUM.onItemClick ?: {},
+                        onLongClick = { tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM) },
+                    ),
             )
             is TangemHeaderRowUM -> TangemHeaderRow(
                 headerRowUM = tokenRowUM,
@@ -170,6 +182,7 @@ private fun LazyListScope.tokenItem(
     }
 }
 
+@Suppress("LongMethod")
 private fun LazyListScope.portfolioItem(
     listItem: TokensListItemUM2.Portfolio,
     index: Int,
@@ -220,12 +233,23 @@ private fun LazyListScope.portfolioItem(
                         .testTag(MainScreenTestTags.TOKEN_LIST_ITEM)
                         .semantics { lazyListItemPosition = tokenIndex + 1 }
 
+                    var position by remember { mutableStateOf(Offset.Zero) }
                     when (val tokenRowUM = item.tokenRowUM) {
                         is TangemTokenRowUM -> TangemTokenRow(
                             tokenRowUM = tokenRowUM,
                             isBalanceHidden = isBalanceHidden,
                             reorderableState = null,
-                            modifier = itemModifier,
+                            modifier = itemModifier
+                                .onGloballyPositioned {
+                                    position = it.positionInWindow()
+                                }
+                                .combinedClickable(
+                                    enabled = tokenRowUM.onItemClick != null || tokenRowUM.onItemLongClick != null,
+                                    onClick = tokenRowUM.onItemClick ?: {},
+                                    onLongClick = {
+                                        tokenRowUM.onItemLongClick?.invoke(position, tokenRowUM)
+                                    },
+                                ),
                         )
                         is TangemHeaderRowUM -> TangemHeaderRow(
                             headerRowUM = tokenRowUM,
@@ -343,7 +367,8 @@ internal fun PortfolioRowItem(
             val composables = remember {
                 SharedTokenRowComposables(
                     icon = { modifier ->
-                        val size = if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
+                        val size =
+                            if (isExpandedWrapped) AccountIconSize.ExtraSmall else AccountIconSize.Default
                         val headIcon = item.tokenRowUM.headIconUM
                         val sizedHeadIcon = if (headIcon is TangemIconUM.Currency) {
                             headIcon.copy(
