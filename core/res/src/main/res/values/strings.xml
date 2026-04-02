@@ -422,6 +422,7 @@
   <string name="custom_token_creation_error_token_already_exist_title">Token already exists</string>
   <string name="custom_token_creation_error_wrong_decimals">Decimal must be a valid integer, up to %d</string>
   <string name="custom_token_custom_derivation">Custom derivation</string>
+  <string name="custom_token_custom_derivation_dynamic_addresses_enabled_error">Dynamic Addresses is enabled. Custom \\"change\\" and \\"index\\" are unavailable.</string>
   <string name="custom_token_custom_derivation_placeholder">E. g. m/00\'/0000\'/0\'/0/0</string>
   <string name="custom_token_custom_derivation_title">Enter custom derivation</string>
   <string name="custom_token_decimals_input_title">Decimals</string>
@@ -475,6 +476,7 @@
   <string name="domain_receive_assets_onboarding_network_name">%s network</string>
   <string name="domain_receive_assets_onboarding_title">Send funds using only</string>
   <string name="dynamic_addresses">Dynamic addresses</string>
+  <string name="dynamic_addresses_custom_token_error_on_addition">Dynamic Addresses is enabled. Custom \"change\" and \"index\" are unavailable.</string>
   <string name="dynamic_addresses_enabled_toast_title">Dynamic addresses enabled</string>
   <string name="dynamic_addresses_enter_features_privacy_description">Use a new address for each transaction to reduce traceability and improve on-chain privacy.</string>
   <string name="dynamic_addresses_enter_features_privacy_title">Enhanced Privacy</string>
@@ -1652,7 +1654,7 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">Unable to display details. However, card payments are still working.</string>
   <string name="tangempay_set_pin_code">Set \nPIN code</string>
-  <string name="tangempay_sync_needed">Not synced</string>
+  <string name="tangempay_sync_needed">Session expired</string>
   <string name="tangempay_sync_needed_restore_access">Restore access</string>
   <string name="tangempay_tangem_visa_card">Use USDC for everyday payments</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unreachable</string>
@@ -1732,6 +1734,9 @@
   <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
+  <string name="update_approval_permission_fee_note">Previous permission will be revoked and a new one will be issued. Network will charge token approval fee for each of theses actions. You will see a zero-amount transaction in the history as a revoke evidence.</string>
+  <string name="update_approval_permission_subtitle">Transaction exceeds previously granted  permission amount.\nUpdate permission to proceed</string>
+  <string name="update_approval_permission_title">Update permission</string>
   <string name="upgrade_to_hardware_wallet_button_title">Upgrade to hardware wallet</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
   <string name="user_push_notification_agreement_argument_one_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
