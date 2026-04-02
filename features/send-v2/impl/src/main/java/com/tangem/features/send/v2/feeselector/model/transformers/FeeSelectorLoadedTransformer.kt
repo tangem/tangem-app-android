@@ -22,6 +22,7 @@ internal class FeeSelectorLoadedTransformer(
     private val feeStateConfiguration: FeeSelectorParams.FeeStateConfiguration,
     private val isFeeApproximate: Boolean,
     private val feeSelectorIntents: FeeSelectorIntents,
+    private val shouldDisableCustomFee: Boolean,
 ) : Transformer<FeeSelectorUM> {
 
     private val feeItemsConverter = FeeItemConverter(
@@ -30,6 +31,7 @@ internal class FeeSelectorLoadedTransformer(
         feeSelectorIntents = feeSelectorIntents,
         appCurrency = appCurrency,
         cryptoCurrencyStatus = feeCryptoCurrencyStatus,
+        shouldDisableCustomFee = shouldDisableCustomFee,
     )
 
     override fun transform(prevState: FeeSelectorUM): FeeSelectorUM {
