@@ -199,7 +199,6 @@ internal class TokenDetailsModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         tokenDetailsClickIntents = this,
-        expressTransactionsClickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
@@ -213,9 +212,8 @@ internal class TokenDetailsModel @Inject constructor(
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
-    private val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
+    val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
         CloreMigrationModel(
-            stateFactory = stateFactory,
             signCloreMessageUseCase = signCloreMessageUseCase,
             clipboardManager = clipboardManager,
             uiMessageSender = uiMessageSender,
@@ -224,7 +222,6 @@ internal class TokenDetailsModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
             coroutineScope = modelScope,
             dispatchers = dispatchers,
-            onStateUpdate = { internalUiState.value = it },
         )
     }
     // endregion
@@ -791,8 +788,12 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    internalUiState.value =
-                        stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
+                    bottomSheetNavigation.activate(
+                        configuration = TokenDetailsBottomSheetConfig.ChooseAddress(
+                            currency = cryptoCurrency,
+                            networkAddress = addresses,
+                        ),
+                    )
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -810,7 +811,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
         if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
-            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+            bottomSheetNavigation.dismiss()
 
             uiMessageSender.send(
                 message = SnackbarMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
@@ -829,7 +830,7 @@ internal class TokenDetailsModel @Inject constructor(
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
-            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+            bottomSheetNavigation.dismiss()
         }
     }
 
@@ -1343,7 +1344,12 @@ internal class TokenDetailsModel @Inject constructor(
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
 
-    override fun onCloreMigrationClick() = cloreMigrationModel.onCloreMigrationClick()
+    override fun onCloreMigrationClick() {
+        cloreMigrationModel.onCloreMigrationClick()
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.CloreMigration,
+        )
+    }
 
     override fun onCloreSignMessage(message: String) = cloreMigrationModel.onCloreSignMessage(message)
 
