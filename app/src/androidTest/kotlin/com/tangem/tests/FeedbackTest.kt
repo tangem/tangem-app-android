@@ -7,13 +7,26 @@ import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickAndWaitFor
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.domain.redux.StateDialog
+import com.tangem.core.analytics.models.AnalyticsParam
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import com.tangem.scenarios.checkFailedTransactionDialog
 import com.tangem.scenarios.checkScanWarningDialog
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.screens.*
-import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.screens.ThirdPartyAppPageObject
+import com.tangem.screens.onCreateWalletStartScreen
+import com.tangem.screens.onDetailsScreen
+import com.tangem.screens.onDisclaimerScreen
+import com.tangem.screens.onFailedTransactionDialog
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onScanWarningDialog
+import com.tangem.screens.onSendAddressScreen
+import com.tangem.screens.onSendConfirmScreen
+import com.tangem.screens.onSendScreen
+import com.tangem.screens.onStoriesScreen
+import com.tangem.screens.onTokenDetailsScreen
+import com.tangem.screens.onMainScreenTopBar
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -44,7 +57,7 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Click 'More' button on TopBar") {
                 waitForIdle()
-                onTopBar { moreButton.clickWithAssertion() }
+                onMainScreenTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Contact support' button") {
                 waitForIdle()
@@ -164,8 +177,10 @@ class FeedbackTest : BaseTestCase() {
             }
             step("Force show 'Scan warning' dialog"){
                 runOnUiThread {
-                    val scanFailsState = StateDialog.ScanFailsDialog(source = StateDialog.ScanFailsSource.MAIN)
-                    store.dispatch(GlobalAction.ShowDialog(scanFailsState))
+                    val requester = store.state.daggerGraphState.scanFailsRequester!!
+                    MainScope().launch {
+                        requester.show(AnalyticsParam.ScreensSources.Main)
+                    }
                 }
             }
             step("Check 'Scan warning' dialog") {
@@ -173,7 +188,7 @@ class FeedbackTest : BaseTestCase() {
                 checkScanWarningDialog()
             }
             step("Click on 'Request support' button") {
-                ScanWarningDialogPageObject { requestSupportButton.click() }
+                onScanWarningDialog { requestSupportButton.performClick() }
             }
             step("Assert 'Gmail' app is open") {
                 ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }

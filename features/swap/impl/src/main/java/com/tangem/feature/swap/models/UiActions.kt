@@ -7,8 +7,6 @@ import com.tangem.feature.swap.domain.models.ui.TxFee
 import java.math.BigDecimal
 
 data class UiActions(
-    val onSearchEntered: (String) -> Unit,
-    val onTokenSelected: (String) -> Unit,
     val onAmountChanged: (String) -> Unit,
     val onAmountSelected: (Boolean) -> Unit,
     val onSwapClick: () -> Unit,

@@ -1,7 +1,6 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
@@ -43,7 +42,7 @@ sealed interface AccountStatus {
     @Serializable
     data class Payment(
         override val account: Account.Payment,
-        val totalFiatBalance: TotalFiatBalance,
+        val value: PaymentAccountStatusValue,
     ) : AccountStatus
 }
 

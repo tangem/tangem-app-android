@@ -12,7 +12,7 @@ import com.tangem.domain.express.models.ExpressProviderType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.filterIf
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class DefaultExpressRepository(
     private val tangemExpressApi: TangemExpressApi,
@@ -36,7 +36,7 @@ internal class DefaultExpressRepository(
                     .filterIf(filterProviderTypes.isNotEmpty()) { it.type in filterProviderTypes }
             },
             onError = { error ->
-                Timber.w(error, "Unable to fetch express providers")
+                TangemLogger.w("Unable to fetch express providers", error)
                 throw error
             },
         )

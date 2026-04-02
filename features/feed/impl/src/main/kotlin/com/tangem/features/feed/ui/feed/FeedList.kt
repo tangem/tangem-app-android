@@ -4,34 +4,22 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.extensions.conditional
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
-import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BaseSearchBarTestTags.SEARCH_BAR
 import com.tangem.features.feed.model.market.list.state.SortByTypeUM
+import com.tangem.features.feed.ui.components.FeedSearchBar
 import com.tangem.features.feed.ui.feed.components.*
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.FeedListSearchBar
@@ -50,8 +38,6 @@ internal fun FeedListHeader(
         feedListSearchBar = feedListSearchBar,
         modifier = modifier
             .drawBehind { drawRect(background) }
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 8.dp)
             .testTag(SEARCH_BAR),
     )
 }
@@ -92,39 +78,6 @@ internal fun FeedList(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun FeedSearchBar(
-    isSearchBarClickable: Boolean,
-    feedListSearchBar: FeedListSearchBar,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(36.dp))
-            .background(color = TangemTheme.colors.field.focused)
-            .conditional(condition = isSearchBarClickable) {
-                clickable(onClick = feedListSearchBar.onBarClick)
-            }
-            .padding(14.dp),
-    ) {
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size20),
-            imageVector = ImageVector.vectorResource(id = R.drawable.ic_search_24),
-            tint = TangemTheme.colors.icon.informative,
-            contentDescription = null,
-        )
-
-        SpacerW(14.dp)
-
-        Text(
-            text = feedListSearchBar.placeholderText.resolveReference(),
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.tertiary,
-        )
     }
 }
 
