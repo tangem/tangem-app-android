@@ -19,9 +19,9 @@ import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.network.exchangeServices.SellServiceInitializationStatus
 import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPayAvailableCurrency
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import timber.log.Timber
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -42,13 +42,13 @@ class MoonPayService(
 
     override suspend fun update() {
         withIOContext {
-            Timber.i("Start updating")
+            TangemLogger.i("Start updating")
             _initializationStatus.value = lceLoading()
 
             performRequest {
                 val userStatus = when (val result = performRequest { api.getUserStatus(apiKey) }) {
                     is Result.Failure -> {
-                        Timber.e(result.error, "Failed to load user status")
+                        TangemLogger.e("Failed to load user status", result.error)
                         _initializationStatus.value = result.error.lceError()
                         return@performRequest
                     }
@@ -57,7 +57,7 @@ class MoonPayService(
 
                 val currencies = when (val result = performRequest { api.getCurrencies(apiKey) }) {
                     is Result.Failure -> {
-                        Timber.e(result.error, "Failed to load currencies")
+                        TangemLogger.e("Failed to load currencies", result.error)
                         _initializationStatus.value = result.error.lceError()
                         return@performRequest
                     }
@@ -77,7 +77,7 @@ class MoonPayService(
                         )
                     }
 
-                Timber.i("Successfully updated")
+                TangemLogger.i("Successfully updated")
                 _initializationStatus.value = lceContent()
                 status = MoonPayStatus(currenciesToSell, userStatus, currencies)
             }

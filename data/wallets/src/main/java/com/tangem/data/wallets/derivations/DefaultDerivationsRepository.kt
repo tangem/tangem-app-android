@@ -16,8 +16,8 @@ import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
 import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultDerivationsRepository @Inject constructor(
@@ -29,7 +29,7 @@ internal class DefaultDerivationsRepository @Inject constructor(
 
     override suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) {
-            Timber.d("Nothing to derive")
+            TangemLogger.d("Nothing to derive")
             return
         }
 
