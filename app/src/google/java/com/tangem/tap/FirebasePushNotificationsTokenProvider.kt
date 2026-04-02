@@ -1,9 +1,9 @@
 package com.tangem.tap
 
 import com.google.firebase.messaging.FirebaseMessaging
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.utils.notifications.PushNotificationsTokenProvider
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class FirebasePushNotificationsTokenProvider @Inject constructor() : PushNotificationsTokenProvider {
@@ -11,7 +11,7 @@ internal class FirebasePushNotificationsTokenProvider @Inject constructor() : Pu
         return try {
             FirebaseMessaging.getInstance().token.await()
         } catch (ex: Exception) {
-            Timber.e(ex)
+            TangemLogger.e("Error", ex)
             ""
         }
     }

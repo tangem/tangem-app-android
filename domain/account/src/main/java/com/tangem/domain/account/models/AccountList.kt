@@ -108,16 +108,14 @@ data class AccountList private constructor(
     }
 
     fun flattenMapCurrencies(): Map<AccountCurrencyId, CryptoCurrency> = buildMap {
-        accounts.forEach { acc ->
-            val account = when (acc) {
-                is Account.CryptoPortfolio -> acc
-                is Account.Payment -> TODO("[REDACTED_JIRA]")
+        accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+            .forEach { account ->
+                account.cryptoCurrencies.forEach { currency ->
+                    val key = account.accountId to currency.id
+                    put(key, currency)
+                }
             }
-            account.cryptoCurrencies.forEach { currency ->
-                val key = account.accountId to currency.id
-                put(key, currency)
-            }
-        }
     }
 
     /**

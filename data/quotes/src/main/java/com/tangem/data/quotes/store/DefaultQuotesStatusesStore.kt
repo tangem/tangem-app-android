@@ -4,16 +4,16 @@ import androidx.datastore.core.DataStore
 import com.tangem.data.quotes.converter.QuoteStatusConverter
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.utils.coroutines.AppCoroutineScope
 import com.tangem.utils.extensions.addOrReplace
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal typealias CurrencyIdWithQuote = Map<String, QuotesResponse.Quote>
 
@@ -64,7 +64,7 @@ internal class DefaultQuotesStatusesStore(
         ifNotFound: (CryptoCurrency.RawID) -> QuoteStatus?,
     ) {
         if (currenciesIds.isEmpty()) {
-            Timber.d("Nothing to update: currencies ids are empty")
+            TangemLogger.d("Nothing to update: currencies ids are empty")
             return
         }
 
