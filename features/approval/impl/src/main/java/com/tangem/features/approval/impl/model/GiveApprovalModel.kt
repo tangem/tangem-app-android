@@ -5,6 +5,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender.MultipleTransactionSendMode
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
@@ -22,8 +23,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetAllowanceInfoUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
@@ -32,6 +35,7 @@ import com.tangem.domain.transaction.usecase.gasless.GetFeeForTokenUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.approval.api.GiveApprovalComponent
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
+import com.tangem.features.send.v2.api.entity.FeeItem
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -41,15 +45,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 
 @Stable
 @ModelScoped
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class GiveApprovalModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
+    private val getAllowanceInfoUseCase: GetAllowanceInfoUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val getFeeForGaslessUseCase: GetFeeForGaslessUseCase,
@@ -77,10 +83,13 @@ internal class GiveApprovalModel @Inject constructor(
                 isApproveButtonEnabled = false,
                 isApproveLoading = false,
                 isHoldToConfirm = params.isHoldToConfirm,
+                isResetApproval = params.isResetApproval,
             ),
         )
 
     private var feeSelectorUM: FeeSelectorUM = FeeSelectorUM.Loading
+
+    private var approvalTxList: Map<TransactionData.Uncompiled, TransactionFee> = emptyMap()
 
     override fun onFeeResult(feeSelectorUM: FeeSelectorUM) {
         this.feeSelectorUM = feeSelectorUM
@@ -122,47 +131,92 @@ internal class GiveApprovalModel @Inject constructor(
         )
     }
 
-    suspend fun prepareApprovalTransaction(): Either<Throwable, TransactionData> {
-        val cryptoCurrencyStatus = params.cryptoCurrencyStatus
-        val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
-            ?: return Either.Left(IllegalStateException("Currency is not a token"))
-
-        return createApprovalTransactionUseCase(
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-            userWalletId = params.userWalletId,
-            amount = getApprovalAmount(),
-            contractAddress = tokenCurrency.contractAddress,
-            spenderAddress = params.spenderAddress,
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        return onApprovalTx(
+            onApprove = { approve ->
+                getFeeUseCase(
+                    transactionData = approve,
+                    userWallet = userWallet,
+                    network = params.cryptoCurrencyStatus.currency.network,
+                ).onRight { fee ->
+                    approvalTxList = mapOf(approve to fee)
+                }
+            },
+            onResetApprove = { (revokeApproval, approve) ->
+                getFeeUseCase(
+                    transactionData = revokeApproval,
+                    userWallet = userWallet,
+                    network = params.cryptoCurrencyStatus.currency.network,
+                ).map { revokeFee ->
+                    estimateFeeForResetApproval(
+                        revokeTransactionFee = revokeFee,
+                        revokeApprovalTransaction = revokeApproval,
+                        approvalTransaction = approve,
+                    )
+                }
+            },
         )
     }
 
-    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-        val approvalTransaction = prepareApprovalTransaction()
-            .getOrElse { return GetFeeError.DataError(it).left() }
-
-        return getFeeUseCase(
-            transactionData = approvalTransaction,
-            userWallet = userWallet,
-            network = params.cryptoCurrencyStatus.currency.network,
-        )
+    fun shouldDisableCustomFee(): Boolean {
+        return approvalTxList.size > 1
     }
 
     suspend fun loadFeeExtended(maybeToken: CryptoCurrencyStatus?): Either<GetFeeError, TransactionFeeExtended> {
-        val approvalTransaction = prepareApprovalTransaction()
-            .getOrElse { return GetFeeError.DataError(it).left() }
+        val approve = createApprovalTransactionUseCase(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
+            amount = getApprovalAmount(),
+            contractAddress = (params.cryptoCurrencyStatus.currency as CryptoCurrency.Token).contractAddress,
+            spenderAddress = params.spenderAddress,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create approveTransaction", error)
+            return GetFeeError.DataError(error).left()
+        }
 
         return if (maybeToken == null) {
             getFeeForGaslessUseCase(
-                transactionData = approvalTransaction,
+                transactionData = approve,
                 userWallet = userWallet,
                 network = params.cryptoCurrencyStatus.currency.network,
             )
         } else {
             getFeeForTokenUseCase(
-                transactionData = approvalTransaction,
+                transactionData = approve,
                 userWallet = userWallet,
                 token = maybeToken.currency,
             )
+        }
+    }
+
+    private fun estimateFeeForResetApproval(
+        revokeTransactionFee: TransactionFee,
+        revokeApprovalTransaction: TransactionData.Uncompiled,
+        approvalTransaction: TransactionData.Uncompiled,
+    ) = when (revokeTransactionFee) {
+        is TransactionFee.Choosable -> {
+            val approveFee = revokeTransactionFee.copy(
+                minimum = revokeTransactionFee.minimum.increaseEthereumGasLimitBy(2.toBigDecimal()),
+                normal = revokeTransactionFee.normal.increaseEthereumGasLimitBy(2.toBigDecimal()),
+                priority = revokeTransactionFee.priority.increaseEthereumGasLimitBy(2.toBigDecimal()),
+            )
+            approvalTxList = mapOf(
+                revokeApprovalTransaction to revokeTransactionFee,
+                approvalTransaction to approveFee,
+            )
+            revokeTransactionFee.copy(
+                minimum = approveFee.minimum + revokeTransactionFee.minimum,
+                normal = approveFee.normal + revokeTransactionFee.normal,
+                priority = approveFee.priority + revokeTransactionFee.priority,
+            )
+        }
+        is TransactionFee.Single -> {
+            val approveFee = revokeTransactionFee.copy(normal = revokeTransactionFee.normal)
+            approvalTxList = mapOf(
+                revokeApprovalTransaction to revokeTransactionFee,
+                approvalTransaction to approveFee,
+            )
+            revokeTransactionFee.copy(normal = approveFee.normal + revokeTransactionFee.normal)
         }
     }
 
@@ -171,34 +225,33 @@ internal class GiveApprovalModel @Inject constructor(
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return false
 
         val feeContent = feeSelectorUM as? FeeSelectorUM.Content ?: return false
-        val selectedFee = feeContent.selectedFeeItem.fee
         val feeExtended = feeContent.feeExtraInfo.transactionFeeExtended
 
         val isFeeInTokenCurrency = feeExtended?.transactionFee?.normal is Fee.Ethereum.TokenCurrency
 
-        val transactionData = createApprovalTransactionUseCase(
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-            userWalletId = params.userWalletId,
-            amount = getApprovalAmount(),
-            fee = selectedFee,
-            contractAddress = tokenCurrency.contractAddress,
-            spenderAddress = params.spenderAddress,
-        ).getOrElse { error ->
-            TangemLogger.e("Failed to create approval transaction", error)
-            return false
+        val transactions = approvalTxList.map { (tx, fee) ->
+            tx.copy(
+                fee = when (feeContent.selectedFeeItem) {
+                    is FeeItem.Fast -> (fee as? TransactionFee.Choosable)?.priority ?: fee.normal
+                    is FeeItem.Market -> fee.normal
+                    is FeeItem.Slow -> (fee as? TransactionFee.Choosable)?.minimum ?: fee.normal
+                    else -> feeContent.selectedFeeItem.fee
+                },
+            )
         }
 
         return if (isFeeInTokenCurrency) {
             createAndSendGaslessTransactionUseCase(
                 userWallet = userWallet,
-                transactionData = transactionData,
+                transactionData = transactions.first(),
                 fee = feeExtended,
             )
         } else {
             sendTransactionUseCase(
-                txData = transactionData,
+                txsData = transactions,
                 userWallet = userWallet,
                 network = tokenCurrency.network,
+                sendMode = MultipleTransactionSendMode.DEFAULT,
             )
         }.fold(
             ifLeft = { error ->
@@ -239,6 +292,90 @@ internal class GiveApprovalModel @Inject constructor(
             params.amount.toBigDecimalOrNull()
         } else {
             null
+        }
+    }
+
+    private suspend fun <T> onApprovalTx(
+        onApprove: suspend (TransactionData.Uncompiled) -> Either<GetFeeError, T>,
+        onResetApprove:
+        suspend (Pair<TransactionData.Uncompiled, TransactionData.Uncompiled>) -> Either<GetFeeError, T>,
+    ): Either<GetFeeError, T> {
+        val cryptoCurrencyStatus = params.cryptoCurrencyStatus
+        val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: return GetFeeError.DataError(IllegalStateException("Currency is not a token")).left()
+
+        val amount = params.amount.toBigDecimalOrNull()
+            ?: return GetFeeError.DataError(IllegalArgumentException("Invalid amount format")).left()
+
+        val allowance = getAllowanceInfoUseCase(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = cryptoCurrencyStatus.currency,
+            spenderAddress = params.spenderAddress,
+            requiredAmount = amount,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to get allowance info", error)
+            return GetFeeError.DataError(error).left()
+        }
+
+        val approve = createApprovalTransactionUseCase(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amount = getApprovalAmount(),
+            contractAddress = tokenCurrency.contractAddress,
+            spenderAddress = params.spenderAddress,
+        ).getOrElse { error ->
+            TangemLogger.e("Failed to create approveTransaction", error)
+            return GetFeeError.DataError(error).left()
+        }
+
+        return if (allowance is AllowanceInfo.ResetNeeded) {
+            val revokeApproval = createApprovalTransactionUseCase(
+                userWalletId = params.userWalletId,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amount = BigDecimal.ZERO,
+                contractAddress = tokenCurrency.contractAddress,
+                spenderAddress = params.spenderAddress,
+            ).getOrElse { error ->
+                TangemLogger.e("Failed to create revoke approveTransaction", error)
+                return GetFeeError.DataError(error).left()
+            }
+            onResetApprove(revokeApproval to approve)
+        } else {
+            onApprove(approve)
+        }
+    }
+
+    private fun Fee.increaseEthereumGasLimitBy(multiplier: BigDecimal): Fee {
+        if (this !is Fee.Ethereum) return this
+        val increasedGasPrice = amount.value?.movePointRight(amount.decimals)
+            ?.divide(gasLimit.toBigDecimal(), RoundingMode.HALF_UP)
+        val increasedGasLimit = gasLimit
+            .multiply(multiplier.toBigInteger())
+        val increasedAmount = amount.copy(
+            value = increasedGasPrice?.multiply(
+                increasedGasLimit.toBigDecimal().movePointLeft(amount.decimals),
+            ),
+        )
+        return when (this) {
+            is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.TokenCurrency -> error("handle in [REDACTED_TASK_KEY]")
+        }
+    }
+
+    private operator fun Fee.plus(otherFee: Fee): Fee {
+        if (this !is Fee.Ethereum || otherFee !is Fee.Ethereum) return this
+        val gasLimit = this.gasLimit
+        val increasedGasPrice = this.amount.value?.movePointRight(this.amount.decimals)
+            ?.divide(gasLimit.toBigDecimal(), RoundingMode.HALF_UP)
+        val increasedGasLimit = gasLimit + otherFee.gasLimit
+        val increasedAmount = this.amount.copy(
+            value = increasedGasLimit.toBigDecimal().multiply(increasedGasPrice).movePointLeft(this.amount.decimals),
+        )
+        return when (this) {
+            is Fee.Ethereum.EIP1559 -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.Legacy -> copy(amount = increasedAmount, gasLimit = increasedGasLimit)
+            is Fee.Ethereum.TokenCurrency -> this
         }
     }
 }
