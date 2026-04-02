@@ -13,7 +13,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
-import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
@@ -92,6 +91,7 @@ import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRout
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceTypeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockUM
@@ -192,6 +192,9 @@ internal class TokenDetailsModel @Inject constructor(
     /** Transaction id to check for status */
     private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
 
+    /** Currently displayed express transaction txId in the bottom sheet */
+    private var displayedExpressTxId: String? = null
+
     val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
 
     private val stateFactory = TokenDetailsStateFactory(
@@ -199,7 +202,6 @@ internal class TokenDetailsModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         tokenDetailsClickIntents = this,
-        expressTransactionsClickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
@@ -208,14 +210,17 @@ internal class TokenDetailsModel @Inject constructor(
     private val internalUiState = MutableStateFlow(stateFactory.getInitialState(cryptoCurrency))
     val uiState: StateFlow<TokenDetailsState> = internalUiState
 
+    val expressTxsFlow: StateFlow<PersistentList<ExpressTransactionStateUM>> =
+        internalUiState.map { it.expressTxs }
+            .stateIn(modelScope, SharingStarted.Lazily, persistentListOf())
+
     private val internalRedesignUiState = MutableStateFlow(createInitialRedesignState())
     val redesignUiState: StateFlow<TokenDetailsUM> = internalRedesignUiState
 
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
-    private val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
+    val cloreMigrationModel by lazy(mode = LazyThreadSafetyMode.NONE) {
         CloreMigrationModel(
-            stateFactory = stateFactory,
             signCloreMessageUseCase = signCloreMessageUseCase,
             clipboardManager = clipboardManager,
             uiMessageSender = uiMessageSender,
@@ -224,7 +229,6 @@ internal class TokenDetailsModel @Inject constructor(
             cryptoCurrency = cryptoCurrency,
             coroutineScope = modelScope,
             dispatchers = dispatchers,
-            onStateUpdate = { internalUiState.value = it },
         )
     }
     // endregion
@@ -386,10 +390,7 @@ internal class TokenDetailsModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { waitForFirstExpressStatusEmmit.value = true }
             .onEach { expressTxs ->
-                internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                    expressTxs = expressTxs,
-                    updateBalance = ::updateNetworkToSwapBalance,
-                )
+                updateExpressTxsState(expressTxs)
                 expressTxStatusTaskScheduler.scheduleTask(
                     scope = modelScope,
                     task = PeriodicTask(
@@ -401,10 +402,7 @@ internal class TokenDetailsModel @Inject constructor(
                             }
                         },
                         onSuccess = { updatedTxs ->
-                            internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
-                                updatedTxs,
-                                ::updateNetworkToSwapBalance,
-                            )
+                            updateExpressTxsState(updatedTxs)
                         },
                         onError = { /* no-op */ },
                     ),
@@ -791,8 +789,12 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    internalUiState.value =
-                        stateFactory.getStateWithChooseAddressBottomSheet(cryptoCurrency, addresses)
+                    bottomSheetNavigation.activate(
+                        configuration = TokenDetailsBottomSheetConfig.ChooseAddress(
+                            currency = cryptoCurrency,
+                            networkAddress = addresses,
+                        ),
+                    )
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -810,7 +812,7 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
         if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
-            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+            bottomSheetNavigation.dismiss()
 
             uiMessageSender.send(
                 message = SnackbarMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
@@ -829,7 +831,7 @@ internal class TokenDetailsModel @Inject constructor(
                     addressType = AddressType.valueOf(addressModel.type.name),
                 ),
             )
-            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+            bottomSheetNavigation.dismiss()
         }
     }
 
@@ -861,14 +863,17 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onDismissBottomSheet() {
-        when (val bsContent = internalUiState.value.bottomSheetConfig?.content) {
-            is ExpressStatusBottomSheetConfig -> {
+        val txId = displayedExpressTxId
+        if (txId != null) {
+            val expressState = findExpressTransaction(txId)
+            if (expressState != null) {
                 modelScope.launch(dispatchers.main) {
-                    expressStatusFactory.removeTransactionOnBottomSheetClosed(bsContent.value)
+                    expressStatusFactory.removeTransactionOnBottomSheetClosed(expressState)
                 }
             }
+            displayedExpressTxId = null
         }
-        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        bottomSheetNavigation.dismiss()
     }
 
     override fun onCloseRentInfoNotification() {
@@ -878,7 +883,11 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onExpressTransactionClick(txId: String) {
         val expressTxState = internalUiState.value.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
             ?: return
-        internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
+        expressStatusFactory.sendExpressStatusAnalytics(expressTxState)
+        displayedExpressTxId = txId
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.ExpressStatus(txId = txId),
+        )
     }
 
     override fun onGoToProviderClick(url: String) {
@@ -1088,16 +1097,20 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onDisposeExpressStatus() {
-        val bottomSheetState = internalUiState.value.bottomSheetConfig?.content
-        if (bottomSheetState is ExpressStatusBottomSheetConfig) {
-            modelScope.launch {
-                expressStatusFactory.removeTransactionOnBottomSheetClosed(
-                    expressState = bottomSheetState.value,
-                    isForceDispose = true,
-                )
+        val txId = displayedExpressTxId
+        if (txId != null) {
+            val expressState = findExpressTransaction(txId)
+            if (expressState != null) {
+                modelScope.launch {
+                    expressStatusFactory.removeTransactionOnBottomSheetClosed(
+                        expressState = expressState,
+                        isForceDispose = true,
+                    )
+                }
             }
+            displayedExpressTxId = null
         }
-        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        bottomSheetNavigation.dismiss()
     }
 
     override fun onYieldInfoClick() {
@@ -1295,6 +1308,30 @@ internal class TokenDetailsModel @Inject constructor(
         return needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
     }
 
+    private fun updateExpressTxsState(expressTxs: PersistentList<ExpressTransactionStateUM>) {
+        val txId = displayedExpressTxId
+        if (txId != null) {
+            val previousTx = findExpressTransaction(txId)
+            val updatedTx = expressTxs.firstOrNull { it.info.txId == txId }
+            if (updatedTx != null) {
+                expressStatusFactory.maybeGetLongTimeExchangeNotificationShowEvent(
+                    expressState = updatedTx,
+                    currentStateNotification = (previousTx as? ExchangeUM)?.notification,
+                    isBottomSheetShown = true,
+                )?.let { analyticsEventsHandler.send(it) }
+            }
+        }
+        internalUiState.value = expressStatusFactory.getStateWithUpdatedExpressTxs(
+            expressTxs = expressTxs,
+            displayedTxId = displayedExpressTxId,
+            updateBalance = ::updateNetworkToSwapBalance,
+        )
+    }
+
+    private fun findExpressTransaction(txId: String): ExpressTransactionStateUM? {
+        return internalUiState.value.expressTxs.firstOrNull { it.info.txId == txId }
+    }
+
     private fun isActiveYieldSupply(): Boolean {
         return cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
@@ -1343,7 +1380,12 @@ internal class TokenDetailsModel @Inject constructor(
     // region Clore migration
     // TODO: Remove after Clore migration ends ([REDACTED_TASK_KEY])
 
-    override fun onCloreMigrationClick() = cloreMigrationModel.onCloreMigrationClick()
+    override fun onCloreMigrationClick() {
+        cloreMigrationModel.onCloreMigrationClick()
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.CloreMigration,
+        )
+    }
 
     override fun onCloreSignMessage(message: String) = cloreMigrationModel.onCloreSignMessage(message)
 

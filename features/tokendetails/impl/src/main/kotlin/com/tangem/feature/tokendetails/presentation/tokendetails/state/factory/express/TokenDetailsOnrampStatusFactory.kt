@@ -1,6 +1,5 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
-import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
@@ -16,7 +15,6 @@ import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.ExpressTransactionsClickIntents
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
@@ -34,7 +32,6 @@ internal class TokenDetailsOnrampStatusFactory @AssistedInject constructor(
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
     private val onrampUpdateTransactionStatusUseCase: OnrampUpdateTransactionStatusUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val clickIntents: ExpressTransactionsClickIntents,
@@ -68,11 +65,10 @@ internal class TokenDetailsOnrampStatusFactory @AssistedInject constructor(
         }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed(isForceDispose: Boolean) {
-        val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
-        val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
-
+    suspend fun removeTransactionOnBottomSheetClosed(
+        selectedTx: ExpressTransactionStateUM.OnrampUM,
+        isForceDispose: Boolean,
+    ) {
         if (selectedTx.activeStatus.isAutoDisposable || isForceDispose) {
             onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
@@ -154,7 +150,6 @@ internal class TokenDetailsOnrampStatusFactory @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            currentStateProvider: Provider<TokenDetailsState>,
             cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
             appCurrencyProvider: Provider<AppCurrency>,
             clickIntents: ExpressTransactionsClickIntents,

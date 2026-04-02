@@ -172,7 +172,6 @@ internal object TokenDetailsPreviewData {
         expressTxs = persistentListOf(),
         expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
-        bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
     )
@@ -196,7 +195,6 @@ internal object TokenDetailsPreviewData {
         expressTxs = persistentListOf(),
         expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
-        bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
     )

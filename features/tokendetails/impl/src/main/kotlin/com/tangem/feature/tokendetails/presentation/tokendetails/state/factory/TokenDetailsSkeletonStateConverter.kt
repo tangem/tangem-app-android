@@ -66,7 +66,6 @@ internal class TokenDetailsSkeletonStateConverter(
             expressTxs = persistentListOf(),
             expressTxsToDisplay = persistentListOf(),
             pullToRefreshConfig = createPullToRefresh(),
-            bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
         )

@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state
 
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
@@ -18,7 +17,6 @@ internal data class TokenDetailsState(
     val expressTxsToDisplay: PersistentList<ExpressTransactionStateUM>,
     val expressTxs: PersistentList<ExpressTransactionStateUM>,
     val pullToRefreshConfig: PullToRefreshConfig,
-    val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
 )
