@@ -139,6 +139,7 @@ internal class WalletStateController @Inject constructor(
             isHidingMode = false,
             showMarketsOnboarding = false,
             onDismissMarketsTooltip = {},
+            isRedesignEnabled = designFeatureToggles.isRedesignEnabled,
         )
     }
 }

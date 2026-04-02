@@ -30,6 +30,11 @@ interface NetworksRepository {
      */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network.RawID): List<CryptoCurrencyAddress>
 
+    /**
+     * Returns the default address for the given [network] in the selected [userWalletId]
+     */
+    suspend fun getDefaultAddress(userWalletId: UserWalletId, network: Network): String?
+
     /** Checks if there are cached statuses for given [userWalletId] */
     suspend fun hasCachedStatuses(userWalletId: UserWalletId): Boolean
 }
