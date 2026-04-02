@@ -12,4 +12,5 @@ internal data class GiveApprovalUM(
     val isApproveButtonEnabled: Boolean,
     val isApproveLoading: Boolean,
     val isHoldToConfirm: Boolean = false,
+    val isResetApproval: Boolean = false,
 )
