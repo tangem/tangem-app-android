@@ -16,6 +16,7 @@ interface GiveApprovalComponent : ComposableBottomSheetComponent {
         val spenderAddress: String,
         val subtitle: TextReference,
         val isHoldToConfirm: Boolean = false,
+        val isResetApproval: Boolean = false,
         val callback: Callback,
     )
 
