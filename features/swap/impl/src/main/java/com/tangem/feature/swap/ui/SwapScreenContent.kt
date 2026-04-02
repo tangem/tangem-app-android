@@ -346,6 +346,7 @@ private fun SwapNotifications(notifications: List<NotificationUM>) {
                     Notification(
                         config = notification.config,
                         iconTint = when (notification) {
+                            is SwapNotificationUM.Warning.TradeTooHigh -> TangemTheme.colors.icon.warning
                             is SwapNotificationUM.Error.UnableToCoverFeeWarning,
                             is NotificationUM.Error.TokenExceedsBalance,
                             is NotificationUM.Error.ExceedsBalance,
@@ -412,7 +413,7 @@ private val sendCard = SwapCardState.SwapCardData(
         accountTitleUM = null,
     ),
     amountTextFieldValue = TextFieldValue(),
-    amountEquivalent = "1 000 000",
+    amountEquivalent = stringReference("1 000 000"),
     tokenIconUrl = "",
     tokenCurrency = "DAI",
     isNotNativeToken = true,
@@ -427,7 +428,7 @@ private val sendCard = SwapCardState.SwapCardData(
 private val receiveCard = SwapCardState.SwapCardData(
     type = TransactionCardType.ReadOnly(),
     amountTextFieldValue = TextFieldValue(),
-    amountEquivalent = "1 000 000",
+    amountEquivalent = stringReference("1 000 000"),
     tokenIconUrl = "",
     tokenCurrency = "DAI",
     isNotNativeToken = true,
@@ -466,7 +467,7 @@ private val state = SwapStateHolder(
     permissionState = GiveTxPermissionState.InProgress,
     blockchainId = "POLYGON",
     providerState = ProviderState.Loading(),
-    priceImpact = PriceImpact.Empty(),
+    priceImpact = PriceImpact.Empty,
     shouldShowMaxAmount = true,
     isInsufficientFunds = false,
     onSuccess = {},

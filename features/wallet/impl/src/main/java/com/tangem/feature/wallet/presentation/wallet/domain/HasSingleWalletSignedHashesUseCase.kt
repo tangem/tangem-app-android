@@ -7,9 +7,9 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -42,7 +42,7 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
                             },
                         )
                 } catch (e: IllegalArgumentException) {
-                    Timber.w(e, "Unable to validate signature count: user wallet not found")
+                    TangemLogger.w("Unable to validate signature count: user wallet not found", e)
                     false
                 }
             }
