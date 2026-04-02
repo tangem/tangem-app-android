@@ -11,4 +11,5 @@ data class CryptoCurrencyCheck(
     val utxoAmountLimit: UtxoAmountLimit?,
     val isAccountFunded: Boolean,
     val rentWarning: CryptoCurrencyWarning.Rent?,
+    val isMemoRequired: Boolean = false,
 )
