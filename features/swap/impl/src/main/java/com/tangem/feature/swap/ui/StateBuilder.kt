@@ -180,7 +180,10 @@ internal class StateBuilder(
         toToken: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         toAccount: Account.CryptoPortfolio?,
+        mainTokenId: String,
     ): SwapStateHolder {
+        val canSelectSendToken = mainTokenId != fromToken.currency.id.value
+        val canSelectReceiveToken = mainTokenId != toToken.currency.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
@@ -196,7 +199,7 @@ internal class StateBuilder(
                 coinId = fromToken.currency.network.backendId,
                 isNotNativeToken = fromToken.currency is CryptoCurrency.Token,
                 tokenCurrency = fromToken.currency.symbol,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                canSelectAnotherToken = canSelectSendToken,
                 balance = fromToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(fromToken.currency.network.rawId),
                 isBalanceHidden = isBalanceHiddenProvider(),
@@ -214,7 +217,7 @@ internal class StateBuilder(
                 coinId = toToken.currency.network.backendId,
                 isNotNativeToken = toToken.currency is CryptoCurrency.Token,
                 tokenCurrency = toToken.currency.symbol,
-                canSelectAnotherToken = true,
+                canSelectAnotherToken = canSelectReceiveToken,
                 balance = toToken.getFormattedAmount(isNeedSymbol = false),
                 networkIconRes = getActiveIconRes(toToken.currency.network.rawId),
                 isBalanceHidden = isBalanceHiddenProvider(),
