@@ -2,6 +2,7 @@ package com.tangem.tap.common.clipboard
 
 import android.content.ClipData
 import android.content.ClipDescription
+import android.content.ClipDescription.MIMETYPE_TEXT_HTML
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.os.Build
 import android.os.PersistableBundle
@@ -29,7 +30,9 @@ internal class DefaultClipboardManager(private val clipboardManager: AndroidClip
         }
 
         val clipDescription = clipboardManager.primaryClipDescription
-        if (clipDescription?.hasMimeType(MIMETYPE_TEXT_PLAIN) == false) {
+        if (clipDescription?.hasMimeType(MIMETYPE_TEXT_PLAIN) == false &&
+            !clipDescription.hasMimeType(MIMETYPE_TEXT_HTML)
+        ) {
             TangemLogger.d("Clipboard doesn't contain text")
             return default
         }
