@@ -125,7 +125,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                     top.linkTo(parent.top)
                     bottom.linkTo(timestampItem.top)
                     end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
+                    width = Dimension.wrapContent
                 },
             )
 
@@ -274,6 +274,8 @@ private fun Amount(state: TransactionState, isBalanceHidden: Boolean, modifier: 
                     }
                 },
                 style = TangemTheme.typography.body2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         is TransactionState.Loading -> {
