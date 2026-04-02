@@ -1,5 +1,6 @@
 package com.tangem.data.qrscanning.parser
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.qrscanning.models.ClassifiedQrContent
 import java.math.BigDecimal
@@ -14,11 +15,10 @@ internal class Eip681PaymentUriParser(
         coins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): PaymentUriParser.ParseResult {
-        if (!qrCode.startsWith(SCHEME)) {
-            return PaymentUriParser.ParseResult.NotRecognized
-        }
+        val scheme = SCHEMES.find { qrCode.startsWith(it, ignoreCase = true) }
+            ?: return PaymentUriParser.ParseResult.NotRecognized
 
-        val withoutScheme = qrCode.removePrefix(SCHEME)
+        val withoutScheme = qrCode.removePrefix(scheme)
         val parsed = parseEip681(withoutScheme) ?: return PaymentUriParser.ParseResult.NotRecognized
 
         val matchingCoins = findMatchingCoins(parsed.chainId, coins)
@@ -31,8 +31,26 @@ internal class Eip681PaymentUriParser(
             )
         }
 
+        val isAddressValid = matchingCoins.any { coin ->
+            blockchainDataProvider.validateAddress(coin.network, parsed.targetAddress)
+        }
+        if (!isAddressValid) {
+            return PaymentUriParser.ParseResult.RecognizedError(
+                ClassifiedQrContent.Error.Unrecognized(qrCode),
+            )
+        }
+
         val result = if (parsed.functionName == FUNCTION_TRANSFER) {
-            if (PARAM_ADDRESS !in parsed.params) {
+            val recipient = parsed.params[Param.ADDRESS.key]
+            if (recipient == null) {
+                return PaymentUriParser.ParseResult.RecognizedError(
+                    ClassifiedQrContent.Error.Unrecognized(qrCode),
+                )
+            }
+            val isRecipientValid = matchingCoins.any { coin ->
+                blockchainDataProvider.validateAddress(coin.network, recipient)
+            }
+            if (!isRecipientValid) {
                 return PaymentUriParser.ParseResult.RecognizedError(
                     ClassifiedQrContent.Error.Unrecognized(qrCode),
                 )
@@ -41,16 +59,30 @@ internal class Eip681PaymentUriParser(
         } else {
             resolveNativeTransfer(parsed, matchingCoins, allCurrencies)
         }
-        return if (result != null) {
-            PaymentUriParser.ParseResult.Success(result)
-        } else {
-            PaymentUriParser.ParseResult.RecognizedError(
+        if (result == null) {
+            return PaymentUriParser.ParseResult.RecognizedError(
                 ClassifiedQrContent.Error.UnsupportedNetwork(
                     raw = qrCode,
                     blockchain = matchingCoins.firstOrNull()?.network?.name,
                 ),
             )
         }
+
+        val unsupportedParams = findUnsupportedParams(parsed.params, parsed.functionName)
+        return if (unsupportedParams.isEmpty()) {
+            PaymentUriParser.ParseResult.Success(result)
+        } else {
+            PaymentUriParser.ParseResult.SuccessWithWarning(result, unsupportedParams)
+        }
+    }
+
+    private fun findUnsupportedParams(params: Map<String, String>, functionName: String?): Map<String, String> {
+        val supportedKeys = if (functionName == FUNCTION_TRANSFER) {
+            Param.transferParams()
+        } else {
+            Param.nativeParams()
+        }
+        return params.filterKeys { key -> key !in supportedKeys }
     }
 
     private fun resolveNativeTransfer(
@@ -58,7 +90,7 @@ internal class Eip681PaymentUriParser(
         matchingCoins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): ClassifiedQrContent.PaymentUri? {
-        val valueWei = parsed.params[PARAM_VALUE]?.toBigDecimalOrNull()
+        val valueWei = parsed.params[Param.VALUE.key]?.toBigDecimalOrNull()
 
         if (matchingCoins.isEmpty()) return null
 
@@ -87,7 +119,7 @@ internal class Eip681PaymentUriParser(
         matchingCoins: List<CryptoCurrency.Coin>,
         allCurrencies: List<CryptoCurrency>,
     ): ClassifiedQrContent.PaymentUri? {
-        val recipient = parsed.params[PARAM_ADDRESS] ?: return null
+        val recipient = parsed.params[Param.ADDRESS.key] ?: return null
         val contractAddress = parsed.targetAddress
 
         val matchingNetworkIds = matchingCoins.map { it.network.id }.toSet()
@@ -100,7 +132,7 @@ internal class Eip681PaymentUriParser(
 
         if (matchingTokens.isEmpty()) return null
 
-        val rawAmount = parsed.params[PARAM_UINT256]?.toBigDecimalOrNull()
+        val rawAmount = parsed.params[Param.UINT256.key]?.toBigDecimalOrNull()
         val amount = rawAmount?.fromSmallestUnit(matchingTokens.first().decimals)
 
         return ClassifiedQrContent.PaymentUri(
@@ -114,7 +146,7 @@ internal class Eip681PaymentUriParser(
     private fun findMatchingCoins(chainId: Long?, coins: List<CryptoCurrency.Coin>): List<CryptoCurrency.Coin> {
         if (chainId == null) {
             return coins.filter { coin ->
-                blockchainDataProvider.getShareSchemes(coin.network).any { it.startsWith(SCHEME) }
+                blockchainDataProvider.getChainId(coin.network) != null
             }
         }
         return coins.filter { coin ->
@@ -131,7 +163,7 @@ internal class Eip681PaymentUriParser(
         val queryString = match.groupValues[GROUP_QUERY]
 
         val params = parseQueryParams(queryString)
-        val chainId = pathChainId ?: params[PARAM_CHAIN_ID]?.toLongOrNull()
+        val chainId = pathChainId ?: params[Param.CHAIN_ID.key]?.toLongOrNull()
 
         return Eip681Result(
             targetAddress = targetAddress,
@@ -161,15 +193,27 @@ internal class Eip681PaymentUriParser(
         val params: Map<String, String>,
     )
 
+    private enum class Param(val key: String) {
+        VALUE("value"),
+        ADDRESS("address"),
+        UINT256("uint256"),
+        CHAIN_ID("chainId"),
+        ;
+
+        companion object {
+            /** Params supported for native transfers (no function or unknown function). */
+            fun nativeParams(): Set<String> = setOf(VALUE.key, CHAIN_ID.key)
+
+            /** Params supported for ERC-20 transfer() calls. */
+            fun transferParams(): Set<String> = setOf(ADDRESS.key, UINT256.key, CHAIN_ID.key)
+        }
+    }
+
     private companion object {
         // ethereum:<address>[@<chainId>][/<function>][?<params>]
         val URI_REGEX = Regex("""^([^@/?]+)(?:@(\d+))?(?:/([^?]+))?(?:\?(.+))?$""")
-        const val SCHEME = "ethereum:"
+        val SCHEMES = Blockchain.Ethereum.getShareScheme()
         const val FUNCTION_TRANSFER = "transfer"
-        const val PARAM_VALUE = "value"
-        const val PARAM_ADDRESS = "address"
-        const val PARAM_UINT256 = "uint256"
-        const val PARAM_CHAIN_ID = "chainId"
         const val GROUP_ADDRESS = 1
         const val GROUP_CHAIN_ID = 2
         const val GROUP_FUNCTION = 3
