@@ -17,6 +17,7 @@ internal class FeeItemConverter(
     private val feeSelectorIntents: FeeSelectorIntents,
     private val appCurrency: AppCurrency,
     cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val shouldDisableCustomFee: Boolean,
 ) : Converter<FeeItemConverter.Input, ImmutableList<FeeItem>> {
 
     private val customFeeFieldConverter = FeeSelectorCustomFieldConverter(
@@ -54,8 +55,10 @@ internal class FeeItemConverter(
                 add(FeeItem.Market(fee = value.transactionFee.normal))
             }
         }
-        val customFee = value.customFee ?: constructCustomFee()
-        customFee?.let(::add)
+        if (!shouldDisableCustomFee) {
+            val customFee = value.customFee ?: constructCustomFee()
+            customFee?.let(::add)
+        }
     }
 
     private fun MutableList<FeeItem>.addFeeItemsLimited(value: Input) {

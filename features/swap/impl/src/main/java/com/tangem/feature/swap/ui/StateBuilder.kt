@@ -975,6 +975,7 @@ internal class StateBuilder(
                     dialogText = resourceReference(R.string.swapping_approve_information_text),
                     footerText = resourceReference(R.string.swap_give_permission_fee_footer),
                     onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
+                    isResetApproval = permissionDataState.isResetApproval,
                 )
             }
         }
