@@ -117,7 +117,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                     is CryptoCurrency.Coin -> "0"
                 },
                 memo = null,
-                amountValue = model.confirmData.enteredAmount.orZero(),
+                amountValue = model.confirmData.enteredFromAmount.orZero(),
                 reduceAmountBy = model.confirmData.reduceAmountBy.orZero(),
                 isIgnoreReduce = model.confirmData.isIgnoreReduce,
                 fee = model.confirmData.fee,
@@ -137,6 +137,9 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
                 memo = model.confirmData.enteredMemo,
                 toCryptoCurrencyStatus = model.confirmData.toCryptoCurrencyStatus,
                 userWalletId = params.userWallet.walletId,
+                enteredFromAmount = model.confirmData.enteredFromAmount,
+                fromCryptoCurrencyStatus = model.confirmData.fromCryptoCurrencyStatus,
+                priceImpact = model.confirmData.priceImpact,
             ),
         ),
     )

@@ -48,6 +48,7 @@ internal fun GiveApprovalContent(
     walletInteractionIcon: Int?,
     isApproveEnabled: Boolean,
     isApproveLoading: Boolean,
+    isHoldToConfirm: Boolean,
     onApproveClick: () -> Unit,
     onCancelClick: () -> Unit,
     onOpenLearnMoreAboutApproveClick: () -> Unit,
@@ -81,16 +82,28 @@ internal fun GiveApprovalContent(
 
         SpacerH(height = TangemTheme.dimens.spacing20)
 
-        PrimaryButtonIconEnd(
-            text = stringResourceSafe(id = CommonUiR.string.common_approve),
-            iconResId = walletInteractionIcon,
-            showProgress = isApproveLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TangemTheme.dimens.spacing16),
-            onClick = onApproveClick,
-            enabled = isApproveEnabled,
-        )
+        if (isHoldToConfirm) {
+            HoldToConfirmButton(
+                text = stringResourceSafe(id = CommonUiR.string.common_approve),
+                enabled = isApproveEnabled,
+                isLoading = isApproveLoading,
+                onConfirm = onApproveClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TangemTheme.dimens.spacing16),
+            )
+        } else {
+            PrimaryButtonIconEnd(
+                text = stringResourceSafe(id = CommonUiR.string.common_approve),
+                iconResId = walletInteractionIcon,
+                showProgress = isApproveLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                onClick = onApproveClick,
+                enabled = isApproveEnabled,
+            )
+        }
 
         SpacerH12()
 
@@ -309,6 +322,7 @@ private fun GiveApprovalContentPreview(
             walletInteractionIcon = params.walletInteractionIcon,
             isApproveEnabled = params.isApproveEnabled,
             isApproveLoading = params.isApproveLoading,
+            isHoldToConfirm = false,
             onApproveClick = {},
             onCancelClick = {},
             onOpenLearnMoreAboutApproveClick = {},

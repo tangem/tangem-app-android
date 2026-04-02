@@ -39,7 +39,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 
 @Suppress("LongParameterList")
@@ -286,7 +286,7 @@ internal class StakeKitTransactionSender @AssistedInject constructor(
                             transactionHash = transactionHash,
                         )
                     }.onRight {
-                        Timber.d("Successful hash submission")
+                        TangemLogger.d("Successful hash submission")
                     }
             }
     }

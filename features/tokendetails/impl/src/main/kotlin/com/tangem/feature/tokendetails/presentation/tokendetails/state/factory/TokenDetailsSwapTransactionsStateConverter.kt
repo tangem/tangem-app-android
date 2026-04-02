@@ -36,7 +36,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.Locale
 
@@ -122,7 +122,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
 
     fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel): ExchangeUM {
         if (tx.activeStatus == statusModel.status && tx.hasLongTime == statusModel.hasLongTime) {
-            Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
+            TangemLogger.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
         val hasFailed = statusModel.status.isFailed()

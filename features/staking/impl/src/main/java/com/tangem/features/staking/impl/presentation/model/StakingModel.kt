@@ -106,7 +106,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
@@ -835,7 +835,7 @@ internal class StakingModel @Inject constructor(
                 userWalletId = userWalletId,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     analyticsEventHandler.send(
                         StakingAnalyticsEvent.TransactionError(
                             errorCode = "CreateApprovalTxError",
@@ -864,7 +864,7 @@ internal class StakingModel @Inject constructor(
                 network = tokenCryptoCurrency.network,
             ).fold(
                 ifLeft = { error ->
-                    Timber.e(error.toString())
+                    TangemLogger.e(error.toString())
                     analyticsEventHandler.send(
                         StakingAnalyticsEvent.TransactionError(
                             errorCode = error.getAnalyticsDescription(),
@@ -1438,7 +1438,7 @@ internal class StakingModel @Inject constructor(
             userWalletId = userWalletId,
             network = cryptoCurrencyStatus.currency.network,
         ).getOrElse { throwable ->
-            Timber.e(throwable)
+            TangemLogger.e("Error", throwable)
             false
         }
 
@@ -1497,6 +1497,7 @@ internal class StakingModel @Inject constructor(
                 id = R.string.give_permission_staking_subtitle,
                 formatArgs = wrappedList(cryptoCurrencyStatus.currency.symbol),
             ),
+            isHoldToConfirm = value.shouldShowHoldToConfirmButton,
             callback = approvalCallback,
         )
     }
