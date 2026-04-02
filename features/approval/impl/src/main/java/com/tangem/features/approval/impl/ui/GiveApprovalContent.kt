@@ -27,28 +27,24 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.window.PopupProperties
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.approval.impl.model.GiveApprovalUM
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import com.tangem.common.ui.R as CommonUiR
 
 @Composable
 @Suppress("LongParameterList")
 internal fun GiveApprovalContent(
     currency: String,
+    uiState: GiveApprovalUM,
     subtitle: TextReference,
-    approveType: ApproveType,
-    approveItems: ImmutableList<ApproveType>,
     onChangeApproveType: (ApproveType) -> Unit,
-    walletInteractionIcon: Int?,
-    isApproveEnabled: Boolean,
-    isApproveLoading: Boolean,
-    isHoldToConfirm: Boolean,
     onApproveClick: () -> Unit,
     onCancelClick: () -> Unit,
     onOpenLearnMoreAboutApproveClick: () -> Unit,
@@ -73,20 +69,21 @@ internal fun GiveApprovalContent(
 
         ApprovalInfo(
             currency = currency,
-            approveType = approveType,
-            approveItems = approveItems,
+            approveType = uiState.approveType,
+            approveItems = uiState.approveItems,
             onChangeApproveType = onChangeApproveType,
             onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
             feeSelectorBlockComponent = feeSelectorBlockComponent,
+            isResetApproval = uiState.isResetApproval,
         )
 
         SpacerH(height = TangemTheme.dimens.spacing20)
 
-        if (isHoldToConfirm) {
+        if (uiState.isHoldToConfirm) {
             HoldToConfirmButton(
-                text = stringResourceSafe(id = CommonUiR.string.common_approve),
-                enabled = isApproveEnabled,
-                isLoading = isApproveLoading,
+                text = stringResourceSafe(id = R.string.common_approve),
+                enabled = uiState.isApproveButtonEnabled,
+                isLoading = uiState.isApproveLoading,
                 onConfirm = onApproveClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -94,21 +91,21 @@ internal fun GiveApprovalContent(
             )
         } else {
             PrimaryButtonIconEnd(
-                text = stringResourceSafe(id = CommonUiR.string.common_approve),
-                iconResId = walletInteractionIcon,
-                showProgress = isApproveLoading,
+                text = stringResourceSafe(id = R.string.common_approve),
+                iconResId = uiState.walletInteractionIcon,
+                showProgress = uiState.isApproveLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TangemTheme.dimens.spacing16),
                 onClick = onApproveClick,
-                enabled = isApproveEnabled,
+                enabled = uiState.isApproveButtonEnabled,
             )
         }
 
         SpacerH12()
 
         SecondaryButton(
-            text = stringResourceSafe(id = CommonUiR.string.common_cancel),
+            text = stringResourceSafe(id = R.string.common_cancel),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
@@ -124,6 +121,7 @@ internal fun GiveApprovalContent(
 private fun ApprovalInfo(
     currency: String,
     approveType: ApproveType,
+    isResetApproval: Boolean,
     approveItems: ImmutableList<ApproveType>,
     onChangeApproveType: (ApproveType) -> Unit,
     onOpenLearnMoreAboutApproveClick: () -> Unit,
@@ -131,7 +129,7 @@ private fun ApprovalInfo(
 ) {
     FooterContainer(
         footer = annotatedReference {
-            append(stringResourceSafe(CommonUiR.string.swap_approve_description))
+            append(stringResourceSafe(R.string.swap_approve_description))
             append(" ")
             withLink(
                 link = LinkAnnotation.Clickable(
@@ -140,7 +138,7 @@ private fun ApprovalInfo(
                 ),
                 block = {
                     appendColored(
-                        text = stringResourceSafe(CommonUiR.string.common_learn_more),
+                        text = stringResourceSafe(R.string.common_learn_more),
                         color = TangemTheme.colors.text.accent,
                     )
                 },
@@ -157,7 +155,13 @@ private fun ApprovalInfo(
     }
     SpacerH16()
     FooterContainer(
-        footer = resourceReference(CommonUiR.string.give_permission_policy_type_footer),
+        footer = resourceReference(
+            if (isResetApproval) {
+                R.string.update_approval_permission_fee_note
+            } else {
+                R.string.give_permission_policy_type_footer
+            },
+        ),
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         feeSelectorBlockComponent.Content(
@@ -202,7 +206,7 @@ private fun AmountItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResourceSafe(id = CommonUiR.string.give_permission_rows_amount, currency),
+                text = stringResourceSafe(id = R.string.give_permission_rows_amount, currency),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
@@ -215,7 +219,7 @@ private fun AmountItem(
                 maxLines = 1,
             )
             Icon(
-                painter = rememberVectorPainter(ImageVector.vectorResource(id = CommonUiR.drawable.ic_chevron_24)),
+                painter = rememberVectorPainter(ImageVector.vectorResource(id = R.drawable.ic_chevron_24)),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing2),
@@ -275,10 +279,10 @@ private fun DropdownSelector(
                             Text(
                                 text = when (item) {
                                     ApproveType.LIMITED -> stringResourceSafe(
-                                        id = CommonUiR.string.give_permission_current_transaction,
+                                        id = R.string.give_permission_current_transaction,
                                     )
                                     ApproveType.UNLIMITED -> stringResourceSafe(
-                                        id = CommonUiR.string.give_permission_unlimited,
+                                        id = R.string.give_permission_unlimited,
                                     )
                                 },
                                 color = TangemTheme.colors.text.primary1,
@@ -288,7 +292,7 @@ private fun DropdownSelector(
                             SpacerWMax()
                             Icon(
                                 painter = rememberVectorPainter(
-                                    image = ImageVector.vectorResource(id = CommonUiR.drawable.ic_check_24),
+                                    image = ImageVector.vectorResource(id = R.drawable.ic_check_24),
                                 ),
                                 tint = color,
                                 contentDescription = null,
@@ -316,13 +320,8 @@ private fun GiveApprovalContentPreview(
         GiveApprovalContent(
             currency = params.currency,
             subtitle = params.subtitle,
-            approveType = params.approveType,
-            approveItems = params.approveItems,
+            uiState = params.uiState,
             onChangeApproveType = {},
-            walletInteractionIcon = params.walletInteractionIcon,
-            isApproveEnabled = params.isApproveEnabled,
-            isApproveLoading = params.isApproveLoading,
-            isHoldToConfirm = false,
             onApproveClick = {},
             onCancelClick = {},
             onOpenLearnMoreAboutApproveClick = {},
@@ -334,11 +333,7 @@ private fun GiveApprovalContentPreview(
 private data class GiveApprovalPreviewParams(
     val currency: String,
     val subtitle: TextReference,
-    val approveType: ApproveType,
-    val approveItems: ImmutableList<ApproveType>,
-    val walletInteractionIcon: Int?,
-    val isApproveEnabled: Boolean,
-    val isApproveLoading: Boolean,
+    val uiState: GiveApprovalUM,
 )
 
 private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<GiveApprovalPreviewParams> {
@@ -347,20 +342,36 @@ private class GiveApprovalContentPreviewProvider : PreviewParameterProvider<Give
             GiveApprovalPreviewParams(
                 currency = "USDT",
                 subtitle = stringReference("Allow this app to access your USDT"),
-                approveType = ApproveType.LIMITED,
-                approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
-                walletInteractionIcon = CommonUiR.drawable.ic_tangem_24,
-                isApproveEnabled = true,
-                isApproveLoading = false,
+                uiState = GiveApprovalUM(
+                    approveType = ApproveType.LIMITED,
+                    approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
+                    walletInteractionIcon = R.drawable.ic_tangem_24,
+                    isApproveButtonEnabled = true,
+                    isApproveLoading = false,
+                ),
             ),
             GiveApprovalPreviewParams(
                 currency = "USDC",
                 subtitle = stringReference("Allow this app to access your USDC"),
-                approveType = ApproveType.UNLIMITED,
-                approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
-                walletInteractionIcon = CommonUiR.drawable.ic_tangem_24,
-                isApproveEnabled = false,
-                isApproveLoading = true,
+                uiState = GiveApprovalUM(
+                    approveType = ApproveType.UNLIMITED,
+                    approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
+                    walletInteractionIcon = R.drawable.ic_tangem_24,
+                    isApproveButtonEnabled = false,
+                    isApproveLoading = true,
+                ),
+            ),
+            GiveApprovalPreviewParams(
+                currency = "USDC",
+                subtitle = stringReference("Allow this app to access your USDC"),
+                uiState = GiveApprovalUM(
+                    approveType = ApproveType.UNLIMITED,
+                    approveItems = persistentListOf(ApproveType.LIMITED, ApproveType.UNLIMITED),
+                    walletInteractionIcon = R.drawable.ic_tangem_24,
+                    isApproveButtonEnabled = true,
+                    isApproveLoading = false,
+                    isResetApproval = true,
+                ),
             ),
         )
 }
