@@ -39,7 +39,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("DestructuringDeclarationWithTooManyEntries")
 @Composable
-internal fun TokenDetailsBalanceBlock(
+internal fun TokenDetailsBalanceBlockLegacy(
     state: TokenDetailsBalanceBlockState,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
@@ -264,7 +264,7 @@ private fun Preview_TokenDetailsBalanceBlock(
     @PreviewParameter(TokenDetailsBalanceBlockStateProvider::class) state: TokenDetailsBalanceBlockState,
 ) {
     TangemThemePreview {
-        TokenDetailsBalanceBlock(state = state, isBalanceHidden = false)
+        TokenDetailsBalanceBlockLegacy(state = state, isBalanceHidden = false)
     }
 }
 
