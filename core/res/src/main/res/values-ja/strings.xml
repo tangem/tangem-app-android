@@ -467,6 +467,19 @@
   <string name="domain_receive_assets_onboarding_description">他のネットワークで資産を送金すると、永久に失われます。</string>
   <string name="domain_receive_assets_onboarding_network_name">%sネットワーク</string>
   <string name="domain_receive_assets_onboarding_title">下記のみを使用して資金を送金する</string>
+  <string name="dynamic_addresses">動的アドレス</string>
+  <string name="dynamic_addresses_custom_token_error_on_addition">動的アドレスが有効になっています。カスタムの「change」と「index」は利用できません。</string>
+  <string name="dynamic_addresses_enabled_toast_title">動的アドレスが有効です。</string>
+  <string name="dynamic_addresses_enter_features_privacy_description">取引ごとに新しいアドレスを使うことで、追跡されにくくなり、オンチェーン上のプライバシーが向上します。</string>
+  <string name="dynamic_addresses_enter_features_privacy_title">プライバシー強化</string>
+  <string name="dynamic_addresses_enter_features_receving_description">UTXOベースのネットワークでは、アドレスが自動生成されるため、手動で管理しなくても簡単に資金を受け取れます。</string>
+  <string name="dynamic_addresses_enter_features_receving_title">スムーズな受け取り</string>
+  <string name="dynamic_addresses_enter_main_button_title">動的アドレスを有効にする</string>
+  <string name="dynamic_addresses_enter_subtitle">動的アドレスでは、プライバシー強化のため毎回新しいアドレスが生成されますが、合計残高は変わりません。</string>
+  <string name="dynamic_addresses_error_has_custom_token_description">一部のカスタムアドレスまたはトークンで通常と異なる導出パスが使われているため、動的アドレスを有効にできません。</string>
+  <string name="dynamic_addresses_error_has_custom_token_title">動的アドレスは利用できません</string>
+  <string name="dynamic_addresses_error_service_unavailable_description">現在、プロバイダーに接続できません。しばらくしてからもう一度お試しください。</string>
+  <string name="dynamic_addresses_error_service_unavailable_title">サービスを利用できません。しばらくしてからもう一度お試しください。</string>
   <string name="earn_best_opportunities">おすすめ</string>
   <string name="earn_clear_filter">絞り込みを解除</string>
   <string name="earn_empty">リストは現在更新中のため、一時的に空になっています。しばらくしてからご確認ください。</string>
@@ -745,7 +758,10 @@
   <string name="markets_loading_no_data_title">データなし</string>
   <string name="markets_pulse_common_title">マーケット動向</string>
   <string name="markets_quick_actions">クイックアクション</string>
+  <string name="markets_search_clear_all_hints">すべてクリア</string>
   <string name="markets_search_header_title">トークンを探す</string>
+  <string name="markets_search_hint_header">最近</string>
+  <string name="markets_search_portfolio_header">ポートフォリオ内</string>
   <string name="markets_search_result_title">結果</string>
   <string name="markets_search_see_tokens_under_100k">時価総額10万ドル以下のトークンを見る</string>
   <string name="markets_search_show_tokens">トークンを表示</string>
@@ -820,9 +836,11 @@
   <string name="markets_token_details_market_rating_description">時価総額に基づくすべてのコイン間の暗号資産評価における位置</string>
   <string name="markets_token_details_market_rating_full">市場格付け</string>
   <string name="markets_token_details_max_supply">最大供給量</string>
+  <string name="markets_token_details_max_supply_and_circulation_full">流通量と最大供給量</string>
   <string name="markets_token_details_max_supply_description">特定の暗号資産に存在しうるコインまたはトークンの最大数</string>
   <string name="markets_token_details_max_supply_full">最大供給量</string>
   <string name="markets_token_details_metrics">指標</string>
+  <string name="markets_token_details_metrics_no_limited">制限なし</string>
   <string name="markets_token_details_official_links">公式リンク</string>
   <string name="markets_token_details_price_performance">値動き</string>
   <string name="markets_token_details_repository">リポジトリ</string>
@@ -1095,6 +1113,8 @@
   <string name="qr_scanner_error_unrecognized_title">認識できないQRコード</string>
   <string name="qr_scanner_error_unsupported_network_message">このネットワークは、追加されているトークンのいずれにも対応していません。対応しているトークンを追加してから暗号資産を送金してください。</string>
   <string name="qr_scanner_error_unsupported_network_title">対応しているトークンが見つかりません</string>
+  <string name="qr_scanner_warning_unknown_parameters_message">このQRコードには認識できないパラメータが含まれています：%s。続行すると、一部の支払い情報が失われる可能性があります。</string>
+  <string name="qr_scanner_warning_unknown_parameters_title">不明なパラメータ</string>
   <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
   <string name="receive_bottom_sheet_warning_message">%3$sネットワーク上の%1$s ( %2$s )</string>
   <string name="receive_bottom_sheet_warning_message_compact">%2$sネットワーク上の%1$s</string>
@@ -1477,6 +1497,7 @@
   <string name="swapping_fee_estimation_error_text">手数料見積りエラーです。サポートにフィードバックをお送りください。</string>
   <string name="swapping_from_title">スワップする</string>
   <string name="swapping_high_price_impact_description">選択したトークンをこの量を交換すると、価格に大きな影響が生じ、結果が減少します。</string>
+  <string name="swapping_high_price_impact_text">流動性が低いため、受取額が大幅に少なくなる可能性があります。金額を減らすか、別のプロバイダーをお試しください。</string>
   <string name="swapping_high_price_impact_title">価格への影響が甚大です</string>
   <string name="swapping_insufficient_funds">残高不足</string>
   <string name="swapping_insufficient_funds_description">この取引を完了するには残高が不足しています。受け取り額を減らすか、資金を追加してください。</string>
@@ -1486,6 +1507,8 @@
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
+  <string name="swapping_trade_too_large_text">この取引に十分な流動性がありません。\n金額を減らすか、別のプロバイダーを選択してください。</string>
+  <string name="swapping_trade_too_large_title">取引額が大きすぎます</string>
   <string name="tangem_pay_beta_notification_subtitle">皆様からのフィードバックをお待ちしております</string>
   <string name="tangem_pay_beta_notification_title">Tangem Payのベータ版を公開しました</string>
   <string name="tangem_pay_card_frozen">カードが凍結されています</string>
@@ -1609,7 +1632,7 @@
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在、データを表示できませんが、カードでのお支払いは引き続きご利用いただけます。</string>
   <string name="tangempay_set_pin_code">\nPINコードの設定</string>
-  <string name="tangempay_sync_needed">未同期</string>
+  <string name="tangempay_sync_needed">セッションの有効期限が切れました</string>
   <string name="tangempay_sync_needed_restore_access">アクセスを復元</string>
   <string name="tangempay_tangem_visa_card">日常の支払いにUSDCを利用</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは現在一時的に利用できません。</string>
@@ -1646,6 +1669,7 @@
   <string name="token_details_token_type_subtitle_no_standard">%%image%% %1$sネットワーク上のトークン</string>
   <string name="token_details_unable_hide_alert_message">%1$s ( %2$s ) トークンは%3$sネットワークの主要通貨であり、このネットワーク上の他のトークンがリストにある限り、非表示にすることはできません。</string>
   <string name="token_details_unable_hide_alert_title">%sを非表示にできません</string>
+  <string name="token_market_metrics_no_data">該当なし</string>
   <string name="token_receive_show_qr_code_title">QRコードを表示</string>
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
