@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 @Suppress("LongParameterList")
 internal class TangemPayMainSubscriber @AssistedInject constructor(
@@ -67,7 +67,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                         }
                         TangemPayCustomerInfoError.UnknownError -> {
                             // hide TangemPay block
-                            Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
+                            TangemLogger.e("Failed when loading main screen TangemPay info: $tangemPayError")
                             stateController.update(
                                 transformer = TangemPayHiddenStateTransformer(userWalletId),
                             )

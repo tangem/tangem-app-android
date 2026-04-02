@@ -50,6 +50,7 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.logging.TangemLogger
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -57,7 +58,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
-import timber.log.Timber
 import java.util.UUID
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
@@ -221,7 +221,7 @@ internal class DefaultOnrampRepository(
                 ).bind()
             },
             onError = { error ->
-                Timber.w(error, "Unable to fetch onramp payment methods")
+                TangemLogger.w("Unable to fetch onramp payment methods", error)
                 throw error
             },
         )
@@ -256,7 +256,7 @@ internal class DefaultOnrampRepository(
                     ).bind()
                 },
                 onError = { error ->
-                    Timber.w(error, "Unable to fetch onramp pairs")
+                    TangemLogger.w("Unable to fetch onramp pairs", error)
                     throw error
                 },
             )
@@ -273,7 +273,7 @@ internal class DefaultOnrampRepository(
                     ).bind()
                 },
                 onError = { error ->
-                    Timber.w(error, "Unable to fetch express providers")
+                    TangemLogger.w("Unable to fetch express providers", error)
                     throw error
                 },
             )
@@ -321,7 +321,7 @@ internal class DefaultOnrampRepository(
                         ).bind()
                     },
                     onError = { error ->
-                        Timber.w(error, "Unable to fetch onramp pairs")
+                        TangemLogger.w("Unable to fetch onramp pairs", error)
                         throw error
                     },
                 )
@@ -455,7 +455,7 @@ internal class DefaultOnrampRepository(
                     ).bind()
                 },
                 onError = { e ->
-                    Timber.e(e)
+                    TangemLogger.e("Error", e)
                     throw e
                 },
             )
@@ -478,7 +478,7 @@ internal class DefaultOnrampRepository(
                 throw OnrampRedirectError.VerificationFailed
             }
         } catch (e: Exception) {
-            Timber.e(e)
+            TangemLogger.e("Error", e)
             throw e
         }
     }
@@ -602,7 +602,7 @@ internal class DefaultOnrampRepository(
                 countryCode = countryCode,
             )
         } else {
-            Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")
+            TangemLogger.w("Unable to fetch onramp quotes for ${provider.id}. $error", error)
             OnrampQuote.Error(
                 paymentMethod = paymentMethod,
                 provider = provider,
@@ -612,7 +612,7 @@ internal class DefaultOnrampRepository(
             )
         }
     } else {
-        Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")
+        TangemLogger.w("Unable to fetch onramp quotes for ${provider.id}. $error", error)
         null
     }
 

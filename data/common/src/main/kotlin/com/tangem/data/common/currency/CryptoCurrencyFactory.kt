@@ -11,7 +11,7 @@ import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import com.tangem.blockchain.common.Token as SdkToken
 
 // FIXME: Make internal
@@ -52,7 +52,7 @@ class CryptoCurrencyFactory(
         accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Token? {
         if (blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
+            TangemLogger.e("Unable to map the SDK token to the domain token with Unknown blockchain")
             return null
         }
 
@@ -93,7 +93,7 @@ class CryptoCurrencyFactory(
                 accountIndex = accountIndex,
             )
         } else {
-            Timber.e("Unable to get blockchain from chainId == $chainId")
+            TangemLogger.e("Unable to get blockchain from chainId == $chainId")
             null
         }
     }
@@ -105,7 +105,7 @@ class CryptoCurrencyFactory(
         accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Coin? {
         if (blockchain == Blockchain.Unknown) {
-            Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
+            TangemLogger.e("Unable to map the SDK token to the domain token with Unknown blockchain")
             return null
         }
 

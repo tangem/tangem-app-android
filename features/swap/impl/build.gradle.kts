@@ -94,7 +94,6 @@ dependencies {
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)
-    implementation(deps.timber)
     implementation(deps.decompose.ext.compose)
 
     /** Tangem libs */

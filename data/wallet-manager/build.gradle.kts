@@ -43,7 +43,6 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
     implementation(deps.androidx.datastore)
     implementation(deps.arrow.core)
-    implementation(deps.timber)
 
     /** Testing libraries */
     testRuntimeOnly(deps.test.junit5.engine)

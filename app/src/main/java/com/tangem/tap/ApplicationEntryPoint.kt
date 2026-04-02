@@ -28,6 +28,7 @@ import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.ScanFailsRequester
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -151,4 +152,6 @@ interface ApplicationEntryPoint {
     fun getAppsFlyerClientFactory(): AppsFlyerClient.Factory
 
     fun getCustomerIoFeatureToggles(): CustomerIoFeatureToggles
+
+    fun getScanFailsRequester(): ScanFailsRequester
 }
