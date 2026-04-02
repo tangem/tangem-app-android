@@ -16,7 +16,7 @@ import com.tangem.utils.coroutines.saveInAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 
 internal class CustomCurrencyValidator(
     private val userWalletId: UserWalletId,
@@ -103,7 +103,7 @@ internal class CustomCurrencyValidator(
         ).getOrElse { e ->
             when (e) {
                 is FindTokenException.DataError -> {
-                    Timber.e(e.cause, "Unable to find custom currency")
+                    TangemLogger.e("Unable to find custom currency", e.cause)
                     updateStatus(Status.UnexpectedException(e.cause))
                     return
                 }
@@ -135,7 +135,7 @@ internal class CustomCurrencyValidator(
         ).getOrElse { e ->
             val newStatus = when (e) {
                 is FindTokenException.DataError -> {
-                    Timber.e(e.cause, "Unable to find custom currency")
+                    TangemLogger.e("Unable to find custom currency", e.cause)
                     Status.UnexpectedException(e.cause)
                 }
                 is FindTokenException.NotFound -> {
@@ -161,7 +161,7 @@ internal class CustomCurrencyValidator(
             derivationPath = derivationPath,
             formValues = validatedForm,
         ).getOrElse { e ->
-            Timber.e(e, "Unable to create custom currency")
+            TangemLogger.e("Unable to create custom currency", e)
             updateStatus(Status.UnexpectedException(e))
             return
         }
@@ -181,7 +181,7 @@ internal class CustomCurrencyValidator(
                 is CryptoCurrency.Token -> currency.contractAddress
             },
         ).getOrElse { e ->
-            Timber.e(e, "Unable to check if currency is already added")
+            TangemLogger.e("Unable to check if currency is already added", e)
             updateStatus(Status.UnexpectedException(e))
 
             return
