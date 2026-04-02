@@ -771,7 +771,12 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun handleQrResult(qrCode: String, resultSource: QrResultSource) {
-        when (val target = resolveQrSendTargetsUseCase(qrCode)) {
+        val target = resolveQrSendTargetsUseCase(qrCode)
+        handleQrTarget(target, resultSource)
+    }
+
+    private fun handleQrTarget(target: QrSendTarget, resultSource: QrResultSource) {
+        when (target) {
             is QrSendTarget.WalletConnect -> {
                 val source = when (resultSource) {
                     QrResultSource.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
@@ -800,6 +805,17 @@ internal class WalletModel @Inject constructor(
             }
             is QrSendTarget.Multiple -> {
                 innerWalletRouter.openNetworkSelectionBottomSheet(target)
+            }
+            is QrSendTarget.AddressSameAsWallet -> {
+                uiMessageSender.send(WalletAlertUM.qrCodeAddressSameAsWallet())
+            }
+            is QrSendTarget.Warning -> {
+                uiMessageSender.send(
+                    WalletAlertUM.qrCodeUnsupportedParams(
+                        unsupportedParams = target.unsupportedParams,
+                        onContinue = { handleQrTarget(target.target, resultSource) },
+                    ),
+                )
             }
             is QrSendTarget.Error -> handleQrError(target.error)
         }
