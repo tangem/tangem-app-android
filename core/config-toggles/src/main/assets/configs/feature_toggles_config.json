@@ -75,5 +75,9 @@
     {
         "name": "TOKEN_SYNC_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SOLANA_TX_HISTORY_ENABLED",
+        "version": "undefined"
     }
 ]
