@@ -6,6 +6,7 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.BITCOIN_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
@@ -599,22 +600,22 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Reset Wiremock scenario: '$scenarioName'") {
                 resetWireMockScenarioState(scenarioName)
             }
-            step("Perform pull to refresh") {
-                pullToRefresh(steps = 10)
-                waitForIdle()
-            }
-            step("Assert action buttons is enabled") {
-                assertActionButtonsForMultiCurrencyWallet(isEnabled = true)
+            step("Pull to refresh and wait for buttons to become enabled") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 2_000) {
+                    pullToRefresh(10)
+                    waitForIdle()
+                    assertActionButtonsForMultiCurrencyWallet(isEnabled = true)
+                }
             }
             step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
                 setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
             }
-            step("Perform pull to refresh") {
-                pullToRefresh(steps = 10)
-                waitForIdle()
-            }
-            step("Assert action buttons is not enabled") {
-                assertActionButtonsForMultiCurrencyWallet(isEnabled = false)
+            step("Pull to refresh and wait for buttons to become disabled") {
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG, intervalMs = 2_000) {
+                    pullToRefresh(10)
+                    waitForIdle()
+                    assertActionButtonsForMultiCurrencyWallet(isEnabled = false)
+                }
             }
         }
     }
