@@ -36,7 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LongParameterList")
@@ -72,12 +72,12 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
 
     private fun findSelectedWallet(promoCode: String) {
         getSelectedWalletSyncUseCase().fold(
-            ifLeft = {
-                Timber.tag(LOG_TAG).e("Error on getting user wallet: $it")
+            ifLeft = { error ->
+                TangemLogger.withTag(LOG_TAG).e("Error on getting user wallet: $error")
                 showAlert(Failed)
             },
             ifRight = { userWallet ->
-                Timber.tag(LOG_TAG).d("SelectedUserWallet ${userWallet.walletId.stringValue.mask()}")
+                TangemLogger.withTag(LOG_TAG).d("SelectedUserWallet ${userWallet.walletId.stringValue.mask()}")
                 findBitcoinAddress(userWallet = userWallet, promoCode = promoCode)
             },
         )
@@ -96,24 +96,24 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 },
             )
 
-            Timber.tag(LOG_TAG).d("All user network statuses ${networkStatuses?.size}")
+            TangemLogger.withTag(LOG_TAG).d("All user network statuses ${networkStatuses?.size}")
 
             val cryptoCurrencies = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
                 MultiWalletCryptoCurrenciesProducer.Params(userWallet.walletId),
             )
 
-            Timber.tag(LOG_TAG).d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
+            TangemLogger.withTag(LOG_TAG).d("All user cryptoCurrencies on main ${cryptoCurrencies?.size}")
 
             val bitcoinCurrency = cryptoCurrencies?.firstOrNull { it.id.rawNetworkId == Blockchain.Bitcoin.id }
-            Timber.tag(LOG_TAG).d("BitcoinCurrency $bitcoinCurrency")
+            TangemLogger.withTag(LOG_TAG).d("BitcoinCurrency $bitcoinCurrency")
 
             val bitcoinStatus = networkStatuses?.firstOrNull { status ->
                 status.network.id == bitcoinCurrency?.network?.id
             }
-            Timber.tag(LOG_TAG).d("BitcoinStatus $bitcoinStatus")
+            TangemLogger.withTag(LOG_TAG).d("BitcoinStatus $bitcoinStatus")
 
             if (bitcoinStatus == null) {
-                Timber.tag(LOG_TAG).d("No bitcoin, bitcoin network status == null")
+                TangemLogger.withTag(LOG_TAG).d("No bitcoin, bitcoin network status == null")
                 showAlert(NoBitcoinAddress)
             } else {
                 val networkAddress = when (bitcoinStatus.value) {
@@ -126,7 +126,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                     ?.defaultAddress?.value
 
                 if (bitcoinAddress != null) {
-                    Timber.tag(LOG_TAG).d(
+                    TangemLogger.withTag(LOG_TAG).d(
                         "Start activation promoCode ${promoCode.mask()} address ${bitcoinAddress.mask()}",
                     )
 
@@ -138,7 +138,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 } else {
                     uiMessageSender.send(GlobalLoadingMessage(false))
                     delay(DEFAULT_MESSAGE_SENDER_DELAY)
-                    Timber.tag(LOG_TAG).d("No Bitcoin address $bitcoinStatus.value")
+                    TangemLogger.withTag(LOG_TAG).d("No Bitcoin address $bitcoinStatus.value")
                     showAlert(NoBitcoinAddress)
                 }
             }
@@ -155,13 +155,15 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
             uiMessageSender.send(GlobalLoadingMessage(false))
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
-            Timber.tag(LOG_TAG).d("${promoCode.mask()} activation success on address ${bitcoinAddress.mask()}")
+            TangemLogger.withTag(
+                LOG_TAG,
+            ).d("${promoCode.mask()} activation success on address ${bitcoinAddress.mask()}")
             showAlert(Activated)
         }.onLeft { error ->
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
             uiMessageSender.send(GlobalLoadingMessage(false))
             delay(DEFAULT_MESSAGE_SENDER_DELAY)
-            Timber.tag(LOG_TAG).d("${promoCode.mask()} activation failed $error")
+            TangemLogger.withTag(LOG_TAG).d("${promoCode.mask()} activation failed $error")
             val alertType = when (error) {
                 ActivatePromoCodeError.ActivationFailed -> Failed
                 ActivatePromoCodeError.InvalidPromoCode -> InvalidPromoCode
@@ -203,7 +205,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
     @Suppress("NullableToStringCall")
     private fun saveAndBindRefcode() {
         scope.launch(dispatchers.default) {
-            Timber.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
+            TangemLogger.i("saveAndBindRefcode: refcode = $refcode, campaign = $campaign")
 
             if (!refcode.isNullOrBlank()) {
                 val conversionData = AppsFlyerConversionData(refcode = refcode, campaign = campaign)
@@ -211,7 +213,7 @@ internal class DefaultPromoDeeplinkHandler @AssistedInject constructor(
                 appsFlyerStore.storeIfAbsent(value = conversionData)
 
                 bindRefcodeWithWalletUseCase(conversionData)
-                    .onLeft { Timber.e("Failed to bind refcode with wallets: $it") }
+                    .onLeft { TangemLogger.e("Failed to bind refcode with wallets: $it") }
             }
         }
     }

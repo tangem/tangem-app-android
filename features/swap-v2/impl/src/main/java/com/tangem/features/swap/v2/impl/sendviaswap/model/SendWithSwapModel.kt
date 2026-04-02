@@ -34,7 +34,7 @@ import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import com.tangem.utils.logging.TangemLogger
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -159,7 +159,7 @@ internal class SendWithSwapModel @Inject constructor(
                 getPrimaryCurrencyStatusUpdates(params.currency)
             },
             ifLeft = { error ->
-                Timber.w(error.toString())
+                TangemLogger.w(error.toString())
                 swapAlertFactory.getGenericErrorState(
                     expressError = ExpressError.UnknownError,
                     onFailedTxEmailClick = {

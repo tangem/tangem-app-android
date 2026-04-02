@@ -17,6 +17,7 @@ import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldS
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -31,6 +32,7 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.account.filterCryptoPortfolio
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -49,6 +51,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.models.AllowanceInfo
 import com.tangem.domain.transaction.models.TransactionFeeExtended
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.transaction.usecase.gasless.CreateAndSendGaslessTransactionUseCase
@@ -66,11 +69,11 @@ import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.logging.TangemLogger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -110,6 +113,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val walletManagersFacade: WalletManagersFacade,
+    private val getAllowanceInfoUseCase: GetAllowanceInfoUseCase,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -131,7 +135,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getAccountCurrencyTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
         val walletAccountCurrencyStatuses = singleAccountStatusListSupplier.getSyncOrNull(
             SingleAccountStatusListProducer.Params(userWalletId),
-        )?.accountStatuses.orEmpty()
+        )?.accountStatuses.orEmpty().filterCryptoPortfolio()
 
         val walletAccountCurrencyStatusesExceptInitial: Map<Account, List<CryptoCurrencyStatus>> =
             walletAccountCurrencyStatuses.mapNotNull { accountStatus ->
@@ -290,7 +294,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             contractAddress = permissionOptions.forTokenContractAddress,
             spenderAddress = permissionOptions.spenderAddress,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create approveTransaction")
+            TangemLogger.e("Failed to create approveTransaction", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -321,7 +325,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         reduceBalanceBy: BigDecimal,
         txFeeSealedState: TxFeeSealedState,
     ): Map<SwapProvider, SwapState> {
-        Timber.i(
+        TangemLogger.i(
             """
                Find the best quote
                |- fromToken: $fromToken
@@ -429,12 +433,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val isAllowedToSpend = maybeQuotes.fold(
             ifRight = { quotes ->
                 quotes.allowanceContract?.let { allowanceContract ->
-                    isAllowedToSpend(
-                        networkId = networkId,
-                        fromToken = fromToken.currency,
-                        amount = amount,
+                    getAllowanceInfoUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = fromToken.currency,
                         spenderAddress = allowanceContract,
-                    )
+                        requiredAmount = amount.value,
+                    ).getOrNull() is AllowanceInfo.Enough
                 } != false
             },
             ifLeft = { false },
@@ -702,7 +706,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         expressOperationType: ExpressOperationType,
         isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState {
-        Timber.i(
+        TangemLogger.i(
             """
                Swap
                |- swapProvider: $swapProvider
@@ -795,7 +799,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(dataToSign, currencyToSendStatus.currency.network, txFee.fee.getGasLimit()),
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap dex tx data")
+            TangemLogger.e("Failed to create swap dex tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -999,7 +1003,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             network = currencyToSend.currency.network,
         ).getOrElse { error ->
-            Timber.e(error, "Failed to create swap CEX tx data")
+            TangemLogger.e("Failed to create swap CEX tx data", error)
             return SwapTransactionState.Error.UnknownError
         }
 
@@ -1266,34 +1270,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ?: error("Unable to create network coin with ID: ${network.id}")
     }
 
-    private suspend fun isAllowedToSpend(
-        networkId: String,
-        fromToken: CryptoCurrency,
-        amount: SwapAmount,
-        spenderAddress: String,
-    ): Boolean {
-        if (fromToken is CryptoCurrency.Coin) return true
-
-        val allowance = repository.getAllowance(
-            userWalletId = userWallet.walletId,
-            networkId = networkId,
-            derivationPath = fromToken.network.derivationPath.value,
-            tokenDecimalCount = fromToken.decimals,
-            tokenAddress = getTokenAddress(fromToken),
-            spenderAddress = spenderAddress,
-        )
-        return allowance >= amount.value
-    }
-
     private suspend fun createEmptyAmountState(): SwapState {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
-            zeroAmountEquivalent = BigDecimal.ZERO.format {
-                fiat(
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                )
-            },
+            zeroAmountEquivalent = stringReference(
+                BigDecimal.ZERO.format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                },
+            ),
         )
     }
 
@@ -1522,7 +1509,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
             tokenAmount = amount,
-            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
+            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
             account = fromAccount,
@@ -1686,7 +1673,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(feeCurrencyId)
         return rates[feeCurrencyId]?.let { rate ->
             fees.map { fee ->
-                rate.multiply(fee).format {
+                rate.fiatRate.multiply(fee).format {
                     fiat(
                         fiatCurrencyCode = appCurrency.code,
                         fiatCurrencySymbol = appCurrency.symbol,
@@ -1854,7 +1841,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(fromToken.currency.id)
         val fromTokenSwapInfo = TokenSwapInfo(
             tokenAmount = amount,
-            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
+            amountFiat = rates[fromToken.currency.id]?.fiatRate?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
             account = fromAccount,
@@ -1962,21 +1949,21 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 tokenAmount = fromTokenAmount,
                 account = fromAccount,
                 cryptoCurrencyStatus = fromTokenStatus,
-                amountFiat = rates[fromToken.id]?.multiply(fromTokenAmount.value)
+                amountFiat = rates[fromToken.id]?.fiatRate?.multiply(fromTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
                 cryptoCurrencyStatus = toTokenStatus,
                 account = toAccount,
-                amountFiat = rates[toToken.id]?.multiply(toTokenAmount.value)
+                amountFiat = rates[toToken.id]?.fiatRate?.multiply(toTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
             priceImpact = calculatePriceImpact(
                 fromTokenAmount = fromTokenAmount.value,
-                fromRate = rates[fromToken.id]?.toDouble() ?: 0.0,
+                fromQuoteStatus = rates[fromToken.id],
                 toTokenAmount = toTokenAmount.value,
-                toRate = rates[toToken.id]?.toDouble() ?: 0.0,
+                toRate = rates[toToken.id]?.fiatRate,
             ),
             swapDataModel = swapData,
             swapProvider = provider,
@@ -2065,7 +2052,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 userWallet = userWallet,
             ).getOrNull() ?: error("unable to calculate fee")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get fee")
+            TangemLogger.e("Failed to get fee", e)
             // it's impossible next steps without fee
             return createSwapErrorWith(
                 fromToken = fromTokenStatus,
@@ -2445,17 +2432,43 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private fun calculatePriceImpact(
         fromTokenAmount: BigDecimal,
-        fromRate: Double,
+        fromQuoteStatus: QuoteStatus.Data?,
         toTokenAmount: BigDecimal,
-        toRate: Double,
+        toRate: BigDecimal?,
     ): PriceImpact {
-        val fromTokenFiatValue = fromTokenAmount.multiply(fromRate.toBigDecimal())
-        val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
-        val value = (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
-        return PriceImpact.Value(value)
+        if (fromQuoteStatus == null) return PriceImpact.Empty
+
+        val fromTokenFiatValue = fromTokenAmount.multiply(fromQuoteStatus.fiatRate)
+        val toTokenFiatValue = toRate?.let { toTokenAmount.multiply(toRate) } ?: return PriceImpact.Empty
+
+        val value = BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)
+
+        val fromAmountUSD = if (fromQuoteStatus.fiatRateUSD != BigDecimal.ZERO) {
+            fromTokenAmount.multiply(fromQuoteStatus.fiatRateUSD)
+        } else {
+            PRICE_IMPACT_AMOUNT_MIN_THRESHOLD
+        }
+
+        val amountSignificance = when {
+            fromAmountUSD <= PRICE_IMPACT_AMOUNT_MIN_THRESHOLD -> PriceImpact.AmountSignificance.LOW
+            fromAmountUSD > PRICE_IMPACT_AMOUNT_MAX_THRESHOLD -> PriceImpact.AmountSignificance.HIGH
+            else -> PriceImpact.AmountSignificance.MEDIUM
+        }
+
+        val type = when {
+            value < PRICE_IMPACT_LOW_THRESHOLD -> PriceImpact.Type.LOW
+            value in PRICE_IMPACT_LOW_THRESHOLD..PRICE_IMPACT_HIGH_THRESHOLD -> PriceImpact.Type.MEDIUM
+            else -> PriceImpact.Type.HIGH
+        }
+
+        return PriceImpact(
+            value = value,
+            amountSignificance = amountSignificance,
+            type = type,
+        )
     }
 
-    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, BigDecimal> {
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, QuoteStatus.Data> {
         val set = ids.mapNotNullTo(destination = hashSetOf(), transform = CryptoCurrency.ID::rawCurrencyId)
             .getQuotesOrEmpty()
 
@@ -2464,7 +2477,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val found = set.find { it.rawCurrencyId == id.rawCurrencyId && it.value is QuoteStatus.Data }
                     ?: return@mapNotNull null
 
-                id to (found.value as QuoteStatus.Data).fiatRate
+                id to found.value as QuoteStatus.Data
             }
             .toMap()
     }
@@ -2491,7 +2504,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
             quotesRepository.getMultiQuoteSyncOrNull(currenciesIds = this@getQuotesOrEmpty).orEmpty()
         }.getOrElse { e ->
-            Timber.e(e, "Failed to get quotes: ${e.message.orEmpty()}")
+            TangemLogger.e("Failed to get quotes: ${e.message.orEmpty()}", e)
             emptySet()
         }
     }
@@ -2505,7 +2518,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return try {
             SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
         } catch (e: Exception) {
-            Timber.e("Failed to format the hash: ${e.message.orEmpty()}")
+            TangemLogger.e("Failed to format the hash: ${e.message.orEmpty()}")
             hash
         }
     }
@@ -2522,6 +2535,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     companion object {
         private const val INCREASE_GAS_LIMIT_FOR_DEX = 112 // 12%
         private const val INCREASE_GAS_LIMIT_FOR_SEND = 105 // 5%
+        private val PRICE_IMPACT_AMOUNT_MIN_THRESHOLD = 25.toBigDecimal() // in USD
+        private val PRICE_IMPACT_AMOUNT_MAX_THRESHOLD = 5000.toBigDecimal() // in USD
+        private val PRICE_IMPACT_LOW_THRESHOLD = 0.1.toBigDecimal() // 10%
+        private val PRICE_IMPACT_HIGH_THRESHOLD = 0.5.toBigDecimal() // 50%
         private const val INFINITY_SYMBOL = "∞"
     }
 

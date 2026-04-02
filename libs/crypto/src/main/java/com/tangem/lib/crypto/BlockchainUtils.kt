@@ -23,6 +23,7 @@ object BlockchainUtils {
     private const val XRP_X_ADDRESS = 'X'
     private const val TERRA_CLASSIC_USD_COIN_ID = "terrausd"
     private const val TERRA_LUNA_CLASSIC_COIN_ID = "terra-luna"
+    private const val TETHER_CONTRACT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     const val SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES = 930
 
     /** Decodes XRP Blockchain address */
@@ -216,5 +217,14 @@ object BlockchainUtils {
         return Blockchain.fromNetworkId(networkId) != Blockchain.TerraV1 ||
             coinId == TERRA_CLASSIC_USD_COIN_ID ||
             coinId == TERRA_LUNA_CLASSIC_COIN_ID
+    }
+
+    /**
+     * Checks if the given coin is Tether on Ethereum network, which may require special handling in some cases.
+     */
+    fun isTetherInEthereum(blockchainId: String, contractAddress: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return (blockchain == Blockchain.Ethereum || blockchain == Blockchain.EthereumTestnet) &&
+            contractAddress.equals(TETHER_CONTRACT_ADDRESS, ignoreCase = true)
     }
 }
