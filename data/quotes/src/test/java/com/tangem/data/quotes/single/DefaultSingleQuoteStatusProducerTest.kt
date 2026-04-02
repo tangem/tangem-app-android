@@ -83,6 +83,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
             value = QuoteStatus.Data(
                 fiatRate = BigDecimal.ONE,
                 priceChange = BigDecimal.ZERO,
+                fiatRateUSD = BigDecimal.ZERO,
                 source = StatusSource.ACTUAL,
             ),
         )
@@ -129,6 +130,7 @@ internal class DefaultSingleQuoteStatusProducerTest {
             rawCurrencyId = params.rawCurrencyId,
             value = QuoteStatus.Data(
                 fiatRate = BigDecimal.ONE,
+                fiatRateUSD = BigDecimal.ZERO,
                 priceChange = BigDecimal.ZERO,
                 source = StatusSource.ACTUAL,
             ),

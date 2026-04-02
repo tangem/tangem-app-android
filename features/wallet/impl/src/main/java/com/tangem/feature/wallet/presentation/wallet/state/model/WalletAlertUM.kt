@@ -9,24 +9,6 @@ import com.tangem.feature.wallet.impl.R
 
 internal object WalletAlertUM {
 
-    fun seedPhraseConfirm(onClick: () -> Unit): DialogMessage {
-        return DialogMessage(
-            message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
-            firstActionBuilder = {
-                okAction(onClick = onClick)
-            },
-        )
-    }
-
-    fun seedPhraseDismiss(onClick: () -> Unit): DialogMessage {
-        return DialogMessage(
-            message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
-            firstActionBuilder = {
-                okAction(onClick = onClick)
-            },
-        )
-    }
-
     fun unableHideToken(cryptoCurrency: CryptoCurrency): DialogMessage {
         return DialogMessage(
             title = resourceReference(
